@@ -10,9 +10,10 @@ import kotlin.reflect.KFunction1
 enum class Definisjon(private val kode: String,
                       private val type: BehovType = BehovType.MANUELT,
                       private val defaultFrist: Period = Period.ZERO,
-                      private val løsesISteg: StegType = StegType.UDEFINERT,
-                      private val vurderingspunkt: Vurderingspunkt,
-                      private val rekjørSteg: Boolean = false) {
+                      val løsesISteg: StegType = StegType.UDEFINERT,
+                      val vurderingspunkt: Vurderingspunkt,
+                      val rekjørSteg: Boolean = false,
+                      val kreverToTrinn: Boolean = false) {
 
     MANUELT_SATT_PÅ_VENT(
         kode = "9001",
@@ -48,7 +49,7 @@ enum class Definisjon(private val kode: String,
         AUTOMATISK(Definisjon::validerAutomatisk);
     }
 
-    fun løsesISteg(steg: StegType): Boolean {
+    fun skalLøsesISteg(steg: StegType): Boolean {
         return løsesISteg == steg
     }
 

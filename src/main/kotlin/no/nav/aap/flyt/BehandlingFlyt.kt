@@ -56,6 +56,28 @@ class BehandlingFlyt(private var behandlingType: BehandlingType,
     fun stegene(): List<StegType> {
         return this.flyt
     }
+
+    fun erStegFør(stegA: StegType, stegB: StegType): Boolean {
+        val aIndex = flyt.indexOf(stegA)
+        val bIndex = flyt.indexOf(stegB)
+
+        return aIndex < bIndex
+    }
+
+    fun forrige(nåværendeSteg: StegType): StegType {
+        val nåværendeIndex = flyt.indexOf(nåværendeSteg)
+
+        if (nåværendeIndex == -1) {
+            throw IllegalStateException("[Utvikler feil] '" + nåværendeSteg + "' er ikke en del av den definerte prosessen")
+        }
+
+        val iterator = this.flyt.listIterator(nåværendeIndex)
+        if (iterator.hasPrevious()) {
+            return iterator.previous()
+        }
+
+        return StegType.START_BEHANDLING // Dette steget må da spesialhåndteres i Flytkontroller for å ikke gi evig løkke
+    }
 }
 
 class BehandlingFlytBuilder(private var behandlingType: BehandlingType) {

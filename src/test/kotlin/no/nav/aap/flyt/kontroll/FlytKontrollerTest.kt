@@ -1,5 +1,8 @@
 package no.nav.aap.flyt.kontroll
 
+import no.nav.aap.domene.behandling.BehandlingRepository
+import no.nav.aap.domene.behandling.Status
+import no.nav.aap.domene.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
 import org.junit.jupiter.api.Test
 
 class FlytKontrollerTest {
@@ -11,10 +14,14 @@ class FlytKontrollerTest {
         val kontekst = FlytKontekst(1L, 1L)
         flytKontroller.prosesserBehandling(kontekst)
 
-        val behandling = flytKontroller.behandliger.getValue(1L)
+        val behandling = BehandlingRepository.hentBehandling(kontekst.behandlingId)
+        assert(behandling.status() == Status.UTREDES)
+        assert(behandling.avklaringsbehov().isNotEmpty())
 
-        behandling.løsAvklaringsbehov(no.nav.aap.domene.behandling.avklaringsbehov.Definisjon.AVKLAR_YRKESSKADE, "Begrunnelse", "meg")
+        flytKontroller.løsAvklaringsbehovOgFortsettProsessering(kontekst, avklaringsbehov = listOf(
+            AvklaringsbehovLøsning(no.nav.aap.domene.behandling.avklaringsbehov.Definisjon.AVKLAR_YRKESSKADE, "Begrunnelse", "meg")
+        ))
 
-        flytKontroller.prosesserBehandling(kontekst)
+        assert(behandling.status() == Status.AVSLUTTET)
     }
 }

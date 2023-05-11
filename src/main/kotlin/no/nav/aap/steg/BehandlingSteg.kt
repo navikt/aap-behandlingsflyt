@@ -7,4 +7,8 @@ interface BehandlingSteg {
     fun utfør(input: StegInput): StegResultat
 
     fun type(): StegType
+
+    fun vedTilbakeføring(input: StegInput) {
+
+    }
 }
