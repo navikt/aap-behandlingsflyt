@@ -5,14 +5,17 @@ import no.nav.aap.domene.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.flyt.StegStatus
 import no.nav.aap.flyt.StegType
 import no.nav.aap.flyt.Tilstand
+import java.time.LocalDateTime
 
 class Behandling(
     val id: Long,
+    val fagsakId: Long,
     val type: BehandlingType,
     private var status: Status = Status.OPPRETTET,
     private var avklaringsbehov: List<Avklaringsbehov> = mutableListOf(),
-    private var stegHistorikk: List<StegTilstand> = mutableListOf()
-) {
+    private var stegHistorikk: List<StegTilstand> = mutableListOf(),
+    val opprettetTidspunkt: LocalDateTime = LocalDateTime.now()
+) : Comparable<Behandling> {
 
     fun visit(stegTilstand: StegTilstand) {
         if (!stegTilstand.aktiv) {
@@ -83,5 +86,9 @@ class Behandling(
 
     fun løsAvklaringsbehov(definisjon: Definisjon, begrunnelse: String, endretAv: String) {
         avklaringsbehov.single { it.definisjon == definisjon }.løs(begrunnelse, endretAv = endretAv)
+    }
+
+    override fun compareTo(other: Behandling): Int {
+        return this.opprettetTidspunkt.compareTo(other.opprettetTidspunkt)
     }
 }

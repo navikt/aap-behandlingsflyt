@@ -1,6 +1,6 @@
 package no.nav.aap.flyt.kontroll
 
-import no.nav.aap.domene.behandling.BehandlingRepository
+import no.nav.aap.domene.behandling.BehandlingTjeneste
 import no.nav.aap.domene.behandling.Status
 import no.nav.aap.domene.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
 import org.junit.jupiter.api.Test
@@ -12,9 +12,9 @@ class FlytKontrollerTest {
     @Test
     fun name() {
         val kontekst = FlytKontekst(1L, 1L)
+        val behandling = BehandlingTjeneste.opprettBehandling(kontekst.fagsakId)
         flytKontroller.prosesserBehandling(kontekst)
 
-        val behandling = BehandlingRepository.hentBehandling(kontekst.behandlingId)
         assert(behandling.status() == Status.UTREDES)
         assert(behandling.avklaringsbehov().isNotEmpty())
 

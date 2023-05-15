@@ -9,6 +9,6 @@ class VurderYrkesskadeSteg : BehandlingSteg {
     }
 
     override fun type(): StegType {
-        return StegType.START_BEHANDLING
+        return StegType.AVKLAR_YRKESSKADE
     }
 }

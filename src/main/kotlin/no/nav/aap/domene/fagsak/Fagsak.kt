@@ -1,5 +1,7 @@
 package no.nav.aap.domene.fagsak
 
-class Fagsak(private val status: Status = Status.OPPRETTET) {
+import no.nav.aap.domene.person.Person
+
+class Fagsak(val person: Person, private var status: Status = Status.OPPRETTET) {
     // TODO
 }

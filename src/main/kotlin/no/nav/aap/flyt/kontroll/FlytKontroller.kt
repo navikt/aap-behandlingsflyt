@@ -1,48 +1,29 @@
 package no.nav.aap.flyt.kontroll
 
 import no.nav.aap.domene.behandling.Behandling
-import no.nav.aap.domene.behandling.BehandlingRepository
-import no.nav.aap.domene.behandling.BehandlingType
+import no.nav.aap.domene.behandling.BehandlingTjeneste
 import no.nav.aap.domene.behandling.Status
 import no.nav.aap.domene.behandling.StegTilstand
 import no.nav.aap.domene.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.domene.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
 import no.nav.aap.flyt.BehandlingFlyt
-import no.nav.aap.flyt.Definisjon
 import no.nav.aap.flyt.StegStatus
 import no.nav.aap.flyt.StegType
 import no.nav.aap.steg.BehandlingSteg
-import no.nav.aap.steg.StartBehandlingSteg
 import no.nav.aap.steg.StegInput
-import no.nav.aap.steg.VurderYrkesskadeSteg
 
 class FlytKontroller {
 
-    var definisjoner = HashMap<BehandlingType, BehandlingFlyt>()
-    var stegene = HashMap<StegType, BehandlingSteg>()
-
-    init {
-        definisjoner[BehandlingType.FØRSTEGANGSBEHANDLING] = Definisjon.førstegangsbehandling
-        definisjoner[BehandlingType.REVURDERING] = Definisjon.revurdering
-
-        // TODO: Må instansieres på en bedre måte
-        Definisjon.førstegangsbehandling.stegene()
-            .forEach { steg -> stegene[steg] = StartBehandlingSteg() }
-
-        stegene[StegType.AVSLUTT_BEHANDLING] = StartBehandlingSteg()
-        stegene[StegType.AVKLAR_YRKESSKADE] = VurderYrkesskadeSteg()
-    }
-
     fun prosesserBehandling(kontekst: FlytKontekst) {
-        val behandling = BehandlingRepository.hentBehandling(kontekst.behandlingId)
+        val behandling = BehandlingTjeneste.hentBehandling(kontekst.behandlingId)
 
         validerTilstandBehandling(behandling, listOf())
 
-        val behandlingFlyt = definisjoner.getValue(behandling.type)
+        val behandlingFlyt = behandling.type.flyt()
 
         var aktivtSteg = behandling.aktivtSteg()
         var nesteStegStatus = aktivtSteg.tilstand.status()
-        var nesteSteg = aktivtSteg.tilstand.steg()
+        var nesteSteg = behandlingFlyt.steg(aktivtSteg.tilstand.steg())
 
         var kanFortsette = true
         while (kanFortsette) {
@@ -51,7 +32,7 @@ class FlytKontroller {
             val result = utførTilstandsEndring(kontekst, nesteStegStatus, avklaringsbehov, nesteSteg, behandling)
 
             if (result.funnetAvklaringsbehov().isNotEmpty()) {
-                validerPlassering(result.funnetAvklaringsbehov(), nesteSteg, nesteStegStatus)
+                validerPlassering(result.funnetAvklaringsbehov(), nesteSteg.type(), nesteStegStatus)
                 behandling.leggTil(result.funnetAvklaringsbehov())
             }
 
@@ -67,11 +48,11 @@ class FlytKontroller {
 
     fun løsAvklaringsbehovOgFortsettProsessering(kontekst: FlytKontekst,
                                                  avklaringsbehov: List<AvklaringsbehovLøsning>) {
-        val behandling = BehandlingRepository.hentBehandling(kontekst.behandlingId)
+        val behandling = BehandlingTjeneste.hentBehandling(kontekst.behandlingId)
 
         validerTilstandBehandling(behandling, avklaringsbehov.map { it.definisjon })
 
-        val behandlingFlyt = definisjoner.getValue(behandling.type)
+        val behandlingFlyt = behandling.type.flyt()
 
         // løses det behov som fremtvinger tilbakehopp?
         if (skalHoppesTilbake(behandlingFlyt, behandling.aktivtSteg(), avklaringsbehov.map { it.definisjon })) {
@@ -86,7 +67,6 @@ class FlytKontroller {
 
         avklaringsbehov.forEach { behandling.løsAvklaringsbehov(it.definisjon, it.begrunnelse, it.endretAv) }
 
-
         prosesserBehandling(kontekst)
     }
 
@@ -98,22 +78,25 @@ class FlytKontroller {
         if (avklaringsbehov.any { !behandling.avklaringsbehov().map { a -> a.definisjon }.contains(it) }) {
             throw IllegalArgumentException("Forsøker løse aksjonspunkt ikke knyttet til behandlingen")
         }
+        if (avklaringsbehov.any { !behandling.type.flyt().erStegFørEllerLik(it.løsesISteg, behandling.aktivtSteg().tilstand.steg()) }) {
+            throw IllegalArgumentException("Forsøker løse aksjonspunkt ikke knyttet til behandlingen")
+        }
     }
 
     private fun hoppTilbakeTilSteg(kontekst: FlytKontekst,
                                    behandling: Behandling,
                                    tilSteg: StegType,
                                    tilStegStatus: StegStatus) {
-        val behandlingFlyt = definisjoner.getValue(behandling.type)
+        val behandlingFlyt = behandling.type.flyt()
 
         val aktivtSteg = behandling.aktivtSteg()
-        var forrige = aktivtSteg.tilstand.steg()
+        var forrige = behandlingFlyt.steg(aktivtSteg.tilstand.steg())
 
         var kanFortsette = true
         while (kanFortsette) {
-            forrige = behandlingFlyt.forrige(forrige)
+            forrige = behandlingFlyt.forrige(forrige.type())
 
-            if (forrige == tilSteg && tilStegStatus != StegStatus.INNGANG) {
+            if (forrige.type() == tilSteg && tilStegStatus != StegStatus.INNGANG) {
                 kanFortsette = false
             } else {
                 utførTilstandsEndring(
@@ -124,7 +107,7 @@ class FlytKontroller {
                     behandling = behandling
                 )
             }
-            if (forrige == tilSteg && tilStegStatus == StegStatus.INNGANG) {
+            if (forrige.type() == tilSteg && tilStegStatus == StegStatus.INNGANG) {
                 kanFortsette = false
             }
         }
@@ -174,37 +157,38 @@ class FlytKontroller {
 
     private fun utledNesteSteg(aktivtSteg: StegTilstand,
                                nesteStegStatus: StegStatus,
-                               behandlingFlyt: BehandlingFlyt): StegType {
+                               behandlingFlyt: BehandlingFlyt): BehandlingSteg {
 
         if (aktivtSteg.tilstand.status() == StegStatus.AVSLUTTER && nesteStegStatus == StegStatus.START) {
             return behandlingFlyt.neste(aktivtSteg.tilstand.steg())
         }
-        return aktivtSteg.tilstand.steg()
+        return behandlingFlyt.steg(aktivtSteg.tilstand.steg())
     }
 
     private fun utførTilstandsEndring(kontekst: FlytKontekst,
                                       nesteStegStatus: StegStatus,
                                       avklaringsbehov: List<Avklaringsbehov>,
-                                      aktivtSteg: StegType,
+                                      aktivtSteg: BehandlingSteg,
                                       behandling: Behandling): Transisjon {
-        val relevanteAvklaringsbehov = avklaringsbehov.filter { behov -> behov.definisjon.skalLøsesISteg(aktivtSteg) }
+        val relevanteAvklaringsbehov =
+            avklaringsbehov.filter { behov -> behov.definisjon.skalLøsesISteg(aktivtSteg.type()) }
         return when (nesteStegStatus) {
-            StegStatus.INNGANG -> harAvklaringspunkt(aktivtSteg, nesteStegStatus, relevanteAvklaringsbehov)
+            StegStatus.INNGANG -> harAvklaringspunkt(aktivtSteg.type(), nesteStegStatus, relevanteAvklaringsbehov)
             StegStatus.UTFØRER -> behandleSteg(aktivtSteg, kontekst)
-            StegStatus.UTGANG -> harAvklaringspunkt(aktivtSteg, nesteStegStatus, relevanteAvklaringsbehov)
-            StegStatus.AVSLUTTER -> harTruffetSlutten(aktivtSteg)
+            StegStatus.UTGANG -> harAvklaringspunkt(aktivtSteg.type(), nesteStegStatus, relevanteAvklaringsbehov)
+            StegStatus.AVSLUTTER -> harTruffetSlutten(aktivtSteg.type())
             StegStatus.TILBAKEFØRT -> behandleStegBakover(aktivtSteg, kontekst)
             else -> Fortsett
         }.also {
             val nyStegTilstand =
-                StegTilstand(tilstand = no.nav.aap.flyt.Tilstand(aktivtSteg, nesteStegStatus))
+                StegTilstand(tilstand = no.nav.aap.flyt.Tilstand(aktivtSteg.type(), nesteStegStatus))
             behandling.visit(nyStegTilstand)
         }
     }
 
-    private fun behandleStegBakover(steg: StegType, kontekst: FlytKontekst): Transisjon {
+    private fun behandleStegBakover(steg: BehandlingSteg, kontekst: FlytKontekst): Transisjon {
         val input = StegInput(kontekst)
-        stegene.getValue(steg).vedTilbakeføring(input)
+        steg.vedTilbakeføring(input)
 
         return Fortsett
     }
@@ -216,9 +200,9 @@ class FlytKontroller {
         }
     }
 
-    private fun behandleSteg(steg: StegType, kontekst: FlytKontekst): Transisjon {
+    private fun behandleSteg(steg: BehandlingSteg, kontekst: FlytKontekst): Transisjon {
         val input = StegInput(kontekst)
-        val stegResultat = stegene.getValue(steg).utfør(input)
+        val stegResultat = steg.utfør(input)
 
         return stegResultat.transisjon()
     }
