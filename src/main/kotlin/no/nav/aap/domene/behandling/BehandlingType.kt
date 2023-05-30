@@ -3,10 +3,10 @@ package no.nav.aap.domene.behandling
 import no.nav.aap.flyt.BehandlingFlyt
 import no.nav.aap.flyt.BehandlingFlytBuilder
 import no.nav.aap.flyt.StegType
-import no.nav.aap.steg.AvsluttBehandlingSteg
-import no.nav.aap.steg.GeneriskPlaceholderSteg
-import no.nav.aap.steg.StartBehandlingSteg
-import no.nav.aap.steg.VurderYrkesskadeSteg
+import no.nav.aap.flyt.steg.AvsluttBehandlingSteg
+import no.nav.aap.flyt.steg.GeneriskPlaceholderSteg
+import no.nav.aap.flyt.steg.StartBehandlingSteg
+import no.nav.aap.flyt.steg.VurderYrkesskadeSteg
 
 interface BehandlingType {
     fun flyt(): BehandlingFlyt

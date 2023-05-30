@@ -12,8 +12,8 @@ import no.nav.aap.domene.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.flyt.BehandlingFlyt
 import no.nav.aap.flyt.StegStatus
 import no.nav.aap.flyt.StegType
-import no.nav.aap.steg.BehandlingSteg
-import no.nav.aap.steg.StegInput
+import no.nav.aap.flyt.steg.BehandlingSteg
+import no.nav.aap.flyt.steg.StegInput
 
 class FlytKontroller {
 
@@ -202,7 +202,7 @@ class FlytKontroller {
                 ) || definisjon.vurderingspunkt.stegStatus.erFør(nesteStegStatus)
             }
         if (uhåndterteBehov.isNotEmpty()) {
-            throw IllegalStateException("Har uhåndterte behov som skulle vært håndtert før nåværende steg = '" + nesteSteg + "' med status = '" + nesteStegStatus + "'")
+            throw IllegalStateException("Har uhåndterte behov som skulle vært håndtert før nåværende steg = '$nesteSteg' med status = '$nesteStegStatus'")
         }
     }
 

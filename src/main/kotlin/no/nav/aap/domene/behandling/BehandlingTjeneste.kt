@@ -31,7 +31,7 @@ object BehandlingTjeneste {
             if (erSisteBehandlingAvsluttet) {
                 val key1 = key.addAndGet(1)
                 val behandlingType = utledBehandlingType(sisteBehandlingFor.isPresent)
-                behandliger.put(key1, Behandling(key1, fagsakId, behandlingType))
+                behandliger[key1] = Behandling(key1, fagsakId, behandlingType)
                 return behandliger.getValue(key1)
             } else {
                 throw IllegalStateException("Siste behandling er ikke avsluttet")

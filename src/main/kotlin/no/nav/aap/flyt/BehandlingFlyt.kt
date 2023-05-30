@@ -1,9 +1,9 @@
 package no.nav.aap.flyt
 
 import no.nav.aap.domene.behandling.EndringType
-import no.nav.aap.steg.AvsluttBehandlingSteg
-import no.nav.aap.steg.BehandlingSteg
-import no.nav.aap.steg.StartBehandlingSteg
+import no.nav.aap.flyt.steg.AvsluttBehandlingSteg
+import no.nav.aap.flyt.steg.BehandlingSteg
+import no.nav.aap.flyt.steg.StartBehandlingSteg
 import java.util.Collections
 
 /**
@@ -18,7 +18,7 @@ class BehandlingFlyt(private var flyt: List<BehandlingSteg>,
     fun neste(nåværendeSteg: StegType): BehandlingSteg {
         val nåværendeIndex = this.flyt.indexOfFirst { it.type() == nåværendeSteg }
         if (nåværendeIndex == -1) {
-            throw IllegalStateException("[Utvikler feil] Nåværende steg '" + nåværendeSteg + "' er ikke en del av den definerte prosessen")
+            throw IllegalStateException("[Utvikler feil] Nåværende steg '$nåværendeSteg' er ikke en del av den definerte prosessen")
         }
 
         val iterator = this.flyt.listIterator(nåværendeIndex)
@@ -77,7 +77,7 @@ class BehandlingFlyt(private var flyt: List<BehandlingSteg>,
         val nåværendeIndex = flyt.indexOfFirst { it.type() == nåværendeSteg }
 
         if (nåværendeIndex == -1) {
-            throw IllegalStateException("[Utvikler feil] '" + nåværendeSteg + "' er ikke en del av den definerte prosessen")
+            throw IllegalStateException("[Utvikler feil] '$nåværendeSteg' er ikke en del av den definerte prosessen")
         }
 
         val iterator = this.flyt.listIterator(nåværendeIndex)
@@ -109,7 +109,7 @@ class BehandlingFlytBuilder {
             throw IllegalStateException("[Utvikler feil] Builder er allerede bygget")
         }
         if (StegType.UDEFINERT == steg.type()) {
-            throw IllegalStateException("[Utvikler feil] Builder er allerede bygget")
+            throw IllegalStateException("[Utvikler feil] StegType UDEFINERT er ugyldig å legge til i flyten")
         }
         this.flyt.add(steg)
         endringer.forEach { endring ->

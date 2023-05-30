@@ -4,4 +4,8 @@ import no.nav.aap.domene.typer.Ident
 import java.util.UUID
 
 class Person(private val identifikator: UUID, private var identer: List<Ident>) {
+
+    fun er(ident: Ident): Boolean {
+        return identer.any { it == ident }
+    }
 }

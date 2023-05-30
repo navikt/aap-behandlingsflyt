@@ -1,14 +1,13 @@
-package no.nav.aap.steg
+package no.nav.aap.flyt.steg
 
-import no.nav.aap.domene.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.flyt.StegType
 
-class StartBehandlingSteg : BehandlingSteg {
+class AvsluttBehandlingSteg : BehandlingSteg {
     override fun utfør(input: StegInput): StegResultat {
         return StegResultat() // DO NOTHING
     }
 
     override fun type(): StegType {
-        return StegType.START_BEHANDLING
+        return StegType.AVSLUTT_BEHANDLING
     }
 }

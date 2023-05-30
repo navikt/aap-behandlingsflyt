@@ -1,4 +1,4 @@
-package no.nav.aap.steg
+package no.nav.aap.flyt.steg
 
 import no.nav.aap.flyt.StegType
 
