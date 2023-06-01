@@ -8,11 +8,8 @@ class VurderYrkesskadeSteg : BehandlingSteg {
     override fun utfør(input: StegInput): StegResultat {
         val grunnlagOptional = YrkesskadeTjeneste.hentHvisEksisterer(input.kontekst.behandlingId)
 
-        if (grunnlagOptional.isPresent) {
-            val grunnlag = grunnlagOptional.get()
-            if (grunnlag.yrkesskader.harYrkesskade()) {
-                return StegResultat(listOf(Definisjon.AVKLAR_YRKESSKADE))
-            }
+        if (grunnlagOptional.map { it.yrkesskader }.map { it.harYrkesskade() }.orElse(false)) {
+            return StegResultat(listOf(Definisjon.AVKLAR_YRKESSKADE))
         }
         return StegResultat()
     }
