@@ -21,7 +21,7 @@ object FagsakTjeneste {
             if (fagsaker.values.any { sak -> sak.person.er(ident) && sak.periode.overlapper(periode) }) {
                 throw IllegalArgumentException("Forsøker å opprette sak når det finnes en som overlapper")
             }
-            val fagsak = Fagsak(fagsaker.keys.size.plus(1L), Person(UUID.randomUUID(), listOf(ident)), periode)
+            val fagsak = Fagsak(fagsaker.keys.size.plus(10000001L), Person(UUID.randomUUID(), listOf(ident)), periode)
             fagsaker[fagsak.id] = fagsak
 
             return fagsak

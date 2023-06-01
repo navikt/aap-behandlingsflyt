@@ -1,0 +1,27 @@
+package no.nav.aap.domene.behandling.grunnlag.yrkesskade
+
+import java.util.Optional
+import java.util.concurrent.atomic.AtomicLong
+
+object YrkesskadeTjeneste {
+
+    private var grunnlagene = HashMap<Long, YrkesskadeGrunnlag>()
+
+    private val key = AtomicLong()
+    private val LOCK = Object()
+
+    fun hentHvisEksisterer(behandlingId: Long): Optional<YrkesskadeGrunnlag> {
+        synchronized(LOCK) {
+            return Optional.ofNullable(grunnlagene.get(behandlingId))
+        }
+    }
+
+    fun lagre(behandlingId: Long, yrkesskader: Yrkesskader) {
+        synchronized(LOCK) {
+            grunnlagene.put(
+                behandlingId,
+                YrkesskadeGrunnlag(behandlingId = behandlingId, yrkesskader = yrkesskader, id = key.addAndGet(1))
+            )
+        }
+    }
+}
