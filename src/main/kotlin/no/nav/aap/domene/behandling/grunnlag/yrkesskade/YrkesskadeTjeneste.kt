@@ -12,16 +12,20 @@ object YrkesskadeTjeneste {
 
     fun hentHvisEksisterer(behandlingId: Long): Optional<YrkesskadeGrunnlag> {
         synchronized(LOCK) {
-            return Optional.ofNullable(grunnlagene.get(behandlingId))
+            return Optional.ofNullable(grunnlagene[behandlingId])
         }
     }
 
-    fun lagre(behandlingId: Long, yrkesskader: Yrkesskader) {
+    fun lagre(behandlingId: Long, yrkesskader: Yrkesskader?) {
         synchronized(LOCK) {
-            grunnlagene.put(
-                behandlingId,
-                YrkesskadeGrunnlag(behandlingId = behandlingId, yrkesskader = yrkesskader, id = key.addAndGet(1))
-            )
+            if (yrkesskader != null) {
+                grunnlagene.put(
+                    behandlingId,
+                    YrkesskadeGrunnlag(behandlingId = behandlingId, yrkesskader = yrkesskader, id = key.addAndGet(1))
+                )
+            } else {
+                grunnlagene.remove(behandlingId)
+            }
         }
     }
 }

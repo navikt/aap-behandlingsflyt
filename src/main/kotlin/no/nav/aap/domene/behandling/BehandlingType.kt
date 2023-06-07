@@ -7,6 +7,7 @@ import no.nav.aap.flyt.steg.AvsluttBehandlingSteg
 import no.nav.aap.flyt.steg.FatteVedtakSteg
 import no.nav.aap.flyt.steg.ForeslåVedtakSteg
 import no.nav.aap.flyt.steg.GeneriskPlaceholderSteg
+import no.nav.aap.flyt.steg.InnhentRegisterdataSteg
 import no.nav.aap.flyt.steg.StartBehandlingSteg
 import no.nav.aap.flyt.steg.VurderYrkesskadeSteg
 
@@ -19,7 +20,7 @@ object Førstegangsbehandling : BehandlingType {
     override fun flyt(): BehandlingFlyt {
         return BehandlingFlytBuilder()
             .medSteg(StartBehandlingSteg())
-            .medSteg(GeneriskPlaceholderSteg(StegType.INNHENT_REGISTERDATA))
+            .medSteg(InnhentRegisterdataSteg())
             .medSteg(VurderYrkesskadeSteg())
             .medSteg(GeneriskPlaceholderSteg(StegType.INNGANGSVILKÅR))
             .medSteg(GeneriskPlaceholderSteg(StegType.FASTSETT_GRUNNLAG))
