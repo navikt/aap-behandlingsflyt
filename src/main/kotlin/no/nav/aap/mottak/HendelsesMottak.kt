@@ -3,6 +3,8 @@ package no.nav.aap.mottak
 import no.nav.aap.domene.behandling.BehandlingTjeneste
 import no.nav.aap.domene.fagsak.FagsakTjeneste
 import no.nav.aap.domene.person.PersonTjeneste
+import no.nav.aap.domene.typer.Ident
+import no.nav.aap.domene.typer.Saksnummer
 import no.nav.aap.flyt.kontroll.FlytKontekst
 import no.nav.aap.flyt.kontroll.FlytKontroller
 
@@ -10,19 +12,18 @@ object HendelsesMottak {
 
     private val kontroller = FlytKontroller()
 
-    fun håndtere(hendelse: PersonHendelse) {
-        val ident = hendelse.ident()
-        val person = PersonTjeneste.finnEllerOpprett(ident)
+    fun håndtere(key: Ident, hendelse: PersonHendelse) {
+        val person = PersonTjeneste.finnEllerOpprett(key)
 
         val fagsak = FagsakTjeneste.finnEllerOpprett(person, hendelse.periode())
 
         // Legg til kø for fagsak, men mocker ved å kalle videre bare
 
-        håndtere(hendelse.tilSakshendelse(fagsak.saksnummer))
+        håndtere(fagsak.saksnummer, hendelse.tilSakshendelse())
     }
 
-    fun håndtere(hendelse: SakHendelse) {
-        val fagsak = FagsakTjeneste.hent(hendelse.saksnummer())
+    fun håndtere(key: Saksnummer, hendelse: SakHendelse) {
+        val fagsak = FagsakTjeneste.hent(key)
         val sisteBehandlingOpt = BehandlingTjeneste.finnSisteBehandlingFor(fagsak.id)
 
         val sisteBehandling = if (sisteBehandlingOpt.isPresent && !sisteBehandlingOpt.get().status().erAvsluttet()) {
@@ -31,19 +32,31 @@ object HendelsesMottak {
             // Har ikke behandling så oppretter en
             BehandlingTjeneste.opprettBehandling(fagsak.id)
         }
-        håndtere(hendelse.tilBehandlingHendelse(sisteBehandling.id))
+        håndtere(key = sisteBehandling.id, hendelse.tilBehandlingHendelse())
     }
 
-    fun håndtere(hendelse: BehandlingHendelse) {
-        val behandling = BehandlingTjeneste.hent(hendelse.behandlingId())
+    fun håndtere(key: Long, hendelse: LøsAvklaringsbehovBehandlingHendelse) {
+        val behandling = BehandlingTjeneste.hent(key)
+        kontroller.validerTilstandBehandling(behandling = behandling)
+
+        val fagsak = FagsakTjeneste.hent(behandling.fagsakId)
+
+        val kontekst = FlytKontekst(fagsakId = fagsak.id, behandlingId = behandling.id)
+        kontroller.løsAvklaringsbehovOgFortsettProsessering(
+            kontekst = kontekst,
+            avklaringsbehov = listOf(hendelse.behov())
+        )
+    }
+
+    fun håndtere(key: Long, hendelse: BehandlingHendelse) {
+        val behandling = BehandlingTjeneste.hent(key)
+        kontroller.validerTilstandBehandling(behandling = behandling)
+
         val fagsak = FagsakTjeneste.hent(behandling.fagsakId)
 
         val kontekst = FlytKontekst(fagsakId = fagsak.id, behandlingId = behandling.id)
         if (hendelse is LøsAvklaringsbehovBehandlingHendelse) {
-            kontroller.løsAvklaringsbehovOgFortsettProsessering(
-                kontekst = kontekst,
-                avklaringsbehov = listOf(hendelse.behov())
-            )
+            throw IllegalArgumentException("Skal håndteres mellom eksplisitt funksjon")
         } else {
             kontroller.prosesserBehandling(kontekst)
         }

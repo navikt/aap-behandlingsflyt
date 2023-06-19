@@ -100,8 +100,8 @@ class FlytKontroller {
         behandling.løsAvklaringsbehov(it.definisjon, it.begrunnelse, it.endretAv)
     }
 
-    private fun validerTilstandBehandling(behandling: Behandling,
-                                          avklaringsbehov: List<Definisjon>) {
+    fun validerTilstandBehandling(behandling: Behandling,
+                                  avklaringsbehov: List<Definisjon> = listOf()) {
         if (setOf(Status.AVSLUTTET, Status.IVERKSETTES).contains(behandling.status())) {
             throw IllegalArgumentException("Forsøker manipulere på behandling som er avsluttet")
         }
@@ -129,6 +129,13 @@ class FlytKontroller {
             forrige = behandlingFlyt.forrige(forrige.type())
 
             if (forrige.type() == tilSteg && tilStegStatus != StegStatus.INNGANG) {
+                utførTilstandsEndring(
+                    kontekst = kontekst,
+                    nesteStegStatus = tilStegStatus,
+                    avklaringsbehov = listOf(),
+                    aktivtSteg = forrige,
+                    behandling = behandling
+                )
                 kanFortsette = false
             } else {
                 utførTilstandsEndring(
@@ -163,8 +170,8 @@ class FlytKontroller {
                           avklaringsDefinisjoner: List<Definisjon>): StegType {
         return avklaringsDefinisjoner.filter { definisjon ->
             behandlingFlyt.erStegFør(
-                aktivtSteg.tilstand.steg(),
-                definisjon.løsesISteg
+                definisjon.løsesISteg,
+                aktivtSteg.tilstand.steg()
             )
         }
             .map { definisjon -> definisjon.løsesISteg }
@@ -182,8 +189,8 @@ class FlytKontroller {
 
         return avklaringsDefinisjoner.filter { definisjon ->
             behandlingFlyt.erStegFør(
-                aktivtSteg.tilstand.steg(),
-                definisjon.løsesISteg
+                definisjon.løsesISteg,
+                aktivtSteg.tilstand.steg()
             )
         }.isNotEmpty()
     }

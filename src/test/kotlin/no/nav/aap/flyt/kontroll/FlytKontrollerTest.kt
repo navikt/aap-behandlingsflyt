@@ -12,9 +12,9 @@ import no.nav.aap.domene.fagsak.FagsakTjeneste
 import no.nav.aap.domene.person.PersonTjeneste
 import no.nav.aap.domene.typer.Ident
 import no.nav.aap.domene.typer.Periode
+import no.nav.aap.mottak.DokumentMottattPersonHendelse
 import no.nav.aap.mottak.HendelsesMottak
 import no.nav.aap.mottak.LøsAvklaringsbehovBehandlingHendelse
-import no.nav.aap.mottak.SøknadMottattPersonHendelse
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -25,9 +25,11 @@ class FlytKontrollerTest {
         val ident = Ident("123123123123")
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
+        // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
         YrkesskadeRegister.konstruer(ident = ident, periode = periode)
 
-        HendelsesMottak.håndtere(SøknadMottattPersonHendelse(ident = ident, periode = periode))
+        // Sender inn en søknad
+        HendelsesMottak.håndtere(ident, DokumentMottattPersonHendelse(periode = periode))
 
         val fagsak = FagsakTjeneste.finnEllerOpprett(PersonTjeneste.finnEllerOpprett(ident), periode)
         assert(fagsak.saksnummer.toString().isNotEmpty())
@@ -38,29 +40,40 @@ class FlytKontrollerTest {
         assert(behandling.avklaringsbehov().isNotEmpty())
         assert(behandling.status() == Status.UTREDES)
 
-        HendelsesMottak.håndtere(
+
+        HendelsesMottak.håndtere(behandling.id,
             LøsAvklaringsbehovBehandlingHendelse(
-                behandlingId = behandling.id,
+                versjon = 1L,
                 løsning = AvklarYrkesskadeLøsning("Begrunnelse", "meg")
             )
         )
 
+        // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
         assert(behandling.avklaringsbehov().filter { it.erÅpent() }.any { it.definisjon == Definisjon.FORESLÅ_VEDTAK })
         assert(behandling.status() == Status.UTREDES)
 
-        HendelsesMottak.håndtere(
+
+        HendelsesMottak.håndtere(behandling.id,
             LøsAvklaringsbehovBehandlingHendelse(
-                behandlingId = behandling.id,
+                versjon = 1L,
+                løsning = AvklarYrkesskadeLøsning("Begrunnelse", "meg")
+            )
+        )
+
+        HendelsesMottak.håndtere(behandling.id,
+            LøsAvklaringsbehovBehandlingHendelse(
+                versjon = 1L,
                 løsning = ForeslåVedtakLøsning("Begrunnelse", "meg")
             )
         )
 
+        // Saken står til To-trinnskontroll hos beslutter
         assert(behandling.avklaringsbehov().filter { it.erÅpent() }.any { it.definisjon == Definisjon.FATTE_VEDTAK })
         assert(behandling.status() == Status.UTREDES)
 
-        HendelsesMottak.håndtere(
+        HendelsesMottak.håndtere(behandling.id,
             LøsAvklaringsbehovBehandlingHendelse(
-                behandlingId = behandling.id,
+                versjon = 1L,
                 løsning = FatteVedtakLøsning("Begrunnelse", "meg")
             )
         )
@@ -74,7 +87,7 @@ class FlytKontrollerTest {
         val person = PersonTjeneste.finnEllerOpprett(ident)
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
-        HendelsesMottak.håndtere(SøknadMottattPersonHendelse(ident = ident, periode = periode))
+        HendelsesMottak.håndtere(ident, DokumentMottattPersonHendelse(periode = periode))
 
         val fagsak = FagsakTjeneste.finnEllerOpprett(person, periode)
         assert(fagsak.saksnummer.toString().isNotEmpty())
