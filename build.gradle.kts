@@ -1,6 +1,6 @@
 plugins {
-    kotlin("jvm") version "1.8.20"
-    id("io.ktor.plugin") version "2.2.4" apply false
+    kotlin("jvm") version "1.9.0"
+    id("io.ktor.plugin") version "2.3.3" apply false
 }
 
 allprojects {
@@ -12,7 +12,7 @@ allprojects {
 
     tasks {
         withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-            kotlinOptions.jvmTarget = "19"
+            kotlinOptions.jvmTarget = "20"
         }
 
         withType<Test> {
@@ -29,8 +29,8 @@ allprojects {
 }
 
 dependencies {
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.0")
     testImplementation("org.assertj:assertj-core:3.18.0")
     testImplementation(kotlin("test"))
 }
