@@ -15,9 +15,7 @@ class VurderAlderSteg : BehandlingSteg {
         val behandling = BehandlingTjeneste.hent(input.kontekst.behandlingId)
 
         val personinfoGrunnlag = PersoninformasjonTjeneste.hentHvisEksisterer(input.kontekst.behandlingId)
-        if (personinfoGrunnlag == null) {
-            throw IllegalStateException("Forventet å finne personopplysninger")
-        }
+            ?: throw IllegalStateException("Forventet å finne personopplysninger")
 
         val aldersgrunnlag = Aldersgrunnlag(
             sak.rettighetsperiode.fraOgMed(),
@@ -35,7 +33,6 @@ class VurderAlderSteg : BehandlingSteg {
                 vurdering.beslutningstre
             )
         )
-
 
         return StegResultat()
     }

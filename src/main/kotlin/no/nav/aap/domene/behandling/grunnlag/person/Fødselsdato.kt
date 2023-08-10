@@ -1,8 +1,18 @@
 package no.nav.aap.domene.behandling.grunnlag.person
 
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 
-class Fødselsdato(val dato: LocalDate) {
+class Fødselsdato(private val dato: LocalDate) {
+
+    init {
+        if (dato.isAfter(LocalDate.now())) throw IllegalArgumentException("Kan ikke sette fødselsdato inn i fremtiden")
+    }
+
+    fun alderPåDato(gittDato: LocalDate): Int {
+        return dato.until(gittDato, ChronoUnit.YEARS).toInt()
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
