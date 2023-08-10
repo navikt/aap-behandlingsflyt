@@ -34,7 +34,7 @@ class FlytKontrollerTest {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
         // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
-        PersonRegisterMock.konstruer(ident, Personinfo(Fødselsdato(LocalDate.now().minusYears(17))))
+        PersonRegisterMock.konstruer(ident, Personinfo(Fødselsdato(LocalDate.now().minusYears(18))))
         YrkesskadeRegisterMock.konstruer(ident = ident, periode = periode)
 
         // Sender inn en søknad
@@ -81,6 +81,15 @@ class FlytKontrollerTest {
         )
 
         assertThat(behandling?.status()).isEqualTo(Status.AVSLUTTET)
+
+        //Henter vurder alder-vilkår
+        //Assert utfall
+        val vilkårsresultat = behandling?.vilkårsresultat()
+        val aldersvilkår = vilkårsresultat?.finnVilkår(Vilkårstype.ALDERSVILKÅRET)
+
+        assertThat(aldersvilkår?.vilkårsperioder())
+            .hasSize(1)
+            .allMatch { vilkårsperiodeForAlder -> vilkårsperiodeForAlder.erOppfylt() }
     }
 
     @Test
@@ -89,7 +98,7 @@ class FlytKontrollerTest {
         val ident = Ident("123123123124")
         val person = Personlager.finnEllerOpprett(ident)
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-        PersonRegisterMock.konstruer(ident, Personinfo(Fødselsdato(LocalDate.now().minusYears(17))))
+        PersonRegisterMock.konstruer(ident, Personinfo(Fødselsdato(LocalDate.now().minusYears(18))))
 
         HendelsesMottak.håndtere(ident, DokumentMottattPersonHendelse(periode = periode))
 
@@ -99,10 +108,19 @@ class FlytKontrollerTest {
 
         assertThat(behandling?.avklaringsbehov()).isEmpty()
         assertThat(behandling?.status()).isEqualTo(Status.AVSLUTTET)
+
+        //Henter vurder alder-vilkår
+        //Assert utfall
+        val vilkårsresultat = behandling?.vilkårsresultat()
+        val aldersvilkår = vilkårsresultat?.finnVilkår(Vilkårstype.ALDERSVILKÅRET)
+
+        assertThat(aldersvilkår?.vilkårsperioder())
+            .hasSize(1)
+            .allMatch { vilkårsperiodeForAlder -> vilkårsperiodeForAlder.erOppfylt() }
     }
 
     @Test
-    fun `Skal vurdere alder`() {
+    fun `Ikke oppfylt på grunn av alder på søknadstidspunkt`() {
         val ident = Ident("123123123125")
         val person = Personlager.finnEllerOpprett(ident)
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
@@ -121,9 +139,10 @@ class FlytKontrollerTest {
         //Henter vurder alder-vilkår
         //Assert utfall
         val vilkårsresultat = behandling?.vilkårsresultat()
-        val vilkår = vilkårsresultat?.finnVilkår(Vilkårstype.ALDERSVILKÅRET)
+        val aldersvilkår = vilkårsresultat?.finnVilkår(Vilkårstype.ALDERSVILKÅRET)
 
-        assertThat(vilkår?.vilkårsperiode).hasSize(1)
-
+        assertThat(aldersvilkår?.vilkårsperioder())
+            .hasSize(1)
+            .noneMatch { vilkårsperiodeForAlder -> vilkårsperiodeForAlder.erOppfylt() }
     }
 }

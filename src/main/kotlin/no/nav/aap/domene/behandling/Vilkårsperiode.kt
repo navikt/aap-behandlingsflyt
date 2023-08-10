@@ -9,6 +9,10 @@ class Vilkårsperiode(
     private val besluttningstre: Beslutningstre
 ) {
 
+    fun erOppfylt(): Boolean {
+        return utfall == Utfall.OPPFYLT
+    }
+
     override fun toString(): String {
         return "Vilkårsperiode(periode=$periode, utfall=$utfall)"
     }
