@@ -1,5 +1,6 @@
 package no.nav.aap.domene.behandling.grunnlag.yrkesskade
 
+import no.nav.aap.domene.behandling.Behandling
 import java.util.Optional
 import java.util.concurrent.atomic.AtomicLong
 
@@ -25,6 +26,14 @@ object YrkesskadeTjeneste {
                 )
             } else {
                 grunnlagene.remove(behandlingId)
+            }
+        }
+    }
+
+    fun kopier(fraBehandling: Behandling, tilBehandling: Behandling) {
+        synchronized(LOCK) {
+            hentHvisEksisterer(fraBehandling.id).ifPresent { eksisterendeGrunnlag ->
+                grunnlagene[tilBehandling.id] = eksisterendeGrunnlag
             }
         }
     }

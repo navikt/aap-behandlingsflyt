@@ -1,5 +1,6 @@
 package no.nav.aap.domene.behandling.grunnlag.person
 
+import no.nav.aap.domene.behandling.Behandling
 import java.util.concurrent.atomic.AtomicLong
 
 object PersoninformasjonTjeneste {
@@ -24,6 +25,16 @@ object PersoninformasjonTjeneste {
                 )
             } else {
                 grunnlagene.remove(behandlingId)
+            }
+        }
+    }
+
+    fun kopier(fraBehandling: Behandling, tilBehandling: Behandling) {
+        synchronized(LOCK) {
+            val eksisterendeGrunnlag = hentHvisEksisterer(fraBehandling.id)
+
+            if (eksisterendeGrunnlag != null) {
+                grunnlagene[tilBehandling.id] = eksisterendeGrunnlag
             }
         }
     }
