@@ -1,4 +1,4 @@
-package no.nav.aap.vilkår
+package no.nav.aap.domene.vilkår
 
 import no.nav.aap.domene.behandling.Beslutningstre
 import no.nav.aap.domene.behandling.Utfall
