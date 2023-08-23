@@ -1,5 +1,8 @@
 package no.nav.aap.flate.sak
 
+import io.github.smiley4.ktorswaggerui.dsl.get
+import io.github.smiley4.ktorswaggerui.dsl.post
+import io.github.smiley4.ktorswaggerui.dsl.route
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -13,8 +16,12 @@ import no.nav.aap.domene.typer.Ident
 import no.nav.aap.domene.typer.Saksnummer
 
 fun Routing.saksApi() {
-    route("/api/sak") {
-        post("/finn") {
+    route("/api/sak", {
+        tags = listOf("sak")
+    }) {
+        post("/finn", {
+            request { body<FinnSakForIdentDTO>() }
+        }) {
             val dto = call.receive<FinnSakForIdentDTO>()
 
             val ident = Ident(dto.ident)
@@ -29,7 +36,15 @@ fun Routing.saksApi() {
                 call.respond(HttpStatusCode.OK, saker)
             }
         }
-        get("/hent/{saksnummer}") {
+        get("/hent/{saksnummer}", {
+            request { pathParameter<String>("saksnummer") }
+            response {
+                HttpStatusCode.OK to {
+                    description = "Successful Request"
+                    body<UtvidetSaksinfoDTO> { }
+                }
+            }
+        }) {
             val saksnummer = call.parameters.getOrFail("saksnummer")
 
             val sak = Sakslager.hent(saksnummer = Saksnummer(saksnummer))
@@ -43,7 +58,15 @@ fun Routing.saksApi() {
                 )
             }
 
-            call.respond(HttpStatusCode.OK, behandlinger)
+            call.respond(
+                HttpStatusCode.OK,
+                UtvidetSaksinfoDTO(
+                    saksnummer = sak.saksnummer.toString(),
+                    periode = sak.rettighetsperiode,
+                    behandlinger = behandlinger,
+                    status = sak.status()
+                )
+            )
         }
     }
 }

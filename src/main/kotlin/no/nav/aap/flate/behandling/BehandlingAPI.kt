@@ -1,5 +1,7 @@
 package no.nav.aap.flate.behandling
 
+import io.github.smiley4.ktorswaggerui.dsl.get
+import io.github.smiley4.ktorswaggerui.dsl.route
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
@@ -9,8 +11,18 @@ import no.nav.aap.domene.behandling.BehandlingTjeneste
 import java.util.*
 
 fun Routing.behandlingApi() {
-    route("/api/behandling") {
-        get("/hent/{referanse}") {
+    route("/api/behandling", {
+        tags = listOf("behandling")
+    }) {
+        get("/hent/{referanse}", {
+            request { pathParameter<UUID>("referanse") }
+            response {
+                HttpStatusCode.OK to {
+                    description = "Successful Request"
+                    body<DetaljertBehandlingDTO> { }
+                }
+            }
+        }) {
             val referanse = call.parameters.getOrFail("referanse")
 
             val eksternReferanse = UUID.fromString(referanse)
@@ -18,16 +30,26 @@ fun Routing.behandlingApi() {
             val behandling = BehandlingTjeneste.hent(eksternReferanse)
 
             val dto = DetaljertBehandlingDTO(
-                behandling.referanse,
-                behandling.type.identifikator(),
-                behandling.status(),
-                behandling.opprettetTidspunkt,
-                behandling.avklaringsbehov().map { avklaringsbehov ->
+                referanse = behandling.referanse,
+                type = behandling.type.identifikator(),
+                status = behandling.status(),
+                opprettet = behandling.opprettetTidspunkt,
+                avklaringsbehov = behandling.avklaringsbehov().map { avklaringsbehov ->
                     AvklaringsbehovDTO(
                         avklaringsbehov.definisjon,
-                        avklaringsbehov.status()
+                        avklaringsbehov.status(),
+                        avklaringsbehov.historikk.map { endring ->
+                            EndringDTO(
+                                endring.status,
+                                endring.tidsstempel,
+                                endring.begrunnelse,
+                                endring.endretAv
+                            )
+                        }
                     )
-                })
+                },
+                aktivtSteg = behandling.stegHistorikk().last().tilstand.steg()
+            )
 
             call.respond(HttpStatusCode.OK, dto)
         }

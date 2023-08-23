@@ -2,6 +2,8 @@ package no.nav.aap
 
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import io.github.smiley4.ktorswaggerui.SwaggerUI
+import io.github.smiley4.ktorswaggerui.dsl.route
 import io.ktor.http.*
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
@@ -40,18 +42,37 @@ internal fun Application.server() {
             disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
         }
     }
+    install(SwaggerUI) {
+        swagger {
+            swaggerUrl = "swagger-ui"
+            forwardRoot = true
+        }
+        info {
+            title = "AAP - Saksbehandling"
+            version = "latest"
+            description = ""
+        }
+        server {
+            url = "http://localhost:8080"
+            description = ""
+        }
+    }
+
 
     routing {
         actuator(prometheus)
         saksApi()
         behandlingApi()
+
         hendelsesApi()
     }
 }
 
 
 private fun Routing.actuator(prometheus: PrometheusMeterRegistry) {
-    route("/actuator") {
+    route("/actuator", {
+        hidden = true
+    }) {
         get("/metrics") {
             call.respond(prometheus.scrape())
         }
@@ -70,7 +91,9 @@ private fun Routing.actuator(prometheus: PrometheusMeterRegistry) {
 
 @Deprecated("Kun for test lokalt enn så lenge")
 fun Routing.hendelsesApi() {
-    route("/test/opprett") {
+    route("/test/opprett", {
+        tags = listOf("test")
+    }) {
         post() {
             val dto = call.receive<OpprettTestcaseDTO>()
 
