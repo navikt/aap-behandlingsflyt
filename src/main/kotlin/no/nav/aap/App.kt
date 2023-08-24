@@ -117,8 +117,5 @@ fun Routing.hendelsesApi() {
             )
             call.respond(HttpStatusCode.Created)
         }
-        get("/tid") {
-            call.respond(HttpStatusCode.OK, LocalDate.now())
-        }
     }
 }
