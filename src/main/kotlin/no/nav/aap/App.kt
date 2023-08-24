@@ -3,6 +3,7 @@ package no.nav.aap
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.github.smiley4.ktorswaggerui.SwaggerUI
+import io.github.smiley4.ktorswaggerui.dsl.post
 import io.github.smiley4.ktorswaggerui.dsl.route
 import io.ktor.http.*
 import io.ktor.serialization.jackson.*
@@ -43,7 +44,7 @@ internal fun Application.server() {
             disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
         }
     }
-    install(CORS){
+    install(CORS) {
         anyHost() // FIXME: Dette blir litt vel aggresivt, men greit for nå? :pray:
         allowHeader(HttpHeaders.ContentType)
     }
@@ -73,7 +74,6 @@ internal fun Application.server() {
     }
 }
 
-
 private fun Routing.actuator(prometheus: PrometheusMeterRegistry) {
     route("/actuator", {
         hidden = true
@@ -99,7 +99,14 @@ fun Routing.hendelsesApi() {
     route("/test/opprett", {
         tags = listOf("test")
     }) {
-        post() {
+        post({
+            request { body<OpprettTestcaseDTO>() }
+            response {
+                HttpStatusCode.Created to {
+                    description = "Opprettet testcase, søk opp via ident"
+                }
+            }
+        }) {
             val dto = call.receive<OpprettTestcaseDTO>()
 
             val ident = Ident(dto.ident)
