@@ -7,7 +7,6 @@ import no.nav.aap.avklaringsbehov.vedtak.ForeslåVedtakLøser
 import no.nav.aap.avklaringsbehov.yrkesskade.AvklarYrkesskadeLøser
 import no.nav.aap.domene.behandling.Behandling
 import no.nav.aap.domene.behandling.BehandlingTjeneste
-import no.nav.aap.domene.behandling.Status
 import no.nav.aap.domene.behandling.StegTilstand
 import no.nav.aap.domene.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.domene.behandling.avklaringsbehov.Definisjon
@@ -30,7 +29,7 @@ class FlytKontroller {
     fun prosesserBehandling(kontekst: FlytKontekst) {
         val behandling = BehandlingTjeneste.hent(kontekst.behandlingId)
 
-        validerTilstandBehandling(behandling, listOf())
+        ValiderBehandlingTilstand.validerTilstandBehandling(behandling, listOf())
 
         val behandlingFlyt = behandling.type.flyt()
 
@@ -70,7 +69,7 @@ class FlytKontroller {
                                                  avklaringsbehov: List<AvklaringsbehovLøsning>) {
         val behandling = BehandlingTjeneste.hent(kontekst.behandlingId)
 
-        validerTilstandBehandling(behandling, avklaringsbehov.map { it.definisjon })
+        ValiderBehandlingTilstand.validerTilstandBehandling(behandling, avklaringsbehov.map { it.definisjon })
 
         val behandlingFlyt = behandling.type.flyt()
 
@@ -100,21 +99,6 @@ class FlytKontroller {
             avklaringsbehovsLøsere.getValue(it.definisjon) as AvklaringsbehovsLøser<AvklaringsbehovLøsning>
         avklaringsbehovsLøser.løs(kontekst = kontekst, it)
         behandling.løsAvklaringsbehov(it.definisjon, it.begrunnelse, it.endretAv)
-    }
-
-    fun validerTilstandBehandling(behandling: Behandling,
-                                  avklaringsbehov: List<Definisjon> = listOf()) {
-        if (setOf(Status.AVSLUTTET, Status.IVERKSETTES).contains(behandling.status())) {
-            throw IllegalArgumentException("Forsøker manipulere på behandling som er avsluttet")
-        }
-        if (avklaringsbehov.any { !behandling.avklaringsbehov().map { a -> a.definisjon }.contains(it) }) {
-            throw IllegalArgumentException("Forsøker løse aksjonspunkt ikke knyttet til behandlingen")
-        }
-        if (avklaringsbehov.any {
-                !behandling.type.flyt().erStegFørEllerLik(it.løsesISteg, behandling.aktivtSteg().tilstand.steg())
-            }) {
-            throw IllegalArgumentException("Forsøker løse aksjonspunkt ikke knyttet til behandlingen")
-        }
     }
 
     private fun hoppTilbakeTilSteg(kontekst: FlytKontekst,

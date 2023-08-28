@@ -7,6 +7,7 @@ import no.nav.aap.domene.typer.Ident
 import no.nav.aap.domene.typer.Saksnummer
 import no.nav.aap.flyt.kontroll.FlytKontekst
 import no.nav.aap.flyt.kontroll.FlytKontroller
+import no.nav.aap.flyt.kontroll.ValiderBehandlingTilstand
 
 object HendelsesMottak {
 
@@ -37,7 +38,7 @@ object HendelsesMottak {
 
     fun håndtere(key: Long, hendelse: LøsAvklaringsbehovBehandlingHendelse) {
         val behandling = BehandlingTjeneste.hent(key)
-        kontroller.validerTilstandBehandling(behandling = behandling)
+        ValiderBehandlingTilstand.validerTilstandBehandling(behandling = behandling)
 
         val sak = Sakslager.hent(behandling.sakId)
 
@@ -50,7 +51,7 @@ object HendelsesMottak {
 
     fun håndtere(key: Long, hendelse: BehandlingHendelse) {
         val behandling = BehandlingTjeneste.hent(key)
-        kontroller.validerTilstandBehandling(behandling = behandling)
+        ValiderBehandlingTilstand.validerTilstandBehandling(behandling = behandling)
 
         val sak = Sakslager.hent(behandling.sakId)
 
