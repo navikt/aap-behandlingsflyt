@@ -54,4 +54,10 @@ object Sakslager {
             return saker.values.filter { sak -> sak.person == person }.toList()
         }
     }
+
+    fun finnAlle(): List<Sak> {
+        synchronized(LOCK) {
+            return saker.values.toList()
+        }
+    }
 }
