@@ -1,6 +1,10 @@
 plugins {
     kotlin("jvm") version "1.9.0"
-    id("io.ktor.plugin") version "2.3.3" apply false
+    id("io.ktor.plugin") version "2.3.3"
+}
+
+application {
+    mainClass.set("no.nav.aap.AppKt")
 }
 
 allprojects {
@@ -28,7 +32,7 @@ allprojects {
     sourceSets["test"].resources.srcDirs("test")
 }
 
-val ktorVersion = "2.3.2"
+val ktorVersion = "2.3.3"
 
 dependencies {
     implementation("io.ktor:ktor-server-auth:$ktorVersion")
