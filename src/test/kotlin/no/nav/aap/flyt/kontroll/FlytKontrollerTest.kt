@@ -41,15 +41,15 @@ class FlytKontrollerTest {
         HendelsesMottak.håndtere(ident, DokumentMottattPersonHendelse(periode = periode))
 
         val sak = Sakslager.finnEllerOpprett(Personlager.finnEllerOpprett(ident), periode)
-        val behandling = BehandlingTjeneste.finnSisteBehandlingFor(sak.id)
-        assertThat(behandling?.type).isEqualTo(Førstegangsbehandling)
+        val behandling = requireNotNull(BehandlingTjeneste.finnSisteBehandlingFor(sak.id))
+        assertThat(behandling.type).isEqualTo(Førstegangsbehandling)
 
-        assertThat(behandling?.avklaringsbehov()).isNotEmpty()
-        assertThat(behandling?.status()).isEqualTo(Status.UTREDES)
+        assertThat(behandling.avklaringsbehov()).isNotEmpty()
+        assertThat(behandling.status()).isEqualTo(Status.UTREDES)
 
 
         HendelsesMottak.håndtere(
-            behandling?.id ?: 0L,
+            behandling.id,
             LøsAvklaringsbehovBehandlingHendelse(
                 versjon = 1L,
                 løsning = AvklarYrkesskadeLøsning("Begrunnelse", "meg")
@@ -57,11 +57,11 @@ class FlytKontrollerTest {
         )
 
         // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
-        assertThat(behandling?.avklaringsbehov()).anySatisfy { it.erÅpent() && it.definisjon == Definisjon.FORESLÅ_VEDTAK }
-        assertThat(behandling?.status()).isEqualTo(Status.UTREDES)
+        assertThat(behandling.avklaringsbehov()).anySatisfy { it.erÅpent() && it.definisjon == Definisjon.FORESLÅ_VEDTAK }
+        assertThat(behandling.status()).isEqualTo(Status.UTREDES)
 
         HendelsesMottak.håndtere(
-            behandling?.id ?: 0L,
+            behandling.id,
             LøsAvklaringsbehovBehandlingHendelse(
                 versjon = 1L,
                 løsning = ForeslåVedtakLøsning("Begrunnelse", "meg")
@@ -69,25 +69,25 @@ class FlytKontrollerTest {
         )
 
         // Saken står til To-trinnskontroll hos beslutter
-        assertThat(behandling?.avklaringsbehov()).anySatisfy { it.erÅpent() && it.definisjon == Definisjon.FATTE_VEDTAK }
-        assertThat(behandling?.status()).isEqualTo(Status.UTREDES)
+        assertThat(behandling.avklaringsbehov()).anySatisfy { it.erÅpent() && it.definisjon == Definisjon.FATTE_VEDTAK }
+        assertThat(behandling.status()).isEqualTo(Status.UTREDES)
 
         HendelsesMottak.håndtere(
-            behandling?.id ?: 0L,
+            behandling.id,
             LøsAvklaringsbehovBehandlingHendelse(
                 versjon = 1L,
                 løsning = FatteVedtakLøsning("Begrunnelse", "meg")
             )
         )
 
-        assertThat(behandling?.status()).isEqualTo(Status.AVSLUTTET)
+        assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
 
         //Henter vurder alder-vilkår
         //Assert utfall
-        val vilkårsresultat = behandling?.vilkårsresultat()
-        val aldersvilkår = vilkårsresultat?.finnVilkår(Vilkårstype.ALDERSVILKÅRET)
+        val vilkårsresultat = behandling.vilkårsresultat()
+        val aldersvilkår = vilkårsresultat.finnVilkår(Vilkårstype.ALDERSVILKÅRET)
 
-        assertThat(aldersvilkår?.vilkårsperioder())
+        assertThat(aldersvilkår.vilkårsperioder())
             .hasSize(1)
             .allMatch { vilkårsperiodeForAlder -> vilkårsperiodeForAlder.erOppfylt() }
     }
@@ -103,18 +103,18 @@ class FlytKontrollerTest {
         HendelsesMottak.håndtere(ident, DokumentMottattPersonHendelse(periode = periode))
 
         val sak = Sakslager.finnEllerOpprett(person, periode)
-        val behandling = BehandlingTjeneste.finnSisteBehandlingFor(sak.id)
-        assertThat(behandling?.type).isEqualTo(Førstegangsbehandling)
+        val behandling = requireNotNull(BehandlingTjeneste.finnSisteBehandlingFor(sak.id))
+        assertThat(behandling.type).isEqualTo(Førstegangsbehandling)
 
-        assertThat(behandling?.avklaringsbehov()).isEmpty()
-        assertThat(behandling?.status()).isEqualTo(Status.AVSLUTTET)
+        assertThat(behandling.avklaringsbehov()).isEmpty()
+        assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
 
         //Henter vurder alder-vilkår
         //Assert utfall
-        val vilkårsresultat = behandling?.vilkårsresultat()
-        val aldersvilkår = vilkårsresultat?.finnVilkår(Vilkårstype.ALDERSVILKÅRET)
+        val vilkårsresultat = behandling.vilkårsresultat()
+        val aldersvilkår = vilkårsresultat.finnVilkår(Vilkårstype.ALDERSVILKÅRET)
 
-        assertThat(aldersvilkår?.vilkårsperioder())
+        assertThat(aldersvilkår.vilkårsperioder())
             .hasSize(1)
             .allMatch { vilkårsperiodeForAlder -> vilkårsperiodeForAlder.erOppfylt() }
     }
@@ -130,18 +130,18 @@ class FlytKontrollerTest {
         HendelsesMottak.håndtere(ident, DokumentMottattPersonHendelse(periode = periode))
 
         val sak = Sakslager.finnEllerOpprett(person, periode)
-        val behandling = BehandlingTjeneste.finnSisteBehandlingFor(sak.id)
-        assertThat(behandling?.type).isEqualTo(Førstegangsbehandling)
+        val behandling = requireNotNull(BehandlingTjeneste.finnSisteBehandlingFor(sak.id))
+        assertThat(behandling.type).isEqualTo(Førstegangsbehandling)
 
-        val stegHistorikk = behandling?.stegHistorikk()
-        assertThat(stegHistorikk?.map { it.tilstand }).contains(Tilstand(StegType.VURDER_ALDER, StegStatus.AVSLUTTER))
+        val stegHistorikk = behandling.stegHistorikk()
+        assertThat(stegHistorikk.map { it.tilstand }).contains(Tilstand(StegType.VURDER_ALDER, StegStatus.AVSLUTTER))
 
         //Henter vurder alder-vilkår
         //Assert utfall
-        val vilkårsresultat = behandling?.vilkårsresultat()
-        val aldersvilkår = vilkårsresultat?.finnVilkår(Vilkårstype.ALDERSVILKÅRET)
+        val vilkårsresultat = behandling.vilkårsresultat()
+        val aldersvilkår = vilkårsresultat.finnVilkår(Vilkårstype.ALDERSVILKÅRET)
 
-        assertThat(aldersvilkår?.vilkårsperioder())
+        assertThat(aldersvilkår.vilkårsperioder())
             .hasSize(1)
             .noneMatch { vilkårsperiodeForAlder -> vilkårsperiodeForAlder.erOppfylt() }
     }
