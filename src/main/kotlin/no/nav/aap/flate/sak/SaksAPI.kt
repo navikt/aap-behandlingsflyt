@@ -44,6 +44,7 @@ fun Routing.saksApi() {
         }
         get("/alle", {
             description = "Endepunkt for å hente ut alle saker. NB! Fjernes senere"
+            deprecated = true
             tags = listOf("test")
             response {
                 HttpStatusCode.OK to {

@@ -8,7 +8,12 @@ import java.util.*
 import java.util.stream.Collectors
 import kotlin.reflect.KFunction1
 
-enum class Definisjon(@JsonValue private val kode: String,
+const val MANUELT_SATT_PÅ_VENT_KODE = "9001"
+const val AVKLAR_YRKESSKADE_KODE = "5001"
+const val FORESLÅ_VEDTAK_KODE = "5098"
+const val FATTE_VEDTAK_KODE = "5099"
+
+enum class Definisjon(@JsonValue val kode: String,
                       private val type: BehovType = BehovType.MANUELT,
                       private val defaultFrist: Period = Period.ZERO,
                       val løsesISteg: StegType = StegType.UDEFINERT,
@@ -17,40 +22,40 @@ enum class Definisjon(@JsonValue private val kode: String,
                       val kreverToTrinn: Boolean = false) {
 
     MANUELT_SATT_PÅ_VENT(
-        kode = "9001",
+        kode = MANUELT_SATT_PÅ_VENT_KODE,
         type = BehovType.AUTOMATISK,
         defaultFrist = Period.ofWeeks(3),
         vurderingspunkt = Vurderingspunkt.UT,
         rekjørSteg = true
     ),
     AVKLAR_YRKESSKADE(
-        kode = "5001",
+        kode = AVKLAR_YRKESSKADE_KODE,
         løsesISteg = StegType.AVKLAR_YRKESSKADE,
         vurderingspunkt = Vurderingspunkt.UT,
         kreverToTrinn = true
     ),
     FORESLÅ_VEDTAK(
-        kode = "5098",
+        kode = FORESLÅ_VEDTAK_KODE,
         løsesISteg = StegType.FORESLÅ_VEDTAK,
         vurderingspunkt = Vurderingspunkt.UT
     ),
     FATTE_VEDTAK(
-        kode = "5099",
+        kode = FATTE_VEDTAK_KODE,
         løsesISteg = StegType.FATTE_VEDTAK,
         vurderingspunkt = Vurderingspunkt.UT
     );
 
     companion object {
         init {
-            val unikeKoder = Arrays.stream(values())
+            val unikeKoder = Arrays.stream(entries.toTypedArray())
                 .map { it.kode }
                 .collect(Collectors.toSet())
 
-            if (unikeKoder.size != values().size) {
+            if (unikeKoder.size != entries.size) {
                 throw IllegalStateException("Gjenbrukt koder for Avklaringsbehov")
             }
 
-            for (value in values()) {
+            for (value in entries) {
                 value.type.valideringsFunksjon.invoke(value)
             }
         }

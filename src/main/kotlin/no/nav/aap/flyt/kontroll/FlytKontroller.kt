@@ -69,15 +69,15 @@ class FlytKontroller {
                                                  avklaringsbehov: List<AvklaringsbehovLøsning>) {
         val behandling = BehandlingTjeneste.hent(kontekst.behandlingId)
 
-        ValiderBehandlingTilstand.validerTilstandBehandling(behandling, avklaringsbehov.map { it.definisjon })
+        ValiderBehandlingTilstand.validerTilstandBehandling(behandling, avklaringsbehov.map { it.definisjon() })
 
         val behandlingFlyt = behandling.type.flyt()
 
         // løses det behov som fremtvinger tilbakehopp?
-        if (skalHoppesTilbake(behandlingFlyt, behandling.aktivtSteg(), avklaringsbehov.map { it.definisjon })) {
-            val tilSteg = utledSteg(behandlingFlyt, behandling.aktivtSteg(), avklaringsbehov.map { it.definisjon })
-            val tilStegStatus = utledStegStatus(avklaringsbehov.filter { it.definisjon.løsesISteg == tilSteg }
-                .map { it.definisjon.vurderingspunkt.stegStatus })
+        if (skalHoppesTilbake(behandlingFlyt, behandling.aktivtSteg(), avklaringsbehov.map { it.definisjon() })) {
+            val tilSteg = utledSteg(behandlingFlyt, behandling.aktivtSteg(), avklaringsbehov.map { it.definisjon() })
+            val tilStegStatus = utledStegStatus(avklaringsbehov.filter { it.definisjon().løsesISteg == tilSteg }
+                .map { it.definisjon().vurderingspunkt.stegStatus })
 
             hoppTilbakeTilSteg(kontekst, behandling, tilSteg, tilStegStatus)
         } else if (skalRekjøreSteg(avklaringsbehov, behandling)) {
@@ -96,9 +96,9 @@ class FlytKontroller {
                                    it: AvklaringsbehovLøsning) {
         // Liker denne casten fryktelig lite godt -_- men må til pga generics *
         val avklaringsbehovsLøser =
-            avklaringsbehovsLøsere.getValue(it.definisjon) as AvklaringsbehovsLøser<AvklaringsbehovLøsning>
+            avklaringsbehovsLøsere.getValue(it.definisjon()) as AvklaringsbehovsLøser<AvklaringsbehovLøsning>
         avklaringsbehovsLøser.løs(kontekst = kontekst, it)
-        behandling.løsAvklaringsbehov(it.definisjon, it.begrunnelse, it.endretAv)
+        behandling.løsAvklaringsbehov(it.definisjon(), it.begrunnelse, it.endretAv)
     }
 
     private fun hoppTilbakeTilSteg(kontekst: FlytKontekst,
@@ -163,8 +163,8 @@ class FlytKontroller {
 
     private fun skalRekjøreSteg(avklaringsbehov: List<AvklaringsbehovLøsning>,
                                 behandling: Behandling) =
-        avklaringsbehov.filter { it.definisjon.løsesISteg == behandling.aktivtSteg().tilstand.steg() }
-            .any { it.definisjon.rekjørSteg }
+        avklaringsbehov.filter { it.definisjon().løsesISteg == behandling.aktivtSteg().tilstand.steg() }
+            .any { it.definisjon().rekjørSteg }
 
     private fun skalHoppesTilbake(behandlingFlyt: BehandlingFlyt,
                                   aktivtSteg: StegTilstand,

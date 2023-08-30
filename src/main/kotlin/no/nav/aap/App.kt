@@ -24,6 +24,7 @@ import no.nav.aap.domene.behandling.grunnlag.person.Personinfo
 import no.nav.aap.domene.behandling.grunnlag.yrkesskade.YrkesskadeRegisterMock
 import no.nav.aap.domene.typer.Ident
 import no.nav.aap.domene.typer.Periode
+import no.nav.aap.flate.behandling.avklaringsbehov.avklaringsbehovApi
 import no.nav.aap.flate.behandling.behandlingApi
 import no.nav.aap.flate.sak.saksApi
 import no.nav.aap.hendelse.mottak.DokumentMottattPersonHendelse
@@ -64,11 +65,11 @@ internal fun Application.server() {
         }
     }
 
-
     routing {
         actuator(prometheus)
         saksApi()
         behandlingApi()
+        avklaringsbehovApi()
 
         hendelsesApi()
     }
