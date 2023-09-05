@@ -3,6 +3,7 @@ package no.nav.aap
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.github.smiley4.ktorswaggerui.SwaggerUI
+import io.github.smiley4.ktorswaggerui.dsl.get
 import io.github.smiley4.ktorswaggerui.dsl.post
 import io.github.smiley4.ktorswaggerui.dsl.route
 import io.ktor.http.*
@@ -21,6 +22,7 @@ import io.micrometer.prometheus.PrometheusMeterRegistry
 import no.nav.aap.avklaringsbehov.sykdom.AvklarSykdomLøsning
 import no.nav.aap.avklaringsbehov.vedtak.FatteVedtakLøsning
 import no.nav.aap.avklaringsbehov.vedtak.ForeslåVedtakLøsning
+import no.nav.aap.domene.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.domene.behandling.grunnlag.person.Fødselsdato
 import no.nav.aap.domene.behandling.grunnlag.person.PersonRegisterMock
 import no.nav.aap.domene.behandling.grunnlag.person.Personinfo
@@ -46,7 +48,11 @@ internal fun Application.server() {
         jackson {
             registerModule(JavaTimeModule())
             disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-            registerSubtypes(AvklarSykdomLøsning::class.java, ForeslåVedtakLøsning::class.java, FatteVedtakLøsning::class.java)
+            registerSubtypes(
+                AvklarSykdomLøsning::class.java,
+                ForeslåVedtakLøsning::class.java,
+                FatteVedtakLøsning::class.java
+            )
         }
     }
     install(CORS) {
@@ -71,11 +77,29 @@ internal fun Application.server() {
 
     routing {
         actuator(prometheus)
+        configApi()
         saksApi()
         behandlingApi()
         avklaringsbehovApi()
 
         hendelsesApi()
+    }
+}
+
+fun Routing.configApi() {
+    route("/config/definisjoner", {
+        tags = listOf("config")
+    }) {
+        get({
+            response {
+                HttpStatusCode.OK to {
+                    description = "Lister ut alle definisjoner"
+                    body<List<Definisjon>> {}
+                }
+            }
+        }) {
+            call.respond(HttpStatusCode.OK, Definisjon.entries.toList())
+        }
     }
 }
 
