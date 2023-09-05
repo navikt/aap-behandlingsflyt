@@ -1,5 +1,6 @@
 package no.nav.aap.domene.behandling.avklaringsbehov
 
+import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import no.nav.aap.flyt.StegStatus
@@ -14,6 +15,7 @@ const val AVKLAR_SYKDOM_KODE = "5001"
 const val FORESLÅ_VEDTAK_KODE = "5098"
 const val FATTE_VEDTAK_KODE = "5099"
 
+@JsonFormat(shape = JsonFormat.Shape.OBJECT)
 enum class Definisjon(
     @JsonProperty("kode") val kode: String,
     private val type: BehovType = BehovType.MANUELT,
