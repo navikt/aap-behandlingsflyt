@@ -7,6 +7,7 @@ import no.nav.aap.domene.person.Personlager
 import no.nav.aap.domene.sak.Sakslager
 import no.nav.aap.domene.typer.Ident
 import no.nav.aap.domene.typer.Saksnummer
+import no.nav.aap.flyt.kontroll.AvklaringsbehovKontroller
 import no.nav.aap.flyt.kontroll.FlytKontekst
 import no.nav.aap.flyt.kontroll.FlytKontroller
 import no.nav.aap.flyt.kontroll.ValiderBehandlingTilstand
@@ -14,6 +15,7 @@ import no.nav.aap.flyt.kontroll.ValiderBehandlingTilstand
 object HendelsesMottak {
 
     private val kontroller = FlytKontroller()
+    private val avklaringsbehovKontroller = AvklaringsbehovKontroller()
 
     fun håndtere(key: Ident, hendelse: PersonHendelse) {
         val person = Personlager.finnEllerOpprett(key)
@@ -45,7 +47,7 @@ object HendelsesMottak {
         val sak = Sakslager.hent(behandling.sakId)
 
         val kontekst = FlytKontekst(sakId = sak.id, behandlingId = behandling.id)
-        kontroller.løsAvklaringsbehovOgFortsettProsessering(
+        avklaringsbehovKontroller.løsAvklaringsbehovOgFortsettProsessering(
             kontekst = kontekst,
             avklaringsbehov = listOf(hendelse.behov())
         )

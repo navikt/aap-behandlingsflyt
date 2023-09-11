@@ -1,10 +1,5 @@
 package no.nav.aap.flyt.kontroll
 
-import no.nav.aap.avklaringsbehov.AvklaringsbehovLøsning
-import no.nav.aap.avklaringsbehov.AvklaringsbehovsLøser
-import no.nav.aap.avklaringsbehov.sykdom.AvklarSykdomLøser
-import no.nav.aap.avklaringsbehov.vedtak.FatteVedtakLøser
-import no.nav.aap.avklaringsbehov.vedtak.ForeslåVedtakLøser
 import no.nav.aap.domene.behandling.Behandling
 import no.nav.aap.domene.behandling.BehandlingTjeneste
 import no.nav.aap.domene.behandling.StegTilstand
@@ -17,14 +12,6 @@ import no.nav.aap.flyt.steg.BehandlingSteg
 import no.nav.aap.flyt.steg.StegInput
 
 class FlytKontroller {
-
-    private val avklaringsbehovsLøsere = mutableMapOf<Definisjon, AvklaringsbehovsLøser<*>>()
-
-    init {
-        avklaringsbehovsLøsere[Definisjon.AVKLAR_SYKDOM] = AvklarSykdomLøser()
-        avklaringsbehovsLøsere[Definisjon.FORESLÅ_VEDTAK] = ForeslåVedtakLøser()
-        avklaringsbehovsLøsere[Definisjon.FATTE_VEDTAK] = FatteVedtakLøser()
-    }
 
     fun prosesserBehandling(kontekst: FlytKontekst) {
         val behandling = BehandlingTjeneste.hent(kontekst.behandlingId)
@@ -65,46 +52,12 @@ class FlytKontroller {
         }
     }
 
-    fun løsAvklaringsbehovOgFortsettProsessering(kontekst: FlytKontekst,
-                                                 avklaringsbehov: List<AvklaringsbehovLøsning>) {
-        val behandling = BehandlingTjeneste.hent(kontekst.behandlingId)
-
-        ValiderBehandlingTilstand.validerTilstandBehandling(behandling, avklaringsbehov.map { it.definisjon() })
-
-        val behandlingFlyt = behandling.type.flyt()
-
-        // løses det behov som fremtvinger tilbakehopp?
-        if (skalHoppesTilbake(behandlingFlyt, behandling.aktivtSteg(), avklaringsbehov.map { it.definisjon() })) {
-            val tilSteg = utledSteg(behandlingFlyt, behandling.aktivtSteg(), avklaringsbehov.map { it.definisjon() })
-            val tilStegStatus = utledStegStatus(avklaringsbehov.filter { it.definisjon().løsesISteg == tilSteg }
-                .map { it.definisjon().vurderingspunkt.stegStatus })
-
-            hoppTilbakeTilSteg(kontekst, behandling, tilSteg, tilStegStatus)
-        } else if (skalRekjøreSteg(avklaringsbehov, behandling)) {
-            flyttTilStartAvAktivtSteg(behandling)
-        }
-
-        // Bør ideelt kalle på
-        avklaringsbehov.forEach { løsAvklaringsbehov(kontekst, behandling, it) }
-
-        prosesserBehandling(kontekst)
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    private fun løsAvklaringsbehov(kontekst: FlytKontekst,
-                                   behandling: Behandling,
-                                   it: AvklaringsbehovLøsning) {
-        // Liker denne casten fryktelig lite godt -_- men må til pga generics *
-        val avklaringsbehovsLøser =
-            avklaringsbehovsLøsere.getValue(it.definisjon()) as AvklaringsbehovsLøser<AvklaringsbehovLøsning>
-        avklaringsbehovsLøser.løs(kontekst = kontekst, it)
-        behandling.løsAvklaringsbehov(it.definisjon(), it.begrunnelse, it.endretAv)
-    }
-
-    private fun hoppTilbakeTilSteg(kontekst: FlytKontekst,
-                                   behandling: Behandling,
-                                   tilSteg: StegType,
-                                   tilStegStatus: StegStatus) {
+    internal fun hoppTilbakeTilSteg(
+        kontekst: FlytKontekst,
+        behandling: Behandling,
+        tilSteg: StegType,
+        tilStegStatus: StegStatus
+    ) {
         val behandlingFlyt = behandling.type.flyt()
 
         val aktivtSteg = behandling.aktivtSteg()
@@ -138,22 +91,24 @@ class FlytKontroller {
         }
     }
 
-    private fun flyttTilStartAvAktivtSteg(behandling: Behandling) {
+    internal fun flyttTilStartAvAktivtSteg(behandling: Behandling) {
         val nyStegTilstand =
             StegTilstand(tilstand = no.nav.aap.flyt.Tilstand(behandling.aktivtSteg().tilstand.steg(), StegStatus.START))
         behandling.visit(nyStegTilstand)
     }
 
-    private fun utledStegStatus(stegStatuser: List<StegStatus>): StegStatus {
+    internal fun utledStegStatus(stegStatuser: List<StegStatus>): StegStatus {
         if (stegStatuser.contains(StegStatus.UTGANG)) {
             return StegStatus.UTGANG
         }
         return StegStatus.INNGANG
     }
 
-    private fun utledSteg(behandlingFlyt: BehandlingFlyt,
-                          aktivtSteg: StegTilstand,
-                          avklaringsDefinisjoner: List<Definisjon>): StegType {
+    internal fun utledSteg(
+        behandlingFlyt: BehandlingFlyt,
+        aktivtSteg: StegTilstand,
+        avklaringsDefinisjoner: List<Definisjon>
+    ): StegType {
         return avklaringsDefinisjoner.filter { definisjon ->
             erStegFørAktivtSteg(behandlingFlyt, definisjon, aktivtSteg)
         }
@@ -161,31 +116,21 @@ class FlytKontroller {
             .minWith(behandlingFlyt.compareable())
     }
 
-    private fun skalRekjøreSteg(avklaringsbehov: List<AvklaringsbehovLøsning>,
-                                behandling: Behandling) =
-        avklaringsbehov.filter { it.definisjon().løsesISteg == behandling.aktivtSteg().tilstand.steg() }
-            .any { it.definisjon().rekjørSteg }
-
-    private fun skalHoppesTilbake(behandlingFlyt: BehandlingFlyt,
-                                  aktivtSteg: StegTilstand,
-                                  avklaringsDefinisjoner: List<Definisjon>): Boolean {
-
-        return avklaringsDefinisjoner.filter { definisjon ->
-            erStegFørAktivtSteg(behandlingFlyt, definisjon, aktivtSteg)
-        }.isNotEmpty()
-    }
-
-    private fun erStegFørAktivtSteg(behandlingFlyt: BehandlingFlyt,
-                                    definisjon: Definisjon,
-                                    aktivtSteg: StegTilstand) = behandlingFlyt.erStegFør(
+    private fun erStegFørAktivtSteg(
+        behandlingFlyt: BehandlingFlyt,
+        definisjon: Definisjon,
+        aktivtSteg: StegTilstand
+    ) = behandlingFlyt.erStegFør(
         definisjon.løsesISteg,
         aktivtSteg.tilstand.steg()
     )
 
-    private fun validerPlassering(behandlingFlyt: BehandlingFlyt,
-                                  åpneAvklaringsbehov: List<Definisjon>,
-                                  nesteSteg: StegType,
-                                  nesteStegStatus: StegStatus) {
+    private fun validerPlassering(
+        behandlingFlyt: BehandlingFlyt,
+        åpneAvklaringsbehov: List<Definisjon>,
+        nesteSteg: StegType,
+        nesteStegStatus: StegStatus
+    ) {
         val uhåndterteBehov = åpneAvklaringsbehov
             .filter { definisjon ->
                 behandlingFlyt.erStegFørEllerLik(
@@ -204,9 +149,11 @@ class FlytKontroller {
         }
     }
 
-    private fun utledNesteSteg(aktivtSteg: StegTilstand,
-                               nesteStegStatus: StegStatus,
-                               behandlingFlyt: BehandlingFlyt): BehandlingSteg {
+    private fun utledNesteSteg(
+        aktivtSteg: StegTilstand,
+        nesteStegStatus: StegStatus,
+        behandlingFlyt: BehandlingFlyt
+    ): BehandlingSteg {
 
         if (aktivtSteg.tilstand.status() == StegStatus.AVSLUTTER && nesteStegStatus == StegStatus.START) {
             return behandlingFlyt.neste(aktivtSteg.tilstand.steg())
@@ -214,11 +161,13 @@ class FlytKontroller {
         return behandlingFlyt.steg(aktivtSteg.tilstand.steg())
     }
 
-    private fun utførTilstandsEndring(kontekst: FlytKontekst,
-                                      nesteStegStatus: StegStatus,
-                                      avklaringsbehov: List<Avklaringsbehov>,
-                                      aktivtSteg: BehandlingSteg,
-                                      behandling: Behandling): Transisjon {
+    private fun utførTilstandsEndring(
+        kontekst: FlytKontekst,
+        nesteStegStatus: StegStatus,
+        avklaringsbehov: List<Avklaringsbehov>,
+        aktivtSteg: BehandlingSteg,
+        behandling: Behandling
+    ): Transisjon {
         val relevanteAvklaringsbehov =
             avklaringsbehov.filter { behov -> behov.definisjon.skalLøsesISteg(aktivtSteg.type()) }
         return when (nesteStegStatus) {
@@ -256,9 +205,11 @@ class FlytKontroller {
         return stegResultat.transisjon()
     }
 
-    private fun harAvklaringspunkt(steg: StegType,
-                                   nesteStegStatus: StegStatus,
-                                   avklaringsbehov: List<Avklaringsbehov>): Transisjon {
+    private fun harAvklaringspunkt(
+        steg: StegType,
+        nesteStegStatus: StegStatus,
+        avklaringsbehov: List<Avklaringsbehov>
+    ): Transisjon {
 
         if (avklaringsbehov.any { behov -> behov.skalStoppeHer(steg, nesteStegStatus) }) {
             return Stopp
