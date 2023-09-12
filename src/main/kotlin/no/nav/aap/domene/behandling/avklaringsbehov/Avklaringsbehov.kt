@@ -4,8 +4,9 @@ import no.nav.aap.flyt.StegStatus
 import no.nav.aap.flyt.StegType
 
 class Avklaringsbehov(
-    var definisjon: Definisjon,
-    val historikk: MutableList<Endring> = mutableListOf()
+    val definisjon: Definisjon,
+    val historikk: MutableList<Endring> = mutableListOf(),
+    val funnetISteg: StegType
 ) {
     init {
         if (historikk.isEmpty()) {
@@ -22,7 +23,7 @@ class Avklaringsbehov(
     }
 
     fun skalStoppeHer(stegType: StegType, stegStatus: StegStatus): Boolean {
-        return definisjon.skalLøsesISteg(stegType) && definisjon.påStegStatus(stegStatus) && erÅpent()
+        return definisjon.skalLøsesISteg(stegType, funnetISteg) && definisjon.påStegStatus(stegStatus) && erÅpent()
     }
 
     fun løs(begrunnelse: String, endretAv: String) {
@@ -43,6 +44,18 @@ class Avklaringsbehov(
 
     override fun toString(): String {
         return "Avklaringsbehov(definisjon=$definisjon, status=${status()})"
+    }
+
+    fun skalLøsesISteg(type: StegType): Boolean {
+        return definisjon.skalLøsesISteg(type, funnetISteg)
+    }
+
+    fun løsesISteg(): StegType {
+        if (definisjon.løsesISteg == StegType.UDEFINERT) {
+            return funnetISteg
+        }
+        return definisjon.løsesISteg
+
     }
 
 }

@@ -21,6 +21,7 @@ import no.nav.aap.domene.typer.Periode
 import no.nav.aap.flyt.StegStatus
 import no.nav.aap.flyt.StegType
 import no.nav.aap.flyt.Tilstand
+import no.nav.aap.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.hendelse.mottak.DokumentMottattPersonHendelse
 import no.nav.aap.hendelse.mottak.HendelsesMottak
 import no.nav.aap.hendelse.mottak.LøsAvklaringsbehovBehandlingHendelse
@@ -144,12 +145,24 @@ class FlytKontrollerTest {
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         assertThat(behandling.avklaringsbehov()).anySatisfy { it.erÅpent() && it.definisjon == Definisjon.AVKLAR_SYKDOM }
 
-        /*HendelsesMottak.håndtere(
+        HendelsesMottak.håndtere(
             behandling.id,
-            LøsAvklaringsbehovBehandlingHendelse(
-                versjon = 1L,
-                løsning = //TODO: sett behandling på vent
-            )
-        )*/
+            BehandlingSattPåVent()
+        )
+
+        assertThat(behandling.status()).isEqualTo(Status.PÅ_VENT)
+        assertThat(behandling.avklaringsbehov())
+            .hasSize(2)
+            .anySatisfy { it.erÅpent() && it.definisjon == Definisjon.MANUELT_SATT_PÅ_VENT }
+            .anySatisfy { it.erÅpent() && it.definisjon == Definisjon.AVKLAR_SYKDOM }
+
+        HendelsesMottak.håndtere(ident, DokumentMottattPersonHendelse(periode = periode))
+
+        assertThat(behandling.status()).isEqualTo(Status.PÅ_VENT)
+        assertThat(behandling.avklaringsbehov())
+            .hasSize(2)
+            .anySatisfy { it.erÅpent() && it.definisjon == Definisjon.MANUELT_SATT_PÅ_VENT }
+            .anySatisfy { it.erÅpent() && it.definisjon == Definisjon.AVKLAR_SYKDOM }
+
     }
 }

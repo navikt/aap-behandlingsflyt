@@ -1,7 +1,9 @@
 package no.nav.aap.hendelse.mottak
 
+import no.nav.aap.avklaringsbehov.SattPåVentLøsning
 import no.nav.aap.domene.behandling.BehandlingTjeneste
 import no.nav.aap.domene.behandling.EndringType
+import no.nav.aap.domene.behandling.Status
 import no.nav.aap.domene.behandling.Årsak
 import no.nav.aap.domene.person.Personlager
 import no.nav.aap.domene.sak.Sakslager
@@ -53,6 +55,16 @@ object HendelsesMottak {
         )
     }
 
+    fun håndtere(key:Long, hendelse:BehandlingSattPåVent){
+        val behandling = BehandlingTjeneste.hent(key)
+        ValiderBehandlingTilstand.validerTilstandBehandling(behandling = behandling)
+
+        val sak = Sakslager.hent(behandling.sakId)
+
+        val kontekst = FlytKontekst(sakId = sak.id, behandlingId = behandling.id)
+        kontroller.settBehandlingPåVent(kontekst)
+    }
+
     fun håndtere(key: Long, hendelse: BehandlingHendelse) {
         val behandling = BehandlingTjeneste.hent(key)
         ValiderBehandlingTilstand.validerTilstandBehandling(behandling = behandling)
@@ -63,7 +75,14 @@ object HendelsesMottak {
         if (hendelse is LøsAvklaringsbehovBehandlingHendelse) {
             throw IllegalArgumentException("Skal håndteres mellom eksplisitt funksjon")
         } else {
+            if(behandling.status()==Status.PÅ_VENT){
+                avklaringsbehovKontroller.løsAvklaringsbehov(
+                    kontekst = kontekst,
+                    avklaringsbehov = listOf(SattPåVentLøsning())
+                )
+            }
             kontroller.prosesserBehandling(kontekst)
+
         }
     }
 }

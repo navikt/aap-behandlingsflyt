@@ -72,7 +72,10 @@ enum class Definisjon(
         AUTOMATISK(Definisjon::validerAutomatisk);
     }
 
-    fun skalLøsesISteg(steg: StegType): Boolean {
+    fun skalLøsesISteg(steg: StegType, funnetISteg: StegType): Boolean {
+        if(løsesISteg==StegType.UDEFINERT){
+            return steg == funnetISteg
+        }
         return løsesISteg == steg
     }
 

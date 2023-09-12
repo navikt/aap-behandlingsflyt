@@ -5,7 +5,8 @@ enum class Status {
     UTREDES,
     IVERKSETTES,
     AVSLUTTET,
-    HENLAGT;
+    HENLAGT,
+    PÅ_VENT;
 
     fun erAvsluttet(): Boolean {
         return setOf(IVERKSETTES, AVSLUTTET).contains(this)

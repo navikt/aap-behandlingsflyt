@@ -107,21 +107,21 @@ class FlytKontroller {
     internal fun utledSteg(
         behandlingFlyt: BehandlingFlyt,
         aktivtSteg: StegTilstand,
-        avklaringsDefinisjoner: List<Definisjon>
+        avklaringsDefinisjoner: List<Avklaringsbehov>
     ): StegType {
         return avklaringsDefinisjoner.filter { definisjon ->
-            erStegFørAktivtSteg(behandlingFlyt, definisjon, aktivtSteg)
+            erStegFørAktivtSteg(behandlingFlyt, aktivtSteg, definisjon.løsesISteg())
         }
-            .map { definisjon -> definisjon.løsesISteg }
+            .map { definisjon -> definisjon.løsesISteg() }
             .minWith(behandlingFlyt.compareable())
     }
 
     private fun erStegFørAktivtSteg(
         behandlingFlyt: BehandlingFlyt,
-        definisjon: Definisjon,
-        aktivtSteg: StegTilstand
+        aktivtSteg: StegTilstand,
+        løsesISteg: StegType
     ) = behandlingFlyt.erStegFør(
-        definisjon.løsesISteg,
+        løsesISteg,
         aktivtSteg.tilstand.steg()
     )
 
@@ -169,7 +169,7 @@ class FlytKontroller {
         behandling: Behandling
     ): Transisjon {
         val relevanteAvklaringsbehov =
-            avklaringsbehov.filter { behov -> behov.definisjon.skalLøsesISteg(aktivtSteg.type()) }
+            avklaringsbehov.filter { behov -> behov.skalLøsesISteg(aktivtSteg.type()) }
 
         val transisjon = when (nesteStegStatus) {
             StegStatus.INNGANG -> harAvklaringspunkt(aktivtSteg.type(), nesteStegStatus, relevanteAvklaringsbehov)
@@ -224,5 +224,10 @@ class FlytKontroller {
         val status = aktivtSteg.tilstand.status()
 
         return StegStatus.neste(status)
+    }
+
+    fun settBehandlingPåVent(kontekst: FlytKontekst) {
+        val behandling = BehandlingTjeneste.hent(kontekst.behandlingId)
+        behandling.settPåVent()
     }
 }

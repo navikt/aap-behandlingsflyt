@@ -8,6 +8,7 @@ import no.nav.aap.avklaringsbehov.vedtak.ForeslåVedtakLøser
 import no.nav.aap.domene.behandling.Behandling
 import no.nav.aap.domene.behandling.BehandlingTjeneste
 import no.nav.aap.domene.behandling.StegTilstand
+import no.nav.aap.domene.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.domene.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.flyt.BehandlingFlyt
 
@@ -26,6 +27,15 @@ class AvklaringsbehovKontroller {
         kontekst: FlytKontekst,
         avklaringsbehov: List<AvklaringsbehovLøsning>
     ) {
+        løsAvklaringsbehov(kontekst, avklaringsbehov)
+
+        flytKontroller.prosesserBehandling(kontekst)
+    }
+
+    fun løsAvklaringsbehov(
+        kontekst: FlytKontekst,
+        avklaringsbehov: List<AvklaringsbehovLøsning>
+    ) {
         val behandling = BehandlingTjeneste.hent(kontekst.behandlingId)
 
         ValiderBehandlingTilstand.validerTilstandBehandling(behandling, avklaringsbehov.map { it.definisjon() })
@@ -33,11 +43,17 @@ class AvklaringsbehovKontroller {
         val behandlingFlyt = behandling.type.flyt()
 
         // løses det behov som fremtvinger tilbakehopp?
-        if (skalHoppesTilbake(behandlingFlyt, behandling.aktivtSteg(), avklaringsbehov.map { it.definisjon() })) {
+        if (skalHoppesTilbake(
+                behandlingFlyt,
+                behandling.aktivtSteg(),
+                behandling.avklaringsbehov()
+                    .filter { behov -> avklaringsbehov.any { it.definisjon() == behov.definisjon } })
+        ) {
             val tilSteg = flytKontroller.utledSteg(
                 behandlingFlyt,
                 behandling.aktivtSteg(),
-                avklaringsbehov.map { it.definisjon() })
+                behandling.avklaringsbehov()
+                    .filter { behov -> avklaringsbehov.any { it.definisjon() == behov.definisjon } })
             val tilStegStatus =
                 flytKontroller.utledStegStatus(avklaringsbehov.filter { it.definisjon().løsesISteg == tilSteg }
                     .map { it.definisjon().vurderingspunkt.stegStatus })
@@ -49,9 +65,8 @@ class AvklaringsbehovKontroller {
 
         // Bør ideelt kalle på
         avklaringsbehov.forEach { løsAvklaringsbehov(kontekst, behandling, it) }
-
-        flytKontroller.prosesserBehandling(kontekst)
     }
+
 
     @Suppress("UNCHECKED_CAST")
     private fun løsAvklaringsbehov(
@@ -63,7 +78,11 @@ class AvklaringsbehovKontroller {
         val avklaringsbehovsLøser =
             avklaringsbehovsLøsere.getValue(it.definisjon()) as AvklaringsbehovsLøser<AvklaringsbehovLøsning>
         val løsningsResultat = avklaringsbehovsLøser.løs(kontekst = kontekst, løsning = it)
-        behandling.løsAvklaringsbehov(it.definisjon(), løsningsResultat.begrunnelse, "Saksbehandler") // TODO: Hente fra context
+        behandling.løsAvklaringsbehov(
+            it.definisjon(),
+            løsningsResultat.begrunnelse,
+            "Saksbehandler"
+        ) // TODO: Hente fra context
     }
 
 
@@ -77,12 +96,12 @@ class AvklaringsbehovKontroller {
     private fun skalHoppesTilbake(
         behandlingFlyt: BehandlingFlyt,
         aktivtSteg: StegTilstand,
-        avklaringsDefinisjoner: List<Definisjon>
+        avklaringsDefinisjoner: List<Avklaringsbehov>
     ): Boolean {
 
         return avklaringsDefinisjoner.filter { definisjon ->
             behandlingFlyt.erStegFør(
-                definisjon.løsesISteg,
+                definisjon.løsesISteg(),
                 aktivtSteg.tilstand.steg()
             )
         }.isNotEmpty()

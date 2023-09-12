@@ -35,6 +35,12 @@ class Behandling(
         oppdaterStatus(stegTilstand)
     }
 
+    fun settPåVent() {
+        status = Status.PÅ_VENT
+        leggTil(behov = Avklaringsbehov(Definisjon.MANUELT_SATT_PÅ_VENT, funnetISteg = aktivtSteg().tilstand.steg()))
+    }
+
+
     fun avklaringsbehov(): List<Avklaringsbehov> {
         return avklaringsbehov.toList()
     }
@@ -77,7 +83,8 @@ class Behandling(
         funnetAvklaringsbehov.stream()
             .map { definisjon ->
                 Avklaringsbehov(
-                    definisjon
+                    definisjon,
+                    funnetISteg = aktivtSteg().tilstand.steg()
                 )
             }
             .forEach { leggTil(behov = it) }
