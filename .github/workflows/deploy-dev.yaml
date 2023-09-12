@@ -19,7 +19,7 @@ jobs:
 
       - uses: gradle/gradle-build-action@v2.8.0
         with:
-          arguments: test app:buildFatJar --continue --no-daemon --configuration-cache
+          arguments: test buildFatJar --continue --no-daemon --configuration-cache
 
       - uses: docker/login-action@v2
         with:
