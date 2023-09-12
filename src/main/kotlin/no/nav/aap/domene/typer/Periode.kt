@@ -1,9 +1,15 @@
 package no.nav.aap.domene.typer
 
+import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 import java.time.LocalDate
 
 class Periode(private val fom: LocalDate, private val tom: LocalDate) {
+
+    @JsonCreator
+    constructor(periodeString: String)
+            : this(LocalDate.parse(periodeString.split("/")[0]), LocalDate.parse(periodeString.split("/")[1]))
+
     init {
         valider()
     }
