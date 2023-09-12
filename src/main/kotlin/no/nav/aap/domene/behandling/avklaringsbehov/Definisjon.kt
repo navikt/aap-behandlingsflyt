@@ -73,7 +73,7 @@ enum class Definisjon(
     }
 
     fun skalLøsesISteg(steg: StegType, funnetISteg: StegType): Boolean {
-        if(løsesISteg==StegType.UDEFINERT){
+        if (løsesISteg == StegType.UDEFINERT){
             return steg == funnetISteg
         }
         return løsesISteg == steg

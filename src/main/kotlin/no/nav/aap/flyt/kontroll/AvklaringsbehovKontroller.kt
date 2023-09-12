@@ -2,6 +2,7 @@ package no.nav.aap.flyt.kontroll
 
 import no.nav.aap.avklaringsbehov.AvklaringsbehovLøsning
 import no.nav.aap.avklaringsbehov.AvklaringsbehovsLøser
+import no.nav.aap.avklaringsbehov.SattPåVentLøser
 import no.nav.aap.avklaringsbehov.sykdom.AvklarSykdomLøser
 import no.nav.aap.avklaringsbehov.vedtak.FatteVedtakLøser
 import no.nav.aap.avklaringsbehov.vedtak.ForeslåVedtakLøser
@@ -18,6 +19,7 @@ class AvklaringsbehovKontroller {
     private val flytKontroller = FlytKontroller()
 
     init {
+        avklaringsbehovsLøsere[Definisjon.MANUELT_SATT_PÅ_VENT] = SattPåVentLøser()
         avklaringsbehovsLøsere[Definisjon.AVKLAR_SYKDOM] = AvklarSykdomLøser()
         avklaringsbehovsLøsere[Definisjon.FORESLÅ_VEDTAK] = ForeslåVedtakLøser()
         avklaringsbehovsLøsere[Definisjon.FATTE_VEDTAK] = FatteVedtakLøser()
