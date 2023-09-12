@@ -170,18 +170,20 @@ class FlytKontroller {
     ): Transisjon {
         val relevanteAvklaringsbehov =
             avklaringsbehov.filter { behov -> behov.definisjon.skalLøsesISteg(aktivtSteg.type()) }
-        return when (nesteStegStatus) {
+
+        val transisjon = when (nesteStegStatus) {
             StegStatus.INNGANG -> harAvklaringspunkt(aktivtSteg.type(), nesteStegStatus, relevanteAvklaringsbehov)
             StegStatus.UTFØRER -> behandleSteg(aktivtSteg, kontekst)
             StegStatus.UTGANG -> harAvklaringspunkt(aktivtSteg.type(), nesteStegStatus, relevanteAvklaringsbehov)
             StegStatus.AVSLUTTER -> harTruffetSlutten(aktivtSteg.type())
             StegStatus.TILBAKEFØRT -> behandleStegBakover(aktivtSteg, kontekst)
             else -> Fortsett
-        }.also {
-            val nyStegTilstand =
-                StegTilstand(tilstand = no.nav.aap.flyt.Tilstand(aktivtSteg.type(), nesteStegStatus))
-            behandling.visit(nyStegTilstand)
         }
+
+        val nyStegTilstand = StegTilstand(tilstand = no.nav.aap.flyt.Tilstand(aktivtSteg.type(), nesteStegStatus))
+        behandling.visit(nyStegTilstand)
+
+        return transisjon
     }
 
     private fun behandleStegBakover(steg: BehandlingSteg, kontekst: FlytKontekst): Transisjon {

@@ -17,10 +17,7 @@ class Vilkår(
             val justertePerioder = vilkårsperioder
                 .filter { vp -> vp.periode.overlapper(vilkårsperiode.periode) }
                 .filter { vp ->
-                    !((vp.periode.tilOgMed()
-                        .isBefore(vilkårsperiode.periode.tilOgMed()) || vp.periode.tilOgMed() == vilkårsperiode.periode.tilOgMed())
-                            && (vp.periode.fraOgMed()
-                        .isAfter(vilkårsperiode.periode.fraOgMed()) || vp.periode.fraOgMed() == vilkårsperiode.periode.fraOgMed()))
+                    vp.periode.tilOgMed() > vilkårsperiode.periode.tilOgMed() || vp.periode.fraOgMed() < vilkårsperiode.periode.fraOgMed()
                 }
                 .map { vp ->
                     Vilkårsperiode(
@@ -32,7 +29,6 @@ class Vilkår(
                         vp.besluttningstre
                     )
                 }
-                .toList()
 
             this.vilkårsperioder.removeIf { vp -> vp.periode.overlapper(vilkårsperiode.periode) }
             this.vilkårsperioder.addAll(justertePerioder)
