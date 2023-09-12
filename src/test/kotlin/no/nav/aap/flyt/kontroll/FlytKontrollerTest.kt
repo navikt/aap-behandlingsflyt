@@ -128,4 +128,28 @@ class FlytKontrollerTest {
             .hasSize(1)
             .noneMatch { vilkårsperiodeForAlder -> vilkårsperiodeForAlder.erOppfylt() }
     }
+
+    @Test
+    fun `Blir satt på vent for etterspørring av informasjon`(){
+        val ident = Ident("123123123125")
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        PersonRegisterMock.konstruer(ident, Personinfo(Fødselsdato(LocalDate.now().minusYears(20))))
+
+        HendelsesMottak.håndtere(ident, DokumentMottattPersonHendelse(periode = periode))
+
+        val sak = Sakslager.finnSakerFor(Personlager.finnEllerOpprett(ident)).single()
+        val behandling = requireNotNull(BehandlingTjeneste.finnSisteBehandlingFor(sak.id))
+
+        assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+        assertThat(behandling.avklaringsbehov()).anySatisfy { it.erÅpent() && it.definisjon == Definisjon.AVKLAR_SYKDOM }
+
+        /*HendelsesMottak.håndtere(
+            behandling.id,
+            LøsAvklaringsbehovBehandlingHendelse(
+                versjon = 1L,
+                løsning = //TODO: sett behandling på vent
+            )
+        )*/
+    }
 }
