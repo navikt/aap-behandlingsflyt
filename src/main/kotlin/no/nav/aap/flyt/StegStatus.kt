@@ -36,20 +36,14 @@ enum class StegStatus {
      */
     TILBAKEFØRT;
 
-    companion object {
-        fun rekkefølge(): List<StegStatus> {
-            return listOf(START, INNGANG, UTFØRER, UTGANG, AVSLUTTER)
-        }
+    fun neste(): StegStatus {
+        val rekkefølge = rekkefølge()
+        val indexOf = rekkefølge.indexOf(this)
 
-        fun neste(status: StegStatus): StegStatus {
-            val rekkefølge = rekkefølge()
-            val indexOf = rekkefølge.indexOf(status)
-
-            if (indexOf > -1 && indexOf < rekkefølge.size - 1) {
-                return rekkefølge[indexOf + 1]
-            }
-            return START
+        if (indexOf > -1 && indexOf < rekkefølge.size - 1) {
+            return rekkefølge[indexOf + 1]
         }
+        return START
     }
 
     fun erFør(otherStatus: StegStatus): Boolean {
@@ -66,5 +60,11 @@ enum class StegStatus {
         stegStatus
     } else {
         START
+    }
+
+    companion object {
+        fun rekkefølge(): List<StegStatus> {
+            return listOf(START, INNGANG, UTFØRER, UTGANG, AVSLUTTER)
+        }
     }
 }

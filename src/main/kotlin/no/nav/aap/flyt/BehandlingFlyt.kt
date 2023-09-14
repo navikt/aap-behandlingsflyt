@@ -1,6 +1,7 @@
 package no.nav.aap.flyt
 
 import no.nav.aap.domene.behandling.EndringType
+import no.nav.aap.domene.behandling.StegTilstand
 import no.nav.aap.flyt.steg.AvsluttBehandlingSteg
 import no.nav.aap.flyt.steg.BehandlingSteg
 import no.nav.aap.flyt.steg.StartBehandlingSteg
@@ -11,6 +12,13 @@ import java.util.Collections
  */
 class BehandlingFlyt(private var flyt: List<BehandlingSteg>,
                      private var endringTilSteg: Map<EndringType, StegType>) {
+
+    fun utledNesteSteg(aktivtSteg: StegTilstand, nesteStegStatus: StegStatus): BehandlingSteg {
+        if (aktivtSteg.tilstand.status() == StegStatus.AVSLUTTER && nesteStegStatus == StegStatus.START) {
+            return neste(aktivtSteg.tilstand.steg())
+        }
+        return steg(aktivtSteg.tilstand.steg())
+    }
 
     /**
      * Finner neste steget som skal prosesseres etter at nåværende er ferdig

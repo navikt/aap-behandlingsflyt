@@ -8,9 +8,13 @@ import no.nav.aap.domene.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.flyt.BehandlingFlyt
 import no.nav.aap.flyt.StegStatus
 import no.nav.aap.flyt.StegType
+import no.nav.aap.flyt.Tilstand
 import no.nav.aap.flyt.steg.BehandlingSteg
 import no.nav.aap.flyt.steg.StegInput
 
+/**
+ * Har ansvar for å drive flyten til en gitt behandling. Typen behandling styrer hvilke steg som skal utføres.
+ */
 class FlytKontroller {
 
     fun prosesserBehandling(kontekst: FlytKontekst) {
@@ -18,7 +22,7 @@ class FlytKontroller {
 
         ValiderBehandlingTilstand.validerTilstandBehandling(behandling, listOf())
 
-        val behandlingFlyt = behandling.type.flyt()
+        val behandlingFlyt = behandling.flyt()
 
         var aktivtSteg = behandling.aktivtSteg()
         var nesteStegStatus = aktivtSteg.tilstand.status()
@@ -44,8 +48,8 @@ class FlytKontroller {
 
             if (kanFortsette) {
                 aktivtSteg = behandling.aktivtSteg()
-                nesteStegStatus = utledNesteStegStatus(aktivtSteg)
-                nesteSteg = utledNesteSteg(aktivtSteg, nesteStegStatus, behandlingFlyt)
+                nesteStegStatus = aktivtSteg.utledNesteStegStatus()
+                nesteSteg = behandlingFlyt.utledNesteSteg(aktivtSteg, nesteStegStatus)
             } else {
                 // Prosessen har stoppet opp, slipp ut hendelse om at den har stoppet opp og hvorfor?
             }
@@ -93,7 +97,7 @@ class FlytKontroller {
 
     internal fun flyttTilStartAvAktivtSteg(behandling: Behandling) {
         val nyStegTilstand =
-            StegTilstand(tilstand = no.nav.aap.flyt.Tilstand(behandling.aktivtSteg().tilstand.steg(), StegStatus.START))
+            StegTilstand(tilstand = Tilstand(behandling.aktivtSteg().tilstand.steg(), StegStatus.START))
         behandling.visit(nyStegTilstand)
     }
 
@@ -149,18 +153,6 @@ class FlytKontroller {
         }
     }
 
-    private fun utledNesteSteg(
-        aktivtSteg: StegTilstand,
-        nesteStegStatus: StegStatus,
-        behandlingFlyt: BehandlingFlyt
-    ): BehandlingSteg {
-
-        if (aktivtSteg.tilstand.status() == StegStatus.AVSLUTTER && nesteStegStatus == StegStatus.START) {
-            return behandlingFlyt.neste(aktivtSteg.tilstand.steg())
-        }
-        return behandlingFlyt.steg(aktivtSteg.tilstand.steg())
-    }
-
     private fun utførTilstandsEndring(
         kontekst: FlytKontekst,
         nesteStegStatus: StegStatus,
@@ -180,7 +172,7 @@ class FlytKontroller {
             else -> Fortsett
         }
 
-        val nyStegTilstand = StegTilstand(tilstand = no.nav.aap.flyt.Tilstand(aktivtSteg.type(), nesteStegStatus))
+        val nyStegTilstand = StegTilstand(tilstand = Tilstand(aktivtSteg.type(), nesteStegStatus))
         behandling.visit(nyStegTilstand)
 
         return transisjon
@@ -218,12 +210,6 @@ class FlytKontroller {
         }
 
         return Fortsett
-    }
-
-    private fun utledNesteStegStatus(aktivtSteg: StegTilstand): StegStatus {
-        val status = aktivtSteg.tilstand.status()
-
-        return StegStatus.neste(status)
     }
 
     fun settBehandlingPåVent(kontekst: FlytKontekst) {

@@ -2,6 +2,7 @@ package no.nav.aap.domene.behandling
 
 import no.nav.aap.domene.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.domene.behandling.avklaringsbehov.Definisjon
+import no.nav.aap.flyt.BehandlingFlyt
 import no.nav.aap.flyt.StegStatus
 import no.nav.aap.flyt.StegType
 import no.nav.aap.flyt.Tilstand
@@ -110,5 +111,9 @@ class Behandling(
 
     fun vilkårsresultat(): Vilkårsresultat {
         return vilkårsresultat
+    }
+
+    fun flyt(): BehandlingFlyt {
+        return type.flyt()
     }
 }
