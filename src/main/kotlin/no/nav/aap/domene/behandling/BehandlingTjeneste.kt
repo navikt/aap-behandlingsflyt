@@ -29,20 +29,20 @@ object BehandlingTjeneste {
             val sisteBehandlingFor = finnSisteBehandlingFor(sakId)
             val erSisteBehandlingAvsluttet = sisteBehandlingFor?.status()?.erAvsluttet() ?: true
 
-            if (erSisteBehandlingAvsluttet) {
-                val key1 = key.addAndGet(1)
-                val behandlingType = utledBehandlingType(sisteBehandlingFor != null)
-                val behandling = Behandling(id = key1, sakId = sakId, type = behandlingType, årsaker = årsaker)
-                behandliger[key1] = behandling
-
-                if (sisteBehandlingFor != null) {
-                    GrunnlagKopierer.overfør(sisteBehandlingFor, behandling)
-                }
-
-                return behandliger.getValue(key1)
-            } else {
+            if (!erSisteBehandlingAvsluttet) {
                 throw IllegalStateException("Siste behandling er ikke avsluttet")
             }
+
+            val key1 = key.addAndGet(1)
+            val behandlingType = utledBehandlingType(sisteBehandlingFor != null)
+            val behandling = Behandling(id = key1, sakId = sakId, type = behandlingType, årsaker = årsaker)
+            behandliger[key1] = behandling
+
+            if (sisteBehandlingFor != null) {
+                GrunnlagKopierer.overfør(sisteBehandlingFor, behandling)
+            }
+
+            return behandliger.getValue(key1)
         }
     }
 
