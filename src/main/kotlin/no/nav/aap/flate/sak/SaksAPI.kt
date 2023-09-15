@@ -37,6 +37,8 @@ fun NormalOpenAPIRoute.saksApi() {
                     }
                 }
             }
+        }
+        route("") {
             route("/alle").get<Unit, List<SaksinfoDTO>> {
                 val saker = Sakslager.finnAlle()
                     .map { sak ->
