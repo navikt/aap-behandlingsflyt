@@ -9,17 +9,17 @@ import no.nav.aap.flyt.kontroll.TilbakeførtTilAvklaringsbehov
 import no.nav.aap.flyt.kontroll.Transisjon
 
 class StegResultat(val avklaringsbehov: List<Definisjon> = listOf(),
-                   val tilbakeFørtTilSteg: StegType = StegType.UDEFINERT) {
+                   val tilbakeførtTilSteg: StegType = StegType.UDEFINERT) {
 
     fun transisjon(): Transisjon {
-        if (avklaringsbehov.isNotEmpty() && tilbakeFørtTilSteg != StegType.UDEFINERT) {
-            return TilbakeførtTilAvklaringsbehov(avklaringsbehov, tilbakeFørtTilSteg)
+        if (avklaringsbehov.isNotEmpty() && tilbakeførtTilSteg != StegType.UDEFINERT) {
+            return TilbakeførtTilAvklaringsbehov(avklaringsbehov, tilbakeførtTilSteg)
         }
         if (avklaringsbehov.isNotEmpty()) {
             return FunnetAvklaringsbehov(avklaringsbehov)
         }
-        if (tilbakeFørtTilSteg != StegType.UDEFINERT) {
-            return Tilbakeført(tilbakeFørtTilSteg)
+        if (tilbakeførtTilSteg != StegType.UDEFINERT) {
+            return Tilbakeført(tilbakeførtTilSteg)
         }
         return Fortsett
     }

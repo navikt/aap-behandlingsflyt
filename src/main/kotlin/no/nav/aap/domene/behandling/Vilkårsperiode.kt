@@ -8,7 +8,7 @@ class Vilkårsperiode(
     val manuellVurdering: Boolean = false,
     val begrunnelse: String?,
     internal val faktagrunnlag: Faktagrunnlag?,
-    internal val besluttningstre: Beslutningstre?
+    internal val beslutningstre: Beslutningstre?
 ) {
     constructor(
         periode: Periode,
@@ -35,7 +35,7 @@ class Vilkårsperiode(
         if (periode != other.periode) return false
         if (utfall != other.utfall) return false
         if (faktagrunnlag != other.faktagrunnlag) return false
-        if (besluttningstre != other.besluttningstre) return false
+        if (beslutningstre != other.beslutningstre) return false
 
         return true
     }
@@ -44,7 +44,7 @@ class Vilkårsperiode(
         var result = periode.hashCode()
         result = 31 * result + utfall.hashCode()
         result = 31 * result + faktagrunnlag.hashCode()
-        result = 31 * result + besluttningstre.hashCode()
+        result = 31 * result + beslutningstre.hashCode()
         return result
     }
 

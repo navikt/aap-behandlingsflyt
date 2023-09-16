@@ -26,7 +26,7 @@ class Vilkår(
                         vp.manuellVurdering,
                         vp.begrunnelse,
                         vp.faktagrunnlag,
-                        vp.besluttningstre
+                        vp.beslutningstre
                     )
                 }
 
