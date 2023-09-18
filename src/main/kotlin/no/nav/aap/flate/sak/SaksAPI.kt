@@ -68,6 +68,7 @@ fun NormalOpenAPIRoute.saksApi() {
                     UtvidetSaksinfoDTO(
                         saksnummer = sak.saksnummer.toString(),
                         periode = sak.rettighetsperiode,
+                        ident = sak.person.identer().first().identifikator,
                         behandlinger = behandlinger,
                         status = sak.status()
                     )
