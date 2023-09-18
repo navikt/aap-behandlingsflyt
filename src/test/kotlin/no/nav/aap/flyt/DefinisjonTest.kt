@@ -19,7 +19,7 @@ class DefinisjonTest {
     fun `Skal finne forrige steg for førstegangsbehandling`() {
         val førstegangsbehandling = Førstegangsbehandling.flyt()
 
-        val forrige = førstegangsbehandling.forrige(StegType.INNGANGSVILKÅR)
+        val forrige = førstegangsbehandling.forrige(StegType.FASTSETT_GRUNNLAG)
 
         assertThat(forrige.type()).isEqualTo(StegType.AVKLAR_SYKDOM)
     }

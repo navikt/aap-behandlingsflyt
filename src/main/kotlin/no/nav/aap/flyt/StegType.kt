@@ -7,7 +7,6 @@ enum class StegType(val status: Status, val tekniskSteg: Boolean = false) {
     VURDER_ALDER(status = Status.UTREDES),
     AVKLAR_SYKDOM(status = Status.UTREDES),
     INNHENT_REGISTERDATA(status = Status.UTREDES),
-    INNGANGSVILKÅR(status = Status.UTREDES),
     FASTSETT_GRUNNLAG(status = Status.UTREDES),
     FASTSETT_UTTAK(status = Status.UTREDES),
     BEREGN_TILKJENT_YTELSE(status = Status.UTREDES),
