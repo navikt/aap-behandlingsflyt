@@ -17,7 +17,7 @@ fun NormalOpenAPIRoute.saksApi() {
     route("/api/sak") {
         route("/finn").throws(HttpStatusCode.BadRequest, IllegalArgumentException::class) {
             throws(HttpStatusCode.NoContent, NoSuchElementException::class) {
-                post<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO> { path, dto ->
+                post<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO> { _, dto ->
 
                     val ident = Ident(dto.ident)
                     val person = Personlager.finn(ident)
