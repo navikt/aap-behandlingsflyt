@@ -12,13 +12,20 @@ class AvklarSykdomLøser : AvklaringsbehovsLøser<AvklarSykdomLøsning> {
     override fun løs(kontekst: FlytKontekst, løsning: AvklarSykdomLøsning): LøsningsResultat {
         val behandling = BehandlingTjeneste.hent(kontekst.behandlingId)
 
-        SykdomsTjeneste.lagre(behandlingId = behandling.id, yrkesskadevurdering = løsning.yrkesskadevurdering, sykdomsvurdering = løsning.sykdomsvurdering)
+        SykdomsTjeneste.lagre(
+            behandlingId = behandling.id,
+            yrkesskadevurdering = løsning.yrkesskadevurdering,
+            sykdomsvurdering = løsning.sykdomsvurdering
+        )
 
         return LøsningsResultat(begrunnelse = lagSamletBegrunnelse(løsning))
     }
 
     private fun lagSamletBegrunnelse(løsning: AvklarSykdomLøsning): String {
-        return "${løsning.yrkesskadevurdering?.begrunnelse} \n ${løsning.sykdomsvurdering.begrunnelse}"
+        if (løsning.yrkesskadevurdering != null) {
+            return "${løsning.yrkesskadevurdering.begrunnelse} \n ${løsning.sykdomsvurdering.begrunnelse}"
+        }
+        return løsning.sykdomsvurdering.begrunnelse
     }
 
     override fun forBehov(): Definisjon {
