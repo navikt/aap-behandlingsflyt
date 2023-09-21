@@ -11,6 +11,13 @@ class SykdomsGrunnlag(
     val sykdomsvurdering: Sykdomsvurdering
 ) {
     fun erKonsistent(): Boolean {
-        return !(((yrkesskadevurdering == null || !yrkesskadevurdering.erÅrsakssammenheng)) && sykdomsvurdering.nedreGrense == NedreGrense.TRETTI)
+        //TODO: Clever or not??
+        val clever = true
+        if (clever) {
+            return (yrkesskadevurdering?.erÅrsakssammenheng == true) == (sykdomsvurdering.nedreGrense == NedreGrense.TRETTI)
+        }
+
+        if (yrkesskadevurdering?.erÅrsakssammenheng == true) return sykdomsvurdering.nedreGrense == NedreGrense.TRETTI
+        return sykdomsvurdering.nedreGrense == NedreGrense.FEMTI
     }
 }
