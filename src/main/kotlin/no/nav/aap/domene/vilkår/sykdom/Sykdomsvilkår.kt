@@ -1,6 +1,7 @@
 package no.nav.aap.domene.vilkår.sykdom
 
 import no.nav.aap.domene.Periode
+import no.nav.aap.domene.behandling.Avslagsårsak
 import no.nav.aap.domene.behandling.TomtBeslutningstre
 import no.nav.aap.domene.behandling.Utfall
 import no.nav.aap.domene.behandling.Vilkår
@@ -15,8 +16,20 @@ class Sykdomsvilkår(val vilkår: Vilkår) : Vilkårsvurderer<SykdomsFaktagrunnl
     }
 
     override fun vurder(grunnlag: SykdomsFaktagrunnlag): VurderingsResultat {
+        val utfall: Utfall
+        var avslagsårsak : Avslagsårsak? = null
 
-        return lagre(grunnlag, VurderingsResultat(Utfall.OPPFYLT, null, TomtBeslutningstre()))
+        val sykdomsvurdering = grunnlag.sykdomsvurdering
+
+        if (sykdomsvurdering.erSkadeSykdomEllerLyteVesentligdel && sykdomsvurdering.erNedsettelseIArbeidsevneHøyereEnnNedreGrense == true) {
+            utfall = Utfall.OPPFYLT
+            // TODO: Legge til innvilget etter (f.eks YS)
+        } else {
+            utfall = Utfall.IKKE_OPPFYLT
+            avslagsårsak = Avslagsårsak.MANGLENDE_DOKUMENTASJON // TODO noe mer rett
+        }
+
+        return lagre(grunnlag, VurderingsResultat(utfall = utfall, avslagsårsak, TomtBeslutningstre()))
     }
 
     private fun lagre(grunnlag: SykdomsFaktagrunnlag, vurderingsResultat: VurderingsResultat): VurderingsResultat {

@@ -103,6 +103,12 @@ class FlytKontrollerTest {
         assertThat(aldersvilkår.vilkårsperioder())
             .hasSize(1)
             .allMatch { vilkårsperiodeForAlder -> vilkårsperiodeForAlder.erOppfylt() }
+
+        val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårstype.SYKDOMSVILKÅRET)
+
+        assertThat(sykdomsvilkåret.vilkårsperioder())
+            .hasSize(1)
+            .allMatch { vilkårsperiode -> vilkårsperiode.erOppfylt() }
     }
 
     @Test
