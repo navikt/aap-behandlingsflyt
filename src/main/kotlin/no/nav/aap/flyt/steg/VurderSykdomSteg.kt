@@ -20,7 +20,7 @@ class VurderSykdomSteg : BehandlingSteg {
             val sykdomsvilkåret = behandling.vilkårsresultat().finnVilkår(Vilkårstype.SYKDOMSVILKÅRET)
             val sykdomsGrunnlag = SykdomsTjeneste.hentHvisEksisterer(behandlingId = behandling.id)
 
-            if (sykdomsGrunnlag != null) {
+            if (sykdomsGrunnlag != null && sykdomsGrunnlag.erKonsistent()) {
                 for (periode in periodeTilVurdering) {
                     val faktagrunnlag = SykdomsFaktagrunnlag(
                         periode.fraOgMed(),
@@ -32,7 +32,7 @@ class VurderSykdomSteg : BehandlingSteg {
                 }
             }
 
-            if (sykdomsvilkåret.harPerioderSomIkkeErVurdert(periodeTilVurdering)) {
+            if (sykdomsvilkåret.harPerioderSomIkkeErVurdert(periodeTilVurdering) || sykdomsGrunnlag?.erKonsistent() != true) {
                 return StegResultat(listOf(Definisjon.AVKLAR_SYKDOM))
             }
         }
