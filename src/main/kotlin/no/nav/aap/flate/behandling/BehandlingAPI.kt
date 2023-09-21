@@ -7,6 +7,7 @@ import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.throws
 import io.ktor.http.*
 import no.nav.aap.domene.behandling.BehandlingTjeneste
+import no.nav.aap.domene.behandling.grunnlag.sykdom.SykdomsTjeneste
 import no.nav.aap.domene.behandling.grunnlag.yrkesskade.YrkesskadeTjeneste
 
 fun NormalOpenAPIRoute.behandlingApi() {
@@ -64,25 +65,22 @@ fun NormalOpenAPIRoute.behandlingApi() {
                 val behandling = BehandlingTjeneste.hent(req.ref())
 
                 val yrkesskadeGrunnlagOptional = YrkesskadeTjeneste.hentHvisEksisterer(behandlingId = behandling.id)
-
-                // TODO: Hente vurderinger
+                val sykdomsGrunnlag = SykdomsTjeneste.hentHvisEksisterer(behandlingId = behandling.id)
 
                 respond(
                     SykdomsGrunnlagDto(
                         opplysninger = InnhentetSykdomsOpplysninger(
                             oppgittYrkesskadeISøknad = false,
-                            innhentedeYrkesskader = yrkesskadeGrunnlagOptional.map { grunnlag ->
-                                grunnlag.yrkesskader.yrkesskader.map { yrkesskade ->
-                                    RegistrertYrkesskade(
-                                        ref = yrkesskade.ref,
-                                        periode = yrkesskade.periode,
-                                        kilde = "Yrkesskaderegisteret"
-                                    )
-                                }
-                            }.orElse(listOf())
+                            innhentedeYrkesskader = yrkesskadeGrunnlagOptional?.yrkesskader?.yrkesskader?.map { yrkesskade ->
+                                RegistrertYrkesskade(
+                                    ref = yrkesskade.ref,
+                                    periode = yrkesskade.periode,
+                                    kilde = "Yrkesskaderegisteret"
+                                )
+                            } ?: emptyList()
                         ),
-                        yrkesskadevurdering = null,
-                        sykdomsvurdering = null
+                        yrkesskadevurdering = sykdomsGrunnlag?.yrkesskadevurdering,
+                        sykdomsvurdering = sykdomsGrunnlag?.sykdomsvurdering
                     )
                 )
             }

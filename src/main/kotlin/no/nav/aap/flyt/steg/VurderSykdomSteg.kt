@@ -3,6 +3,9 @@ package no.nav.aap.flyt.steg
 import no.nav.aap.domene.behandling.BehandlingTjeneste
 import no.nav.aap.domene.behandling.Vilkårstype
 import no.nav.aap.domene.behandling.avklaringsbehov.Definisjon
+import no.nav.aap.domene.behandling.grunnlag.sykdom.SykdomsTjeneste
+import no.nav.aap.domene.vilkår.sykdom.SykdomsFaktagrunnlag
+import no.nav.aap.domene.vilkår.sykdom.Sykdomsvilkår
 import no.nav.aap.flate.behandling.periode.PeriodeTilVurderingTjeneste
 import no.nav.aap.flyt.StegType
 
@@ -11,10 +14,23 @@ class VurderSykdomSteg : BehandlingSteg {
         val behandling = BehandlingTjeneste.hent(input.kontekst.behandlingId)
 
         val periodeTilVurdering =
-            PeriodeTilVurderingTjeneste.utled(behandling = behandling, vilkår = Vilkårstype.ALDERSVILKÅRET)
+            PeriodeTilVurderingTjeneste.utled(behandling = behandling, vilkår = Vilkårstype.SYKDOMSVILKÅRET)
 
         if (periodeTilVurdering.isNotEmpty()) {
             val sykdomsvilkåret = behandling.vilkårsresultat().finnVilkår(Vilkårstype.SYKDOMSVILKÅRET)
+            val sykdomsGrunnlag = SykdomsTjeneste.hentHvisEksisterer(behandlingId = behandling.id)
+
+            if (sykdomsGrunnlag != null) {
+                for (periode in periodeTilVurdering) {
+                    val faktagrunnlag = SykdomsFaktagrunnlag(
+                        periode.fraOgMed(),
+                        periode.tilOgMed(),
+                        sykdomsGrunnlag.yrkesskadevurdering,
+                        sykdomsGrunnlag.sykdomsvurdering
+                    )
+                    Sykdomsvilkår(sykdomsvilkåret).vurder(faktagrunnlag)
+                }
+            }
 
             if (sykdomsvilkåret.harPerioderSomIkkeErVurdert(periodeTilVurdering)) {
                 return StegResultat(listOf(Definisjon.AVKLAR_SYKDOM))

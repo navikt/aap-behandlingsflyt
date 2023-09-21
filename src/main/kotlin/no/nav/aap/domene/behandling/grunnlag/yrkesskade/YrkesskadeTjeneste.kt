@@ -1,7 +1,6 @@
 package no.nav.aap.domene.behandling.grunnlag.yrkesskade
 
 import no.nav.aap.domene.behandling.Behandling
-import java.util.Optional
 import java.util.concurrent.atomic.AtomicLong
 
 object YrkesskadeTjeneste {
@@ -26,15 +25,15 @@ object YrkesskadeTjeneste {
 
     fun kopier(fraBehandling: Behandling, tilBehandling: Behandling) {
         synchronized(LOCK) {
-            hentHvisEksisterer(fraBehandling.id).ifPresent { eksisterendeGrunnlag ->
+            grunnlagene[fraBehandling.id]?.let { eksisterendeGrunnlag ->
                 grunnlagene[tilBehandling.id] = eksisterendeGrunnlag
             }
         }
     }
 
-    fun hentHvisEksisterer(behandlingId: Long): Optional<YrkesskadeGrunnlag> {
+    fun hentHvisEksisterer(behandlingId: Long): YrkesskadeGrunnlag? {
         synchronized(LOCK) {
-            return Optional.ofNullable(grunnlagene[behandlingId])
+            return grunnlagene[behandlingId]
         }
     }
 }

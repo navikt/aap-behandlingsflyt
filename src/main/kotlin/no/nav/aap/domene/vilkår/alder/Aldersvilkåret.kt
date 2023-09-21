@@ -19,7 +19,7 @@ object Aldersvilkåret : Vilkårsvurderer<Aldersgrunnlag> {
             }
         }
 
-        return VurderingsResultat(resultat, TomtBeslutningstre())
+        return VurderingsResultat(resultat, null, TomtBeslutningstre())
     }
 
 }

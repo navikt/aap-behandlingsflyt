@@ -24,7 +24,7 @@ class InnhentRegisterdataSteg : BehandlingSteg {
                 behandlingId,
                 Yrkesskader(yrkesskadePeriode.map { periode -> Yrkesskade("ASDF", periode) })
             )
-        } else if (YrkesskadeTjeneste.hentHvisEksisterer(behandlingId).isPresent) {
+        } else if (YrkesskadeTjeneste.hentHvisEksisterer(behandlingId) != null) {
             YrkesskadeTjeneste.lagre(behandlingId, null)
         }
 

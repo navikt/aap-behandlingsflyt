@@ -1,23 +1,24 @@
 package no.nav.aap.flyt.kontroll
 
 import no.nav.aap.avklaringsbehov.sykdom.AvklarSykdomLøsning
-import no.nav.aap.avklaringsbehov.sykdom.PeriodeMedUtfall
+import no.nav.aap.avklaringsbehov.sykdom.NedreGrense
+import no.nav.aap.avklaringsbehov.sykdom.Sykdomsvurdering
 import no.nav.aap.avklaringsbehov.vedtak.FatteVedtakLøsning
 import no.nav.aap.avklaringsbehov.vedtak.ForeslåVedtakLøsning
+import no.nav.aap.domene.Periode
 import no.nav.aap.domene.behandling.BehandlingTjeneste
 import no.nav.aap.domene.behandling.Førstegangsbehandling
 import no.nav.aap.domene.behandling.Status
-import no.nav.aap.domene.behandling.Utfall
 import no.nav.aap.domene.behandling.Vilkårstype
 import no.nav.aap.domene.behandling.avklaringsbehov.Definisjon
+import no.nav.aap.domene.behandling.dokumenter.JournalpostId
 import no.nav.aap.domene.behandling.grunnlag.person.Fødselsdato
 import no.nav.aap.domene.behandling.grunnlag.person.PersonRegisterMock
 import no.nav.aap.domene.behandling.grunnlag.person.Personinfo
 import no.nav.aap.domene.behandling.grunnlag.yrkesskade.YrkesskadeRegisterMock
+import no.nav.aap.domene.person.Ident
 import no.nav.aap.domene.person.Personlager
 import no.nav.aap.domene.sak.Sakslager
-import no.nav.aap.domene.person.Ident
-import no.nav.aap.domene.Periode
 import no.nav.aap.flyt.StegStatus
 import no.nav.aap.flyt.StegType
 import no.nav.aap.flyt.Tilstand
@@ -50,18 +51,19 @@ class FlytKontrollerTest {
         assertThat(behandling.avklaringsbehov()).isNotEmpty()
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
 
-
         HendelsesMottak.håndtere(
             behandling.id,
             LøsAvklaringsbehovBehandlingHendelse(
                 versjon = 1L,
                 løsning = AvklarSykdomLøsning(
-                    setOf(
-                        PeriodeMedUtfall(
-                            sak.rettighetsperiode,
-                            Utfall.OPPFYLT,
-                            "Begrunnelse"
-                        )
+                    yrkesskadevurdering = null,
+                    sykdomsvurdering = Sykdomsvurdering(
+                        begrunnelse = "Er syk nok",
+                        dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
+                        erSkadeSykdomEllerLyteVesentligdel = true,
+                        erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
+                        nedreGrense = NedreGrense.FEMTI,
+                        skadetidspunkt = LocalDate.now()
                     )
                 )
             )
@@ -131,7 +133,7 @@ class FlytKontrollerTest {
     }
 
     @Test
-    fun `Blir satt på vent for etterspørring av informasjon`(){
+    fun `Blir satt på vent for etterspørring av informasjon`() {
         val ident = Ident("123123123125")
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 

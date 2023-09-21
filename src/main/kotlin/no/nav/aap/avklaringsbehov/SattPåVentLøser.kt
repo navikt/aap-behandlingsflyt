@@ -1,10 +1,5 @@
 package no.nav.aap.avklaringsbehov
 
-import no.nav.aap.avklaringsbehov.sykdom.AvklarSykdomLøsning
-import no.nav.aap.avklaringsbehov.sykdom.SykdomsFaktagrunnlag
-import no.nav.aap.domene.behandling.BehandlingTjeneste
-import no.nav.aap.domene.behandling.Vilkårsperiode
-import no.nav.aap.domene.behandling.Vilkårstype
 import no.nav.aap.domene.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.flyt.kontroll.FlytKontekst
 
