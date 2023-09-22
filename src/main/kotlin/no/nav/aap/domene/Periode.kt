@@ -1,14 +1,8 @@
 package no.nav.aap.domene
 
-import com.fasterxml.jackson.annotation.JsonCreator
-import com.fasterxml.jackson.annotation.JsonValue
 import java.time.LocalDate
 
-class Periode(private val fom: LocalDate, private val tom: LocalDate) {
-
-    @JsonCreator
-    constructor(periodeString: String)
-            : this(LocalDate.parse(periodeString.split("/")[0]), LocalDate.parse(periodeString.split("/")[1]))
+class Periode(val fom: LocalDate, val tom: LocalDate) {
 
     init {
         valider()
@@ -20,16 +14,8 @@ class Periode(private val fom: LocalDate, private val tom: LocalDate) {
         }
     }
 
-    fun fraOgMed(): LocalDate {
-        return fom
-    }
-
-    fun tilOgMed(): LocalDate {
-        return tom
-    }
-
     fun overlapper(periode: Periode): Boolean {
-        return !this.tom.isBefore(periode.fraOgMed()) && !this.fom.isAfter(periode.tilOgMed())
+        return !this.tom.isBefore(periode.fom) && !this.fom.isAfter(periode.tom)
     }
 
     override fun equals(other: Any?): Boolean {
@@ -52,7 +38,6 @@ class Periode(private val fom: LocalDate, private val tom: LocalDate) {
         return "Periode(fom=$fom, tom=$tom)"
     }
 
-    @JsonValue
     fun jsonValue(): String {
         return "$fom/$tom"
     }

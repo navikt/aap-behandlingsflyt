@@ -17,7 +17,7 @@ class Vilkår(
             val justertePerioder = vilkårsperioder
                 .filter { vp -> vp.periode.overlapper(vilkårsperiode.periode) }
                 .filter { vp ->
-                    vp.periode.tilOgMed() > vilkårsperiode.periode.tilOgMed() || vp.periode.fraOgMed() < vilkårsperiode.periode.fraOgMed()
+                    vp.periode.tom > vilkårsperiode.periode.tom || vp.periode.fom < vilkårsperiode.periode.fom
                 }
                 .map { vp ->
                     Vilkårsperiode(
@@ -43,15 +43,15 @@ class Vilkår(
         if (!leftPeriode.overlapper(rightPeriode)) {
             return leftPeriode
         }
-        val fom = if (rightPeriode.fraOgMed().isBefore(leftPeriode.fraOgMed())) {
-            rightPeriode.tilOgMed().plusDays(1)
+        val fom = if (rightPeriode.fom.isBefore(leftPeriode.fom)) {
+            rightPeriode.tom.plusDays(1)
         } else {
-            leftPeriode.fraOgMed()
+            leftPeriode.fom
         }
-        val tom = if (rightPeriode.tilOgMed().isAfter(leftPeriode.tilOgMed())) {
-            rightPeriode.fraOgMed().minusDays(1)
+        val tom = if (rightPeriode.tom.isAfter(leftPeriode.tom)) {
+            rightPeriode.fom.minusDays(1)
         } else {
-            leftPeriode.tilOgMed()
+            leftPeriode.tom
         }
         return Periode(fom, tom)
     }

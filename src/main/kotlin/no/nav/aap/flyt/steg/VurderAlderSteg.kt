@@ -22,7 +22,7 @@ class VurderAlderSteg : BehandlingSteg {
 
             for (periode in periodeTilVurdering) {
                 val aldersgrunnlag = Aldersgrunnlag(
-                    periode.fraOgMed(),
+                    periode.fom,
                     personinfoGrunnlag.personinfo.fødselsdato
                 )
                 val vurdering = Aldersvilkåret.vurder(

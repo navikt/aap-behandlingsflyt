@@ -23,8 +23,8 @@ class VurderSykdomSteg : BehandlingSteg {
             if (sykdomsGrunnlag != null && sykdomsGrunnlag.erKonsistent()) {
                 for (periode in periodeTilVurdering) {
                     val faktagrunnlag = SykdomsFaktagrunnlag(
-                        periode.fraOgMed(),
-                        periode.tilOgMed(),
+                        periode.fom,
+                        periode.tom,
                         sykdomsGrunnlag.yrkesskadevurdering,
                         sykdomsGrunnlag.sykdomsvurdering
                     )
