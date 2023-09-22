@@ -1,6 +1,7 @@
 package no.nav.aap.domene.behandling
 
 import no.nav.aap.domene.behandling.avklaringsbehov.Avklaringsbehov
+import no.nav.aap.domene.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.domene.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.flyt.BehandlingFlyt
 import no.nav.aap.flyt.StegStatus
@@ -17,6 +18,7 @@ class Behandling(
     private var status: Status = Status.OPPRETTET,
     private var årsaker: List<Årsak> = mutableListOf(),
     private var avklaringsbehov: List<Avklaringsbehov> = mutableListOf(),
+    private val flereavklaringsbehov: Avklaringsbehovene = Avklaringsbehovene(),
     private var stegHistorikk: List<StegTilstand> = mutableListOf(),
     private val vilkårsresultat: Vilkårsresultat = Vilkårsresultat(),
     val opprettetTidspunkt: LocalDateTime = LocalDateTime.now()
