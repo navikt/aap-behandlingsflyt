@@ -31,6 +31,6 @@ class Avklaringsbehovene {
         avklaringsbehovene.single { it.definisjon == definisjon }.løs(begrunnelse, endretAv = endretAv)
     }
 
-    fun alle(): List<Avklaringsbehov> = avklaringsbehovene.map { it }.toList()
+    fun alle(): List<Avklaringsbehov> = avklaringsbehovene.toList()
     fun åpne(): List<Avklaringsbehov> =  avklaringsbehovene.filter { it.erÅpent() }.toList()
 }
