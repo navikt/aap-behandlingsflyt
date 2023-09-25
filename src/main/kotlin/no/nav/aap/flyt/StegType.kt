@@ -5,6 +5,11 @@ import no.nav.aap.domene.behandling.Status
 enum class StegType(val status: Status, val tekniskSteg: Boolean = false) {
     START_BEHANDLING(status = Status.OPPRETTET),
     VURDER_ALDER(status = Status.UTREDES),
+    VURDER_LOVVALG(status = Status.UTREDES),
+    VURDER_MEDLEMSKAP(status = Status.UTREDES),
+    VURDER_BISTANDSBEHOV(status = Status.UTREDES),
+    BARNETILLEGG(status = Status.UTREDES),
+    SAMORDNING(status = Status.UTREDES),
     AVKLAR_SYKDOM(status = Status.UTREDES),
     INNHENT_REGISTERDATA(status = Status.UTREDES),
     FASTSETT_GRUNNLAG(status = Status.UTREDES),
@@ -17,4 +22,5 @@ enum class StegType(val status: Status, val tekniskSteg: Boolean = false) {
     UDEFINERT(status = Status.UTREDES, tekniskSteg = true), // Forbeholdt deklarasjon for avklaringsbehov som
     AVSLUTT_BEHANDLING(status = Status.AVSLUTTET, tekniskSteg = true) // Forbeholdt enden av saksbehandlingsflyten, skal ikke implementeres
     ,
+
 }

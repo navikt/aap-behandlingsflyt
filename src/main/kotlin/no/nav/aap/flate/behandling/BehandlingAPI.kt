@@ -114,6 +114,11 @@ fun NormalOpenAPIRoute.behandlingApi() {
                 )
             }
         }
+        route("/{referanse}/grunnlag/medlemskap") {
+            get<BehandlingReferanse, MedlemskapGrunnlagDto> { req ->
+                respond(MedlemskapGrunnlagDto())
+            }
+        }
         route("/{referanse}/flyt") {
             get<BehandlingReferanse, BehandlingFlytOgTilstandDto> { req ->
                 val behandling = BehandlingTjeneste.hent(req.ref())
