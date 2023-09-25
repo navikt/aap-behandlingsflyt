@@ -67,7 +67,34 @@ class FlytKontroller {
         }
     }
 
-    internal fun hoppTilbakeTilSteg(
+    internal fun forberedLøsingAvBehov(definisjoner: List<Definisjon>, behandling: Behandling, kontekst: FlytKontekst) {
+        if (behandling.skalHoppesTilbake(definisjoner)) {
+            val tilSteg = utledSteg(
+                behandling.flyt(),
+                behandling.aktivtSteg(),
+                behandling.avklaringsbehov()
+                    .filter { behov -> definisjoner.any { it == behov.definisjon } })
+            val tilStegStatus =
+                utledStegStatus(definisjoner
+                    .filter { it.løsesISteg == tilSteg }
+                    .map { it.vurderingspunkt.stegStatus })
+
+            hoppTilbakeTilSteg(kontekst, behandling, tilSteg, tilStegStatus)
+        } else if (skalRekjøreSteg(definisjoner, behandling)) {
+            flyttTilStartAvAktivtSteg(behandling)
+        }
+    }
+
+    private fun skalRekjøreSteg(
+        avklaringsbehov: List<Definisjon>,
+        behandling: Behandling
+    ): Boolean {
+        return avklaringsbehov
+            .filter { it.løsesISteg == behandling.aktivtSteg().tilstand.steg() }
+            .any { it.rekjørSteg }
+    }
+
+    private fun hoppTilbakeTilSteg(
         kontekst: FlytKontekst,
         behandling: Behandling,
         tilSteg: StegType,
@@ -122,20 +149,20 @@ class FlytKontroller {
         )
     }
 
-    internal fun flyttTilStartAvAktivtSteg(behandling: Behandling) {
+    private fun flyttTilStartAvAktivtSteg(behandling: Behandling) {
         val nyStegTilstand =
             StegTilstand(tilstand = Tilstand(behandling.aktivtSteg().tilstand.steg(), StegStatus.START))
         behandling.visit(nyStegTilstand)
     }
 
-    internal fun utledStegStatus(stegStatuser: List<StegStatus>): StegStatus {
+    private fun utledStegStatus(stegStatuser: List<StegStatus>): StegStatus {
         if (stegStatuser.contains(StegStatus.UTGANG)) {
             return StegStatus.UTGANG
         }
         return StegStatus.INNGANG
     }
 
-    internal fun utledSteg(
+    private fun utledSteg(
         behandlingFlyt: BehandlingFlyt,
         aktivtSteg: StegTilstand,
         avklaringsDefinisjoner: List<Avklaringsbehov>

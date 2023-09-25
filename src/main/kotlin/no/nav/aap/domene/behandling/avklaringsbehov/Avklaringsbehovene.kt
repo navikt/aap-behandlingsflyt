@@ -1,5 +1,7 @@
 package no.nav.aap.domene.behandling.avklaringsbehov
 
+import no.nav.aap.domene.behandling.StegTilstand
+import no.nav.aap.flyt.BehandlingFlyt
 import no.nav.aap.flyt.StegType
 
 class Avklaringsbehovene {
@@ -18,7 +20,7 @@ class Avklaringsbehovene {
     }
 
     fun leggTil(avklaringsbehov: Avklaringsbehov) {
-        val relevantBehov = avklaringsbehovene.firstOrNull{ it.definisjon == avklaringsbehov.definisjon }
+        val relevantBehov = avklaringsbehovene.firstOrNull { it.definisjon == avklaringsbehov.definisjon }
 
         if (relevantBehov != null) {
             relevantBehov.reåpne()
@@ -32,5 +34,20 @@ class Avklaringsbehovene {
     }
 
     fun alle(): List<Avklaringsbehov> = avklaringsbehovene.toList()
-    fun åpne(): List<Avklaringsbehov> =  avklaringsbehovene.filter { it.erÅpent() }.toList()
+    fun åpne(): List<Avklaringsbehov> = avklaringsbehovene.filter { it.erÅpent() }.toList()
+
+    fun skalHoppesTilbake(
+        behandlingFlyt: BehandlingFlyt,
+        aktivtSteg: StegTilstand,
+        definisjoner: List<Definisjon>
+    ): Boolean {
+        val relevanteBehov = avklaringsbehovene.filter { it.definisjon in definisjoner }
+
+        return relevanteBehov.any { behov ->
+            behandlingFlyt.erStegFør(
+                stegA = behov.løsesISteg(),
+                stegB = aktivtSteg.tilstand.steg()
+            )
+        }
+    }
 }

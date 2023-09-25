@@ -44,30 +44,12 @@ class AvklaringsbehovKontroller {
         val behandling = BehandlingTjeneste.hent(kontekst.behandlingId)
         log.info("Forsøker løse avklaringsbehov på behandling[${behandling.referanse}")
 
-        ValiderBehandlingTilstand.validerTilstandBehandling(behandling, avklaringsbehov.map { it.definisjon() })
+        val definisjoner = avklaringsbehov.map { løsning -> løsning.definisjon() }
 
-        val behandlingFlyt = behandling.type.flyt()
+        ValiderBehandlingTilstand.validerTilstandBehandling(behandling, definisjoner)
 
         // løses det behov som fremtvinger tilbakehopp?
-        if (skalHoppesTilbake(
-                behandlingFlyt,
-                behandling.aktivtSteg(),
-                behandling.avklaringsbehov()
-                    .filter { behov -> avklaringsbehov.any { it.definisjon() == behov.definisjon } })
-        ) {
-            val tilSteg = flytKontroller.utledSteg(
-                behandlingFlyt,
-                behandling.aktivtSteg(),
-                behandling.avklaringsbehov()
-                    .filter { behov -> avklaringsbehov.any { it.definisjon() == behov.definisjon } })
-            val tilStegStatus =
-                flytKontroller.utledStegStatus(avklaringsbehov.filter { it.definisjon().løsesISteg == tilSteg }
-                    .map { it.definisjon().vurderingspunkt.stegStatus })
-
-            flytKontroller.hoppTilbakeTilSteg(kontekst, behandling, tilSteg, tilStegStatus)
-        } else if (skalRekjøreSteg(avklaringsbehov, behandling)) {
-            flytKontroller.flyttTilStartAvAktivtSteg(behandling)
-        }
+        flytKontroller.forberedLøsingAvBehov(definisjoner, behandling, kontekst)
 
         // Bør ideelt kalle på
         avklaringsbehov.forEach { løsAvklaringsbehov(kontekst, behandling, it) }
@@ -89,27 +71,5 @@ class AvklaringsbehovKontroller {
             løsningsResultat.begrunnelse,
             "Saksbehandler"
         ) // TODO: Hente fra context
-    }
-
-
-    private fun skalRekjøreSteg(
-        avklaringsbehov: List<AvklaringsbehovLøsning>,
-        behandling: Behandling
-    ) =
-        avklaringsbehov.filter { it.definisjon().løsesISteg == behandling.aktivtSteg().tilstand.steg() }
-            .any { it.definisjon().rekjørSteg }
-
-    private fun skalHoppesTilbake(
-        behandlingFlyt: BehandlingFlyt,
-        aktivtSteg: StegTilstand,
-        avklaringsDefinisjoner: List<Avklaringsbehov>
-    ): Boolean {
-
-        return avklaringsDefinisjoner.filter { definisjon ->
-            behandlingFlyt.erStegFør(
-                definisjon.løsesISteg(),
-                aktivtSteg.tilstand.steg()
-            )
-        }.isNotEmpty()
     }
 }
