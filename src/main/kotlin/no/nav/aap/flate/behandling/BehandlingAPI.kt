@@ -7,8 +7,36 @@ import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.throws
 import io.ktor.http.*
 import no.nav.aap.domene.behandling.BehandlingTjeneste
+import no.nav.aap.domene.behandling.Vilkår
+import no.nav.aap.domene.behandling.Vilkårsresultat
+import no.nav.aap.domene.behandling.Vilkårstype
 import no.nav.aap.domene.behandling.grunnlag.sykdom.SykdomsTjeneste
 import no.nav.aap.domene.behandling.grunnlag.yrkesskade.YrkesskadeTjeneste
+import no.nav.aap.flyt.StegType
+
+fun hentUtRelevantVilkårForSteg(vilkårsresultat: Vilkårsresultat, stegType: StegType): VilkårDTO? {
+    var vilkår: Vilkår? = null
+    if (stegType == StegType.AVKLAR_SYKDOM) {
+        vilkår = vilkårsresultat.finnVilkår(Vilkårstype.SYKDOMSVILKÅRET)
+    }
+    if (stegType == StegType.VURDER_ALDER) {
+        vilkår = vilkårsresultat.finnVilkår(Vilkårstype.ALDERSVILKÅRET)
+    }
+    if (vilkår == null) {
+        return null
+    }
+    return VilkårDTO(
+        vilkår.type,
+        perioder = vilkår.vilkårsperioder().map { vp ->
+            VilkårsperiodeDTO(
+                vp.periode,
+                vp.utfall,
+                vp.manuellVurdering,
+                vp.begrunnelse,
+                vp.avslagsårsak
+            )
+        })
+}
 
 fun NormalOpenAPIRoute.behandlingApi() {
     route("/api/behandling") {
@@ -90,7 +118,15 @@ fun NormalOpenAPIRoute.behandlingApi() {
             get<BehandlingReferanse, BehandlingFlytOgTilstandDto> { req ->
                 val behandling = BehandlingTjeneste.hent(req.ref())
 
-                respond(BehandlingFlytOgTilstandDto(behandling.flyt().stegene()))
+                respond(BehandlingFlytOgTilstandDto(behandling.flyt().stegene().map { stegType ->
+                    FlytSteg(
+                        stegType,
+                        behandling.avklaringsbehov()
+                            .filter { avklaringsbehov -> avklaringsbehov.skalLøsesISteg(stegType) }
+                            .map { behov -> AvklaringsbehovDTO(behov.definisjon, behov.status(), emptyList()) },
+                        hentUtRelevantVilkårForSteg(behandling.vilkårsresultat(), stegType)
+                    )
+                }, behandling.aktivtSteg().tilstand.steg()))
             }
         }
     }
