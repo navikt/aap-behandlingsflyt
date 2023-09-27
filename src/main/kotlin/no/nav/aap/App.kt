@@ -36,6 +36,7 @@ import no.nav.aap.domene.person.Ident
 import no.nav.aap.flate.behandling.avklaringsbehov.avklaringsbehovApi
 import no.nav.aap.flate.behandling.behandlingApi
 import no.nav.aap.flate.sak.saksApi
+import no.nav.aap.flyt.ErrorRespons
 import no.nav.aap.hendelse.mottak.DokumentMottattPersonHendelse
 import no.nav.aap.hendelse.mottak.HendelsesMottak
 import org.slf4j.LoggerFactory
@@ -68,7 +69,7 @@ internal fun Application.server() {
             } else {
                 LoggerFactory.getLogger(App::class.java)
                     .info("Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
-                call.respond(status = HttpStatusCode.InternalServerError, message = Error(cause.message))
+                call.respond(status = HttpStatusCode.InternalServerError, message = ErrorRespons(cause.message))
             }
         }
     }
