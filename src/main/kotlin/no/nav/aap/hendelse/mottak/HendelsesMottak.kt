@@ -13,6 +13,10 @@ import no.nav.aap.flyt.kontroll.AvklaringsbehovKontroller
 import no.nav.aap.flyt.kontroll.FlytKontekst
 import no.nav.aap.flyt.kontroll.FlytKontroller
 import no.nav.aap.flyt.kontroll.ValiderBehandlingTilstand
+import no.nav.aap.prosessering.Gruppe
+import no.nav.aap.prosessering.OppgaveInput
+import no.nav.aap.prosessering.OppgaveRepository
+import no.nav.aap.prosessering.ProsesserBehandlingOppgave
 
 object HendelsesMottak {
 
@@ -37,7 +41,10 @@ object HendelsesMottak {
             sisteBehandlingOpt
         } else {
             // Har ikke behandling så oppretter en
-            BehandlingTjeneste.opprettBehandling(sak.id, listOf(Årsak(EndringType.MOTTATT_SØKNAD))) // TODO: Reeltsett oppdatere denne
+            BehandlingTjeneste.opprettBehandling(
+                sak.id,
+                listOf(Årsak(EndringType.MOTTATT_SØKNAD))
+            ) // TODO: Reeltsett oppdatere denne
         }
         håndtere(key = sisteBehandling.id, hendelse.tilBehandlingHendelse())
     }
@@ -55,7 +62,7 @@ object HendelsesMottak {
         )
     }
 
-    fun håndtere(key:Long, hendelse:BehandlingSattPåVent){
+    fun håndtere(key: Long, hendelse: BehandlingSattPåVent) {
         val behandling = BehandlingTjeneste.hent(key)
         ValiderBehandlingTilstand.validerTilstandBehandling(behandling = behandling)
 
@@ -75,14 +82,20 @@ object HendelsesMottak {
         if (hendelse is LøsAvklaringsbehovBehandlingHendelse) {
             throw IllegalArgumentException("Skal håndteres mellom eksplisitt funksjon")
         } else {
-            if(behandling.status()==Status.PÅ_VENT){
+            if (behandling.status() == Status.PÅ_VENT) {
                 avklaringsbehovKontroller.løsAvklaringsbehov(
                     kontekst = kontekst,
                     avklaringsbehov = listOf(SattPåVentLøsning())
                 )
             }
-            kontroller.prosesserBehandling(kontekst)
-
+            OppgaveRepository.leggTil(
+                Gruppe().leggTil(
+                    OppgaveInput(oppgave = ProsesserBehandlingOppgave).forBehandling(
+                        kontekst.sakId,
+                        kontekst.behandlingId
+                    )
+                )
+            )
         }
     }
 }

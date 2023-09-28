@@ -26,11 +26,29 @@ import no.nav.aap.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.hendelse.mottak.DokumentMottattPersonHendelse
 import no.nav.aap.hendelse.mottak.HendelsesMottak
 import no.nav.aap.hendelse.mottak.LøsAvklaringsbehovBehandlingHendelse
+import no.nav.aap.prosessering.Motor
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 class FlytKontrollerTest {
+
+    companion object {
+
+        @BeforeAll
+        @JvmStatic
+        internal fun beforeAll() {
+            Motor.start()
+        }
+
+        @AfterAll
+        @JvmStatic
+        internal fun afterAll() {
+            Motor.stop()
+        }
+    }
 
     @Test
     fun `skal avklare yrkesskade hvis det finnes spor av yrkesskade`() {
@@ -43,6 +61,7 @@ class FlytKontrollerTest {
 
         // Sender inn en søknad
         HendelsesMottak.håndtere(ident, DokumentMottattPersonHendelse(periode = periode))
+        ventPåSvar()
 
         val sak = Sakslager.finnEllerOpprett(Personlager.finnEllerOpprett(ident), periode)
         val behandling = requireNotNull(BehandlingTjeneste.finnSisteBehandlingFor(sak.id))
@@ -68,6 +87,7 @@ class FlytKontrollerTest {
                 )
             )
         )
+        ventPåSvar()
 
         // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
         assertThat(behandling.avklaringsbehov()).anySatisfy { it.erÅpent() && it.definisjon == Definisjon.FORESLÅ_VEDTAK }
@@ -80,6 +100,7 @@ class FlytKontrollerTest {
                 løsning = ForeslåVedtakLøsning("Begrunnelse")
             )
         )
+        ventPåSvar()
 
         // Saken står til To-trinnskontroll hos beslutter
         assertThat(behandling.avklaringsbehov()).anySatisfy { it.erÅpent() && it.definisjon == Definisjon.FATTE_VEDTAK }
@@ -92,6 +113,7 @@ class FlytKontrollerTest {
                 løsning = FatteVedtakLøsning("Begrunnelse")
             )
         )
+        ventPåSvar()
 
         assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
 
@@ -111,6 +133,12 @@ class FlytKontrollerTest {
             .allMatch { vilkårsperiode -> vilkårsperiode.erOppfylt() }
     }
 
+    private fun ventPåSvar() {
+        while (Motor.harOppgaver()) {
+            Thread.sleep(500L)
+        }
+    }
+
     @Test
     fun `Ikke oppfylt på grunn av alder på søknadstidspunkt`() {
         val ident = Ident("123123123125")
@@ -120,6 +148,7 @@ class FlytKontrollerTest {
         PersonRegisterMock.konstruer(ident, Personinfo(Fødselsdato(LocalDate.now().minusYears(17))))
 
         HendelsesMottak.håndtere(ident, DokumentMottattPersonHendelse(periode = periode))
+        ventPåSvar()
 
         val sak = Sakslager.finnEllerOpprett(person, periode)
         val behandling = requireNotNull(BehandlingTjeneste.finnSisteBehandlingFor(sak.id))
@@ -146,6 +175,7 @@ class FlytKontrollerTest {
         PersonRegisterMock.konstruer(ident, Personinfo(Fødselsdato(LocalDate.now().minusYears(20))))
 
         HendelsesMottak.håndtere(ident, DokumentMottattPersonHendelse(periode = periode))
+        ventPåSvar()
 
         val sak = Sakslager.finnSakerFor(Personlager.finnEllerOpprett(ident)).single()
         val behandling = requireNotNull(BehandlingTjeneste.finnSisteBehandlingFor(sak.id))
@@ -165,6 +195,7 @@ class FlytKontrollerTest {
             .anySatisfy { it.erÅpent() && it.definisjon == Definisjon.AVKLAR_SYKDOM }
 
         HendelsesMottak.håndtere(ident, DokumentMottattPersonHendelse(periode = periode))
+        ventPåSvar()
 
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         assertThat(behandling.avklaringsbehov())

@@ -8,10 +8,11 @@ import no.nav.aap.avklaringsbehov.vedtak.FatteVedtakLøser
 import no.nav.aap.avklaringsbehov.vedtak.ForeslåVedtakLøser
 import no.nav.aap.domene.behandling.Behandling
 import no.nav.aap.domene.behandling.BehandlingTjeneste
-import no.nav.aap.domene.behandling.StegTilstand
-import no.nav.aap.domene.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.domene.behandling.avklaringsbehov.Definisjon
-import no.nav.aap.flyt.BehandlingFlyt
+import no.nav.aap.prosessering.Gruppe
+import no.nav.aap.prosessering.OppgaveInput
+import no.nav.aap.prosessering.OppgaveRepository
+import no.nav.aap.prosessering.ProsesserBehandlingOppgave
 import org.slf4j.LoggerFactory
 
 class AvklaringsbehovKontroller {
@@ -34,7 +35,14 @@ class AvklaringsbehovKontroller {
     ) {
         løsAvklaringsbehov(kontekst, avklaringsbehov)
 
-        flytKontroller.prosesserBehandling(kontekst)
+        OppgaveRepository.leggTil(
+            Gruppe().leggTil(
+                OppgaveInput(oppgave = ProsesserBehandlingOppgave).forBehandling(
+                    kontekst.sakId,
+                    kontekst.behandlingId
+                )
+            )
+        )
     }
 
     fun løsAvklaringsbehov(

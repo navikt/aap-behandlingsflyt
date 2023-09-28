@@ -39,6 +39,7 @@ import no.nav.aap.flate.sak.saksApi
 import no.nav.aap.flyt.ErrorRespons
 import no.nav.aap.hendelse.mottak.DokumentMottattPersonHendelse
 import no.nav.aap.hendelse.mottak.HendelsesMottak
+import no.nav.aap.prosessering.Motor
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 
@@ -97,6 +98,20 @@ internal fun Application.server() {
         routing {
             actuator(prometheus)
         }
+    }
+    module()
+}
+
+fun Application.module() {
+    environment.monitor.subscribe(ApplicationStarted) { application ->
+        Motor.start()
+    }
+    environment.monitor.subscribe(ApplicationStopped) { application ->
+        application.environment.log.info("Server har stoppet")
+        Motor.stop()
+        // Release resources and unsubscribe from events
+        application.environment.monitor.unsubscribe(ApplicationStarted) {}
+        application.environment.monitor.unsubscribe(ApplicationStopped) {}
     }
 }
 
