@@ -1,4 +1,4 @@
-package no.nav.aap.flate.sak
+package no.nav.aap.behandlingsflyt.flate.sak
 
 import com.papsign.ktor.openapigen.annotations.parameters.PathParam
 

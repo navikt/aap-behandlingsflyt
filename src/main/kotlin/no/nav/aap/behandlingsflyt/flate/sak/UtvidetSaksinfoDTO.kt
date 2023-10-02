@@ -1,4 +1,4 @@
-package no.nav.aap.flate.sak
+package no.nav.aap.behandlingsflyt.flate.sak
 
 import no.nav.aap.behandlingsflyt.domene.Periode
 import no.nav.aap.behandlingsflyt.domene.sak.Status

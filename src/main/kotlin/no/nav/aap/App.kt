@@ -33,9 +33,9 @@ import no.nav.aap.behandlingsflyt.domene.behandling.grunnlag.person.PersonRegist
 import no.nav.aap.behandlingsflyt.domene.behandling.grunnlag.person.Personinfo
 import no.nav.aap.behandlingsflyt.domene.behandling.grunnlag.yrkesskade.YrkesskadeRegisterMock
 import no.nav.aap.behandlingsflyt.domene.person.Ident
-import no.nav.aap.flate.behandling.avklaringsbehov.avklaringsbehovApi
-import no.nav.aap.flate.behandling.behandlingApi
-import no.nav.aap.flate.sak.saksApi
+import no.nav.aap.behandlingsflyt.flate.behandling.avklaringsbehov.avklaringsbehovApi
+import no.nav.aap.behandlingsflyt.flate.behandling.behandlingApi
+import no.nav.aap.behandlingsflyt.flate.sak.saksApi
 import no.nav.aap.flyt.ErrorRespons
 import no.nav.aap.hendelse.mottak.DokumentMottattPersonHendelse
 import no.nav.aap.hendelse.mottak.HendelsesMottak

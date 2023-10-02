@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.domene.behandling.grunnlag.sykdom.SykdomsGrunn
 import no.nav.aap.behandlingsflyt.domene.behandling.grunnlag.sykdom.SykdomsTjeneste
 import no.nav.aap.behandlingsflyt.domene.behandling.grunnlag.yrkesskade.YrkesskadeGrunnlag
 import no.nav.aap.behandlingsflyt.domene.behandling.grunnlag.yrkesskade.YrkesskadeTjeneste
-import no.nav.aap.flate.behandling.periode.PeriodeTilVurderingTjeneste
+import no.nav.aap.behandlingsflyt.flate.behandling.periode.PeriodeTilVurderingTjeneste
 import no.nav.aap.flyt.StegType
 
 class VurderYrkesskadeÅrsakssammenhengSteg : BehandlingSteg {

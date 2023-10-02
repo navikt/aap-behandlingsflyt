@@ -1,4 +1,4 @@
-package no.nav.aap.flate.behandling
+package no.nav.aap.behandlingsflyt.flate.behandling
 
 import no.nav.aap.behandlingsflyt.domene.Periode
 import no.nav.aap.behandlingsflyt.domene.behandling.Avslagsårsak
