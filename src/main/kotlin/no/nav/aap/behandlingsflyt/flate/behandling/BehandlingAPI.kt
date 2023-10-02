@@ -10,35 +10,9 @@ import no.nav.aap.behandlingsflyt.domene.behandling.BehandlingTjeneste
 import no.nav.aap.behandlingsflyt.domene.behandling.Vilkår
 import no.nav.aap.behandlingsflyt.domene.behandling.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.domene.behandling.Vilkårstype
-import no.nav.aap.behandlingsflyt.grunnlag.sykdom.SykdomsTjeneste
-import no.nav.aap.behandlingsflyt.grunnlag.yrkesskade.YrkesskadeTjeneste
 import no.nav.aap.behandlingsflyt.flyt.StegGruppe
 import no.nav.aap.behandlingsflyt.flyt.StegType
 import java.util.*
-
-fun hentUtRelevantVilkårForSteg(vilkårsresultat: Vilkårsresultat, stegType: StegType): VilkårDTO? {
-    var vilkår: Vilkår? = null
-    if (stegType == StegType.AVKLAR_SYKDOM) {
-        vilkår = vilkårsresultat.finnVilkår(Vilkårstype.SYKDOMSVILKÅRET)
-    }
-    if (stegType == StegType.VURDER_ALDER) {
-        vilkår = vilkårsresultat.finnVilkår(Vilkårstype.ALDERSVILKÅRET)
-    }
-    if (vilkår == null) {
-        return null
-    }
-    return VilkårDTO(
-        vilkår.type,
-        perioder = vilkår.vilkårsperioder().map { vp ->
-            VilkårsperiodeDTO(
-                vp.periode,
-                vp.utfall,
-                vp.manuellVurdering,
-                vp.begrunnelse,
-                vp.avslagsårsak
-            )
-        })
-}
 
 fun NormalOpenAPIRoute.behandlingApi() {
     route("/api/behandling") {
@@ -83,37 +57,6 @@ fun NormalOpenAPIRoute.behandlingApi() {
                 )
 
                 respond(dto)
-            }
-        }
-        route("/{referanse}/grunnlag/sykdom") {
-            get<BehandlingReferanse, SykdomsGrunnlagDto> { req ->
-                val behandling = behandling(req)
-
-                val yrkesskadeGrunnlagOptional = YrkesskadeTjeneste.hentHvisEksisterer(behandlingId = behandling.id)
-                val sykdomsGrunnlag = SykdomsTjeneste.hentHvisEksisterer(behandlingId = behandling.id)
-
-                respond(
-                    SykdomsGrunnlagDto(
-                        opplysninger = InnhentetSykdomsOpplysninger(
-                            oppgittYrkesskadeISøknad = false,
-                            innhentedeYrkesskader = yrkesskadeGrunnlagOptional?.yrkesskader?.yrkesskader?.map { yrkesskade ->
-                                RegistrertYrkesskade(
-                                    ref = yrkesskade.ref,
-                                    periode = yrkesskade.periode,
-                                    kilde = "Yrkesskaderegisteret"
-                                )
-                            } ?: emptyList()
-                        ),
-                        yrkesskadevurdering = sykdomsGrunnlag?.yrkesskadevurdering,
-                        sykdomsvurdering = sykdomsGrunnlag?.sykdomsvurdering
-                    )
-                )
-            }
-        }
-        route("/{referanse}/grunnlag/medlemskap") {
-            get<BehandlingReferanse, MedlemskapGrunnlagDto> { req ->
-                val behandling = behandling(req)
-                respond(MedlemskapGrunnlagDto())
             }
         }
         route("/{referanse}/flyt") {
@@ -196,4 +139,28 @@ private fun behandling(req: BehandlingReferanse): Behandling {
 
     val behandling = BehandlingTjeneste.hent(eksternReferanse)
     return behandling
+}
+
+private fun hentUtRelevantVilkårForSteg(vilkårsresultat: Vilkårsresultat, stegType: StegType): VilkårDTO? {
+    var vilkår: Vilkår? = null
+    if (stegType == StegType.AVKLAR_SYKDOM) {
+        vilkår = vilkårsresultat.finnVilkår(Vilkårstype.SYKDOMSVILKÅRET)
+    }
+    if (stegType == StegType.VURDER_ALDER) {
+        vilkår = vilkårsresultat.finnVilkår(Vilkårstype.ALDERSVILKÅRET)
+    }
+    if (vilkår == null) {
+        return null
+    }
+    return VilkårDTO(
+        vilkår.type,
+        perioder = vilkår.vilkårsperioder().map { vp ->
+            VilkårsperiodeDTO(
+                vp.periode,
+                vp.utfall,
+                vp.manuellVurdering,
+                vp.begrunnelse,
+                vp.avslagsårsak
+            )
+        })
 }

@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.flate.behandling
+package no.nav.aap.behandlingsflyt.grunnlag.flate
 
 import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.Yrkesskadevurdering

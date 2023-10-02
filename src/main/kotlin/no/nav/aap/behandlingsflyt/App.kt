@@ -36,6 +36,7 @@ import no.nav.aap.behandlingsflyt.flate.behandling.avklaringsbehov.avklaringsbeh
 import no.nav.aap.behandlingsflyt.flate.behandling.behandlingApi
 import no.nav.aap.behandlingsflyt.flate.sak.saksApi
 import no.nav.aap.behandlingsflyt.flyt.ErrorRespons
+import no.nav.aap.behandlingsflyt.grunnlag.flate.behandlingsgrunnlagApi
 import no.nav.aap.behandlingsflyt.hendelse.mottak.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HendelsesMottak
 import no.nav.aap.behandlingsflyt.prosessering.Motor
@@ -91,6 +92,7 @@ internal fun Application.server() {
         configApi()
         saksApi()
         behandlingApi()
+        behandlingsgrunnlagApi()
         avklaringsbehovApi()
 
         hendelsesApi()
