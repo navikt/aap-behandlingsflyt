@@ -1,4 +1,4 @@
-package no.nav.aap.vilkår.alder
+package no.nav.aap.behandlingsflyt.domene.vilkår.alder
 
 import no.nav.aap.behandlingsflyt.domene.behandling.Utfall
 import no.nav.aap.behandlingsflyt.domene.behandling.grunnlag.person.Fødselsdato
