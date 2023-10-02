@@ -1,4 +1,4 @@
-package no.nav.aap.hendelse.avløp
+package no.nav.aap.behandlingsflyt.hendelse.avløp
 
 import no.nav.aap.behandlingsflyt.domene.sak.Saksnummer
 import java.util.*

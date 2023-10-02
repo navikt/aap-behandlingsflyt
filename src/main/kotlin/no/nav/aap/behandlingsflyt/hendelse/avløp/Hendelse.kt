@@ -1,4 +1,4 @@
-package no.nav.aap.hendelse.avløp
+package no.nav.aap.behandlingsflyt.hendelse.avløp
 
 interface SakHendelse {
 }

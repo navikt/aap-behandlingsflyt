@@ -24,10 +24,10 @@ import no.nav.aap.behandlingsflyt.domene.sak.Sakslager
 import no.nav.aap.behandlingsflyt.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.flyt.StegType
 import no.nav.aap.behandlingsflyt.flyt.Tilstand
-import no.nav.aap.hendelse.mottak.BehandlingSattPåVent
-import no.nav.aap.hendelse.mottak.DokumentMottattPersonHendelse
-import no.nav.aap.hendelse.mottak.HendelsesMottak
-import no.nav.aap.hendelse.mottak.LøsAvklaringsbehovBehandlingHendelse
+import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
+import no.nav.aap.behandlingsflyt.hendelse.mottak.DokumentMottattPersonHendelse
+import no.nav.aap.behandlingsflyt.hendelse.mottak.HendelsesMottak
+import no.nav.aap.behandlingsflyt.hendelse.mottak.LøsAvklaringsbehovBehandlingHendelse
 import no.nav.aap.prosessering.Motor
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll

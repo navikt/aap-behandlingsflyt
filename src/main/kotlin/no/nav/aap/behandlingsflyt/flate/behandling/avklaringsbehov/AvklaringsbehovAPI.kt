@@ -8,8 +8,8 @@ import com.papsign.ktor.openapigen.route.throws
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.domene.behandling.BehandlingTjeneste
 import no.nav.aap.behandlingsflyt.flyt.kontroll.ValiderBehandlingTilstand
-import no.nav.aap.hendelse.mottak.HendelsesMottak
-import no.nav.aap.hendelse.mottak.LøsAvklaringsbehovBehandlingHendelse
+import no.nav.aap.behandlingsflyt.hendelse.mottak.HendelsesMottak
+import no.nav.aap.behandlingsflyt.hendelse.mottak.LøsAvklaringsbehovBehandlingHendelse
 
 fun NormalOpenAPIRoute.avklaringsbehovApi() {
     route("/api/behandling") {
