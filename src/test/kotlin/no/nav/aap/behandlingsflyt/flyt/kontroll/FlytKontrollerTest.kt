@@ -14,10 +14,10 @@ import no.nav.aap.behandlingsflyt.domene.behandling.Status
 import no.nav.aap.behandlingsflyt.domene.behandling.Vilkårstype
 import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.domene.behandling.dokumenter.JournalpostId
-import no.nav.aap.behandlingsflyt.domene.behandling.grunnlag.person.Fødselsdato
-import no.nav.aap.behandlingsflyt.domene.behandling.grunnlag.person.PersonRegisterMock
-import no.nav.aap.behandlingsflyt.domene.behandling.grunnlag.person.Personinfo
-import no.nav.aap.behandlingsflyt.domene.behandling.grunnlag.yrkesskade.YrkesskadeRegisterMock
+import no.nav.aap.behandlingsflyt.grunnlag.person.Fødselsdato
+import no.nav.aap.behandlingsflyt.grunnlag.person.PersonRegisterMock
+import no.nav.aap.behandlingsflyt.grunnlag.person.Personinfo
+import no.nav.aap.behandlingsflyt.grunnlag.yrkesskade.YrkesskadeRegisterMock
 import no.nav.aap.behandlingsflyt.domene.person.Ident
 import no.nav.aap.behandlingsflyt.domene.person.Personlager
 import no.nav.aap.behandlingsflyt.domene.sak.Sakslager

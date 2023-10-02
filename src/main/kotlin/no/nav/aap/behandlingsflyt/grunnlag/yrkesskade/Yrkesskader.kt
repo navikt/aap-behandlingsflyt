@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.domene.behandling.grunnlag.yrkesskade
+package no.nav.aap.behandlingsflyt.grunnlag.yrkesskade
 
 class Yrkesskader(val yrkesskader: List<Yrkesskade>) {
 

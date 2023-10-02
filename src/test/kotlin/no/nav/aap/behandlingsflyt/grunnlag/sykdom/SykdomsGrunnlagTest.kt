@@ -1,8 +1,9 @@
-package no.nav.aap.behandlingsflyt.domene.behandling.grunnlag.sykdom
+package no.nav.aap.behandlingsflyt.grunnlag.sykdom
 
 import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.NedreGrense
 import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.Yrkesskadevurdering
+import no.nav.aap.behandlingsflyt.grunnlag.sykdom.SykdomsGrunnlag
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate

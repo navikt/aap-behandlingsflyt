@@ -1,9 +1,9 @@
-package no.nav.aap.behandlingsflyt.domene.behandling.grunnlag
+package no.nav.aap.behandlingsflyt.grunnlag
 
 import no.nav.aap.behandlingsflyt.domene.behandling.Behandling
-import no.nav.aap.behandlingsflyt.domene.behandling.grunnlag.person.PersoninformasjonTjeneste
-import no.nav.aap.behandlingsflyt.domene.behandling.grunnlag.sykdom.SykdomsTjeneste
-import no.nav.aap.behandlingsflyt.domene.behandling.grunnlag.yrkesskade.YrkesskadeTjeneste
+import no.nav.aap.behandlingsflyt.grunnlag.person.PersoninformasjonTjeneste
+import no.nav.aap.behandlingsflyt.grunnlag.sykdom.SykdomsTjeneste
+import no.nav.aap.behandlingsflyt.grunnlag.yrkesskade.YrkesskadeTjeneste
 
 object GrunnlagKopierer {
 

@@ -1,11 +1,11 @@
 package no.nav.aap.behandlingsflyt.flyt.steg
 
-import no.nav.aap.behandlingsflyt.domene.behandling.grunnlag.person.PersonRegisterMock
-import no.nav.aap.behandlingsflyt.domene.behandling.grunnlag.person.PersoninformasjonTjeneste
-import no.nav.aap.behandlingsflyt.domene.behandling.grunnlag.yrkesskade.Yrkesskade
-import no.nav.aap.behandlingsflyt.domene.behandling.grunnlag.yrkesskade.YrkesskadeRegisterMock
-import no.nav.aap.behandlingsflyt.domene.behandling.grunnlag.yrkesskade.YrkesskadeTjeneste
-import no.nav.aap.behandlingsflyt.domene.behandling.grunnlag.yrkesskade.Yrkesskader
+import no.nav.aap.behandlingsflyt.grunnlag.person.PersonRegisterMock
+import no.nav.aap.behandlingsflyt.grunnlag.person.PersoninformasjonTjeneste
+import no.nav.aap.behandlingsflyt.grunnlag.yrkesskade.Yrkesskade
+import no.nav.aap.behandlingsflyt.grunnlag.yrkesskade.YrkesskadeRegisterMock
+import no.nav.aap.behandlingsflyt.grunnlag.yrkesskade.YrkesskadeTjeneste
+import no.nav.aap.behandlingsflyt.grunnlag.yrkesskade.Yrkesskader
 import no.nav.aap.behandlingsflyt.domene.person.Personlager
 import no.nav.aap.behandlingsflyt.domene.sak.Sakslager
 import no.nav.aap.behandlingsflyt.flyt.StegType

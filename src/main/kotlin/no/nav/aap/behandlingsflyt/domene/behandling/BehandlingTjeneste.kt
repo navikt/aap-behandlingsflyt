@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.domene.behandling
 
 import no.nav.aap.behandlingsflyt.domene.ElementNotFoundException
-import no.nav.aap.behandlingsflyt.domene.behandling.grunnlag.GrunnlagKopierer
+import no.nav.aap.behandlingsflyt.grunnlag.GrunnlagKopierer
 import java.util.*
 import java.util.concurrent.atomic.AtomicLong
 

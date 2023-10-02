@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.flyt.steg
 import no.nav.aap.behandlingsflyt.domene.behandling.BehandlingTjeneste
 import no.nav.aap.behandlingsflyt.domene.behandling.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.domene.behandling.Vilkårstype
-import no.nav.aap.behandlingsflyt.domene.behandling.grunnlag.person.PersoninformasjonTjeneste
+import no.nav.aap.behandlingsflyt.grunnlag.person.PersoninformasjonTjeneste
 import no.nav.aap.behandlingsflyt.domene.vilkår.alder.Aldersgrunnlag
 import no.nav.aap.behandlingsflyt.domene.vilkår.alder.Aldersvilkåret
 import no.nav.aap.behandlingsflyt.flate.behandling.periode.PeriodeTilVurderingTjeneste

@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.domene.behandling.grunnlag.yrkesskade
+package no.nav.aap.behandlingsflyt.grunnlag.yrkesskade
 
 import no.nav.aap.behandlingsflyt.domene.behandling.Behandling
 import java.util.concurrent.atomic.AtomicLong

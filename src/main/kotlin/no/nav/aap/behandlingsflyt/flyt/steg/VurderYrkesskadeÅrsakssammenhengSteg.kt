@@ -5,10 +5,10 @@ import no.nav.aap.behandlingsflyt.domene.behandling.BehandlingTjeneste
 import no.nav.aap.behandlingsflyt.domene.behandling.Vilkår
 import no.nav.aap.behandlingsflyt.domene.behandling.Vilkårstype
 import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.domene.behandling.grunnlag.sykdom.SykdomsGrunnlag
-import no.nav.aap.behandlingsflyt.domene.behandling.grunnlag.sykdom.SykdomsTjeneste
-import no.nav.aap.behandlingsflyt.domene.behandling.grunnlag.yrkesskade.YrkesskadeGrunnlag
-import no.nav.aap.behandlingsflyt.domene.behandling.grunnlag.yrkesskade.YrkesskadeTjeneste
+import no.nav.aap.behandlingsflyt.grunnlag.sykdom.SykdomsGrunnlag
+import no.nav.aap.behandlingsflyt.grunnlag.sykdom.SykdomsTjeneste
+import no.nav.aap.behandlingsflyt.grunnlag.yrkesskade.YrkesskadeGrunnlag
+import no.nav.aap.behandlingsflyt.grunnlag.yrkesskade.YrkesskadeTjeneste
 import no.nav.aap.behandlingsflyt.flate.behandling.periode.PeriodeTilVurderingTjeneste
 import no.nav.aap.behandlingsflyt.flyt.StegType
 

@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.domene.behandling.grunnlag.person
+package no.nav.aap.behandlingsflyt.grunnlag.person
 
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit

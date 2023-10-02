@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.domene.vilkår.alder
 
 import no.nav.aap.behandlingsflyt.domene.behandling.Utfall
-import no.nav.aap.behandlingsflyt.domene.behandling.grunnlag.person.Fødselsdato
+import no.nav.aap.behandlingsflyt.grunnlag.person.Fødselsdato
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate

@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.domene.behandling.grunnlag.person
+package no.nav.aap.behandlingsflyt.grunnlag.person
 
 import no.nav.aap.behandlingsflyt.domene.person.Ident
 
