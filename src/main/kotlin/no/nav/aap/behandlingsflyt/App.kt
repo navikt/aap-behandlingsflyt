@@ -23,20 +23,21 @@ import io.ktor.server.routing.*
 import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
 import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.AvklarSykdomLøsning
+import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.AvklarYrkesskadeLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.domene.Periode
 import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.grunnlag.person.Fødselsdato
-import no.nav.aap.behandlingsflyt.grunnlag.person.PersonRegisterMock
-import no.nav.aap.behandlingsflyt.grunnlag.person.Personinfo
-import no.nav.aap.behandlingsflyt.grunnlag.yrkesskade.YrkesskadeRegisterMock
 import no.nav.aap.behandlingsflyt.domene.person.Ident
 import no.nav.aap.behandlingsflyt.flate.behandling.avklaringsbehov.avklaringsbehovApi
 import no.nav.aap.behandlingsflyt.flate.behandling.behandlingApi
 import no.nav.aap.behandlingsflyt.flate.sak.saksApi
 import no.nav.aap.behandlingsflyt.flyt.ErrorRespons
 import no.nav.aap.behandlingsflyt.grunnlag.flate.behandlingsgrunnlagApi
+import no.nav.aap.behandlingsflyt.grunnlag.person.Fødselsdato
+import no.nav.aap.behandlingsflyt.grunnlag.person.PersonRegisterMock
+import no.nav.aap.behandlingsflyt.grunnlag.person.Personinfo
+import no.nav.aap.behandlingsflyt.grunnlag.yrkesskade.YrkesskadeRegisterMock
 import no.nav.aap.behandlingsflyt.hendelse.mottak.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HendelsesMottak
 import no.nav.aap.behandlingsflyt.prosessering.Motor
@@ -59,7 +60,10 @@ internal fun Application.server() {
             registerModule(JavaTimeModule())
             disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
             registerSubtypes(
-                AvklarSykdomLøsning::class.java, ForeslåVedtakLøsning::class.java, FatteVedtakLøsning::class.java
+                AvklarYrkesskadeLøsning::class.java,
+                AvklarSykdomLøsning::class.java,
+                ForeslåVedtakLøsning::class.java,
+                FatteVedtakLøsning::class.java
             )
         }
     }
