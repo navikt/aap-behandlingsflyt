@@ -29,6 +29,7 @@ object Førstegangsbehandling : BehandlingType {
             .medSteg(VurderYrkesskadeÅrsakssammenhengSteg())
             .medSteg(VurderSykdomSteg())
             .medSteg(GeneriskPlaceholderSteg(StegType.VURDER_BISTANDSBEHOV))
+            .medSteg(GeneriskPlaceholderSteg(StegType.VURDER_SYKEPENGEERSTATNING))
             .medSteg(GeneriskPlaceholderSteg(StegType.VURDER_MEDLEMSKAP))
             .medSteg(GeneriskPlaceholderSteg(StegType.FASTSETT_GRUNNLAG))
             .medSteg(GeneriskPlaceholderSteg(StegType.FASTSETT_UTTAK))
