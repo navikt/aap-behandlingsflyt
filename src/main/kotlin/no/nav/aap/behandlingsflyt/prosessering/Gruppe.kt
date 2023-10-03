@@ -14,8 +14,8 @@ class Gruppe {
 
     fun oppgaver() = oppgaver
 
-    fun sakId() = oppgaver.map { it.sakId() }.toSet().single()
-    fun behandlingId() = oppgaver.map { it.behandlingId() }.toSet().single()
+    fun sakId() = oppgaver.map { it.sakId() }.toSet().firstOrNull()
+    fun behandlingId() = oppgaver.map { it.behandlingId() }.toSet().firstOrNull()
 
     override fun toString(): String {
         return "Gruppe(sak=${sakId()}, behandling=${behandlingId()}, oppgaver=$oppgaver)"

@@ -56,10 +56,15 @@ enum class Definisjon(
     FATTE_VEDTAK(
         kode = FATTE_VEDTAK_KODE,
         løsesISteg = StegType.FATTE_VEDTAK,
-        vurderingspunkt = Vurderingspunkt.UT
+        vurderingspunkt = Vurderingspunkt.UT,
+        rekjørSteg = true
     );
 
     companion object {
+        fun forKode(definisjon: String): Definisjon {
+            return entries.single { it.kode == definisjon }
+        }
+
         init {
             val unikeKoder = Arrays.stream(entries.toTypedArray())
                 .map { it.kode }
@@ -81,7 +86,7 @@ enum class Definisjon(
     }
 
     fun skalLøsesISteg(steg: StegType, funnetISteg: StegType): Boolean {
-        if (løsesISteg == StegType.UDEFINERT){
+        if (løsesISteg == StegType.UDEFINERT) {
             return steg == funnetISteg
         }
         return løsesISteg == steg

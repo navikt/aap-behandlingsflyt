@@ -60,7 +60,7 @@ object Motor {
                         gruppe!!.oppgaver()
                             .filter { oppgave -> utførteOppgaver.any { uo -> oppgave.type() == uo } }
                             .forEach { nyGruppe.leggTil(it) }
-                        log.warn("Feil under prosessering av gruppe {}, gjenstående opgaver {}", gruppe, nyGruppe)
+                        log.warn("Feil under prosessering av gruppe {}, gjenstående opgaver {}", gruppe, nyGruppe, exception)
                         repo.leggTil(gruppe = nyGruppe)
                     }
                 }

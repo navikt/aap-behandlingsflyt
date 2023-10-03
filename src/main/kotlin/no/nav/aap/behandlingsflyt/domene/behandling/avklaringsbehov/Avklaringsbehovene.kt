@@ -36,6 +36,9 @@ class Avklaringsbehovene {
     fun alle(): List<Avklaringsbehov> = avklaringsbehovene.toList()
     fun åpne(): List<Avklaringsbehov> = avklaringsbehovene.filter { it.erÅpent() }.toList()
 
+    fun tilbakeførtFraBeslutter(): List<Avklaringsbehov> =
+        avklaringsbehovene.filter { it.status() == Status.SENDT_TILBAKE_FRA_BESLUTTER }.toList()
+
     fun skalHoppesTilbake(
         behandlingFlyt: BehandlingFlyt,
         aktivtSteg: StegTilstand,
@@ -49,5 +52,9 @@ class Avklaringsbehovene {
                 stegB = aktivtSteg.tilstand.steg()
             )
         }
+    }
+
+    fun vurderTotrinn(definisjon: Definisjon, godkjent: Boolean, begrunnelse: String) {
+        avklaringsbehovene.single { it.definisjon == definisjon }.vurderTotrinn(begrunnelse, godkjent)
     }
 }

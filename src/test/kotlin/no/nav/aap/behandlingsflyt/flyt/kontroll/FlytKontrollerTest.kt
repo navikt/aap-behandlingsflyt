@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.ForeslåVedtakLøsning
+import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.domene.Periode
 import no.nav.aap.behandlingsflyt.domene.behandling.BehandlingTjeneste
 import no.nav.aap.behandlingsflyt.domene.behandling.Førstegangsbehandling
@@ -127,7 +128,8 @@ class FlytKontrollerTest {
             behandling.id,
             LøsAvklaringsbehovBehandlingHendelse(
                 versjon = 1L,
-                løsning = FatteVedtakLøsning("Begrunnelse")
+                løsning = FatteVedtakLøsning(behandling.avklaringsbehov().filter { it.erTotrinn() }
+                    .map { TotrinnsVurdering(it.definisjon.kode, true, "begrunnelse") })
             )
         )
         ventPåSvar()

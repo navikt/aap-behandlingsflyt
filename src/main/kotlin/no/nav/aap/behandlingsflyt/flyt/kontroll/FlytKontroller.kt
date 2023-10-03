@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.domene.behandling.BehandlingTjeneste
 import no.nav.aap.behandlingsflyt.domene.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.flyt.StegType
@@ -37,7 +38,8 @@ class FlytKontroller {
             val avklaringsbehov = behandling.avklaringsbehov().filter { behov -> behov.erÅpent() }
             validerPlassering(
                 behandlingFlyt,
-                avklaringsbehov.map { behov -> behov.definisjon },
+                avklaringsbehov.filter { it.status() != Status.SENDT_TILBAKE_FRA_BESLUTTER }
+                    .map { behov -> behov.definisjon },
                 nesteSteg.type(),
                 nesteStegStatus
             )
@@ -52,6 +54,11 @@ class FlytKontroller {
                     result.funnetAvklaringsbehov()
                 )
                 behandling.leggTil(result.funnetAvklaringsbehov())
+            }
+
+            if (result.erTilbakeføring()) {
+                hoppTilbakeTilSteg(kontekst, behandling, result.tilSteg(), StegStatus.START)
+                aktivtSteg = behandling.aktivtSteg()
             }
 
             kanFortsette = result.kanFortsette() && behandlingFlyt.utledNesteSteg(aktivtSteg, nesteStegStatus) != null

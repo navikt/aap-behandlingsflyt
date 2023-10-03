@@ -77,6 +77,7 @@ class Behandling(
     fun vilkårsresultat(): Vilkårsresultat = vilkårsresultat
     fun flyt(): BehandlingFlyt = type.flyt()
     fun avklaringsbehov(): List<Avklaringsbehov> = avklaringsbehovene.alle()
+    fun avklaringsbehovene(): Avklaringsbehovene = avklaringsbehovene
     fun åpneAvklaringsbehov(): List<Avklaringsbehov> = avklaringsbehovene.åpne()
     fun skalHoppesTilbake(definisjoner: List<Definisjon>): Boolean {
         return avklaringsbehovene.skalHoppesTilbake(flyt(), aktivtSteg(), definisjoner)
