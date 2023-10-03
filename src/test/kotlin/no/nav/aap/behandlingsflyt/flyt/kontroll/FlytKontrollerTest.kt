@@ -14,16 +14,16 @@ import no.nav.aap.behandlingsflyt.domene.behandling.Status
 import no.nav.aap.behandlingsflyt.domene.behandling.Vilkårstype
 import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.domene.behandling.dokumenter.JournalpostId
-import no.nav.aap.behandlingsflyt.grunnlag.person.Fødselsdato
-import no.nav.aap.behandlingsflyt.grunnlag.person.PersonRegisterMock
-import no.nav.aap.behandlingsflyt.grunnlag.person.Personinfo
-import no.nav.aap.behandlingsflyt.grunnlag.yrkesskade.YrkesskadeRegisterMock
 import no.nav.aap.behandlingsflyt.domene.person.Ident
 import no.nav.aap.behandlingsflyt.domene.person.Personlager
 import no.nav.aap.behandlingsflyt.domene.sak.Sakslager
 import no.nav.aap.behandlingsflyt.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.flyt.StegType
 import no.nav.aap.behandlingsflyt.flyt.Tilstand
+import no.nav.aap.behandlingsflyt.grunnlag.person.Fødselsdato
+import no.nav.aap.behandlingsflyt.grunnlag.person.PersonRegisterMock
+import no.nav.aap.behandlingsflyt.grunnlag.person.Personinfo
+import no.nav.aap.behandlingsflyt.grunnlag.yrkesskade.YrkesskadeRegisterMock
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.hendelse.mottak.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HendelsesMottak
@@ -152,7 +152,7 @@ class FlytKontrollerTest {
 
     private fun ventPåSvar() {
         while (Motor.harOppgaver()) {
-            Thread.sleep(500L)
+            Thread.sleep(100L)
         }
     }
 

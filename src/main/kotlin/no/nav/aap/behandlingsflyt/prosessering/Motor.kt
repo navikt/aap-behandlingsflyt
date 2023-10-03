@@ -22,23 +22,24 @@ object Motor {
     }
 
     fun harOppgaver(): Boolean {
-        return OppgaveRepository.harOppgaver()
+        return OppgaveRepository.harOppgaver() || worker.utførerOppgave()
     }
 
     private class Worker : Runnable {
         private val log = LoggerFactory.getLogger(Worker::class.java)
         private val repo = OppgaveRepository
         private var running = false
+        private var gruppe: Gruppe? = null
 
         override fun run() {
             running = true
             while (running) {
-                val gruppe = OppgaveRepository.plukk()
+                gruppe = repo.plukk()
                 if (gruppe != null) {
                     val utførteOppgaver = mutableListOf<String>()
                     try {
-                        log.info("[{} - {}}] Plukket gruppe {}", gruppe.sakId(), gruppe.behandlingId(), gruppe)
-                        for (oppgaveInput in gruppe.oppgaver()) {
+                        log.info("[{} - {}}] Plukket gruppe {}", gruppe!!.sakId(), gruppe!!.behandlingId(), gruppe)
+                        for (oppgaveInput in gruppe!!.oppgaver()) {
                             log.info(
                                 "[{} - {}}] Starter på oppgave '{}'",
                                 oppgaveInput.sakId(),
@@ -56,14 +57,15 @@ object Motor {
                         }
                     } catch (exception: Exception) {
                         val nyGruppe = Gruppe()
-                        gruppe.oppgaver()
+                        gruppe!!.oppgaver()
                             .filter { oppgave -> utførteOppgaver.any { uo -> oppgave.type() == uo } }
                             .forEach { nyGruppe.leggTil(it) }
                         log.warn("Feil under prosessering av gruppe {}, gjenstående opgaver {}", gruppe, nyGruppe)
-                        OppgaveRepository.leggTil(gruppe = nyGruppe)
+                        repo.leggTil(gruppe = nyGruppe)
                     }
                 }
-                if (running && !OppgaveRepository.harOppgaver()) {
+                gruppe = null
+                if (running && !repo.harOppgaver()) {
                     Thread.sleep(500L)
                 }
             }
@@ -72,6 +74,10 @@ object Motor {
 
         fun stop() {
             running = false
+        }
+
+        fun utførerOppgave(): Boolean {
+            return gruppe != null
         }
     }
 }
