@@ -33,8 +33,8 @@ object Motor {
 
         override fun run() {
             running = true
+            gruppe = repo.plukk()
             while (running) {
-                gruppe = repo.plukk()
                 if (gruppe != null) {
                     val utførteOppgaver = mutableListOf<String>()
                     try {
@@ -64,8 +64,8 @@ object Motor {
                         repo.leggTil(gruppe = nyGruppe)
                     }
                 }
-                gruppe = null
-                if (running && !repo.harOppgaver()) {
+                gruppe = repo.plukk()
+                if (running && !repo.harOppgaver() && gruppe == null) {
                     Thread.sleep(500L)
                 }
             }
