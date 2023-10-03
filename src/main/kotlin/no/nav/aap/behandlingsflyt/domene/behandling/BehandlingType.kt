@@ -6,7 +6,8 @@ import no.nav.aap.behandlingsflyt.flyt.StegType
 import no.nav.aap.behandlingsflyt.flyt.steg.FatteVedtakSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.ForeslåVedtakSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.GeneriskPlaceholderSteg
-import no.nav.aap.behandlingsflyt.flyt.steg.InnhentRegisterdataSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.InnhentPersonopplysningerSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.InnhentYrkesskadeSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StartBehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.VurderAlderSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.VurderSykdomSteg
@@ -21,9 +22,10 @@ object Førstegangsbehandling : BehandlingType {
     override fun flyt(): BehandlingFlyt {
         return BehandlingFlytBuilder()
             .medSteg(StartBehandlingSteg())
-            .medSteg(InnhentRegisterdataSteg())
+            .medSteg(InnhentPersonopplysningerSteg())
             .medSteg(VurderAlderSteg())
             .medSteg(GeneriskPlaceholderSteg(StegType.VURDER_LOVVALG))
+            .medSteg(InnhentYrkesskadeSteg())
             .medSteg(VurderYrkesskadeÅrsakssammenhengSteg())
             .medSteg(VurderSykdomSteg())
             .medSteg(GeneriskPlaceholderSteg(StegType.VURDER_BISTANDSBEHOV))

@@ -1,16 +1,14 @@
 package no.nav.aap.behandlingsflyt.flyt.steg
 
-import no.nav.aap.behandlingsflyt.grunnlag.person.PersonRegisterMock
-import no.nav.aap.behandlingsflyt.grunnlag.person.PersoninformasjonTjeneste
+import no.nav.aap.behandlingsflyt.domene.person.Personlager
+import no.nav.aap.behandlingsflyt.domene.sak.Sakslager
+import no.nav.aap.behandlingsflyt.flyt.StegType
 import no.nav.aap.behandlingsflyt.grunnlag.yrkesskade.Yrkesskade
 import no.nav.aap.behandlingsflyt.grunnlag.yrkesskade.YrkesskadeRegisterMock
 import no.nav.aap.behandlingsflyt.grunnlag.yrkesskade.YrkesskadeTjeneste
 import no.nav.aap.behandlingsflyt.grunnlag.yrkesskade.Yrkesskader
-import no.nav.aap.behandlingsflyt.domene.person.Personlager
-import no.nav.aap.behandlingsflyt.domene.sak.Sakslager
-import no.nav.aap.behandlingsflyt.flyt.StegType
 
-class InnhentRegisterdataSteg : BehandlingSteg {
+class InnhentYrkesskadeSteg : BehandlingSteg {
 
     override fun utfør(input: StegInput): StegResultat {
         val sak = Sakslager.hent(input.kontekst.sakId)
@@ -28,17 +26,10 @@ class InnhentRegisterdataSteg : BehandlingSteg {
             YrkesskadeTjeneste.lagre(behandlingId, null)
         }
 
-        val personopplysninger = PersonRegisterMock.innhent(person.identer())
-        if (personopplysninger.size != 1) {
-            throw IllegalStateException("fant flere personer enn forventet")
-        }
-
-        PersoninformasjonTjeneste.lagre(behandlingId, personopplysninger.first())
-
         return StegResultat() // DO NOTHING
     }
 
     override fun type(): StegType {
-        return StegType.INNHENT_REGISTERDATA
+        return StegType.INNHENT_YRKESSKADE
     }
 }

@@ -27,8 +27,12 @@ enum class StegType(val gruppe: StegGruppe, val status: Status, val tekniskSteg:
         gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES
     ),
-    INNHENT_REGISTERDATA(
+    INNHENT_PERSONOPPLYSNINGER(
         gruppe = StegGruppe.ALDER,
+        status = Status.UTREDES
+    ),
+    INNHENT_YRKESSKADE(
+        gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES
     ),
     FASTSETT_GRUNNLAG(gruppe = StegGruppe.GRUNNLAG, status = Status.UTREDES), FASTSETT_UTTAK(
