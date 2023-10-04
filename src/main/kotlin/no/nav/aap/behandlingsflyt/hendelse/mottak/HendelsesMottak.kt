@@ -9,9 +9,9 @@ import no.nav.aap.behandlingsflyt.domene.person.Ident
 import no.nav.aap.behandlingsflyt.domene.person.Personlager
 import no.nav.aap.behandlingsflyt.domene.sak.Sakslager
 import no.nav.aap.behandlingsflyt.domene.sak.Saksnummer
-import no.nav.aap.behandlingsflyt.flyt.kontroll.AvklaringsbehovKontroller
+import no.nav.aap.behandlingsflyt.flyt.kontroll.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.kontroll.FlytKontekst
-import no.nav.aap.behandlingsflyt.flyt.kontroll.FlytKontroller
+import no.nav.aap.behandlingsflyt.flyt.kontroll.FlytOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.kontroll.ValiderBehandlingTilstand
 import no.nav.aap.behandlingsflyt.prosessering.Gruppe
 import no.nav.aap.behandlingsflyt.prosessering.OppgaveInput
@@ -20,8 +20,8 @@ import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingOppgave
 
 object HendelsesMottak {
 
-    private val kontroller = FlytKontroller()
-    private val avklaringsbehovKontroller = AvklaringsbehovKontroller()
+    private val kontroller = FlytOrkestrator()
+    private val avklaringsbehovKontroller = AvklaringsbehovOrkestrator()
 
     fun håndtere(key: Ident, hendelse: PersonHendelse) {
         val person = Personlager.finnEllerOpprett(key)

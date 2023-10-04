@@ -16,12 +16,12 @@ import no.nav.aap.behandlingsflyt.prosessering.OppgaveRepository
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingOppgave
 import org.slf4j.LoggerFactory
 
-class AvklaringsbehovKontroller {
+class AvklaringsbehovOrkestrator {
 
     private val avklaringsbehovsLøsere = mutableMapOf<Definisjon, AvklaringsbehovsLøser<*>>()
-    private val flytKontroller = FlytKontroller()
+    private val flytOrkestrator = FlytOrkestrator()
 
-    private val log = LoggerFactory.getLogger(AvklaringsbehovKontroller::class.java)
+    private val log = LoggerFactory.getLogger(AvklaringsbehovOrkestrator::class.java)
 
     init {
         avklaringsbehovsLøsere[Definisjon.MANUELT_SATT_PÅ_VENT] = SattPåVentLøser()
@@ -59,7 +59,7 @@ class AvklaringsbehovKontroller {
         ValiderBehandlingTilstand.validerTilstandBehandling(behandling, definisjoner)
 
         // løses det behov som fremtvinger tilbakehopp?
-        flytKontroller.forberedLøsingAvBehov(definisjoner, behandling, kontekst)
+        flytOrkestrator.forberedLøsingAvBehov(definisjoner, behandling, kontekst)
 
         // Bør ideelt kalle på
         avklaringsbehov.forEach { løsAvklaringsbehov(kontekst, behandling, it) }

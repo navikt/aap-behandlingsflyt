@@ -14,13 +14,13 @@ import no.nav.aap.behandlingsflyt.flyt.Tilstand
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import org.slf4j.LoggerFactory
 
-private val log = LoggerFactory.getLogger(FlytKontroller::class.java)
+private val log = LoggerFactory.getLogger(FlytOrkestrator::class.java)
 
 
 /**
  * Har ansvar for å drive flyten til en gitt behandling. Typen behandling styrer hvilke steg som skal utføres.
  */
-class FlytKontroller {
+class FlytOrkestrator {
 
     fun prosesserBehandling(kontekst: FlytKontekst) {
         val behandling = BehandlingTjeneste.hent(kontekst.behandlingId)

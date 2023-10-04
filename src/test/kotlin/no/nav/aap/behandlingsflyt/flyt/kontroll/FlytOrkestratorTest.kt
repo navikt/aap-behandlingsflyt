@@ -36,7 +36,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class FlytKontrollerTest {
+class FlytOrkestratorTest {
 
     companion object {
 
