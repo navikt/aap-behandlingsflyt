@@ -32,7 +32,6 @@ import no.nav.aap.behandlingsflyt.domene.person.Ident
 import no.nav.aap.behandlingsflyt.flate.behandling.avklaringsbehov.avklaringsbehovApi
 import no.nav.aap.behandlingsflyt.flate.behandling.behandlingApi
 import no.nav.aap.behandlingsflyt.flate.sak.saksApi
-import no.nav.aap.behandlingsflyt.flyt.ErrorRespons
 import no.nav.aap.behandlingsflyt.grunnlag.flate.behandlingsgrunnlagApi
 import no.nav.aap.behandlingsflyt.grunnlag.person.Fødselsdato
 import no.nav.aap.behandlingsflyt.grunnlag.person.PersonRegisterMock

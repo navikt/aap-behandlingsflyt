@@ -61,7 +61,8 @@ class FlytKontroller {
                     "[{} - {}] Tilakeført fra '{}' til '{}'",
                     kontekst.sakId,
                     kontekst.behandlingId,
-                    aktivtSteg.tilstand, result.tilSteg()
+                    aktivtSteg.tilstand,
+                    result.tilSteg()
                 )
                 hoppTilbakeTilSteg(kontekst, behandling, result.tilSteg(), StegStatus.START)
                 aktivtSteg = behandling.aktivtSteg()
