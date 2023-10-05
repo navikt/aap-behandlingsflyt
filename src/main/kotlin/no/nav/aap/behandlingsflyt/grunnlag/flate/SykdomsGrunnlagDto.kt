@@ -6,33 +6,16 @@ import no.nav.aap.behandlingsflyt.domene.Periode
 
 data class SykdomsGrunnlagDto(
     val opplysninger: InnhentetSykdomsOpplysninger,
-    val yrkesskadevurdering: Yrkesskadevurdering?,
-    val sykdomsvurdering: Sykdomsvurdering?
-)
-
-data class InnhentetSykdomsOpplysninger(
-    val oppgittYrkesskadeISøknad: Boolean,
-    val innhentedeYrkesskader: List<RegistrertYrkesskade>
-)
-
-
-data class SykdomSykdomsGrunnlagDto(
-    val opplysninger: SykdomInnhentetSykdomsOpplysninger,
-    val sykdomsvurdering: Sykdomsvurdering?
-)
-
-data class SykdomInnhentetSykdomsOpplysninger(
-    val oppgittYrkesskadeISøknad: Boolean,
-    val innhentedeYrkesskader: List<RegistrertYrkesskade>,
+    val sykdomsvurdering: Sykdomsvurdering?,
     val erÅrsakssammenheng: Boolean?
 )
 
-data class SykdomYrkesskadeGrunnlagDto(
-    val opplysninger: SykdomInnhentetYrkesskadeOpplysninger,
+data class YrkesskadeGrunnlagDto(
+    val opplysninger: InnhentetSykdomsOpplysninger,
     val yrkesskadevurdering: Yrkesskadevurdering?,
 )
 
-data class SykdomInnhentetYrkesskadeOpplysninger(
+data class InnhentetSykdomsOpplysninger(
     val oppgittYrkesskadeISøknad: Boolean,
     val innhentedeYrkesskader: List<RegistrertYrkesskade>,
 )
