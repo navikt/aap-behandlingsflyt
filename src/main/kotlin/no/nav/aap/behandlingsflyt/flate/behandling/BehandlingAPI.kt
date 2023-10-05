@@ -7,11 +7,11 @@ import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.domene.ElementNotFoundException
 import no.nav.aap.behandlingsflyt.domene.behandling.Behandling
 import no.nav.aap.behandlingsflyt.domene.behandling.BehandlingTjeneste
+import no.nav.aap.behandlingsflyt.flyt.steg.StegGruppe
+import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkår
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårstype
-import no.nav.aap.behandlingsflyt.flyt.steg.StegGruppe
-import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 import java.util.*
 
 fun NormalOpenAPIRoute.behandlingApi() {
@@ -90,21 +90,22 @@ fun NormalOpenAPIRoute.behandlingApi() {
         route("/{referanse}/flyt-2") {
             get<BehandlingReferanse, BehandlingFlytOgTilstand2Dto> { req ->
                 val behandling = behandling(req)
-                val stegGrupper = LinkedHashMap<StegGruppe, LinkedList<StegType>>()
-                for (steg in behandling.flyt().stegene()) {
-                    val gruppe = stegGrupper.getOrDefault(steg.gruppe, LinkedList<StegType>())
-                    gruppe.add(steg)
-                    stegGrupper[steg.gruppe] = gruppe
-                }
+                val stegGrupper: Map<StegGruppe, List<StegType>> =
+                    behandling.flyt().stegene().groupBy { steg -> steg.gruppe }
 
+                val aktivtSteg = behandling.aktivtSteg().tilstand.steg()
+                var erFullført = true
                 respond(
                     BehandlingFlytOgTilstand2Dto(
-                        stegGrupper.map { gruppe ->
+                        flyt = stegGrupper.map { (gruppe, steg) ->
+                            erFullført = erFullført && gruppe != aktivtSteg.gruppe
                             FlytGruppe(
-                                gruppe.key,
-                                gruppe.value.map { stegType ->
-                                    FlytSteg(stegType,
-                                        behandling.avklaringsbehov()
+                                stegGruppe = gruppe,
+                                erFullført = erFullført,
+                                steg = steg.map { stegType ->
+                                    FlytSteg(
+                                        stegType = stegType,
+                                        avklaringsbehov = behandling.avklaringsbehov()
                                             .filter { avklaringsbehov -> avklaringsbehov.skalLøsesISteg(stegType) }
                                             .map { behov ->
                                                 AvklaringsbehovDTO(
@@ -113,15 +114,16 @@ fun NormalOpenAPIRoute.behandlingApi() {
                                                     emptyList()
                                                 )
                                             },
-                                        hentUtRelevantVilkårForSteg(
+                                        vilkårDTO = hentUtRelevantVilkårForSteg(
                                             behandling.vilkårsresultat(),
                                             stegType
                                         )
                                     )
                                 }
                             )
-                        }, behandling.aktivtSteg().tilstand.steg(),
-                        behandling.aktivtSteg().tilstand.steg().gruppe
+                        },
+                        aktivtSteg = aktivtSteg,
+                        aktivGruppe = aktivtSteg.gruppe
                     )
                 )
             }
