@@ -40,8 +40,7 @@ class FlytOrkestrator {
                 behandlingFlyt,
                 avklaringsbehov.filter { it.status() != Status.SENDT_TILBAKE_FRA_BESLUTTER }
                     .map { behov -> behov.definisjon },
-                nesteSteg.type(),
-                nesteStegStatus
+                nesteSteg.type()
             )
 
             val result = StegOrkestrator(nesteSteg).utførTilstandsEndring(
@@ -69,7 +68,7 @@ class FlytOrkestrator {
                     aktivtSteg.tilstand,
                     result.tilSteg()
                 )
-                hoppTilbakeTilSteg(kontekst, behandling, result.tilSteg(), StegStatus.START)
+                hoppTilbakeTilSteg(kontekst, behandling, result.tilSteg())
                 aktivtSteg = behandling.aktivtSteg()
             }
 
@@ -100,9 +99,8 @@ class FlytOrkestrator {
                 behandling.aktivtSteg(),
                 behandling.avklaringsbehov()
                     .filter { behov -> definisjoner.any { it == behov.definisjon } })
-            val tilStegStatus = StegStatus.AVKLARINGSPUNKT
 
-            hoppTilbakeTilSteg(kontekst, behandling, tilSteg, tilStegStatus)
+            hoppTilbakeTilSteg(kontekst, behandling, tilSteg)
         } else if (skalRekjøreSteg(definisjoner, behandling)) {
             flyttTilStartAvAktivtSteg(behandling)
         }
@@ -120,13 +118,11 @@ class FlytOrkestrator {
     private fun hoppTilbakeTilSteg(
         kontekst: FlytKontekst,
         behandling: Behandling,
-        tilSteg: StegType,
-        tilStegStatus: StegStatus
+        tilSteg: StegType
     ) {
         val behandlingFlyt = behandling.flyt()
 
-        val aktivtSteg = behandling.aktivtSteg()
-        var forrige: BehandlingSteg? = behandlingFlyt.steg(aktivtSteg.tilstand.steg())
+        var forrige: BehandlingSteg?
 
         var kanFortsette = true
         while (kanFortsette) {
@@ -135,18 +131,15 @@ class FlytOrkestrator {
             // TODO: Refactor
             if (forrige == null) {
                 kanFortsette = false
-            } else if (forrige.type() == tilSteg && tilStegStatus != StegStatus.AVKLARINGSPUNKT) {
-                StegOrkestrator(forrige).utførTilstandsEndring(
-                    kontekst = kontekst,
-                    nesteStegStatus = tilStegStatus,
-                    avklaringsbehov = listOf(),
-                    behandling = behandling
-                )
-                kanFortsette = false
             } else {
+                var status = StegStatus.TILBAKEFØRT
+                if (forrige.type() == tilSteg) {
+                    status = StegStatus.START
+                    kanFortsette = false
+                }
                 StegOrkestrator(forrige).utførTilstandsEndring(
                     kontekst = kontekst,
-                    nesteStegStatus = StegStatus.TILBAKEFØRT,
+                    nesteStegStatus = status,
                     avklaringsbehov = listOf(),
                     behandling = behandling
                 )
@@ -200,8 +193,7 @@ class FlytOrkestrator {
     private fun validerPlassering(
         behandlingFlyt: BehandlingFlyt,
         åpneAvklaringsbehov: List<Definisjon>,
-        nesteSteg: StegType,
-        nesteStegStatus: StegStatus
+        nesteSteg: StegType
     ) {
         val uhåndterteBehov = åpneAvklaringsbehov
             .filter { definisjon ->
@@ -217,7 +209,7 @@ class FlytOrkestrator {
                 )
             }
         if (uhåndterteBehov.isNotEmpty()) {
-            throw IllegalStateException("Har uhåndterte behov som skulle vært håndtert før nåværende steg = '$nesteSteg' med status = '$nesteStegStatus'")
+            throw IllegalStateException("Har uhåndterte behov som skulle vært håndtert før nåværende steg = '$nesteSteg'")
         }
     }
 
