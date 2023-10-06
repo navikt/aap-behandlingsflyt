@@ -61,14 +61,15 @@ class FlytOrkestrator {
             }
 
             if (result.erTilbakeføring()) {
+                val tilSteg = behandlingFlyt.finnTidligsteVedTilbakeføring(behandling.avklaringsbehovene())
                 log.info(
                     "[{} - {}] Tilakeført fra '{}' til '{}'",
                     kontekst.sakId,
                     kontekst.behandlingId,
                     aktivtSteg.tilstand,
-                    result.tilSteg()
+                    tilSteg
                 )
-                hoppTilbakeTilSteg(kontekst, behandling, result.tilSteg())
+                hoppTilbakeTilSteg(kontekst, behandling, tilSteg)
                 aktivtSteg = behandling.aktivtSteg()
             }
 

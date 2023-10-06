@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.domene.behandling.EndringType
+import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 import java.util.*
@@ -93,6 +94,10 @@ class BehandlingFlyt(
 
     fun harTruffetSlutten(nåværendeSteg: StegType): Boolean {
         return flyt.indexOfFirst { it.type() == nåværendeSteg } == (flyt.size - 1)
+    }
+
+    fun finnTidligsteVedTilbakeføring(avklaringsbehovene: Avklaringsbehovene): StegType {
+        return avklaringsbehovene.tilbakeførtFraBeslutter().map { it.løsesISteg() }.minWith(compareable())
     }
 }
 

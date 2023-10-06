@@ -3,22 +3,17 @@ package no.nav.aap.behandlingsflyt.flyt.steg.impl
 import no.nav.aap.behandlingsflyt.domene.behandling.Behandling
 import no.nav.aap.behandlingsflyt.domene.behandling.BehandlingTjeneste
 import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Status
-import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegInput
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
+import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 
 class FatteVedtakSteg : BehandlingSteg {
     override fun utfør(input: StegInput): StegResultat {
         val behandling = BehandlingTjeneste.hent(input.kontekst.behandlingId)
 
         if (skalTilbakeføresEtterTotrinnsVurdering(behandling)) {
-            val tilbakeførtFraBeslutter = behandling.avklaringsbehovene().tilbakeførtFraBeslutter()
-            val førsteSteg = tilbakeførtFraBeslutter.map { it.løsesISteg() }
-                .minWith(behandling.flyt().compareable())
-
-            return StegResultat(tilbakeførtTilSteg = førsteSteg)
+            return StegResultat(tilbakeførtFraBeslutter = true)
         }
         if (harHattAvklaringsbehovSomHarKrevdToTrinn(behandling)) {
             return StegResultat(listOf(Definisjon.FATTE_VEDTAK))
@@ -28,8 +23,7 @@ class FatteVedtakSteg : BehandlingSteg {
     }
 
     private fun skalTilbakeføresEtterTotrinnsVurdering(behandling: Behandling): Boolean {
-        return behandling.avklaringsbehov()
-            .any { avklaringsbehov -> avklaringsbehov.status() == Status.SENDT_TILBAKE_FRA_BESLUTTER }
+        return behandling.avklaringsbehovene().tilbakeførtFraBeslutter().isNotEmpty()
     }
 
     private fun harHattAvklaringsbehovSomHarKrevdToTrinn(behandling: Behandling) =

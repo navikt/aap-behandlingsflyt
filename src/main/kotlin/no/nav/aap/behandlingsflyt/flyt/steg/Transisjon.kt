@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Definisjon
 
 interface Transisjon {
     fun funnetAvklaringsbehov(): List<Definisjon> = listOf()
-    fun tilSteg(): StegType = StegType.UDEFINERT
 
     fun erTilbakeføring(): Boolean = false
     fun kanFortsette(): Boolean = true
@@ -23,25 +22,7 @@ class FunnetAvklaringsbehov(var avklaringsbehov: List<Definisjon>) : Transisjon 
     }
 }
 
-class TilbakeførtTilAvklaringsbehov(var avklaringsbehov: List<Definisjon>, var tilSteg: StegType) : Transisjon {
-    override fun funnetAvklaringsbehov(): List<Definisjon> {
-        return avklaringsbehov
-    }
-
-    override fun tilSteg(): StegType {
-        return tilSteg
-    }
-
-    override fun erTilbakeføring(): Boolean {
-        return true
-    }
-}
-
-class Tilbakeført(var tilSteg: StegType) : Transisjon {
-    override fun tilSteg(): StegType {
-        return tilSteg
-    }
-
+class TilbakeførtFraBeslutter : Transisjon {
     override fun erTilbakeføring(): Boolean {
         return true
     }
