@@ -19,7 +19,7 @@ class FatteVedtakSteg : BehandlingSteg {
             return StegResultat(listOf(Definisjon.FATTE_VEDTAK))
         }
 
-        return StegResultat() // DO NOTHING
+        return StegResultat()
     }
 
     private fun skalTilbakeføresEtterTotrinnsVurdering(behandling: Behandling): Boolean {
