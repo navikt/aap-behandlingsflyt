@@ -16,11 +16,19 @@ enum class StegType(val gruppe: StegGruppe, val status: Status, val tekniskSteg:
         gruppe = StegGruppe.MEDLEMSKAP,
         status = Status.UTREDES
     ),
+    INNHENT_MEDLEMSKAP(
+        gruppe = StegGruppe.MEDLEMSKAP,
+        status = Status.UTREDES
+    ),
     VURDER_BISTANDSBEHOV(
         gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES
     ),
     VURDER_SYKEPENGEERSTATNING(
+        gruppe = StegGruppe.SYKDOM,
+        status = Status.UTREDES
+    ),
+    FRITAK_MELDEPLIKT(
         gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES
     ),
@@ -43,6 +51,7 @@ enum class StegType(val gruppe: StegGruppe, val status: Status, val tekniskSteg:
         status = Status.UTREDES
     ),
     FASTSETT_GRUNNLAG(gruppe = StegGruppe.GRUNNLAG, status = Status.UTREDES),
+    INNHENT_INNTEKTSOPPLYSNINGER(gruppe = StegGruppe.GRUNNLAG, status = Status.UTREDES),
     FASTSETT_UTTAK(
         gruppe = StegGruppe.UTTAK,
         status = Status.UTREDES
