@@ -60,16 +60,18 @@ class FlytOrkestrator {
             }
 
             if (result.erTilbakeføring()) {
-                val tilSteg = behandlingFlyt.finnTidligsteVedTilbakeføring(behandling.avklaringsbehovene())
+                val tilbakeføringsflyt =
+                    behandlingFlyt.tilbakeflyt(behandling.avklaringsbehovene().tilbakeførtFraBeslutter())
                 log.info(
                     "[{} - {}] Tilakeført fra '{}' til '{}'",
                     kontekst.sakId,
                     kontekst.behandlingId,
                     aktivtSteg.tilstand,
-                    tilSteg
+                    tilbakeføringsflyt.stegene().last()
                 )
-                hoppTilbakeTilSteg(kontekst, behandling, tilSteg)
+                tilbakefør(kontekst, behandling, tilbakeføringsflyt)
                 aktivtSteg = behandling.aktivtSteg()
+                nesteSteg = behandlingFlyt.forberedFlyt(aktivtSteg.tilstand.steg())
             }
 
             val neste =
@@ -93,15 +95,14 @@ class FlytOrkestrator {
     }
 
     internal fun forberedLøsingAvBehov(definisjoner: List<Definisjon>, behandling: Behandling, kontekst: FlytKontekst) {
-        if (behandling.skalHoppesTilbake(definisjoner)) {
-            val tilSteg = utledSteg(
-                behandling.flyt(),
-                behandling.aktivtSteg(),
-                behandling.avklaringsbehov()
-                    .filter { behov -> definisjoner.any { it == behov.definisjon } })
 
-            hoppTilbakeTilSteg(kontekst, behandling, tilSteg)
-        } else if (skalRekjøreSteg(definisjoner, behandling)) {
+        val behovForLøsninger = behandling.avklaringsbehovene().hentBehovForLøsninger(definisjoner)
+
+        val tilbakeføringsflyt = behandling.flyt().tilbakeflyt(behovForLøsninger)
+
+        tilbakefør(kontekst, behandling, tilbakeføringsflyt)
+
+        if (skalRekjøreSteg(definisjoner, behandling) && tilbakeføringsflyt.erTom()) {
             flyttTilStartAvAktivtSteg(behandling)
         }
     }
@@ -115,31 +116,23 @@ class FlytOrkestrator {
             .any { it.rekjørSteg }
     }
 
-    private fun hoppTilbakeTilSteg(
+    private fun tilbakefør(
         kontekst: FlytKontekst,
         behandling: Behandling,
-        tilSteg: StegType
+        behandlingFlyt: BehandlingFlyt
     ) {
-        val behandlingFlyt = behandling.flyt()
-
-        var forrige: BehandlingSteg?
+        var neste: BehandlingSteg?
 
         var kanFortsette = true
         while (kanFortsette) {
-            forrige = behandlingFlyt.forrige()
+            neste = behandlingFlyt.neste()
 
-            // TODO: Refactor
-            if (forrige == null) {
+            if (neste == null) {
                 kanFortsette = false
             } else {
-                var status = StegStatus.TILBAKEFØRT
-                if (forrige.type() == tilSteg) {
-                    status = StegStatus.START
-                    kanFortsette = false
-                }
-                StegOrkestrator(forrige).utførTilstandsEndring(
+                StegOrkestrator(neste).utførTilstandsEndring(
                     kontekst = kontekst,
-                    nesteStegStatus = status,
+                    nesteStegStatus = StegStatus.TILBAKEFØRT,
                     avklaringsbehov = listOf(),
                     behandling = behandling
                 )
@@ -167,29 +160,6 @@ class FlytOrkestrator {
         val nyStegTilstand =
             StegTilstand(tilstand = Tilstand(behandling.aktivtSteg().tilstand.steg(), StegStatus.START))
         behandling.visit(nyStegTilstand)
-    }
-
-    private fun utledSteg(
-        behandlingFlyt: BehandlingFlyt,
-        aktivtSteg: StegTilstand,
-        avklaringsDefinisjoner: List<Avklaringsbehov>
-    ): StegType {
-        return avklaringsDefinisjoner.filter { definisjon ->
-            erStegFørAktivtSteg(behandlingFlyt, aktivtSteg, definisjon.løsesISteg())
-        }
-            .map { definisjon -> definisjon.løsesISteg() }
-            .minWith(behandlingFlyt.compareable())
-    }
-
-    private fun erStegFørAktivtSteg(
-        behandlingFlyt: BehandlingFlyt,
-        aktivtSteg: StegTilstand,
-        løsesISteg: StegType
-    ): Boolean {
-        return behandlingFlyt.erStegFør(
-            løsesISteg,
-            aktivtSteg.tilstand.steg()
-        )
     }
 
     private fun validerPlassering(

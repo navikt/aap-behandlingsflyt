@@ -17,14 +17,6 @@ class BehandlingFlytTest {
         assertThat(neste!!.type()).isEqualTo(StegType.INNHENT_PERSONOPPLYSNINGER)
     }
 
-    @Test
-    fun `Skal finne forrige steg for førstegangsbehandling`() {
-        førstegangsbehandling.forberedFlyt(StegType.FASTSETT_GRUNNLAG)
-        val forrige = førstegangsbehandling.forrige()
-
-        assertThat(forrige!!.type()).isEqualTo(StegType.VURDER_MEDLEMSKAP)
-    }
-
     private val førstegangsbehandling = BehandlingFlytBuilder()
         .medSteg(StartBehandlingSteg())
         .medSteg(InnhentPersonopplysningerSteg())

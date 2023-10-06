@@ -34,7 +34,7 @@ class StegOrkestrator(private val aktivtSteg: BehandlingSteg) {
                 relevanteAvklaringsbehov
             )
 
-            StegStatus.AVSLUTTER -> harTruffetSlutten(aktivtSteg.type(), behandling.flyt())
+            StegStatus.AVSLUTTER -> Fortsett
             StegStatus.TILBAKEFØRT -> behandleStegBakover(aktivtSteg, kontekst)
             else -> Fortsett
         }
@@ -50,13 +50,6 @@ class StegOrkestrator(private val aktivtSteg: BehandlingSteg) {
         steg.vedTilbakeføring(input)
 
         return Fortsett
-    }
-
-    private fun harTruffetSlutten(aktivtSteg: StegType, flyt: BehandlingFlyt): Transisjon {
-        return when (flyt.harTruffetSlutten(aktivtSteg)) {
-            true -> Stopp
-            else -> Fortsett
-        }
     }
 
     private fun behandleSteg(steg: BehandlingSteg, kontekst: FlytKontekst): Transisjon {

@@ -87,9 +87,6 @@ class Behandling(
     fun avklaringsbehov(): List<Avklaringsbehov> = avklaringsbehovene.alle()
     fun avklaringsbehovene(): Avklaringsbehovene = avklaringsbehovene
     fun åpneAvklaringsbehov(): List<Avklaringsbehov> = avklaringsbehovene.åpne()
-    fun skalHoppesTilbake(definisjoner: List<Definisjon>): Boolean {
-        return avklaringsbehovene.skalHoppesTilbake(flyt(), aktivtSteg(), definisjoner)
-    }
 
     fun årsaker(): List<Årsak> = årsaker.toList()
     fun stegHistorikk(): List<StegTilstand> = stegHistorikk.toList()

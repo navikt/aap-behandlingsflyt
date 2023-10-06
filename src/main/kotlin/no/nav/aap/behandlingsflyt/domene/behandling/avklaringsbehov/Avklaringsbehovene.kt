@@ -33,25 +33,20 @@ class Avklaringsbehovene {
         avklaringsbehovene.single { it.definisjon == definisjon }.løs(begrunnelse, endretAv = endretAv)
     }
 
-    fun alle(): List<Avklaringsbehov> = avklaringsbehovene.toList()
-    fun åpne(): List<Avklaringsbehov> = avklaringsbehovene.filter { it.erÅpent() }.toList()
+    fun alle(): List<Avklaringsbehov> {
+        return avklaringsbehovene.toList()
+    }
 
-    fun tilbakeførtFraBeslutter(): List<Avklaringsbehov> =
-        avklaringsbehovene.filter { it.status() == Status.SENDT_TILBAKE_FRA_BESLUTTER }.toList()
+    fun åpne(): List<Avklaringsbehov> {
+        return avklaringsbehovene.filter { it.erÅpent() }.toList()
+    }
 
-    fun skalHoppesTilbake(
-        behandlingFlyt: BehandlingFlyt,
-        aktivtSteg: StegTilstand,
-        definisjoner: List<Definisjon>
-    ): Boolean {
-        val relevanteBehov = avklaringsbehovene.filter { it.definisjon in definisjoner }
+    fun tilbakeførtFraBeslutter(): List<Avklaringsbehov> {
+        return avklaringsbehovene.filter { it.status() == Status.SENDT_TILBAKE_FRA_BESLUTTER }.toList()
+    }
 
-        return relevanteBehov.any { behov ->
-            behandlingFlyt.erStegFør(
-                stegA = behov.løsesISteg(),
-                stegB = aktivtSteg.tilstand.steg()
-            )
-        }
+    fun hentBehovForLøsninger(definisjoner: List<Definisjon>): List<Avklaringsbehov> {
+        return avklaringsbehovene.filter {it.definisjon in definisjoner }.toList()
     }
 
     fun vurderTotrinn(definisjon: Definisjon, godkjent: Boolean, begrunnelse: String) {

@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.domene.behandling.EndringType
-import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 import java.util.*
@@ -13,34 +13,27 @@ class BehandlingFlyt(
     private val flyt: List<BehandlingSteg>,
     private val endringTilSteg: Map<EndringType, StegType>
 ) {
-    private var aktivtSteg: BehandlingSteg = flyt.first()
+    private var aktivtSteg: BehandlingSteg? = flyt.firstOrNull()
 
     fun forberedFlyt(aktivtSteg: StegType): BehandlingSteg {
         this.aktivtSteg = steg(aktivtSteg)
-        return this.aktivtSteg
+        return this.aktivtSteg!!
     }
 
     /**
      * Finner neste steget som skal prosesseres etter at nåværende er ferdig
      */
     fun neste(): BehandlingSteg? {
+        if (this.flyt.isEmpty()) {
+            return null
+        }
+
         val nåværendeIndex = this.flyt.indexOfFirst { it === this.aktivtSteg }
         val iterator = this.flyt.listIterator(nåværendeIndex)
         iterator.next() // Er alltid nåværende steg
 
         if (iterator.hasNext()) {
             aktivtSteg = iterator.next()
-            return aktivtSteg
-        }
-
-        return null
-    }
-
-    fun forrige(): BehandlingSteg? {
-        val nåværendeIndex = this.flyt.indexOfFirst { it === aktivtSteg }
-        val iterator = this.flyt.listIterator(nåværendeIndex)
-        if (iterator.hasPrevious()) {
-            aktivtSteg = iterator.previous()
             return aktivtSteg
         }
 
@@ -89,16 +82,31 @@ class BehandlingFlyt(
         return aIndex <= bIndex
     }
 
+    /**
+     * Brukes av APIet
+     */
     fun stegene(): List<StegType> {
         return flyt.map { it.type() }
     }
 
-    fun harTruffetSlutten(nåværendeSteg: StegType): Boolean {
-        return flyt.indexOfFirst { it.type() == nåværendeSteg } == (flyt.size - 1)
+    fun tilbakeflyt(avklaringsbehov: List<Avklaringsbehov>): BehandlingFlyt {
+        val skalTilSteg = avklaringsbehov.map { it.løsesISteg() }.minWithOrNull(compareable())
+
+        if (skalTilSteg == null) {
+            return BehandlingFlyt(emptyList(), emptyMap())
+        }
+
+        val returflyt = flyt.slice(flyt.indexOfFirst { it.type() == skalTilSteg }..flyt.indexOf(this.aktivtSteg))
+
+        if (returflyt.size <= 1) {
+            return BehandlingFlyt(emptyList(), emptyMap())
+        }
+
+        return BehandlingFlyt(returflyt.reversed(), emptyMap())
     }
 
-    fun finnTidligsteVedTilbakeføring(avklaringsbehovene: Avklaringsbehovene): StegType {
-        return avklaringsbehovene.tilbakeførtFraBeslutter().map { it.løsesISteg() }.minWith(compareable())
+    fun erTom(): Boolean {
+        return flyt.isEmpty()
     }
 }
 
