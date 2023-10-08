@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.flyt
 import no.nav.aap.behandlingsflyt.domene.behandling.Behandling
 import no.nav.aap.behandlingsflyt.domene.behandling.BehandlingTjeneste
 import no.nav.aap.behandlingsflyt.domene.behandling.StegTilstand
-import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -71,7 +70,7 @@ class FlytOrkestrator {
                 )
                 tilbakefør(kontekst, behandling, tilbakeføringsflyt)
                 aktivtSteg = behandling.aktivtSteg()
-                nesteSteg = behandlingFlyt.forberedFlyt(aktivtSteg.tilstand.steg())
+                nesteSteg = behandlingFlyt.aktivtSteg()!!
             }
 
             val neste =

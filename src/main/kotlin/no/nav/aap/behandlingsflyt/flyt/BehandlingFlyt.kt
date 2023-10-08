@@ -6,12 +6,14 @@ import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 import java.util.*
 
+
 /**
  * Holder styr på den definerte behandlingsflyten og regner ut hvilket steg det skal flyttes
  */
 class BehandlingFlyt(
     private val flyt: List<BehandlingSteg>,
-    private val endringTilSteg: Map<EndringType, StegType>
+    private val endringTilSteg: Map<EndringType, StegType>,
+    private val onCompletedFlyt: (StegType) -> Any = { _ -> }
 ) {
     private var aktivtSteg: BehandlingSteg? = flyt.firstOrNull()
 
@@ -19,6 +21,7 @@ class BehandlingFlyt(
         this.aktivtSteg = steg(aktivtSteg)
         return this.aktivtSteg!!
     }
+
 
     /**
      * Finner neste steget som skal prosesseres etter at nåværende er ferdig
@@ -36,6 +39,7 @@ class BehandlingFlyt(
             aktivtSteg = iterator.next()
             return aktivtSteg
         }
+        onCompletedFlyt(flyt.last().type())
 
         return null
     }
@@ -89,6 +93,10 @@ class BehandlingFlyt(
         return flyt.map { it.type() }
     }
 
+    fun aktivtSteg(): BehandlingSteg? {
+        return aktivtSteg
+    }
+
     fun tilbakeflyt(avklaringsbehov: List<Avklaringsbehov>): BehandlingFlyt {
         val skalTilSteg = avklaringsbehov.map { it.løsesISteg() }.minWithOrNull(compareable())
 
@@ -102,7 +110,7 @@ class BehandlingFlyt(
             return BehandlingFlyt(emptyList(), emptyMap())
         }
 
-        return BehandlingFlyt(returflyt.reversed(), emptyMap())
+        return BehandlingFlyt(returflyt.reversed(), emptyMap(), this::forberedFlyt)
     }
 
     fun erTom(): Boolean {
