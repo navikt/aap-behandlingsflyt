@@ -17,7 +17,9 @@ class AvklarBistandLøser : AvklaringsbehovsLøser<AvklarBistandsbehovLøsning> 
             bistandsVurdering = løsning.bistandsVurdering
         )
 
-        return LøsningsResultat(begrunnelse = løsning.bistandsVurdering.begrunnelse)
+        return LøsningsResultat(
+            begrunnelse = løsning.bistandsVurdering.begrunnelse
+        )
     }
 
     override fun forBehov(): Definisjon {

@@ -4,8 +4,8 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovsLøser
 import no.nav.aap.behandlingsflyt.avklaringsbehov.LøsningsResultat
 import no.nav.aap.behandlingsflyt.domene.behandling.BehandlingTjeneste
 import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.grunnlag.sykdom.SykdomsTjeneste
 import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
+import no.nav.aap.behandlingsflyt.grunnlag.sykdom.SykdomsTjeneste
 
 class AvklarSykdomLøser : AvklaringsbehovsLøser<AvklarSykdomLøsning> {
 
@@ -19,7 +19,9 @@ class AvklarSykdomLøser : AvklaringsbehovsLøser<AvklarSykdomLøsning> {
             sykdomsvurdering = løsning.sykdomsvurdering
         )
 
-        return LøsningsResultat(begrunnelse = løsning.sykdomsvurdering.begrunnelse)
+        return LøsningsResultat(
+            begrunnelse = løsning.sykdomsvurdering.begrunnelse
+        )
     }
 
     override fun forBehov(): Definisjon {

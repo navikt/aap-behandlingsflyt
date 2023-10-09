@@ -65,7 +65,7 @@ class FlytOrkestrator {
 
     internal fun forberedLøsingAvBehov(definisjoner: List<Definisjon>, behandling: Behandling, kontekst: FlytKontekst) {
 
-        val behovForLøsninger = behandling.avklaringsbehovene().hentBehovForLøsninger(definisjoner)
+        val behovForLøsninger = behandling.avklaringsbehovene().hentBehovForDefinisjon(definisjoner)
 
         val tilbakeføringsflyt = behandling.flyt().tilbakeflyt(behovForLøsninger)
 

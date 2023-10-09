@@ -5,7 +5,8 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 class Avklaringsbehov(
     val definisjon: Definisjon,
     val historikk: MutableList<Endring> = mutableListOf(),
-    val funnetISteg: StegType
+    val funnetISteg: StegType,
+    var kreverToTrinn: Boolean = false
 ) {
     init {
         if (historikk.isEmpty()) {
@@ -36,11 +37,21 @@ class Avklaringsbehov(
     }
 
     fun løs(begrunnelse: String, endretAv: String) {
+        løs(begrunnelse, endretAv, definisjon.kreverToTrinn)
+    }
+
+    fun løs(begrunnelse: String, endretAv: String, kreverToTrinn: Boolean) {
+        if (!this.kreverToTrinn) {
+            this.kreverToTrinn = kreverToTrinn
+        }
         historikk.add(Endring(status = Status.AVSLUTTET, begrunnelse = begrunnelse, endretAv = endretAv))
     }
 
     fun erTotrinn(): Boolean {
-        return definisjon.kreverToTrinn
+        if (definisjon.kreverToTrinn) {
+            return true
+        }
+        return kreverToTrinn
     }
 
     fun erTotrinnsVurdert(): Boolean {

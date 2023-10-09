@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovsLøser
 import no.nav.aap.behandlingsflyt.avklaringsbehov.SattPåVentLøser
 import no.nav.aap.behandlingsflyt.avklaringsbehov.bistand.AvklarBistandLøser
+import no.nav.aap.behandlingsflyt.avklaringsbehov.meldeplikt.FritakFraMeldepliktLøser
 import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.AvklarSykdomLøser
 import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.AvklarYrkesskadeLøser
 import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.FatteVedtakLøser
@@ -27,6 +28,7 @@ class AvklaringsbehovOrkestrator {
     init {
         avklaringsbehovsLøsere[Definisjon.MANUELT_SATT_PÅ_VENT] = SattPåVentLøser()
         avklaringsbehovsLøsere[Definisjon.AVKLAR_SYKDOM] = AvklarSykdomLøser()
+        avklaringsbehovsLøsere[Definisjon.FRITAK_MELDEPLIKT] = FritakFraMeldepliktLøser()
         avklaringsbehovsLøsere[Definisjon.AVKLAR_BISTANDSBEHOV] = AvklarBistandLøser()
         avklaringsbehovsLøsere[Definisjon.AVKLAR_YRKESSKADE] = AvklarYrkesskadeLøser()
         avklaringsbehovsLøsere[Definisjon.FORESLÅ_VEDTAK] = ForeslåVedtakLøser()
@@ -78,10 +80,20 @@ class AvklaringsbehovOrkestrator {
         val avklaringsbehovsLøser =
             avklaringsbehovsLøsere.getValue(it.definisjon()) as AvklaringsbehovsLøser<AvklaringsbehovLøsning>
         val løsningsResultat = avklaringsbehovsLøser.løs(kontekst = kontekst, løsning = it)
-        behandling.løsAvklaringsbehov(
-            it.definisjon(),
-            løsningsResultat.begrunnelse,
-            "Saksbehandler"
-        ) // TODO: Hente fra context
+        val avklaringsbehovene = behandling.avklaringsbehovene()
+        if (løsningsResultat.kreverToTrinn == null) {
+            avklaringsbehovene.løsAvklaringsbehov(
+                it.definisjon(),
+                løsningsResultat.begrunnelse,
+                "Saksbehandler" // TODO: Hente fra context
+            )
+        } else {
+            avklaringsbehovene.løsAvklaringsbehov(
+                it.definisjon(),
+                løsningsResultat.begrunnelse,
+                "Saksbehandler", // TODO: Hente fra context
+                løsningsResultat.kreverToTrinn
+            )
+        }
     }
 }

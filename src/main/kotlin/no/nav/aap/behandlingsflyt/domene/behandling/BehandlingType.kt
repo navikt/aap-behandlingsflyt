@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.flyt.BehandlingFlytBuilder
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 import no.nav.aap.behandlingsflyt.flyt.steg.impl.FatteVedtakSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.impl.ForeslåVedtakSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.impl.FritakMeldepliktSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.impl.GeneriskPlaceholderSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.impl.InnhentPersonopplysningerSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.impl.InnhentYrkesskadeSteg
@@ -31,7 +32,7 @@ object Førstegangsbehandling : BehandlingType {
             .medSteg(VurderSykdomSteg())
             .medSteg(VurderBistandsbehovSteg())
             .medSteg(GeneriskPlaceholderSteg(StegType.VURDER_SYKEPENGEERSTATNING))
-            .medSteg(GeneriskPlaceholderSteg(StegType.FRITAK_MELDEPLIKT))
+            .medSteg(FritakMeldepliktSteg())
             .medSteg(GeneriskPlaceholderSteg(StegType.INNHENT_MEDLEMSKAP))
             .medSteg(GeneriskPlaceholderSteg(StegType.VURDER_MEDLEMSKAP))
             .medSteg(GeneriskPlaceholderSteg(StegType.INNHENT_INNTEKTSOPPLYSNINGER))

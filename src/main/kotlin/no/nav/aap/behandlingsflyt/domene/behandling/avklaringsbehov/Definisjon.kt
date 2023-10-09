@@ -12,6 +12,7 @@ import kotlin.reflect.KFunction1
 const val MANUELT_SATT_PÅ_VENT_KODE = "9001"
 const val AVKLAR_YRKESSKADE_KODE = "5002"
 const val AVKLAR_BISTANDSBEHOV_KODE = "5003"
+const val FRITAK_MELDEPLIKT_KODE = "5004"
 const val AVKLAR_SYKDOM_KODE = "5001"
 const val FORESLÅ_VEDTAK_KODE = "5098"
 const val FATTE_VEDTAK_KODE = "5099"
@@ -38,6 +39,10 @@ enum class Definisjon(
     AVKLAR_BISTANDSBEHOV(
         kode = AVKLAR_BISTANDSBEHOV_KODE,
         løsesISteg = StegType.VURDER_BISTANDSBEHOV,
+    ),
+    FRITAK_MELDEPLIKT(
+        kode = FRITAK_MELDEPLIKT_KODE,
+        løsesISteg = StegType.FRITAK_MELDEPLIKT,
     ),
     AVKLAR_YRKESSKADE(
         kode = AVKLAR_YRKESSKADE_KODE,

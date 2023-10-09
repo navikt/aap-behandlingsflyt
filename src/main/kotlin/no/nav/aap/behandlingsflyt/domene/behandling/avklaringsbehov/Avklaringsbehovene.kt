@@ -31,6 +31,10 @@ class Avklaringsbehovene {
         avklaringsbehovene.single { it.definisjon == definisjon }.løs(begrunnelse, endretAv = endretAv)
     }
 
+    fun løsAvklaringsbehov(definisjon: Definisjon, begrunnelse: String, endretAv: String, kreverToTrinn: Boolean) {
+        avklaringsbehovene.single { it.definisjon == definisjon }.løs(begrunnelse = begrunnelse, endretAv = endretAv, kreverToTrinn = kreverToTrinn)
+    }
+
     fun alle(): List<Avklaringsbehov> {
         return avklaringsbehovene.toList()
     }
@@ -43,7 +47,11 @@ class Avklaringsbehovene {
         return avklaringsbehovene.filter { it.status() == Status.SENDT_TILBAKE_FRA_BESLUTTER }.toList()
     }
 
-    fun hentBehovForLøsninger(definisjoner: List<Definisjon>): List<Avklaringsbehov> {
+    fun hentBehovForDefinisjon(definisjon: Definisjon): Avklaringsbehov? {
+        return avklaringsbehovene.filter { it.definisjon == definisjon }.singleOrNull()
+    }
+
+    fun hentBehovForDefinisjon(definisjoner: List<Definisjon>): List<Avklaringsbehov> {
         return avklaringsbehovene.filter { it.definisjon in definisjoner }.toList()
     }
 

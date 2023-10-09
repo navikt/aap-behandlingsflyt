@@ -38,7 +38,7 @@ class ForeslåVedtakSteg : BehandlingSteg {
         val behandling = BehandlingTjeneste.hent(input.kontekst.behandlingId)
         val avklaringsbehovene = behandling.avklaringsbehovene()
         val relevanteBehov =
-            avklaringsbehovene.hentBehovForLøsninger(listOf(Definisjon.FORESLÅ_VEDTAK))
+            avklaringsbehovene.hentBehovForDefinisjon(listOf(Definisjon.FORESLÅ_VEDTAK))
 
         if (relevanteBehov.isNotEmpty()) {
             avklaringsbehovene.avbryt(Definisjon.FORESLÅ_VEDTAK)
