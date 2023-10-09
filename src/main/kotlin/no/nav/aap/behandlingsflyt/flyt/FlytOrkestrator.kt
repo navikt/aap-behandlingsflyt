@@ -26,8 +26,7 @@ class FlytOrkestrator {
 
         var gjeldendeSteg = behandlingFlyt.forberedFlyt(behandling.aktivtSteg())
 
-        var kanFortsette = true
-        while (kanFortsette) {
+        while (true) {
             val avklaringsbehov = behandling.avklaringsbehov().filter { behov -> behov.erÅpent() }
             validerPlassering(
                 behandlingFlyt,
@@ -53,18 +52,16 @@ class FlytOrkestrator {
                     tilbakeføringsflyt.stegene().last()
                 )
                 tilbakefør(kontekst, behandling, tilbakeføringsflyt)
-                gjeldendeSteg = behandlingFlyt.aktivtSteg()!!
             }
 
             val neste = behandlingFlyt.neste()
 
-            kanFortsette = result.kanFortsette() && neste != null
-
-            if (kanFortsette) {
-                gjeldendeSteg = neste!!
+            if (result.kanFortsette() && neste != null) {
+                gjeldendeSteg = neste
             } else {
                 // Prosessen har stoppet opp, slipp ut hendelse om at den har stoppet opp og hvorfor?
                 loggStopp(kontekst, behandling)
+                return
             }
         }
     }

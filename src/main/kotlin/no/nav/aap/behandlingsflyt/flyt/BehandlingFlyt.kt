@@ -13,7 +13,7 @@ import java.util.*
 class BehandlingFlyt(
     private val flyt: List<BehandlingSteg>,
     private val endringTilSteg: Map<EndringType, StegType>,
-    private val onCompletedFlyt: (StegType) -> Any = { _ -> }
+    private val onCompletedFlyt: (StegType) -> Unit = { }
 ) {
     private var aktivtSteg: BehandlingSteg? = flyt.firstOrNull()
 
