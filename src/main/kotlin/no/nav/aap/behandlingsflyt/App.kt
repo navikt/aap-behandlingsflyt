@@ -107,7 +107,7 @@ internal fun Application.server() {
 }
 
 fun Application.module() {
-    environment.monitor.subscribe(ApplicationStarted) { application ->
+    environment.monitor.subscribe(ApplicationStarted) {
         Motor.start()
     }
     environment.monitor.subscribe(ApplicationStopped) { application ->
@@ -121,7 +121,7 @@ fun Application.module() {
 
 fun NormalOpenAPIRoute.configApi() {
     route("/config/definisjoner") {
-        get<Unit, List<Definisjon>> { request ->
+        get<Unit, List<Definisjon>> {
             respond(Definisjon.entries.toList())
         }
     }
@@ -148,7 +148,7 @@ private fun Routing.actuator(prometheus: PrometheusMeterRegistry) {
 @Deprecated("Kun for test lokalt enn så lenge")
 fun NormalOpenAPIRoute.hendelsesApi() {
     route("/test/opprett") {
-        post<Unit, OpprettTestcaseDTO, OpprettTestcaseDTO> { path, dto ->
+        post<Unit, OpprettTestcaseDTO, OpprettTestcaseDTO> { _, dto ->
 
             val ident = Ident(dto.ident)
             PersonRegisterMock.konstruer(ident, Personinfo(Fødselsdato(dto.fødselsdato)))

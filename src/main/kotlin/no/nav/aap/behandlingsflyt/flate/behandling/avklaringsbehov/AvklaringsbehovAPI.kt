@@ -14,7 +14,7 @@ import no.nav.aap.behandlingsflyt.hendelse.mottak.LøsAvklaringsbehovBehandlingH
 fun NormalOpenAPIRoute.avklaringsbehovApi() {
     route("/api/behandling") {
         route("/løs-behov").throws(HttpStatusCode.BadRequest, IllegalArgumentException::class) {
-            post<Unit, LøsAvklaringsbehovPåBehandling, LøsAvklaringsbehovPåBehandling> { path, request ->
+            post<Unit, LøsAvklaringsbehovPåBehandling, LøsAvklaringsbehovPåBehandling> { _, request ->
 
                 val dto = request
 
