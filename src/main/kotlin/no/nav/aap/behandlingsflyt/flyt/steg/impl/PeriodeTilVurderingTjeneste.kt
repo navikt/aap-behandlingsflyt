@@ -1,38 +1,16 @@
 package no.nav.aap.behandlingsflyt.flyt.steg.impl
 
-import no.nav.aap.behandlingsflyt.domene.behandling.Behandling
-import no.nav.aap.behandlingsflyt.flyt.vilkår.FunksjonellGruppe
-import no.nav.aap.behandlingsflyt.domene.behandling.Førstegangsbehandling
-import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårstype
-import no.nav.aap.behandlingsflyt.domene.sak.Sakslager
 import no.nav.aap.behandlingsflyt.domene.Periode
+import no.nav.aap.behandlingsflyt.domene.behandling.Behandling
+import no.nav.aap.behandlingsflyt.domene.behandling.Førstegangsbehandling
+import no.nav.aap.behandlingsflyt.domene.sak.Sakslager
+import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårstype
 
 object PeriodeTilVurderingTjeneste {
 
     fun utled(behandling: Behandling, vilkår: Vilkårstype): Set<Periode> {
         if (behandling.type == Førstegangsbehandling) {
             // ved førstegangsbehandling skal hele perioden alltid vurderes for alle vilkår?
-            val sak = Sakslager.hent(behandling.sakId)
-
-            return setOf(sak.rettighetsperiode)
-        }
-        behandling.årsaker()
-        TODO(" Sjekk vilkår mot årsaker til vurdering (ligger på behandling)")
-    }
-
-    /**
-     * Er du i kontekst av et vilkår benytt metoden for vilkår
-     *
-     * Denne er for UTTAK osv? Usikker på om dette er en god ide?
-     */
-    fun utled(behandling: Behandling, gruppe: FunksjonellGruppe): Set<Periode> {
-        if (behandling.type == Førstegangsbehandling) {
-            // ved førstegangsbehandling skal hele perioden alltid vurderes for alle vilkår?
-            val sak = Sakslager.hent(behandling.sakId)
-
-            return setOf(sak.rettighetsperiode)
-        } else if (gruppe in setOf(FunksjonellGruppe.UTTAK, FunksjonellGruppe.TILKJENT_YTELSE)) {
-            // Skal alltid innom UTTAK / TILKJENT_YTELSE men kan avgrensenses på et tidspunkt?
             val sak = Sakslager.hent(behandling.sakId)
 
             return setOf(sak.rettighetsperiode)
