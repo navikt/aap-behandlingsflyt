@@ -2,13 +2,11 @@ package no.nav.aap.behandlingsflyt.flyt.vilkår
 
 enum class Vilkårstype(
     val kode: String,
-    val gruppe: FunksjonellGruppe,
     val avslagsårsaker: List<Avslagsårsak>,
     val hjemmel: String
 ) {
     ALDERSVILKÅRET(
         kode = "AAP-4",
-        gruppe = FunksjonellGruppe.INNGANGSVILKÅR,
         avslagsårsaker = listOf(
             Avslagsårsak.BRUKER_OVER_67,
             Avslagsårsak.BRUKER_UNDER_18,
@@ -18,26 +16,24 @@ enum class Vilkårstype(
     ),
     SYKDOMSVILKÅRET(
         kode = "AAP-5",
-        gruppe = FunksjonellGruppe.INNGANGSVILKÅR,
         avslagsårsaker = listOf(
             Avslagsårsak.MANGLENDE_DOKUMENTASJON
         ),
         hjemmel = "§ 11-5"
     ),
+    BISTANDSVILKÅRET(
+        kode = "AAP-6",
+        avslagsårsaker = listOf(
+            Avslagsårsak.MANGLENDE_DOKUMENTASJON
+        ),
+        hjemmel = "§ 11-6"
+    ),
     GRUNNLAGET(
         kode = "AAP-20",
-        gruppe = FunksjonellGruppe.BEREGNING,
         avslagsårsaker = listOf(
             Avslagsårsak.MANGLENDE_DOKUMENTASJON
         ),
         hjemmel = "§ 11-19"
     )
 
-}
-
-enum class FunksjonellGruppe {
-    INNGANGSVILKÅR,
-    BEREGNING,
-    UTTAK,
-    TILKJENT_YTELSE
 }
