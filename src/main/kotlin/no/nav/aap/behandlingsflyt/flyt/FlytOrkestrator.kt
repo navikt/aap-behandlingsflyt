@@ -85,7 +85,7 @@ class FlytOrkestrator {
     ) {
         var neste: BehandlingSteg?
 
-        var kanFortsette = true
+        var kanFortsette = !behandlingFlyt.erTom()
         while (kanFortsette) {
             neste = behandlingFlyt.neste()
 
