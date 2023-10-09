@@ -71,4 +71,8 @@ class Avklaringsbehov(
 
     }
 
+    fun avbryt() {
+        historikk += Endring(status = Status.AVBRUTT, begrunnelse = "", endretAv = "system")
+    }
+
 }

@@ -1,7 +1,5 @@
 package no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov
 
-import no.nav.aap.behandlingsflyt.domene.behandling.StegTilstand
-import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 
 class Avklaringsbehovene {
@@ -46,10 +44,14 @@ class Avklaringsbehovene {
     }
 
     fun hentBehovForLøsninger(definisjoner: List<Definisjon>): List<Avklaringsbehov> {
-        return avklaringsbehovene.filter {it.definisjon in definisjoner }.toList()
+        return avklaringsbehovene.filter { it.definisjon in definisjoner }.toList()
     }
 
     fun vurderTotrinn(definisjon: Definisjon, godkjent: Boolean, begrunnelse: String) {
         avklaringsbehovene.single { it.definisjon == definisjon }.vurderTotrinn(begrunnelse, godkjent)
+    }
+
+    fun avbryt(definisjon: Definisjon) {
+        avklaringsbehovene.single { it.definisjon == definisjon }.avbryt()
     }
 }
