@@ -27,7 +27,7 @@ class FlytOrkestrator {
         var gjeldendeSteg = behandlingFlyt.forberedFlyt(behandling.aktivtSteg())
 
         while (true) {
-            val avklaringsbehov = behandling.avklaringsbehov().filter { behov -> behov.erÅpent() }
+            val avklaringsbehov = behandling.avklaringsbehovene().åpne()
             validerPlassering(
                 behandlingFlyt,
                 avklaringsbehov.filter { it.status() != Status.SENDT_TILBAKE_FRA_BESLUTTER }
@@ -37,7 +37,6 @@ class FlytOrkestrator {
 
             val result = StegOrkestrator(gjeldendeSteg).utfør(
                 kontekst,
-                avklaringsbehov,
                 behandling
             )
 
@@ -91,7 +90,6 @@ class FlytOrkestrator {
             } else {
                 StegOrkestrator(neste).utførTilbakefør(
                     kontekst = kontekst,
-                    avklaringsbehov = listOf(),
                     behandling = behandling
                 )
             }

@@ -12,13 +12,12 @@ class StegOrkestrator(private val aktivtSteg: BehandlingSteg) {
 
     fun utfør(
         kontekst: FlytKontekst,
-        avklaringsbehov: List<Avklaringsbehov>,
         behandling: Behandling
     ): Transisjon {
 
         var gjeldendeStegStatus = StegStatus.START
         while (true) {
-            val resultat = utførTilstandsEndring(kontekst, gjeldendeStegStatus, avklaringsbehov, behandling)
+            val resultat = utførTilstandsEndring(kontekst, gjeldendeStegStatus, behandling)
 
             if (resultat.funnetAvklaringsbehov().isNotEmpty()) {
                 log.info(
@@ -39,20 +38,20 @@ class StegOrkestrator(private val aktivtSteg: BehandlingSteg) {
 
     fun utførTilbakefør(
         kontekst: FlytKontekst,
-        avklaringsbehov: List<Avklaringsbehov>,
         behandling: Behandling
     ): Transisjon {
-        return utførTilstandsEndring(kontekst, StegStatus.TILBAKEFØRT, avklaringsbehov, behandling)
+        return utførTilstandsEndring(kontekst, StegStatus.TILBAKEFØRT, behandling)
     }
 
     private fun utførTilstandsEndring(
         kontekst: FlytKontekst,
         nesteStegStatus: StegStatus,
-        avklaringsbehov: List<Avklaringsbehov>,
         behandling: Behandling
     ): Transisjon {
         val relevanteAvklaringsbehov =
-            avklaringsbehov.filter { behov -> behov.skalLøsesISteg(aktivtSteg.type()) }
+            behandling.avklaringsbehov()
+                .filter { it.erÅpent() }
+                .filter { behov -> behov.skalLøsesISteg(aktivtSteg.type()) }
 
         log.debug(
             "[{} - {}] Behandler steg({}) med status({})",
