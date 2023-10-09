@@ -13,7 +13,7 @@ import java.util.*
 class BehandlingFlyt private constructor(
     private val flyt: List<BehandlingSteg>,
     private val endringTilSteg: Map<EndringType, StegType>,
-    private var parent: BehandlingFlyt?
+    private val parent: BehandlingFlyt?
 ) {
     private var aktivtSteg: BehandlingSteg? = flyt.firstOrNull()
 
