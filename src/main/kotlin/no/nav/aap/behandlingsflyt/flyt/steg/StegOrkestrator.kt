@@ -45,7 +45,7 @@ class StegOrkestrator(private val aktivtSteg: BehandlingSteg) {
         return utførTilstandsEndring(kontekst, StegStatus.TILBAKEFØRT, avklaringsbehov, behandling)
     }
 
-    fun utførTilstandsEndring(
+    private fun utførTilstandsEndring(
         kontekst: FlytKontekst,
         nesteStegStatus: StegStatus,
         avklaringsbehov: List<Avklaringsbehov>,
