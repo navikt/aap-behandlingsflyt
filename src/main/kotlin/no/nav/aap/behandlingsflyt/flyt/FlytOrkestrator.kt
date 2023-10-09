@@ -79,22 +79,21 @@ class FlytOrkestrator {
         behandling: Behandling,
         behandlingFlyt: BehandlingFlyt
     ) {
-        var neste: BehandlingSteg?
+        if (behandlingFlyt.erTom()) {
+            return
+        }
 
-        var kanFortsette = !behandlingFlyt.erTom()
-        while (kanFortsette) {
-            neste = behandlingFlyt.neste()
+        while (true) {
+            val neste = behandlingFlyt.neste()
 
             if (neste == null) {
-                kanFortsette = false
+                loggStopp(kontekst, behandling)
+                return
             } else {
                 StegOrkestrator(neste).utførTilbakefør(
                     kontekst = kontekst,
                     behandling = behandling
                 )
-            }
-            if (!kanFortsette) {
-                loggStopp(kontekst, behandling)
             }
         }
     }
