@@ -1,13 +1,11 @@
 package no.nav.aap.behandlingsflyt.flyt.steg.impl
 
-import no.nav.aap.behandlingsflyt.domene.Periode
 import no.nav.aap.behandlingsflyt.domene.behandling.BehandlingTjeneste
 import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegInput
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
-import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkår
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårstype
 import no.nav.aap.behandlingsflyt.grunnlag.sykdom.SykdomsGrunnlag
 import no.nav.aap.behandlingsflyt.grunnlag.sykdom.SykdomsTjeneste
@@ -26,7 +24,7 @@ class VurderYrkesskadeÅrsakssammenhengSteg : BehandlingSteg {
             val sykdomsvilkåret = behandling.vilkårsresultat().finnVilkår(Vilkårstype.SYKDOMSVILKÅRET)
             val sykdomsGrunnlag = SykdomsTjeneste.hentHvisEksisterer(behandlingId = behandling.id)
 
-            if (erBehovForAvklaring(yrkesskadeGrunnlag, sykdomsvilkåret, periodeTilVurdering, sykdomsGrunnlag)) {
+            if (erBehovForAvklaring(yrkesskadeGrunnlag, sykdomsGrunnlag)) {
                 return StegResultat(listOf(Definisjon.AVKLAR_YRKESSKADE))
             }
         }
@@ -35,13 +33,10 @@ class VurderYrkesskadeÅrsakssammenhengSteg : BehandlingSteg {
 
     private fun erBehovForAvklaring(
         yrkesskadeGrunnlag: YrkesskadeGrunnlag?,
-        sykdomsvilkåret: Vilkår,
-        periodeTilVurdering: Set<Periode>,
         sykdomsGrunnlag: SykdomsGrunnlag?
     ): Boolean {
-        return yrkesskadeGrunnlag?.yrkesskader?.yrkesskader?.isNotEmpty() == true && (sykdomsvilkåret.harPerioderSomIkkeErVurdert(
-            periodeTilVurdering
-        ) || sykdomsGrunnlag?.erKonsistent() != true)
+        return yrkesskadeGrunnlag?.yrkesskader?.yrkesskader?.isNotEmpty() == true
+                && sykdomsGrunnlag?.yrkesskadevurdering == null
     }
 
     override fun type(): StegType {

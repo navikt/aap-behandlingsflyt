@@ -3,13 +3,39 @@ package no.nav.aap.behandlingsflyt.flyt.steg
 import no.nav.aap.behandlingsflyt.domene.behandling.Behandling
 import no.nav.aap.behandlingsflyt.domene.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Avklaringsbehov
-import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
 import org.slf4j.LoggerFactory
 
 private val log = LoggerFactory.getLogger(StegOrkestrator::class.java)
 
 class StegOrkestrator(private val aktivtSteg: BehandlingSteg) {
+
+    fun utfør(
+        kontekst: FlytKontekst,
+        avklaringsbehov: List<Avklaringsbehov>,
+        behandling: Behandling
+    ): Transisjon {
+
+        var gjeldendeStegStatus = StegStatus.START
+        while (true) {
+            val resultat = utførTilstandsEndring(kontekst, gjeldendeStegStatus, avklaringsbehov, behandling)
+
+            if (resultat.funnetAvklaringsbehov().isNotEmpty()) {
+                log.info(
+                    "[{} - {}] Fant avklaringsbehov: {}",
+                    kontekst.sakId,
+                    kontekst.behandlingId,
+                    resultat.funnetAvklaringsbehov()
+                )
+                behandling.leggTil(resultat.funnetAvklaringsbehov())
+            }
+
+            if (!resultat.kanFortsette() || resultat.erTilbakeføring() || gjeldendeStegStatus == StegStatus.AVSLUTTER) {
+                return resultat
+            }
+            gjeldendeStegStatus = gjeldendeStegStatus.neste()
+        }
+    }
 
     fun utførTilstandsEndring(
         kontekst: FlytKontekst,
@@ -29,11 +55,7 @@ class StegOrkestrator(private val aktivtSteg: BehandlingSteg) {
         )
         val transisjon = when (nesteStegStatus) {
             StegStatus.UTFØRER -> behandleSteg(aktivtSteg, kontekst)
-            StegStatus.AVKLARINGSPUNKT -> harAvklaringspunkt(
-                aktivtSteg.type(),
-                relevanteAvklaringsbehov
-            )
-
+            StegStatus.AVKLARINGSPUNKT -> harAvklaringspunkt(aktivtSteg.type(), relevanteAvklaringsbehov)
             StegStatus.AVSLUTTER -> Fortsett
             StegStatus.TILBAKEFØRT -> behandleStegBakover(aktivtSteg, kontekst)
             else -> Fortsett

@@ -29,7 +29,6 @@ class FlytOrkestrator {
 
         var aktivtSteg = behandling.aktivtSteg()
         var nesteSteg = behandlingFlyt.forberedFlyt(aktivtSteg.tilstand.steg())
-        var nesteStegStatus = aktivtSteg.tilstand.status()
 
         var kanFortsette = true
         while (kanFortsette) {
@@ -41,22 +40,11 @@ class FlytOrkestrator {
                 nesteSteg.type()
             )
 
-            val result = StegOrkestrator(nesteSteg).utførTilstandsEndring(
+            val result = StegOrkestrator(nesteSteg).utfør(
                 kontekst,
-                nesteStegStatus,
                 avklaringsbehov,
                 behandling
             )
-
-            if (result.funnetAvklaringsbehov().isNotEmpty()) {
-                log.info(
-                    "[{} - {}] Fant avklaringsbehov: {}",
-                    kontekst.sakId,
-                    kontekst.behandlingId,
-                    result.funnetAvklaringsbehov()
-                )
-                behandling.leggTil(result.funnetAvklaringsbehov())
-            }
 
             if (result.erTilbakeføring()) {
                 val tilbakeføringsflyt =
@@ -73,18 +61,12 @@ class FlytOrkestrator {
                 nesteSteg = behandlingFlyt.aktivtSteg()!!
             }
 
-            val neste =
-                if (aktivtSteg.tilstand.status() == StegStatus.AVSLUTTER && nesteStegStatus == StegStatus.START) {
-                    behandlingFlyt.neste()
-                } else {
-                    nesteSteg
-                }
+            val neste = behandlingFlyt.neste()
 
             kanFortsette = result.kanFortsette() && neste != null
 
             if (kanFortsette) {
                 aktivtSteg = behandling.aktivtSteg()
-                nesteStegStatus = aktivtSteg.utledNesteStegStatus()
                 nesteSteg = neste!!
             } else {
                 // Prosessen har stoppet opp, slipp ut hendelse om at den har stoppet opp og hvorfor?
