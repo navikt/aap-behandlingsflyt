@@ -5,7 +5,7 @@ on:
     branches: [ main ]
 
 env:
-  IMAGE_BASE: europe-north1-docker.pkg.dev/${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}/aap/${{ github.repository }}
+  IMAGE: europe-north1-docker.pkg.dev/${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}/aap/${{ github.repository }}-$(echo $GITHUB_SHA | cut -c1-7)
 
 jobs:
   build:
@@ -24,15 +24,6 @@ jobs:
       - uses: gradle/gradle-build-action@v2.8.0
         with:
           arguments: test buildFatJar --continue --no-daemon --configuration-cache
-
-      - name: Setter tag-navn
-        run: echo "TAG=$(date +%m-%d-%Y)-$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_ENV
-
-      - name: Setter image-navn
-        id: image
-        run: |
-            echo "IMAGE=$(echo $IMAGE_BASE)-$(echo $TAG)" >> $GITHUB_ENV
-            echo "image=$(echo $IMAGE_BASE)-$(echo $TAG)" >> $GITHUB_OUTPUT
 
       - name: Login GAR
         uses: nais/login@v0
