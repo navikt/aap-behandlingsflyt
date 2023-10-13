@@ -25,6 +25,7 @@ class Vilkår(
                         vp.utfall,
                         vp.manuellVurdering,
                         vp.begrunnelse,
+                        vp.innvilgelsesårsak,
                         vp.avslagsårsak,
                         vp.faktagrunnlag,
                         vp.beslutningstre

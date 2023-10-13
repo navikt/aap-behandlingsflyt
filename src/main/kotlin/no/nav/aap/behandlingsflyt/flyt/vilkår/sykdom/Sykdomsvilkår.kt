@@ -42,6 +42,7 @@ class Sykdomsvilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<Sykd
                 vurderingsResultat.utfall,
                 false,
                 null,
+                null,
                 vurderingsResultat.avslagsårsak,
                 grunnlag,
                 vurderingsResultat.beslutningstre

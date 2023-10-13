@@ -39,6 +39,7 @@ class Bistandsvilkåret(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<B
                 vurderingsResultat.utfall,
                 false,
                 null,
+                null,
                 vurderingsResultat.avslagsårsak,
                 grunnlag,
                 vurderingsResultat.beslutningstre
