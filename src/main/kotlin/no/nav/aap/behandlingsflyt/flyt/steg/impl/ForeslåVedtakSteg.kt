@@ -20,8 +20,9 @@ class ForeslåVedtakSteg : BehandlingSteg {
         return StegResultat() // DO NOTHING
     }
 
-    private fun harHattAvklaringsbehov(behandling: Behandling) =
-        behandling.avklaringsbehov().filter { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }.isNotEmpty()
+    private fun harHattAvklaringsbehov(behandling: Behandling): Boolean {
+        return behandling.avklaringsbehov().any { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
+    }
 
     private fun harIkkeForeslåttVedtak(behandling: Behandling): Boolean {
         return behandling

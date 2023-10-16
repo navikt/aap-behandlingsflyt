@@ -21,7 +21,6 @@ class VurderYrkesskadeÅrsakssammenhengSteg : BehandlingSteg {
 
         if (periodeTilVurdering.isNotEmpty()) {
             val yrkesskadeGrunnlag = YrkesskadeTjeneste.hentHvisEksisterer(behandlingId = behandling.id)
-            val sykdomsvilkåret = behandling.vilkårsresultat().finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
             val sykdomsGrunnlag = SykdomsTjeneste.hentHvisEksisterer(behandlingId = behandling.id)
 
             if (erBehovForAvklaring(yrkesskadeGrunnlag, sykdomsGrunnlag)) {

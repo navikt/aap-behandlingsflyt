@@ -31,7 +31,12 @@ class SykepengerErstatningVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårs
             avslagsårsak = Avslagsårsak.MANGLENDE_DOKUMENTASJON // TODO noe mer rett
         }
 
-        return lagre(grunnlag, VurderingsResultat(utfall = utfall, avslagsårsak, TomtBeslutningstre()))
+        return lagre(grunnlag, VurderingsResultat(
+            utfall = utfall,
+            avslagsårsak,
+            TomtBeslutningstre(),
+            null
+        ))
     }
 
     private fun lagre(grunnlag: SykepengerErstatningFaktagrunnlag, vurderingsResultat: VurderingsResultat): VurderingsResultat {

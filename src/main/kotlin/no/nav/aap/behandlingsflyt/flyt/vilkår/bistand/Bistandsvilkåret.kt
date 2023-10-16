@@ -29,7 +29,12 @@ class Bistandsvilkåret(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<B
             avslagsårsak = Avslagsårsak.MANGLENDE_DOKUMENTASJON // TODO: Må ha mer
         }
 
-        return lagre(grunnlag, VurderingsResultat(utfall = utfall, avslagsårsak, TomtBeslutningstre()))
+        return lagre(grunnlag, VurderingsResultat(
+            utfall = utfall,
+            avslagsårsak,
+            TomtBeslutningstre(),
+            null
+        ))
     }
 
     private fun lagre(grunnlag: BistandFaktagrunnlag, vurderingsResultat: VurderingsResultat): VurderingsResultat {
