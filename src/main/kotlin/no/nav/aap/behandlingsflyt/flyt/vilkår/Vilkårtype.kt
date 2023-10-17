@@ -17,6 +17,14 @@ enum class Vilkårtype(
         ),
         hjemmel = "§ 11-4"
     ),
+    STUDENTVILKÅRET(
+        kode = "AAP-14",
+        spesielleInnvilgelsesÅrsaker = listOf(),
+        avslagsårsaker = listOf(
+            Avslagsårsak.MANGLENDE_DOKUMENTASJON
+        ),
+        hjemmel = "§ 11-14"
+    ),
     SYKDOMSVILKÅRET(
         kode = "AAP-5",
         spesielleInnvilgelsesÅrsaker = listOf(Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG),
