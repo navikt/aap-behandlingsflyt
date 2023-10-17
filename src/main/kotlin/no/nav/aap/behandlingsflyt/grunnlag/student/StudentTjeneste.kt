@@ -32,13 +32,13 @@ object StudentTjeneste {
         }
     }
 
-    fun hentHvisEksisterer(behandlingId: Long): SykdomsGrunnlag? {
+    fun hentHvisEksisterer(behandlingId: Long): StudentGrunnlag? {
         synchronized(LOCK) {
             return grunnlagene[behandlingId]
         }
     }
 
-    fun hent(behandlingId: Long): SykdomsGrunnlag {
+    fun hent(behandlingId: Long): StudentGrunnlag {
         synchronized(LOCK) {
             return grunnlagene.getValue(behandlingId)
         }

@@ -28,6 +28,7 @@ object Førstegangsbehandling : BehandlingType {
             .medSteg(InnhentPersonopplysningerSteg())
             .medSteg(VurderAlderSteg())
             .medSteg(GeneriskPlaceholderSteg(StegType.VURDER_LOVVALG))
+            .medSteg(GeneriskPlaceholderSteg(StegType.VURDER_STUDENT))
             .medSteg(InnhentYrkesskadeOpplysningerSteg())
             .medSteg(VurderYrkesskadeÅrsakssammenhengSteg())
             .medSteg(VurderSykdomSteg())
