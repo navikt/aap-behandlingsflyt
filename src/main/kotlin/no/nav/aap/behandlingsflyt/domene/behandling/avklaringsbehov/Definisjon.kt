@@ -3,65 +3,69 @@ package no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
-import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 import java.time.Period
 import java.util.*
 import java.util.stream.Collectors
 import kotlin.reflect.KFunction1
+import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 
 const val MANUELT_SATT_PÅ_VENT_KODE = "9001"
 const val AVKLAR_YRKESSKADE_KODE = "5002"
 const val AVKLAR_BISTANDSBEHOV_KODE = "5003"
 const val FRITAK_MELDEPLIKT_KODE = "5004"
 const val VURDER_SYKEPENGEERSTATNING_KODE = "5005"
+const val AVKLAR_STUDENT_KODE = "5006"
 const val AVKLAR_SYKDOM_KODE = "5001"
 const val FORESLÅ_VEDTAK_KODE = "5098"
 const val FATTE_VEDTAK_KODE = "5099"
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 enum class Definisjon(
-    @JsonProperty("kode") val kode: String,
-    private val type: BehovType = BehovType.MANUELT,
-    @JsonIgnore private val defaultFrist: Period = Period.ZERO,
-    @JsonProperty("løsesISteg") val løsesISteg: StegType = StegType.UDEFINERT,
-    val kreverToTrinn: Boolean = false
+        @JsonProperty("kode") val kode: String,
+        private val type: BehovType = BehovType.MANUELT,
+        @JsonIgnore private val defaultFrist: Period = Period.ZERO,
+        @JsonProperty("løsesISteg") val løsesISteg: StegType = StegType.UDEFINERT,
+        val kreverToTrinn: Boolean = false
 ) {
-
     MANUELT_SATT_PÅ_VENT(
-        kode = MANUELT_SATT_PÅ_VENT_KODE,
-        type = BehovType.AUTOMATISK,
-        defaultFrist = Period.ofWeeks(3),
+            kode = MANUELT_SATT_PÅ_VENT_KODE,
+            type = BehovType.AUTOMATISK,
+            defaultFrist = Period.ofWeeks(3),
     ),
     AVKLAR_SYKDOM(
-        kode = AVKLAR_SYKDOM_KODE,
-        løsesISteg = StegType.AVKLAR_SYKDOM,
-        kreverToTrinn = true
+            kode = AVKLAR_SYKDOM_KODE,
+            løsesISteg = StegType.AVKLAR_SYKDOM,
+            kreverToTrinn = true
+    ),
+    AVKLAR_STUDENT(
+            kode = AVKLAR_STUDENT_KODE,
+            løsesISteg = StegType.AVKLAR_STUDENT,
     ),
     AVKLAR_BISTANDSBEHOV(
-        kode = AVKLAR_BISTANDSBEHOV_KODE,
-        løsesISteg = StegType.VURDER_BISTANDSBEHOV,
+            kode = AVKLAR_BISTANDSBEHOV_KODE,
+            løsesISteg = StegType.VURDER_BISTANDSBEHOV,
     ),
     FRITAK_MELDEPLIKT(
-        kode = FRITAK_MELDEPLIKT_KODE,
-        løsesISteg = StegType.FRITAK_MELDEPLIKT,
+            kode = FRITAK_MELDEPLIKT_KODE,
+            løsesISteg = StegType.FRITAK_MELDEPLIKT,
     ),
     AVKLAR_YRKESSKADE(
-        kode = AVKLAR_YRKESSKADE_KODE,
-        løsesISteg = StegType.AVKLAR_YRKESSKADE,
-        kreverToTrinn = true
+            kode = AVKLAR_YRKESSKADE_KODE,
+            løsesISteg = StegType.AVKLAR_YRKESSKADE,
+            kreverToTrinn = true
     ),
     AVKLAR_SYKEPENGEERSTATNING(
-        kode = VURDER_SYKEPENGEERSTATNING_KODE,
-        løsesISteg = StegType.VURDER_SYKEPENGEERSTATNING,
-        kreverToTrinn = true
+            kode = VURDER_SYKEPENGEERSTATNING_KODE,
+            løsesISteg = StegType.VURDER_SYKEPENGEERSTATNING,
+            kreverToTrinn = true
     ),
     FORESLÅ_VEDTAK(
-        kode = FORESLÅ_VEDTAK_KODE,
-        løsesISteg = StegType.FORESLÅ_VEDTAK,
+            kode = FORESLÅ_VEDTAK_KODE,
+            løsesISteg = StegType.FORESLÅ_VEDTAK,
     ),
     FATTE_VEDTAK(
-        kode = FATTE_VEDTAK_KODE,
-        løsesISteg = StegType.FATTE_VEDTAK,
+            kode = FATTE_VEDTAK_KODE,
+            løsesISteg = StegType.FATTE_VEDTAK,
     );
 
     companion object {
@@ -70,9 +74,10 @@ enum class Definisjon(
         }
 
         init {
-            val unikeKoder = Arrays.stream(entries.toTypedArray())
-                .map { it.kode }
-                .collect(Collectors.toSet())
+            val unikeKoder =
+                    Arrays.stream(entries.toTypedArray())
+                            .map { it.kode }
+                            .collect(Collectors.toSet())
 
             if (unikeKoder.size != entries.size) {
                 throw IllegalStateException("Gjenbrukt koder for Avklaringsbehov")
@@ -86,7 +91,7 @@ enum class Definisjon(
 
     enum class BehovType(val valideringsFunksjon: KFunction1<Definisjon, Unit>) {
         MANUELT(Definisjon::validerManuelt),
-        AUTOMATISK(Definisjon::validerAutomatisk);
+        AUTOMATISK(Definisjon::validerAutomatisk)
     }
 
     fun skalLøsesISteg(steg: StegType, funnetISteg: StegType): Boolean {
@@ -98,7 +103,9 @@ enum class Definisjon(
 
     private fun validerManuelt() {
         if (this.løsesISteg.tekniskSteg) {
-            throw IllegalArgumentException("Avklaringsbehov må være knyttet til et funksjonelt steg")
+            throw IllegalArgumentException(
+                    "Avklaringsbehov må være knyttet til et funksjonelt steg"
+            )
         }
     }
 
@@ -121,5 +128,4 @@ enum class Definisjon(
     override fun toString(): String {
         return "$name(kode='$kode')"
     }
-
 }

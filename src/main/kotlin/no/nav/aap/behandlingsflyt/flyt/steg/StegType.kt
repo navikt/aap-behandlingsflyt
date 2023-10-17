@@ -42,6 +42,10 @@ enum class StegType(val gruppe: StegGruppe, val status: Status, val tekniskSteg:
         status = Status.UTREDES
     ),
     AVKLAR_YRKESSKADE(gruppe = StegGruppe.SYKDOM, status = Status.UTREDES),
+    AVKLAR_STUDENT(
+        gruppe = StegGruppe.STUDENT,
+        status = Status.UTREDES
+    ),
     AVKLAR_SYKDOM(
         gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES
