@@ -11,96 +11,15 @@ import no.nav.aap.behandlingsflyt.domene.behandling.BehandlingTjeneste
 import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.flate.behandling.BehandlingReferanse
-import no.nav.aap.behandlingsflyt.grunnlag.bistand.BistandsTjeneste
 import no.nav.aap.behandlingsflyt.grunnlag.meldeplikt.MeldepliktTjeneste
-import no.nav.aap.behandlingsflyt.grunnlag.sykdom.SykdomsTjeneste
-import no.nav.aap.behandlingsflyt.grunnlag.yrkesskade.YrkesskadeTjeneste
-import no.nav.aap.behandlingsflyt.grunnlag.flate.StudentGrunnlagDto
-import no.nav.aap.behandlingsflyt.grunnlag.student.StudentTjeneste
 import java.util.*
 
 fun NormalOpenAPIRoute.behandlingsgrunnlagApi() {
     route("/api/behandling") {
-        route("/{referanse}/grunnlag/student") {
-            get<BehandlingReferanse, StudentGrunnlagDto> { req ->
-                val behandling = behandling(req)
-
-                val studentGrunnlag = StudentTjeneste.hentHvisEksisterer(behandlingId = behandling.id)
-
-                respond(StudentGrunnlagDto(
-                    studentvurdering = studentGrunnlag?.studentvurdering
-                ))
-            }
-        }
-        route("/{referanse}/grunnlag/sykdom/sykdom") {
-            get<BehandlingReferanse, SykdomsGrunnlagDto> { req ->
-                val behandling = behandling(req)
-
-                val yrkesskadeGrunnlag = YrkesskadeTjeneste.hentHvisEksisterer(behandlingId = behandling.id)
-                val sykdomsGrunnlag = SykdomsTjeneste.hentHvisEksisterer(behandlingId = behandling.id)
-
-                respond(
-                    SykdomsGrunnlagDto(
-                        opplysninger = InnhentetSykdomsOpplysninger(
-                            oppgittYrkesskadeISøknad = false,
-                            innhentedeYrkesskader = yrkesskadeGrunnlag?.yrkesskader?.yrkesskader?.map { yrkesskade ->
-                                RegistrertYrkesskade(
-                                    ref = yrkesskade.ref,
-                                    periode = yrkesskade.periode,
-                                    kilde = "Yrkesskaderegisteret"
-                                )
-                            } ?: emptyList(),
-                        ),
-                        sykdomsvurdering = sykdomsGrunnlag?.sykdomsvurdering,
-                        erÅrsakssammenheng = sykdomsGrunnlag?.yrkesskadevurdering?.erÅrsakssammenheng
-                    )
-                )
-            }
-        }
-        route("/{referanse}/grunnlag/sykdom/yrkesskade") {
-            get<BehandlingReferanse, YrkesskadeGrunnlagDto> { req ->
-                val behandling = behandling(req)
-
-                val yrkesskadeGrunnlag = YrkesskadeTjeneste.hentHvisEksisterer(behandlingId = behandling.id)
-                val sykdomsGrunnlag = SykdomsTjeneste.hentHvisEksisterer(behandlingId = behandling.id)
-
-                respond(
-                    YrkesskadeGrunnlagDto(
-                        opplysninger = InnhentetSykdomsOpplysninger(
-                            oppgittYrkesskadeISøknad = false,
-                            innhentedeYrkesskader = yrkesskadeGrunnlag?.yrkesskader?.yrkesskader?.map { yrkesskade ->
-                                RegistrertYrkesskade(
-                                    ref = yrkesskade.ref,
-                                    periode = yrkesskade.periode,
-                                    kilde = "Yrkesskaderegisteret"
-                                )
-                            } ?: emptyList()
-                        ),
-                        yrkesskadevurdering = sykdomsGrunnlag?.yrkesskadevurdering,
-                    )
-                )
-            }
-        }
         route("/{referanse}/grunnlag/medlemskap") {
             get<BehandlingReferanse, MedlemskapGrunnlagDto> { req ->
                 val behandling = behandling(req)
                 respond(MedlemskapGrunnlagDto())
-            }
-        }
-        route("/{referanse}/grunnlag/bistand") {
-            get<BehandlingReferanse, BistandGrunnlagDto> { req ->
-                val behandling = behandling(req)
-
-                val bistandsGrunnlag = BistandsTjeneste.hentHvisEksisterer(behandling.id)
-                respond(BistandGrunnlagDto(bistandsGrunnlag?.vurdering))
-            }
-        }
-        route("/{referanse}/grunnlag/fritak-meldeplikt") {
-            get<BehandlingReferanse, FritakMeldepliktGrunnlagDto> { req ->
-                val behandling = behandling(req)
-
-                val meldepliktGrunnlag = MeldepliktTjeneste.hentHvisEksisterer(behandling.id)
-                respond(FritakMeldepliktGrunnlagDto(meldepliktGrunnlag?.vurderinger.orEmpty()))
             }
         }
         route("/{referanse}/grunnlag/fatte-vedtak") {
