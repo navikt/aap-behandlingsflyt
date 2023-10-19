@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.domene.person.Ident
 import no.nav.aap.behandlingsflyt.domene.person.Personlager
 import no.nav.aap.behandlingsflyt.domene.sak.Sakslager
 import no.nav.aap.behandlingsflyt.domene.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.flyt.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
@@ -20,7 +21,7 @@ import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingOppgave
 
 object HendelsesMottak {
 
-    private val kontroller = FlytOrkestrator()
+    private val kontroller = FlytOrkestrator(Faktagrunnlag())
     private val avklaringsbehovKontroller = AvklaringsbehovOrkestrator()
 
     fun håndtere(key: Ident, hendelse: PersonHendelse) {

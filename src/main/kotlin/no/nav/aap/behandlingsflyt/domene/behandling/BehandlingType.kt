@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.domene.behandling
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Legeerklæring
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Yrkesskade
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlytBuilder
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
@@ -32,7 +34,7 @@ object Førstegangsbehandling : BehandlingType {
             .medSteg(VurderStudentSteg())
             .medSteg(InnhentYrkesskadeOpplysningerSteg())
             .medSteg(VurderYrkesskadeÅrsakssammenhengSteg())
-            .medSteg(VurderSykdomSteg())
+            .medSteg(VurderSykdomSteg(), informasjonskrav = listOf(Yrkesskade, Legeerklæring))
             .medSteg(FritakMeldepliktSteg())
             .medSteg(VurderBistandsbehovSteg())
             .medSteg(VurderSykepengeErstatningSteg())

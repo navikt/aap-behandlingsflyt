@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.domene.behandling.Behandling
 import no.nav.aap.behandlingsflyt.domene.behandling.BehandlingTjeneste
 import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Status
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.flyt.steg.StegOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 import org.slf4j.LoggerFactory
@@ -14,7 +15,9 @@ private val log = LoggerFactory.getLogger(FlytOrkestrator::class.java)
 /**
  * Har ansvar for å drive flyten til en gitt behandling. Typen behandling styrer hvilke steg som skal utføres.
  */
-class FlytOrkestrator {
+class FlytOrkestrator(
+    private val faktagrunnlag: Faktagrunnlag
+) {
 
     fun prosesserBehandling(kontekst: FlytKontekst) {
         val behandling = BehandlingTjeneste.hent(kontekst.behandlingId)
@@ -25,6 +28,8 @@ class FlytOrkestrator {
 
         var gjeldendeSteg = behandlingFlyt.forberedFlyt(behandling.aktivtSteg())
 
+        faktagrunnlag.oppdaterFaktagrunnlagForKravliste(behandlingFlyt.faktagrunnlagFremTilGjeldendeSteg())
+
         while (true) {
             val avklaringsbehov = behandling.avklaringsbehovene().åpne()
             validerPlassering(
@@ -33,6 +38,8 @@ class FlytOrkestrator {
                     .map { behov -> behov.definisjon },
                 gjeldendeSteg.type()
             )
+
+            faktagrunnlag.oppdaterFaktagrunnlagForKravliste(behandlingFlyt.faktagrunnlagForGjeldendeSteg())
 
             val result = StegOrkestrator(gjeldendeSteg).utfør(
                 kontekst,

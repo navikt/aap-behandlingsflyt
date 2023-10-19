@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.student.AvklarStudentLøser
 import no.nav.aap.behandlingsflyt.domene.behandling.Behandling
 import no.nav.aap.behandlingsflyt.domene.behandling.BehandlingTjeneste
 import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.prosessering.Gruppe
 import no.nav.aap.behandlingsflyt.prosessering.OppgaveInput
 import no.nav.aap.behandlingsflyt.prosessering.OppgaveRepository
@@ -23,7 +24,7 @@ import org.slf4j.LoggerFactory
 class AvklaringsbehovOrkestrator {
 
     private val avklaringsbehovsLøsere = mutableMapOf<Definisjon, AvklaringsbehovsLøser<*>>()
-    private val flytOrkestrator = FlytOrkestrator()
+    private val flytOrkestrator = FlytOrkestrator(Faktagrunnlag())
 
     private val log = LoggerFactory.getLogger(AvklaringsbehovOrkestrator::class.java)
 

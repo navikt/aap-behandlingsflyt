@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.domene.behandling.EndringType
 import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Avklaringsbehov
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlagstype
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 import java.util.*
@@ -11,14 +12,19 @@ import java.util.*
  * Holder styr på den definerte behandlingsflyten og regner ut hvilket steg det skal flyttes
  */
 class BehandlingFlyt private constructor(
-    private val flyt: List<BehandlingSteg>,
+    private val flyt: List<Behandlingsflytsteg>,
     private val endringTilSteg: Map<EndringType, StegType>,
     private val parent: BehandlingFlyt?
 ) {
-    private var aktivtSteg: BehandlingSteg? = flyt.firstOrNull()
+    private var aktivtSteg: Behandlingsflytsteg? = flyt.firstOrNull()
+
+    class Behandlingsflytsteg(
+        val steg: BehandlingSteg,
+        val kravliste: List<Grunnlagstype>
+    )
 
     constructor(
-        flyt: List<BehandlingSteg>,
+        flyt: List<Behandlingsflytsteg>,
         endringTilSteg: Map<EndringType, StegType>,
     ) : this(
         flyt = flyt,
@@ -26,11 +32,23 @@ class BehandlingFlyt private constructor(
         parent = null
     )
 
-    fun forberedFlyt(aktivtSteg: StegType): BehandlingSteg {
-        return forberedFlyt(steg(aktivtSteg))
+    fun faktagrunnlagForGjeldendeSteg(): List<Grunnlagstype> {
+        return aktivtSteg?.kravliste ?: emptyList()
     }
 
-    private fun forberedFlyt(aktivtSteg: BehandlingSteg): BehandlingSteg {
+    fun faktagrunnlagFremTilGjeldendeSteg(): List<Grunnlagstype> {
+        return flyt
+            .takeWhile { it != aktivtSteg }
+            .plus(aktivtSteg)
+            .filterNotNull()
+            .flatMap { it.kravliste }
+    }
+
+    fun forberedFlyt(aktivtSteg: StegType): BehandlingSteg {
+        return forberedFlyt(steg(aktivtSteg)).steg
+    }
+
+    private fun forberedFlyt(aktivtSteg: Behandlingsflytsteg): Behandlingsflytsteg {
         this.aktivtSteg = aktivtSteg
         parent?.forberedFlyt(aktivtSteg)
         return aktivtSteg
@@ -50,7 +68,7 @@ class BehandlingFlyt private constructor(
 
         if (iterator.hasNext()) {
             val nesteSteg = iterator.next()
-            return forberedFlyt(nesteSteg)
+            return forberedFlyt(nesteSteg).steg
         }
 
         return null
@@ -61,28 +79,28 @@ class BehandlingFlyt private constructor(
      */
     fun nesteEtterEndringer(nåværendeSteg: StegType, vararg endringer: EndringType): BehandlingSteg {
         if (endringer.isNotEmpty()) {
-            val nåværendeIndex = flyt.indexOfFirst { it.type() == nåværendeSteg }
+            val nåværendeIndex = flyt.indexOfFirst { it.steg.type() == nåværendeSteg }
             if (nåværendeIndex == -1) {
                 throw IllegalStateException("[Utvikler feil] Nåværende steg '" + nåværendeSteg + "' er ikke en del av den definerte prosessen")
             }
 
             val endringsIndex =
-                endringer.map { endring -> flyt.indexOfFirst { it.type() == endringTilSteg[endring] } }.min()
+                endringer.map { endring -> flyt.indexOfFirst { it.steg.type() == endringTilSteg[endring] } }.min()
 
             if (endringsIndex < nåværendeIndex) {
-                return flyt[endringsIndex]
+                return flyt[endringsIndex].steg
             }
         }
-        return flyt[flyt.indexOfFirst { it.type() == nåværendeSteg }]
+        return flyt[flyt.indexOfFirst { it.steg.type() == nåværendeSteg }].steg
     }
 
-    private fun steg(nåværendeSteg: StegType): BehandlingSteg {
-        return flyt[flyt.indexOfFirst { it.type() == nåværendeSteg }]
+    private fun steg(nåværendeSteg: StegType): Behandlingsflytsteg {
+        return flyt[flyt.indexOfFirst { it.steg.type() == nåværendeSteg }]
     }
 
     fun erStegFør(stegA: StegType, stegB: StegType): Boolean {
-        val aIndex = flyt.indexOfFirst { it.type() == stegA }
-        val bIndex = flyt.indexOfFirst { it.type() == stegB }
+        val aIndex = flyt.indexOfFirst { it.steg.type() == stegA }
+        val bIndex = flyt.indexOfFirst { it.steg.type() == stegB }
 
         return aIndex < bIndex
     }
@@ -92,8 +110,8 @@ class BehandlingFlyt private constructor(
     }
 
     fun erStegFørEllerLik(stegA: StegType, stegB: StegType): Boolean {
-        val aIndex = flyt.indexOfFirst { it.type() == stegA }
-        val bIndex = flyt.indexOfFirst { it.type() == stegB }
+        val aIndex = flyt.indexOfFirst { it.steg.type() == stegA }
+        val bIndex = flyt.indexOfFirst { it.steg.type() == stegB }
 
         return aIndex <= bIndex
     }
@@ -102,7 +120,7 @@ class BehandlingFlyt private constructor(
      * Brukes av APIet
      */
     fun stegene(): List<StegType> {
-        return flyt.map { it.type() }
+        return flyt.map { it.steg.type() }
     }
 
     fun tilbakeflyt(avklaringsbehov: List<Avklaringsbehov>): BehandlingFlyt {
@@ -112,7 +130,7 @@ class BehandlingFlyt private constructor(
             return BehandlingFlyt(emptyList(), emptyMap())
         }
 
-        val returflyt = flyt.slice(flyt.indexOfFirst { it.type() == skalTilSteg }..flyt.indexOf(this.aktivtSteg))
+        val returflyt = flyt.slice(flyt.indexOfFirst { it.steg.type() == skalTilSteg }..flyt.indexOf(this.aktivtSteg))
 
         if (returflyt.size <= 1) {
             return BehandlingFlyt(emptyList(), emptyMap())
@@ -130,10 +148,10 @@ class BehandlingFlyt private constructor(
     }
 }
 
-class StegComparator(private var flyt: List<BehandlingSteg>) : Comparator<StegType> {
+class StegComparator(private var flyt: List<BehandlingFlyt.Behandlingsflytsteg>) : Comparator<StegType> {
     override fun compare(stegA: StegType?, stegB: StegType?): Int {
-        val aIndex = flyt.indexOfFirst { it.type() == stegA }
-        val bIndex = flyt.indexOfFirst { it.type() == stegB }
+        val aIndex = flyt.indexOfFirst { it.steg.type() == stegA }
+        val bIndex = flyt.indexOfFirst { it.steg.type() == stegB }
 
         return aIndex.compareTo(bIndex)
     }
@@ -141,18 +159,22 @@ class StegComparator(private var flyt: List<BehandlingSteg>) : Comparator<StegTy
 }
 
 class BehandlingFlytBuilder {
-    private var flyt: MutableList<BehandlingSteg> = mutableListOf()
+    private var flyt: MutableList<BehandlingFlyt.Behandlingsflytsteg> = mutableListOf()
     private var endringTilSteg: MutableMap<EndringType, StegType> = mutableMapOf()
     private var buildt = false
 
-    fun medSteg(steg: BehandlingSteg, vararg endringer: EndringType): BehandlingFlytBuilder {
+    fun medSteg(
+        steg: BehandlingSteg,
+        vararg endringer: EndringType,
+        informasjonskrav: List<Grunnlagstype> = emptyList()
+    ): BehandlingFlytBuilder {
         if (buildt) {
             throw IllegalStateException("[Utvikler feil] Builder er allerede bygget")
         }
         if (StegType.UDEFINERT == steg.type()) {
             throw IllegalStateException("[Utvikler feil] StegType UDEFINERT er ugyldig å legge til i flyten")
         }
-        this.flyt.add(steg)
+        this.flyt.add(BehandlingFlyt.Behandlingsflytsteg(steg, informasjonskrav.toList()))
         endringer.forEach { endring ->
             this.endringTilSteg[endring] = steg.type()
         }
