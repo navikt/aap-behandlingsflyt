@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.domene.behandling
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Legeerklæring
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Yrkesskade
+import no.nav.aap.behandlingsflyt.faktagrunnlag.legeerklæring.Legeerklæring
+import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.Yrkesskade
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlytBuilder
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
@@ -14,10 +14,10 @@ import no.nav.aap.behandlingsflyt.flyt.steg.impl.InnhentYrkesskadeOpplysningerSt
 import no.nav.aap.behandlingsflyt.flyt.steg.impl.StartBehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.impl.VurderAlderSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.impl.VurderBistandsbehovSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.impl.VurderStudentSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.impl.VurderSykdomSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.impl.VurderSykepengeErstatningSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.impl.VurderYrkesskadeÅrsakssammenhengSteg
-import no.nav.aap.behandlingsflyt.flyt.steg.impl.VurderStudentSteg
 
 interface BehandlingType {
     fun flyt(): BehandlingFlyt
