@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.grunnlag.person.PersoninformasjonTjeneste
 import no.nav.aap.behandlingsflyt.grunnlag.sykdom.SykdomsTjeneste
 import no.nav.aap.behandlingsflyt.grunnlag.sykdom.SykepengerErstatningTjeneste
 import no.nav.aap.behandlingsflyt.grunnlag.yrkesskade.YrkesskadeTjeneste
-import no.nav.aap.behandlingsflyt.grunnlag.student.StudentTjeneste
+import no.nav.aap.behandlingsflyt.grunnlag.student.db.InMemoryStudentRepository
 
 object GrunnlagKopierer {
 
@@ -14,7 +14,7 @@ object GrunnlagKopierer {
         PersoninformasjonTjeneste.kopier(fraBehandling, tilBehandling)
         YrkesskadeTjeneste.kopier(fraBehandling, tilBehandling)
         SykdomsTjeneste.kopier(fraBehandling, tilBehandling)
-        StudentTjeneste.kopier(fraBehandling, tilBehandling)
+        InMemoryStudentRepository.kopier(fraBehandling, tilBehandling)
         BistandsTjeneste.kopier(fraBehandling, tilBehandling)
         SykepengerErstatningTjeneste.kopier(fraBehandling, tilBehandling)
     }

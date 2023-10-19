@@ -6,7 +6,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.flate.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.grunnlag.BehandlingReferanseService
-import no.nav.aap.behandlingsflyt.grunnlag.student.StudentTjeneste
+import no.nav.aap.behandlingsflyt.grunnlag.student.db.InMemoryStudentRepository
 
 fun NormalOpenAPIRoute.studentgrunnlagApi() {
     route("/api/behandling") {
@@ -14,7 +14,7 @@ fun NormalOpenAPIRoute.studentgrunnlagApi() {
             get<BehandlingReferanse, StudentGrunnlagDto> { req ->
                 val behandling = BehandlingReferanseService.behandling(req)
 
-                val studentGrunnlag = StudentTjeneste.hentHvisEksisterer(behandlingId = behandling.id)
+                val studentGrunnlag = InMemoryStudentRepository.hentHvisEksisterer(behandlingId = behandling.id)
 
                 respond(StudentGrunnlagDto(
                     studentvurdering = studentGrunnlag?.studentvurdering

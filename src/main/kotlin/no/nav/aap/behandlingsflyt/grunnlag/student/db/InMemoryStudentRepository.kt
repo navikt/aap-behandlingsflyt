@@ -1,17 +1,19 @@
-package no.nav.aap.behandlingsflyt.grunnlag.student
+package no.nav.aap.behandlingsflyt.grunnlag.student.db
 
 import java.util.concurrent.atomic.AtomicLong
 import no.nav.aap.behandlingsflyt.avklaringsbehov.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.domene.behandling.Behandling
+import no.nav.aap.behandlingsflyt.grunnlag.student.StudentGrunnlag
+import no.nav.aap.behandlingsflyt.grunnlag.student.StudentRepository
 
-object StudentTjeneste {
+object InMemoryStudentRepository : StudentRepository {
 
     private var grunnlagene = HashMap<Long, StudentGrunnlag>()
 
     private val key = AtomicLong()
     private val LOCK = Object()
 
-    fun lagre(behandlingId: Long, studentvurdering: StudentVurdering?) {
+    override fun lagre(behandlingId: Long, studentvurdering: StudentVurdering?) {
         synchronized(LOCK) {
             grunnlagene.put(
                     behandlingId,
@@ -24,7 +26,7 @@ object StudentTjeneste {
         }
     }
 
-    fun kopier(fraBehandling: Behandling, tilBehandling: Behandling) {
+    override fun kopier(fraBehandling: Behandling, tilBehandling: Behandling) {
         synchronized(LOCK) {
             grunnlagene[fraBehandling.id]?.let { eksisterendeGrunnlag ->
                 grunnlagene[tilBehandling.id] = eksisterendeGrunnlag
@@ -32,13 +34,13 @@ object StudentTjeneste {
         }
     }
 
-    fun hentHvisEksisterer(behandlingId: Long): StudentGrunnlag? {
+    override fun hentHvisEksisterer(behandlingId: Long): StudentGrunnlag? {
         synchronized(LOCK) {
             return grunnlagene[behandlingId]
         }
     }
 
-    fun hent(behandlingId: Long): StudentGrunnlag {
+    override fun hent(behandlingId: Long): StudentGrunnlag {
         synchronized(LOCK) {
             return grunnlagene.getValue(behandlingId)
         }
