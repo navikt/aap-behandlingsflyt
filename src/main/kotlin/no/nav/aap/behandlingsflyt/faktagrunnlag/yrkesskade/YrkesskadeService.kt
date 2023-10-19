@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade
 
-class YrkesskadeService {
+internal class YrkesskadeService {
     fun hentYrkesskade(): Yrkesskadedata {
         return Yrkesskadedata()
     }

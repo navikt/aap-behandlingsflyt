@@ -20,7 +20,7 @@ class BehandlingFlyt private constructor(
 
     class Behandlingsflytsteg(
         val steg: BehandlingSteg,
-        val kravliste: List<Grunnlagstype>
+        val kravliste: List<Grunnlagstype<*>>
     )
 
     constructor(
@@ -32,11 +32,11 @@ class BehandlingFlyt private constructor(
         parent = null
     )
 
-    fun faktagrunnlagForGjeldendeSteg(): List<Grunnlagstype> {
+    fun faktagrunnlagForGjeldendeSteg(): List<Grunnlagstype<*>> {
         return aktivtSteg?.kravliste ?: emptyList()
     }
 
-    fun faktagrunnlagFremTilGjeldendeSteg(): List<Grunnlagstype> {
+    fun faktagrunnlagFremTilGjeldendeSteg(): List<Grunnlagstype<*>> {
         return flyt
             .takeWhile { it != aktivtSteg }
             .plus(aktivtSteg)
@@ -166,7 +166,7 @@ class BehandlingFlytBuilder {
     fun medSteg(
         steg: BehandlingSteg,
         vararg endringer: EndringType,
-        informasjonskrav: List<Grunnlagstype> = emptyList()
+        informasjonskrav: List<Grunnlagstype<*>> = emptyList()
     ): BehandlingFlytBuilder {
         if (buildt) {
             throw IllegalStateException("[Utvikler feil] Builder er allerede bygget")

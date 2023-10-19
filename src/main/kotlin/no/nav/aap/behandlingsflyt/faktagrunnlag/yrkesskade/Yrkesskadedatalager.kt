@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-class Yrkesskadedatalager {
+internal class Yrkesskadedatalager {
     private var sisteLagretTidspunkt: LocalDateTime? = null //TODO: Må hentes fra DB
     private lateinit var data: Yrkesskadedata               //TODO: Må hentes fra DB
 

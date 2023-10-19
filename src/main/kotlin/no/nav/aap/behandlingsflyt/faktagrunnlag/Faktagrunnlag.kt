@@ -8,10 +8,16 @@ enum class GrunnlagstypeEnumTing {
     LEGEERKLÆRING
 }
 
-class Faktagrunnlag(
-    private val grunnlag: List<Grunnlag> = listOf(Yrkesskade(), Legeerklæring())
+class Faktagrunnlag internal constructor(
+    private val grunnlag: List<Grunnlag>
 ) {
-    fun oppdaterFaktagrunnlagForKravliste(kravliste: List<Grunnlagstype>): List<Grunnlagstype> {
+    constructor() : this(listOf(Yrkesskade(), Legeerklæring()))
+
+    fun oppdaterFaktagrunnlagForKravliste(kravliste: List<Grunnlagstype<*>>): List<Grunnlagstype<*>> {
         return kravliste.filterNot { grunnlagstype -> grunnlagstype.oppdater(grunnlag) }
+    }
+
+    fun <DATATYPE, GRUNNLAGSTYPE : Grunnlagstype<DATATYPE>> hentGrunnlagFor(grunnlagstype: GRUNNLAGSTYPE): DATATYPE? {
+        return grunnlagstype.hentGrunnlag(grunnlag)
     }
 }

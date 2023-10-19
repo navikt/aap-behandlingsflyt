@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
-interface Grunnlagstype {
-    fun oppdater(grunnlag: List<Grunnlag>): Boolean
+abstract class Grunnlagstype<T> {
+    internal abstract fun oppdater(grunnlag: List<Grunnlag>): Boolean
+    internal abstract fun hentGrunnlag(grunnlag: List<Grunnlag>): T?
 }
