@@ -6,10 +6,13 @@ import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegInput
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
+import no.nav.aap.behandlingsflyt.flyt.vilkår.Innvilgelsesårsak
+import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkår
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårtype
 import no.nav.aap.behandlingsflyt.flyt.vilkår.bistand.BistandFaktagrunnlag
 import no.nav.aap.behandlingsflyt.flyt.vilkår.bistand.Bistandsvilkåret
 import no.nav.aap.behandlingsflyt.grunnlag.bistand.BistandsTjeneste
+import no.nav.aap.behandlingsflyt.grunnlag.student.StudentGrunnlag
 import no.nav.aap.behandlingsflyt.grunnlag.student.db.InMemoryStudentRepository
 
 class VurderBistandsbehovSteg : BehandlingSteg {
@@ -26,19 +29,33 @@ class VurderBistandsbehovSteg : BehandlingSteg {
 
             if (studentGrunnlag?.studentvurdering?.oppfyller11_14 == true || bistandsGrunnlag != null) {
                 for (periode in periodeTilVurdering) {
-                    val grunnlag = BistandFaktagrunnlag(periode.fom, periode.tom, bistandsGrunnlag?.vurdering, studentGrunnlag?.studentvurdering)
+                    val grunnlag = BistandFaktagrunnlag(
+                        periode.fom,
+                        periode.tom,
+                        bistandsGrunnlag?.vurdering,
+                        studentGrunnlag?.studentvurdering
+                    )
                     Bistandsvilkåret(behandling.vilkårsresultat()).vurder(grunnlag = grunnlag)
                 }
             }
 
             val vilkår = behandling.vilkårsresultat().finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
 
-            if (vilkår.harPerioderSomIkkeErVurdert(periodeTilVurdering)) {
+            if (vilkår.harPerioderSomIkkeErVurdert(periodeTilVurdering) || harInnvilgetForStudentUtenÅVæreStudent(
+                    vilkår,
+                    studentGrunnlag
+                )
+            ) {
                 return StegResultat(listOf(Definisjon.AVKLAR_BISTANDSBEHOV))
             }
         }
 
         return StegResultat()
+    }
+
+    private fun harInnvilgetForStudentUtenÅVæreStudent(vilkår: Vilkår, studentGrunnlag: StudentGrunnlag?): Boolean {
+        return studentGrunnlag?.studentvurdering?.oppfyller11_14 == false && vilkår.vilkårsperioder()
+            .any { it.innvilgelsesårsak == Innvilgelsesårsak.STUDENT }
     }
 
     override fun type(): StegType {
