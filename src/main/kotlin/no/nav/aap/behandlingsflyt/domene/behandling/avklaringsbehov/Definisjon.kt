@@ -39,7 +39,7 @@ enum class Definisjon(
     ),
     AVKLAR_STUDENT(
             kode = AVKLAR_STUDENT_KODE,
-            løsesISteg = StegType.VURDER_STUDENT,
+            løsesISteg = StegType.AVKLAR_STUDENT,
     ),
     AVKLAR_BISTANDSBEHOV(
             kode = AVKLAR_BISTANDSBEHOV_KODE,

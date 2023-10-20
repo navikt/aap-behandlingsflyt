@@ -23,6 +23,6 @@ class VurderStudentSteg(val studentTjeneste: StudentRepository) : BehandlingSteg
     }
 
     override fun type(): StegType {
-        return StegType.VURDER_STUDENT
+        return StegType.AVKLAR_STUDENT
     }
 }
