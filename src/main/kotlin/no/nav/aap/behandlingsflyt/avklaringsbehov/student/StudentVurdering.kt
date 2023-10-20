@@ -8,6 +8,5 @@ data class StudentVurdering(
     val begrunnelse: String,
     val dokumenterBruktIVurdering: List<JournalpostId>,
     val oppfyller11_14: Boolean?,
-    val oppfyller7: Boolean?,
     val avbruttStudieDato: LocalDate?
 )

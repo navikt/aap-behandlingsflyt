@@ -26,7 +26,7 @@ class Studentvilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<Stud
 
         val studentvurdering = grunnlag.studentvurdering
 
-        if (studentvurdering.oppfyller11_14 == true && studentvurdering.oppfyller7 == true) {
+        if (studentvurdering.oppfyller11_14 == true) {
             utfall = Utfall.OPPFYLT
         } else {
             utfall = Utfall.IKKE_OPPFYLT

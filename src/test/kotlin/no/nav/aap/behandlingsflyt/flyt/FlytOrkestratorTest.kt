@@ -86,7 +86,6 @@ class FlytOrkestratorTest {
                         begrunnelse = "Er student",
                         dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                         oppfyller11_14 = false,
-                        oppfyller7 = null,
                         avbruttStudieDato = null
                     )
                 )
