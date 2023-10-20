@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.grunnlag.student.db
 
-import java.util.concurrent.atomic.AtomicLong
 import no.nav.aap.behandlingsflyt.avklaringsbehov.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.domene.behandling.Behandling
 import no.nav.aap.behandlingsflyt.grunnlag.student.StudentGrunnlag
 import no.nav.aap.behandlingsflyt.grunnlag.student.StudentRepository
+import java.util.concurrent.atomic.AtomicLong
 
 object InMemoryStudentRepository : StudentRepository {
 
@@ -16,12 +16,12 @@ object InMemoryStudentRepository : StudentRepository {
     override fun lagre(behandlingId: Long, studentvurdering: StudentVurdering?) {
         synchronized(LOCK) {
             grunnlagene.put(
-                    behandlingId,
-                    StudentGrunnlag(
-                            behandlingId = behandlingId,
-                            studentvurdering = studentvurdering,
-                            id = key.addAndGet(1)
-                    )
+                behandlingId,
+                StudentGrunnlag(
+                    behandlingId = behandlingId,
+                    studentvurdering = studentvurdering,
+                    id = key.addAndGet(1)
+                )
             )
         }
     }
