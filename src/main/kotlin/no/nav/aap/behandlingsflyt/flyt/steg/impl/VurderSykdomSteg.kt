@@ -23,13 +23,13 @@ class VurderSykdomSteg : BehandlingSteg {
             val sykdomsGrunnlag = SykdomsTjeneste.hentHvisEksisterer(behandlingId = behandling.id)
             val studentGrunnlag = InMemoryStudentRepository.hentHvisEksisterer(behandlingId = behandling.id)
 
-            if (sykdomsGrunnlag != null && (sykdomsGrunnlag.erKonsistent() || studentGrunnlag?.studentvurdering?.oppfyller11_14 == true)) {
+            if (sykdomsGrunnlag != null && sykdomsGrunnlag.erKonsistent() || studentGrunnlag?.studentvurdering?.oppfyller11_14 == true) {
                 for (periode in periodeTilVurdering) {
                     val faktagrunnlag = SykdomsFaktagrunnlag(
                         periode.fom,
                         periode.tom,
-                        sykdomsGrunnlag.yrkesskadevurdering,
-                        sykdomsGrunnlag.sykdomsvurdering,
+                        sykdomsGrunnlag?.yrkesskadevurdering,
+                        sykdomsGrunnlag?.sykdomsvurdering,
                         studentGrunnlag?.studentvurdering
                     )
                     Sykdomsvilkår(behandling.vilkårsresultat()).vurder(faktagrunnlag)
