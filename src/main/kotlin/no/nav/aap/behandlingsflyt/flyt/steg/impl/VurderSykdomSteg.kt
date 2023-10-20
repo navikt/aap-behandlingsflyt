@@ -37,7 +37,7 @@ class VurderSykdomSteg : BehandlingSteg {
             }
             val sykdomsvilkåret = behandling.vilkårsresultat().finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
 
-            if (sykdomsvilkåret.harPerioderSomIkkeErVurdert(periodeTilVurdering) || (sykdomsGrunnlag?.erKonsistent() != true || studentGrunnlag?.studentvurdering?.oppfyller11_14 == true)) {
+            if (sykdomsvilkåret.harPerioderSomIkkeErVurdert(periodeTilVurdering) || (studentGrunnlag?.studentvurdering?.oppfyller11_14 == false && sykdomsGrunnlag?.erKonsistent() != true)) {
                 return StegResultat(listOf(Definisjon.AVKLAR_SYKDOM))
             }
         }
