@@ -1,9 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt.steg.impl
 
-import no.nav.aap.behandlingsflyt.domene.behandling.Behandling
 import no.nav.aap.behandlingsflyt.domene.behandling.BehandlingTjeneste
 import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegInput
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
@@ -13,24 +11,11 @@ class ForeslåVedtakSteg(private val behandlingTjeneste: BehandlingTjeneste) : B
     override fun utfør(input: StegInput): StegResultat {
         val behandling = behandlingTjeneste.hent(input.kontekst.behandlingId)
 
-        if (harHattAvklaringsbehov(behandling) && harIkkeForeslåttVedtak(behandling)) {
+        if (behandling.harHattAvklaringsbehov() && behandling.harIkkeForeslåttVedtak()) {
             return StegResultat(listOf(Definisjon.FORESLÅ_VEDTAK))
         }
 
         return StegResultat() // DO NOTHING
-    }
-
-    //TODO: Flytte metode til behandling?
-    private fun harHattAvklaringsbehov(behandling: Behandling): Boolean {
-        return behandling.avklaringsbehov().any { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
-    }
-
-    //TODO: Flytte metode til behandling?
-    private fun harIkkeForeslåttVedtak(behandling: Behandling): Boolean {
-        return behandling
-            .avklaringsbehov()
-            .filter { avklaringsbehov -> avklaringsbehov.erForeslåttVedtak() }
-            .none { it.status() == Status.AVSLUTTET }
     }
 
     override fun type(): StegType {

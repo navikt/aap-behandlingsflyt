@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.domene.behandling
 import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Status.AVSLUTTET
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.flyt.steg.StegStatus
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
@@ -25,6 +26,8 @@ class Behandling(
 ) : Comparable<Behandling> {
 
     private val flyt: BehandlingFlyt = type.flyt()
+
+    fun flyt(): BehandlingFlyt = flyt
 
     fun visit(stegTilstand: StegTilstand) {
         if (!stegTilstand.aktiv) {
@@ -53,6 +56,10 @@ class Behandling(
         }
     }
 
+    fun status(): Status = status
+
+    fun stegHistorikk(): List<StegTilstand> = stegHistorikk.toList()
+
     private fun aktivtStegTilstand(): StegTilstand {
         return stegHistorikk.stream()
             .filter { tilstand -> tilstand.aktiv }
@@ -63,7 +70,6 @@ class Behandling(
                 )
             )
     }
-
     fun aktivtSteg(): StegType {
         return stegHistorikk.stream()
             .filter { tilstand -> tilstand.aktiv }
@@ -74,7 +80,6 @@ class Behandling(
                 )
             ).tilstand.steg()
     }
-
     fun settPåVent() {
         status = Status.PÅ_VENT
         avklaringsbehovene.leggTil(
@@ -84,24 +89,27 @@ class Behandling(
             )
         )
     }
+    fun vilkårsresultat(): Vilkårsresultat = vilkårsresultat
+
+    fun årsaker(): List<Årsak> = årsaker.toList()
 
     fun leggTil(funnetAvklaringsbehov: List<Definisjon>) {
         avklaringsbehovene.leggTil(funnetAvklaringsbehov, aktivtSteg())
     }
 
-    fun løsAvklaringsbehov(definisjon: Definisjon, begrunnelse: String, endretAv: String) {
-        avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse, endretAv)
-    }
-
-    fun vilkårsresultat(): Vilkårsresultat = vilkårsresultat
-    fun flyt(): BehandlingFlyt = flyt
     fun avklaringsbehov(): List<Avklaringsbehov> = avklaringsbehovene.alle()
     fun avklaringsbehovene(): Avklaringsbehovene = avklaringsbehovene
     fun åpneAvklaringsbehov(): List<Avklaringsbehov> = avklaringsbehovene.åpne()
 
-    fun årsaker(): List<Årsak> = årsaker.toList()
-    fun stegHistorikk(): List<StegTilstand> = stegHistorikk.toList()
-    fun status(): Status = status
+    fun harHattAvklaringsbehov(): Boolean {
+        return avklaringsbehov().any { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
+    }
+
+    fun harIkkeForeslåttVedtak(): Boolean {
+        return avklaringsbehov()
+            .filter { avklaringsbehov -> avklaringsbehov.erForeslåttVedtak() }
+            .none { it.status() == AVSLUTTET }
+    }
 
     override fun compareTo(other: Behandling): Int {
         return this.opprettetTidspunkt.compareTo(other.opprettetTidspunkt)
