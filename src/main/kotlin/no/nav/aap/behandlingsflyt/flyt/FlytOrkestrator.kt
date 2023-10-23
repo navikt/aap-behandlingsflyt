@@ -34,17 +34,15 @@ class FlytOrkestrator(
             val avklaringsbehov = behandling.avklaringsbehovene().åpne()
             validerPlassering(
                 behandlingFlyt,
-                avklaringsbehov.filter { it.status() != Status.SENDT_TILBAKE_FRA_BESLUTTER }
+                avklaringsbehov
+                    .filter { it.status() != Status.SENDT_TILBAKE_FRA_BESLUTTER }
                     .map { behov -> behov.definisjon },
                 gjeldendeSteg.type()
             )
 
             faktagrunnlag.oppdaterFaktagrunnlagForKravliste(behandlingFlyt.faktagrunnlagForGjeldendeSteg())
 
-            val result = StegOrkestrator(gjeldendeSteg).utfør(
-                kontekst,
-                behandling
-            )
+            val result = StegOrkestrator(gjeldendeSteg).utfør(kontekst, behandling)
 
             if (result.erTilbakeføring()) {
                 val tilbakeføringsflyt =
