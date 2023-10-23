@@ -15,9 +15,13 @@ import no.nav.aap.behandlingsflyt.grunnlag.bistand.BistandsTjeneste
 import no.nav.aap.behandlingsflyt.grunnlag.student.StudentGrunnlag
 import no.nav.aap.behandlingsflyt.grunnlag.student.StudentRepository
 
-class VurderBistandsbehovSteg(private val studentRepository: StudentRepository) : BehandlingSteg {
+class VurderBistandsbehovSteg(
+    private val behandlingTjeneste: BehandlingTjeneste,
+    private val studentRepository: StudentRepository
+) : BehandlingSteg {
+
     override fun utfør(input: StegInput): StegResultat {
-        val behandling = BehandlingTjeneste.hent(input.kontekst.behandlingId)
+        val behandling = behandlingTjeneste.hent(input.kontekst.behandlingId)
 
         val periodeTilVurdering =
             PeriodeTilVurderingTjeneste.utled(behandling = behandling, vilkår = Vilkårtype.BISTANDSVILKÅRET)

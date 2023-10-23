@@ -39,7 +39,7 @@ class StegOrkestratorTest {
 
         val kontekst = FlytKontekst(sak.id, behandling.id)
 
-        val resultat = StegOrkestrator(VurderSykdomSteg(InMemoryStudentRepository)).utfør(kontekst, behandling)
+        val resultat = StegOrkestrator(VurderSykdomSteg(BehandlingTjeneste, InMemoryStudentRepository)).utfør(kontekst, behandling)
         assertThat(resultat).isNotNull
 
         assertThat(behandling.stegHistorikk()).hasSize(3)

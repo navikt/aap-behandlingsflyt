@@ -14,9 +14,13 @@ import no.nav.aap.behandlingsflyt.grunnlag.sykdom.SykdomsTjeneste
 import no.nav.aap.behandlingsflyt.grunnlag.yrkesskade.YrkesskadeGrunnlag
 import no.nav.aap.behandlingsflyt.grunnlag.yrkesskade.YrkesskadeTjeneste
 
-class VurderYrkesskadeÅrsakssammenhengSteg(private val studentRepository: StudentRepository) : BehandlingSteg {
+class VurderYrkesskadeÅrsakssammenhengSteg(
+    private val behandlingTjeneste: BehandlingTjeneste,
+    private val studentRepository: StudentRepository
+) : BehandlingSteg {
+
     override fun utfør(input: StegInput): StegResultat {
-        val behandling = BehandlingTjeneste.hent(input.kontekst.behandlingId)
+        val behandling = behandlingTjeneste.hent(input.kontekst.behandlingId)
 
         val periodeTilVurdering =
             PeriodeTilVurderingTjeneste.utled(behandling = behandling, vilkår = Vilkårtype.SYKDOMSVILKÅRET)

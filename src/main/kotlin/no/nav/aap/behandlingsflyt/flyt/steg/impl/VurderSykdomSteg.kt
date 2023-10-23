@@ -12,10 +12,13 @@ import no.nav.aap.behandlingsflyt.flyt.vilkår.sykdom.Sykdomsvilkår
 import no.nav.aap.behandlingsflyt.grunnlag.student.StudentRepository
 import no.nav.aap.behandlingsflyt.grunnlag.sykdom.SykdomsTjeneste
 
-class VurderSykdomSteg(private val studentRepository: StudentRepository) : BehandlingSteg {
+class VurderSykdomSteg(
+    private val behandlingTjeneste: BehandlingTjeneste,
+    private val studentRepository: StudentRepository
+) : BehandlingSteg {
 
     override fun utfør(input: StegInput): StegResultat {
-        val behandling = BehandlingTjeneste.hent(input.kontekst.behandlingId)
+        val behandling = behandlingTjeneste.hent(input.kontekst.behandlingId)
 
         val periodeTilVurdering =
             PeriodeTilVurderingTjeneste.utled(behandling = behandling, vilkår = Vilkårtype.SYKDOMSVILKÅRET)
@@ -24,6 +27,7 @@ class VurderSykdomSteg(private val studentRepository: StudentRepository) : Behan
             val sykdomsGrunnlag = SykdomsTjeneste.hentHvisEksisterer(behandlingId = behandling.id)
             val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId = behandling.id)
 
+            //TODO: Skrive om til å være lik uttrykket på linje 46
             if (sykdomsGrunnlag != null && sykdomsGrunnlag.erKonsistent() || studentGrunnlag?.studentvurdering?.oppfyller11_14 == true) {
                 for (periode in periodeTilVurdering) {
                     val faktagrunnlag = SykdomsFaktagrunnlag(
@@ -38,7 +42,8 @@ class VurderSykdomSteg(private val studentRepository: StudentRepository) : Behan
             }
             val sykdomsvilkåret = behandling.vilkårsresultat().finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
 
-            if (sykdomsvilkåret.harPerioderSomIkkeErVurdert(periodeTilVurdering) || (studentGrunnlag?.studentvurdering?.oppfyller11_14 == false && sykdomsGrunnlag?.erKonsistent() != true)) {
+            if (sykdomsvilkåret.harPerioderSomIkkeErVurdert(periodeTilVurdering)
+                || (studentGrunnlag?.studentvurdering?.oppfyller11_14 == false && sykdomsGrunnlag?.erKonsistent() != true)) {
                 return StegResultat(listOf(Definisjon.AVKLAR_SYKDOM))
             }
         }

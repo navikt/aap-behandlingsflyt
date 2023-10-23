@@ -10,9 +10,11 @@ import no.nav.aap.behandlingsflyt.flyt.vilkår.alder.Aldersgrunnlag
 import no.nav.aap.behandlingsflyt.flyt.vilkår.alder.Aldersvilkåret
 import no.nav.aap.behandlingsflyt.grunnlag.person.PersoninformasjonTjeneste
 
-class VurderAlderSteg : BehandlingSteg {
+class VurderAlderSteg(private val behandlingTjeneste: BehandlingTjeneste) : BehandlingSteg {
+
     override fun utfør(input: StegInput): StegResultat {
-        val behandling = BehandlingTjeneste.hent(input.kontekst.behandlingId)
+
+        val behandling = behandlingTjeneste.hent(input.kontekst.behandlingId)
 
         val periodeTilVurdering =
             PeriodeTilVurderingTjeneste.utled(behandling = behandling, vilkår = Vilkårtype.ALDERSVILKÅRET)

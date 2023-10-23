@@ -8,11 +8,13 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 import no.nav.aap.behandlingsflyt.grunnlag.student.StudentRepository
 
-class VurderStudentSteg(val studentTjeneste: StudentRepository) : BehandlingSteg {
+class VurderStudentSteg(
+    private val behandlingTjeneste: BehandlingTjeneste,
+    private val studentTjeneste: StudentRepository
+) : BehandlingSteg {
 
     override fun utfør(input: StegInput): StegResultat {
-        val behandling = BehandlingTjeneste.hent(input.kontekst.behandlingId)
-
+        val behandling = behandlingTjeneste.hent(input.kontekst.behandlingId)
         val studentGrunnlag = studentTjeneste.hentHvisEksisterer(behandlingId = behandling.id)
 
         if (studentGrunnlag?.erKonsistent() != true) {

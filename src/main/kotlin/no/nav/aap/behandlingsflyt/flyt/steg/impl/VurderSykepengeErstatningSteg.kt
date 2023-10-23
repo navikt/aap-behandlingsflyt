@@ -12,9 +12,9 @@ import no.nav.aap.behandlingsflyt.flyt.vilkår.sykdom.SykepengerErstatningFaktag
 import no.nav.aap.behandlingsflyt.flyt.vilkår.sykdom.SykepengerErstatningVilkår
 import no.nav.aap.behandlingsflyt.grunnlag.sykdom.SykepengerErstatningTjeneste
 
-class VurderSykepengeErstatningSteg : BehandlingSteg {
+class VurderSykepengeErstatningSteg(private val behandlingTjeneste: BehandlingTjeneste) : BehandlingSteg {
     override fun utfør(input: StegInput): StegResultat {
-        val behandling = BehandlingTjeneste.hent(input.kontekst.behandlingId)
+        val behandling = behandlingTjeneste.hent(input.kontekst.behandlingId)
         val sak = Sakslager.hent(input.kontekst.sakId)
 
         val sykdomsvilkåret = behandling.vilkårsresultat().finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)

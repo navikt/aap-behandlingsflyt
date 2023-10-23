@@ -9,9 +9,9 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegInput
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 
-class ForeslåVedtakSteg : BehandlingSteg {
+class ForeslåVedtakSteg(private val behandlingTjeneste: BehandlingTjeneste) : BehandlingSteg {
     override fun utfør(input: StegInput): StegResultat {
-        val behandling = BehandlingTjeneste.hent(input.kontekst.behandlingId)
+        val behandling = behandlingTjeneste.hent(input.kontekst.behandlingId)
 
         if (harHattAvklaringsbehov(behandling) && harIkkeForeslåttVedtak(behandling)) {
             return StegResultat(listOf(Definisjon.FORESLÅ_VEDTAK))
@@ -20,10 +20,12 @@ class ForeslåVedtakSteg : BehandlingSteg {
         return StegResultat() // DO NOTHING
     }
 
+    //TODO: Flytte metode til behandling?
     private fun harHattAvklaringsbehov(behandling: Behandling): Boolean {
         return behandling.avklaringsbehov().any { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
     }
 
+    //TODO: Flytte metode til behandling?
     private fun harIkkeForeslåttVedtak(behandling: Behandling): Boolean {
         return behandling
             .avklaringsbehov()
@@ -36,10 +38,9 @@ class ForeslåVedtakSteg : BehandlingSteg {
     }
 
     override fun vedTilbakeføring(input: StegInput) {
-        val behandling = BehandlingTjeneste.hent(input.kontekst.behandlingId)
+        val behandling = behandlingTjeneste.hent(input.kontekst.behandlingId)
         val avklaringsbehovene = behandling.avklaringsbehovene()
-        val relevanteBehov =
-            avklaringsbehovene.hentBehovForDefinisjon(listOf(Definisjon.FORESLÅ_VEDTAK))
+        val relevanteBehov = avklaringsbehovene.hentBehovForDefinisjon(listOf(Definisjon.FORESLÅ_VEDTAK))
 
         if (relevanteBehov.isNotEmpty()) {
             avklaringsbehovene.avbryt(Definisjon.FORESLÅ_VEDTAK)

@@ -22,20 +22,22 @@ import no.nav.aap.behandlingsflyt.grunnlag.student.db.InMemoryStudentRepository
 
 object Førstegangsbehandling : BehandlingType {
     override fun flyt(): BehandlingFlyt {
+
+        val behandlingTjeneste = BehandlingTjeneste
         val studentRepository = InMemoryStudentRepository
 
         return BehandlingFlytBuilder()
-            .medSteg(steg = StartBehandlingSteg())
+            .medSteg(steg = StartBehandlingSteg(behandlingTjeneste))
             .medSteg(steg = InnhentPersonopplysningerSteg())
-            .medSteg(steg = VurderAlderSteg())
+            .medSteg(steg = VurderAlderSteg(behandlingTjeneste))
             .medSteg(steg = GeneriskPlaceholderSteg(StegType.VURDER_LOVVALG))
-            .medSteg(steg = VurderStudentSteg(studentRepository))
+            .medSteg(steg = VurderStudentSteg(behandlingTjeneste, studentRepository))
             .medSteg(steg = InnhentYrkesskadeOpplysningerSteg())
-            .medSteg(steg = VurderYrkesskadeÅrsakssammenhengSteg(studentRepository), informasjonskrav = listOf(Yrkesskade))
-            .medSteg(steg = VurderSykdomSteg(studentRepository), informasjonskrav = listOf(Legeerklæring))
-            .medSteg(steg = FritakMeldepliktSteg())
-            .medSteg(steg = VurderBistandsbehovSteg(studentRepository))
-            .medSteg(steg = VurderSykepengeErstatningSteg())
+            .medSteg(steg = VurderYrkesskadeÅrsakssammenhengSteg(behandlingTjeneste, studentRepository), informasjonskrav = listOf(Yrkesskade))
+            .medSteg(steg = VurderSykdomSteg(behandlingTjeneste, studentRepository), informasjonskrav = listOf(Legeerklæring))
+            .medSteg(steg = FritakMeldepliktSteg(behandlingTjeneste))
+            .medSteg(steg = VurderBistandsbehovSteg(behandlingTjeneste, studentRepository))
+            .medSteg(steg = VurderSykepengeErstatningSteg(behandlingTjeneste))
             .medSteg(steg = GeneriskPlaceholderSteg(StegType.INNHENT_MEDLEMSKAP))
             .medSteg(steg = GeneriskPlaceholderSteg(StegType.VURDER_MEDLEMSKAP))
             .medSteg(steg = GeneriskPlaceholderSteg(StegType.INNHENT_INNTEKTSOPPLYSNINGER))
@@ -45,8 +47,8 @@ object Førstegangsbehandling : BehandlingType {
             .medSteg(steg = GeneriskPlaceholderSteg(StegType.SAMORDNING))
             .medSteg(steg = GeneriskPlaceholderSteg(StegType.SIMULERING))
             .medSteg(steg = GeneriskPlaceholderSteg(StegType.BEREGN_TILKJENT_YTELSE))
-            .medSteg(steg = ForeslåVedtakSteg()) // en-trinn
-            .medSteg(steg = FatteVedtakSteg()) // to-trinn
+            .medSteg(steg = ForeslåVedtakSteg(behandlingTjeneste)) // en-trinn
+            .medSteg(steg = FatteVedtakSteg(behandlingTjeneste)) // to-trinn
             .medSteg(steg = GeneriskPlaceholderSteg(StegType.IVERKSETT_VEDTAK))
             .build()
     }

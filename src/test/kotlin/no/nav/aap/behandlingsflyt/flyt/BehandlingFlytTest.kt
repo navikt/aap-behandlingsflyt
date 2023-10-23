@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt
 
+import no.nav.aap.behandlingsflyt.domene.behandling.BehandlingTjeneste
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 import no.nav.aap.behandlingsflyt.flyt.steg.impl.GeneriskPlaceholderSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.impl.InnhentPersonopplysningerSteg
@@ -18,7 +19,7 @@ class BehandlingFlytTest {
     }
 
     private val førstegangsbehandling = BehandlingFlytBuilder()
-        .medSteg(StartBehandlingSteg())
+        .medSteg(StartBehandlingSteg(BehandlingTjeneste))
         .medSteg(InnhentPersonopplysningerSteg())
         .medSteg(GeneriskPlaceholderSteg(StegType.VURDER_MEDLEMSKAP))
         .medSteg(GeneriskPlaceholderSteg(StegType.FASTSETT_GRUNNLAG))

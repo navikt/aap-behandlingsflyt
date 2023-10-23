@@ -8,9 +8,9 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegInput
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 
-class FatteVedtakSteg : BehandlingSteg {
+class FatteVedtakSteg(private val behandlingTjeneste: BehandlingTjeneste) : BehandlingSteg {
     override fun utfør(input: StegInput): StegResultat {
-        val behandling = BehandlingTjeneste.hent(input.kontekst.behandlingId)
+        val behandling = behandlingTjeneste.hent(input.kontekst.behandlingId)
 
         if (skalTilbakeføresEtterTotrinnsVurdering(behandling)) {
             return StegResultat(tilbakeførtFraBeslutter = true)
