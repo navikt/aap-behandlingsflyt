@@ -9,6 +9,7 @@ object ProsesserBehandlingOppgave : Oppgave() {
     private val kontroller = FlytOrkestrator(Faktagrunnlag())
 
     override fun utfør(input: OppgaveInput) {
+        kontroller.forberedBehandling(FlytKontekst(sakId = input.sakId(), behandlingId = input.behandlingId()))
         kontroller.prosesserBehandling(FlytKontekst(sakId = input.sakId(), behandlingId = input.behandlingId()))
     }
 

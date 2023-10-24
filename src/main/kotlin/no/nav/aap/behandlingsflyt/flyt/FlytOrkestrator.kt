@@ -25,6 +25,8 @@ class FlytOrkestrator(
         ValiderBehandlingTilstand.validerTilstandBehandling(behandling, listOf())
 
         val behandlingFlyt = behandling.flyt()
+        behandlingFlyt.forberedFlyt(behandling.aktivtSteg())
+
         val oppdaterFaktagrunnlagForKravliste =
             faktagrunnlag.oppdaterFaktagrunnlagForKravliste(
                 behandlingFlyt.faktagrunnlagFremTilGjeldendeSteg(),
