@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.domene.behandling
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.legeerklæring.Legeerklæring
+import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.Yrkesskade
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlytBuilder
@@ -9,7 +10,6 @@ import no.nav.aap.behandlingsflyt.flyt.steg.impl.FatteVedtakSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.impl.ForeslåVedtakSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.impl.FritakMeldepliktSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.impl.GeneriskPlaceholderSteg
-import no.nav.aap.behandlingsflyt.flyt.steg.impl.InnhentPersonopplysningerSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.impl.InnhentYrkesskadeOpplysningerSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.impl.StartBehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.impl.VurderAlderSteg
@@ -28,13 +28,12 @@ object Førstegangsbehandling : BehandlingType {
 
         return BehandlingFlytBuilder()
             .medSteg(steg = StartBehandlingSteg(behandlingTjeneste))
-            .medSteg(steg = InnhentPersonopplysningerSteg())
-            .medSteg(steg = VurderAlderSteg(behandlingTjeneste))
+            .medSteg(steg = VurderAlderSteg(behandlingTjeneste), informasjonskrav = listOf(Personopplysning()))
             .medSteg(steg = GeneriskPlaceholderSteg(StegType.VURDER_LOVVALG))
             .medSteg(steg = VurderStudentSteg(behandlingTjeneste, studentRepository))
             .medSteg(steg = InnhentYrkesskadeOpplysningerSteg())
-            .medSteg(steg = VurderYrkesskadeÅrsakssammenhengSteg(behandlingTjeneste, studentRepository), informasjonskrav = listOf(Yrkesskade))
-            .medSteg(steg = VurderSykdomSteg(behandlingTjeneste, studentRepository), informasjonskrav = listOf(Legeerklæring))
+            .medSteg(steg = VurderYrkesskadeÅrsakssammenhengSteg(behandlingTjeneste, studentRepository), informasjonskrav = listOf(Yrkesskade()))
+            .medSteg(steg = VurderSykdomSteg(behandlingTjeneste, studentRepository), informasjonskrav = listOf(Legeerklæring()))
             .medSteg(steg = FritakMeldepliktSteg(behandlingTjeneste))
             .medSteg(steg = VurderBistandsbehovSteg(behandlingTjeneste, studentRepository))
             .medSteg(steg = VurderSykepengeErstatningSteg(behandlingTjeneste))

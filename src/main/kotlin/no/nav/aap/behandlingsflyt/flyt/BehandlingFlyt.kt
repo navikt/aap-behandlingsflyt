@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.domene.behandling.EndringType
 import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Avklaringsbehov
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlagstype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlag
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 import java.util.*
@@ -20,7 +20,7 @@ class BehandlingFlyt private constructor(
 
     class Behandlingsflytsteg(
         val steg: BehandlingSteg,
-        val kravliste: List<Grunnlagstype<*>>
+        val kravliste: List<Grunnlag<*>>
     )
 
     constructor(
@@ -32,11 +32,11 @@ class BehandlingFlyt private constructor(
         parent = null
     )
 
-    fun faktagrunnlagForGjeldendeSteg(): List<Grunnlagstype<*>> {
+    fun faktagrunnlagForGjeldendeSteg(): List<Grunnlag<*>> {
         return aktivtSteg?.kravliste ?: emptyList()
     }
 
-    fun faktagrunnlagFremTilGjeldendeSteg(): List<Grunnlagstype<*>> {
+    fun faktagrunnlagFremTilGjeldendeSteg(): List<Grunnlag<*>> {
         return flyt
             .takeWhile { it != aktivtSteg }
             .flatMap { it.kravliste }
@@ -142,6 +142,26 @@ class BehandlingFlyt private constructor(
         )
     }
 
+    fun tilbakeflytEtterEndringer(oppdaterteGrunnlagstype: List<Grunnlag<*>>): BehandlingFlyt {
+        val skalTilSteg = flyt.filter { it.kravliste.any { at -> oppdaterteGrunnlagstype.contains(at) } }.map { it.steg.type() }.minWithOrNull(compareable())
+
+        if (skalTilSteg == null) {
+            return BehandlingFlyt(emptyList(), emptyMap())
+        }
+
+        val returflyt = flyt.slice(flyt.indexOfFirst { it.steg.type() == skalTilSteg }..flyt.indexOf(this.aktivtSteg))
+
+        if (returflyt.size <= 1) {
+            return BehandlingFlyt(emptyList(), emptyMap())
+        }
+
+        return BehandlingFlyt(
+            flyt = returflyt.reversed(),
+            endringTilSteg = emptyMap(),
+            parent = this
+        )
+    }
+
     fun erTom(): Boolean {
         return flyt.isEmpty()
     }
@@ -165,7 +185,7 @@ class BehandlingFlytBuilder {
     fun medSteg(
         steg: BehandlingSteg,
         vararg endringer: EndringType,
-        informasjonskrav: List<Grunnlagstype<*>> = emptyList()
+        informasjonskrav: List<Grunnlag<*>> = emptyList()
     ): BehandlingFlytBuilder {
         if (buildt) {
             throw IllegalStateException("[Utvikler feil] Builder er allerede bygget")

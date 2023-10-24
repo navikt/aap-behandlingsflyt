@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.ValiderBehandlingTilstand
 import no.nav.aap.behandlingsflyt.prosessering.Gruppe
+import no.nav.aap.behandlingsflyt.prosessering.InnhentOpplysningerOgReposisjonerBehandlingOppgave
 import no.nav.aap.behandlingsflyt.prosessering.OppgaveInput
 import no.nav.aap.behandlingsflyt.prosessering.OppgaveRepository
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingOppgave
@@ -91,6 +92,11 @@ object HendelsesMottak {
             }
             OppgaveRepository.leggTil(
                 Gruppe().leggTil(
+                    OppgaveInput(oppgave = InnhentOpplysningerOgReposisjonerBehandlingOppgave).forBehandling(
+                        kontekst.sakId,
+                        kontekst.behandlingId
+                    )
+                ).leggTil(
                     OppgaveInput(oppgave = ProsesserBehandlingOppgave).forBehandling(
                         kontekst.sakId,
                         kontekst.behandlingId

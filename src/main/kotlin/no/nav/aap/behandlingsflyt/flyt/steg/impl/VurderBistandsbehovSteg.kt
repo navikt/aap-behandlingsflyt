@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt.steg.impl
 
+import no.nav.aap.behandlingsflyt.domene.Periode
 import no.nav.aap.behandlingsflyt.domene.behandling.BehandlingTjeneste
 import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -45,16 +46,21 @@ class VurderBistandsbehovSteg(
 
             val vilkår = behandling.vilkårsresultat().finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
 
-            if (vilkår.harPerioderSomIkkeErVurdert(periodeTilVurdering) || harInnvilgetForStudentUtenÅVæreStudent(
-                    vilkår,
-                    studentGrunnlag
-                )
-            ) {
+            if (harBehovForAvklaring(vilkår, periodeTilVurdering, studentGrunnlag)) {
                 return StegResultat(listOf(Definisjon.AVKLAR_BISTANDSBEHOV))
             }
         }
 
         return StegResultat()
+    }
+
+    private fun harBehovForAvklaring(
+        vilkår: Vilkår,
+        periodeTilVurdering: Set<Periode>,
+        studentGrunnlag: StudentGrunnlag?
+    ): Boolean {
+        return (vilkår.harPerioderSomIkkeErVurdert(periodeTilVurdering)
+                || harInnvilgetForStudentUtenÅVæreStudent(vilkår, studentGrunnlag))
     }
 
     private fun harInnvilgetForStudentUtenÅVæreStudent(vilkår: Vilkår, studentGrunnlag: StudentGrunnlag?): Boolean {

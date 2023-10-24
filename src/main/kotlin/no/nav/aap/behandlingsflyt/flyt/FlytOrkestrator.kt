@@ -19,6 +19,32 @@ class FlytOrkestrator(
     private val faktagrunnlag: Faktagrunnlag
 ) {
 
+    fun forberedBehandling(kontekst: FlytKontekst) {
+        val behandling = BehandlingTjeneste.hent(kontekst.behandlingId)
+
+        ValiderBehandlingTilstand.validerTilstandBehandling(behandling, listOf())
+
+        val behandlingFlyt = behandling.flyt()
+        val oppdaterFaktagrunnlagForKravliste =
+            faktagrunnlag.oppdaterFaktagrunnlagForKravliste(
+                behandlingFlyt.faktagrunnlagFremTilGjeldendeSteg(),
+                kontekst = kontekst
+            )
+
+        val tilbakeføringsflyt = behandlingFlyt.tilbakeflytEtterEndringer(oppdaterFaktagrunnlagForKravliste)
+
+        if (!tilbakeføringsflyt.erTom()) {
+            log.info(
+                "[{} - {}] Tilakeført etter oppdatering av registeropplysninger fra '{}' til '{}'",
+                kontekst.sakId,
+                kontekst.behandlingId,
+                behandling.aktivtSteg(),
+                tilbakeføringsflyt.stegene().last()
+            )
+        }
+        tilbakefør(kontekst, behandling, tilbakeføringsflyt)
+    }
+
     fun prosesserBehandling(kontekst: FlytKontekst) {
         val behandling = BehandlingTjeneste.hent(kontekst.behandlingId)
 
@@ -27,8 +53,6 @@ class FlytOrkestrator(
         val behandlingFlyt = behandling.flyt()
 
         var gjeldendeSteg = behandlingFlyt.forberedFlyt(behandling.aktivtSteg())
-
-        faktagrunnlag.oppdaterFaktagrunnlagForKravliste(behandlingFlyt.faktagrunnlagFremTilGjeldendeSteg())
 
         while (true) {
             val avklaringsbehov = behandling.avklaringsbehovene().åpne()
@@ -40,7 +64,10 @@ class FlytOrkestrator(
                 gjeldendeSteg.type()
             )
 
-            faktagrunnlag.oppdaterFaktagrunnlagForKravliste(behandlingFlyt.faktagrunnlagForGjeldendeSteg())
+            faktagrunnlag.oppdaterFaktagrunnlagForKravliste(
+                behandlingFlyt.faktagrunnlagForGjeldendeSteg(),
+                kontekst
+            )
 
             val result = StegOrkestrator(gjeldendeSteg).utfør(kontekst, behandling)
 

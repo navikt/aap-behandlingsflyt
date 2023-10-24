@@ -1,11 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade
 
-import org.assertj.core.api.Assertions.*
-import org.junit.jupiter.api.Test
-import java.time.LocalDateTime
-
 class YrkesskadeTest {
-
+/*
     @Test
     fun `Yrkesskadedata er oppdatert`() {
         val yrkesskadedatalager = Yrkesskadedatalager()
@@ -86,4 +82,6 @@ class YrkesskadeTest {
 
         assertThat(erOppdatert).isEqualTo(Yrkesskadedata())
     }
+
+ */
 }

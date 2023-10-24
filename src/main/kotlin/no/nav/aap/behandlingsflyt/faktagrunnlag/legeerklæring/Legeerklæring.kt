@@ -1,22 +1,16 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.legeerklæring
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlagstype
+import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
 
-internal class Legeerklæring : Grunnlag {
+internal class Legeerklæring : Grunnlag<Legeerklæringdata> {
 
-    override fun oppdaterLegeerklæring(): Boolean {
+    override fun oppdater(kontekst: FlytKontekst): Boolean {
         //TODO("Not yet implemented")
         return true
     }
 
-    internal companion object : Grunnlagstype<Legeerklæringdata>() {
-        override fun oppdater(grunnlag: List<Grunnlag>): Boolean {
-            return grunnlag.all(Grunnlag::oppdaterLegeerklæring)
-        }
-
-        override fun hentGrunnlag(grunnlag: List<Grunnlag>): Legeerklæringdata? {
-            return grunnlag.firstNotNullOfOrNull(Grunnlag::hentLegeerklæring)
-        }
+    override fun hent(kontekst: FlytKontekst): Legeerklæringdata? {
+        TODO("Not yet implemented")
     }
 }
