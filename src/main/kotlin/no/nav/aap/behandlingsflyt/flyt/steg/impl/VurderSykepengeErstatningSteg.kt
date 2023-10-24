@@ -10,7 +10,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårtype
 import no.nav.aap.behandlingsflyt.flyt.vilkår.sykdom.SykepengerErstatningFaktagrunnlag
 import no.nav.aap.behandlingsflyt.flyt.vilkår.sykdom.SykepengerErstatningVilkår
-import no.nav.aap.behandlingsflyt.grunnlag.sykdom.SykepengerErstatningTjeneste
+import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykepengerErstatningTjeneste
 
 class VurderSykepengeErstatningSteg(private val behandlingTjeneste: BehandlingTjeneste) : BehandlingSteg {
     override fun utfør(input: StegInput): StegResultat {

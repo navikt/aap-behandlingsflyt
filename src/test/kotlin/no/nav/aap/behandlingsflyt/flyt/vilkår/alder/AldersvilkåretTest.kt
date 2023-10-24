@@ -3,9 +3,7 @@ package no.nav.aap.behandlingsflyt.flyt.vilkår.alder
 import no.nav.aap.behandlingsflyt.domene.Periode
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Utfall
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårsresultat
-import no.nav.aap.behandlingsflyt.flyt.vilkår.alder.Aldersgrunnlag
-import no.nav.aap.behandlingsflyt.flyt.vilkår.alder.Aldersvilkåret
-import no.nav.aap.behandlingsflyt.grunnlag.person.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Fødselsdato
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate

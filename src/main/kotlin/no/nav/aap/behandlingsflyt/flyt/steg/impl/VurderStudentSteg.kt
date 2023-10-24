@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegInput
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
-import no.nav.aap.behandlingsflyt.grunnlag.student.StudentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.student.StudentRepository
 
 class VurderStudentSteg(
     private val behandlingTjeneste: BehandlingTjeneste,

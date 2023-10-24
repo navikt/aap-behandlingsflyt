@@ -5,12 +5,12 @@ import no.nav.aap.behandlingsflyt.domene.behandling.BehandlingTjeneste
 import no.nav.aap.behandlingsflyt.domene.person.Ident
 import no.nav.aap.behandlingsflyt.domene.person.Personlager
 import no.nav.aap.behandlingsflyt.domene.sak.Sakslager
-import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.Yrkesskade
+import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.YrkesskadeService
 import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
-import no.nav.aap.behandlingsflyt.grunnlag.person.Fødselsdato
-import no.nav.aap.behandlingsflyt.grunnlag.person.PersonRegisterMock
-import no.nav.aap.behandlingsflyt.grunnlag.person.Personinfo
-import no.nav.aap.behandlingsflyt.grunnlag.yrkesskade.YrkesskadeRegisterMock
+import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.PersonRegisterMock
+import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Personinfo
+import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.YrkesskadeRegisterMock
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -34,8 +34,8 @@ class FaktagrunnlagTest {
     fun `Yrkesskadedata er oppdatert`() {
         val faktagrunnlag = Faktagrunnlag()
 
-        faktagrunnlag.oppdaterFaktagrunnlagForKravliste(listOf(Yrkesskade()), kontekst)
-        val erOppdatert = faktagrunnlag.oppdaterFaktagrunnlagForKravliste(listOf(Yrkesskade()), kontekst)
+        faktagrunnlag.oppdaterFaktagrunnlagForKravliste(listOf(YrkesskadeService()), kontekst)
+        val erOppdatert = faktagrunnlag.oppdaterFaktagrunnlagForKravliste(listOf(YrkesskadeService()), kontekst)
 
         assertThat(erOppdatert).isEmpty()
     }
@@ -44,22 +44,22 @@ class FaktagrunnlagTest {
     fun `Yrkesskadedata er ikke oppdatert`() {
         val faktagrunnlag = Faktagrunnlag()
 
-        val yrkesskade = Yrkesskade()
+        val yrkesskadeService = YrkesskadeService()
 
         YrkesskadeRegisterMock.konstruer(ident = ident, periode = periode)
 
-        val erOppdatert = faktagrunnlag.oppdaterFaktagrunnlagForKravliste(listOf(yrkesskade), kontekst)
+        val erOppdatert = faktagrunnlag.oppdaterFaktagrunnlagForKravliste(listOf(yrkesskadeService), kontekst)
 
         assertThat(erOppdatert)
             .hasSize(1)
-            .allMatch { it === yrkesskade }
+            .allMatch { it === yrkesskadeService }
     }
 
     @Test
     fun `Yrkesskadedata er utdatert, men har ingen endring fra registeret`() {
         val faktagrunnlag = Faktagrunnlag()
 
-        val erOppdatert = faktagrunnlag.oppdaterFaktagrunnlagForKravliste(listOf(Yrkesskade()), kontekst)
+        val erOppdatert = faktagrunnlag.oppdaterFaktagrunnlagForKravliste(listOf(YrkesskadeService()), kontekst)
 
         assertThat(erOppdatert).isEmpty()
     }

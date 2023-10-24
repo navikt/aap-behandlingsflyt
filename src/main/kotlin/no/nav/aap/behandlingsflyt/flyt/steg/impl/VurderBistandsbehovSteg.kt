@@ -12,9 +12,9 @@ import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkår
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårtype
 import no.nav.aap.behandlingsflyt.flyt.vilkår.bistand.BistandFaktagrunnlag
 import no.nav.aap.behandlingsflyt.flyt.vilkår.bistand.Bistandsvilkåret
-import no.nav.aap.behandlingsflyt.grunnlag.bistand.BistandsTjeneste
-import no.nav.aap.behandlingsflyt.grunnlag.student.StudentGrunnlag
-import no.nav.aap.behandlingsflyt.grunnlag.student.StudentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.bistand.BistandsTjeneste
+import no.nav.aap.behandlingsflyt.faktagrunnlag.student.StudentGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.student.StudentRepository
 
 class VurderBistandsbehovSteg(
     private val behandlingTjeneste: BehandlingTjeneste,

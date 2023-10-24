@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.LøsningsResultat
 import no.nav.aap.behandlingsflyt.domene.behandling.BehandlingTjeneste
 import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
-import no.nav.aap.behandlingsflyt.grunnlag.meldeplikt.MeldepliktTjeneste
+import no.nav.aap.behandlingsflyt.faktagrunnlag.meldeplikt.MeldepliktTjeneste
 
 class FritakFraMeldepliktLøser : AvklaringsbehovsLøser<FritakMeldepliktLøsning> {
 

@@ -1,7 +1,9 @@
 package no.nav.aap.behandlingsflyt.domene.behandling
 
 import no.nav.aap.behandlingsflyt.domene.ElementNotFoundException
-import no.nav.aap.behandlingsflyt.grunnlag.GrunnlagKopierer
+import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
+import no.nav.aap.behandlingsflyt.flyt.behandlingstyper.Førstegangsbehandling
+import no.nav.aap.behandlingsflyt.flyt.behandlingstyper.Revurdering
 import java.util.*
 import java.util.concurrent.atomic.AtomicLong
 

@@ -9,8 +9,8 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårtype
 import no.nav.aap.behandlingsflyt.flyt.vilkår.sykdom.SykdomsFaktagrunnlag
 import no.nav.aap.behandlingsflyt.flyt.vilkår.sykdom.Sykdomsvilkår
-import no.nav.aap.behandlingsflyt.grunnlag.student.StudentRepository
-import no.nav.aap.behandlingsflyt.grunnlag.sykdom.SykdomsTjeneste
+import no.nav.aap.behandlingsflyt.faktagrunnlag.student.StudentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykdomsTjeneste
 
 class VurderSykdomSteg(
     private val behandlingTjeneste: BehandlingTjeneste,

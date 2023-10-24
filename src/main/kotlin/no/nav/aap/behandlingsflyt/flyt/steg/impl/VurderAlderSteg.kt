@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårtype
 import no.nav.aap.behandlingsflyt.flyt.vilkår.alder.Aldersgrunnlag
 import no.nav.aap.behandlingsflyt.flyt.vilkår.alder.Aldersvilkåret
-import no.nav.aap.behandlingsflyt.grunnlag.person.PersoninformasjonTjeneste
+import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.PersoninformasjonRepository
 
 class VurderAlderSteg(private val behandlingTjeneste: BehandlingTjeneste) : BehandlingSteg {
 
@@ -20,7 +20,7 @@ class VurderAlderSteg(private val behandlingTjeneste: BehandlingTjeneste) : Beha
             PeriodeTilVurderingTjeneste.utled(behandling = behandling, vilkår = Vilkårtype.ALDERSVILKÅRET)
 
         if (periodeTilVurdering.isNotEmpty()) {
-            val personinfoGrunnlag = PersoninformasjonTjeneste.hentHvisEksisterer(input.kontekst.behandlingId)
+            val personinfoGrunnlag = PersoninformasjonRepository.hentHvisEksisterer(input.kontekst.behandlingId)
                 ?: throw IllegalStateException("Forventet å finne personopplysninger")
 
             for (periode in periodeTilVurdering) {
