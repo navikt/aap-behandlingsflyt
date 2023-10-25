@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt
 
+import no.nav.aap.behandlingsflyt.dbstuff.DbConnection
 import no.nav.aap.behandlingsflyt.domene.behandling.Behandling
 import no.nav.aap.behandlingsflyt.domene.behandling.BehandlingTjeneste
 import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Definisjon
@@ -8,7 +9,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.flyt.steg.StegOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 import org.slf4j.LoggerFactory
-import java.sql.Connection
 
 private val log = LoggerFactory.getLogger(FlytOrkestrator::class.java)
 
@@ -17,9 +17,9 @@ private val log = LoggerFactory.getLogger(FlytOrkestrator::class.java)
  * Har ansvar for å drive flyten til en gitt behandling. Typen behandling styrer hvilke steg som skal utføres.
  */
 class FlytOrkestrator(
-    private val faktagrunnlag: Faktagrunnlag
+    private val faktagrunnlag: Faktagrunnlag,
+    private val transaksjonsconnection: DbConnection
 ) {
-//    private val transaksjonsconnection: Connection by lazy { TODO() }
 
     fun forberedBehandling(kontekst: FlytKontekst) {
         val behandling = BehandlingTjeneste.hent(kontekst.behandlingId)
@@ -59,53 +59,48 @@ class FlytOrkestrator(
         var gjeldendeSteg = behandlingFlyt.forberedFlyt(behandling.aktivtSteg())
 
         while (true) {
-//            var savepoint = transaksjonsconnection.setSavepoint()
+            transaksjonsconnection.markerSavepoint()
 
-            try {
-                val avklaringsbehov = behandling.avklaringsbehovene().åpne()
-                validerPlassering(
-                    behandlingFlyt,
-                    avklaringsbehov
-                        .filter { it.status() != Status.SENDT_TILBAKE_FRA_BESLUTTER }
-                        .map { behov -> behov.definisjon },
-                    gjeldendeSteg.type()
+            val avklaringsbehov = behandling.avklaringsbehovene().åpne()
+            validerPlassering(
+                behandlingFlyt,
+                avklaringsbehov
+                    .filter { it.status() != Status.SENDT_TILBAKE_FRA_BESLUTTER }
+                    .map { behov -> behov.definisjon },
+                gjeldendeSteg.type()
+            )
+
+            faktagrunnlag.oppdaterFaktagrunnlagForKravliste(
+                behandlingFlyt.faktagrunnlagForGjeldendeSteg(),
+                kontekst
+            )
+
+            transaksjonsconnection.markerSavepoint()
+
+            val result = StegOrkestrator(gjeldendeSteg).utfør(kontekst, behandling)
+
+            if (result.erTilbakeføring()) {
+                val tilbakeføringsflyt =
+                    behandlingFlyt.tilbakeflyt(behandling.avklaringsbehovene().tilbakeførtFraBeslutter())
+                log.info(
+                    "[{} - {}] Tilakeført fra '{}' til '{}'",
+                    kontekst.sakId,
+                    kontekst.behandlingId,
+                    gjeldendeSteg.type(),
+                    tilbakeføringsflyt.stegene().last()
                 )
-
-                faktagrunnlag.oppdaterFaktagrunnlagForKravliste(
-                    behandlingFlyt.faktagrunnlagForGjeldendeSteg(),
-                    kontekst
-                )
-
-//                savepoint = transaksjonsconnection.setSavepoint()
-
-                val result = StegOrkestrator(gjeldendeSteg).utfør(kontekst, behandling)
-
-                if (result.erTilbakeføring()) {
-                    val tilbakeføringsflyt =
-                        behandlingFlyt.tilbakeflyt(behandling.avklaringsbehovene().tilbakeførtFraBeslutter())
-                    log.info(
-                        "[{} - {}] Tilakeført fra '{}' til '{}'",
-                        kontekst.sakId,
-                        kontekst.behandlingId,
-                        gjeldendeSteg.type(),
-                        tilbakeføringsflyt.stegene().last()
-                    )
-                    tilbakefør(kontekst, behandling, tilbakeføringsflyt)
-                }
-
-
-                val neste = behandlingFlyt.neste()
-
-                if (!result.kanFortsette() || neste == null) {
-                    // Prosessen har stoppet opp, slipp ut hendelse om at den har stoppet opp og hvorfor?
-                    loggStopp(kontekst, behandling)
-                    return
-                }
-                gjeldendeSteg = neste
-            } catch (e: Throwable) {
-//                transaksjonsconnection.rollback(savepoint)
-                throw e
+                tilbakefør(kontekst, behandling, tilbakeføringsflyt)
             }
+
+
+            val neste = behandlingFlyt.neste()
+
+            if (!result.kanFortsette() || neste == null) {
+                // Prosessen har stoppet opp, slipp ut hendelse om at den har stoppet opp og hvorfor?
+                loggStopp(kontekst, behandling)
+                return
+            }
+            gjeldendeSteg = neste
         }
     }
 

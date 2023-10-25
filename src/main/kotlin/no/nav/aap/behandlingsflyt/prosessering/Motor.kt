@@ -1,7 +1,12 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import kotlinx.coroutines.Runnable
+import no.nav.aap.behandlingsflyt.dbstuff.transaction
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
+import java.util.concurrent.Executors
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
 
 class Motor(
@@ -9,27 +14,36 @@ class Motor(
 ) {
 
     private val log = LoggerFactory.getLogger(Motor::class.java)
-    private val worker = Worker()
-    private val workerThread = Thread(worker)
+    private val executor = Executors.newFixedThreadPool(5)
+    private val pollingExecutor = Executors.newScheduledThreadPool(1)
+    private var lastTaskPolled: LocalDateTime? = null
+    private var lastTaskPolledLogged: LocalDateTime? = LocalDateTime.now()
+    private var stopped = false
 
     fun start() {
         log.info("Starter prosessering av oppgaver")
-        if (!workerThread.isAlive) {
-            workerThread.start()
-            log.info("Startet prosessering av oppgaver {}", workerThread)
-        }
+        pollingExecutor.schedule(PollingWorker(dataSource), 0L, TimeUnit.SECONDS)
     }
 
     fun stop() {
-        worker.stop()
+        stopped = true
+        pollingExecutor.shutdown()
+        pollingExecutor.awaitTermination(5L, TimeUnit.SECONDS)
+        executor.shutdown()
+        executor.awaitTermination(10L, TimeUnit.SECONDS)
     }
 
     fun harOppgaver(): Boolean {
-        return OppgaveRepository.harOppgaver() || worker.utførerOppgave()
+        return OppgaveRepository.harOppgaver() || harOppgaverKjørende()
     }
 
-    private inner class Worker : Runnable {
-        private val log = LoggerFactory.getLogger(Worker::class.java)
+    private fun harOppgaverKjørende(): Boolean {
+        val threadPoolExecutor = executor as ThreadPoolExecutor
+        return threadPoolExecutor.activeCount != 0
+    }
+
+    private inner class PollingWorker(val dataSource: DataSource) : Runnable {
+        private val log = LoggerFactory.getLogger(PollingWorker::class.java)
         private val repo = OppgaveRepository
         private var running = false
         private var gruppe: Gruppe? = null
@@ -39,48 +53,66 @@ class Motor(
             gruppe = repo.plukk()
             while (running) {
                 if (gruppe != null) {
-                    val utførteOppgaver = mutableListOf<String>()
-                    try {
-                        log.info("[{} - {}}] Plukket gruppe {}", gruppe!!.sakId(), gruppe!!.behandlingId(), gruppe)
-                        for (oppgaveInput in gruppe!!.oppgaver()) {
-                            log.info(
-                                "[{} - {}}] Starter på oppgave '{}'",
-                                oppgaveInput.sakId(),
-                                oppgaveInput.behandlingId(),
-                                oppgaveInput.type()
-                            )
-                            oppgaveInput.oppgave.utfør(oppgaveInput)
-                            log.info(
-                                "[{} - {}}] Fullført oppgave '{}'",
-                                oppgaveInput.sakId(),
-                                oppgaveInput.behandlingId(),
-                                oppgaveInput.type()
-                            )
-                            utførteOppgaver.add(oppgaveInput.type())
-                        }
-                    } catch (exception: Exception) {
-                        val nyGruppe = Gruppe()
-                        gruppe!!.oppgaver()
-                            .filter { oppgave -> utførteOppgaver.any { uo -> oppgave.type() == uo } }
-                            .forEach { nyGruppe.leggTil(it) }
-                        log.warn("Feil under prosessering av gruppe {}, gjenstående opgaver {}", gruppe, nyGruppe, exception)
-                        repo.leggTil(gruppe = nyGruppe)
-                    }
+                    executor.submit(OppgaveWorker(dataSource, gruppe!!))
+                    lastTaskPolled = LocalDateTime.now()
                 }
                 gruppe = repo.plukk()
                 if (running && !repo.harOppgaver() && gruppe == null) {
-                    Thread.sleep(500L)
+                    running = false
                 }
             }
-            log.info("Stoppet prosessering {}", workerThread)
-        }
+            if (lastTaskPolled?.isBefore(LocalDateTime.now().minusMinutes(10)) == true
+                && lastTaskPolledLogged?.isBefore(LocalDateTime.now().minusMinutes(10)) == true
+            ) {
 
-        fun stop() {
-            running = false
+                log.info("Ikke plukket oppgaver siden {}", lastTaskPolled)
+                lastTaskPolledLogged = LocalDateTime.now()
+            }
+            if (!stopped) {
+                pollingExecutor.schedule(PollingWorker(dataSource), 500L, TimeUnit.MILLISECONDS)
+            }
         }
+    }
 
-        fun utførerOppgave(): Boolean {
-            return gruppe != null
+    private class OppgaveWorker(private val dataSource: DataSource, private val gruppe: Gruppe) : Runnable {
+        private val log = LoggerFactory.getLogger(OppgaveWorker::class.java)
+        private val repo = OppgaveRepository
+        override fun run() {
+            val utførteOppgaver = mutableListOf<String>()
+
+            try {
+                dataSource.transaction { connection ->
+                    log.info("[{} - {}}] Plukket gruppe {}", gruppe.sakId(), gruppe.behandlingId(), gruppe)
+                    for (oppgaveInput in gruppe.oppgaver()) {
+                        log.info(
+                            "[{} - {}}] Starter på oppgave '{}'",
+                            oppgaveInput.sakId(),
+                            oppgaveInput.behandlingId(),
+                            oppgaveInput.type()
+                        )
+                        oppgaveInput.oppgave.utfør(connection, oppgaveInput)
+                        log.info(
+                            "[{} - {}}] Fullført oppgave '{}'",
+                            oppgaveInput.sakId(),
+                            oppgaveInput.behandlingId(),
+                            oppgaveInput.type()
+                        )
+                        utførteOppgaver.add(oppgaveInput.type())
+                    }
+                }
+            } catch (exception: Throwable) {
+                val nyGruppe = Gruppe()
+                gruppe.oppgaver()
+                    .filter { oppgave -> utførteOppgaver.any { uo -> oppgave.type() == uo } }
+                    .forEach { nyGruppe.leggTil(it) }
+                log.warn(
+                    "Feil under prosessering av gruppe {}, gjenstående opgaver {}",
+                    gruppe,
+                    nyGruppe,
+                    exception
+                )
+                repo.leggTil(gruppe = nyGruppe)
+            }
         }
     }
 }

@@ -12,23 +12,24 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.TotrinnsVurdering
+import no.nav.aap.behandlingsflyt.dbstuff.InitTestDatabase
 import no.nav.aap.behandlingsflyt.domene.Periode
 import no.nav.aap.behandlingsflyt.domene.behandling.BehandlingTjeneste
-import no.nav.aap.behandlingsflyt.flyt.behandlingstyper.Førstegangsbehandling
 import no.nav.aap.behandlingsflyt.domene.behandling.Status
 import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.domene.behandling.dokumenter.JournalpostId
 import no.nav.aap.behandlingsflyt.domene.person.Ident
 import no.nav.aap.behandlingsflyt.domene.person.Personlager
 import no.nav.aap.behandlingsflyt.domene.sak.Sakslager
-import no.nav.aap.behandlingsflyt.flyt.steg.StegStatus
-import no.nav.aap.behandlingsflyt.flyt.steg.StegType
-import no.nav.aap.behandlingsflyt.flyt.steg.Tilstand
-import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.PersonRegisterMock
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Personinfo
 import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.YrkesskadeRegisterMock
+import no.nav.aap.behandlingsflyt.flyt.behandlingstyper.Førstegangsbehandling
+import no.nav.aap.behandlingsflyt.flyt.steg.StegStatus
+import no.nav.aap.behandlingsflyt.flyt.steg.StegType
+import no.nav.aap.behandlingsflyt.flyt.steg.Tilstand
+import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårtype
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.hendelse.mottak.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HendelsesMottak
@@ -38,52 +39,12 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import java.io.PrintWriter
-import java.sql.Connection
 import java.time.LocalDate
-import java.util.logging.Logger
-import javax.sql.DataSource
 
 class FlytOrkestratorTest {
 
     companion object {
-        val dataSource:DataSource = object :DataSource {
-            override fun getLogWriter(): PrintWriter {
-                TODO("Not yet implemented")
-            }
-
-            override fun setLogWriter(out: PrintWriter?) {
-                TODO("Not yet implemented")
-            }
-
-            override fun setLoginTimeout(seconds: Int) {
-                TODO("Not yet implemented")
-            }
-
-            override fun getLoginTimeout(): Int {
-                TODO("Not yet implemented")
-            }
-
-            override fun getParentLogger(): Logger {
-                TODO("Not yet implemented")
-            }
-
-            override fun <T : Any?> unwrap(iface: Class<T>?): T {
-                TODO("Not yet implemented")
-            }
-
-            override fun isWrapperFor(iface: Class<*>?): Boolean {
-                TODO("Not yet implemented")
-            }
-
-            override fun getConnection(): Connection {
-                TODO("Not yet implemented")
-            }
-
-            override fun getConnection(username: String?, password: String?): Connection {
-                TODO("Not yet implemented")
-            }
-        }
+        val dataSource = InitTestDatabase.dataSource
         val motor = Motor(dataSource)
 
         @BeforeAll
@@ -99,6 +60,8 @@ class FlytOrkestratorTest {
         }
     }
 
+    private val hendelsesMottak = HendelsesMottak(dataSource)
+
     @Test
     fun `skal avklare yrkesskade hvis det finnes spor av yrkesskade`() {
         val ident = Ident("123123123123")
@@ -109,7 +72,7 @@ class FlytOrkestratorTest {
         YrkesskadeRegisterMock.konstruer(ident = ident, periode = periode)
 
         // Sender inn en søknad
-        HendelsesMottak.håndtere(ident, DokumentMottattPersonHendelse(periode = periode))
+        hendelsesMottak.håndtere(ident, DokumentMottattPersonHendelse(periode = periode))
         ventPåSvar()
 
         val sak = Sakslager.finnEllerOpprett(Personlager.finnEllerOpprett(ident), periode)
@@ -119,7 +82,7 @@ class FlytOrkestratorTest {
         assertThat(behandling.avklaringsbehov()).isNotEmpty()
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
 
-        HendelsesMottak.håndtere(
+        hendelsesMottak.håndtere(
             behandling.id,
             LøsAvklaringsbehovBehandlingHendelse(
                 versjon = 1L,
@@ -135,7 +98,7 @@ class FlytOrkestratorTest {
         )
         ventPåSvar()
 
-        HendelsesMottak.håndtere(
+        hendelsesMottak.håndtere(
             behandling.id,
             LøsAvklaringsbehovBehandlingHendelse(
                 versjon = 1L,
@@ -151,7 +114,7 @@ class FlytOrkestratorTest {
         )
         ventPåSvar()
 
-        HendelsesMottak.håndtere(
+        hendelsesMottak.håndtere(
             behandling.id,
             LøsAvklaringsbehovBehandlingHendelse(
                 versjon = 1L,
@@ -169,7 +132,7 @@ class FlytOrkestratorTest {
         )
         ventPåSvar()
 
-        HendelsesMottak.håndtere(
+        hendelsesMottak.håndtere(
             behandling.id,
             LøsAvklaringsbehovBehandlingHendelse(
                 versjon = 1L,
@@ -187,7 +150,7 @@ class FlytOrkestratorTest {
         assertThat(behandling.avklaringsbehov()).anySatisfy { it.erÅpent() && it.definisjon == Definisjon.FORESLÅ_VEDTAK }
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
 
-        HendelsesMottak.håndtere(
+        hendelsesMottak.håndtere(
             behandling.id,
             LøsAvklaringsbehovBehandlingHendelse(
                 versjon = 1L,
@@ -200,7 +163,7 @@ class FlytOrkestratorTest {
         assertThat(behandling.avklaringsbehov()).anySatisfy { it.erÅpent() && it.definisjon == Definisjon.FATTE_VEDTAK }
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
 
-        HendelsesMottak.håndtere(
+        hendelsesMottak.håndtere(
             behandling.id,
             LøsAvklaringsbehovBehandlingHendelse(
                 versjon = 1L,
@@ -230,7 +193,7 @@ class FlytOrkestratorTest {
 
     private fun ventPåSvar() {
         while (motor.harOppgaver()) {
-            Thread.sleep(100L)
+            Thread.sleep(50L)
         }
     }
 
@@ -242,7 +205,7 @@ class FlytOrkestratorTest {
 
         PersonRegisterMock.konstruer(ident, Personinfo(Fødselsdato(LocalDate.now().minusYears(17))))
 
-        HendelsesMottak.håndtere(ident, DokumentMottattPersonHendelse(periode = periode))
+        hendelsesMottak.håndtere(ident, DokumentMottattPersonHendelse(periode = periode))
         ventPåSvar()
 
         val sak = Sakslager.finnEllerOpprett(person, periode)
@@ -269,7 +232,7 @@ class FlytOrkestratorTest {
 
         PersonRegisterMock.konstruer(ident, Personinfo(Fødselsdato(LocalDate.now().minusYears(20))))
 
-        HendelsesMottak.håndtere(ident, DokumentMottattPersonHendelse(periode = periode))
+        hendelsesMottak.håndtere(ident, DokumentMottattPersonHendelse(periode = periode))
         ventPåSvar()
 
         val sak = Sakslager.finnSakerFor(Personlager.finnEllerOpprett(ident)).single()
@@ -278,7 +241,7 @@ class FlytOrkestratorTest {
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         assertThat(behandling.avklaringsbehov()).anySatisfy { it.erÅpent() && it.definisjon == Definisjon.AVKLAR_SYKDOM }
 
-        HendelsesMottak.håndtere(
+        hendelsesMottak.håndtere(
             behandling.id,
             BehandlingSattPåVent()
         )
@@ -289,7 +252,7 @@ class FlytOrkestratorTest {
             .anySatisfy { it.erÅpent() && it.definisjon == Definisjon.MANUELT_SATT_PÅ_VENT }
             .anySatisfy { it.erÅpent() && it.definisjon == Definisjon.AVKLAR_SYKDOM }
 
-        HendelsesMottak.håndtere(ident, DokumentMottattPersonHendelse(periode = periode))
+        hendelsesMottak.håndtere(ident, DokumentMottattPersonHendelse(periode = periode))
         ventPåSvar()
 
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)

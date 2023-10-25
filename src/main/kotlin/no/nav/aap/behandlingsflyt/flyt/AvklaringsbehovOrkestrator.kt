@@ -5,12 +5,13 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovsLøser
 import no.nav.aap.behandlingsflyt.avklaringsbehov.SattPåVentLøser
 import no.nav.aap.behandlingsflyt.avklaringsbehov.bistand.AvklarBistandLøser
 import no.nav.aap.behandlingsflyt.avklaringsbehov.meldeplikt.FritakFraMeldepliktLøser
+import no.nav.aap.behandlingsflyt.avklaringsbehov.student.AvklarStudentLøser
 import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.AvklarSykdomLøser
 import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.AvklarSykepengerErstatningLøser
 import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.AvklarYrkesskadeLøser
 import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.FatteVedtakLøser
 import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.ForeslåVedtakLøser
-import no.nav.aap.behandlingsflyt.avklaringsbehov.student.AvklarStudentLøser
+import no.nav.aap.behandlingsflyt.dbstuff.DbConnection
 import no.nav.aap.behandlingsflyt.domene.behandling.Behandling
 import no.nav.aap.behandlingsflyt.domene.behandling.BehandlingTjeneste
 import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Definisjon
@@ -21,10 +22,9 @@ import no.nav.aap.behandlingsflyt.prosessering.OppgaveRepository
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingOppgave
 import org.slf4j.LoggerFactory
 
-class AvklaringsbehovOrkestrator {
+class AvklaringsbehovOrkestrator(private val connection: DbConnection) {
 
     private val avklaringsbehovsLøsere = mutableMapOf<Definisjon, AvklaringsbehovsLøser<*>>()
-    private val flytOrkestrator = FlytOrkestrator(Faktagrunnlag())
 
     private val log = LoggerFactory.getLogger(AvklaringsbehovOrkestrator::class.java)
 
@@ -68,6 +68,7 @@ class AvklaringsbehovOrkestrator {
         ValiderBehandlingTilstand.validerTilstandBehandling(behandling, definisjoner)
 
         // løses det behov som fremtvinger tilbakehopp?
+        val flytOrkestrator = FlytOrkestrator(Faktagrunnlag(), connection)
         flytOrkestrator.forberedLøsingAvBehov(definisjoner, behandling, kontekst)
 
         // Bør ideelt kalle på

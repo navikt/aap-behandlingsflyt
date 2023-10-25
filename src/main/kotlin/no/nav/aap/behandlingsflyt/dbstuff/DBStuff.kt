@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.dbstuff
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
+import java.sql.Savepoint
 import java.sql.Timestamp
 import java.time.LocalDateTime
 import java.util.*
@@ -34,15 +35,16 @@ fun <T> DataSource.connect(block: DbConnection.() -> T): T {
     }
 }
 
-fun <T> DataSource.transaction(block: DbConnection.() -> T): T {
+fun <T> DataSource.transaction(block: (DbConnection) -> T): T {
     return this.connection.use { connection ->
+        val dbConnection = DbConnection(connection)
         try {
             connection.autoCommit = false
-            val result = DbConnection(connection).block()
+            val result = block(dbConnection)
             connection.commit()
             result
         } catch (e: Throwable) {
-            connection.rollback()
+            dbConnection.rollback()
             throw e
         } finally {
             connection.autoCommit = true
@@ -51,6 +53,8 @@ fun <T> DataSource.transaction(block: DbConnection.() -> T): T {
 }
 
 class DbConnection(private val connection: Connection) {
+    private var savepoint: Savepoint? = null
+
     fun <T : Any, R> prepareQueryStatement(
         query: String,
         block: PreparedQueryStatement<T, R>.() -> Unit
@@ -70,6 +74,18 @@ class DbConnection(private val connection: Connection) {
             val myPreparedStatement = PreparedExecuteStatement(preparedStatement)
             myPreparedStatement.block()
             myPreparedStatement.execute()
+        }
+    }
+
+    fun markerSavepoint() {
+        savepoint = this.connection.setSavepoint()
+    }
+
+    fun rollback() {
+        if (savepoint != null) {
+            this.connection.rollback(savepoint)
+        } else {
+            this.connection.rollback()
         }
     }
 }

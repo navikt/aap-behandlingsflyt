@@ -10,8 +10,9 @@ import no.nav.aap.behandlingsflyt.domene.behandling.BehandlingTjeneste
 import no.nav.aap.behandlingsflyt.flyt.ValiderBehandlingTilstand
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HendelsesMottak
 import no.nav.aap.behandlingsflyt.hendelse.mottak.LøsAvklaringsbehovBehandlingHendelse
+import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.avklaringsbehovApi() {
+fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource) {
     route("/api/behandling") {
         route("/løs-behov").throws(HttpStatusCode.BadRequest, IllegalArgumentException::class) {
             post<Unit, LøsAvklaringsbehovPåBehandling, LøsAvklaringsbehovPåBehandling> { _, request ->
@@ -20,7 +21,7 @@ fun NormalOpenAPIRoute.avklaringsbehovApi() {
 
                 ValiderBehandlingTilstand.validerTilstandBehandling(behandling, listOf(request.behov.definisjon()))
 
-                HendelsesMottak.håndtere(
+                HendelsesMottak(dataSource).håndtere(
                     key = behandling.id,
                     hendelse = LøsAvklaringsbehovBehandlingHendelse(request.behov, request.behandlingVersjon)
                 )

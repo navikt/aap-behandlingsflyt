@@ -108,6 +108,7 @@ internal fun Application.server(dbConfig: DbConfig) {
         allowHeader(HttpHeaders.ContentType)
     }
 
+    val dataSource = initDatasource(dbConfig)
     apiRouting {
         configApi()
         saksApi()
@@ -117,18 +118,17 @@ internal fun Application.server(dbConfig: DbConfig) {
         meldepliktsgrunnlagApi()
         studentgrunnlagApi()
         sykdomsgrunnlagApi()
-        avklaringsbehovApi()
+        avklaringsbehovApi(dataSource)
 
-        hendelsesApi()
+        hendelsesApi(dataSource)
         routing {
             actuator(prometheus)
         }
     }
-    module(dbConfig)
+    module(dataSource)
 }
 
-fun Application.module(dbConfig: DbConfig) {
-    val dataSource = initDatasource(dbConfig)
+fun Application.module(dataSource: DataSource) {
     val motor = Motor(dataSource)
 
     environment.monitor.subscribe(ApplicationStarted) {
@@ -170,7 +170,7 @@ private fun Routing.actuator(prometheus: PrometheusMeterRegistry) {
 }
 
 @Deprecated("Kun for test lokalt enn så lenge")
-fun NormalOpenAPIRoute.hendelsesApi() {
+fun NormalOpenAPIRoute.hendelsesApi(dataSource: DataSource) {
     route("/test/opprett") {
         post<Unit, OpprettTestcaseDTO, OpprettTestcaseDTO> { _, dto ->
 
@@ -186,7 +186,7 @@ fun NormalOpenAPIRoute.hendelsesApi() {
                 )
             }
 
-            HendelsesMottak.håndtere(
+            HendelsesMottak(dataSource).håndtere(
                 ident, DokumentMottattPersonHendelse(
                     Periode(
                         LocalDate.now(),

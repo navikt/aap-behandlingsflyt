@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.hendelse.mottak
 
 import no.nav.aap.behandlingsflyt.avklaringsbehov.SattPåVentLøsning
+import no.nav.aap.behandlingsflyt.dbstuff.transaction
 import no.nav.aap.behandlingsflyt.domene.behandling.BehandlingTjeneste
 import no.nav.aap.behandlingsflyt.domene.behandling.EndringType
 import no.nav.aap.behandlingsflyt.domene.behandling.Status
@@ -18,11 +19,9 @@ import no.nav.aap.behandlingsflyt.prosessering.Gruppe
 import no.nav.aap.behandlingsflyt.prosessering.OppgaveInput
 import no.nav.aap.behandlingsflyt.prosessering.OppgaveRepository
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingOppgave
+import javax.sql.DataSource
 
-object HendelsesMottak {
-
-    private val kontroller = FlytOrkestrator(Faktagrunnlag())
-    private val avklaringsbehovKontroller = AvklaringsbehovOrkestrator()
+class HendelsesMottak(private val dataSource: DataSource) {
 
     fun håndtere(key: Ident, hendelse: PersonHendelse) {
         val person = Personlager.finnEllerOpprett(key)
@@ -51,52 +50,61 @@ object HendelsesMottak {
     }
 
     fun håndtere(key: Long, hendelse: LøsAvklaringsbehovBehandlingHendelse) {
-        val behandling = BehandlingTjeneste.hent(key)
-        ValiderBehandlingTilstand.validerTilstandBehandling(behandling = behandling)
+        dataSource.transaction { connection ->
+            val behandling = BehandlingTjeneste.hent(key)
+            ValiderBehandlingTilstand.validerTilstandBehandling(behandling = behandling)
 
-        val sak = Sakslager.hent(behandling.sakId)
+            val sak = Sakslager.hent(behandling.sakId)
 
-        val kontekst = FlytKontekst(sakId = sak.id, behandlingId = behandling.id)
-        avklaringsbehovKontroller.løsAvklaringsbehovOgFortsettProsessering(
-            kontekst = kontekst,
-            avklaringsbehov = listOf(hendelse.behov())
-        )
+            val kontekst = FlytKontekst(sakId = sak.id, behandlingId = behandling.id)
+            val avklaringsbehovKontroller = AvklaringsbehovOrkestrator(connection)
+            avklaringsbehovKontroller.løsAvklaringsbehovOgFortsettProsessering(
+                kontekst = kontekst,
+                avklaringsbehov = listOf(hendelse.behov())
+            )
+        }
     }
 
     fun håndtere(key: Long, hendelse: BehandlingSattPåVent) {
-        val behandling = BehandlingTjeneste.hent(key)
-        ValiderBehandlingTilstand.validerTilstandBehandling(behandling = behandling)
+        dataSource.transaction { connection ->
+            val behandling = BehandlingTjeneste.hent(key)
+            ValiderBehandlingTilstand.validerTilstandBehandling(behandling = behandling)
 
-        val sak = Sakslager.hent(behandling.sakId)
+            val sak = Sakslager.hent(behandling.sakId)
 
-        val kontekst = FlytKontekst(sakId = sak.id, behandlingId = behandling.id)
-        kontroller.settBehandlingPåVent(kontekst)
+            val kontekst = FlytKontekst(sakId = sak.id, behandlingId = behandling.id)
+            val kontroller = FlytOrkestrator(Faktagrunnlag(), connection)
+            kontroller.settBehandlingPåVent(kontekst)
+        }
     }
 
     fun håndtere(key: Long, hendelse: BehandlingHendelse) {
-        val behandling = BehandlingTjeneste.hent(key)
-        ValiderBehandlingTilstand.validerTilstandBehandling(behandling = behandling)
+        dataSource.transaction { connection ->
+            val behandling = BehandlingTjeneste.hent(key)
+            ValiderBehandlingTilstand.validerTilstandBehandling(behandling = behandling)
 
-        val sak = Sakslager.hent(behandling.sakId)
+            val sak = Sakslager.hent(behandling.sakId)
 
-        val kontekst = FlytKontekst(sakId = sak.id, behandlingId = behandling.id)
-        if (hendelse is LøsAvklaringsbehovBehandlingHendelse) {
-            throw IllegalArgumentException("Skal håndteres mellom eksplisitt funksjon")
-        } else {
-            if (behandling.status() == Status.PÅ_VENT) {
-                avklaringsbehovKontroller.løsAvklaringsbehov(
-                    kontekst = kontekst,
-                    avklaringsbehov = listOf(SattPåVentLøsning())
-                )
-            }
-            OppgaveRepository.leggTil(
-                Gruppe().leggTil(
-                    OppgaveInput(oppgave = ProsesserBehandlingOppgave).forBehandling(
-                        kontekst.sakId,
-                        kontekst.behandlingId
+            val kontekst = FlytKontekst(sakId = sak.id, behandlingId = behandling.id)
+            if (hendelse is LøsAvklaringsbehovBehandlingHendelse) {
+                throw IllegalArgumentException("Skal håndteres mellom eksplisitt funksjon")
+            } else {
+                if (behandling.status() == Status.PÅ_VENT) {
+                    val avklaringsbehovKontroller = AvklaringsbehovOrkestrator(connection)
+                    avklaringsbehovKontroller.løsAvklaringsbehov(
+                        kontekst = kontekst,
+                        avklaringsbehov = listOf(SattPåVentLøsning())
+                    )
+                }
+                OppgaveRepository.leggTil(
+                    Gruppe().leggTil(
+                        OppgaveInput(oppgave = ProsesserBehandlingOppgave).forBehandling(
+                            kontekst.sakId,
+                            kontekst.behandlingId
+                        )
                     )
                 )
-            )
+            }
         }
     }
 }
