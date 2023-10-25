@@ -7,10 +7,10 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.domene.ElementNotFoundException
 import no.nav.aap.behandlingsflyt.domene.behandling.BehandlingTjeneste
-import no.nav.aap.behandlingsflyt.domene.person.Ident
-import no.nav.aap.behandlingsflyt.domene.person.Personlager
-import no.nav.aap.behandlingsflyt.domene.sak.SakRepository
-import no.nav.aap.behandlingsflyt.domene.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.sak.person.Ident
+import no.nav.aap.behandlingsflyt.sak.person.Personlager
+import no.nav.aap.behandlingsflyt.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sak.Saksnummer
 
 fun NormalOpenAPIRoute.saksApi() {
     route("/api/sak") {

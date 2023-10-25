@@ -1,8 +1,8 @@
-package no.nav.aap.behandlingsflyt.domene.sak
+package no.nav.aap.behandlingsflyt.sak
 
 import no.nav.aap.behandlingsflyt.domene.ElementNotFoundException
 import no.nav.aap.behandlingsflyt.domene.Periode
-import no.nav.aap.behandlingsflyt.domene.person.Person
+import no.nav.aap.behandlingsflyt.sak.person.Person
 
 object SakRepository {
     private var saker = HashMap<Long, Sak>()

@@ -34,7 +34,7 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.domene.Periode
 import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.domene.person.Ident
+import no.nav.aap.behandlingsflyt.sak.person.Ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.bistand.flate.bistandsgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.flate.behandlingsgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.meldeplikt.flate.meldepliktsgrunnlagApi

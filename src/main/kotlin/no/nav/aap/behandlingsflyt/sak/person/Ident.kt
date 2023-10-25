@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.domene.person
+package no.nav.aap.behandlingsflyt.sak.person
 
 class Ident(val identifikator: String) {
     override fun equals(other: Any?): Boolean {

@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.domene.behandling.Behandling
-import no.nav.aap.behandlingsflyt.domene.sak.Sak
+import no.nav.aap.behandlingsflyt.sak.Sak
 
 private const val SAK_ID = "sakId"
 private const val BEHANDLING_ID = "behandlingId"

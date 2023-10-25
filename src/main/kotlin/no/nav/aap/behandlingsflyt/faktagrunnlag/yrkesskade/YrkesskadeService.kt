@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade
 
 import no.nav.aap.behandlingsflyt.dbstuff.DbConnection
-import no.nav.aap.behandlingsflyt.domene.person.Personlager
-import no.nav.aap.behandlingsflyt.domene.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sak.person.Personlager
+import no.nav.aap.behandlingsflyt.sak.SakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlag
 import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
 

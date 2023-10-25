@@ -6,10 +6,10 @@ import no.nav.aap.behandlingsflyt.domene.behandling.BehandlingTjeneste
 import no.nav.aap.behandlingsflyt.domene.behandling.EndringType
 import no.nav.aap.behandlingsflyt.domene.behandling.Status
 import no.nav.aap.behandlingsflyt.domene.behandling.Årsak
-import no.nav.aap.behandlingsflyt.domene.person.Ident
-import no.nav.aap.behandlingsflyt.domene.person.Personlager
-import no.nav.aap.behandlingsflyt.domene.sak.SakRepository
-import no.nav.aap.behandlingsflyt.domene.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.sak.person.Ident
+import no.nav.aap.behandlingsflyt.sak.person.Personlager
+import no.nav.aap.behandlingsflyt.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.flyt.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator

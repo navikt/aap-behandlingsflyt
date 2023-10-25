@@ -4,9 +4,9 @@ import no.nav.aap.behandlingsflyt.dbstuff.DbConnection
 import no.nav.aap.behandlingsflyt.dbstuff.MockConnection
 import no.nav.aap.behandlingsflyt.domene.Periode
 import no.nav.aap.behandlingsflyt.domene.behandling.BehandlingTjeneste
-import no.nav.aap.behandlingsflyt.domene.person.Ident
-import no.nav.aap.behandlingsflyt.domene.person.Personlager
-import no.nav.aap.behandlingsflyt.domene.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sak.person.Ident
+import no.nav.aap.behandlingsflyt.sak.person.Personlager
+import no.nav.aap.behandlingsflyt.sak.SakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.PersonRegisterMock
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Personinfo

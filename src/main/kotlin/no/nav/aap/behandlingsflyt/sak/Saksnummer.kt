@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.domene.sak
+package no.nav.aap.behandlingsflyt.sak
 
 class Saksnummer(private val identifikator: String) {
 
