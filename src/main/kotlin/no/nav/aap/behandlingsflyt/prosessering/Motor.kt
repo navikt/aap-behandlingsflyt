@@ -14,7 +14,10 @@ class Motor(
 ) {
 
     private val log = LoggerFactory.getLogger(Motor::class.java)
-    private val executor = Executors.newFixedThreadPool(5)
+
+    private val maksKøStørrelse = 20
+
+    private val executor = Executors.newFixedThreadPool(5) as ThreadPoolExecutor
     private val pollingExecutor = Executors.newScheduledThreadPool(1)
     private var lastTaskPolled: LocalDateTime? = null
     private var lastTaskPolledLogged: LocalDateTime? = LocalDateTime.now()
@@ -33,13 +36,12 @@ class Motor(
         executor.awaitTermination(10L, TimeUnit.SECONDS)
     }
 
-    fun harOppgaver(): Boolean {
+    fun harOppgaverSomIkkeErProssessert(): Boolean {
         return OppgaveRepository.harOppgaver() || harOppgaverKjørende()
     }
 
     private fun harOppgaverKjørende(): Boolean {
-        val threadPoolExecutor = executor as ThreadPoolExecutor
-        return threadPoolExecutor.activeCount != 0
+        return executor.activeCount != 0
     }
 
     private inner class PollingWorker(val dataSource: DataSource) : Runnable {
@@ -50,13 +52,13 @@ class Motor(
 
         override fun run() {
             running = true
-            gruppe = repo.plukk()
+            gruppe = plukk()
             while (running) {
                 if (gruppe != null) {
                     executor.submit(OppgaveWorker(dataSource, gruppe!!))
                     lastTaskPolled = LocalDateTime.now()
                 }
-                gruppe = repo.plukk()
+                gruppe = plukk()
                 if (running && !repo.harOppgaver() && gruppe == null) {
                     running = false
                 }
@@ -65,12 +67,19 @@ class Motor(
                 && lastTaskPolledLogged?.isBefore(LocalDateTime.now().minusMinutes(10)) == true
             ) {
 
-                log.info("Ikke plukket oppgaver siden {}", lastTaskPolled)
+                log.info("Ikke nye plukket oppgaver siden {}", lastTaskPolled)
                 lastTaskPolledLogged = LocalDateTime.now()
             }
             if (!stopped) {
                 pollingExecutor.schedule(PollingWorker(dataSource), 500L, TimeUnit.MILLISECONDS)
             }
+        }
+
+        fun plukk(): Gruppe? {
+            if (executor.queue.size >= maksKøStørrelse) {
+                return null
+            }
+            return repo.plukk()
         }
     }
 

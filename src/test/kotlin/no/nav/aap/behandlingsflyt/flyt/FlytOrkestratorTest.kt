@@ -18,9 +18,6 @@ import no.nav.aap.behandlingsflyt.domene.behandling.BehandlingTjeneste
 import no.nav.aap.behandlingsflyt.domene.behandling.Status
 import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.domene.behandling.dokumenter.JournalpostId
-import no.nav.aap.behandlingsflyt.sak.person.Ident
-import no.nav.aap.behandlingsflyt.sak.person.PersonRepository
-import no.nav.aap.behandlingsflyt.sak.SakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.PersonRegisterMock
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Personinfo
@@ -35,6 +32,9 @@ import no.nav.aap.behandlingsflyt.hendelse.mottak.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HendelsesMottak
 import no.nav.aap.behandlingsflyt.hendelse.mottak.LøsAvklaringsbehovBehandlingHendelse
 import no.nav.aap.behandlingsflyt.prosessering.Motor
+import no.nav.aap.behandlingsflyt.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sak.person.Ident
+import no.nav.aap.behandlingsflyt.sak.person.PersonRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -192,7 +192,7 @@ class FlytOrkestratorTest {
     }
 
     private fun ventPåSvar() {
-        while (motor.harOppgaver()) {
+        while (motor.harOppgaverSomIkkeErProssessert()) {
             Thread.sleep(50L)
         }
     }
