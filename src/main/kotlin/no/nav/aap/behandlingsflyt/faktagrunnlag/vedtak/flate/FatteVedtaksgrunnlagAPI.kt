@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.flate
+package no.nav.aap.behandlingsflyt.faktagrunnlag.vedtak.flate
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
@@ -7,17 +7,11 @@ import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Status
-import no.nav.aap.behandlingsflyt.flate.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.flate.behandling.BehandlingReferanse
 
-fun NormalOpenAPIRoute.behandlingsgrunnlagApi() {
+fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi() {
     route("/api/behandling") {
-        route("/{referanse}/grunnlag/medlemskap") {
-            get<BehandlingReferanse, MedlemskapGrunnlagDto> { req ->
-                val behandling = BehandlingReferanseService.behandling(req)
-                respond(MedlemskapGrunnlagDto())
-            }
-        }
         route("/{referanse}/grunnlag/fatte-vedtak") {
             get<BehandlingReferanse, FatteVedtakGrunnlagDto> { req ->
                 val behandling = BehandlingReferanseService.behandling(req)

@@ -34,15 +34,15 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.domene.Periode
 import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.sak.person.Ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.bistand.flate.bistandsgrunnlagApi
-import no.nav.aap.behandlingsflyt.faktagrunnlag.flate.behandlingsgrunnlagApi
+import no.nav.aap.behandlingsflyt.faktagrunnlag.medlemskap.flate.medlemskapsgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.meldeplikt.flate.meldepliktsgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.PersonRegisterMock
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Personinfo
 import no.nav.aap.behandlingsflyt.faktagrunnlag.student.flate.studentgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.flate.sykdomsgrunnlagApi
+import no.nav.aap.behandlingsflyt.faktagrunnlag.vedtak.flate.fatteVedtakGrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.YrkesskadeRegisterMock
 import no.nav.aap.behandlingsflyt.flate.behandling.avklaringsbehov.avklaringsbehovApi
 import no.nav.aap.behandlingsflyt.flate.behandling.behandlingApi
@@ -50,6 +50,7 @@ import no.nav.aap.behandlingsflyt.flate.sak.saksApi
 import no.nav.aap.behandlingsflyt.hendelse.mottak.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HendelsesMottak
 import no.nav.aap.behandlingsflyt.prosessering.Motor
+import no.nav.aap.behandlingsflyt.sak.person.Ident
 import org.flywaydb.core.Flyway
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
@@ -113,9 +114,10 @@ internal fun Application.server(dbConfig: DbConfig) {
         configApi()
         saksApi()
         behandlingApi()
-        behandlingsgrunnlagApi()
+        fatteVedtakGrunnlagApi()
         bistandsgrunnlagApi()
         meldepliktsgrunnlagApi()
+        medlemskapsgrunnlagApi()
         studentgrunnlagApi()
         sykdomsgrunnlagApi()
         avklaringsbehovApi(dataSource)
