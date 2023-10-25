@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.prosessering.Gruppe
 import no.nav.aap.behandlingsflyt.prosessering.OppgaveInput
 import no.nav.aap.behandlingsflyt.prosessering.OppgaveRepository
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingOppgave
+import no.nav.aap.behandlingsflyt.sak.SakService
 import javax.sql.DataSource
 
 class HendelsesMottak(private val dataSource: DataSource) {
@@ -53,7 +54,8 @@ class HendelsesMottak(private val dataSource: DataSource) {
             val behandling = BehandlingTjeneste.hent(key)
             ValiderBehandlingTilstand.validerTilstandBehandling(behandling = behandling)
 
-            val sak = SakRepository.hent(behandling.sakId)
+            val sakService = SakService(connection)
+            val sak = sakService.hent(behandling.sakId)
 
             val kontekst = FlytKontekst(sakId = sak.id, behandlingId = behandling.id)
             val avklaringsbehovKontroller = AvklaringsbehovOrkestrator(connection)
@@ -69,7 +71,8 @@ class HendelsesMottak(private val dataSource: DataSource) {
             val behandling = BehandlingTjeneste.hent(key)
             ValiderBehandlingTilstand.validerTilstandBehandling(behandling = behandling)
 
-            val sak = SakRepository.hent(behandling.sakId)
+            val sakService = SakService(connection)
+            val sak = sakService.hent(behandling.sakId)
 
             val kontekst = FlytKontekst(sakId = sak.id, behandlingId = behandling.id)
             val kontroller = FlytOrkestrator(connection)
@@ -82,7 +85,8 @@ class HendelsesMottak(private val dataSource: DataSource) {
             val behandling = BehandlingTjeneste.hent(key)
             ValiderBehandlingTilstand.validerTilstandBehandling(behandling = behandling)
 
-            val sak = SakRepository.hent(behandling.sakId)
+            val sakService = SakService(connection)
+            val sak = sakService.hent(behandling.sakId)
 
             val kontekst = FlytKontekst(sakId = sak.id, behandlingId = behandling.id)
             if (hendelse is LøsAvklaringsbehovBehandlingHendelse) {

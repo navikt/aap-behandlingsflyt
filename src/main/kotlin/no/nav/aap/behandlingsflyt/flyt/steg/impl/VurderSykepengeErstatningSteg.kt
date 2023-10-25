@@ -10,11 +10,15 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårtype
 import no.nav.aap.behandlingsflyt.flyt.vilkår.sykdom.SykepengerErstatningFaktagrunnlag
 import no.nav.aap.behandlingsflyt.flyt.vilkår.sykdom.SykepengerErstatningVilkår
+import no.nav.aap.behandlingsflyt.sak.SakService
 
-class VurderSykepengeErstatningSteg(private val behandlingTjeneste: BehandlingTjeneste) : BehandlingSteg {
+class VurderSykepengeErstatningSteg(
+    private val behandlingTjeneste: BehandlingTjeneste,
+    private val sakService: SakService
+) : BehandlingSteg {
     override fun utfør(input: StegInput): StegResultat {
         val behandling = behandlingTjeneste.hent(input.kontekst.behandlingId)
-        val sak = SakRepository.hent(input.kontekst.sakId)
+        val sak = sakService.hent(input.kontekst.sakId)
 
         val sykdomsvilkåret = behandling.vilkårsresultat().finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
         val bistandsvilkåret = behandling.vilkårsresultat().finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
