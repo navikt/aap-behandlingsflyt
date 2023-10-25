@@ -2,8 +2,11 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import kotlinx.coroutines.Runnable
 import org.slf4j.LoggerFactory
+import javax.sql.DataSource
 
-object Motor {
+class Motor(
+    private val dataSource: DataSource
+) {
 
     private val log = LoggerFactory.getLogger(Motor::class.java)
     private val worker = Worker()
@@ -25,7 +28,7 @@ object Motor {
         return OppgaveRepository.harOppgaver() || worker.utførerOppgave()
     }
 
-    private class Worker : Runnable {
+    private inner class Worker : Runnable {
         private val log = LoggerFactory.getLogger(Worker::class.java)
         private val repo = OppgaveRepository
         private var running = false

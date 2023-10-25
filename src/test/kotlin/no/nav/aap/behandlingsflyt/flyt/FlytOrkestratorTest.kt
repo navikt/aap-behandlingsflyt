@@ -38,22 +38,64 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import java.io.PrintWriter
+import java.sql.Connection
 import java.time.LocalDate
+import java.util.logging.Logger
+import javax.sql.DataSource
 
 class FlytOrkestratorTest {
 
     companion object {
+        val dataSource:DataSource = object :DataSource {
+            override fun getLogWriter(): PrintWriter {
+                TODO("Not yet implemented")
+            }
+
+            override fun setLogWriter(out: PrintWriter?) {
+                TODO("Not yet implemented")
+            }
+
+            override fun setLoginTimeout(seconds: Int) {
+                TODO("Not yet implemented")
+            }
+
+            override fun getLoginTimeout(): Int {
+                TODO("Not yet implemented")
+            }
+
+            override fun getParentLogger(): Logger {
+                TODO("Not yet implemented")
+            }
+
+            override fun <T : Any?> unwrap(iface: Class<T>?): T {
+                TODO("Not yet implemented")
+            }
+
+            override fun isWrapperFor(iface: Class<*>?): Boolean {
+                TODO("Not yet implemented")
+            }
+
+            override fun getConnection(): Connection {
+                TODO("Not yet implemented")
+            }
+
+            override fun getConnection(username: String?, password: String?): Connection {
+                TODO("Not yet implemented")
+            }
+        }
+        val motor = Motor(dataSource)
 
         @BeforeAll
         @JvmStatic
         internal fun beforeAll() {
-            Motor.start()
+            motor.start()
         }
 
         @AfterAll
         @JvmStatic
         internal fun afterAll() {
-            Motor.stop()
+            motor.stop()
         }
     }
 
@@ -187,7 +229,7 @@ class FlytOrkestratorTest {
     }
 
     private fun ventPåSvar() {
-        while (Motor.harOppgaver()) {
+        while (motor.harOppgaver()) {
             Thread.sleep(100L)
         }
     }

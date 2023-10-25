@@ -65,8 +65,13 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.4.11")
     implementation("net.logstash.logback:logstash-logback-encoder:7.4")
 
+    implementation("com.zaxxer:HikariCP:5.0.1")
+    implementation("org.flywaydb:flyway-core:9.22.3")
+    runtimeOnly("org.postgresql:postgresql:42.6.0")
+
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.0")
     testImplementation("org.assertj:assertj-core:3.24.2")
+    testImplementation("org.testcontainers:postgresql:1.19.1")
     testImplementation(kotlin("test"))
 }

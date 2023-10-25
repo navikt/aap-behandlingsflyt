@@ -9,6 +9,8 @@ import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
 import io.ktor.http.*
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
@@ -33,9 +35,6 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.domene.Periode
 import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.domene.person.Ident
-import no.nav.aap.behandlingsflyt.flate.behandling.avklaringsbehov.avklaringsbehovApi
-import no.nav.aap.behandlingsflyt.flate.behandling.behandlingApi
-import no.nav.aap.behandlingsflyt.flate.sak.saksApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.bistand.flate.bistandsgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.flate.behandlingsgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.meldeplikt.flate.meldepliktsgrunnlagApi
@@ -45,11 +44,16 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Personinfo
 import no.nav.aap.behandlingsflyt.faktagrunnlag.student.flate.studentgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.flate.sykdomsgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.YrkesskadeRegisterMock
+import no.nav.aap.behandlingsflyt.flate.behandling.avklaringsbehov.avklaringsbehovApi
+import no.nav.aap.behandlingsflyt.flate.behandling.behandlingApi
+import no.nav.aap.behandlingsflyt.flate.sak.saksApi
 import no.nav.aap.behandlingsflyt.hendelse.mottak.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HendelsesMottak
 import no.nav.aap.behandlingsflyt.prosessering.Motor
+import org.flywaydb.core.Flyway
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
+import javax.sql.DataSource
 
 
 class App
@@ -123,13 +127,16 @@ internal fun Application.server() {
     module()
 }
 
+val dataSource = initDatasource(DbConfig())
+val motor = Motor(dataSource)
+
 fun Application.module() {
     environment.monitor.subscribe(ApplicationStarted) {
-        Motor.start()
+        motor.start()
     }
     environment.monitor.subscribe(ApplicationStopped) { application ->
         application.environment.log.info("Server har stoppet")
-        Motor.stop()
+        motor.stop()
         // Release resources and unsubscribe from events
         application.environment.monitor.unsubscribe(ApplicationStarted) {}
         application.environment.monitor.unsubscribe(ApplicationStopped) {}
@@ -190,4 +197,37 @@ fun NormalOpenAPIRoute.hendelsesApi() {
             respond(dto)
         }
     }
+}
+
+class DbConfig(
+    val host: String = System.getenv("NAIS_DATABASE_FILLAGER_FILLAGER_HOST"),
+    val port: String = System.getenv("NAIS_DATABASE_FILLAGER_FILLAGER_PORT"),
+    val database: String = System.getenv("NAIS_DATABASE_FILLAGER_FILLAGER_DATABASE"),
+    val url: String = "jdbc:postgresql://$host:$port/$database",
+    val username: String = System.getenv("NAIS_DATABASE_FILLAGER_FILLAGER_USERNAME"),
+    val password: String = System.getenv("NAIS_DATABASE_FILLAGER_FILLAGER_PASSWORD")
+)
+
+fun initDatasource(dbConfig: DbConfig) = HikariDataSource(HikariConfig().apply {
+    jdbcUrl = dbConfig.url
+    username = dbConfig.username
+    password = dbConfig.password
+    maximumPoolSize = 3
+    minimumIdle = 1
+    initializationFailTimeout = 5000
+    idleTimeout = 10001
+    connectionTimeout = 1000
+    maxLifetime = 30001
+    driverClassName = "org.postgresql.Driver"
+})
+
+fun migrate(dataSource: DataSource) {
+    Flyway
+        .configure()
+        .cleanDisabled(false) // TODO: husk å skru av denne før prod
+        .cleanOnValidationError(true) // TODO: husk å skru av denne før prod
+        .dataSource(dataSource)
+        .locations("flyway")
+        .load()
+        .migrate()
 }
