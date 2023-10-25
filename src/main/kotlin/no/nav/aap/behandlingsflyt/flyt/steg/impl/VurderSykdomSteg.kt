@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.flyt.vilkår.sykdom.Sykdomsvilkår
 
 class VurderSykdomSteg(
     private val behandlingService: BehandlingService,
+    private val sykdomsRepository: SykdomsRepository,
     private val studentRepository: StudentRepository,
     private val periodeTilVurderingService: PeriodeTilVurderingService
 ) : BehandlingSteg {
@@ -24,7 +25,7 @@ class VurderSykdomSteg(
             periodeTilVurderingService.utled(behandling = behandling, vilkår = Vilkårtype.SYKDOMSVILKÅRET)
 
         if (periodeTilVurdering.isNotEmpty()) {
-            val sykdomsGrunnlag = SykdomsRepository.hentHvisEksisterer(behandlingId = behandling.id)
+            val sykdomsGrunnlag = sykdomsRepository.hentHvisEksisterer(behandlingId = behandling.id)
             val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId = behandling.id)
 
             //TODO: Skrive om til å være lik uttrykket på linje 46

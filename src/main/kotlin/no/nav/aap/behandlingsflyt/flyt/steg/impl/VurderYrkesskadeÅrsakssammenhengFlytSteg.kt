@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.student.db.InMemoryStudentReposi
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
+import no.nav.aap.behandlingsflyt.sak.SakService
 
 object VurderYrkesskadeÅrsakssammenhengFlytSteg : FlytSteg {
 
@@ -13,7 +14,7 @@ object VurderYrkesskadeÅrsakssammenhengFlytSteg : FlytSteg {
         return VurderYrkesskadeÅrsakssammenhengSteg(
             BehandlingService(connection),
             InMemoryStudentRepository,
-            PeriodeTilVurderingService)
+            PeriodeTilVurderingService(SakService(connection)))
     }
 
     override fun type(): StegType {

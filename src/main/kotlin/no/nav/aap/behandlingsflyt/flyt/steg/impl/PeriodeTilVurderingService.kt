@@ -6,12 +6,11 @@ import no.nav.aap.behandlingsflyt.flyt.behandlingstyper.Førstegangsbehandling
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårtype
 import no.nav.aap.behandlingsflyt.sak.SakService
 
-object PeriodeTilVurderingService {
+class PeriodeTilVurderingService(private val sakService: SakService) {
 
     fun utled(behandling: Behandling, vilkår: Vilkårtype): Set<Periode> {
         if (behandling.type == Førstegangsbehandling) {
             // ved førstegangsbehandling skal hele perioden alltid vurderes for alle vilkår?
-            val sakService = SakService(null)
             val sak = sakService.hent(behandling.sakId)
 
             return setOf(sak.rettighetsperiode)
