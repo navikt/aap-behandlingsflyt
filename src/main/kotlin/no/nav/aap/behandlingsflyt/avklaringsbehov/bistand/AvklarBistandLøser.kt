@@ -5,14 +5,14 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.LøsningsResultat
 import no.nav.aap.behandlingsflyt.domene.behandling.BehandlingTjeneste
 import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
-import no.nav.aap.behandlingsflyt.faktagrunnlag.bistand.BistandsTjeneste
+import no.nav.aap.behandlingsflyt.faktagrunnlag.bistand.BistandsRepository
 
 class AvklarBistandLøser : AvklaringsbehovsLøser<AvklarBistandsbehovLøsning> {
 
     override fun løs(kontekst: FlytKontekst, løsning: AvklarBistandsbehovLøsning): LøsningsResultat {
         val behandling = BehandlingTjeneste.hent(kontekst.behandlingId)
 
-        BistandsTjeneste.lagre(
+        BistandsRepository.lagre(
             behandlingId = behandling.id,
             bistandsVurdering = løsning.bistandsVurdering
         )

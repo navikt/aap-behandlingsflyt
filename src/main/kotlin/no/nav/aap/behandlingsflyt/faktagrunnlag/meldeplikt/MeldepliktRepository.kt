@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.domene.behandling.Behandling
 import java.util.concurrent.atomic.AtomicLong
 
-object MeldepliktTjeneste {
+object MeldepliktRepository {
 
     private var grunnlagene = HashMap<Long, MeldepliktGrunnlag>()
 

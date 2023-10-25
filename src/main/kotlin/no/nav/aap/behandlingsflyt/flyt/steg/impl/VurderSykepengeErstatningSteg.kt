@@ -2,8 +2,7 @@ package no.nav.aap.behandlingsflyt.flyt.steg.impl
 
 import no.nav.aap.behandlingsflyt.domene.behandling.BehandlingTjeneste
 import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.sak.SakRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykepengerErstatningTjeneste
+import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykepengerErstatningRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegInput
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
@@ -27,7 +26,7 @@ class VurderSykepengeErstatningSteg(
         if (bistandsvilkåret.vilkårsperioder().all { !it.erOppfylt() } &&
             sykdomsvilkåret.vilkårsperioder().any { it.erOppfylt() }) {
 
-            val grunnlag = SykepengerErstatningTjeneste.hentHvisEksisterer(behandling.id)
+            val grunnlag = SykepengerErstatningRepository.hentHvisEksisterer(behandling.id)
 
             if (grunnlag?.vurdering != null) {
                 val vurderingsdato = sak.rettighetsperiode.fom

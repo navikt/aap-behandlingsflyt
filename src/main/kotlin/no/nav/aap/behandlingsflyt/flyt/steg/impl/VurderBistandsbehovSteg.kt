@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.flyt.steg.impl
 import no.nav.aap.behandlingsflyt.domene.Periode
 import no.nav.aap.behandlingsflyt.domene.behandling.BehandlingTjeneste
 import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.faktagrunnlag.bistand.BistandsTjeneste
+import no.nav.aap.behandlingsflyt.faktagrunnlag.bistand.BistandsRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.student.StudentGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.student.StudentRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -28,7 +28,7 @@ class VurderBistandsbehovSteg(
 
         if (periodeTilVurdering.isNotEmpty()) {
 
-            val bistandsGrunnlag = BistandsTjeneste.hentHvisEksisterer(behandling.id)
+            val bistandsGrunnlag = BistandsRepository.hentHvisEksisterer(behandling.id)
             val studentGrunnlag = studentRepository.hentHvisEksisterer(behandling.id)
 
             if (studentGrunnlag?.studentvurdering?.oppfyller11_14 == true || bistandsGrunnlag != null) {

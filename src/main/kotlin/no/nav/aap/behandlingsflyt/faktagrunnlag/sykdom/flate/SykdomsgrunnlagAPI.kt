@@ -6,7 +6,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.flate.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.BehandlingReferanseService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykdomsTjeneste
+import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykdomsRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.YrkesskadeRepository
 
 fun NormalOpenAPIRoute.sykdomsgrunnlagApi() {
@@ -16,7 +16,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi() {
                 val behandling = BehandlingReferanseService.behandling(req)
 
                 val yrkesskadeGrunnlag = YrkesskadeRepository.hentHvisEksisterer(behandlingId = behandling.id)
-                val sykdomsGrunnlag = SykdomsTjeneste.hentHvisEksisterer(behandlingId = behandling.id)
+                val sykdomsGrunnlag = SykdomsRepository.hentHvisEksisterer(behandlingId = behandling.id)
 
                 respond(
                     SykdomsGrunnlagDto(
@@ -41,7 +41,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi() {
                 val behandling = BehandlingReferanseService.behandling(req)
 
                 val yrkesskadeGrunnlag = YrkesskadeRepository.hentHvisEksisterer(behandlingId = behandling.id)
-                val sykdomsGrunnlag = SykdomsTjeneste.hentHvisEksisterer(behandlingId = behandling.id)
+                val sykdomsGrunnlag = SykdomsRepository.hentHvisEksisterer(behandlingId = behandling.id)
 
                 respond(
                     YrkesskadeGrunnlagDto(

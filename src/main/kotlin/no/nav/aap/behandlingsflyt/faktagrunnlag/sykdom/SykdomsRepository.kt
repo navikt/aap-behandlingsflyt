@@ -1,23 +1,25 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.bistand
+package no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom
 
-import no.nav.aap.behandlingsflyt.avklaringsbehov.bistand.BistandsVurdering
+import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.Sykdomsvurdering
+import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.domene.behandling.Behandling
 import java.util.concurrent.atomic.AtomicLong
 
-object BistandsTjeneste {
+object SykdomsRepository {
 
-    private var grunnlagene = HashMap<Long, BistandsGrunnlag>()
+    private var grunnlagene = HashMap<Long, SykdomsGrunnlag>()
 
     private val key = AtomicLong()
     private val LOCK = Object()
 
-    fun lagre(behandlingId: Long, bistandsVurdering: BistandsVurdering) {
+    fun lagre(behandlingId: Long, yrkesskadevurdering: Yrkesskadevurdering?, sykdomsvurdering: Sykdomsvurdering?) {
         synchronized(LOCK) {
             grunnlagene.put(
                 behandlingId,
-                BistandsGrunnlag(
+                SykdomsGrunnlag(
                     behandlingId = behandlingId,
-                    vurdering = bistandsVurdering,
+                    yrkesskadevurdering = yrkesskadevurdering,
+                    sykdomsvurdering = sykdomsvurdering,
                     id = key.addAndGet(1)
                 )
             )
@@ -32,13 +34,13 @@ object BistandsTjeneste {
         }
     }
 
-    fun hentHvisEksisterer(behandlingId: Long): BistandsGrunnlag? {
+    fun hentHvisEksisterer(behandlingId: Long): SykdomsGrunnlag? {
         synchronized(LOCK) {
             return grunnlagene[behandlingId]
         }
     }
 
-    fun hent(behandlingId: Long): BistandsGrunnlag {
+    fun hent(behandlingId: Long): SykdomsGrunnlag {
         synchronized(LOCK) {
             return grunnlagene.getValue(behandlingId)
         }

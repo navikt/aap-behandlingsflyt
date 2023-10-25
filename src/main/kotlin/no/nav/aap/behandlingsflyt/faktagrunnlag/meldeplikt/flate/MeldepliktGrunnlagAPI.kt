@@ -6,7 +6,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.flate.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.BehandlingReferanseService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.meldeplikt.MeldepliktTjeneste
+import no.nav.aap.behandlingsflyt.faktagrunnlag.meldeplikt.MeldepliktRepository
 
 fun NormalOpenAPIRoute.meldepliktsgrunnlagApi() {
     route("/api/behandling") {
@@ -14,7 +14,7 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi() {
             get<BehandlingReferanse, FritakMeldepliktGrunnlagDto> { req ->
                 val behandling = BehandlingReferanseService.behandling(req)
 
-                val meldepliktGrunnlag = MeldepliktTjeneste.hentHvisEksisterer(behandling.id)
+                val meldepliktGrunnlag = MeldepliktRepository.hentHvisEksisterer(behandling.id)
                 respond(FritakMeldepliktGrunnlagDto(meldepliktGrunnlag?.vurderinger.orEmpty()))
             }
         }

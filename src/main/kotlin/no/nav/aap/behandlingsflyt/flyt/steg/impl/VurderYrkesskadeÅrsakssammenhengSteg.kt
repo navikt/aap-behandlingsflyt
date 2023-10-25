@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.domene.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.student.StudentGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykdomsGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykdomsTjeneste
+import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykdomsRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.YrkesskadeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -26,7 +26,7 @@ class VurderYrkesskadeÅrsakssammenhengSteg(
 
         if (periodeTilVurdering.isNotEmpty()) {
             val yrkesskadeGrunnlag = YrkesskadeRepository.hentHvisEksisterer(behandlingId = behandling.id)
-            val sykdomsGrunnlag = SykdomsTjeneste.hentHvisEksisterer(behandlingId = behandling.id)
+            val sykdomsGrunnlag = SykdomsRepository.hentHvisEksisterer(behandlingId = behandling.id)
             val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId = behandling.id)
 
             if (erBehovForAvklaring(yrkesskadeGrunnlag, sykdomsGrunnlag, studentGrunnlag)) {
