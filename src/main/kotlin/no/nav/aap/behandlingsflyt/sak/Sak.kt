@@ -16,7 +16,7 @@ class Sak(
     }
 
     override fun toString(): String {
-        return "Sak(id=$id, person=$person, periode=$rettighetsperiode, status=$status, saksnummer='$saksnummer')"
+        return "Sak(id=$id, saksnummer='$saksnummer, person=$person, periode=$rettighetsperiode, status=$status')"
     }
 
 }

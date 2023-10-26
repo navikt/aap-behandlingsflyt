@@ -37,7 +37,7 @@ class SakRepository(private val connection: DbConnection) {
 
     private fun genererSaksnummer(id: Long): Saksnummer {
         return Saksnummer(
-            id.toString(36)
+            (id * 1000).toString(36)
                 .uppercase(Locale.getDefault())
                 .replace("O", "o")
                 .replace("I", "i")
