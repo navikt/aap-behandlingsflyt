@@ -6,9 +6,9 @@ import org.junit.jupiter.api.Test;
 internal class DBStuffTest : DatabaseTestBase() {
 
     @Test
-    fun `Test test`() {
+    fun `Skriver og henter en rad mot DB`() {
         val result = InitTestDatabase.dataSource.transaction { connection ->
-            connection.prepareExecuteStatement("INSERT INTO test VALUES ('1')") {}
+            connection.prepareExecuteStatement("INSERT INTO test (test) VALUES ('1')") {}
             connection.prepareQueryStatement("SELECT test FROM test") {
                 setRowMapper { row -> row.getString("test") }
                 setResultMapper { it.first() }
@@ -16,5 +16,37 @@ internal class DBStuffTest : DatabaseTestBase() {
         }
 
         assertThat(result).isEqualTo("1")
+    }
+
+    @Test
+    fun `Skriver og henter keys og verdier fra DB`() {
+        val (result, keys) = InitTestDatabase.dataSource.transaction { connection ->
+            connection.prepareExecuteStatement("INSERT INTO test (test) VALUES ('a'), ('b')") {}
+            val keys =
+                connection.prepareExecuteStatementReturnAutoGenKeys("INSERT INTO test (test) VALUES ('c'), ('d')") {}
+            connection.prepareQueryStatement("SELECT test FROM test") {
+                setRowMapper { row -> row.getString("test") }
+                setResultMapper { it.toList() }
+            } to keys
+        }
+
+        assertThat(result)
+            .hasSize(4)
+            .contains("a", "b", "c", "d")
+        assertThat(keys)
+            .hasSize(2)
+            .contains(3, 4)
+    }
+
+    @Test
+    fun `Henter tomt resultat fra DB`() {
+        val result = InitTestDatabase.dataSource.transaction { connection ->
+            connection.prepareQueryStatement("SELECT test FROM test") {
+                setRowMapper { row -> row.getString("test") }
+                setResultMapper { it.toList() }
+            }
+        }
+
+        assertThat(result).isEmpty()
     }
 }

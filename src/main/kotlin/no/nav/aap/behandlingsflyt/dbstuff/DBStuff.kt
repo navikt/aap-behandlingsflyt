@@ -4,6 +4,7 @@ import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Savepoint
+import java.sql.Statement
 import java.sql.Timestamp
 import java.time.LocalDateTime
 import java.util.*
@@ -29,9 +30,9 @@ fun <T : Any> ResultSet.map(block: (rs: ResultSet) -> T): Sequence<T> {
     return ResultSetSequence(this).map(block)
 }
 
-fun <T> DataSource.connect(block: DbConnection.() -> T): T {
+fun <T> DataSource.connect(block: (DbConnection) -> T): T {
     return this.connection.use { connection ->
-        DbConnection(connection).block()
+        block(DbConnection(connection))
     }
 }
 
@@ -72,6 +73,17 @@ class DbConnection(private val connection: Connection) {
     ) {
         return this.connection.prepareStatement(query).use { preparedStatement ->
             val myPreparedStatement = PreparedExecuteStatement(preparedStatement)
+            myPreparedStatement.block()
+            myPreparedStatement.execute()
+        }
+    }
+
+    fun prepareExecuteStatementReturnAutoGenKeys(
+        query: String,
+        block: PreparedExecuteStatementReturnAutoGenKeys.() -> Unit
+    ): List<Long> {
+        return this.connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS).use { preparedStatement ->
+            val myPreparedStatement = PreparedExecuteStatementReturnAutoGenKeys(preparedStatement)
             myPreparedStatement.block()
             myPreparedStatement.execute()
         }
@@ -124,6 +136,20 @@ class PreparedExecuteStatement(private val preparedStatement: PreparedStatement)
 
     fun execute() {
         preparedStatement.execute()
+    }
+}
+
+class PreparedExecuteStatementReturnAutoGenKeys(private val preparedStatement: PreparedStatement) {
+    fun setParams(block: Params.() -> Unit) {
+        Params(preparedStatement).block()
+    }
+
+    fun execute(): List<Long> {
+        preparedStatement.execute()
+        return preparedStatement
+            .generatedKeys
+            .map { it.getLong(1) }
+            .toList()
     }
 }
 

@@ -4,6 +4,7 @@ GRANT ALL ON ALL TABLES IN SCHEMA PUBLIC TO cloudsqliamuser;
 
 CREATE TABLE test
 (
+    id SERIAL PRIMARY KEY,
     test TEXT
 );
 
