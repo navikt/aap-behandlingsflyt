@@ -4,12 +4,13 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.behandlingsflyt.flate.behandling.BehandlingReferanse
+import com.zaxxer.hikari.HikariDataSource
 import no.nav.aap.behandlingsflyt.faktagrunnlag.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykdomsRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.YrkesskadeRepository
+import no.nav.aap.behandlingsflyt.flate.behandling.BehandlingReferanse
 
-fun NormalOpenAPIRoute.sykdomsgrunnlagApi() {
+fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: HikariDataSource) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/sykdom/sykdom") {
             get<BehandlingReferanse, SykdomsGrunnlagDto> { req ->

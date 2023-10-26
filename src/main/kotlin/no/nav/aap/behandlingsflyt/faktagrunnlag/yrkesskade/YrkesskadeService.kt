@@ -1,11 +1,10 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade
 
 import no.nav.aap.behandlingsflyt.dbstuff.DbConnection
-import no.nav.aap.behandlingsflyt.sak.person.PersonRepository
-import no.nav.aap.behandlingsflyt.sak.SakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlag
 import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sak.SakService
+import no.nav.aap.behandlingsflyt.sak.person.PersonRepository
 
 class YrkesskadeService : Grunnlag {
 
@@ -13,7 +12,7 @@ class YrkesskadeService : Grunnlag {
         val sakService = SakService(transaksjonsconnection)
         val sak = sakService.hent(kontekst.sakId)
         //TODO: Trenger ikke PersonRepository når vi finner identer via sak
-        val person = PersonRepository.hent(sak.person.identifikator)
+        val person = PersonRepository(transaksjonsconnection).hent(sak.person.identifikator)
         val behandlingId = kontekst.behandlingId
 
         val yrkesskadePeriode = YrkesskadeRegisterMock.innhent(person.identer(), sak.rettighetsperiode)

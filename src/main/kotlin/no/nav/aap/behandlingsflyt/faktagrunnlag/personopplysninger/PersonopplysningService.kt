@@ -1,11 +1,10 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger
 
 import no.nav.aap.behandlingsflyt.dbstuff.DbConnection
-import no.nav.aap.behandlingsflyt.sak.person.PersonRepository
-import no.nav.aap.behandlingsflyt.sak.SakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlag
 import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sak.SakService
+import no.nav.aap.behandlingsflyt.sak.person.PersonRepository
 
 class PersonopplysningService : Grunnlag {
 
@@ -13,7 +12,7 @@ class PersonopplysningService : Grunnlag {
         val sakService = SakService(transaksjonsconnection)
         val sak = sakService.hent(kontekst.sakId)
         //TODO: PersonService bør være unødvendig da vi kan hente identene fra sak
-        val person = PersonRepository.hent(sak.person.identifikator)
+        val person = PersonRepository(transaksjonsconnection).hent(sak.person.identifikator)
         val behandlingId = kontekst.behandlingId
 
         val gamleData = PersoninformasjonRepository.hentHvisEksisterer(behandlingId)

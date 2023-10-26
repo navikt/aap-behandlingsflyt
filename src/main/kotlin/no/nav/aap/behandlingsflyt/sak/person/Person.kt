@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.sak.person
 
-import java.util.UUID
+import java.util.*
 
-class Person(val identifikator: UUID, private var identer: List<Ident>) {
+class Person(val id: Long, val identifikator: UUID, private var identer: List<Ident>) {
 
     fun er(ident: Ident): Boolean {
         return identer.any { it == ident }

@@ -7,64 +7,77 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.ElementNotFoundException
 import no.nav.aap.behandlingsflyt.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sak.person.Ident
-import no.nav.aap.behandlingsflyt.sak.person.PersonRepository
+import no.nav.aap.behandlingsflyt.dbstuff.transaction
+import no.nav.aap.behandlingsflyt.sak.Sak
 import no.nav.aap.behandlingsflyt.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.sak.person.Ident
+import no.nav.aap.behandlingsflyt.sak.person.PersonRepository
+import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.saksApi() {
+fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
     route("/api/sak") {
         route("/finn").post<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO> { _, dto ->
-            val ident = Ident(dto.ident)
-            val person = PersonRepository.finn(ident)
+            var saker: List<SaksinfoDTO> = emptyList()
+            dataSource.transaction { connection ->
+                val ident = Ident(dto.ident)
+                val person = PersonRepository(connection).finn(ident)
 
-            if (person == null) {
-                throw ElementNotFoundException()
-            } else {
-                val saker = SakRepository.finnSakerFor(person)
-                    .map { sak ->
-                        SaksinfoDTO(
-                            saksnummer = sak.saksnummer.toString(),
-                            periode = sak.rettighetsperiode
-                        )
-                    }
+                if (person == null) {
+                    throw ElementNotFoundException()
+                } else {
+                    saker = SakRepository(connection).finnSakerFor(person)
+                        .map { sak ->
+                            SaksinfoDTO(
+                                saksnummer = sak.saksnummer.toString(),
+                                periode = sak.rettighetsperiode
+                            )
+                        }
 
-                respond(saker)
+                }
             }
+            respond(saker)
         }
         route("") {
             route("/alle").get<Unit, List<SaksinfoDTO>> {
-                val saker = SakRepository.finnAlle()
-                    .map { sak ->
-                        SaksinfoDTO(
-                            saksnummer = sak.saksnummer.toString(),
-                            periode = sak.rettighetsperiode
-                        )
-                    }
+                var saker: List<SaksinfoDTO> = emptyList()
+                dataSource.transaction { connection ->
+                    saker = SakRepository(connection).finnAlle()
+                        .map { sak ->
+                            SaksinfoDTO(
+                                saksnummer = sak.saksnummer.toString(),
+                                periode = sak.rettighetsperiode
+                            )
+                        }
+                }
 
                 respond(saker)
             }
             route("/{saksnummer}").get<HentSakDTO, UtvidetSaksinfoDTO> { req ->
                 val saksnummer = req.saksnummer
+                var sak: Sak? = null
+                var behandlinger: List<BehandlinginfoDTO> = emptyList()
 
-                val sak = SakRepository.hent(saksnummer = Saksnummer(saksnummer))
+                dataSource.transaction { connection ->
+                    sak = SakRepository(connection).hent(saksnummer = Saksnummer(saksnummer))
 
-                val behandlinger = BehandlingRepository.hentAlleFor(sak.id).map { behandling ->
-                    BehandlinginfoDTO(
-                        referanse = behandling.referanse,
-                        type = behandling.type.identifikator(),
-                        status = behandling.status(),
-                        opprettet = behandling.opprettetTidspunkt
-                    )
+                    behandlinger = BehandlingRepository.hentAlleFor(sak!!.id).map { behandling ->
+                        BehandlinginfoDTO(
+                            referanse = behandling.referanse,
+                            type = behandling.type.identifikator(),
+                            status = behandling.status(),
+                            opprettet = behandling.opprettetTidspunkt
+                        )
+                    }
                 }
 
                 respond(
                     UtvidetSaksinfoDTO(
-                        saksnummer = sak.saksnummer.toString(),
-                        periode = sak.rettighetsperiode,
-                        ident = sak.person.identer().first().identifikator,
+                        saksnummer = sak!!.saksnummer.toString(),
+                        periode = sak!!.rettighetsperiode,
+                        ident = sak!!.person.identer().first().identifikator,
                         behandlinger = behandlinger,
-                        status = sak.status()
+                        status = sak!!.status()
                     )
                 )
             }

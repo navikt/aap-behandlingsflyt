@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.dbstuff
 
+import no.nav.aap.behandlingsflyt.Periode
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
@@ -9,6 +10,7 @@ import java.sql.Timestamp
 import java.time.LocalDateTime
 import java.util.*
 import javax.sql.DataSource
+
 
 private class ResultSetSequence(private val resultSet: ResultSet) : Sequence<ResultSet> {
     override fun iterator(): Iterator<ResultSet> {
@@ -178,6 +180,14 @@ class Params(private val preparedStatement: PreparedStatement) {
     fun setUUID(index: Int, uuid: UUID) {
         preparedStatement.setObject(index, uuid)
     }
+
+    fun setDateRange(index: Int, periode: Periode) {
+        preparedStatement.setString(index, DaterangeParser.toSQL(periode))
+    }
+
+    fun setLong(index: Int, value: Long) {
+        preparedStatement.setLong(index, value)
+    }
 }
 
 class Row(private val resultSet: ResultSet) {
@@ -187,5 +197,18 @@ class Row(private val resultSet: ResultSet) {
 
     fun getString(columnLabel: String): String {
         return resultSet.getString(columnLabel)
+    }
+
+    fun getLong(columnLabel: String): Long {
+        return resultSet.getLong(columnLabel)
+    }
+
+    fun getUUID(columnLabel: String): UUID {
+        return UUID.fromString(resultSet.getString(columnLabel))
+    }
+
+    fun getDateRange(columnLabel: String): Periode {
+        val dateRange = resultSet.getString(columnLabel)
+        return DaterangeParser.fromSQL(dateRange)
     }
 }

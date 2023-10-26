@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt
 
+import no.nav.aap.behandlingsflyt.Periode
 import no.nav.aap.behandlingsflyt.avklaringsbehov.bistand.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.bistand.BistandsVurdering
 import no.nav.aap.behandlingsflyt.avklaringsbehov.student.AvklarStudentLøsning
@@ -12,12 +13,12 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.TotrinnsVurdering
-import no.nav.aap.behandlingsflyt.dbstuff.InitTestDatabase
-import no.nav.aap.behandlingsflyt.Periode
 import no.nav.aap.behandlingsflyt.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.behandling.Status
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.behandling.dokumenter.JournalpostId
+import no.nav.aap.behandlingsflyt.dbstuff.InitTestDatabase
+import no.nav.aap.behandlingsflyt.dbstuff.transaction
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.PersonRegisterMock
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Personinfo
@@ -32,8 +33,10 @@ import no.nav.aap.behandlingsflyt.hendelse.mottak.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HendelsesMottak
 import no.nav.aap.behandlingsflyt.hendelse.mottak.LøsAvklaringsbehovBehandlingHendelse
 import no.nav.aap.behandlingsflyt.prosessering.Motor
+import no.nav.aap.behandlingsflyt.sak.Sak
 import no.nav.aap.behandlingsflyt.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sak.person.Ident
+import no.nav.aap.behandlingsflyt.sak.person.Person
 import no.nav.aap.behandlingsflyt.sak.person.PersonRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
@@ -75,7 +78,8 @@ class FlytOrkestratorTest {
         hendelsesMottak.håndtere(ident, DokumentMottattPersonHendelse(periode = periode))
         ventPåSvar()
 
-        val sak = SakRepository.finnEllerOpprett(PersonRepository.finnEllerOpprett(ident), periode)
+
+        val sak = hentSak(ident, periode)
         val behandling = requireNotNull(BehandlingRepository.finnSisteBehandlingFor(sak.id))
         assertThat(behandling.type).isEqualTo(Førstegangsbehandling)
 
@@ -191,6 +195,14 @@ class FlytOrkestratorTest {
             .allMatch { vilkårsperiode -> vilkårsperiode.erOppfylt() }
     }
 
+    private fun hentSak(ident: Ident, periode: Periode): Sak {
+        var sak: Sak? = null
+        dataSource.transaction {
+            sak = SakRepository(it).finnEllerOpprett(PersonRepository(it).finnEllerOpprett(ident), periode)
+        }
+        return sak!!
+    }
+
     private fun ventPåSvar() {
         while (motor.harOppgaverSomIkkeErProssessert()) {
             Thread.sleep(50L)
@@ -200,7 +212,7 @@ class FlytOrkestratorTest {
     @Test
     fun `Ikke oppfylt på grunn av alder på søknadstidspunkt`() {
         val ident = Ident("123123123125")
-        val person = PersonRepository.finnEllerOpprett(ident)
+        val person = hentPerson(ident)
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
         PersonRegisterMock.konstruer(ident, Personinfo(Fødselsdato(LocalDate.now().minusYears(17))))
@@ -208,7 +220,7 @@ class FlytOrkestratorTest {
         hendelsesMottak.håndtere(ident, DokumentMottattPersonHendelse(periode = periode))
         ventPåSvar()
 
-        val sak = SakRepository.finnEllerOpprett(person, periode)
+        val sak = hentSak(ident, periode)
         val behandling = requireNotNull(BehandlingRepository.finnSisteBehandlingFor(sak.id))
         assertThat(behandling.type).isEqualTo(Førstegangsbehandling)
 
@@ -225,6 +237,14 @@ class FlytOrkestratorTest {
             .noneMatch { vilkårsperiodeForAlder -> vilkårsperiodeForAlder.erOppfylt() }
     }
 
+    private fun hentPerson(ident: Ident): Person {
+        var person: Person? = null
+        dataSource.transaction {
+            person = PersonRepository(it).finnEllerOpprett(ident)
+        }
+        return person!!
+    }
+
     @Test
     fun `Blir satt på vent for etterspørring av informasjon`() {
         val ident = Ident("123123123125")
@@ -235,7 +255,7 @@ class FlytOrkestratorTest {
         hendelsesMottak.håndtere(ident, DokumentMottattPersonHendelse(periode = periode))
         ventPåSvar()
 
-        val sak = SakRepository.finnSakerFor(PersonRepository.finnEllerOpprett(ident)).single()
+        val sak = hentSak(ident, periode)
         val behandling = requireNotNull(BehandlingRepository.finnSisteBehandlingFor(sak.id))
 
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)

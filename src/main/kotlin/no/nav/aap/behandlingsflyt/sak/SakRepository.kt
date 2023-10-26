@@ -1,63 +1,129 @@
 package no.nav.aap.behandlingsflyt.sak
 
-import no.nav.aap.behandlingsflyt.ElementNotFoundException
 import no.nav.aap.behandlingsflyt.Periode
+import no.nav.aap.behandlingsflyt.dbstuff.DbConnection
+import no.nav.aap.behandlingsflyt.dbstuff.Row
 import no.nav.aap.behandlingsflyt.sak.person.Person
+import no.nav.aap.behandlingsflyt.sak.person.PersonRepository
+import java.util.*
 
-object SakRepository {
-    private var saker = HashMap<Long, Sak>()
+class SakRepository(private val connection: DbConnection) {
 
-    private val LOCK = Object()
+    private val personRepository = PersonRepository(connection)
 
     fun hent(sakId: Long): Sak {
-        synchronized(LOCK) {
-            return saker.getValue(sakId)
+        return connection.prepareQueryStatement("SELECT id, saksnummer, person_id, rettighetsperiode FROM SAK WHERE id = ?") {
+            setParams {
+                setLong(1, sakId)
+            }
+            setRowMapper { row ->
+                mapSak(row)
+            }
+            setResultMapper { it.first() }
         }
     }
 
     fun hent(saksnummer: Saksnummer): Sak {
-        synchronized(LOCK) {
-            return saker.values.firstOrNull { it.saksnummer == saksnummer } ?: throw ElementNotFoundException()
+        return connection.prepareQueryStatement("SELECT id, saksnummer, person_id, rettighetsperiode FROM SAK WHERE saksnummer = ?") {
+            setParams {
+                setString(1, saksnummer.toString())
+            }
+            setRowMapper { row ->
+                mapSak(row)
+            }
+            setResultMapper { it.first() }
         }
+    }
+
+    private fun genererSaksnummer(id: Long): Saksnummer {
+        return Saksnummer(
+            id.toString(36)
+                .uppercase(Locale.getDefault())
+                .replace("O", "o")
+                .replace("I", "i")
+        )
     }
 
     private fun opprett(person: Person, periode: Periode): Sak {
-        synchronized(LOCK) {
-            if (saker.values.any { sak -> sak.person == person && sak.rettighetsperiode.overlapper(periode) }) {
-                throw IllegalArgumentException("Forsøker å opprette sak når det finnes en som overlapper")
+        val sakId = connection.prepareQueryStatement("SELECT nextval('SEQ_SAKSNUMMER') as nextval") {
+            setRowMapper { row ->
+                row.getLong("nextval")
             }
-            val sak = Sak(saker.keys.size.plus(10000001L), person, periode)
-            saker[sak.id] = sak
-
-            return sak
+            setResultMapper { it.first() }
         }
+        val saksnummer = genererSaksnummer(sakId)
+        val keys = connection.prepareExecuteStatementReturnAutoGenKeys(
+            "INSERT INTO " +
+                    "SAK (saksnummer, person_id, rettighetsperiode, status) " +
+                    "VALUES (?, ?, ?::daterange, ?)"
+        ) {
+            setParams {
+                setString(1, saksnummer.toString())
+                setLong(2, person.id)
+                setDateRange(3, periode)
+                setString(4, Status.OPPRETTET.name)
+            }
+        }
+        return Sak(keys.first(), saksnummer, person, periode)
     }
 
     fun finnEllerOpprett(person: Person, periode: Periode): Sak {
-        synchronized(LOCK) {
-            val relevantesaker =
-                saker.values.filter { sak -> sak.person == person && sak.rettighetsperiode.overlapper(periode) }
-
-            if (relevantesaker.isEmpty()) {
-                return opprett(person, periode)
+        val relevantesaker = connection.prepareQueryStatement(
+            "SELECT id, saksnummer, person_id, rettighetsperiode " +
+                    "FROM SAK " +
+                    "WHERE person_id = ? AND rettighetsperiode && ?::daterange"
+        ) {
+            setParams {
+                setLong(1, person.id)
+                setDateRange(2, periode)
             }
-
-            if (relevantesaker.size != 1) {
-                throw IllegalStateException("Fant flere saker som er relevant: $relevantesaker")
+            setRowMapper { row ->
+                mapSak(row)
             }
-            return relevantesaker.first()
+            setResultMapper { it.toList() }
         }
+        if (relevantesaker.isEmpty()) {
+            return opprett(person, periode)
+        }
+
+        if (relevantesaker.size != 1) {
+            throw IllegalStateException("Fant flere saker som er relevant: $relevantesaker")
+        }
+        return relevantesaker.first()
     }
 
     fun finnSakerFor(person: Person): List<Sak> {
-        synchronized(LOCK) {
-            return saker.values.filter { sak -> sak.person == person }.toList()
+        return connection.prepareQueryStatement(
+            "SELECT id, saksnummer, person_id, rettighetsperiode " +
+                    "FROM SAK " +
+                    "WHERE person_id = ?"
+        ) {
+            setParams {
+                setLong(1, person.id)
+            }
+            setRowMapper { row ->
+                mapSak(row)
+            }
+            setResultMapper { it.toList() }
         }
     }
 
+    private fun mapSak(row: Row) = Sak(
+        id = row.getLong("id"),
+        person = personRepository.hent(row.getLong("person_id")),
+        rettighetsperiode = row.getDateRange("rettighetsperiode"),
+        saksnummer = Saksnummer(row.getString("saksnummer"))
+    )
+
     fun finnAlle(): List<Sak> {
-        synchronized(LOCK) {
-            return saker.values.toList()
+        return connection.prepareQueryStatement(
+            "SELECT id, saksnummer, person_id, rettighetsperiode " +
+                    "FROM SAK"
+        ) {
+            setRowMapper { row ->
+                mapSak(row)
+            }
+            setResultMapper { it.toList() }
         }
     }
 }

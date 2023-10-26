@@ -1,22 +1,15 @@
 package no.nav.aap.behandlingsflyt.sak
 
-import no.nav.aap.behandlingsflyt.sak.person.Person
 import no.nav.aap.behandlingsflyt.Periode
-import java.util.*
+import no.nav.aap.behandlingsflyt.sak.person.Person
 
 class Sak(
     val id: Long,
+    val saksnummer: Saksnummer,
     val person: Person,
     val rettighetsperiode: Periode,
     private var status: Status = Status.OPPRETTET
 ) {
-
-    val saksnummer = Saksnummer(
-        id.toString(36)
-            .uppercase(Locale.getDefault())
-            .replace("O", "o")
-            .replace("I", "i")
-    )
 
     fun status(): Status {
         return status
