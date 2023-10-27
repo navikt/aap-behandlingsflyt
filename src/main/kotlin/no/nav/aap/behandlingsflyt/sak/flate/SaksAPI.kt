@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.flate.sak
+package no.nav.aap.behandlingsflyt.sak.flate
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
@@ -11,8 +11,8 @@ import no.nav.aap.behandlingsflyt.dbstuff.transaction
 import no.nav.aap.behandlingsflyt.sak.Sak
 import no.nav.aap.behandlingsflyt.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sak.Saksnummer
-import no.nav.aap.behandlingsflyt.sak.person.Ident
-import no.nav.aap.behandlingsflyt.sak.person.PersonRepository
+import no.nav.aap.behandlingsflyt.sak.Ident
+import no.nav.aap.behandlingsflyt.sak.PersonRepository
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {

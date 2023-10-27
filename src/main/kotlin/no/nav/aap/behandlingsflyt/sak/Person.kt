@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.sak.person
+package no.nav.aap.behandlingsflyt.sak
 
 import java.util.*
 

@@ -3,8 +3,6 @@ package no.nav.aap.behandlingsflyt.sak
 import no.nav.aap.behandlingsflyt.Periode
 import no.nav.aap.behandlingsflyt.dbstuff.DbConnection
 import no.nav.aap.behandlingsflyt.dbstuff.Row
-import no.nav.aap.behandlingsflyt.sak.person.Person
-import no.nav.aap.behandlingsflyt.sak.person.PersonRepository
 import java.util.*
 
 class SakRepository(private val connection: DbConnection) {

@@ -19,8 +19,8 @@ import no.nav.aap.behandlingsflyt.sak.Sak
 import no.nav.aap.behandlingsflyt.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sak.SakService
 import no.nav.aap.behandlingsflyt.sak.Saksnummer
-import no.nav.aap.behandlingsflyt.sak.person.Ident
-import no.nav.aap.behandlingsflyt.sak.person.PersonRepository
+import no.nav.aap.behandlingsflyt.sak.Ident
+import no.nav.aap.behandlingsflyt.sak.PersonRepository
 import javax.sql.DataSource
 
 class HendelsesMottak(private val dataSource: DataSource) {

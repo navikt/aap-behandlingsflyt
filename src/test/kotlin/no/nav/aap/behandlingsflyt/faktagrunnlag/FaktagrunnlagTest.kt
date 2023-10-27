@@ -11,8 +11,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.YrkesskadeRegisterMoc
 import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.YrkesskadeService
 import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sak.SakRepository
-import no.nav.aap.behandlingsflyt.sak.person.Ident
-import no.nav.aap.behandlingsflyt.sak.person.PersonRepository
+import no.nav.aap.behandlingsflyt.sak.Ident
+import no.nav.aap.behandlingsflyt.sak.PersonRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

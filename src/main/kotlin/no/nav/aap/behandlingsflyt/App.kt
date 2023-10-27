@@ -45,11 +45,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.vedtak.flate.fatteVedtakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.YrkesskadeRegisterMock
 import no.nav.aap.behandlingsflyt.flate.behandling.avklaringsbehov.avklaringsbehovApi
 import no.nav.aap.behandlingsflyt.flate.behandling.behandlingApi
-import no.nav.aap.behandlingsflyt.flate.sak.saksApi
+import no.nav.aap.behandlingsflyt.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.hendelse.mottak.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HendelsesMottak
 import no.nav.aap.behandlingsflyt.prosessering.Motor
-import no.nav.aap.behandlingsflyt.sak.person.Ident
+import no.nav.aap.behandlingsflyt.sak.Ident
 import org.flywaydb.core.Flyway
 import org.slf4j.LoggerFactory
 import java.time.LocalDate

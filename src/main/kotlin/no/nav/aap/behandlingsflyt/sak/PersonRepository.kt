@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.sak.person
+package no.nav.aap.behandlingsflyt.sak
 
 import no.nav.aap.behandlingsflyt.dbstuff.DbConnection
 import no.nav.aap.behandlingsflyt.dbstuff.Row

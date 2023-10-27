@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.sak
 
 import no.nav.aap.behandlingsflyt.Periode
-import no.nav.aap.behandlingsflyt.sak.person.Person
 
 class Sak(
     val id: Long,

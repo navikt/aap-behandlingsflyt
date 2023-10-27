@@ -35,9 +35,9 @@ import no.nav.aap.behandlingsflyt.hendelse.mottak.LøsAvklaringsbehovBehandlingH
 import no.nav.aap.behandlingsflyt.prosessering.Motor
 import no.nav.aap.behandlingsflyt.sak.Sak
 import no.nav.aap.behandlingsflyt.sak.SakRepository
-import no.nav.aap.behandlingsflyt.sak.person.Ident
-import no.nav.aap.behandlingsflyt.sak.person.Person
-import no.nav.aap.behandlingsflyt.sak.person.PersonRepository
+import no.nav.aap.behandlingsflyt.sak.Ident
+import no.nav.aap.behandlingsflyt.sak.Person
+import no.nav.aap.behandlingsflyt.sak.PersonRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
