@@ -51,7 +51,7 @@ internal class DBStuffTest : DatabaseTestBase() {
     }
 
     @Test
-    fun `Henter tomt resultat fra DB 2`() {
+    fun `ResultSetIterator må svare false på hasNext hvis den forsøkes å itereres over flere ganger`() {
         val result = InitTestDatabase.dataSource.transaction { connection ->
             connection.prepareExecuteStatement("INSERT INTO test (test) VALUES ('a'), ('b'), ('c'), ('d')") {}
             connection.prepareQueryStatement("SELECT test FROM test") {
