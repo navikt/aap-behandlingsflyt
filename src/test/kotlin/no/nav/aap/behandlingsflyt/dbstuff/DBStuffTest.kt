@@ -8,14 +8,38 @@ internal class DBStuffTest : DatabaseTestBase() {
     @Test
     fun `Skriver og henter en rad mot DB`() {
         val result = InitTestDatabase.dataSource.transaction { connection ->
-            connection.prepareExecuteStatement("INSERT INTO test (test) VALUES ('1')") {}
-            connection.prepareQueryStatement("SELECT test FROM test") {
+            connection.prepareExecuteStatement("INSERT INTO test (test) VALUES ('a')") {}
+            connection.prepareFirstQueryStatement("SELECT test FROM test") {
                 setRowMapper { row -> row.getString("test") }
-                setResultMapper { it.first() }
             }
         }
 
-        assertThat(result).isEqualTo("1")
+        assertThat(result).isEqualTo("a")
+    }
+
+    @Test
+    fun `Skriver og henter to rader mot DB`() {
+        val result = InitTestDatabase.dataSource.transaction { connection ->
+            connection.prepareExecuteStatement("INSERT INTO test (test) VALUES ('a'), ('b')") {}
+            connection.prepareListQueryStatement("SELECT test FROM test") {
+                setRowMapper { row -> row.getString("test") }
+            }
+        }
+
+        assertThat(result)
+            .hasSize(2)
+            .contains("a", "b")
+    }
+
+    @Test
+    fun `Henter ingen rader fra DB`() {
+        val result = InitTestDatabase.dataSource.transaction { connection ->
+            connection.prepareFirstOrNullQueryStatement("SELECT test FROM test") {
+                setRowMapper { row -> row.getString("test") }
+            }
+        }
+
+        assertThat(result).isNull()
     }
 
     @Test
@@ -24,9 +48,8 @@ internal class DBStuffTest : DatabaseTestBase() {
             connection.prepareExecuteStatement("INSERT INTO test (test) VALUES ('a'), ('b')") {}
             val keys =
                 connection.prepareExecuteStatementReturnAutoGenKeys("INSERT INTO test (test) VALUES ('c'), ('d')") {}
-            connection.prepareQueryStatement("SELECT test FROM test") {
+            connection.prepareListQueryStatement("SELECT test FROM test") {
                 setRowMapper { row -> row.getString("test") }
-                setResultMapper { it.toList() }
             } to keys
         }
 
@@ -41,30 +64,29 @@ internal class DBStuffTest : DatabaseTestBase() {
     @Test
     fun `Henter tomt resultat fra DB`() {
         val result = InitTestDatabase.dataSource.transaction { connection ->
-            connection.prepareQueryStatement("SELECT test FROM test") {
+            connection.prepareListQueryStatement("SELECT test FROM test") {
                 setRowMapper { row -> row.getString("test") }
-                setResultMapper(Sequence<String>::toList)
             }
         }
 
         assertThat(result).isEmpty()
     }
 
-    @Test
-    fun `ResultSetIterator må svare false på hasNext hvis den forsøkes å itereres over flere ganger`() {
-        val result = InitTestDatabase.dataSource.transaction { connection ->
-            connection.prepareExecuteStatement("INSERT INTO test (test) VALUES ('a'), ('b'), ('c'), ('d')") {}
-            connection.prepareQueryStatement("SELECT test FROM test") {
-                setRowMapper { row -> row.getString("test") }
-                setResultMapper {
-                    val iterator = it.iterator()
-                    // To kall på samme iterator skal ikke føre til exception
-                    iterator.asSequence().toList() // Radene blir hentet ut her
-                    iterator.asSequence().toList()// Denne lista blir tom, siden radene allerede er lest
-                }
-            }
-        }
-
-        assertThat(result).isEmpty()
-    }
+//    @Test
+//    fun `ResultSetIterator må svare false på hasNext hvis den forsøkes å itereres over flere ganger`() {
+//        val result = InitTestDatabase.dataSource.transaction { connection ->
+//            connection.prepareExecuteStatement("INSERT INTO test (test) VALUES ('a'), ('b'), ('c'), ('d')") {}
+//            connection.prepareQueryStatement("SELECT test FROM test") {
+//                setRowMapper { row -> row.getString("test") }
+//                setResultMapper {
+//                    val iterator = it.iterator()
+//                    // To kall på samme iterator skal ikke føre til exception
+//                    iterator.asSequence().toList() // Radene blir hentet ut her
+//                    iterator.asSequence().toList()// Denne lista blir tom, siden radene allerede er lest
+//                }
+//            }
+//        }
+//
+//        assertThat(result).isEmpty()
+//    }
 }

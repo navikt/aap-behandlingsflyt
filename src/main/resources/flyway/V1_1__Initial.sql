@@ -2,12 +2,6 @@
 create extension if not exists btree_gist;
 GRANT ALL ON ALL TABLES IN SCHEMA PUBLIC TO cloudsqliamuser;
 
-CREATE TABLE test
-(
-    id SERIAL PRIMARY KEY,
-    test TEXT
-);
-
 CREATE TABLE PERSON
 (
     ID        SERIAL NOT NULL PRIMARY KEY,

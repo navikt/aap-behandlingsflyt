@@ -37,7 +37,7 @@ private class ResultSetSequence(private val resultSet: ResultSet) : Sequence<Res
     }
 }
 
-fun <T : Any> ResultSet.map(block: (rs: ResultSet) -> T): Sequence<T> {
+fun <T> ResultSet.map(block: (rs: ResultSet) -> T): Sequence<T> {
     return ResultSetSequence(this).map(block)
 }
 
@@ -67,12 +67,34 @@ fun <T> DataSource.transaction(block: (DbConnection) -> T): T {
 class DbConnection(private val connection: Connection) {
     private var savepoint: Savepoint? = null
 
-    fun <T : Any, R> prepareQueryStatement(
+    fun <T : Any> prepareFirstQueryStatement(
         query: String,
-        block: PreparedQueryStatement<T, R>.() -> Unit
-    ): R {
+        block: PreparedFirstQueryStatement<T>.() -> Unit
+    ): T {
         return this.connection.prepareStatement(query).use { preparedStatement ->
-            val preparedQueryStatement = PreparedQueryStatement<T, R>(preparedStatement)
+            val preparedQueryStatement = PreparedFirstQueryStatement<T>(preparedStatement)
+            preparedQueryStatement.block()
+            preparedQueryStatement.executeQuery()
+        }
+    }
+
+    fun <T : Any> prepareFirstOrNullQueryStatement(
+        query: String,
+        block: PreparedFirstOrNullQueryStatement<T>.() -> Unit
+    ): T? {
+        return this.connection.prepareStatement(query).use { preparedStatement ->
+            val preparedQueryStatement = PreparedFirstOrNullQueryStatement<T>(preparedStatement)
+            preparedQueryStatement.block()
+            preparedQueryStatement.executeQuery()
+        }
+    }
+
+    fun <T : Any> prepareListQueryStatement(
+        query: String,
+        block: PreparedListQueryStatement<T>.() -> Unit
+    ): List<T> {
+        return this.connection.prepareStatement(query).use { preparedStatement ->
+            val preparedQueryStatement = PreparedListQueryStatement<T>(preparedStatement)
             preparedQueryStatement.block()
             preparedQueryStatement.executeQuery()
         }
@@ -113,9 +135,8 @@ class DbConnection(private val connection: Connection) {
     }
 }
 
-class PreparedQueryStatement<T : Any, R>(private val preparedStatement: PreparedStatement) {
+class PreparedFirstQueryStatement<T : Any>(private val preparedStatement: PreparedStatement) {
     private lateinit var rowMapper: (Row) -> T
-    private lateinit var resultMapper: (Sequence<T>) -> R
 
     fun setParams(block: Params.() -> Unit) {
         Params(preparedStatement).block()
@@ -125,17 +146,56 @@ class PreparedQueryStatement<T : Any, R>(private val preparedStatement: Prepared
         rowMapper = block
     }
 
-    fun setResultMapper(block: (result: Sequence<T>) -> R) {
-        resultMapper = block
-    }
-
-    fun executeQuery(): R {
+    fun executeQuery(): T {
         val resultSet = preparedStatement.executeQuery()
         return resultSet
             .map { currentResultSet ->
                 rowMapper(Row(currentResultSet))
             }
-            .let(resultMapper)
+            .first()
+    }
+}
+
+class PreparedFirstOrNullQueryStatement<T : Any>(private val preparedStatement: PreparedStatement) {
+    private lateinit var rowMapper: (Row) -> T?
+
+    fun setParams(block: Params.() -> Unit) {
+        Params(preparedStatement).block()
+    }
+
+    fun setRowMapper(block: (Row) -> T?) {
+        rowMapper = block
+    }
+
+    fun executeQuery(): T? {
+        val resultSet = preparedStatement.executeQuery()
+        return resultSet
+            .map { currentResultSet ->
+                rowMapper(Row(currentResultSet))
+            }
+            .filterNotNull()
+            .firstOrNull()
+    }
+}
+
+class PreparedListQueryStatement<T : Any>(private val preparedStatement: PreparedStatement) {
+    private lateinit var rowMapper: (Row) -> T
+
+    fun setParams(block: Params.() -> Unit) {
+        Params(preparedStatement).block()
+    }
+
+    fun setRowMapper(block: (Row) -> T) {
+        rowMapper = block
+    }
+
+    fun executeQuery(): List<T> {
+        val resultSet = preparedStatement.executeQuery()
+        return resultSet
+            .map { currentResultSet ->
+                rowMapper(Row(currentResultSet))
+            }
+            .toList()
 
     }
 }
