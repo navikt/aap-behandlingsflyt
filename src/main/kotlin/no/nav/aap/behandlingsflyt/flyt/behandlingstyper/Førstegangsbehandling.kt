@@ -20,7 +20,6 @@ import no.nav.aap.behandlingsflyt.flyt.steg.impl.VurderYrkesskadeÅrsakssammenhe
 
 object Førstegangsbehandling : BehandlingType {
     override fun flyt(): BehandlingFlyt {
-
         return BehandlingFlytBuilder()
             .medSteg(steg = StartBehandlingFlytSteg)
             .medSteg(steg = VurderAlderFlytSteg, informasjonskrav = listOf(PersonopplysningService()))

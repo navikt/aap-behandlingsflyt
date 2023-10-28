@@ -30,4 +30,8 @@ class Params(private val preparedStatement: PreparedStatement) {
     fun setLong(index: Int, value: Long) {
         preparedStatement.setLong(index, value)
     }
+
+    fun setBoolean(indewx: Int, value: Boolean) {
+        preparedStatement.setBoolean(indewx, value)
+    }
 }

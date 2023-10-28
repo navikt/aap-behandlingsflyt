@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.dbstuff
 
 import no.nav.aap.behandlingsflyt.Periode
 import java.sql.ResultSet
+import java.time.LocalDateTime
 import java.util.*
 
 class Row(private val resultSet: ResultSet) {
@@ -24,5 +25,13 @@ class Row(private val resultSet: ResultSet) {
     fun getDateRange(columnLabel: String): Periode {
         val dateRange = resultSet.getString(columnLabel)
         return DaterangeParser.fromSQL(dateRange)
+    }
+
+    fun getBoolean(columnLabel: String): Boolean {
+        return resultSet.getBoolean(columnLabel)
+    }
+
+    fun getLocalDateTime(columnLabel: String): LocalDateTime {
+        return resultSet.getTimestamp(columnLabel).toLocalDateTime()
     }
 }

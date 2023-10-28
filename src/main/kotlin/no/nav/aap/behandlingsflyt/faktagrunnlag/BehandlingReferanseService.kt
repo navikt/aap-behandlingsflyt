@@ -3,10 +3,11 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag
 import no.nav.aap.behandlingsflyt.ElementNotFoundException
 import no.nav.aap.behandlingsflyt.behandling.Behandling
 import no.nav.aap.behandlingsflyt.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.dbstuff.DBConnection
 import no.nav.aap.behandlingsflyt.flate.behandling.BehandlingReferanse
 import java.util.*
 
-object BehandlingReferanseService {
+class BehandlingReferanseService(val connection: DBConnection) {
 
     fun behandling(req: BehandlingReferanse): Behandling {
         val eksternReferanse: UUID
@@ -16,6 +17,6 @@ object BehandlingReferanseService {
             throw ElementNotFoundException()
         }
 
-        return BehandlingRepository.hent(eksternReferanse)
+        return BehandlingRepository(connection).hent(eksternReferanse)
     }
 }

@@ -3,10 +3,11 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 
 class Avklaringsbehov(
+    val id: Long,
     val definisjon: Definisjon,
     val historikk: MutableList<Endring> = mutableListOf(),
     val funnetISteg: StegType,
-    var kreverToTrinn: Boolean = false
+    private var kreverToTrinn: Boolean = false
 ) {
     init {
         if (historikk.isEmpty()) {

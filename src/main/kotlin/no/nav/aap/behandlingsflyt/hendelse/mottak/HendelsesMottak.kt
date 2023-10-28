@@ -15,12 +15,12 @@ import no.nav.aap.behandlingsflyt.prosessering.Gruppe
 import no.nav.aap.behandlingsflyt.prosessering.OppgaveInput
 import no.nav.aap.behandlingsflyt.prosessering.OppgaveRepository
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingOppgave
+import no.nav.aap.behandlingsflyt.sak.Ident
+import no.nav.aap.behandlingsflyt.sak.PersonRepository
 import no.nav.aap.behandlingsflyt.sak.Sak
 import no.nav.aap.behandlingsflyt.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sak.SakService
 import no.nav.aap.behandlingsflyt.sak.Saksnummer
-import no.nav.aap.behandlingsflyt.sak.Ident
-import no.nav.aap.behandlingsflyt.sak.PersonRepository
 import javax.sql.DataSource
 
 class HendelsesMottak(private val dataSource: DataSource) {
@@ -41,13 +41,14 @@ class HendelsesMottak(private val dataSource: DataSource) {
         var sisteBehandling: Behandling? = null
         dataSource.transaction { connection ->
             val sak = SakRepository(connection).hent(key)
-            val sisteBehandlingOpt = BehandlingRepository.finnSisteBehandlingFor(sak.id)
+            val behandlingRepository = BehandlingRepository(connection)
+            val sisteBehandlingOpt = behandlingRepository.finnSisteBehandlingFor(sak.id)
 
             sisteBehandling = if (sisteBehandlingOpt != null && !sisteBehandlingOpt.status().erAvsluttet()) {
                 sisteBehandlingOpt
             } else {
                 // Har ikke behandling så oppretter en
-                BehandlingRepository.opprettBehandling(
+                behandlingRepository.opprettBehandling(
                     sak.id,
                     listOf(Årsak(EndringType.MOTTATT_SØKNAD))
                 ) // TODO: Reeltsett oppdatere denne
@@ -58,7 +59,7 @@ class HendelsesMottak(private val dataSource: DataSource) {
 
     fun håndtere(key: Long, hendelse: LøsAvklaringsbehovBehandlingHendelse) {
         dataSource.transaction { connection ->
-            val behandling = BehandlingRepository.hent(key)
+            val behandling = BehandlingRepository(connection).hent(key)
             ValiderBehandlingTilstand.validerTilstandBehandling(behandling = behandling)
 
             val sakService = SakService(connection)
@@ -75,7 +76,7 @@ class HendelsesMottak(private val dataSource: DataSource) {
 
     fun håndtere(key: Long, hendelse: BehandlingSattPåVent) {
         dataSource.transaction { connection ->
-            val behandling = BehandlingRepository.hent(key)
+            val behandling = BehandlingRepository(connection).hent(key)
             ValiderBehandlingTilstand.validerTilstandBehandling(behandling = behandling)
 
             val sakService = SakService(connection)
@@ -89,7 +90,7 @@ class HendelsesMottak(private val dataSource: DataSource) {
 
     fun håndtere(key: Long, hendelse: BehandlingHendelse) {
         dataSource.transaction { connection ->
-            val behandling = BehandlingRepository.hent(key)
+            val behandling = BehandlingRepository(connection).hent(key)
             ValiderBehandlingTilstand.validerTilstandBehandling(behandling = behandling)
 
             val sakService = SakService(connection)

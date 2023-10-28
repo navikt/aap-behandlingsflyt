@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegInput
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkår
+import no.nav.aap.behandlingsflyt.flyt.vilkår.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårtype
 import no.nav.aap.behandlingsflyt.flyt.vilkår.bistand.BistandFaktagrunnlag
 import no.nav.aap.behandlingsflyt.flyt.vilkår.bistand.Bistandsvilkåret
@@ -40,11 +41,11 @@ class VurderBistandsbehovSteg(
                         bistandsGrunnlag?.vurdering,
                         studentGrunnlag?.studentvurdering
                     )
-                    Bistandsvilkåret(behandling.vilkårsresultat()).vurder(grunnlag = grunnlag)
+                    Bistandsvilkåret(VilkårsresultatRepository.hent(behandling.id)).vurder(grunnlag = grunnlag)
                 }
             }
 
-            val vilkår = behandling.vilkårsresultat().finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
+            val vilkår = VilkårsresultatRepository.hent(behandling.id).finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
 
             if (harBehovForAvklaring(vilkår, periodeTilVurdering, studentGrunnlag)) {
                 return StegResultat(listOf(Definisjon.AVKLAR_BISTANDSBEHOV))

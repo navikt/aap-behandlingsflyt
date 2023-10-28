@@ -1,9 +1,10 @@
 package no.nav.aap.behandlingsflyt.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.dbstuff.DBConnection
 import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
 
-class SattPåVentLøser : AvklaringsbehovsLøser<SattPåVentLøsning> {
+class SattPåVentLøser(val connection: DBConnection) : AvklaringsbehovsLøser<SattPåVentLøsning> {
 
     override fun løs(kontekst: FlytKontekst, løsning: SattPåVentLøsning): LøsningsResultat {
         return LøsningsResultat("Tatt av vent")

@@ -10,9 +10,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Personinfo
 import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.YrkesskadeRegisterMock
 import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.YrkesskadeService
 import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
-import no.nav.aap.behandlingsflyt.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sak.Ident
 import no.nav.aap.behandlingsflyt.sak.PersonRepository
+import no.nav.aap.behandlingsflyt.sak.SakRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -29,7 +29,7 @@ class FaktagrunnlagTest {
     val sak =
         SakRepository(dbConnection).finnEllerOpprett(PersonRepository(dbConnection).finnEllerOpprett(ident), periode)
     val behandling =
-        BehandlingRepository.finnSisteBehandlingFor(sak.id) ?: BehandlingRepository.opprettBehandling(sak.id, listOf())
+        BehandlingRepository(dbConnection).finnSisteBehandlingFor(sak.id) ?: BehandlingRepository(dbConnection).opprettBehandling(sak.id, listOf())
     val kontekst = FlytKontekst(sak.id, behandling.id)
 
     @BeforeEach

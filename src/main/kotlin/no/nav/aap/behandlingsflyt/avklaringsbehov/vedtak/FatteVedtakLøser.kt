@@ -2,21 +2,22 @@ package no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak
 
 import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovsLøser
 import no.nav.aap.behandlingsflyt.avklaringsbehov.LøsningsResultat
-import no.nav.aap.behandlingsflyt.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.dbstuff.DBConnection
 import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
 
-class FatteVedtakLøser : AvklaringsbehovsLøser<FatteVedtakLøsning> {
+class FatteVedtakLøser(val connection: DBConnection) : AvklaringsbehovsLøser<FatteVedtakLøsning> {
+
+    private val avklaringsbehovRepository = AvklaringsbehovRepository(connection)
 
     override fun løs(kontekst: FlytKontekst, løsning: FatteVedtakLøsning): LøsningsResultat {
-        val behandling = BehandlingRepository.hent(kontekst.behandlingId)
-        val avklaringsbehovene = behandling.avklaringsbehovene()
-
         løsning.vurderinger.forEach { vurdering ->
-            avklaringsbehovene.vurderTotrinn(
-                Definisjon.forKode(vurdering.definisjon),
-                vurdering.godkjent!!,
-                vurdering.begrunnelse!!
+            avklaringsbehovRepository.toTrinnsVurdering(
+                behandlingId = kontekst.behandlingId,
+                definisjon = Definisjon.forKode(vurdering.definisjon),
+                begrunnelse = vurdering.begrunnelse!!,
+                godkjent = vurdering.godkjent!!
             )
         }
 

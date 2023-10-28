@@ -41,3 +41,51 @@ CREATE INDEX IDX_SAK_SAKSNUMMER ON SAK (SAKSNUMMER);
 CREATE INDEX IDX_SAK_PERSON ON SAK (PERSON_ID);
 
 create sequence if not exists SEQ_SAKSNUMMER increment by 50 minvalue 10000000;
+
+CREATE TABLE BEHANDLING
+(
+    ID            SERIAL                                 NOT NULL PRIMARY KEY,
+    sak_id        BIGINT                                 NOT NULL REFERENCES sak (ID),
+    referanse     uuid unique                            NOT NULL,
+    STATUS        VARCHAR(100)                           NOT NULL,
+    type          varchar(100)                           not null,
+    VERSJON       BIGINT       DEFAULT 0                 NOT NULL,
+    OPPRETTET_TID TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+CREATE INDEX IDX_BEHANDLING_REFERANSE ON BEHANDLING (referanse);
+CREATE INDEX IDX_BEHANDLING_SAK_TID ON BEHANDLING (sak_id, OPPRETTET_TID);
+
+CREATE TABLE AVKLARINGSBEHOV
+(
+    ID              SERIAL                                 NOT NULL PRIMARY KEY,
+    behandling_id   BIGINT                                 NOT NULL REFERENCES BEHANDLING (ID),
+    definisjon      varchar(50)                            not null,
+    funnet_i_steg   varchar(50)                            not null,
+    krever_to_trinn boolean,
+    OPPRETTET_TID   TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+CREATE INDEX IDX_AVKLARINGSBEHOV_DEFINISJON ON AVKLARINGSBEHOV (definisjon);
+CREATE unique INDEX IDX_AVKLARINGSBEHOV_BEHANDLING_DEFINISJON ON AVKLARINGSBEHOV (behandling_id, definisjon);
+
+CREATE TABLE AVKLARINGSBEHOV_ENDRING
+(
+    ID                 SERIAL                                 NOT NULL PRIMARY KEY,
+    avklaringsbehov_id BIGINT                                 NOT NULL REFERENCES AVKLARINGSBEHOV (ID),
+    status             varchar(50)                            not null,
+    begrunnelse        varchar(4000),
+    OPPRETTET_AV       varchar(100)                           NOT NULL,
+    OPPRETTET_TID      TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+CREATE INDEX IDX_AVKLARINGSBEHOV_TID ON AVKLARINGSBEHOV (OPPRETTET_TID);
+
+CREATE TABLE STEG_HISTORIKK
+(
+    ID            SERIAL                                 NOT NULL PRIMARY KEY,
+    behandling_id BIGINT                                 NOT NULL REFERENCES BEHANDLING (ID),
+    aktiv         boolean      default true              NOT NULL,
+    steg          varchar(50)                            not null,
+    status        varchar(50)                            not null,
+    OPPRETTET_TID TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+CREATE UNIQUE INDEX UIDX_STEG_HISTORIKK ON STEG_HISTORIKK (BEHANDLING_ID) WHERE (AKTIV = TRUE);

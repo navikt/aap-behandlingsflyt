@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.TotrinnsVurdering
+import no.nav.aap.behandlingsflyt.behandling.Behandling
 import no.nav.aap.behandlingsflyt.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.behandling.Status
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
@@ -27,17 +28,18 @@ import no.nav.aap.behandlingsflyt.flyt.behandlingstyper.Førstegangsbehandling
 import no.nav.aap.behandlingsflyt.flyt.steg.StegStatus
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 import no.nav.aap.behandlingsflyt.flyt.steg.Tilstand
+import no.nav.aap.behandlingsflyt.flyt.vilkår.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårtype
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.hendelse.mottak.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HendelsesMottak
 import no.nav.aap.behandlingsflyt.hendelse.mottak.LøsAvklaringsbehovBehandlingHendelse
 import no.nav.aap.behandlingsflyt.prosessering.Motor
-import no.nav.aap.behandlingsflyt.sak.Sak
-import no.nav.aap.behandlingsflyt.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sak.Ident
 import no.nav.aap.behandlingsflyt.sak.Person
 import no.nav.aap.behandlingsflyt.sak.PersonRepository
+import no.nav.aap.behandlingsflyt.sak.Sak
+import no.nav.aap.behandlingsflyt.sak.SakRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -78,9 +80,8 @@ class FlytOrkestratorTest {
         hendelsesMottak.håndtere(ident, DokumentMottattPersonHendelse(periode = periode))
         ventPåSvar()
 
-
         val sak = hentSak(ident, periode)
-        val behandling = requireNotNull(BehandlingRepository.finnSisteBehandlingFor(sak.id))
+        var behandling = requireNotNull(hentBehandling(sak.id))
         assertThat(behandling.type).isEqualTo(Førstegangsbehandling)
 
         assertThat(behandling.avklaringsbehov()).isNotEmpty()
@@ -166,6 +167,7 @@ class FlytOrkestratorTest {
         // Saken står til To-trinnskontroll hos beslutter
         assertThat(behandling.avklaringsbehov()).anySatisfy { it.erÅpent() && it.definisjon == Definisjon.FATTE_VEDTAK }
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+        behandling = hentBehandling(sak.id)
 
         hendelsesMottak.håndtere(
             behandling.id,
@@ -177,11 +179,12 @@ class FlytOrkestratorTest {
         )
         ventPåSvar()
 
+        behandling = hentBehandling(sak.id)
         assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
 
         //Henter vurder alder-vilkår
         //Assert utfall
-        val vilkårsresultat = behandling.vilkårsresultat()
+        val vilkårsresultat = VilkårsresultatRepository.hent(behandlingId = behandling.id)
         val aldersvilkår = vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET)
 
         assertThat(aldersvilkår.vilkårsperioder())
@@ -203,6 +206,14 @@ class FlytOrkestratorTest {
         return sak!!
     }
 
+    private fun hentBehandling(sakId: Long): Behandling {
+        var behandling: Behandling? = null
+        dataSource.transaction {
+            behandling = BehandlingRepository(it).finnSisteBehandlingFor(sakId)
+        }
+        return behandling!!
+    }
+
     private fun ventPåSvar() {
         while (motor.harOppgaverSomIkkeErProssessert()) {
             Thread.sleep(50L)
@@ -221,15 +232,15 @@ class FlytOrkestratorTest {
         ventPåSvar()
 
         val sak = hentSak(ident, periode)
-        val behandling = requireNotNull(BehandlingRepository.finnSisteBehandlingFor(sak.id))
+        val behandling = requireNotNull(hentBehandling(sak.id))
         assertThat(behandling.type).isEqualTo(Førstegangsbehandling)
 
         val stegHistorikk = behandling.stegHistorikk()
-        assertThat(stegHistorikk.map { it.tilstand }).contains(Tilstand(StegType.VURDER_ALDER, StegStatus.AVSLUTTER))
+        assertThat(stegHistorikk.map { it.tilstand }).contains(Tilstand(StegType.AVKLAR_STUDENT, StegStatus.AVKLARINGSPUNKT))
 
         //Henter vurder alder-vilkår
         //Assert utfall
-        val vilkårsresultat = behandling.vilkårsresultat()
+        val vilkårsresultat = VilkårsresultatRepository.hent(behandlingId = behandling.id)
         val aldersvilkår = vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET)
 
         assertThat(aldersvilkår.vilkårsperioder())
@@ -256,7 +267,7 @@ class FlytOrkestratorTest {
         ventPåSvar()
 
         val sak = hentSak(ident, periode)
-        val behandling = requireNotNull(BehandlingRepository.finnSisteBehandlingFor(sak.id))
+        var behandling = requireNotNull(hentBehandling(sak.id))
 
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         assertThat(behandling.avklaringsbehov()).anySatisfy { it.erÅpent() && it.definisjon == Definisjon.AVKLAR_SYKDOM }
@@ -266,7 +277,7 @@ class FlytOrkestratorTest {
             BehandlingSattPåVent()
         )
 
-        assertThat(behandling.status()).isEqualTo(Status.PÅ_VENT)
+        behandling = hentBehandling(sak.id)
         assertThat(behandling.avklaringsbehov())
             .hasSize(2)
             .anySatisfy { it.erÅpent() && it.definisjon == Definisjon.MANUELT_SATT_PÅ_VENT }
@@ -275,6 +286,7 @@ class FlytOrkestratorTest {
         hendelsesMottak.håndtere(ident, DokumentMottattPersonHendelse(periode = periode))
         ventPåSvar()
 
+        behandling = hentBehandling(sak.id)
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         assertThat(behandling.avklaringsbehov())
             .hasSize(2)

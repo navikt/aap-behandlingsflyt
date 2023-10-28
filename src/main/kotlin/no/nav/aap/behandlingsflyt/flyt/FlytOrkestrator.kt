@@ -18,14 +18,14 @@ private val log = LoggerFactory.getLogger(FlytOrkestrator::class.java)
  * Har ansvar for å drive flyten til en gitt behandling. Typen behandling styrer hvilke steg som skal utføres.
  */
 class FlytOrkestrator(
-    private val transaksjonsconnection: DBConnection
+    private val connection: DBConnection
 ) {
 
-    private val faktagrunnlag = Faktagrunnlag(transaksjonsconnection)
-    private val flytOperasjonRepository = FlytOperasjonRepository(transaksjonsconnection)
+    private val faktagrunnlag = Faktagrunnlag(connection)
+    private val flytOperasjonRepository = FlytOperasjonRepository(connection)
 
     fun forberedBehandling(kontekst: FlytKontekst) {
-        val behandling = BehandlingRepository.hent(kontekst.behandlingId)
+        val behandling = BehandlingRepository(connection).hent(kontekst.behandlingId)
 
         ValiderBehandlingTilstand.validerTilstandBehandling(behandling, listOf())
 
@@ -61,7 +61,7 @@ class FlytOrkestrator(
     }
 
     fun prosesserBehandling(kontekst: FlytKontekst) {
-        val behandling = BehandlingRepository.hent(kontekst.behandlingId)
+        val behandling = BehandlingRepository(connection).hent(kontekst.behandlingId)
 
         ValiderBehandlingTilstand.validerTilstandBehandling(behandling, listOf())
 
@@ -70,7 +70,7 @@ class FlytOrkestrator(
         var gjeldendeSteg = behandlingFlyt.forberedFlyt(behandling.aktivtSteg())
 
         while (true) {
-            transaksjonsconnection.markerSavepoint()
+            connection.markerSavepoint()
 
             val avklaringsbehov = behandling.avklaringsbehovene().åpne()
             validerPlassering(
@@ -86,9 +86,9 @@ class FlytOrkestrator(
                 kontekst
             )
 
-            transaksjonsconnection.markerSavepoint()
+            connection.markerSavepoint()
 
-            val result = StegOrkestrator(transaksjonsconnection, gjeldendeSteg).utfør(kontekst, behandling)
+            val result = StegOrkestrator(connection, gjeldendeSteg).utfør(kontekst, behandling)
 
             if (result.erTilbakeføring()) {
                 val tilbakeføringsflyt =
@@ -139,7 +139,7 @@ class FlytOrkestrator(
                 loggStopp(kontekst, behandling)
                 return
             }
-            StegOrkestrator(transaksjonsconnection, neste).utførTilbakefør(
+            StegOrkestrator(connection, neste).utførTilbakefør(
                 kontekst = kontekst,
                 behandling = behandling
             )
@@ -177,7 +177,8 @@ class FlytOrkestrator(
     }
 
     fun settBehandlingPåVent(kontekst: FlytKontekst) {
-        val behandling = BehandlingRepository.hent(kontekst.behandlingId)
+        val behandling = BehandlingRepository(connection).hent(kontekst.behandlingId)
         behandling.settPåVent()
+        flytOperasjonRepository.leggTilAvklaringsbehov(behandling.id, Definisjon.MANUELT_SATT_PÅ_VENT, behandling.aktivtSteg())
     }
 }

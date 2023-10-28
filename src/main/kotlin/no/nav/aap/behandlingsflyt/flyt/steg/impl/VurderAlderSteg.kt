@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Personinforma
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegInput
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
+import no.nav.aap.behandlingsflyt.flyt.vilkår.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårtype
 import no.nav.aap.behandlingsflyt.flyt.vilkår.alder.Aldersgrunnlag
 import no.nav.aap.behandlingsflyt.flyt.vilkår.alder.Aldersvilkåret
@@ -28,7 +29,7 @@ class VurderAlderSteg(
 
             for (periode in periodeTilVurdering) {
                 val aldersgrunnlag = Aldersgrunnlag(periode, personinfoGrunnlag.personinfo.fødselsdato)
-                Aldersvilkåret(behandling.vilkårsresultat()).vurder(aldersgrunnlag)
+                Aldersvilkåret(VilkårsresultatRepository.hent(behandling.id)).vurder(aldersgrunnlag)
             }
         }
 

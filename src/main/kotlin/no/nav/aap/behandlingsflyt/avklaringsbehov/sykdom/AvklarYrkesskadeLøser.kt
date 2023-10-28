@@ -4,13 +4,14 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovsLøser
 import no.nav.aap.behandlingsflyt.avklaringsbehov.LøsningsResultat
 import no.nav.aap.behandlingsflyt.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
+import no.nav.aap.behandlingsflyt.dbstuff.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykdomsRepository
+import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
 
-class AvklarYrkesskadeLøser : AvklaringsbehovsLøser<AvklarYrkesskadeLøsning> {
+class AvklarYrkesskadeLøser(val connection: DBConnection) : AvklaringsbehovsLøser<AvklarYrkesskadeLøsning> {
 
     override fun løs(kontekst: FlytKontekst, løsning: AvklarYrkesskadeLøsning): LøsningsResultat {
-        val behandling = BehandlingRepository.hent(kontekst.behandlingId)
+        val behandling = BehandlingRepository(connection).hent(kontekst.behandlingId)
         val sykdomsGrunnlag = SykdomsRepository.hentHvisEksisterer(behandlingId = kontekst.behandlingId)
 
         SykdomsRepository.lagre(

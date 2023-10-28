@@ -8,11 +8,11 @@ import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.ElementNotFoundException
 import no.nav.aap.behandlingsflyt.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.dbstuff.transaction
+import no.nav.aap.behandlingsflyt.sak.Ident
+import no.nav.aap.behandlingsflyt.sak.PersonRepository
 import no.nav.aap.behandlingsflyt.sak.Sak
 import no.nav.aap.behandlingsflyt.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sak.Saksnummer
-import no.nav.aap.behandlingsflyt.sak.Ident
-import no.nav.aap.behandlingsflyt.sak.PersonRepository
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
@@ -61,7 +61,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 dataSource.transaction { connection ->
                     sak = SakRepository(connection).hent(saksnummer = Saksnummer(saksnummer))
 
-                    behandlinger = BehandlingRepository.hentAlleFor(sak!!.id).map { behandling ->
+                    behandlinger = BehandlingRepository(connection).hentAlleFor(sak!!.id).map { behandling ->
                         BehandlinginfoDTO(
                             referanse = behandling.referanse,
                             type = behandling.type.identifikator(),

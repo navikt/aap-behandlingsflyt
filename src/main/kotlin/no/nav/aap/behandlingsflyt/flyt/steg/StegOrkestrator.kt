@@ -1,15 +1,18 @@
 package no.nav.aap.behandlingsflyt.flyt.steg
 
-import no.nav.aap.behandlingsflyt.dbstuff.DBConnection
 import no.nav.aap.behandlingsflyt.behandling.Behandling
 import no.nav.aap.behandlingsflyt.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
+import no.nav.aap.behandlingsflyt.dbstuff.DBConnection
 import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
+import no.nav.aap.behandlingsflyt.flyt.internal.FlytOperasjonRepository
 import org.slf4j.LoggerFactory
 
 private val log = LoggerFactory.getLogger(StegOrkestrator::class.java)
 
 class StegOrkestrator(private val transaksjonsconnection: DBConnection, private val aktivtSteg: FlytSteg) {
+
+    private val flytOperasjonRepository = FlytOperasjonRepository(transaksjonsconnection)
 
     fun utfør(
         kontekst: FlytKontekst,
@@ -27,7 +30,7 @@ class StegOrkestrator(private val transaksjonsconnection: DBConnection, private 
                     kontekst.behandlingId,
                     resultat.funnetAvklaringsbehov()
                 )
-                behandling.leggTil(resultat.funnetAvklaringsbehov())
+                leggTilAvklaringsbehov(behandling, resultat)
             }
 
             if (!resultat.kanFortsette() || resultat.erTilbakeføring() || gjeldendeStegStatus == StegStatus.AVSLUTTER) {
@@ -35,6 +38,15 @@ class StegOrkestrator(private val transaksjonsconnection: DBConnection, private 
             }
             gjeldendeStegStatus = gjeldendeStegStatus.neste()
         }
+    }
+
+    private fun leggTilAvklaringsbehov(
+        behandling: Behandling,
+        resultat: Transisjon
+    ) {
+        val definisjoner = resultat.funnetAvklaringsbehov()
+        behandling.leggTil(definisjoner)
+        flytOperasjonRepository.leggTilAvklaringsbehov(behandling.id, definisjoner, aktivtSteg.type())
     }
 
     fun utførTilbakefør(
@@ -70,9 +82,22 @@ class StegOrkestrator(private val transaksjonsconnection: DBConnection, private 
         }
 
         val nyStegTilstand = StegTilstand(tilstand = Tilstand(aktivtSteg.type(), nesteStegStatus))
-        behandling.visit(nyStegTilstand)
+        loggStegHistorikk(behandling, nyStegTilstand)
 
         return transisjon
+    }
+
+    private fun loggStegHistorikk(
+        behandling: Behandling,
+        nyStegTilstand: StegTilstand
+    ) {
+        val førStatus = behandling.status()
+        behandling.visit(nyStegTilstand)
+        flytOperasjonRepository.loggBesøktSteg(behandlingId = behandling.id, nyStegTilstand.tilstand)
+        val etterStatus = nyStegTilstand.tilstand.steg().status
+        if (førStatus != etterStatus) {
+            flytOperasjonRepository.oppdaterBehandlingStatus(behandlingId = behandling.id, status = etterStatus)
+        }
     }
 
     private fun behandleStegBakover(flytSteg: FlytSteg, kontekst: FlytKontekst): Transisjon {

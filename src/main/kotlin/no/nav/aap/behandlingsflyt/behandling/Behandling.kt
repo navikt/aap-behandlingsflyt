@@ -8,7 +8,6 @@ import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.flyt.steg.StegStatus
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 import no.nav.aap.behandlingsflyt.flyt.steg.Tilstand
-import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårsresultat
 import java.time.LocalDateTime
 import java.util.*
 
@@ -19,9 +18,8 @@ class Behandling(
     val type: BehandlingType,
     private var status: Status = Status.OPPRETTET,
     private var årsaker: List<Årsak> = mutableListOf(),
-    private val avklaringsbehovene: Avklaringsbehovene = Avklaringsbehovene(),
+    private val avklaringsbehovene: Avklaringsbehovene = Avklaringsbehovene(mutableListOf()),
     private var stegHistorikk: List<StegTilstand> = mutableListOf(),
-    private val vilkårsresultat: Vilkårsresultat = Vilkårsresultat(),
     val opprettetTidspunkt: LocalDateTime = LocalDateTime.now()
 ) : Comparable<Behandling> {
 
@@ -84,12 +82,12 @@ class Behandling(
         status = Status.PÅ_VENT
         avklaringsbehovene.leggTil(
             Avklaringsbehov(
+                Long.MAX_VALUE,
                 Definisjon.MANUELT_SATT_PÅ_VENT,
                 funnetISteg = aktivtSteg()
             )
         )
     }
-    fun vilkårsresultat(): Vilkårsresultat = vilkårsresultat
 
     fun årsaker(): List<Årsak> = årsaker.toList()
 

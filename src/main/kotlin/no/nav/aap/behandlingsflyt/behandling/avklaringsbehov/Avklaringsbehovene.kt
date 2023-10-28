@@ -2,14 +2,19 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 
-class Avklaringsbehovene {
+class Avklaringsbehovene(avklaringsbehovene: List<Avklaringsbehov> = mutableListOf()) {
 
-    private val avklaringsbehovene: MutableList<Avklaringsbehov> = mutableListOf()
+    private val avklaringsbehovene: MutableList<Avklaringsbehov>
+
+    init {
+        this.avklaringsbehovene = avklaringsbehovene.toMutableList()
+    }
 
     fun leggTil(funnetAvklaringsbehov: List<Definisjon>, steg: StegType) {
         funnetAvklaringsbehov.stream()
             .map { definisjon ->
                 Avklaringsbehov(
+                    Long.MAX_VALUE,
                     definisjon,
                     funnetISteg = steg
                 )
@@ -32,7 +37,8 @@ class Avklaringsbehovene {
     }
 
     fun løsAvklaringsbehov(definisjon: Definisjon, begrunnelse: String, endretAv: String, kreverToTrinn: Boolean) {
-        avklaringsbehovene.single { it.definisjon == definisjon }.løs(begrunnelse = begrunnelse, endretAv = endretAv, kreverToTrinn = kreverToTrinn)
+        avklaringsbehovene.single { it.definisjon == definisjon }
+            .løs(begrunnelse = begrunnelse, endretAv = endretAv, kreverToTrinn = kreverToTrinn)
     }
 
     fun alle(): List<Avklaringsbehov> {

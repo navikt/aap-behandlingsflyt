@@ -5,21 +5,21 @@ import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import com.zaxxer.hikari.HikariDataSource
-import no.nav.aap.behandlingsflyt.ElementNotFoundException
 import no.nav.aap.behandlingsflyt.behandling.Behandling
-import no.nav.aap.behandlingsflyt.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.dbstuff.transaction
+import no.nav.aap.behandlingsflyt.faktagrunnlag.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.flyt.steg.StegGruppe
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkår
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårsresultat
+import no.nav.aap.behandlingsflyt.flyt.vilkår.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårtype
-import java.util.*
 
 fun NormalOpenAPIRoute.behandlingApi(dataSource: HikariDataSource) {
     route("/api/behandling") {
         route("/{referanse}") {
             get<BehandlingReferanse, DetaljertBehandlingDTO> { req ->
-                val behandling = behandling(req)
+                val behandling = behandling(dataSource, req)
 
                 val dto = DetaljertBehandlingDTO(
                     referanse = behandling.referanse,
@@ -40,7 +40,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: HikariDataSource) {
                             }
                         )
                     },
-                    vilkår = behandling.vilkårsresultat().alle().map { vilkår ->
+                    vilkår = VilkårsresultatRepository.hent(behandling.id).alle().map { vilkår ->
                         VilkårDTO(
                             vilkårtype = vilkår.type,
                             perioder = vilkår.vilkårsperioder()
@@ -63,7 +63,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: HikariDataSource) {
         }
         route("/{referanse}/flyt") {
             get<BehandlingReferanse, BehandlingFlytOgTilstandDto> { req ->
-                val behandling = behandling(req)
+                val behandling = behandling(dataSource, req)
 
                 respond(
                     BehandlingFlytOgTilstandDto(
@@ -80,7 +80,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: HikariDataSource) {
                                         )
                                     },
                                 hentUtRelevantVilkårForSteg(
-                                    behandling.vilkårsresultat(),
+                                    VilkårsresultatRepository.hent(behandling.id),
                                     stegType
                                 )
                             )
@@ -91,7 +91,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: HikariDataSource) {
         }
         route("/{referanse}/flyt-2") {
             get<BehandlingReferanse, BehandlingFlytOgTilstand2Dto> { req ->
-                val behandling = behandling(req)
+                val behandling = behandling(dataSource, req)
                 val stegGrupper: Map<StegGruppe, List<StegType>> =
                     behandling.flyt().stegene().groupBy { steg -> steg.gruppe }
 
@@ -117,7 +117,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: HikariDataSource) {
                                                 )
                                             },
                                         vilkårDTO = hentUtRelevantVilkårForSteg(
-                                            behandling.vilkårsresultat(),
+                                            VilkårsresultatRepository.hent(behandling.id),
                                             stegType
                                         )
                                     )
@@ -133,16 +133,12 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: HikariDataSource) {
     }
 }
 
-private fun behandling(req: BehandlingReferanse): Behandling {
-    val eksternReferanse: UUID
-    try {
-        eksternReferanse = req.ref()
-    } catch (exception: IllegalArgumentException) {
-        throw ElementNotFoundException()
+private fun behandling(dataSource: HikariDataSource, req: BehandlingReferanse): Behandling {
+    var behandling: Behandling? = null
+    dataSource.transaction {
+        behandling = BehandlingReferanseService(it).behandling(req)
     }
-
-    val behandling = BehandlingRepository.hent(eksternReferanse)
-    return behandling
+    return behandling!!
 }
 
 private fun hentUtRelevantVilkårForSteg(vilkårsresultat: Vilkårsresultat, stegType: StegType): VilkårDTO? {

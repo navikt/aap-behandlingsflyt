@@ -19,6 +19,7 @@ class FritakMeldepliktSteg(private val behandlingService: BehandlingService) : B
             // Legger til et ferdig løst behov så saksbehandler alltid har muligheten til å legge inn en vurdering
             avklaringsbehovene.leggTil(
                 Avklaringsbehov(
+                    id = 1L,
                     definisjon = Definisjon.FRITAK_MELDEPLIKT,
                     historikk = mutableListOf(
                         Endring(

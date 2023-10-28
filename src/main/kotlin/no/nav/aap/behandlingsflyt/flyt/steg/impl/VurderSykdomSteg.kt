@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykdomsRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegInput
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
+import no.nav.aap.behandlingsflyt.flyt.vilkår.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårtype
 import no.nav.aap.behandlingsflyt.flyt.vilkår.sykdom.SykdomsFaktagrunnlag
 import no.nav.aap.behandlingsflyt.flyt.vilkår.sykdom.Sykdomsvilkår
@@ -38,10 +39,10 @@ class VurderSykdomSteg(
                         sykdomsGrunnlag?.sykdomsvurdering,
                         studentGrunnlag?.studentvurdering
                     )
-                    Sykdomsvilkår(behandling.vilkårsresultat()).vurder(faktagrunnlag)
+                    Sykdomsvilkår(VilkårsresultatRepository.hent(behandling.id)).vurder(faktagrunnlag)
                 }
             }
-            val sykdomsvilkåret = behandling.vilkårsresultat().finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
+            val sykdomsvilkåret = VilkårsresultatRepository.hent(behandling.id).finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
 
             if (sykdomsvilkåret.harPerioderSomIkkeErVurdert(periodeTilVurdering)
                 || (studentGrunnlag?.studentvurdering?.oppfyller11_14 == false && sykdomsGrunnlag?.erKonsistent() != true)) {
