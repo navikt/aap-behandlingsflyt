@@ -1,11 +1,11 @@
 package no.nav.aap.behandlingsflyt.sak
 
 import no.nav.aap.behandlingsflyt.Periode
-import no.nav.aap.behandlingsflyt.dbstuff.DbConnection
+import no.nav.aap.behandlingsflyt.dbstuff.DBConnection
 import no.nav.aap.behandlingsflyt.dbstuff.Row
 import java.util.*
 
-class SakRepository(private val connection: DbConnection) {
+class SakRepository(private val connection: DBConnection) {
 
     private val personRepository = PersonRepository(connection)
 

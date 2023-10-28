@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.flyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.dbstuff.DbConnection
+import no.nav.aap.behandlingsflyt.dbstuff.DBConnection
 
 object TestFlytSteg : FlytSteg {
-    override fun konstruer(connection: DbConnection): BehandlingSteg {
+    override fun konstruer(connection: DBConnection): BehandlingSteg {
         return TestSteg()
     }
 

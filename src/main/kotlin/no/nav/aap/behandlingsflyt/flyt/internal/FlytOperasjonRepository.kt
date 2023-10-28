@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.flyt.internal
 
-import no.nav.aap.behandlingsflyt.dbstuff.DbConnection
+import no.nav.aap.behandlingsflyt.dbstuff.DBConnection
 import no.nav.aap.behandlingsflyt.sak.Status
 
-class FlytOperasjonRepository(private val connection: DbConnection) {
+class FlytOperasjonRepository(private val connection: DBConnection) {
 
     fun oppdaterSakStatus(sakId: Long, status: Status) {
         val query = """UPDATE sak SET status = ? WHERE ID = ?"""

@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import no.nav.aap.behandlingsflyt.dbstuff.DbConnection
+import no.nav.aap.behandlingsflyt.dbstuff.DBConnection
 
-class TaSkriveLåsRepository(private val connection: DbConnection) {
+class TaSkriveLåsRepository(private val connection: DBConnection) {
 
     fun låsSak(sakId: Long): Skrivelås {
         val query = """SELECT versjon FROM SAK WHERE ID = ? FOR UPDATE"""

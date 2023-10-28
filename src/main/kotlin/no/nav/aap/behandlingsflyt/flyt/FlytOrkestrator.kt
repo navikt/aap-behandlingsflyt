@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.Behandling
 import no.nav.aap.behandlingsflyt.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Status
-import no.nav.aap.behandlingsflyt.dbstuff.DbConnection
+import no.nav.aap.behandlingsflyt.dbstuff.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.flyt.internal.FlytOperasjonRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.StegOrkestrator
@@ -18,7 +18,7 @@ private val log = LoggerFactory.getLogger(FlytOrkestrator::class.java)
  * Har ansvar for å drive flyten til en gitt behandling. Typen behandling styrer hvilke steg som skal utføres.
  */
 class FlytOrkestrator(
-    private val transaksjonsconnection: DbConnection
+    private val transaksjonsconnection: DBConnection
 ) {
 
     private val faktagrunnlag = Faktagrunnlag(transaksjonsconnection)

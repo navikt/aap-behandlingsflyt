@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger
 
-import no.nav.aap.behandlingsflyt.dbstuff.DbConnection
+import no.nav.aap.behandlingsflyt.dbstuff.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlag
 import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sak.SakService
@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.sak.PersonRepository
 
 class PersonopplysningService : Grunnlag {
 
-    override fun oppdater(transaksjonsconnection: DbConnection, kontekst: FlytKontekst): Boolean {
+    override fun oppdater(transaksjonsconnection: DBConnection, kontekst: FlytKontekst): Boolean {
         val sakService = SakService(transaksjonsconnection)
         val sak = sakService.hent(kontekst.sakId)
         //TODO: PersonService bør være unødvendig da vi kan hente identene fra sak

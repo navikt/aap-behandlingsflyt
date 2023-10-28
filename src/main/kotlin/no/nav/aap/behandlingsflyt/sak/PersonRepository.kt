@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.sak
 
-import no.nav.aap.behandlingsflyt.dbstuff.DbConnection
+import no.nav.aap.behandlingsflyt.dbstuff.DBConnection
 import no.nav.aap.behandlingsflyt.dbstuff.Row
 import java.util.*
 
-class PersonRepository(private val connection: DbConnection) {
+class PersonRepository(private val connection: DBConnection) {
 
     fun finnEllerOpprett(ident: Ident): Person {
         val relevantePersoner = connection.prepareListQueryStatement(

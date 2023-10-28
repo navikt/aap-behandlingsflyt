@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.dbstuff.DbConnection
+import no.nav.aap.behandlingsflyt.dbstuff.DBConnection
 import no.nav.aap.behandlingsflyt.dbstuff.MockConnection
 import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.flyt.behandlingstyper.Førstegangsbehandling
@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test
 
 class StegOrkestratorTest {
 
-    private val transaksjonsconnection = DbConnection(MockConnection())
+    private val transaksjonsconnection = DBConnection(MockConnection())
 
     @Test
     fun `ved avklaringsbehov skal vi gå gjennom statusene START-UTFØRER-AVKARLINGSPUNKT`() {
@@ -29,4 +29,3 @@ class StegOrkestratorTest {
         assertThat(behandling.stegHistorikk()[2].tilstand.status()).isEqualTo(StegStatus.AVKLARINGSPUNKT)
     }
 }
-

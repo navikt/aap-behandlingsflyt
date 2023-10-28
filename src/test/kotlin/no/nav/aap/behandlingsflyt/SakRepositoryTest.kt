@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt
 
-import no.nav.aap.behandlingsflyt.dbstuff.DbConnection
+import no.nav.aap.behandlingsflyt.dbstuff.DBConnection
 import no.nav.aap.behandlingsflyt.dbstuff.InitTestDatabase
 import no.nav.aap.behandlingsflyt.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sak.Ident
@@ -11,8 +11,8 @@ import java.time.LocalDate
 
 class SakRepositoryTest {
 
-    private val personRepository = PersonRepository(DbConnection(dataSource.connection))
-    private val sakRepository = SakRepository(DbConnection(dataSource.connection))
+    private val personRepository = PersonRepository(DBConnection(dataSource.connection))
+    private val sakRepository = SakRepository(DBConnection(dataSource.connection))
 
     @Test
     fun `skal avklare yrkesskade hvis det finnes spor av yrkesskade`() {

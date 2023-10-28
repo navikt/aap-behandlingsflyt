@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.sak
 
-import no.nav.aap.behandlingsflyt.dbstuff.DbConnection
+import no.nav.aap.behandlingsflyt.dbstuff.DBConnection
 
-class SakService(connection: DbConnection) {
+class SakService(connection: DBConnection) {
 
     private val sakRepository = SakRepository(connection)
 

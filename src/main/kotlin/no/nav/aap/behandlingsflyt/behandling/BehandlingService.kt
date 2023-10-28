@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling
 
-import no.nav.aap.behandlingsflyt.dbstuff.DbConnection
+import no.nav.aap.behandlingsflyt.dbstuff.DBConnection
 
-class BehandlingService(connection: DbConnection) {
+class BehandlingService(connection: DBConnection) {
 
     private val behandlingRepository = BehandlingRepository
 

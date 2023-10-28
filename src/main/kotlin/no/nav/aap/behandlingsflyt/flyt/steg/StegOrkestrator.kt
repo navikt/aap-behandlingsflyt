@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt.steg
 
-import no.nav.aap.behandlingsflyt.dbstuff.DbConnection
+import no.nav.aap.behandlingsflyt.dbstuff.DBConnection
 import no.nav.aap.behandlingsflyt.behandling.Behandling
 import no.nav.aap.behandlingsflyt.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory
 
 private val log = LoggerFactory.getLogger(StegOrkestrator::class.java)
 
-class StegOrkestrator(private val transaksjonsconnection: DbConnection, private val aktivtSteg: FlytSteg) {
+class StegOrkestrator(private val transaksjonsconnection: DBConnection, private val aktivtSteg: FlytSteg) {
 
     fun utfør(
         kontekst: FlytKontekst,

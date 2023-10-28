@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag
 
 import no.nav.aap.behandlingsflyt.Periode
 import no.nav.aap.behandlingsflyt.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.dbstuff.DbConnection
+import no.nav.aap.behandlingsflyt.dbstuff.DBConnection
 import no.nav.aap.behandlingsflyt.dbstuff.InitTestDatabase
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.PersonRegisterMock
@@ -23,7 +23,7 @@ class FaktagrunnlagTest {
     companion object {
         val dataSource = InitTestDatabase.dataSource
     }
-    private val dbConnection = DbConnection(dataSource.connection)
+    private val dbConnection = DBConnection(dataSource.connection)
     val ident = Ident("123123123123")
     val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     val sak =
