@@ -55,7 +55,7 @@ class OppgaveRepository(private val connection: DBConnection) {
             setRowMapper {
                 OppgaveInput(OppgaveType.parse(it.getString("type")))
                     .medId(it.getLong("id"))
-                    .forBehandling(it.getLong("sak_id"), it.getLong("behandling_id"))
+                    .forBehandling(it.getLongOrNull("sak_id"), it.getLongOrNull("behandling_id"))
             }
         }
 
