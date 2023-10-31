@@ -20,10 +20,10 @@ internal object InitTestDatabase {
             password = postgres.password
             maximumPoolSize = 3
             minimumIdle = 1
-            initializationFailTimeout = 5000
-            idleTimeout = 10001
-            connectionTimeout = 1000
-            maxLifetime = 30001
+            initializationFailTimeout = 30000
+            idleTimeout = 10000
+            connectionTimeout = 30000
+            maxLifetime = 30000
         })
 
         Flyway
