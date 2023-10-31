@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.sak
 import no.nav.aap.behandlingsflyt.Periode
 import no.nav.aap.behandlingsflyt.dbstuff.DBConnection
 import no.nav.aap.behandlingsflyt.dbstuff.Row
-import java.util.*
 
 class SakRepository(private val connection: DBConnection) {
 
@@ -31,22 +30,13 @@ class SakRepository(private val connection: DBConnection) {
         }
     }
 
-    private fun genererSaksnummer(id: Long): Saksnummer {
-        return Saksnummer(
-            (id * 1000).toString(36)
-                .uppercase(Locale.getDefault())
-                .replace("O", "o")
-                .replace("I", "i")
-        )
-    }
-
     private fun opprett(person: Person, periode: Periode): Sak {
         val sakId = connection.queryFirst("SELECT nextval('SEQ_SAKSNUMMER') as nextval") {
             setRowMapper { row ->
                 row.getLong("nextval")
             }
         }
-        val saksnummer = genererSaksnummer(sakId)
+        val saksnummer = Saksnummer.valueOf(sakId)
         val keys = connection.executeReturnKeys(
             "INSERT INTO " +
                     "SAK (saksnummer, person_id, rettighetsperiode, status) " +
@@ -101,14 +91,6 @@ class SakRepository(private val connection: DBConnection) {
         }
     }
 
-    private fun mapSak(row: Row) = Sak(
-        id = row.getLong("id"),
-        person = personRepository.hent(row.getLong("person_id")),
-        rettighetsperiode = row.getPeriode("rettighetsperiode"),
-        saksnummer = Saksnummer(row.getString("saksnummer")),
-        status = Status.valueOf(row.getString("status"))
-    )
-
     fun finnAlle(): List<Sak> {
         return connection.queryList(
             "SELECT id, saksnummer, person_id, rettighetsperiode, status " +
@@ -119,4 +101,12 @@ class SakRepository(private val connection: DBConnection) {
             }
         }
     }
+
+    private fun mapSak(row: Row) = Sak(
+        id = row.getLong("id"),
+        person = personRepository.hent(row.getLong("person_id")),
+        rettighetsperiode = row.getPeriode("rettighetsperiode"),
+        saksnummer = Saksnummer(row.getString("saksnummer")),
+        status = Status.valueOf(row.getString("status"))
+    )
 }

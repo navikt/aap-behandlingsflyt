@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.sak
 
+import java.util.*
+
 class Saksnummer(private val identifikator: String) {
 
     override fun toString(): String {
@@ -17,5 +19,20 @@ class Saksnummer(private val identifikator: String) {
 
     override fun hashCode(): Int {
         return identifikator.hashCode()
+    }
+
+    companion object {
+
+        /**
+         * Gjør saksnummer "human readable"
+         */
+        fun valueOf(id: Long): Saksnummer {
+            return Saksnummer(
+                (id * 1000).toString(36)
+                    .uppercase(Locale.getDefault())
+                    .replace("O", "o")
+                    .replace("I", "i")
+            )
+        }
     }
 }
