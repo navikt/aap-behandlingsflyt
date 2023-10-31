@@ -8,10 +8,10 @@ class SakRepository(private val connection: DBConnection) {
 
     private val personRepository = PersonRepository(connection)
 
-    fun hent(sakId: Long): Sak {
+    fun hent(sakId: SakId): Sak {
         return connection.queryFirst("SELECT id, saksnummer, person_id, rettighetsperiode, status FROM SAK WHERE id = ?") {
             setParams {
-                setLong(1, sakId)
+                setLong(1, sakId.toLong())
             }
             setRowMapper { row ->
                 mapSak(row)
