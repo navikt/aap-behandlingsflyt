@@ -45,6 +45,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.vedtak.flate.fatteVedtakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.YrkesskadeRegisterMock
 import no.nav.aap.behandlingsflyt.behandling.flate.avklaringsbehov.avklaringsbehovApi
 import no.nav.aap.behandlingsflyt.behandling.flate.behandlingApi
+import no.nav.aap.behandlingsflyt.flyt.flate.flytApi
 import no.nav.aap.behandlingsflyt.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.hendelse.mottak.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HendelsesMottak
@@ -114,6 +115,7 @@ internal fun Application.server(dbConfig: DbConfig) {
         configApi()
         saksApi(dataSource)
         behandlingApi(dataSource)
+        flytApi(dataSource)
         fatteVedtakGrunnlagApi(dataSource)
         bistandsgrunnlagApi(dataSource)
         meldepliktsgrunnlagApi(dataSource)

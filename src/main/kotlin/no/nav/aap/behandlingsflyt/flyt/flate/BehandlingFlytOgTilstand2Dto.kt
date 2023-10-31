@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.behandling.flate
+package no.nav.aap.behandlingsflyt.flyt.flate
 
 import no.nav.aap.behandlingsflyt.flyt.steg.StegGruppe
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
