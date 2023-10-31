@@ -4,19 +4,16 @@ import no.nav.aap.behandlingsflyt.dbstuff.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlag
 import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sak.SakService
-import no.nav.aap.behandlingsflyt.sak.PersonRepository
 
 class YrkesskadeService : Grunnlag {
 
     override fun oppdater(transaksjonsconnection: DBConnection, kontekst: FlytKontekst): Boolean {
         val sakService = SakService(transaksjonsconnection)
+
         val sak = sakService.hent(kontekst.sakId)
-        //TODO: Trenger ikke PersonRepository når vi finner identer via sak
-        val person = PersonRepository(transaksjonsconnection).hent(sak.person.identifikator)
+        val yrkesskadePeriode = YrkesskadeRegisterMock.innhent(sak.person.identer(), sak.rettighetsperiode)
+
         val behandlingId = kontekst.behandlingId
-
-        val yrkesskadePeriode = YrkesskadeRegisterMock.innhent(person.identer(), sak.rettighetsperiode)
-
         val gamleData = YrkesskadeRepository.hentHvisEksisterer(behandlingId)
 
         if (yrkesskadePeriode.isNotEmpty()) {
