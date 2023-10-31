@@ -11,12 +11,11 @@ import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
 
 class Motor(
-    private val dataSource: DataSource
+    private val dataSource: DataSource,
+    private val workers: Int = 5
 ) {
 
     private val log = LoggerFactory.getLogger(Motor::class.java)
-
-    private val workers = 5
 
     private val executor = Executors.newScheduledThreadPool(workers) as ScheduledThreadPoolExecutor
 

@@ -40,8 +40,8 @@ import no.nav.aap.behandlingsflyt.sak.Ident
 import no.nav.aap.behandlingsflyt.sak.Person
 import no.nav.aap.behandlingsflyt.sak.PersonRepository
 import no.nav.aap.behandlingsflyt.sak.Sak
-import no.nav.aap.behandlingsflyt.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sak.SakId
+import no.nav.aap.behandlingsflyt.sak.SakRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -52,7 +52,7 @@ class FlytOrkestratorTest {
 
     companion object {
         val dataSource = InitTestDatabase.dataSource
-        val motor = Motor(dataSource)
+        val motor = Motor(dataSource, 1)
 
         @BeforeAll
         @JvmStatic
