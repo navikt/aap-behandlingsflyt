@@ -27,5 +27,9 @@ class OppgaveRepositoryTest {
 
         assertThat(plukketOppgave).isNotNull
         assertThat(plukketOppgave?.id).isEqualTo(1)
+
+        dataSource.transaction {
+            it.execute("TRUNCATE TABLE OPPGAVE cascade")
+        }
     }
 }
