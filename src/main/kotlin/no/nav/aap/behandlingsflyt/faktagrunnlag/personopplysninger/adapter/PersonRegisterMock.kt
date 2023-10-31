@@ -1,5 +1,6 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger
+package no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.adapter
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Personinfo
 import no.nav.aap.behandlingsflyt.sak.Ident
 
 object PersonRegisterMock {

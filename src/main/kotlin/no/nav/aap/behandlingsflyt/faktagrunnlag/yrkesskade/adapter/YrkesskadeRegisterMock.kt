@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade
+package no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.adapter
 
 import no.nav.aap.behandlingsflyt.sak.Ident
 import no.nav.aap.behandlingsflyt.Periode
