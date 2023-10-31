@@ -41,6 +41,7 @@ import no.nav.aap.behandlingsflyt.sak.Person
 import no.nav.aap.behandlingsflyt.sak.PersonRepository
 import no.nav.aap.behandlingsflyt.sak.Sak
 import no.nav.aap.behandlingsflyt.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sak.SakId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -199,7 +200,7 @@ class FlytOrkestratorTest {
         }
     }
 
-    private fun hentBehandling(sakId: Long): Behandling {
+    private fun hentBehandling(sakId: SakId): Behandling {
         return dataSource.transaction { connection ->
             val finnSisteBehandlingFor = BehandlingRepository(connection).finnSisteBehandlingFor(sakId)
             requireNotNull(finnSisteBehandlingFor)

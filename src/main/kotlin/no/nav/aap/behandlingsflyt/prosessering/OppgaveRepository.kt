@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.dbstuff.DBConnection
+import no.nav.aap.behandlingsflyt.sak.SakId
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
@@ -15,7 +16,7 @@ class OppgaveRepository(private val connection: DBConnection) {
 
         val oppgaveId = connection.executeReturnKey(oppgave) {
             setParams {
-                setLong(1, oppgaveInput.sakIdOrNull())
+                setLong(1, oppgaveInput.sakIdOrNull()?.toLong())
                 setLong(2, oppgaveInput.behandlingIdOrNull())
                 setString(3, oppgaveInput.type())
                 setLocalDateTime(4, LocalDateTime.now())
@@ -55,7 +56,9 @@ class OppgaveRepository(private val connection: DBConnection) {
             setRowMapper {
                 OppgaveInput(OppgaveType.parse(it.getString("type")))
                     .medId(it.getLong("id"))
-                    .forBehandling(it.getLongOrNull("sak_id"), it.getLongOrNull("behandling_id"))
+                    .forBehandling(
+                        it.getLongOrNull("sak_id")?.let { SakId(it) },
+                        it.getLongOrNull("behandling_id"))
             }
         }
 

@@ -8,13 +8,14 @@ import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.flyt.steg.StegStatus
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 import no.nav.aap.behandlingsflyt.flyt.steg.Tilstand
+import no.nav.aap.behandlingsflyt.sak.SakId
 import java.time.LocalDateTime
 import java.util.*
 
 class Behandling(
     val id: Long,
     val referanse: UUID = UUID.randomUUID(),
-    val sakId: Long,
+    val sakId: SakId,
     val type: BehandlingType,
     private var status: Status = Status.OPPRETTET,
     private var årsaker: List<Årsak> = mutableListOf(),

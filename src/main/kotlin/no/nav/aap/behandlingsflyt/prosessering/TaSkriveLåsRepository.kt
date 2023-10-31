@@ -1,15 +1,16 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.dbstuff.DBConnection
+import no.nav.aap.behandlingsflyt.sak.SakId
 
 class TaSkriveLåsRepository(private val connection: DBConnection) {
 
-    fun låsSak(sakId: Long): SakSkrivelås {
+    fun låsSak(sakId: SakId): SakSkrivelås {
         val query = """SELECT versjon FROM SAK WHERE ID = ? FOR UPDATE"""
 
         return connection.queryFirst(query) {
             setParams {
-                setLong(1, sakId)
+                setLong(1, sakId.toLong())
             }
             setRowMapper {
                 SakSkrivelås(sakId, it.getLong("versjon"))
@@ -17,10 +18,10 @@ class TaSkriveLåsRepository(private val connection: DBConnection) {
         }
     }
 
-    fun lås(sakId: Long, behandlingId: Long): Skrivelås {
+    fun lås(sakId: SakId, behandlingId: Long): Skrivelås {
         val behandling = låsBehandling(behandlingId)
-        val sak = låsSak(sakId)
-        return Skrivelås(sak, behandling)
+        val sakSkrivelås = låsSak(sakId)
+        return Skrivelås(sakSkrivelås, behandling)
     }
 
     fun låsBehandling(behandlingId: Long): BehandlingSkrivelås {
@@ -42,7 +43,7 @@ class TaSkriveLåsRepository(private val connection: DBConnection) {
         return connection.execute(query) {
             setParams {
                 setLong(1, skrivelås.versjon + 1)
-                setLong(2, skrivelås.id)
+                setLong(2, skrivelås.id.toLong())
                 setLong(3, skrivelås.versjon)
             }
             setResultValidator {

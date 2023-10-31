@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.sak
 import no.nav.aap.behandlingsflyt.Periode
 
 class Sak(
-    val id: Long,
+    val id: SakId,
     val saksnummer: Saksnummer,
     val person: Person,
     val rettighetsperiode: Periode,

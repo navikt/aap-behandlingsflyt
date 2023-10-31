@@ -49,7 +49,7 @@ class SakRepository(private val connection: DBConnection) {
                 setString(4, Status.OPPRETTET.name)
             }
         }
-        return Sak(keys, saksnummer, person, periode)
+        return Sak(SakId(keys), saksnummer, person, periode)
     }
 
     fun finnEllerOpprett(person: Person, periode: Periode): Sak {
@@ -103,7 +103,7 @@ class SakRepository(private val connection: DBConnection) {
     }
 
     private fun mapSak(row: Row) = Sak(
-        id = row.getLong("id"),
+        id = SakId(row.getLong("id")),
         person = personRepository.hent(row.getLong("person_id")),
         rettighetsperiode = row.getPeriode("rettighetsperiode"),
         saksnummer = Saksnummer(row.getString("saksnummer")),

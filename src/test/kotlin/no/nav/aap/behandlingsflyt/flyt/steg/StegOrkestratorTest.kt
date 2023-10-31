@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.flyt.behandlingstyper.Førstegangsbehandling
 import no.nav.aap.behandlingsflyt.sak.Ident
 import no.nav.aap.behandlingsflyt.sak.PersonRepository
 import no.nav.aap.behandlingsflyt.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sak.SakId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -29,7 +30,7 @@ class StegOrkestratorTest {
             val behandling = BehandlingRepository(connection).opprettBehandling(sak.id, listOf())
             assertThat(behandling.type).isEqualTo(Førstegangsbehandling)
 
-            val kontekst = FlytKontekst(1L, behandling.id)
+            val kontekst = FlytKontekst(SakId(1L), behandling.id)
 
             val resultat = StegOrkestrator(connection, TestFlytSteg).utfør(kontekst, behandling)
 

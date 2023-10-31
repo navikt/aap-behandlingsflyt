@@ -6,7 +6,7 @@ class SakService(connection: DBConnection) {
 
     private val sakRepository = SakRepository(connection)
 
-    fun hent(sakId: Long): Sak {
+    fun hent(sakId: SakId): Sak {
         return sakRepository.hent(sakId)
     }
     fun hent(saksnummer: Saksnummer): Sak {

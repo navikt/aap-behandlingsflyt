@@ -9,13 +9,14 @@ import no.nav.aap.behandlingsflyt.flyt.behandlingstyper.Revurdering
 import no.nav.aap.behandlingsflyt.flyt.steg.StegStatus
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 import no.nav.aap.behandlingsflyt.flyt.steg.Tilstand
+import no.nav.aap.behandlingsflyt.sak.SakId
 import java.util.*
 
 class BehandlingRepository(private val connection: DBConnection) {
 
     private val avklaringsbehovRepository = AvklaringsbehovRepository(connection)
 
-    fun opprettBehandling(sakId: Long, årsaker: List<Årsak>): Behandling {
+    fun opprettBehandling(sakId: SakId, årsaker: List<Årsak>): Behandling {
         val sisteBehandlingFor = finnSisteBehandlingFor(sakId)
         val erSisteBehandlingAvsluttet = sisteBehandlingFor?.status()?.erAvsluttet() ?: true
 
@@ -32,7 +33,7 @@ class BehandlingRepository(private val connection: DBConnection) {
             """.trimIndent()
         val behandlingId = connection.executeReturnKey(query) {
             setParams {
-                setLong(1, sakId)
+                setLong(1, sakId.toLong())
                 setUUID(2, referanse)
                 setString(3, Status.OPPRETTET.name)
                 setString(4, behandlingType.identifikator())
@@ -53,14 +54,14 @@ class BehandlingRepository(private val connection: DBConnection) {
         return behandling
     }
 
-    fun finnSisteBehandlingFor(sakId: Long): Behandling? {
+    fun finnSisteBehandlingFor(sakId: SakId): Behandling? {
         val query = """
             SELECT * FROM BEHANDLING WHERE sak_id = ? ORDER BY opprettet_tid DESC LIMIT 1
             """.trimIndent()
 
         return connection.queryFirstOrNull(query) {
             setParams {
-                setLong(1, sakId)
+                setLong(1, sakId.toLong())
             }
             setRowMapper {
                 mapBehandling(it)
@@ -73,7 +74,7 @@ class BehandlingRepository(private val connection: DBConnection) {
         return Behandling(
             id = behandlingId,
             referanse = it.getUUID("referanse"),
-            sakId = it.getLong("sak_id"),
+            sakId = SakId(it.getLong("sak_id")),
             type = utledType(it.getString("type")),
             status = Status.valueOf(it.getString("status")),
             avklaringsbehovene = avklaringsbehovRepository.hent(behandlingId),
@@ -110,14 +111,14 @@ class BehandlingRepository(private val connection: DBConnection) {
         return Førstegangsbehandling
     }
 
-    fun hentAlleFor(sakId: Long): List<Behandling> {
+    fun hentAlleFor(sakId: SakId): List<Behandling> {
         val query = """
             SELECT * FROM BEHANDLING WHERE sak_id = ? ORDER BY opprettet_tid DESC
             """.trimIndent()
 
         return connection.queryList(query) {
             setParams {
-                setLong(1, sakId)
+                setLong(1, sakId.toLong())
             }
             setRowMapper {
                 mapBehandling(it)

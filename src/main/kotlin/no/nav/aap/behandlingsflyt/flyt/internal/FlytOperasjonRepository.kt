@@ -4,18 +4,19 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.dbstuff.DBConnection
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 import no.nav.aap.behandlingsflyt.flyt.steg.Tilstand
+import no.nav.aap.behandlingsflyt.sak.SakId
 import no.nav.aap.behandlingsflyt.sak.Status
 import java.time.LocalDateTime
 
 class FlytOperasjonRepository(private val connection: DBConnection) {
 
-    fun oppdaterSakStatus(sakId: Long, status: Status) {
+    fun oppdaterSakStatus(sakId: SakId, status: Status) {
         val query = """UPDATE sak SET status = ? WHERE ID = ?"""
 
         return connection.execute(query) {
             setParams {
                 setString(1, status.name)
-                setLong(2, sakId)
+                setLong(2, sakId.toLong())
             }
             setResultValidator {
                 require(it == 1)
