@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.flate.behandling
+package no.nav.aap.behandlingsflyt.behandling.flate
 
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårtype
 

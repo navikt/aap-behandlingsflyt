@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.ElementNotFoundException
 import no.nav.aap.behandlingsflyt.behandling.Behandling
 import no.nav.aap.behandlingsflyt.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.dbstuff.DBConnection
-import no.nav.aap.behandlingsflyt.flate.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.behandling.flate.BehandlingReferanse
 import java.util.*
 
 class BehandlingReferanseService(val connection: DBConnection) {

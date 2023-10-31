@@ -10,7 +10,7 @@ import no.nav.aap.behandlingsflyt.dbstuff.transaction
 import no.nav.aap.behandlingsflyt.faktagrunnlag.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykdomsRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.YrkesskadeRepository
-import no.nav.aap.behandlingsflyt.flate.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.behandling.flate.BehandlingReferanse
 
 fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: HikariDataSource) {
     route("/api/behandling") {

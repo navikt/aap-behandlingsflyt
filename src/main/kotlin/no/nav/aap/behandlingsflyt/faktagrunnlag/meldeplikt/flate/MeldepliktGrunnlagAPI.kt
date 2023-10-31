@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.behandling.Behandling
 import no.nav.aap.behandlingsflyt.dbstuff.transaction
 import no.nav.aap.behandlingsflyt.faktagrunnlag.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.meldeplikt.MeldepliktRepository
-import no.nav.aap.behandlingsflyt.flate.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.behandling.flate.BehandlingReferanse
 
 fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(dataSource: HikariDataSource) {
     route("/api/behandling") {

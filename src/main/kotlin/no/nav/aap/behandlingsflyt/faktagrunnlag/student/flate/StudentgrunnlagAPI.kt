@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.behandling.Behandling
 import no.nav.aap.behandlingsflyt.dbstuff.transaction
 import no.nav.aap.behandlingsflyt.faktagrunnlag.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.student.db.InMemoryStudentRepository
-import no.nav.aap.behandlingsflyt.flate.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.behandling.flate.BehandlingReferanse
 
 fun NormalOpenAPIRoute.studentgrunnlagApi(dataSource: HikariDataSource) {
     route("/api/behandling") {

@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.dbstuff.transaction
 import no.nav.aap.behandlingsflyt.faktagrunnlag.BehandlingReferanseService
-import no.nav.aap.behandlingsflyt.flate.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.behandling.flate.BehandlingReferanse
 
 fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(dataSource: HikariDataSource) {
     route("/api/behandling") {

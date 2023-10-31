@@ -43,8 +43,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.student.flate.studentgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.flate.sykdomsgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.vedtak.flate.fatteVedtakGrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.YrkesskadeRegisterMock
-import no.nav.aap.behandlingsflyt.flate.behandling.avklaringsbehov.avklaringsbehovApi
-import no.nav.aap.behandlingsflyt.flate.behandling.behandlingApi
+import no.nav.aap.behandlingsflyt.behandling.flate.avklaringsbehov.avklaringsbehovApi
+import no.nav.aap.behandlingsflyt.behandling.flate.behandlingApi
 import no.nav.aap.behandlingsflyt.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.hendelse.mottak.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HendelsesMottak

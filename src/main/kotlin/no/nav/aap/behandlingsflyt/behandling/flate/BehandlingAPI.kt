@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.flate.behandling
+package no.nav.aap.behandlingsflyt.behandling.flate
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
