@@ -18,10 +18,10 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource) {
     route("/api/behandling") {
         route("/løs-behov").throws(HttpStatusCode.BadRequest, IllegalArgumentException::class) {
             post<Unit, LøsAvklaringsbehovPåBehandling, LøsAvklaringsbehovPåBehandling> { _, request ->
-                dataSource.transaction {
-                    val behandling = BehandlingRepository(it).hent(request.referanse)
-                    val taSkriveLåsRepository = TaSkriveLåsRepository(it)
-                    val lås = taSkriveLåsRepository.lås(behandlingId = behandling.id, sakId = behandling.sakId)
+                dataSource.transaction { connection ->
+                    val taSkriveLåsRepository = TaSkriveLåsRepository(connection)
+                    val lås = taSkriveLåsRepository.lås(request.referanse)
+                    val behandling = BehandlingRepository(connection).hent(lås.behandlingSkrivelås.id)
 
                     ValiderBehandlingTilstand.validerTilstandBehandling(
                         behandling,

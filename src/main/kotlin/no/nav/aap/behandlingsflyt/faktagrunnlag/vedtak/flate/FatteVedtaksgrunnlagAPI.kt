@@ -20,8 +20,10 @@ fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(dataSource: HikariDataSource) {
                 val behandling: Behandling = dataSource.transaction {
                     BehandlingReferanseService(it).behandling(req)
                 }
-                respond(FatteVedtakGrunnlagDto(behandling.avklaringsbehov().filter { it.erTotrinn() }
-                    .map { tilTotrinnsVurdering(it) }))
+                respond(FatteVedtakGrunnlagDto(behandling.avklaringsbehov()
+                    .filter { it.erTotrinn() }
+                    .map { tilTotrinnsVurdering(it) })
+                )
             }
         }
     }

@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 import no.nav.aap.behandlingsflyt.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.dbstuff.DBConnection
 import no.nav.aap.behandlingsflyt.sak.SakId
+import java.util.*
 
 class TaSkriveLåsRepository(private val connection: DBConnection) {
 
@@ -23,6 +24,19 @@ class TaSkriveLåsRepository(private val connection: DBConnection) {
         val behandling = låsBehandling(behandlingId)
         val sakSkrivelås = låsSak(sakId)
         return Skrivelås(sakSkrivelås, behandling)
+    }
+
+    fun lås(behandlingUUid: UUID): Skrivelås {
+        val query = """SELECT id, sak_id, versjon FROM BEHANDLING WHERE referanse = ? FOR UPDATE"""
+
+        return connection.queryFirst(query) {
+            setParams {
+                setUUID(1, behandlingUUid)
+            }
+            setRowMapper {
+                Skrivelås(låsSak(SakId(it.getLong("sak_id"))), BehandlingSkrivelås(BehandlingId(it.getLong("id")), it.getLong("versjon")))
+            }
+        }
     }
 
     fun låsBehandling(behandlingId: BehandlingId): BehandlingSkrivelås {
