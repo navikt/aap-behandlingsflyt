@@ -5,10 +5,10 @@ import no.nav.aap.behandlingsflyt.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.dbstuff.DBConnection
 import no.nav.aap.behandlingsflyt.dbstuff.InitTestDatabase
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.adapter.PersonRegisterMock
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Personinfo
-import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.adapter.YrkesskadeRegisterMock
+import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.adapter.PersonRegisterMock
 import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.YrkesskadeService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.adapter.YrkesskadeRegisterMock
 import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sak.Ident
 import no.nav.aap.behandlingsflyt.sak.PersonRepository
@@ -24,7 +24,7 @@ class FaktagrunnlagTest {
         val dataSource = InitTestDatabase.dataSource
     }
     private val dbConnection = DBConnection(dataSource.connection)
-    val ident = Ident("123123123123")
+    val ident = Ident("123123123124")
     val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     val sak =
         SakRepository(dbConnection).finnEllerOpprett(PersonRepository(dbConnection).finnEllerOpprett(ident), periode)
