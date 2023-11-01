@@ -9,19 +9,18 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.Behandling
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Status
+import no.nav.aap.behandlingsflyt.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.dbstuff.transaction
 import no.nav.aap.behandlingsflyt.faktagrunnlag.BehandlingReferanseService
-import no.nav.aap.behandlingsflyt.behandling.flate.BehandlingReferanse
 
 fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(dataSource: HikariDataSource) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/fatte-vedtak") {
             get<BehandlingReferanse, FatteVedtakGrunnlagDto> { req ->
-                var behandling: Behandling? = null
-                dataSource.transaction {
-                    behandling = BehandlingReferanseService(it).behandling(req)
+                val behandling: Behandling = dataSource.transaction {
+                    BehandlingReferanseService(it).behandling(req)
                 }
-                respond(FatteVedtakGrunnlagDto(behandling!!.avklaringsbehov().filter { it.erTotrinn() }
+                respond(FatteVedtakGrunnlagDto(behandling.avklaringsbehov().filter { it.erTotrinn() }
                     .map { tilTotrinnsVurdering(it) }))
             }
         }

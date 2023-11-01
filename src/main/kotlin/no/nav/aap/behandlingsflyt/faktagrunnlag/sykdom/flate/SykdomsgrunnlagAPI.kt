@@ -6,23 +6,22 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import com.zaxxer.hikari.HikariDataSource
 import no.nav.aap.behandlingsflyt.behandling.Behandling
+import no.nav.aap.behandlingsflyt.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.dbstuff.transaction
 import no.nav.aap.behandlingsflyt.faktagrunnlag.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykdomsRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.YrkesskadeRepository
-import no.nav.aap.behandlingsflyt.behandling.flate.BehandlingReferanse
 
 fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: HikariDataSource) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/sykdom/sykdom") {
             get<BehandlingReferanse, SykdomsGrunnlagDto> { req ->
-                var behandling: Behandling? = null
-                dataSource.transaction {
-                    behandling = BehandlingReferanseService(it).behandling(req)
+                val behandling: Behandling = dataSource.transaction {
+                    BehandlingReferanseService(it).behandling(req)
                 }
 
-                val yrkesskadeGrunnlag = YrkesskadeRepository.hentHvisEksisterer(behandlingId = behandling!!.id)
-                val sykdomsGrunnlag = SykdomsRepository.hentHvisEksisterer(behandlingId = behandling!!.id)
+                val yrkesskadeGrunnlag = YrkesskadeRepository.hentHvisEksisterer(behandlingId = behandling.id)
+                val sykdomsGrunnlag = SykdomsRepository.hentHvisEksisterer(behandlingId = behandling.id)
 
                 respond(
                     SykdomsGrunnlagDto(
@@ -44,13 +43,12 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: HikariDataSource) {
         }
         route("/{referanse}/grunnlag/sykdom/yrkesskade") {
             get<BehandlingReferanse, YrkesskadeGrunnlagDto> { req ->
-                var behandling: Behandling? = null
-                dataSource.transaction {
-                    behandling = BehandlingReferanseService(it).behandling(req)
+                val behandling: Behandling = dataSource.transaction {
+                    BehandlingReferanseService(it).behandling(req)
                 }
 
-                val yrkesskadeGrunnlag = YrkesskadeRepository.hentHvisEksisterer(behandlingId = behandling!!.id)
-                val sykdomsGrunnlag = SykdomsRepository.hentHvisEksisterer(behandlingId = behandling!!.id)
+                val yrkesskadeGrunnlag = YrkesskadeRepository.hentHvisEksisterer(behandlingId = behandling.id)
+                val sykdomsGrunnlag = SykdomsRepository.hentHvisEksisterer(behandlingId = behandling.id)
 
                 respond(
                     YrkesskadeGrunnlagDto(

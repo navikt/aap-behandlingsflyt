@@ -26,25 +26,23 @@ import javax.sql.DataSource
 class HendelsesMottak(private val dataSource: DataSource) {
 
     fun håndtere(key: Ident, hendelse: PersonHendelse) {
-        var sak: Sak? = null
-        dataSource.transaction { connection ->
+        val sak: Sak = dataSource.transaction { connection ->
             val person = PersonRepository(connection).finnEllerOpprett(key)
 
-            sak = SakRepository(connection).finnEllerOpprett(person, hendelse.periode())
+            SakRepository(connection).finnEllerOpprett(person, hendelse.periode())
 
             // Legg til kø for sak, men mocker ved å kalle videre bare
         }
-        håndtere(sak!!.saksnummer, hendelse.tilSakshendelse())
+        håndtere(sak.saksnummer, hendelse.tilSakshendelse())
     }
 
     fun håndtere(key: Saksnummer, hendelse: SakHendelse) {
-        var sisteBehandling: Behandling? = null
-        dataSource.transaction { connection ->
+        val sisteBehandling: Behandling = dataSource.transaction { connection ->
             val sak = SakRepository(connection).hent(key)
             val behandlingRepository = BehandlingRepository(connection)
             val sisteBehandlingOpt = behandlingRepository.finnSisteBehandlingFor(sak.id)
 
-            sisteBehandling = if (sisteBehandlingOpt != null && !sisteBehandlingOpt.status().erAvsluttet()) {
+            if (sisteBehandlingOpt != null && !sisteBehandlingOpt.status().erAvsluttet()) {
                 sisteBehandlingOpt
             } else {
                 // Har ikke behandling så oppretter en
@@ -54,7 +52,7 @@ class HendelsesMottak(private val dataSource: DataSource) {
                 ) // TODO: Reeltsett oppdatere denne
             }
         }
-        håndtere(key = sisteBehandling!!.id, hendelse.tilBehandlingHendelse())
+        håndtere(key = sisteBehandling.id, hendelse.tilBehandlingHendelse())
     }
 
     fun håndtere(key: BehandlingId, hendelse: LøsAvklaringsbehovBehandlingHendelse) {

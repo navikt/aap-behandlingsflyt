@@ -63,9 +63,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: HikariDataSource) {
 }
 
 private fun behandling(dataSource: HikariDataSource, req: BehandlingReferanse): Behandling {
-    var behandling: Behandling? = null
-    dataSource.transaction {
-        behandling = BehandlingReferanseService(it).behandling(req)
+    return dataSource.transaction {
+        BehandlingReferanseService(it).behandling(req)
     }
-    return behandling!!
 }
