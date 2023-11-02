@@ -4,7 +4,6 @@ import kotlinx.coroutines.Runnable
 import no.nav.aap.behandlingsflyt.dbstuff.DBConnection
 import no.nav.aap.behandlingsflyt.dbstuff.transaction
 import org.slf4j.LoggerFactory
-import java.time.LocalDateTime
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.TimeUnit
@@ -40,8 +39,6 @@ class Motor(
     inner class OppgaveWorker(private val dataSource: DataSource) : Runnable {
         private val log = LoggerFactory.getLogger(OppgaveWorker::class.java)
 
-        private var lastTaskPolled: LocalDateTime? = null
-        private var lastTaskPolledLogged: LocalDateTime? = LocalDateTime.now()
         private var running = true
         override fun run() {
             try {
@@ -51,19 +48,12 @@ class Motor(
                         val gruppe = repository.plukkOppgave()
                         if (gruppe != null) {
                             utførOppgave(gruppe, it)
-                            lastTaskPolled = LocalDateTime.now()
                         }
 
                         if (running && gruppe == null) {
                             running = false
                         }
                     }
-                }
-                if (lastTaskPolled?.isBefore(LocalDateTime.now().minusMinutes(10)) == true
-                    && lastTaskPolledLogged?.isBefore(LocalDateTime.now().minusMinutes(10)) == true
-                ) {
-                    log.info("Ikke nye plukket oppgaver siden {}", lastTaskPolled)
-                    lastTaskPolledLogged = LocalDateTime.now()
                 }
             } catch (excetion: Throwable) {
                 log.warn("Feil under plukking av oppgaver", excetion)
