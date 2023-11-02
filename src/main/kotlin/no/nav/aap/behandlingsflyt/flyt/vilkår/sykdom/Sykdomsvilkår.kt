@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.flyt.vilkår.sykdom
 import no.nav.aap.behandlingsflyt.Periode
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Avslagsårsak
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Innvilgelsesårsak
-import no.nav.aap.behandlingsflyt.flyt.vilkår.TomtBeslutningstre
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Utfall
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkår
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårsperiode
@@ -51,8 +50,7 @@ class Sykdomsvilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<Sykd
             VurderingsResultat(
                 utfall = utfall,
                 avslagsårsak = avslagsårsak,
-                innvilgelsesårsak = innvilgelsesårsak,
-                beslutningstre = TomtBeslutningstre()
+                innvilgelsesårsak = innvilgelsesårsak
             )
         )
     }
@@ -67,7 +65,7 @@ class Sykdomsvilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<Sykd
                 vurderingsResultat.innvilgelsesårsak,
                 vurderingsResultat.avslagsårsak,
                 grunnlag,
-                vurderingsResultat.beslutningstre
+                vurderingsResultat.versjon()
             )
         )
 

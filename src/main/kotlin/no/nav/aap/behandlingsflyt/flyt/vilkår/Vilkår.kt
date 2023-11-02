@@ -28,7 +28,7 @@ class Vilkår(
                         vp.innvilgelsesårsak,
                         vp.avslagsårsak,
                         vp.faktagrunnlag,
-                        vp.beslutningstre
+                        vp.versjon
                     )
                 }
 

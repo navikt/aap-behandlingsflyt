@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.flyt.vilkår.bistand
 import no.nav.aap.behandlingsflyt.Periode
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Avslagsårsak
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Innvilgelsesårsak
-import no.nav.aap.behandlingsflyt.flyt.vilkår.TomtBeslutningstre
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Utfall
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkår
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårsperiode
@@ -38,7 +37,6 @@ class Bistandsvilkåret(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<B
             grunnlag, VurderingsResultat(
                 utfall = utfall,
                 avslagsårsak = avslagsårsak,
-                beslutningstre = TomtBeslutningstre(),
                 innvilgelsesårsak = innvilgelsesårsak
             )
         )
@@ -54,7 +52,7 @@ class Bistandsvilkåret(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<B
                 vurderingsResultat.innvilgelsesårsak,
                 vurderingsResultat.avslagsårsak,
                 grunnlag,
-                vurderingsResultat.beslutningstre
+                vurderingsResultat.versjon()
             )
         )
 

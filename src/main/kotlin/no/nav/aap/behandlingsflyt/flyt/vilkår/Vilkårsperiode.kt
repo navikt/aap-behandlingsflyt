@@ -10,7 +10,7 @@ class Vilkårsperiode(
     val innvilgelsesårsak: Innvilgelsesårsak? = null,
     val avslagsårsak: Avslagsårsak? = null,
     internal val faktagrunnlag: Faktagrunnlag?,
-    internal val beslutningstre: Beslutningstre?
+    internal val versjon: String
 ) {
     constructor(
         periode: Periode,
@@ -28,7 +28,7 @@ class Vilkårsperiode(
         innvilgelsesårsak,
         avslagsårsak,
         faktagrunnlag,
-        TomtBeslutningstre()
+        ApplikasjonsVersjon.versjon
     )
 
     init {
@@ -54,7 +54,6 @@ class Vilkårsperiode(
         if (periode != other.periode) return false
         if (utfall != other.utfall) return false
         if (faktagrunnlag != other.faktagrunnlag) return false
-        if (beslutningstre != other.beslutningstre) return false
 
         return true
     }
@@ -63,7 +62,6 @@ class Vilkårsperiode(
         var result = periode.hashCode()
         result = 31 * result + utfall.hashCode()
         result = 31 * result + faktagrunnlag.hashCode()
-        result = 31 * result + beslutningstre.hashCode()
         return result
     }
 

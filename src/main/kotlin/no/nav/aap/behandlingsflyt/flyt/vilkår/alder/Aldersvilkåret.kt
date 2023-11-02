@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt.vilkår.alder
 
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Avslagsårsak
-import no.nav.aap.behandlingsflyt.flyt.vilkår.TomtBeslutningstre
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Utfall
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkår
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårsperiode
@@ -38,7 +37,6 @@ class Aldersvilkåret(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<Ald
             grunnlag, VurderingsResultat(
                 utfall = utfall,
                 avslagsårsak = avslagsårsak,
-                beslutningstre = TomtBeslutningstre(),
                 innvilgelsesårsak = null
             )
         )
@@ -52,7 +50,7 @@ class Aldersvilkåret(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<Ald
                 avslagsårsak = vurderingsResultat.avslagsårsak,
                 begrunnelse = null,
                 faktagrunnlag = grunnlag,
-                beslutningstre = vurderingsResultat.beslutningstre
+                versjon = vurderingsResultat.versjon()
             )
         )
 

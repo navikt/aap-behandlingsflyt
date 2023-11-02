@@ -22,9 +22,9 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource) {
                     val behandling = BehandlingRepository(connection).hent(lås.behandlingSkrivelås.id)
 
                     ValiderBehandlingTilstand.validerTilstandBehandling(
-                        behandling,
-                        listOf(request.behov.definisjon()),
-                        request.behandlingVersjon
+                        behandling = behandling,
+                        avklaringsbehov = listOf(request.behov.definisjon()),
+                        versjon = request.behandlingVersjon
                     )
 
                     HendelsesMottak(dataSource).håndtere(

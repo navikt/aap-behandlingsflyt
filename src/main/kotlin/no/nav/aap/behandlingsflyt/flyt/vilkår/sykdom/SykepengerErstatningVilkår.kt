@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.flyt.vilkår.sykdom
 
 import no.nav.aap.behandlingsflyt.Periode
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Avslagsårsak
-import no.nav.aap.behandlingsflyt.flyt.vilkår.TomtBeslutningstre
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Utfall
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkår
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårsperiode
@@ -34,7 +33,6 @@ class SykepengerErstatningVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårs
         return lagre(grunnlag, VurderingsResultat(
             utfall = utfall,
             avslagsårsak,
-            TomtBeslutningstre(),
             null
         ))
     }
@@ -49,7 +47,7 @@ class SykepengerErstatningVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårs
                 null,
                 vurderingsResultat.avslagsårsak,
                 grunnlag,
-                vurderingsResultat.beslutningstre
+                vurderingsResultat.versjon()
             )
         )
 

@@ -1,3 +1,5 @@
+import java.io.ByteArrayOutputStream
+
 val ktorVersion = "2.3.5"
 
 plugins {
@@ -24,6 +26,17 @@ allprojects {
     apply(plugin = "org.jetbrains.kotlin.jvm")
 
     tasks {
+        val projectProps by registering(WriteProperties::class) {
+            destinationFile = file("${layout.buildDirectory}/version.properties")
+            // Define property.
+            property("project.version", getCheckedOutGitCommitHash())
+        }
+
+        processResources {
+            // Depend on output of the task to create properties,
+            // so the properties file will be part of the Java resources.
+            from(projectProps)
+        }
         withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
             kotlinOptions.jvmTarget = "$javaVersion"
         }
@@ -41,6 +54,18 @@ allprojects {
     sourceSets["test"].resources.srcDirs("test")
 }
 
+fun runCommand(command: String): String {
+    val byteOut = ByteArrayOutputStream()
+    project.exec {
+        commandLine = command.split("\\s".toRegex())
+        standardOutput = byteOut
+    }
+    return String(byteOut.toByteArray()).trim()
+}
+
+fun getCheckedOutGitCommitHash(): String {
+    return runCommand("git rev-parse --verify HEAD")
+}
 dependencies {
     implementation("io.ktor:ktor-server-auth:$ktorVersion")
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
