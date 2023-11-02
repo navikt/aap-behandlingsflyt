@@ -43,8 +43,20 @@ class OppgaveRepository(private val connection: DBConnection) {
             SELECT id, type, sak_id, behandling_id
             FROM (
                 SELECT id, type, sak_id, behandling_id, neste_kjoring
-                FROM OPPGAVE 
-                WHERE status = 'KLAR' and neste_kjoring < ?
+                FROM OPPGAVE o
+                WHERE status = 'KLAR' 
+                AND neste_kjoring < ? 
+                AND NOT EXISTS 
+                    (
+                    SELECT 1 
+                    FROM oppgave op 
+                    WHERE o.id != op.id 
+                    AND o.status = 'FEILET'
+                    AND op.sak_id != null
+                    AND op.behandling_id != null
+                    AND o.sak_id = op.sak_id
+                    AND o.behandling_id = op.behandling_id
+                    )
              )
              ORDER BY neste_kjoring ASC
              FOR UPDATE SKIP LOCKED
