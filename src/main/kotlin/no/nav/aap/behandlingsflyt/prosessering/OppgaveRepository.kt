@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 import no.nav.aap.behandlingsflyt.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.dbstuff.DBConnection
 import no.nav.aap.behandlingsflyt.sak.SakId
+import org.intellij.lang.annotations.Language
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
@@ -39,27 +40,25 @@ class OppgaveRepository(private val connection: DBConnection) {
     }
 
     internal fun plukkOppgave(): OppgaveInput? {
+        @Language("PostgreSQL")
         val query = """
             SELECT id, type, sak_id, behandling_id
-            FROM (
-                SELECT id, type, sak_id, behandling_id, neste_kjoring
-                FROM OPPGAVE o
-                WHERE status = 'KLAR' 
-                AND neste_kjoring < ? 
-                AND NOT EXISTS 
-                    (
-                    SELECT 1 
-                    FROM oppgave op 
-                    WHERE o.id != op.id 
-                    AND o.status = 'FEILET'
-                    AND op.sak_id != null
-                    AND op.behandling_id != null
-                    AND o.sak_id = op.sak_id
-                    AND o.behandling_id = op.behandling_id
-                    )
-             )
-             ORDER BY neste_kjoring ASC
-             FOR UPDATE SKIP LOCKED
+            FROM OPPGAVE o
+            WHERE status = 'KLAR'
+              AND neste_kjoring < ?
+              AND NOT EXISTS
+                (
+                SELECT 1
+                 FROM oppgave op
+                 WHERE o.id != op.id
+                   AND o.status = 'FEILET'
+                   AND op.sak_id != null
+                   AND op.behandling_id != null
+                   AND o.sak_id = op.sak_id
+                   AND o.behandling_id = op.behandling_id
+                   )
+            ORDER BY neste_kjoring ASC
+            FOR UPDATE SKIP LOCKED
         """.trimIndent()
 
         val plukketOppgave = connection.queryFirstOrNull(query) {
