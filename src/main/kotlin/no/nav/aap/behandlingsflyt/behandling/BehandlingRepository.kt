@@ -35,7 +35,7 @@ class BehandlingRepository(private val connection: DBConnection) {
             setParams {
                 setLong(1, sakId.toLong())
                 setUUID(2, referanse)
-                setString(3, Status.OPPRETTET.name)
+                setEnumName(3, Status.OPPRETTET)
                 setString(4, behandlingType.identifikator())
             }
         }

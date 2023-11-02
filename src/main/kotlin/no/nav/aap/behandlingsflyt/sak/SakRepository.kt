@@ -46,7 +46,7 @@ class SakRepository(private val connection: DBConnection) {
                 setString(1, saksnummer.toString())
                 setLong(2, person.id)
                 setPeriode(3, periode)
-                setString(4, Status.OPPRETTET.name)
+                setEnumName(4, Status.OPPRETTET)
             }
         }
         return Sak(SakId(keys), saksnummer, person, periode)

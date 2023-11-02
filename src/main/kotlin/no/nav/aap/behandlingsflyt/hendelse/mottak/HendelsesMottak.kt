@@ -52,7 +52,7 @@ class HendelsesMottak(private val dataSource: DataSource) {
                 ) // TODO: Reeltsett oppdatere denne
             }
         }
-        håndtere(key = sisteBehandling.id, hendelse.tilBehandlingHendelse())
+        håndtere(sisteBehandling.id, hendelse.tilBehandlingHendelse())
     }
 
     fun håndtere(key: BehandlingId, hendelse: LøsAvklaringsbehovBehandlingHendelse) {
@@ -95,23 +95,19 @@ class HendelsesMottak(private val dataSource: DataSource) {
             val sak = sakService.hent(behandling.sakId)
 
             val kontekst = FlytKontekst(sakId = sak.id, behandlingId = behandling.id)
-            if (hendelse is LøsAvklaringsbehovBehandlingHendelse) {
-                throw IllegalArgumentException("Skal håndteres mellom eksplisitt funksjon")
-            } else {
-                if (behandling.status() == Status.PÅ_VENT) {
-                    val avklaringsbehovKontroller = AvklaringsbehovOrkestrator(connection)
-                    avklaringsbehovKontroller.løsAvklaringsbehov(
-                        kontekst = kontekst,
-                        avklaringsbehov = listOf(SattPåVentLøsning())
-                    )
-                }
-                OppgaveRepository(connection).leggTil(
-                    OppgaveInput(oppgave = ProsesserBehandlingOppgave).forBehandling(
-                        kontekst.sakId,
-                        kontekst.behandlingId
-                    )
+            if (behandling.status() == Status.PÅ_VENT) {
+                val avklaringsbehovKontroller = AvklaringsbehovOrkestrator(connection)
+                avklaringsbehovKontroller.løsAvklaringsbehov(
+                    kontekst = kontekst,
+                    avklaringsbehov = listOf(SattPåVentLøsning())
                 )
             }
+            OppgaveRepository(connection).leggTil(
+                OppgaveInput(oppgave = ProsesserBehandlingOppgave).forBehandling(
+                    kontekst.sakId,
+                    kontekst.behandlingId
+                )
+            )
         }
     }
 }

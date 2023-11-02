@@ -39,7 +39,7 @@ class FlytOrkestrator(
 
         val oppdaterFaktagrunnlagForKravliste =
             faktagrunnlag.oppdaterFaktagrunnlagForKravliste(
-                behandlingFlyt.faktagrunnlagFremTilGjeldendeSteg(),
+                kravliste = behandlingFlyt.faktagrunnlagFremTilOgMedGjeldendeSteg(),
                 kontekst = kontekst
             )
 
@@ -47,7 +47,7 @@ class FlytOrkestrator(
 
         if (!tilbakeføringsflyt.erTom()) {
             log.info(
-                "[{} - {}] Tilakeført etter oppdatering av registeropplysninger fra '{}' til '{}'",
+                "[{} - {}] Tilbakeført etter oppdatering av registeropplysninger fra '{}' til '{}'",
                 kontekst.sakId,
                 kontekst.behandlingId,
                 behandling.aktivtSteg(),

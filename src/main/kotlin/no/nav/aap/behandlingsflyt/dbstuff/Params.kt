@@ -16,6 +16,10 @@ class Params(private val preparedStatement: PreparedStatement) {
         preparedStatement.setString(index, value)
     }
 
+    fun setEnumName(index: Int, value: Enum<*>?) {
+        preparedStatement.setString(index, value?.name)
+    }
+
     fun setLocalDateTime(index: Int, localDateTime: LocalDateTime?) {
         preparedStatement.setTimestamp(index, localDateTime?.let(Timestamp::valueOf))
     }

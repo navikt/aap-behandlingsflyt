@@ -32,7 +32,7 @@ class OppgaveRepository(private val connection: DBConnection) {
         connection.execute(historikk) {
             setParams {
                 setLong(1, oppgaveId)
-                setString(2, OppgaveStatus.KLAR.name)
+                setEnumName(2, OppgaveStatus.KLAR)
             }
         }
         log.info("Planlagt kjøring av oppgave[${oppgaveInput.type()}]")
@@ -66,12 +66,13 @@ class OppgaveRepository(private val connection: DBConnection) {
             setParams {
                 setLocalDateTime(1, LocalDateTime.now())
             }
-            setRowMapper {
-                OppgaveInput(OppgaveType.parse(it.getString("type")))
-                    .medId(it.getLong("id"))
+            setRowMapper { row ->
+                OppgaveInput(OppgaveType.parse(row.getString("type")))
+                    .medId(row.getLong("id"))
                     .forBehandling(
-                        it.getLongOrNull("sak_id")?.let { SakId(it) },
-                        it.getLongOrNull("behandling_id")?.let { BehandlingId(it) })
+                        row.getLongOrNull("sak_id")?.let(::SakId),
+                        row.getLongOrNull("behandling_id")?.let(::BehandlingId)
+                    )
             }
         }
 
@@ -80,7 +81,7 @@ class OppgaveRepository(private val connection: DBConnection) {
         }
         connection.execute("UPDATE OPPGAVE SET status = ? WHERE id = ?") {
             setParams {
-                setString(1, OppgaveStatus.PLUKKET.name)
+                setEnumName(1, OppgaveStatus.PLUKKET)
                 setLong(2, plukketOppgave.id)
             }
         }
@@ -93,7 +94,7 @@ class OppgaveRepository(private val connection: DBConnection) {
         connection.execute(historikk) {
             setParams {
                 setLong(1, plukketOppgave.id)
-                setString(2, OppgaveStatus.KLAR.name)
+                setEnumName(2, OppgaveStatus.KLAR)
             }
         }
 
@@ -103,7 +104,7 @@ class OppgaveRepository(private val connection: DBConnection) {
     internal fun markerKjørt(oppgaveInput: OppgaveInput) {
         connection.execute("UPDATE OPPGAVE SET status = ? WHERE id = ? AND status = 'PLUKKET'") {
             setParams {
-                setString(1, OppgaveStatus.FERDIG.name)
+                setEnumName(1, OppgaveStatus.FERDIG)
                 setLong(2, oppgaveInput.id)
             }
             setResultValidator {
@@ -119,7 +120,7 @@ class OppgaveRepository(private val connection: DBConnection) {
         connection.execute(historikk) {
             setParams {
                 setLong(1, oppgaveInput.id)
-                setString(2, OppgaveStatus.FERDIG.name)
+                setEnumName(2, OppgaveStatus.FERDIG)
             }
         }
     }
@@ -127,7 +128,7 @@ class OppgaveRepository(private val connection: DBConnection) {
     internal fun markerFeilet(oppgaveInput: OppgaveInput, exception: Throwable) {
         connection.execute("UPDATE OPPGAVE SET status = ? WHERE id = ? AND status = 'PLUKKET'") {
             setParams {
-                setString(1, OppgaveStatus.FEILET.name)
+                setEnumName(1, OppgaveStatus.FEILET)
                 setLong(2, oppgaveInput.id)
             }
             setResultValidator {
@@ -143,7 +144,7 @@ class OppgaveRepository(private val connection: DBConnection) {
         connection.execute(historikk) {
             setParams {
                 setLong(1, oppgaveInput.id)
-                setString(2, OppgaveStatus.FEILET.name)
+                setEnumName(2, OppgaveStatus.FEILET)
                 setString(3, exception.message.orEmpty().take(3000))
             }
         }
@@ -152,7 +153,7 @@ class OppgaveRepository(private val connection: DBConnection) {
     internal fun markerKlar(oppgaveInput: OppgaveInput) {
         connection.execute("UPDATE OPPGAVE SET status = ? WHERE id = ? and status IN ('PLUKKET', 'FEILET')") {
             setParams {
-                setString(1, OppgaveStatus.KLAR.name)
+                setEnumName(1, OppgaveStatus.KLAR)
                 setLong(2, oppgaveInput.id)
             }
             setResultValidator {
@@ -168,7 +169,7 @@ class OppgaveRepository(private val connection: DBConnection) {
         connection.execute(historikk) {
             setParams {
                 setLong(1, oppgaveInput.id)
-                setString(2, OppgaveStatus.KLAR.name)
+                setEnumName(2, OppgaveStatus.KLAR)
             }
         }
     }

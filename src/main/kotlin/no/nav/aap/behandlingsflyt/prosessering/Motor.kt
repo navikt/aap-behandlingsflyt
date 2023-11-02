@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import kotlinx.coroutines.Runnable
 import no.nav.aap.behandlingsflyt.dbstuff.DBConnection
 import no.nav.aap.behandlingsflyt.dbstuff.transaction
 import org.slf4j.LoggerFactory
@@ -43,14 +42,14 @@ class Motor(
         override fun run() {
             try {
                 while (running) {
-                    dataSource.transaction {
-                        val repository = OppgaveRepository(it)
-                        val gruppe = repository.plukkOppgave()
-                        if (gruppe != null) {
-                            utførOppgave(gruppe, it)
+                    dataSource.transaction { connection ->
+                        val repository = OppgaveRepository(connection)
+                        val oppgaveInput = repository.plukkOppgave()
+                        if (oppgaveInput != null) {
+                            utførOppgave(oppgaveInput, connection)
                         }
 
-                        if (running && gruppe == null) {
+                        if (running && oppgaveInput == null) {
                             running = false
                         }
                     }

@@ -16,7 +16,7 @@ class FlytOperasjonRepository(private val connection: DBConnection) {
 
         return connection.execute(query) {
             setParams {
-                setString(1, status.name)
+                setEnumName(1, status)
                 setLong(2, sakId.toLong())
             }
             setResultValidator {
@@ -30,7 +30,7 @@ class FlytOperasjonRepository(private val connection: DBConnection) {
 
         return connection.execute(query) {
             setParams {
-                setString(1, status.name)
+                setEnumName(1, status)
                 setLong(2, behandlingId.toLong())
             }
             setResultValidator {
@@ -54,7 +54,7 @@ class FlytOperasjonRepository(private val connection: DBConnection) {
         connection.execute(queryEndring) {
             setParams {
                 setLong(1, avklaringsbehovId)
-                setString(2, no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Status.OPPRETTET.name)
+                setEnumName(2, no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Status.OPPRETTET)
                 setString(3, "")
                 setString(4, "Kelvin")
                 setLocalDateTime(5, LocalDateTime.now())
@@ -95,7 +95,7 @@ class FlytOperasjonRepository(private val connection: DBConnection) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setString(2, definisjon.kode)
-                setString(3, funnetISteg.name)
+                setEnumName(3, funnetISteg)
             }
         }
     }
@@ -119,8 +119,8 @@ class FlytOperasjonRepository(private val connection: DBConnection) {
         connection.execute(query) {
             setParams {
                 setLong(1, behandlingId.toLong())
-                setString(2, tilstand.steg().name)
-                setString(3, tilstand.status().name)
+                setEnumName(2, tilstand.steg())
+                setEnumName(3, tilstand.status())
                 setBoolean(4, true)
                 setLocalDateTime(5, LocalDateTime.now())
             }

@@ -37,7 +37,7 @@ class BehandlingFlyt private constructor(
         return aktivtSteg?.kravliste ?: emptyList()
     }
 
-    fun faktagrunnlagFremTilGjeldendeSteg(): List<Grunnlag> {
+    fun faktagrunnlagFremTilOgMedGjeldendeSteg(): List<Grunnlag> {
         if (aktivtSteg?.oppdaterFaktagrunnlag != true){
             return emptyList()
         }

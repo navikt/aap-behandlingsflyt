@@ -38,7 +38,7 @@ class AvklaringsbehovRepository(private val connection: DBConnection) {
         connection.execute(query) {
             setParams {
                 setLong(1, avklaringsbehov.id)
-                setString(2, Status.AVSLUTTET.name)
+                setEnumName(2, Status.AVSLUTTET)
                 setString(3, begrunnelse)
                 setString(4, "Saksbehandler") // TODO: Hent fra sikkerhetscontex
                 setLocalDateTime(5, LocalDateTime.now()) // TODO: Hent fra sikkerhetscontex
@@ -72,7 +72,7 @@ class AvklaringsbehovRepository(private val connection: DBConnection) {
         connection.execute(query) {
             setParams {
                 setLong(1, avklaringsbehov.id)
-                setString(2, status.name)
+                setEnumName(2, status)
                 setString(3, begrunnelse)
                 setString(4, "Saksbehandler") // TODO: Hent fra sikkerhetscontex
                 setLocalDateTime(5, LocalDateTime.now())
