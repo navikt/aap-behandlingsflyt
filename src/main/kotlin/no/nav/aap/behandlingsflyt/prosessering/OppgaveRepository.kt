@@ -42,22 +42,19 @@ class OppgaveRepository(private val connection: DBConnection) {
     internal fun plukkOppgave(): OppgaveInput? {
         @Language("PostgreSQL")
         val query = """
-            SELECT id, type, sak_id, behandling_id
-            FROM (
-                SELECT id, type, sak_id, behandling_id, neste_kjoring
-                FROM OPPGAVE o
-                WHERE status = '${OppgaveStatus.KLAR.name}'
-                  AND neste_kjoring < ?
-                  AND NOT EXISTS
-                    (
-                    SELECT 1
-                     FROM OPPGAVE op
-                     WHERE op.status = '${OppgaveStatus.FEILET.name}'
-                       AND op.sak_id is not null
-                       AND o.sak_id is not null
-                       AND o.sak_id = op.sak_id
-                       AND (o.behandling_id = op.behandling_id OR op.behandling_id IS NULL OR o.behandling_id IS NULL)
-                    )
+            SELECT id, type, sak_id, behandling_id, neste_kjoring
+            FROM OPPGAVE o
+            WHERE status = '${OppgaveStatus.KLAR.name}'
+              AND neste_kjoring < ?
+              AND NOT EXISTS
+                (
+                SELECT 1
+                 FROM OPPGAVE op
+                 WHERE op.status = '${OppgaveStatus.FEILET.name}'
+                   AND op.sak_id is not null
+                   AND o.sak_id is not null
+                   AND o.sak_id = op.sak_id
+                   AND (o.behandling_id = op.behandling_id OR op.behandling_id IS NULL OR o.behandling_id IS NULL)
                 )
             ORDER BY neste_kjoring ASC
             FOR UPDATE SKIP LOCKED
