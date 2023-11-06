@@ -123,6 +123,11 @@ CREATE TABLE VILKAR_PERIODE
     versjon           varchar(100)  not null
 );
 CREATE INDEX IDX_VILKAR_PERIODE_PERIODE ON VILKAR_PERIODE (vilkar_id, periode);
+alter table VILKAR_PERIODE
+    add constraint VILKAR_PERIODE_ikke_overlapp_periode EXCLUDE USING GIST (
+        vilkar_id WITH =,
+        periode WITH &&
+        );
 
 --
 CREATE TABLE OPPGAVE
