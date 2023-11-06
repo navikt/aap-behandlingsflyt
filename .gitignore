@@ -40,3 +40,4 @@ APP_LOG_HOME_IS_UNDEFINED
 out/
 build/
 .gradle
+/property 'buildDir'/version.properties

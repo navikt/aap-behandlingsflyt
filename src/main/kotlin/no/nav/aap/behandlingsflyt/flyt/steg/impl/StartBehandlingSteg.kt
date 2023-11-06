@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.sak.SakService
 
 class StartBehandlingSteg(
     private val behandlingService: BehandlingService,
+    private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val sakService: SakService
 ) : BehandlingSteg {
 
@@ -18,7 +19,7 @@ class StartBehandlingSteg(
         val behandling = behandlingService.hent(input.kontekst.behandlingId)
 
         if (behandling.type == Førstegangsbehandling) {
-            val vilkårsresultat = VilkårsresultatRepository.hent(behandling.id)
+            val vilkårsresultat = vilkårsresultatRepository.hent(behandling.id)
             val rettighetsperiode = sakService.hent(behandling.sakId).rettighetsperiode
             Vilkårtype
                 .entries
@@ -26,6 +27,8 @@ class StartBehandlingSteg(
                 .forEach { vilkårstype ->
                     vilkårsresultat.leggTilHvisIkkeEksisterer(vilkårstype).leggTilIkkeVurdertPeriode(rettighetsperiode)
                 }
+
+            vilkårsresultatRepository.lagre(behandling.id, vilkårsresultat)
         }
 
         return StegResultat()

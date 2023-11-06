@@ -14,13 +14,14 @@ import no.nav.aap.behandlingsflyt.sak.SakService
 
 class VurderSykepengeErstatningSteg(
     private val behandlingService: BehandlingService,
+    private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val sakService: SakService
 ) : BehandlingSteg {
     override fun utfør(input: StegInput): StegResultat {
         val behandling = behandlingService.hent(input.kontekst.behandlingId)
         val sak = sakService.hent(input.kontekst.sakId)
 
-        val vilkårsresultat = VilkårsresultatRepository.hent(behandling.id)
+        val vilkårsresultat = vilkårsresultatRepository.hent(behandling.id)
         val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
         val bistandsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
 
@@ -38,6 +39,7 @@ class VurderSykepengeErstatningSteg(
                     grunnlag.vurdering
                 )
                 SykepengerErstatningVilkår(vilkårsresultat).vurder(faktagrunnlag)
+                vilkårsresultatRepository.lagre(behandling.id, vilkårsresultat)
             } else {
                 return StegResultat(listOf(Definisjon.AVKLAR_SYKEPENGEERSTATNING))
             }

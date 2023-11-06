@@ -3,9 +3,9 @@ package no.nav.aap.behandlingsflyt.flyt.vilkår
 import no.nav.aap.behandlingsflyt.Periode
 
 class Vilkår(
-    val type: Vilkårtype
-) {
+    val type: Vilkårtype,
     private val vilkårsperioder: MutableSet<Vilkårsperiode> = mutableSetOf()
+) {
 
     fun vilkårsperioder(): List<Vilkårsperiode> {
         return this.vilkårsperioder.toList()
@@ -57,10 +57,6 @@ class Vilkår(
         return Periode(fom, tom)
     }
 
-    override fun toString(): String {
-        return "Vilkår(type=$type)"
-    }
-
     fun leggTilIkkeVurdertPeriode(rettighetsperiode: Periode) {
         this.vilkårsperioder.add(
             Vilkårsperiode(
@@ -78,5 +74,27 @@ class Vilkår(
             .filter { periode -> periodeTilVurdering.any { vp -> periode.periode.overlapper(vp) } }
             .any { periode -> periode.erIkkeVurdert() }
 
+    }
+
+    override fun toString(): String {
+        return "Vilkår(type=$type)"
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Vilkår
+
+        if (type != other.type) return false
+        if (vilkårsperioder != other.vilkårsperioder) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = type.hashCode()
+        result = 31 * result + vilkårsperioder.hashCode()
+        return result
     }
 }

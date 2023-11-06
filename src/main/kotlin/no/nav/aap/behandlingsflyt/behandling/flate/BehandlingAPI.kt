@@ -6,10 +6,12 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import com.zaxxer.hikari.HikariDataSource
 import no.nav.aap.behandlingsflyt.behandling.Behandling
+import no.nav.aap.behandlingsflyt.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.dbstuff.transaction
 import no.nav.aap.behandlingsflyt.faktagrunnlag.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.flyt.flate.VilkårDTO
 import no.nav.aap.behandlingsflyt.flyt.flate.VilkårsperiodeDTO
+import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.flyt.vilkår.VilkårsresultatRepository
 
 fun NormalOpenAPIRoute.behandlingApi(dataSource: HikariDataSource) {
@@ -37,7 +39,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: HikariDataSource) {
                             }
                         )
                     },
-                    vilkår = VilkårsresultatRepository.hent(behandling.id).alle().map { vilkår ->
+                    vilkår = vilkårResultat(dataSource, behandling.id).alle().map { vilkår ->
                         VilkårDTO(
                             vilkårtype = vilkår.type,
                             perioder = vilkår.vilkårsperioder()
@@ -65,5 +67,11 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: HikariDataSource) {
 private fun behandling(dataSource: HikariDataSource, req: BehandlingReferanse): Behandling {
     return dataSource.transaction {
         BehandlingReferanseService(it).behandling(req)
+    }
+}
+
+private fun vilkårResultat(dataSource: HikariDataSource, behandlingId: BehandlingId): Vilkårsresultat {
+    return dataSource.transaction {
+        VilkårsresultatRepository(it).hent(behandlingId)
     }
 }

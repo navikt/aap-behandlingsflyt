@@ -83,6 +83,7 @@ class Motor(
                 log.warn(
                     "Feil under prosessering av oppgave {}",
                     oppgaveInput,
+                    exception
                 )
             }
         }

@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.student.db.InMemoryStudentReposi
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
+import no.nav.aap.behandlingsflyt.flyt.vilkår.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.sak.SakService
 
 object VurderBistandsbehovFlytSteg : FlytSteg {
@@ -14,6 +15,7 @@ object VurderBistandsbehovFlytSteg : FlytSteg {
         return VurderBistandsbehovSteg(
             BehandlingService(connection),
             InMemoryStudentRepository,
+            VilkårsresultatRepository(connection),
             PeriodeTilVurderingService(SakService(connection)))
     }
 

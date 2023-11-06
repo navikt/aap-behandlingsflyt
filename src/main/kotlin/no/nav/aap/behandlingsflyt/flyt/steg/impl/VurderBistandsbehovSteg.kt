@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.flyt.vilkår.bistand.Bistandsvilkåret
 class VurderBistandsbehovSteg(
     private val behandlingService: BehandlingService,
     private val studentRepository: StudentRepository,
+    private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val periodeTilVurderingService: PeriodeTilVurderingService
 ) : BehandlingSteg {
 
@@ -33,6 +34,7 @@ class VurderBistandsbehovSteg(
             val bistandsGrunnlag = BistandsRepository.hentHvisEksisterer(behandling.id)
             val studentGrunnlag = studentRepository.hentHvisEksisterer(behandling.id)
 
+            val vilkårsresultat = vilkårsresultatRepository.hent(behandling.id)
             if (studentGrunnlag?.studentvurdering?.oppfyller11_14 == true || bistandsGrunnlag != null) {
                 for (periode in periodeTilVurdering) {
                     val grunnlag = BistandFaktagrunnlag(
@@ -41,11 +43,12 @@ class VurderBistandsbehovSteg(
                         bistandsGrunnlag?.vurdering,
                         studentGrunnlag?.studentvurdering
                     )
-                    Bistandsvilkåret(VilkårsresultatRepository.hent(behandling.id)).vurder(grunnlag = grunnlag)
+                    Bistandsvilkåret(vilkårsresultat).vurder(grunnlag = grunnlag)
                 }
             }
+            vilkårsresultatRepository.lagre(behandling.id, vilkårsresultat)
 
-            val vilkår = VilkårsresultatRepository.hent(behandling.id).finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
+            val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
 
             if (harBehovForAvklaring(vilkår, periodeTilVurdering, studentGrunnlag)) {
                 return StegResultat(listOf(Definisjon.AVKLAR_BISTANDSBEHOV))

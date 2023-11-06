@@ -6,6 +6,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import com.zaxxer.hikari.HikariDataSource
 import no.nav.aap.behandlingsflyt.behandling.Behandling
+import no.nav.aap.behandlingsflyt.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.behandling.flate.AvklaringsbehovDTO
 import no.nav.aap.behandlingsflyt.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.dbstuff.transaction
@@ -38,7 +39,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
                                         )
                                     },
                                 vilkårDTO = hentUtRelevantVilkårForSteg(
-                                    VilkårsresultatRepository.hent(behandling.id),
+                                    vilkårResultat(dataSource, behandling.id),
                                     stegType
                                 )
                             )
@@ -76,7 +77,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
                                                 )
                                             },
                                         vilkårDTO = hentUtRelevantVilkårForSteg(
-                                            VilkårsresultatRepository.hent(behandling.id),
+                                            vilkårResultat(dataSource, behandling.id),
                                             stegType
                                         )
                                     )
@@ -94,10 +95,15 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
 }
 
 private fun behandling(dataSource: HikariDataSource, req: BehandlingReferanse): Behandling {
-    val behandling: Behandling = dataSource.transaction {
+    return dataSource.transaction {
         BehandlingReferanseService(it).behandling(req)
     }
-    return behandling
+}
+
+private fun vilkårResultat(dataSource: HikariDataSource, behandlingId: BehandlingId): Vilkårsresultat {
+    return dataSource.transaction {
+        VilkårsresultatRepository(it).hent(behandlingId)
+    }
 }
 
 private fun hentUtRelevantVilkårForSteg(vilkårsresultat: Vilkårsresultat, stegType: StegType): VilkårDTO? {

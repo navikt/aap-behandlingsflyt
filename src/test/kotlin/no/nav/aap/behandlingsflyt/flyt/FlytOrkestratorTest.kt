@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.Behandling
+import no.nav.aap.behandlingsflyt.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.behandling.Status
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
@@ -28,6 +29,7 @@ import no.nav.aap.behandlingsflyt.flyt.behandlingstyper.Førstegangsbehandling
 import no.nav.aap.behandlingsflyt.flyt.steg.StegStatus
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 import no.nav.aap.behandlingsflyt.flyt.steg.Tilstand
+import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.flyt.vilkår.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårtype
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
@@ -179,7 +181,7 @@ class FlytOrkestratorTest {
 
         //Henter vurder alder-vilkår
         //Assert utfall
-        val vilkårsresultat = VilkårsresultatRepository.hent(behandlingId = behandling.id)
+        val vilkårsresultat = hentVilkårsresultat(behandlingId = behandling.id)
         val aldersvilkår = vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET)
 
         assertThat(aldersvilkår.vilkårsperioder())
@@ -196,6 +198,11 @@ class FlytOrkestratorTest {
     private fun hentSak(ident: Ident, periode: Periode): Sak {
         return dataSource.transaction { connection ->
             SakRepository(connection).finnEllerOpprett(PersonRepository(connection).finnEllerOpprett(ident), periode)
+        }
+    }
+    private fun hentVilkårsresultat(behandlingId: BehandlingId): Vilkårsresultat {
+        return dataSource.transaction { connection ->
+            VilkårsresultatRepository(connection).hent(behandlingId)
         }
     }
 
@@ -239,7 +246,7 @@ class FlytOrkestratorTest {
 
         //Henter vurder alder-vilkår
         //Assert utfall
-        val vilkårsresultat = VilkårsresultatRepository.hent(behandlingId = behandling.id)
+        val vilkårsresultat = hentVilkårsresultat(behandlingId = behandling.id)
         val aldersvilkår = vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET)
 
         assertThat(aldersvilkår.vilkårsperioder())

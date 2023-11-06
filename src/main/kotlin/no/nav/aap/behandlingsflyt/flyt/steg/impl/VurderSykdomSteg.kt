@@ -16,6 +16,7 @@ class VurderSykdomSteg(
     private val behandlingService: BehandlingService,
     private val sykdomsRepository: SykdomsRepository,
     private val studentRepository: StudentRepository,
+    private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val periodeTilVurderingService: PeriodeTilVurderingService
 ) : BehandlingSteg {
 
@@ -30,6 +31,7 @@ class VurderSykdomSteg(
             val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId = behandling.id)
 
             //TODO: Skrive om til å være lik uttrykket på linje 46
+            val vilkårResultat = vilkårsresultatRepository.hent(behandling.id)
             if (sykdomsGrunnlag != null && sykdomsGrunnlag.erKonsistent() || studentGrunnlag?.studentvurdering?.oppfyller11_14 == true) {
                 for (periode in periodeTilVurdering) {
                     val faktagrunnlag = SykdomsFaktagrunnlag(
@@ -39,13 +41,15 @@ class VurderSykdomSteg(
                         sykdomsGrunnlag?.sykdomsvurdering,
                         studentGrunnlag?.studentvurdering
                     )
-                    Sykdomsvilkår(VilkårsresultatRepository.hent(behandling.id)).vurder(faktagrunnlag)
+                    Sykdomsvilkår(vilkårResultat).vurder(faktagrunnlag)
                 }
             }
-            val sykdomsvilkåret = VilkårsresultatRepository.hent(behandling.id).finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
+            vilkårsresultatRepository.lagre(behandling.id, vilkårResultat)
+            val sykdomsvilkåret = vilkårResultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
 
             if (sykdomsvilkåret.harPerioderSomIkkeErVurdert(periodeTilVurdering)
-                || (studentGrunnlag?.studentvurdering?.oppfyller11_14 == false && sykdomsGrunnlag?.erKonsistent() != true)) {
+                || (studentGrunnlag?.studentvurdering?.oppfyller11_14 == false && sykdomsGrunnlag?.erKonsistent() != true)
+            ) {
                 return StegResultat(listOf(Definisjon.AVKLAR_SYKDOM))
             }
         }

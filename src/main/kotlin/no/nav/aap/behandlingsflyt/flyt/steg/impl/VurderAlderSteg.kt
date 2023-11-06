@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.flyt.vilkår.alder.Aldersvilkåret
 
 class VurderAlderSteg(
     private val behandlingService: BehandlingService,
+    private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val periodeTilVurderingService: PeriodeTilVurderingService
 ) : BehandlingSteg {
 
@@ -27,10 +28,12 @@ class VurderAlderSteg(
             val personinfoGrunnlag = PersoninformasjonRepository.hentHvisEksisterer(input.kontekst.behandlingId)
                 ?: throw IllegalStateException("Forventet å finne personopplysninger")
 
+            val vilkårsresultat = vilkårsresultatRepository.hent(behandling.id)
             for (periode in periodeTilVurdering) {
                 val aldersgrunnlag = Aldersgrunnlag(periode, personinfoGrunnlag.personinfo.fødselsdato)
-                Aldersvilkåret(VilkårsresultatRepository.hent(behandling.id)).vurder(aldersgrunnlag)
+                Aldersvilkåret(vilkårsresultat).vurder(aldersgrunnlag)
             }
+            vilkårsresultatRepository.lagre(behandling.id, vilkårsresultat)
         }
 
         return StegResultat()

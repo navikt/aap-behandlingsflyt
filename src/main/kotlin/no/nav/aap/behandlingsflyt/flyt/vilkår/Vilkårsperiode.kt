@@ -41,6 +41,10 @@ class Vilkårsperiode(
         return utfall == Utfall.OPPFYLT
     }
 
+    fun faktagrunnlag(): Faktagrunnlag? {
+        return faktagrunnlag
+    }
+
     override fun toString(): String {
         return "Vilkårsperiode(periode=$periode, utfall=$utfall)"
     }
@@ -53,7 +57,10 @@ class Vilkårsperiode(
 
         if (periode != other.periode) return false
         if (utfall != other.utfall) return false
-        if (faktagrunnlag != other.faktagrunnlag) return false
+        if (begrunnelse != other.begrunnelse) return false
+        if (manuellVurdering != other.manuellVurdering) return false
+        if (innvilgelsesårsak != other.innvilgelsesårsak) return false
+        if (avslagsårsak != other.avslagsårsak) return false
 
         return true
     }
@@ -61,11 +68,22 @@ class Vilkårsperiode(
     override fun hashCode(): Int {
         var result = periode.hashCode()
         result = 31 * result + utfall.hashCode()
-        result = 31 * result + faktagrunnlag.hashCode()
+        result = 31 * result + begrunnelse.hashCode()
+        result = 31 * result + manuellVurdering.hashCode()
+        result = 31 * result + innvilgelsesårsak.hashCode()
+        result = 31 * result + avslagsårsak.hashCode()
         return result
     }
 
     fun erIkkeVurdert(): Boolean {
         return utfall !in setOf(Utfall.IKKE_OPPFYLT, Utfall.OPPFYLT)
+    }
+
+    fun faktagrunnlagSomString(): String? {
+        if (faktagrunnlag == null) {
+            return null
+        }
+
+        return faktagrunnlag.hent()
     }
 }
