@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Personinfo
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.adapter.PersonRegisterMock
 import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.YrkesskadeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.adapter.YrkesskadeRegisterMock
-import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
+import no.nav.aap.behandlingsflyt.flyt.tilKontekst
 import no.nav.aap.behandlingsflyt.sak.Ident
 import no.nav.aap.behandlingsflyt.sak.PersonRepository
 import no.nav.aap.behandlingsflyt.sak.SakRepository
@@ -30,7 +30,7 @@ class FaktagrunnlagTest {
         SakRepository(dbConnection).finnEllerOpprett(PersonRepository(dbConnection).finnEllerOpprett(ident), periode)
     val behandling =
         BehandlingRepository(dbConnection).finnSisteBehandlingFor(sak.id) ?: BehandlingRepository(dbConnection).opprettBehandling(sak.id, listOf())
-    val kontekst = FlytKontekst(sak.id, behandling.id)
+    val kontekst = tilKontekst(behandling)
 
     @BeforeEach
     fun setUp() {

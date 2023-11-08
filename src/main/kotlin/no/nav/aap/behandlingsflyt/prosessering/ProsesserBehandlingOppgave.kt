@@ -11,8 +11,14 @@ object ProsesserBehandlingOppgave : Oppgave() {
         val skrivelås = låsRepository.lås(input.sakId(), input.behandlingId())
 
         val kontroller = FlytOrkestrator(connection)
-        kontroller.forberedBehandling(FlytKontekst(sakId = input.sakId(), behandlingId = input.behandlingId()))
-        kontroller.prosesserBehandling(FlytKontekst(sakId = input.sakId(), behandlingId = input.behandlingId()))
+
+        val kontekst = FlytKontekst(
+            sakId = input.sakId(),
+            behandlingId = input.behandlingId(),
+            behandlingType = skrivelås.behandlingSkrivelås.behandlingType
+        )
+        kontroller.forberedBehandling(kontekst)
+        kontroller.prosesserBehandling(kontekst)
 
         låsRepository.verifiserSkrivelås(skrivelås)
     }

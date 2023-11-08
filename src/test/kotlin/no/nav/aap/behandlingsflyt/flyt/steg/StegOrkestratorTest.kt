@@ -4,11 +4,10 @@ import no.nav.aap.behandlingsflyt.Periode
 import no.nav.aap.behandlingsflyt.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.dbstuff.InitTestDatabase
 import no.nav.aap.behandlingsflyt.dbstuff.transaction
-import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.flyt.behandlingstyper.Førstegangsbehandling
+import no.nav.aap.behandlingsflyt.flyt.tilKontekst
 import no.nav.aap.behandlingsflyt.sak.Ident
 import no.nav.aap.behandlingsflyt.sak.PersonRepository
-import no.nav.aap.behandlingsflyt.sak.SakId
 import no.nav.aap.behandlingsflyt.sak.SakRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -30,7 +29,7 @@ class StegOrkestratorTest {
             val behandling = BehandlingRepository(connection).opprettBehandling(sak.id, listOf())
             assertThat(behandling.type).isEqualTo(Førstegangsbehandling)
 
-            val kontekst = FlytKontekst(SakId(1L), behandling.id)
+            val kontekst = tilKontekst(behandling)
 
             val resultat = StegOrkestrator(connection, TestFlytSteg).utfør(kontekst, behandling)
 

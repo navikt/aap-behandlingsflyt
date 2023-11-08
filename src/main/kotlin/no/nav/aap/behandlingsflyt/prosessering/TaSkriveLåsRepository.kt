@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.behandling.utledType
 import no.nav.aap.behandlingsflyt.dbstuff.DBConnection
 import no.nav.aap.behandlingsflyt.sak.SakId
 import java.util.*
@@ -14,14 +15,14 @@ class TaSkriveLåsRepository(private val connection: DBConnection) {
     }
 
     fun låsBehandling(behandlingId: BehandlingId): BehandlingSkrivelås {
-        val query = """SELECT versjon FROM BEHANDLING WHERE ID = ? FOR UPDATE"""
+        val query = """SELECT type, versjon FROM BEHANDLING WHERE ID = ? FOR UPDATE"""
 
         return connection.queryFirst(query) {
             setParams {
                 setLong(1, behandlingId.toLong())
             }
             setRowMapper {
-                BehandlingSkrivelås(behandlingId, it.getLong("versjon"))
+                BehandlingSkrivelås(behandlingId, it.getLong("versjon"), utledType(it.getString("type")))
             }
         }
     }
@@ -34,7 +35,11 @@ class TaSkriveLåsRepository(private val connection: DBConnection) {
                 setUUID(1, behandlingUUid)
             }
             setRowMapper {
-                Skrivelås(låsSak(SakId(it.getLong("sak_id"))), BehandlingSkrivelås(BehandlingId(it.getLong("id")), it.getLong("versjon")))
+                Skrivelås(låsSak(SakId(it.getLong("sak_id"))), BehandlingSkrivelås(
+                    BehandlingId(it.getLong("id")),
+                    it.getLong("versjon"),
+                    utledType(it.getString("type"))
+                ))
             }
         }
     }

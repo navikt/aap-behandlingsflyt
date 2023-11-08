@@ -10,9 +10,9 @@ import no.nav.aap.behandlingsflyt.behandling.Årsak
 import no.nav.aap.behandlingsflyt.dbstuff.DBConnection
 import no.nav.aap.behandlingsflyt.dbstuff.transaction
 import no.nav.aap.behandlingsflyt.flyt.AvklaringsbehovOrkestrator
-import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.ValiderBehandlingTilstand
+import no.nav.aap.behandlingsflyt.flyt.tilKontekst
 import no.nav.aap.behandlingsflyt.prosessering.OppgaveInput
 import no.nav.aap.behandlingsflyt.prosessering.OppgaveRepository
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingOppgave
@@ -63,7 +63,7 @@ class HendelsesMottak(private val dataSource: DataSource) {
         val sakService = SakService(connection)
         val sak = sakService.hent(behandling.sakId)
 
-        val kontekst = FlytKontekst(sakId = sak.id, behandlingId = behandling.id)
+        val kontekst = tilKontekst(behandling)
         val avklaringsbehovKontroller = AvklaringsbehovOrkestrator(connection)
         avklaringsbehovKontroller.løsAvklaringsbehovOgFortsettProsessering(
             kontekst = kontekst,
@@ -79,7 +79,7 @@ class HendelsesMottak(private val dataSource: DataSource) {
             val sakService = SakService(connection)
             val sak = sakService.hent(behandling.sakId)
 
-            val kontekst = FlytKontekst(sakId = sak.id, behandlingId = behandling.id)
+            val kontekst = tilKontekst(behandling)
             val kontroller = FlytOrkestrator(connection)
             kontroller.settBehandlingPåVent(kontekst)
         }
@@ -90,10 +90,7 @@ class HendelsesMottak(private val dataSource: DataSource) {
             val behandling = BehandlingRepository(connection).hent(key)
             ValiderBehandlingTilstand.validerTilstandBehandling(behandling = behandling)
 
-            val sakService = SakService(connection)
-            val sak = sakService.hent(behandling.sakId)
-
-            val kontekst = FlytKontekst(sakId = sak.id, behandlingId = behandling.id)
+            val kontekst = tilKontekst(behandling)
             if (behandling.status() == Status.PÅ_VENT) {
                 val avklaringsbehovKontroller = AvklaringsbehovOrkestrator(connection)
                 avklaringsbehovKontroller.løsAvklaringsbehov(
