@@ -21,7 +21,7 @@ class VurderSykepengeErstatningSteg(
         val behandling = behandlingService.hent(input.kontekst.behandlingId)
         val sak = sakService.hent(input.kontekst.sakId)
 
-        val vilkårsresultat = vilkårsresultatRepository.hent(behandling.id)
+        val vilkårsresultat = vilkårsresultatRepository.hent(input.kontekst.behandlingId)
         val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
         val bistandsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
 
@@ -29,7 +29,7 @@ class VurderSykepengeErstatningSteg(
         if (bistandsvilkåret.vilkårsperioder().all { !it.erOppfylt() } &&
             sykdomsvilkåret.vilkårsperioder().any { it.erOppfylt() }) {
 
-            val grunnlag = SykepengerErstatningRepository.hentHvisEksisterer(behandling.id)
+            val grunnlag = SykepengerErstatningRepository.hentHvisEksisterer(input.kontekst.behandlingId)
 
             if (grunnlag?.vurdering != null) {
                 val vurderingsdato = sak.rettighetsperiode.fom
@@ -39,7 +39,7 @@ class VurderSykepengeErstatningSteg(
                     grunnlag.vurdering
                 )
                 SykepengerErstatningVilkår(vilkårsresultat).vurder(faktagrunnlag)
-                vilkårsresultatRepository.lagre(behandling.id, vilkårsresultat)
+                vilkårsresultatRepository.lagre(input.kontekst.behandlingId, vilkårsresultat)
             } else {
                 return StegResultat(listOf(Definisjon.AVKLAR_SYKEPENGEERSTATNING))
             }

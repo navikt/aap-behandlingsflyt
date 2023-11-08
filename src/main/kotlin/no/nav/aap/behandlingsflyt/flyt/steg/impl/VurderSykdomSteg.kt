@@ -27,11 +27,11 @@ class VurderSykdomSteg(
             periodeTilVurderingService.utled(behandling = behandling, vilkår = Vilkårtype.SYKDOMSVILKÅRET)
 
         if (periodeTilVurdering.isNotEmpty()) {
-            val sykdomsGrunnlag = sykdomsRepository.hentHvisEksisterer(behandlingId = behandling.id)
-            val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId = behandling.id)
+            val sykdomsGrunnlag = sykdomsRepository.hentHvisEksisterer(behandlingId = input.kontekst.behandlingId)
+            val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId = input.kontekst.behandlingId)
 
             //TODO: Skrive om til å være lik uttrykket på linje 46
-            val vilkårResultat = vilkårsresultatRepository.hent(behandling.id)
+            val vilkårResultat = vilkårsresultatRepository.hent(input.kontekst.behandlingId)
             if (sykdomsGrunnlag != null && sykdomsGrunnlag.erKonsistent() || studentGrunnlag?.studentvurdering?.oppfyller11_14 == true) {
                 for (periode in periodeTilVurdering) {
                     val faktagrunnlag = SykdomsFaktagrunnlag(
@@ -44,7 +44,7 @@ class VurderSykdomSteg(
                     Sykdomsvilkår(vilkårResultat).vurder(faktagrunnlag)
                 }
             }
-            vilkårsresultatRepository.lagre(behandling.id, vilkårResultat)
+            vilkårsresultatRepository.lagre(input.kontekst.behandlingId, vilkårResultat)
             val sykdomsvilkåret = vilkårResultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
 
             if (sykdomsvilkåret.harPerioderSomIkkeErVurdert(periodeTilVurdering)

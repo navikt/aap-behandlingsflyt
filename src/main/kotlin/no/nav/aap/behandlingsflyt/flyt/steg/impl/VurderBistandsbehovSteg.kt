@@ -31,10 +31,10 @@ class VurderBistandsbehovSteg(
 
         if (periodeTilVurdering.isNotEmpty()) {
 
-            val bistandsGrunnlag = BistandsRepository.hentHvisEksisterer(behandling.id)
-            val studentGrunnlag = studentRepository.hentHvisEksisterer(behandling.id)
+            val bistandsGrunnlag = BistandsRepository.hentHvisEksisterer(input.kontekst.behandlingId)
+            val studentGrunnlag = studentRepository.hentHvisEksisterer(input.kontekst.behandlingId)
 
-            val vilkårsresultat = vilkårsresultatRepository.hent(behandling.id)
+            val vilkårsresultat = vilkårsresultatRepository.hent(input.kontekst.behandlingId)
             if (studentGrunnlag?.studentvurdering?.oppfyller11_14 == true || bistandsGrunnlag != null) {
                 for (periode in periodeTilVurdering) {
                     val grunnlag = BistandFaktagrunnlag(
@@ -46,7 +46,7 @@ class VurderBistandsbehovSteg(
                     Bistandsvilkåret(vilkårsresultat).vurder(grunnlag = grunnlag)
                 }
             }
-            vilkårsresultatRepository.lagre(behandling.id, vilkårsresultat)
+            vilkårsresultatRepository.lagre(input.kontekst.behandlingId, vilkårsresultat)
 
             val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
 

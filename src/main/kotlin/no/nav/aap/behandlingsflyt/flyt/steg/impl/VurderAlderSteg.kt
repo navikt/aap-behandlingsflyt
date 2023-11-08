@@ -18,10 +18,8 @@ class VurderAlderSteg(
 ) : BehandlingSteg {
 
     override fun utfør(input: StegInput): StegResultat {
-
         val behandling = behandlingService.hent(input.kontekst.behandlingId)
 
-        //TODO: Trekk ut PeriodeTilVurderinTjeneste som en dependency
         val periodeTilVurdering =
             periodeTilVurderingService.utled(behandling = behandling, vilkår = Vilkårtype.ALDERSVILKÅRET)
 
@@ -29,12 +27,12 @@ class VurderAlderSteg(
             val personinfoGrunnlag = personinformasjonRepository.hentHvisEksisterer(input.kontekst.behandlingId)
                 ?: throw IllegalStateException("Forventet å finne personopplysninger")
 
-            val vilkårsresultat = vilkårsresultatRepository.hent(behandling.id)
+            val vilkårsresultat = vilkårsresultatRepository.hent(input.kontekst.behandlingId)
             for (periode in periodeTilVurdering) {
                 val aldersgrunnlag = Aldersgrunnlag(periode, personinfoGrunnlag.personinfo.fødselsdato)
                 Aldersvilkåret(vilkårsresultat).vurder(aldersgrunnlag)
             }
-            vilkårsresultatRepository.lagre(behandling.id, vilkårsresultat)
+            vilkårsresultatRepository.lagre(input.kontekst.behandlingId, vilkårsresultat)
         }
 
         return StegResultat()

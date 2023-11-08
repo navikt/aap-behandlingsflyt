@@ -26,9 +26,9 @@ class VurderYrkesskadeÅrsakssammenhengSteg(
             periodeTilVurderingService.utled(behandling = behandling, vilkår = Vilkårtype.SYKDOMSVILKÅRET)
 
         if (periodeTilVurdering.isNotEmpty()) {
-            val yrkesskadeGrunnlag = YrkesskadeRepository.hentHvisEksisterer(behandlingId = behandling.id)
-            val sykdomsGrunnlag = SykdomsRepository.hentHvisEksisterer(behandlingId = behandling.id)
-            val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId = behandling.id)
+            val yrkesskadeGrunnlag = YrkesskadeRepository.hentHvisEksisterer(behandlingId = input.kontekst.behandlingId)
+            val sykdomsGrunnlag = SykdomsRepository.hentHvisEksisterer(behandlingId = input.kontekst.behandlingId)
+            val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId = input.kontekst.behandlingId)
 
             if (erBehovForAvklaring(yrkesskadeGrunnlag, sykdomsGrunnlag, studentGrunnlag)) {
                 return StegResultat(listOf(Definisjon.AVKLAR_YRKESSKADE))
