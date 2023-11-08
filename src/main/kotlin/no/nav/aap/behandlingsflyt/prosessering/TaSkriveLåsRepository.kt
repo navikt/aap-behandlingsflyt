@@ -7,23 +7,23 @@ import java.util.*
 
 class TaSkriveLåsRepository(private val connection: DBConnection) {
 
-    fun låsSak(sakId: SakId): SakSkrivelås {
-        val query = """SELECT versjon FROM SAK WHERE ID = ? FOR UPDATE"""
-
-        return connection.queryFirst(query) {
-            setParams {
-                setLong(1, sakId.toLong())
-            }
-            setRowMapper {
-                SakSkrivelås(sakId, it.getLong("versjon"))
-            }
-        }
-    }
-
     fun lås(sakId: SakId, behandlingId: BehandlingId): Skrivelås {
         val behandling = låsBehandling(behandlingId)
         val sakSkrivelås = låsSak(sakId)
         return Skrivelås(sakSkrivelås, behandling)
+    }
+
+    fun låsBehandling(behandlingId: BehandlingId): BehandlingSkrivelås {
+        val query = """SELECT versjon FROM BEHANDLING WHERE ID = ? FOR UPDATE"""
+
+        return connection.queryFirst(query) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+            setRowMapper {
+                BehandlingSkrivelås(behandlingId, it.getLong("versjon"))
+            }
+        }
     }
 
     fun lås(behandlingUUid: UUID): Skrivelås {
@@ -39,17 +39,22 @@ class TaSkriveLåsRepository(private val connection: DBConnection) {
         }
     }
 
-    fun låsBehandling(behandlingId: BehandlingId): BehandlingSkrivelås {
-        val query = """SELECT versjon FROM BEHANDLING WHERE ID = ? FOR UPDATE"""
+    fun låsSak(sakId: SakId): SakSkrivelås {
+        val query = """SELECT versjon FROM SAK WHERE ID = ? FOR UPDATE"""
 
         return connection.queryFirst(query) {
             setParams {
-                setLong(1, behandlingId.toLong())
+                setLong(1, sakId.toLong())
             }
             setRowMapper {
-                BehandlingSkrivelås(behandlingId, it.getLong("versjon"))
+                SakSkrivelås(sakId, it.getLong("versjon"))
             }
         }
+    }
+
+    fun verifiserSkrivelås(skrivelås: Skrivelås) {
+        verifiserSkrivelås(skrivelås.behandlingSkrivelås)
+        verifiserSkrivelås(skrivelås.sakSkrivelås)
     }
 
     fun verifiserSkrivelås(skrivelås: SakSkrivelås) {
@@ -80,10 +85,5 @@ class TaSkriveLåsRepository(private val connection: DBConnection) {
                 require(it == 1)
             }
         }
-    }
-
-    fun verifiserSkrivelås(skrivelås: Skrivelås) {
-        verifiserSkrivelås(skrivelås.behandlingSkrivelås)
-        verifiserSkrivelås(skrivelås.sakSkrivelås)
     }
 }
