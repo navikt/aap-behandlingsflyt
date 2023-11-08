@@ -25,7 +25,7 @@ enum class StegType(val gruppe: StegGruppe, val status: Status, val tekniskSteg:
         status = Status.UTREDES
     ),
     VURDER_SYKEPENGEERSTATNING(
-        gruppe = StegGruppe.SYKEPENGEERSTATNING,
+        gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES
     ),
     FRITAK_MELDEPLIKT(

@@ -8,7 +8,6 @@ enum class StegGruppe {
     BARNETILLEGG,
     SAMORDNING,
     SYKDOM,
-    SYKEPENGEERSTATNING,
     GRUNNLAG,
     UTTAK,
     TILKJENT_YTELSE,
