@@ -101,17 +101,15 @@ class StegOrkestrator(private val transaksjonsconnection: DBConnection, private 
     }
 
     private fun behandleStegBakover(flytSteg: FlytSteg, kontekst: FlytKontekst): Transisjon {
-        val input = StegInput(kontekst)
         val steg = flytSteg.konstruer(transaksjonsconnection)
-        steg.vedTilbakeføring(input)
+        steg.vedTilbakeføring(kontekst)
 
         return Fortsett
     }
 
     private fun behandleSteg(flytSteg: FlytSteg, kontekst: FlytKontekst): Transisjon {
-        val input = StegInput(kontekst)
         val steg = flytSteg.konstruer(transaksjonsconnection)
-        val stegResultat = steg.utfør(input)
+        val stegResultat = steg.utfør(kontekst)
 
         return stegResultat.transisjon()
     }

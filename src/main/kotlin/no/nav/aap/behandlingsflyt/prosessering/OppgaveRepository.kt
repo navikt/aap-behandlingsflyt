@@ -21,7 +21,7 @@ class OppgaveRepository(private val connection: DBConnection) {
                 setLong(1, oppgaveInput.sakIdOrNull()?.toLong())
                 setLong(2, oppgaveInput.behandlingIdOrNull()?.toLong())
                 setString(3, oppgaveInput.type())
-                setLocalDateTime(4, LocalDateTime.now())
+                setLocalDateTime(4, oppgaveInput.nesteKjøringTidspunkt())
             }
         }
 
@@ -145,30 +145,6 @@ class OppgaveRepository(private val connection: DBConnection) {
                 setLong(1, oppgaveInput.id)
                 setEnumName(2, OppgaveStatus.FEILET)
                 setString(3, exception.message.orEmpty().take(3000))
-            }
-        }
-    }
-
-    internal fun markerKlar(oppgaveInput: OppgaveInput) {
-        connection.execute("UPDATE OPPGAVE SET status = ? WHERE id = ? and status IN ('FEILET')") {
-            setParams {
-                setEnumName(1, OppgaveStatus.KLAR)
-                setLong(2, oppgaveInput.id)
-            }
-            setResultValidator {
-                require(it == 1)
-            }
-        }
-
-        val historikk = """
-            INSERT INTO OPPGAVE_HISTORIKK 
-            (oppgave_id, status) VALUES (?, ?)
-        """.trimIndent()
-
-        connection.execute(historikk) {
-            setParams {
-                setLong(1, oppgaveInput.id)
-                setEnumName(2, OppgaveStatus.KLAR)
             }
         }
     }

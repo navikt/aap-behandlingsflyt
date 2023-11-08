@@ -1,10 +1,12 @@
 package no.nav.aap.behandlingsflyt.flyt.steg
 
+import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
+
 interface BehandlingSteg {
 
-    fun utfør(input: StegInput): StegResultat
+    fun utfør(kontekst: FlytKontekst): StegResultat
 
-    fun vedTilbakeføring(input: StegInput) {
+    fun vedTilbakeføring(kontekst: FlytKontekst) {
 
     }
 }

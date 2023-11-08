@@ -20,7 +20,6 @@ import no.nav.aap.behandlingsflyt.sak.Ident
 import no.nav.aap.behandlingsflyt.sak.PersonRepository
 import no.nav.aap.behandlingsflyt.sak.Sak
 import no.nav.aap.behandlingsflyt.sak.SakRepository
-import no.nav.aap.behandlingsflyt.sak.SakService
 import no.nav.aap.behandlingsflyt.sak.Saksnummer
 import javax.sql.DataSource
 
@@ -60,9 +59,6 @@ class HendelsesMottak(private val dataSource: DataSource) {
         val behandling = BehandlingRepository(connection).hent(key)
         ValiderBehandlingTilstand.validerTilstandBehandling(behandling = behandling)
 
-        val sakService = SakService(connection)
-        val sak = sakService.hent(behandling.sakId)
-
         val kontekst = tilKontekst(behandling)
         val avklaringsbehovKontroller = AvklaringsbehovOrkestrator(connection)
         avklaringsbehovKontroller.løsAvklaringsbehovOgFortsettProsessering(
@@ -75,9 +71,6 @@ class HendelsesMottak(private val dataSource: DataSource) {
         dataSource.transaction { connection ->
             val behandling = BehandlingRepository(connection).hent(key)
             ValiderBehandlingTilstand.validerTilstandBehandling(behandling = behandling)
-
-            val sakService = SakService(connection)
-            val sak = sakService.hent(behandling.sakId)
 
             val kontekst = tilKontekst(behandling)
             val kontroller = FlytOrkestrator(connection)

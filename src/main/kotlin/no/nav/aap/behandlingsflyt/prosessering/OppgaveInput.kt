@@ -4,12 +4,14 @@ import no.nav.aap.behandlingsflyt.behandling.Behandling
 import no.nav.aap.behandlingsflyt.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sak.Sak
 import no.nav.aap.behandlingsflyt.sak.SakId
+import java.time.LocalDateTime
 
 class OppgaveInput(val oppgave: Oppgave) {
 
     internal var id: Long? = null
     private var sakId: SakId? = null
     private var behandlingId: BehandlingId? = null
+    private var nesteKjøring: LocalDateTime? = null
 
     internal fun medId(id: Long): OppgaveInput {
         this.id = id
@@ -52,9 +54,21 @@ class OppgaveInput(val oppgave: Oppgave) {
         return behandlingId
     }
 
+    internal fun nesteKjøringTidspunkt(): LocalDateTime {
+        if (nesteKjøring != null) {
+            return nesteKjøring as LocalDateTime
+        }
+        return LocalDateTime.now()
+    }
+
     fun type(): String = oppgave.type()
 
     override fun toString(): String {
         return "[${oppgave.type()}] - sakId = $sakId, behandlingId = $behandlingId"
+    }
+
+    fun medNesteKjøring(nesteKjøring: LocalDateTime): OppgaveInput {
+        this.nesteKjøring = nesteKjøring
+        return this
     }
 }

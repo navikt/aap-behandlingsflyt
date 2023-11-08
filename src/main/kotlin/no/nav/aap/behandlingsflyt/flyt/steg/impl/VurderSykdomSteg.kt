@@ -4,8 +4,8 @@ import no.nav.aap.behandlingsflyt.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykdomsRepository
+import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
-import no.nav.aap.behandlingsflyt.flyt.steg.StegInput
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.flyt.vilkår.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårtype
@@ -20,18 +20,18 @@ class VurderSykdomSteg(
     private val periodeTilVurderingService: PeriodeTilVurderingService
 ) : BehandlingSteg {
 
-    override fun utfør(input: StegInput): StegResultat {
-        val behandling = behandlingService.hent(input.kontekst.behandlingId)
+    override fun utfør(kontekst: FlytKontekst): StegResultat {
+        val behandling = behandlingService.hent(kontekst.behandlingId)
 
         val periodeTilVurdering =
             periodeTilVurderingService.utled(behandling = behandling, vilkår = Vilkårtype.SYKDOMSVILKÅRET)
 
         if (periodeTilVurdering.isNotEmpty()) {
-            val sykdomsGrunnlag = sykdomsRepository.hentHvisEksisterer(behandlingId = input.kontekst.behandlingId)
-            val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId = input.kontekst.behandlingId)
+            val sykdomsGrunnlag = sykdomsRepository.hentHvisEksisterer(behandlingId = kontekst.behandlingId)
+            val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId = kontekst.behandlingId)
 
             //TODO: Skrive om til å være lik uttrykket på linje 46
-            val vilkårResultat = vilkårsresultatRepository.hent(input.kontekst.behandlingId)
+            val vilkårResultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
             if (sykdomsGrunnlag != null && sykdomsGrunnlag.erKonsistent() || studentGrunnlag?.studentvurdering?.oppfyller11_14 == true) {
                 for (periode in periodeTilVurdering) {
                     val faktagrunnlag = SykdomsFaktagrunnlag(
@@ -44,7 +44,7 @@ class VurderSykdomSteg(
                     Sykdomsvilkår(vilkårResultat).vurder(faktagrunnlag)
                 }
             }
-            vilkårsresultatRepository.lagre(input.kontekst.behandlingId, vilkårResultat)
+            vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårResultat)
             val sykdomsvilkåret = vilkårResultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
 
             if (sykdomsvilkåret.harPerioderSomIkkeErVurdert(periodeTilVurdering)

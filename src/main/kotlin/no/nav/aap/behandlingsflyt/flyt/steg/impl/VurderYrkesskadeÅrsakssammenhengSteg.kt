@@ -8,8 +8,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykdomsGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykdomsRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.YrkesskadeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.YrkesskadeRepository
+import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
-import no.nav.aap.behandlingsflyt.flyt.steg.StegInput
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårtype
 
@@ -19,16 +19,16 @@ class VurderYrkesskadeÅrsakssammenhengSteg(
     private val periodeTilVurderingService: PeriodeTilVurderingService
 ) : BehandlingSteg {
 
-    override fun utfør(input: StegInput): StegResultat {
-        val behandling = behandlingService.hent(input.kontekst.behandlingId)
+    override fun utfør(kontekst: FlytKontekst): StegResultat {
+        val behandling = behandlingService.hent(kontekst.behandlingId)
 
         val periodeTilVurdering =
             periodeTilVurderingService.utled(behandling = behandling, vilkår = Vilkårtype.SYKDOMSVILKÅRET)
 
         if (periodeTilVurdering.isNotEmpty()) {
-            val yrkesskadeGrunnlag = YrkesskadeRepository.hentHvisEksisterer(behandlingId = input.kontekst.behandlingId)
-            val sykdomsGrunnlag = SykdomsRepository.hentHvisEksisterer(behandlingId = input.kontekst.behandlingId)
-            val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId = input.kontekst.behandlingId)
+            val yrkesskadeGrunnlag = YrkesskadeRepository.hentHvisEksisterer(behandlingId = kontekst.behandlingId)
+            val sykdomsGrunnlag = SykdomsRepository.hentHvisEksisterer(behandlingId = kontekst.behandlingId)
+            val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId = kontekst.behandlingId)
 
             if (erBehovForAvklaring(yrkesskadeGrunnlag, sykdomsGrunnlag, studentGrunnlag)) {
                 return StegResultat(listOf(Definisjon.AVKLAR_YRKESSKADE))

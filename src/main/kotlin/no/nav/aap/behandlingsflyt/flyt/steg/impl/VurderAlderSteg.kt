@@ -2,8 +2,8 @@ package no.nav.aap.behandlingsflyt.flyt.steg.impl
 
 import no.nav.aap.behandlingsflyt.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.PersoninformasjonRepository
+import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
-import no.nav.aap.behandlingsflyt.flyt.steg.StegInput
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.flyt.vilkår.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårtype
@@ -17,22 +17,22 @@ class VurderAlderSteg(
     private val personinformasjonRepository: PersoninformasjonRepository
 ) : BehandlingSteg {
 
-    override fun utfør(input: StegInput): StegResultat {
-        val behandling = behandlingService.hent(input.kontekst.behandlingId)
+    override fun utfør(kontekst: FlytKontekst): StegResultat {
+        val behandling = behandlingService.hent(kontekst.behandlingId)
 
         val periodeTilVurdering =
             periodeTilVurderingService.utled(behandling = behandling, vilkår = Vilkårtype.ALDERSVILKÅRET)
 
         if (periodeTilVurdering.isNotEmpty()) {
-            val personinfoGrunnlag = personinformasjonRepository.hentHvisEksisterer(input.kontekst.behandlingId)
+            val personinfoGrunnlag = personinformasjonRepository.hentHvisEksisterer(kontekst.behandlingId)
                 ?: throw IllegalStateException("Forventet å finne personopplysninger")
 
-            val vilkårsresultat = vilkårsresultatRepository.hent(input.kontekst.behandlingId)
+            val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
             for (periode in periodeTilVurdering) {
                 val aldersgrunnlag = Aldersgrunnlag(periode, personinfoGrunnlag.personinfo.fødselsdato)
                 Aldersvilkåret(vilkårsresultat).vurder(aldersgrunnlag)
             }
-            vilkårsresultatRepository.lagre(input.kontekst.behandlingId, vilkårsresultat)
+            vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
         }
 
         return StegResultat()

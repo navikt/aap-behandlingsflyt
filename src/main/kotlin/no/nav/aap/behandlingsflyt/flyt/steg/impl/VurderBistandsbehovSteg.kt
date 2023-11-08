@@ -6,8 +6,8 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.bistand.BistandsRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.student.StudentGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.student.StudentRepository
+import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
-import no.nav.aap.behandlingsflyt.flyt.steg.StegInput
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkår
@@ -23,18 +23,18 @@ class VurderBistandsbehovSteg(
     private val periodeTilVurderingService: PeriodeTilVurderingService
 ) : BehandlingSteg {
 
-    override fun utfør(input: StegInput): StegResultat {
-        val behandling = behandlingService.hent(input.kontekst.behandlingId)
+    override fun utfør(kontekst: FlytKontekst): StegResultat {
+        val behandling = behandlingService.hent(kontekst.behandlingId)
 
         val periodeTilVurdering =
             periodeTilVurderingService.utled(behandling = behandling, vilkår = Vilkårtype.BISTANDSVILKÅRET)
 
         if (periodeTilVurdering.isNotEmpty()) {
 
-            val bistandsGrunnlag = BistandsRepository.hentHvisEksisterer(input.kontekst.behandlingId)
-            val studentGrunnlag = studentRepository.hentHvisEksisterer(input.kontekst.behandlingId)
+            val bistandsGrunnlag = BistandsRepository.hentHvisEksisterer(kontekst.behandlingId)
+            val studentGrunnlag = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
 
-            val vilkårsresultat = vilkårsresultatRepository.hent(input.kontekst.behandlingId)
+            val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
             if (studentGrunnlag?.studentvurdering?.oppfyller11_14 == true || bistandsGrunnlag != null) {
                 for (periode in periodeTilVurdering) {
                     val grunnlag = BistandFaktagrunnlag(
@@ -46,7 +46,7 @@ class VurderBistandsbehovSteg(
                     Bistandsvilkåret(vilkårsresultat).vurder(grunnlag = grunnlag)
                 }
             }
-            vilkårsresultatRepository.lagre(input.kontekst.behandlingId, vilkårsresultat)
+            vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
 
             val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
 
