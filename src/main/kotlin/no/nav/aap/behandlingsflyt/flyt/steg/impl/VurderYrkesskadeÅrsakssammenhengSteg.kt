@@ -13,6 +13,8 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårtype
 
 class VurderYrkesskadeÅrsakssammenhengSteg(
+    private val yrkesskadeRepository: YrkesskadeRepository,
+    private val sykdomsRepository: SykdomsRepository,
     private val studentRepository: StudentRepository,
     private val periodeTilVurderingService: PeriodeTilVurderingService
 ) : BehandlingSteg {
@@ -22,8 +24,8 @@ class VurderYrkesskadeÅrsakssammenhengSteg(
             periodeTilVurderingService.utled(kontekst = kontekst, vilkår = Vilkårtype.SYKDOMSVILKÅRET)
 
         if (periodeTilVurdering.isNotEmpty()) {
-            val yrkesskadeGrunnlag = YrkesskadeRepository.hentHvisEksisterer(behandlingId = kontekst.behandlingId)
-            val sykdomsGrunnlag = SykdomsRepository.hentHvisEksisterer(behandlingId = kontekst.behandlingId)
+            val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId = kontekst.behandlingId)
+            val sykdomsGrunnlag = sykdomsRepository.hentHvisEksisterer(behandlingId = kontekst.behandlingId)
             val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId = kontekst.behandlingId)
 
             if (erBehovForAvklaring(yrkesskadeGrunnlag, sykdomsGrunnlag, studentGrunnlag)) {
