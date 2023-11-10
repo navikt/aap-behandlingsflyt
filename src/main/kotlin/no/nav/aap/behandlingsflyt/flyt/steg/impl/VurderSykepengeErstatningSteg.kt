@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt.steg.impl
 
-import no.nav.aap.behandlingsflyt.behandling.BehandlingService
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykepengerErstatningRepository
 import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
@@ -13,10 +13,10 @@ import no.nav.aap.behandlingsflyt.flyt.vilkår.sykdom.SykepengerErstatningVilkå
 import no.nav.aap.behandlingsflyt.sak.SakService
 
 class VurderSykepengeErstatningSteg(
-    private val behandlingService: BehandlingService,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val sykepengerErstatningRepository: SykepengerErstatningRepository,
-    private val sakService: SakService
+    private val sakService: SakService,
+    private val avklaringsbehovRepository: AvklaringsbehovRepository
 ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekst): StegResultat {
@@ -44,8 +44,7 @@ class VurderSykepengeErstatningSteg(
                 return StegResultat(listOf(Definisjon.AVKLAR_SYKEPENGEERSTATNING))
             }
         } else {
-            val behandling = behandlingService.hent(kontekst.behandlingId)
-            val avklaringsbehovene = behandling.avklaringsbehovene()
+            val avklaringsbehovene = avklaringsbehovRepository.hent(kontekst.behandlingId)
             val sykepengeerstatningsBehov =
                 avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
 
