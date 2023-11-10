@@ -69,4 +69,14 @@ class Avklaringsbehovene(avklaringsbehovene: List<Avklaringsbehov> = mutableList
     fun avbryt(definisjon: Definisjon) {
         avklaringsbehovene.single { it.definisjon == definisjon }.avbryt()
     }
+
+    fun harHattAvklaringsbehov(): Boolean {
+        return avklaringsbehovene.any { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
+    }
+
+    fun harIkkeForeslåttVedtak(): Boolean {
+        return avklaringsbehovene
+            .filter { avklaringsbehov -> avklaringsbehov.erForeslåttVedtak() }
+            .none { it.status() == Status.AVSLUTTET }
+    }
 }

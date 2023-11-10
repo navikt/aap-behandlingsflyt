@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.behandling
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Status.AVSLUTTET
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.flyt.steg.StegStatus
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
@@ -108,16 +107,6 @@ class Behandling(
     fun avklaringsbehov(): List<Avklaringsbehov> = avklaringsbehovene.alle()
     fun avklaringsbehovene(): Avklaringsbehovene = avklaringsbehovene
     fun åpneAvklaringsbehov(): List<Avklaringsbehov> = avklaringsbehovene.åpne()
-
-    fun harHattAvklaringsbehov(): Boolean {
-        return avklaringsbehov().any { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
-    }
-
-    fun harIkkeForeslåttVedtak(): Boolean {
-        return avklaringsbehov()
-            .filter { avklaringsbehov -> avklaringsbehov.erForeslåttVedtak() }
-            .none { it.status() == AVSLUTTET }
-    }
 
     override fun compareTo(other: Behandling): Int {
         return this.opprettetTidspunkt.compareTo(other.opprettetTidspunkt)
