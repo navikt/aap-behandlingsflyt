@@ -21,7 +21,9 @@ class StartBehandlingSteg(
                 .entries
                 .filter { it.obligatorisk }
                 .forEach { vilkårstype ->
-                    vilkårsresultat.leggTilHvisIkkeEksisterer(vilkårstype).leggTilIkkeVurdertPeriode(rettighetsperiode)
+                    vilkårsresultat
+                        .leggTilHvisIkkeEksisterer(vilkårstype)
+                            .leggTilIkkeVurdertPeriode(rettighetsperiode)
                 }
 
             vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)

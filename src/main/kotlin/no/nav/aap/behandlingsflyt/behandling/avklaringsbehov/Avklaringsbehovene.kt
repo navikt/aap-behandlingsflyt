@@ -74,9 +74,20 @@ class Avklaringsbehovene(avklaringsbehovene: List<Avklaringsbehov> = mutableList
         return avklaringsbehovene.any { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
     }
 
+    fun harHattAvklaringsbehovSomHarKrevdToTrinn() =
+        avklaringsbehovene
+            .filter { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
+            .any { avklaringsbehov -> avklaringsbehov.erTotrinn() && !avklaringsbehov.erTotrinnsVurdert() }
+
     fun harIkkeForeslåttVedtak(): Boolean {
         return avklaringsbehovene
             .filter { avklaringsbehov -> avklaringsbehov.erForeslåttVedtak() }
             .none { it.status() == Status.AVSLUTTET }
     }
+
+    fun skalTilbakeføresEtterTotrinnsVurdering(): Boolean {
+        return tilbakeførtFraBeslutter().isNotEmpty()
+    }
+
+
 }

@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.flyt.vilkår.bistand.BistandFaktagrunnlag
 import no.nav.aap.behandlingsflyt.flyt.vilkår.bistand.Bistandsvilkåret
 
 class VurderBistandsbehovSteg(
+    private val bistandsRepository: BistandsRepository,
     private val studentRepository: StudentRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val periodeTilVurderingService: PeriodeTilVurderingService
@@ -26,8 +27,7 @@ class VurderBistandsbehovSteg(
             periodeTilVurderingService.utled(kontekst = kontekst, vilkår = Vilkårtype.BISTANDSVILKÅRET)
 
         if (periodeTilVurdering.isNotEmpty()) {
-
-            val bistandsGrunnlag = BistandsRepository.hentHvisEksisterer(kontekst.behandlingId)
+            val bistandsGrunnlag = bistandsRepository.hentHvisEksisterer(kontekst.behandlingId)
             val studentGrunnlag = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
 
             val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
@@ -64,7 +64,7 @@ class VurderBistandsbehovSteg(
     }
 
     private fun harInnvilgetForStudentUtenÅVæreStudent(vilkår: Vilkår, studentGrunnlag: StudentGrunnlag?): Boolean {
-        return studentGrunnlag?.studentvurdering?.oppfyller11_14 == false && vilkår.vilkårsperioder()
-            .any { it.innvilgelsesårsak == Innvilgelsesårsak.STUDENT }
+        return studentGrunnlag?.studentvurdering?.oppfyller11_14 == false &&
+                vilkår.vilkårsperioder().any { it.innvilgelsesårsak == Innvilgelsesårsak.STUDENT }
     }
 }
