@@ -27,7 +27,7 @@ class VurderBistandsbehovSteg(
         val behandling = behandlingService.hent(kontekst.behandlingId)
 
         val periodeTilVurdering =
-            periodeTilVurderingService.utled(behandling = behandling, vilkår = Vilkårtype.BISTANDSVILKÅRET)
+            periodeTilVurderingService.utled(kontekst = kontekst, vilkår = Vilkårtype.BISTANDSVILKÅRET)
 
         if (periodeTilVurdering.isNotEmpty()) {
 

@@ -23,7 +23,7 @@ class VurderYrkesskadeÅrsakssammenhengSteg(
         val behandling = behandlingService.hent(kontekst.behandlingId)
 
         val periodeTilVurdering =
-            periodeTilVurderingService.utled(behandling = behandling, vilkår = Vilkårtype.SYKDOMSVILKÅRET)
+            periodeTilVurderingService.utled(kontekst = kontekst, vilkår = Vilkårtype.SYKDOMSVILKÅRET)
 
         if (periodeTilVurdering.isNotEmpty()) {
             val yrkesskadeGrunnlag = YrkesskadeRepository.hentHvisEksisterer(behandlingId = kontekst.behandlingId)

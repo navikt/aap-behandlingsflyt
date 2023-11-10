@@ -21,7 +21,7 @@ class VurderAlderSteg(
         val behandling = behandlingService.hent(kontekst.behandlingId)
 
         val periodeTilVurdering =
-            periodeTilVurderingService.utled(behandling = behandling, vilkår = Vilkårtype.ALDERSVILKÅRET)
+            periodeTilVurderingService.utled(kontekst = kontekst, vilkår = Vilkårtype.ALDERSVILKÅRET)
 
         if (periodeTilVurdering.isNotEmpty()) {
             val personinfoGrunnlag = personinformasjonRepository.hentHvisEksisterer(kontekst.behandlingId)
