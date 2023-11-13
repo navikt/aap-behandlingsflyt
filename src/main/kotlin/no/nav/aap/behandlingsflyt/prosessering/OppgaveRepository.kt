@@ -44,7 +44,7 @@ class OppgaveRepository(private val connection: DBConnection) {
         @Language("PostgreSQL")
         val query = """
             SELECT id, type, sak_id, behandling_id, neste_kjoring, 
-                (SELECT count(1) FROM oppgave_historikk h WHERE h.oppgave_id = o.id AND h.status = 'FEILET') as antall_feil
+                (SELECT count(1) FROM oppgave_historikk h WHERE h.oppgave_id = o.id AND h.status = '${OppgaveStatus.FEILET.name}') as antall_feil
             FROM OPPGAVE o
             WHERE status = '${OppgaveStatus.KLAR.name}'
               AND neste_kjoring < ?
@@ -153,7 +153,9 @@ class OppgaveRepository(private val connection: DBConnection) {
 
     fun harOppgaver(): Boolean {
         val antall =
-            connection.queryFirst("SELECT count(1) as antall FROM OPPGAVE WHERE status not in ('FERDIG', 'FEILET')") {
+            connection.queryFirst("SELECT count(1) as antall " +
+                    "FROM OPPGAVE " +
+                    "WHERE status not in ('${OppgaveStatus.FERDIG.name}', '${OppgaveStatus.FEILET.name}')") {
                 setRowMapper {
                     it.getLong("antall") > 0
                 }
