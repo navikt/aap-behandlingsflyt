@@ -43,7 +43,8 @@ class OppgaveRepository(private val connection: DBConnection) {
     internal fun plukkOppgave(): OppgaveInput? {
         @Language("PostgreSQL")
         val query = """
-            SELECT id, type, sak_id, behandling_id, neste_kjoring, (SELECT count(1) from oppgave_historikk h where h.oppgave_id = o.id AND h.status = 'FEILET') as antall_feil
+            SELECT id, type, sak_id, behandling_id, neste_kjoring, 
+                (SELECT count(1) FROM oppgave_historikk h WHERE h.oppgave_id = o.id AND h.status = 'FEILET') as antall_feil
             FROM OPPGAVE o
             WHERE status = '${OppgaveStatus.KLAR.name}'
               AND neste_kjoring < ?
