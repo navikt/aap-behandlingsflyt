@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.Periode
 import no.nav.aap.behandlingsflyt.avklaringsbehov.bistand.AvklarBistandsbehovLøsning
-import no.nav.aap.behandlingsflyt.avklaringsbehov.bistand.BistandsVurdering
+import no.nav.aap.behandlingsflyt.avklaringsbehov.bistand.BistandVurdering
 import no.nav.aap.behandlingsflyt.avklaringsbehov.student.AvklarStudentLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.AvklarSykdomLøsning
@@ -152,7 +152,7 @@ class FlytOrkestratorTest {
                 behandling.id,
                 LøsAvklaringsbehovBehandlingHendelse(
                     løsning = AvklarBistandsbehovLøsning(
-                        bistandsVurdering = BistandsVurdering(
+                        bistandVurdering = BistandVurdering(
                             begrunnelse = "Trenger hjelp fra nav",
                             erBehovForBistand = true
                         ),

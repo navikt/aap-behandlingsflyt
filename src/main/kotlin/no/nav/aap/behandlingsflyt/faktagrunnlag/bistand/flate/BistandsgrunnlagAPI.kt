@@ -9,17 +9,18 @@ import no.nav.aap.behandlingsflyt.behandling.Behandling
 import no.nav.aap.behandlingsflyt.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.faktagrunnlag.BehandlingReferanseService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.bistand.BistandsRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.bistand.BistandRepository
 
 fun NormalOpenAPIRoute.bistandsgrunnlagApi(dataSource: HikariDataSource) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/bistand") {
             get<BehandlingReferanse, BistandGrunnlagDto> { req ->
-                val behandling: Behandling = dataSource.transaction {
-                    BehandlingReferanseService(it).behandling(req)
+                val bistandsGrunnlag = dataSource.transaction { connection ->
+                    val behandling: Behandling = BehandlingReferanseService(connection).behandling(req)
+                    val bistandRepository = BistandRepository(connection)
+                    bistandRepository.hentHvisEksisterer(behandling.id)
                 }
 
-                val bistandsGrunnlag = BistandsRepository.hentHvisEksisterer(behandling.id)
                 respond(BistandGrunnlagDto(bistandsGrunnlag?.vurdering))
             }
         }

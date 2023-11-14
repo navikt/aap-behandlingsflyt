@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.flyt.steg.impl
 
 import no.nav.aap.behandlingsflyt.Periode
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.faktagrunnlag.bistand.BistandsRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.student.StudentGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.student.StudentRepository
 import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
@@ -16,7 +16,7 @@ import no.nav.aap.behandlingsflyt.flyt.vilkår.bistand.BistandFaktagrunnlag
 import no.nav.aap.behandlingsflyt.flyt.vilkår.bistand.Bistandsvilkåret
 
 class VurderBistandsbehovSteg(
-    private val bistandsRepository: BistandsRepository,
+    private val bistandRepository: BistandRepository,
     private val studentRepository: StudentRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val periodeTilVurderingService: PeriodeTilVurderingService
@@ -27,7 +27,7 @@ class VurderBistandsbehovSteg(
             periodeTilVurderingService.utled(kontekst = kontekst, vilkår = Vilkårtype.BISTANDSVILKÅRET)
 
         if (periodeTilVurdering.isNotEmpty()) {
-            val bistandsGrunnlag = bistandsRepository.hentHvisEksisterer(kontekst.behandlingId)
+            val bistandsGrunnlag = bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
             val studentGrunnlag = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
 
             val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)

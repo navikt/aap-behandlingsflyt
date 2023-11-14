@@ -9,6 +9,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AVKLAR_BISTANDSBEHO
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = AVKLAR_BISTANDSBEHOV_KODE)
 class AvklarBistandsbehovLøsning(
-    @JsonProperty("bistandsVurdering", required = true) val bistandsVurdering: BistandsVurdering
+    @JsonProperty("bistandsVurdering", required = true) val bistandVurdering: BistandVurdering
 ) :
     AvklaringsbehovLøsning

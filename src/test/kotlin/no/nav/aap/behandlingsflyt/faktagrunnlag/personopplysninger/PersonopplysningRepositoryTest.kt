@@ -73,7 +73,7 @@ class PersonopplysningRepositoryTest {
             personopplysningRepository.lagre(behandling.id, Personopplysning(Fødselsdato(18 mars 1992)))
 
             val opplysninger =
-                connection.queryList("SELECT BEHANDLING_ID, FODSELSDATO, AKTIV FROM PERSONOPPLYSNING") {
+                connection.queryList("SELECT FODSELSDATO FROM PERSONOPPLYSNING") {
                     setRowMapper { row -> row.getLocalDate("FODSELSDATO") }
                 }
             assertThat(opplysninger)

@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.avklaringsbehov.bistand
 
-data class BistandsVurdering(
+data class BistandVurdering(
     val begrunnelse: String,
     val erBehovForBistand: Boolean
 )

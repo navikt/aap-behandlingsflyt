@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag
 
 import no.nav.aap.behandlingsflyt.behandling.Behandling
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
-import no.nav.aap.behandlingsflyt.faktagrunnlag.bistand.BistandsRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.student.db.InMemoryStudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykdomsRepository
@@ -14,6 +14,7 @@ class GrunnlagKopierer(connection: DBConnection) {
 
     private val vilkårsresultatRepository: VilkårsresultatRepository = VilkårsresultatRepository(connection)
     private val personopplysningRepository = PersonopplysningRepository(connection)
+    private val bistandRepository = BistandRepository(connection)
 
     fun overfør(fraBehandling: Behandling, tilBehandling: Behandling) {
         vilkårsresultatRepository.kopier(fraBehandling, tilBehandling)
@@ -21,7 +22,7 @@ class GrunnlagKopierer(connection: DBConnection) {
         YrkesskadeRepository.kopier(fraBehandling, tilBehandling)
         SykdomsRepository.kopier(fraBehandling, tilBehandling)
         InMemoryStudentRepository.kopier(fraBehandling, tilBehandling)
-        BistandsRepository.kopier(fraBehandling, tilBehandling)
+        bistandRepository.kopier(fraBehandling.id, tilBehandling.id)
         SykepengerErstatningRepository.kopier(fraBehandling, tilBehandling)
     }
 }
