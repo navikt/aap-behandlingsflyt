@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.dbstuff.DBConnection
 import no.nav.aap.behandlingsflyt.dbstuff.InitTestDatabase
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Personinfo
+import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.adapter.PersonRegisterMock
 import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.YrkesskadeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.adapter.YrkesskadeRegisterMock
@@ -34,7 +34,7 @@ class FaktagrunnlagTest {
 
     @BeforeEach
     fun setUp() {
-        PersonRegisterMock.konstruer(ident, Personinfo(Fødselsdato(LocalDate.now().minusYears(18))))
+        PersonRegisterMock.konstruer(ident, Personopplysning(Fødselsdato(LocalDate.now().minusYears(18))))
     }
 
     @Test

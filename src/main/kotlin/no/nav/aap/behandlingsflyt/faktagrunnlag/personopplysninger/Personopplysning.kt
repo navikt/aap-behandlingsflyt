@@ -1,16 +1,16 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger
 
-class PersoninfoGrunnlag(private val id: Long, val personinfo: Personinfo){
+class Personopplysning(val fødselsdato: Fødselsdato) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as PersoninfoGrunnlag
+        other as Personopplysning
 
-        return personinfo == other.personinfo
+        return fødselsdato == other.fødselsdato
     }
 
     override fun hashCode(): Int {
-        return personinfo.hashCode()
+        return fødselsdato.hashCode()
     }
 }

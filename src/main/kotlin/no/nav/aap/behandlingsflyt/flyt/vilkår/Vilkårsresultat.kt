@@ -2,8 +2,10 @@ package no.nav.aap.behandlingsflyt.flyt.vilkår
 
 class Vilkårsresultat(
     internal var id: Long? = null,
-    private val vilkår: MutableList<Vilkår> = mutableListOf()
+    vilkår: List<Vilkår> = emptyList()
 ) {
+    private val vilkår: MutableList<Vilkår> = vilkår.toMutableList()
+
     fun leggTilHvisIkkeEksisterer(vilkårtype: Vilkårtype): Vilkår {
         if (vilkår.none { it.type == vilkårtype }) {
             this.vilkår.add(Vilkår(type = vilkårtype))
@@ -31,6 +33,4 @@ class Vilkårsresultat(
     override fun hashCode(): Int {
         return vilkår.hashCode()
     }
-
-
 }

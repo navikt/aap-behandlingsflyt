@@ -1,9 +1,11 @@
 package no.nav.aap.behandlingsflyt.dbstuff
 
 import no.nav.aap.behandlingsflyt.Periode
+import java.sql.Date
 import java.sql.PreparedStatement
 import java.sql.Timestamp
 import java.sql.Types
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
@@ -18,6 +20,10 @@ class Params(private val preparedStatement: PreparedStatement) {
 
     fun setEnumName(index: Int, value: Enum<*>?) {
         preparedStatement.setString(index, value?.name)
+    }
+
+    fun setLocalDate(index: Int, localDate: LocalDate?) {
+        preparedStatement.setDate(index, localDate?.let(Date::valueOf))
     }
 
     fun setLocalDateTime(index: Int, localDateTime: LocalDateTime?) {

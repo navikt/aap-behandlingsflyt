@@ -1,8 +1,10 @@
 package no.nav.aap.behandlingsflyt.dbstuff
 
 import no.nav.aap.behandlingsflyt.Periode
+import java.sql.Date
 import java.sql.ResultSet
 import java.sql.Timestamp
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
@@ -89,6 +91,17 @@ class Row(private val resultSet: ResultSet) {
         }
 
         return false
+    }
+
+    fun getLocalDate(columnLabel: String): LocalDate {
+        val localDate = getLocalDateOrNull(columnLabel)
+        requireNotNull(localDate)
+        return localDate
+    }
+
+    fun getLocalDateOrNull(columnLabel: String): LocalDate? {
+        val date: Date? = resultSet.getDate(columnLabel)
+        return date?.toLocalDate()
     }
 
     fun getLocalDateTime(columnLabel: String): LocalDateTime {

@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt.steg.impl
 
 import no.nav.aap.behandlingsflyt.dbstuff.DBConnection
-import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.PersoninformasjonRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
@@ -14,8 +14,7 @@ object VurderAlderFlytSteg : FlytSteg {
         return VurderAlderSteg(
             VilkårsresultatRepository(connection),
             PeriodeTilVurderingService(SakService(connection)),
-            PersoninformasjonRepository
-        )
+            PersonopplysningRepository(connection))
     }
 
     override fun type() = StegType.VURDER_ALDER

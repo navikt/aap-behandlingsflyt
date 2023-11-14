@@ -40,7 +40,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.bistand.flate.bistandsgrunnlagAp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.medlemskap.medlemskapsgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.meldeplikt.flate.meldepliktsgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Personinfo
+import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.adapter.PersonRegisterMock
 import no.nav.aap.behandlingsflyt.faktagrunnlag.student.flate.studentgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.flate.sykdomsgrunnlagApi
@@ -185,7 +185,7 @@ fun NormalOpenAPIRoute.hendelsesApi(dataSource: DataSource) {
         post<Unit, OpprettTestcaseDTO, OpprettTestcaseDTO> { _, dto ->
 
             val ident = Ident(dto.ident)
-            PersonRegisterMock.konstruer(ident, Personinfo(Fødselsdato(dto.fødselsdato)))
+            PersonRegisterMock.konstruer(ident, Personopplysning(Fødselsdato(dto.fødselsdato)))
             if (dto.yrkesskade) {
                 YrkesskadeRegisterMock.konstruer(
                     ident,

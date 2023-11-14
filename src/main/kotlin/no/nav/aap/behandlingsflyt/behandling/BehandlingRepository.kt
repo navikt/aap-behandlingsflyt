@@ -63,9 +63,7 @@ class BehandlingRepository(private val connection: DBConnection) {
             setParams {
                 setLong(1, sakId.toLong())
             }
-            setRowMapper {
-                mapBehandling(it)
-            }
+            setRowMapper(::mapBehandling)
         }
     }
 

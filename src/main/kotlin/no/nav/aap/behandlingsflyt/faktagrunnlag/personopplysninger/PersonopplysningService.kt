@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.sak.SakService
 class PersonopplysningService : Grunnlag {
 
     override fun oppdater(transaksjonsconnection: DBConnection, kontekst: FlytKontekst): Boolean {
+        val personopplysningRepository = PersonopplysningRepository(transaksjonsconnection)
         val sakService = SakService(transaksjonsconnection)
         val sak = sakService.hent(kontekst.sakId)
 
@@ -18,10 +19,10 @@ class PersonopplysningService : Grunnlag {
         }
 
         val behandlingId = kontekst.behandlingId
-        val gamleData = PersoninformasjonRepository.hentHvisEksisterer(behandlingId)
+        val gamleData = personopplysningRepository.hentHvisEksisterer(behandlingId)
 
-        PersoninformasjonRepository.lagre(behandlingId, personopplysninger.first())
-        val nyeData = PersoninformasjonRepository.hentHvisEksisterer(behandlingId)
+        personopplysningRepository.lagre(behandlingId, personopplysninger.first())
+        val nyeData = personopplysningRepository.hentHvisEksisterer(behandlingId)
 
         return nyeData == gamleData
     }

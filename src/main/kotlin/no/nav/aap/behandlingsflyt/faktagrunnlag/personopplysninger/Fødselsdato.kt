@@ -13,6 +13,10 @@ class Fødselsdato(private val dato: LocalDate) {
         return dato.until(gittDato, ChronoUnit.YEARS).toInt()
     }
 
+    fun toLocalDate(): LocalDate {
+        return dato
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

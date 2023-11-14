@@ -22,7 +22,7 @@ import no.nav.aap.behandlingsflyt.behandling.dokumenter.JournalpostId
 import no.nav.aap.behandlingsflyt.dbstuff.InitTestDatabase
 import no.nav.aap.behandlingsflyt.dbstuff.transaction
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Personinfo
+import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.adapter.PersonRegisterMock
 import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.adapter.YrkesskadeRegisterMock
 import no.nav.aap.behandlingsflyt.flyt.behandlingstyper.Førstegangsbehandling
@@ -76,7 +76,7 @@ class FlytOrkestratorTest {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
         // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
-        PersonRegisterMock.konstruer(ident, Personinfo(Fødselsdato(LocalDate.now().minusYears(18))))
+        PersonRegisterMock.konstruer(ident, Personopplysning(Fødselsdato(LocalDate.now().minusYears(18))))
         YrkesskadeRegisterMock.konstruer(ident = ident, periode = periode)
 
         // Sender inn en søknad
@@ -246,7 +246,7 @@ class FlytOrkestratorTest {
         hentPerson(ident)
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
-        PersonRegisterMock.konstruer(ident, Personinfo(Fødselsdato(LocalDate.now().minusYears(17))))
+        PersonRegisterMock.konstruer(ident, Personopplysning(Fødselsdato(LocalDate.now().minusYears(17))))
 
         hendelsesMottak.håndtere(ident, DokumentMottattPersonHendelse(periode = periode))
         ventPåSvar()
@@ -286,7 +286,7 @@ class FlytOrkestratorTest {
         val ident = Ident("123123123127")
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
-        PersonRegisterMock.konstruer(ident, Personinfo(Fødselsdato(LocalDate.now().minusYears(20))))
+        PersonRegisterMock.konstruer(ident, Personopplysning(Fødselsdato(LocalDate.now().minusYears(20))))
 
         hendelsesMottak.håndtere(ident, DokumentMottattPersonHendelse(periode = periode))
         ventPåSvar()
