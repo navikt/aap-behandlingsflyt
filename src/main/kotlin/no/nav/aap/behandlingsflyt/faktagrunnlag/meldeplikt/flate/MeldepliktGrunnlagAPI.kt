@@ -15,11 +15,11 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(dataSource: HikariDataSource) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/fritak-meldeplikt") {
             get<BehandlingReferanse, FritakMeldepliktGrunnlagDto> { req ->
-                val behandling: Behandling = dataSource.transaction {
-                    BehandlingReferanseService(it).behandling(req)
+                val meldepliktGrunnlag = dataSource.transaction { connection ->
+                    val behandling: Behandling = BehandlingReferanseService(connection).behandling(req)
+                    MeldepliktRepository(connection).hentHvisEksisterer(behandling.id)
                 }
 
-                val meldepliktGrunnlag = MeldepliktRepository.hentHvisEksisterer(behandling.id)
                 respond(FritakMeldepliktGrunnlagDto(meldepliktGrunnlag?.vurderinger.orEmpty()))
             }
         }

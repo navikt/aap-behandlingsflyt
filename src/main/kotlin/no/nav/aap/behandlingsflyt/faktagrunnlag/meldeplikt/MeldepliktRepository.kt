@@ -1,47 +1,101 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.meldeplikt
 
 import no.nav.aap.behandlingsflyt.avklaringsbehov.meldeplikt.Fritaksvurdering
-import no.nav.aap.behandlingsflyt.behandling.Behandling
 import no.nav.aap.behandlingsflyt.behandling.BehandlingId
-import java.util.concurrent.atomic.AtomicLong
+import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 
-object MeldepliktRepository {
+class MeldepliktRepository(private val connection: DBConnection) {
 
-    private var grunnlagene = HashMap<BehandlingId, MeldepliktGrunnlag>()
-
-    private val key = AtomicLong()
-    private val LOCK = Object()
-
-    fun lagre(behandlingId: BehandlingId, vurderinger: List<Fritaksvurdering>) {
-        synchronized(LOCK) {
-            grunnlagene.put(
-                behandlingId,
+    fun hentHvisEksisterer(behandlingId: BehandlingId): MeldepliktGrunnlag? {
+        return connection.queryFirstOrNull("SELECT ID FROM MELDEPLIKT_FRITAK_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?") {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+            setRowMapper { row ->
+                val id = row.getLong("ID")
                 MeldepliktGrunnlag(
+                    id = id,
                     behandlingId = behandlingId,
-                    vurderinger = vurderinger,
-                    id = key.addAndGet(1)
+                    vurderinger = hentFritaksvurderinger(id)
                 )
-            )
-        }
-    }
-
-    fun kopier(fraBehandling: Behandling, tilBehandling: Behandling) {
-        synchronized(LOCK) {
-            grunnlagene[fraBehandling.id]?.let { eksisterendeGrunnlag ->
-                grunnlagene[tilBehandling.id] = eksisterendeGrunnlag
             }
         }
     }
 
-    fun hentHvisEksisterer(behandlingId: BehandlingId): MeldepliktGrunnlag? {
-        synchronized(LOCK) {
-            return grunnlagene[behandlingId]
+    private fun hentFritaksvurderinger(id: Long): List<Fritaksvurdering> {
+        return connection.queryList("SELECT PERIODE, BEGRUNNELSE, HAR_FRITAK FROM MELDEPLIKT_FRITAK_VURDERING WHERE GRUNNLAG_ID = ?") {
+            setParams {
+                setLong(1, id)
+            }
+            setRowMapper { row ->
+                Fritaksvurdering(
+                    periode = row.getPeriode("PERIODE"),
+                    begrunnelse = row.getString("BEGRUNNELSE"),
+                    harFritak = row.getBoolean("HAR_FRITAK")
+                )
+            }
         }
     }
 
-    fun hent(behandlingId: BehandlingId): MeldepliktGrunnlag {
-        synchronized(LOCK) {
-            return grunnlagene.getValue(behandlingId)
+    fun lagre(behandlingId: BehandlingId, vurderinger: List<Fritaksvurdering>) {
+        val meldepliktGrunnlag = hentHvisEksisterer(behandlingId)
+
+        if (meldepliktGrunnlag?.vurderinger == vurderinger) return
+
+        if (meldepliktGrunnlag != null) {
+            deaktiverEksisterende(behandlingId)
+        }
+
+        val id = connection.executeReturnKey("INSERT INTO MELDEPLIKT_FRITAK_GRUNNLAG (BEHANDLING_ID) VALUES (?)") {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+        }
+
+        vurderinger.forEach { vurdering ->
+            connection.execute("INSERT INTO MELDEPLIKT_FRITAK_VURDERING (GRUNNLAG_ID, PERIODE, BEGRUNNELSE, HAR_FRITAK) VALUES (?, ?::daterange, ?, ?)") {
+                setParams {
+                    setLong(1, id)
+                    setPeriode(2, vurdering.periode)
+                    setString(3, vurdering.begrunnelse)
+                    setBoolean(4, vurdering.harFritak)
+                }
+            }
+        }
+    }
+
+    private fun deaktiverEksisterende(behandlingId: BehandlingId) {
+        connection.execute("UPDATE MELDEPLIKT_FRITAK_GRUNNLAG SET AKTIV = 'FALSE' WHERE AKTIV AND BEHANDLING_ID = ?") {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+            setResultValidator { rowsUpdated ->
+                require(rowsUpdated == 1)
+            }
+        }
+    }
+
+    fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+        val fraId =
+            connection.queryFirst("SELECT ID FROM MELDEPLIKT_FRITAK_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?") {
+                setParams {
+                    setLong(1, fraBehandling.toLong())
+                }
+                setRowMapper { row ->
+                    row.getLong("ID")
+                }
+            }
+        val tilId = connection.executeReturnKey("INSERT INTO MELDEPLIKT_FRITAK_GRUNNLAG (BEHANDLING_ID) VALUES (?)") {
+            setParams {
+                setLong(1, tilBehandling.toLong())
+            }
+        }
+
+        connection.execute("INSERT INTO MELDEPLIKT_FRITAK_VURDERING (GRUNNLAG_ID, PERIODE, BEGRUNNELSE, HAR_FRITAK) SELECT ?, PERIODE, BEGRUNNELSE, HAR_FRITAK FROM MELDEPLIKT_FRITAK_VURDERING WHERE GRUNNLAG_ID = ?"){
+            setParams {
+                setLong(1, tilId)
+                setLong(2, fraId)
+            }
         }
     }
 }

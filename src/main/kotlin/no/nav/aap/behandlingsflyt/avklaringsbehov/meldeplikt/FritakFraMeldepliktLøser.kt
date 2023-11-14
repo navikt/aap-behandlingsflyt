@@ -11,17 +11,18 @@ import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
 class FritakFraMeldepliktLøser(val connection: DBConnection) : AvklaringsbehovsLøser<FritakMeldepliktLøsning> {
 
     private val behandlingRepository = BehandlingRepository(connection)
+    private val meldepliktRepository = MeldepliktRepository(connection)
 
     override fun løs(kontekst: FlytKontekst, løsning: FritakMeldepliktLøsning): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
 
-        val meldepliktGrunnlag = MeldepliktRepository.hentHvisEksisterer(behandling.id)
+        val meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling.id)
 
         val eksisterendeFritaksvurderinger = meldepliktGrunnlag?.vurderinger.orEmpty()
 
         val vurderinger = mutableListOf(løsning.vurdering) + eksisterendeFritaksvurderinger
 
-        MeldepliktRepository.lagre(
+        meldepliktRepository.lagre(
             behandlingId = behandling.id,
             vurderinger = vurderinger
         )
