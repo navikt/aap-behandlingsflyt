@@ -13,7 +13,7 @@ object VurderSykdomFlytSteg : FlytSteg {
 
     override fun konstruer(connection: DBConnection): BehandlingSteg {
         return VurderSykdomSteg(
-            SykdomsRepository,
+            SykdomsRepository(connection),
             InMemoryStudentRepository,
             VilkårsresultatRepository(connection),
             PeriodeTilVurderingService(SakService(connection))

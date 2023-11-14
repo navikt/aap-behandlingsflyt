@@ -1,49 +1,276 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom
 
+import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.NedreGrense
 import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.behandling.Behandling
 import no.nav.aap.behandlingsflyt.behandling.BehandlingId
-import java.util.concurrent.atomic.AtomicLong
+import no.nav.aap.behandlingsflyt.behandling.dokumenter.JournalpostId
+import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
+import no.nav.aap.behandlingsflyt.dbconnect.Row
 
-object SykdomsRepository {
+class SykdomsRepository(private val connection: DBConnection) {
 
-    private var grunnlagene = HashMap<BehandlingId, SykdomsGrunnlag>()
+    fun lagre(behandlingId: BehandlingId, yrkesskadevurdering: Yrkesskadevurdering?) {
 
-    private val key = AtomicLong()
-    private val LOCK = Object()
+        val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
+        val nyttGrunnlag = SykdomsGrunnlag(
+            null,
+            yrkesskadevurdering = yrkesskadevurdering,
+            sykdomsvurdering = eksisterendeGrunnlag?.sykdomsvurdering
+        )
 
-    fun lagre(behandlingId: BehandlingId, yrkesskadevurdering: Yrkesskadevurdering?, sykdomsvurdering: Sykdomsvurdering?) {
-        synchronized(LOCK) {
-            grunnlagene.put(
-                behandlingId,
-                SykdomsGrunnlag(
-                    behandlingId = behandlingId,
-                    yrkesskadevurdering = yrkesskadevurdering,
-                    sykdomsvurdering = sykdomsvurdering,
-                    id = key.addAndGet(1)
-                )
-            )
+        if (eksisterendeGrunnlag != nyttGrunnlag) {
+            eksisterendeGrunnlag?.let {
+                deaktiverGrunnlag(behandlingId)
+            }
+
+            lagre(behandlingId, nyttGrunnlag)
+        }
+    }
+
+    private fun deaktiverGrunnlag(behandlingId: BehandlingId) {
+        connection.execute("UPDATE SYKDOM_GRUNNLAG set aktiv = false WHERE behandling_id = ? and aktiv = true") {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+            setResultValidator { require(it == 1) }
+        }
+    }
+
+    fun lagre(behandlingId: BehandlingId, sykdomsvurdering: Sykdomsvurdering?) {
+        val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
+        val nyttGrunnlag = SykdomsGrunnlag(
+            null,
+            yrkesskadevurdering = eksisterendeGrunnlag?.yrkesskadevurdering,
+            sykdomsvurdering = sykdomsvurdering
+        )
+
+        if (eksisterendeGrunnlag != nyttGrunnlag) {
+            eksisterendeGrunnlag?.let {
+                deaktiverGrunnlag(behandlingId)
+            }
+
+            lagre(behandlingId, nyttGrunnlag)
+        }
+    }
+
+    private fun lagre(behandlingId: BehandlingId, nyttGrunnlag: SykdomsGrunnlag) {
+        val sykdomsvurderingId = lagreSykdom(nyttGrunnlag.sykdomsvurdering)
+        val yrkesskadeId = lagreYrkesskade(nyttGrunnlag.yrkesskadevurdering)
+
+        val query = """
+            INSERT INTO SYKDOM_GRUNNLAG (behandling_id, yrkesskade_id, sykdom_id) VALUES (?, ?, ?)
+        """.trimIndent()
+
+        connection.execute(query) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setLong(2, yrkesskadeId)
+                setLong(3, sykdomsvurderingId)
+            }
+        }
+    }
+
+    private fun lagreYrkesskade(vurdering: Yrkesskadevurdering?): Long? {
+        if (vurdering == null) {
+            return null
+        }
+
+        val query = """
+            INSERT INTO YRKESSKADE_VURDERING 
+            (begrunnelse, aarsakssammenheng, skadedato)
+            VALUES
+            (?, ?, ?)
+        """.trimIndent()
+
+        val id = connection.executeReturnKey(query) {
+            setParams {
+                setString(1, vurdering.begrunnelse)
+                setBoolean(2, vurdering.erÅrsakssammenheng)
+                setLocalDate(3, vurdering.skadedato)
+            }
+        }
+
+        vurdering.dokumenterBruktIVurdering.forEach {
+            lagreYrkesskadeDokument(id, it)
+        }
+
+        return id
+    }
+
+    private fun lagreYrkesskadeDokument(vurderingId: Long, journalpostId: JournalpostId) {
+        val query = """
+            INSERT INTO YRKESSKADE_VURDERING_DOKUMENTER (vurdering_id, journalpost) 
+            VALUES (?, ?)
+        """.trimIndent()
+
+        connection.execute(query) {
+            setParams {
+                setLong(1, vurderingId)
+                setString(2, journalpostId.identifikator)
+            }
+        }
+    }
+
+    private fun lagreSykdom(vurdering: Sykdomsvurdering?): Long? {
+        if (vurdering == null) {
+            return null
+        }
+
+        val query = """
+            INSERT INTO SYKDOM_VURDERING 
+            (begrunnelse, er_sykdom_skade_lyte_vesetling_del, er_nedsettelse_høyere_enn_nedre_grense, nedre_grense, nedsettelses_dato)
+            VALUES
+            (?, ?, ?, ?, ?)
+        """.trimIndent()
+
+        val id = connection.executeReturnKey(query) {
+            setParams {
+                setString(1, vurdering.begrunnelse)
+                setBoolean(2, vurdering.erSkadeSykdomEllerLyteVesentligdel)
+                setBoolean(3, vurdering.erNedsettelseIArbeidsevneHøyereEnnNedreGrense)
+                setEnumName(4, vurdering.nedreGrense)
+                setLocalDate(5, vurdering.nedsattArbeidsevneDato)
+            }
+        }
+
+        vurdering.dokumenterBruktIVurdering.forEach {
+            lagreSykdomDokument(id, it)
+        }
+
+        return id
+    }
+
+    private fun lagreSykdomDokument(sykdomsId: Long, journalpostId: JournalpostId) {
+        val query = """
+            INSERT INTO SYKDOM_VURDERING_DOKUMENTER (vurdering_id, journalpost) 
+            VALUES (?, ?)
+        """.trimIndent()
+
+        connection.execute(query) {
+            setParams {
+                setLong(1, sykdomsId)
+                setString(2, journalpostId.identifikator)
+            }
         }
     }
 
     fun kopier(fraBehandling: Behandling, tilBehandling: Behandling) {
-        synchronized(LOCK) {
-            grunnlagene[fraBehandling.id]?.let { eksisterendeGrunnlag ->
-                grunnlagene[tilBehandling.id] = eksisterendeGrunnlag
+        val eksisterendeGrunnlag = hentHvisEksisterer(fraBehandling.id)
+        if (eksisterendeGrunnlag == null) {
+            return
+        }
+        val query = """
+            INSERT INTO SYKDOM_GRUNNLAG (behandling_id, yrkesskade_id, sykdom_id) VALUES (?, (select yrkesskade_id from SYKDOM_GRUNNLAG where behandling_id = ?), (select sykdom_id from SYKDOM_GRUNNLAG where behandling_id = ?))
+        """.trimIndent()
+
+        connection.execute(query) {
+            setParams {
+                setLong(1, tilBehandling.id.toLong())
+                setLong(2, fraBehandling.id.toLong())
+                setLong(3, fraBehandling.id.toLong())
             }
         }
     }
 
     fun hentHvisEksisterer(behandlingId: BehandlingId): SykdomsGrunnlag? {
-        synchronized(LOCK) {
-            return grunnlagene[behandlingId]
+        val query = """
+            SELECT * FROM SYKDOM_GRUNNLAG WHERE behandling_id = ? and aktiv = true
+        """.trimIndent()
+        return connection.queryFirstOrNull(query) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+            setRowMapper {
+                mapGrunnlag(it)
+            }
+        }
+    }
+
+    private fun mapGrunnlag(row: Row): SykdomsGrunnlag {
+        return SykdomsGrunnlag(
+            row.getLong("id"),
+            mapYrkesskade(row.getLongOrNull("yrkesskade_id")),
+            mapSykdom(row.getLongOrNull("sykdom_id"))
+        )
+    }
+
+    private fun mapSykdom(sykdomId: Long?): Sykdomsvurdering? {
+        if (sykdomId == null) {
+            return null
+        }
+        val query = """
+            SELECT * FROM SYKDOM_VURDERING WHERE id = ?
+        """.trimIndent()
+        return connection.queryFirstOrNull(query) {
+            setParams {
+                setLong(1, sykdomId)
+            }
+            setRowMapper {
+                Sykdomsvurdering(
+                    it.getString("begrunnelse"),
+                    hentSykdomsDokumenter(sykdomId),
+                    it.getBoolean("er_sykdom_skade_lyte_vesetling_del"),
+                    it.getBooleanOrNull("er_nedsettelse_høyere_enn_nedre_grense"),
+                    NedreGrense.valueOf(it.getString("nedre_grense")),
+                    it.getLocalDateOrNull("nedsettelses_dato")
+                )
+            }
+        }
+    }
+
+    private fun hentSykdomsDokumenter(yrkesskadeId: Long): List<JournalpostId> {
+        val query = """
+            SELECT journalpost FROM SYKDOM_VURDERING_DOKUMENTER WHERE vurdering_id = ?
+        """.trimIndent()
+        return connection.queryList(query) {
+            setParams {
+                setLong(1, yrkesskadeId)
+            }
+            setRowMapper {
+                JournalpostId(it.getString("journalpost"))
+            }
+        }
+    }
+
+    private fun mapYrkesskade(yrkesskadeId: Long?): Yrkesskadevurdering? {
+        if (yrkesskadeId == null) {
+            return null
+        }
+        val query = """
+            SELECT * FROM YRKESSKADE_VURDERING WHERE id = ?
+        """.trimIndent()
+        return connection.queryFirstOrNull(query) {
+            setParams {
+                setLong(1, yrkesskadeId)
+            }
+            setRowMapper {
+                Yrkesskadevurdering(
+                    it.getString("begrunnelse"),
+                    hentYrkesskadeDokumenter(yrkesskadeId),
+                    it.getBoolean("aarsakssammenheng"),
+                    it.getLocalDateOrNull("skadedato")
+                )
+            }
+        }
+    }
+
+    private fun hentYrkesskadeDokumenter(yrkesskadeId: Long): List<JournalpostId> {
+        val query = """
+            SELECT journalpost FROM YRKESSKADE_VURDERING_DOKUMENTER WHERE vurdering_id = ?
+        """.trimIndent()
+        return connection.queryList(query) {
+            setParams {
+                setLong(1, yrkesskadeId)
+            }
+            setRowMapper {
+                JournalpostId(it.getString("journalpost"))
+            }
         }
     }
 
     fun hent(behandlingId: BehandlingId): SykdomsGrunnlag {
-        synchronized(LOCK) {
-            return grunnlagene.getValue(behandlingId)
-        }
+        return requireNotNull(hentHvisEksisterer(behandlingId))
     }
 }

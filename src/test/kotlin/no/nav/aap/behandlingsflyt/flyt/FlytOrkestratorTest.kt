@@ -118,7 +118,7 @@ class FlytOrkestratorTest {
                             begrunnelse = "Er syk nok",
                             dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                             erÅrsakssammenheng = false,
-                            skadetidspunkt = null
+                            skadedato = null
                         )
                     )
                 )

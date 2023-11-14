@@ -153,6 +153,50 @@ CREATE TABLE OPPGAVE_HISTORIKK
 
 CREATE INDEX IDX_OPPGAVE_HISTORIKK_STATUS ON OPPGAVE_HISTORIKK (oppgave_id, status);
 
+-- sykdom
+CREATE TABLE SYKDOM_VURDERING
+(
+    ID                                     SERIAL        NOT NULL PRIMARY KEY,
+    begrunnelse                            varchar(4000) not null,
+    er_sykdom_skade_lyte_vesetling_del     boolean       not null,
+    er_nedsettelse_høyere_enn_nedre_grense boolean       null,
+    nedre_grense                           varchar(25)   not null,
+    nedsettelses_dato                      date          null
+);
+
+CREATE TABLE SYKDOM_VURDERING_DOKUMENTER
+(
+    ID           SERIAL      NOT NULL PRIMARY KEY,
+    vurdering_id bigint      not null references SYKDOM_VURDERING,
+    journalpost  varchar(25) not null
+);
+
+CREATE TABLE YRKESSKADE_VURDERING
+(
+    ID                SERIAL        NOT NULL PRIMARY KEY,
+    begrunnelse       varchar(4000) null,
+    aarsakssammenheng boolean       not null,
+    skadedato         date          null
+);
+CREATE TABLE YRKESSKADE_VURDERING_DOKUMENTER
+(
+    ID           SERIAL      NOT NULL PRIMARY KEY,
+    vurdering_id bigint      not null references YRKESSKADE_VURDERING,
+    journalpost  varchar(25) not null
+);
+
+CREATE TABLE SYKDOM_GRUNNLAG
+(
+    ID            SERIAL               NOT NULL PRIMARY KEY,
+    behandling_id BIGINT               NOT NULL REFERENCES BEHANDLING (ID),
+    yrkesskade_id BIGINT               null references YRKESSKADE_VURDERING,
+    sykdom_id     BIGINT               null references SYKDOM_VURDERING,
+    aktiv         boolean default true NOT NULL
+);
+
+CREATE UNIQUE INDEX UIDX_SYKDOM_GRUNNLAG_HISTORIKK ON SYKDOM_GRUNNLAG (BEHANDLING_ID) WHERE (AKTIV = TRUE);
+
+-- personopplysninger
 CREATE TABLE PERSONOPPLYSNING
 (
     ID            SERIAL               NOT NULL PRIMARY KEY,

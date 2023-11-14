@@ -20,5 +20,5 @@ data class Yrkesskadevurdering(
     val begrunnelse: String,
     val dokumenterBruktIVurdering: List<JournalpostId>,
     val erÅrsakssammenheng: Boolean,
-    val skadetidspunkt: LocalDate?
+    val skadedato: LocalDate?
 )

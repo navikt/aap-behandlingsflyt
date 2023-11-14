@@ -15,12 +15,13 @@ class GrunnlagKopierer(connection: DBConnection) {
     private val vilkårsresultatRepository: VilkårsresultatRepository = VilkårsresultatRepository(connection)
     private val personopplysningRepository = PersonopplysningRepository(connection)
     private val bistandRepository = BistandRepository(connection)
+    private val sykdomsRepository = SykdomsRepository(connection)
 
     fun overfør(fraBehandling: Behandling, tilBehandling: Behandling) {
         vilkårsresultatRepository.kopier(fraBehandling, tilBehandling)
         personopplysningRepository.kopier(fraBehandling.id, tilBehandling.id)
         YrkesskadeRepository.kopier(fraBehandling, tilBehandling)
-        SykdomsRepository.kopier(fraBehandling, tilBehandling)
+        sykdomsRepository.kopier(fraBehandling, tilBehandling)
         InMemoryStudentRepository.kopier(fraBehandling, tilBehandling)
         bistandRepository.kopier(fraBehandling.id, tilBehandling.id)
         SykepengerErstatningRepository.kopier(fraBehandling, tilBehandling)

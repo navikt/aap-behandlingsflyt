@@ -11,14 +11,13 @@ import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
 class AvklarSykdomLøser(val connection: DBConnection) : AvklaringsbehovsLøser<AvklarSykdomLøsning> {
 
     private val behandlingRepository = BehandlingRepository(connection)
+    private val sykdomsRepository = SykdomsRepository(connection)
 
     override fun løs(kontekst: FlytKontekst, løsning: AvklarSykdomLøsning): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
-        val sykdomsGrunnlag = SykdomsRepository.hentHvisEksisterer(kontekst.behandlingId)
 
-        SykdomsRepository.lagre(
+        sykdomsRepository.lagre(
             behandlingId = behandling.id,
-            yrkesskadevurdering = sykdomsGrunnlag?.yrkesskadevurdering,
             sykdomsvurdering = løsning.sykdomsvurdering
         )
 

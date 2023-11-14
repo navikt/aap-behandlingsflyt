@@ -21,7 +21,9 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: HikariDataSource) {
                 }
 
                 val yrkesskadeGrunnlag = YrkesskadeRepository.hentHvisEksisterer(behandlingId = behandling.id)
-                val sykdomsGrunnlag = SykdomsRepository.hentHvisEksisterer(behandlingId = behandling.id)
+                val sykdomsGrunnlag = dataSource.transaction {
+                    SykdomsRepository(it).hentHvisEksisterer(behandlingId = behandling.id)
+                }
 
                 respond(
                     SykdomsGrunnlagDto(
@@ -48,7 +50,9 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: HikariDataSource) {
                 }
 
                 val yrkesskadeGrunnlag = YrkesskadeRepository.hentHvisEksisterer(behandlingId = behandling.id)
-                val sykdomsGrunnlag = SykdomsRepository.hentHvisEksisterer(behandlingId = behandling.id)
+                val sykdomsGrunnlag = dataSource.transaction {
+                    SykdomsRepository(it).hentHvisEksisterer(behandlingId = behandling.id)
+                }
 
                 respond(
                     YrkesskadeGrunnlagDto(
