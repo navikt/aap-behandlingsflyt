@@ -81,4 +81,58 @@ class PersonopplysningRepositoryTest {
             assertThat(personopplysningGrunnlag?.personopplysning).isEqualTo(Personopplysning(Fødselsdato(17 mars 1992)))
         }
     }
+
+    @Test
+    fun `Kopierer personopplysninger fra en behandling til en annen der fraBehandlingen har to versjoner av opplysningene`() {
+        dataSource.transaction { connection ->
+            val behandling1 = BehandlingRepository(connection).opprettBehandling(sak.id, listOf())
+            connection.execute("UPDATE BEHANDLING SET status = 'AVSLUTTET'")
+            val behandling2 = BehandlingRepository(connection).opprettBehandling(sak.id, listOf())
+
+            val personopplysningRepository = PersonopplysningRepository(connection)
+            personopplysningRepository.lagre(behandling1.id, Personopplysning(Fødselsdato(16 mars 1992)))
+            personopplysningRepository.lagre(behandling1.id, Personopplysning(Fødselsdato(17 mars 1992)))
+            personopplysningRepository.kopier(
+                fraBehandling = behandling1.id,
+                tilBehandling = behandling2.id
+            )
+            val personopplysningGrunnlag = personopplysningRepository.hentHvisEksisterer(behandling2.id)
+            assertThat(personopplysningGrunnlag?.personopplysning).isEqualTo(Personopplysning(Fødselsdato(17 mars 1992)))
+        }
+    }
+
+    @Test
+    fun `Lagrer nye opplysninger som ny rad og deaktiverer forrige versjon av opplysningene`() {
+        dataSource.transaction { connection ->
+            val behandling = BehandlingRepository(connection).opprettBehandling(sak.id, listOf())
+            val personopplysningRepository = PersonopplysningRepository(connection)
+
+            personopplysningRepository.lagre(behandling.id, Personopplysning(Fødselsdato(17 mars 1992)))
+            val orginaltGrunnlag = personopplysningRepository.hentHvisEksisterer(behandling.id)
+            assertThat(orginaltGrunnlag?.personopplysning).isEqualTo(Personopplysning(Fødselsdato(17 mars 1992)))
+
+            personopplysningRepository.lagre(behandling.id, Personopplysning(Fødselsdato(18 mars 1992)))
+            val oppdatertGrunnlag = personopplysningRepository.hentHvisEksisterer(behandling.id)
+            assertThat(oppdatertGrunnlag?.personopplysning).isEqualTo(Personopplysning(Fødselsdato(18 mars 1992)))
+
+            data class Opplysning(val behandlingId: Long, val fødselsdato: LocalDate, val aktiv: Boolean)
+
+            val opplysninger =
+                connection.queryList("SELECT BEHANDLING_ID, FODSELSDATO, AKTIV FROM PERSONOPPLYSNING") {
+                    setRowMapper { row ->
+                        Opplysning(
+                            behandlingId = row.getLong("BEHANDLING_ID"),
+                            fødselsdato = row.getLocalDate("FODSELSDATO"),
+                            aktiv = row.getBoolean("AKTIV")
+                        )
+                    }
+                }
+            assertThat(opplysninger)
+                .hasSize(2)
+                .containsExactly(
+                    Opplysning(behandling.id.toLong(), 17 mars 1992, false),
+                    Opplysning(behandling.id.toLong(), 18 mars 1992, true)
+                )
+        }
+    }
 }
