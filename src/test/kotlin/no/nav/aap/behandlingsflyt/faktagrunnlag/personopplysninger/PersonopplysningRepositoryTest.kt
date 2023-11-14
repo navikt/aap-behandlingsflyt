@@ -63,6 +63,26 @@ class PersonopplysningRepositoryTest {
     }
 
     @Test
+    fun `Lagrer ikke like opplysninger flere ganger`() {
+        InitTestDatabase.dataSource.transaction { connection ->
+            val behandling = BehandlingRepository(connection).opprettBehandling(sak.id, listOf())
+
+            val personopplysningRepository = PersonopplysningRepository(connection)
+            personopplysningRepository.lagre(behandling.id, Personopplysning(Fødselsdato(17 mars 1992)))
+            personopplysningRepository.lagre(behandling.id, Personopplysning(Fødselsdato(18 mars 1992)))
+            personopplysningRepository.lagre(behandling.id, Personopplysning(Fødselsdato(18 mars 1992)))
+
+            val opplysninger =
+                connection.queryList("SELECT BEHANDLING_ID, FODSELSDATO, AKTIV FROM PERSONOPPLYSNING") {
+                    setRowMapper { row -> row.getLocalDate("FODSELSDATO") }
+                }
+            assertThat(opplysninger)
+                .hasSize(2)
+                .containsExactly(17 mars 1992, 18 mars 1992)
+        }
+    }
+
+    @Test
     fun `Kopierer personopplysninger fra en behandling til en annen`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val behandling1 = BehandlingRepository(connection).opprettBehandling(sak.id, listOf())

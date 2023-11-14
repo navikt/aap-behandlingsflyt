@@ -20,15 +20,29 @@ class PersonopplysningRepository(private val connection: DBConnection) {
     }
 
     fun lagre(behandlingId: BehandlingId, personopplysning: Personopplysning) {
-        connection.execute("UPDATE PERSONOPPLYSNING SET AKTIV = 'FALSE' WHERE AKTIV AND BEHANDLING_ID = ?") {
-            setParams {
-                setLong(1, behandlingId.toLong())
-            }
+        val personopplysningGrunnlag = hentHvisEksisterer(behandlingId)
+
+        if (personopplysningGrunnlag?.personopplysning == personopplysning) return
+
+        if (personopplysningGrunnlag != null) {
+            deaktiverEksisterende(behandlingId)
         }
+
         connection.execute("INSERT INTO PERSONOPPLYSNING (BEHANDLING_ID, FODSELSDATO) VALUES (?, ?)") {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLocalDate(2, personopplysning.fødselsdato.toLocalDate())
+            }
+        }
+    }
+
+    private fun deaktiverEksisterende(behandlingId: BehandlingId) {
+        connection.execute("UPDATE PERSONOPPLYSNING SET AKTIV = 'FALSE' WHERE AKTIV AND BEHANDLING_ID = ?") {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+            setResultValidator { rowsUpdated ->
+                require(rowsUpdated == 1)
             }
         }
     }

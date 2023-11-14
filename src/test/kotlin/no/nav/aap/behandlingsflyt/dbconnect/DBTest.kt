@@ -58,7 +58,7 @@ internal class DBTest {
 
     @Test
     fun `Skriver og henter key og verdier fra DB`() {
-        val (result, keys) = InitTestDatabase.dataSource.transaction { connection ->
+        val (result, key) = InitTestDatabase.dataSource.transaction { connection ->
             connection.execute("INSERT INTO test (test) VALUES ('a')")
             val key = connection.executeReturnKey("INSERT INTO test (test) VALUES ('b')")
             connection.queryList("SELECT test FROM test") {
@@ -69,7 +69,7 @@ internal class DBTest {
         assertThat(result)
             .hasSize(2)
             .contains("a", "b")
-        assertThat(keys).isEqualTo(2)
+        assertThat(key).isEqualTo(2)
     }
 
     @Test
@@ -260,7 +260,7 @@ internal class DBTest {
 
     @Test
     fun `Skriver og leser LocalDate og null-verdi riktig`() {
-        val localDate = LocalDate.of(2016, Month.AUGUST, 12);
+        val localDate = LocalDate.of(2016, Month.AUGUST, 12)
         InitTestDatabase.dataSource.transaction { connection ->
             connection.execute(
                 """
@@ -286,7 +286,7 @@ internal class DBTest {
 
     @Test
     fun `Skriver og leser LocalDateTime og null-verdi riktig`() {
-        val localDateTime = LocalDateTime.of(2016, Month.AUGUST, 12, 9, 38, 12, 123456000);
+        val localDateTime = LocalDateTime.of(2016, Month.AUGUST, 12, 9, 38, 12, 123456000)
         InitTestDatabase.dataSource.transaction { connection ->
             connection.execute(
                 """
