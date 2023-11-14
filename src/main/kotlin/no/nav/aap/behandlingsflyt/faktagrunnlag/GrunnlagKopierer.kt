@@ -10,7 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykepengerErstatningRepos
 import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.flyt.vilkår.VilkårsresultatRepository
 
-class GrunnlagKopierer(private val connection: DBConnection) {
+class GrunnlagKopierer(connection: DBConnection) {
 
     private val vilkårsresultatRepository: VilkårsresultatRepository = VilkårsresultatRepository(connection)
 
