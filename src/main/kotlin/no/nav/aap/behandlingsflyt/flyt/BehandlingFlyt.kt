@@ -128,7 +128,7 @@ class BehandlingFlyt private constructor(
     }
 
     fun tilbakeflyt(avklaringsbehov: List<Avklaringsbehov>): BehandlingFlyt {
-        val skalTilSteg = avklaringsbehov.map { it.løsesISteg() }.minWithOrNull(compareable())
+        val skalTilSteg = skalTilStegForBehov(avklaringsbehov)
 
         if (skalTilSteg == null) {
             return BehandlingFlyt(emptyList(), emptyMap())
@@ -145,6 +145,10 @@ class BehandlingFlyt private constructor(
             endringTilSteg = emptyMap(),
             parent = this
         )
+    }
+
+    internal fun skalTilStegForBehov(avklaringsbehov: List<Avklaringsbehov>): StegType? {
+        return avklaringsbehov.map { it.løsesISteg() }.minWithOrNull(compareable())
     }
 
     fun tilbakeflytEtterEndringer(oppdaterteGrunnlagstype: List<Grunnlag>): BehandlingFlyt {

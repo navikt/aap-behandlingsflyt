@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory
 
 private val log = LoggerFactory.getLogger(FlytOrkestrator::class.java)
 
-
 /**
  * Har ansvar for å drive flyten til en gitt behandling. Typen behandling styrer hvilke steg som skal utføres.
  */
@@ -120,6 +119,9 @@ class FlytOrkestrator(
         val tilbakeføringsflyt = flyt.tilbakeflyt(behovForLøsninger)
 
         tilbakefør(kontekst, behandling, tilbakeføringsflyt)
+
+        val skulleVærtISteg = flyt.skalTilStegForBehov(behovForLøsninger)
+        require(skulleVærtISteg == behandling.aktivtSteg())
     }
 
     private fun tilbakefør(
