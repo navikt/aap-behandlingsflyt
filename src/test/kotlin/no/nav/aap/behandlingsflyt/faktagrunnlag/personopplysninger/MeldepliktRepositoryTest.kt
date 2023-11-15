@@ -197,14 +197,12 @@ class MeldepliktRepositoryTest {
                 val harFritak: Boolean
             )
 
-            @Language("PostgreSQL")
             val opplysninger =
                 connection.queryList(
                     """
                     SELECT g.BEHANDLING_ID, g.AKTIV, v.PERIODE, v.BEGRUNNELSE, v.HAR_FRITAK
                     FROM MELDEPLIKT_FRITAK_GRUNNLAG g
-                    INNER JOIN MELDEPLIKT_FRITAK_VURDERING v
-                    ON g.ID = v.GRUNNLAG_ID
+                    INNER JOIN MELDEPLIKT_FRITAK_VURDERING v ON g.ID = v.GRUNNLAG_ID
                     WHERE g.BEHANDLING_ID = ?
                     """.trimIndent()
                 ) {

@@ -175,7 +175,7 @@ CREATE TABLE YRKESSKADE_VURDERING
 (
     ID                SERIAL        NOT NULL PRIMARY KEY,
     begrunnelse       varchar(4000) null,
-    aarsakssammenheng boolean       not null,
+    arsakssammenheng boolean       not null,
     skadedato         date          null
 );
 CREATE TABLE YRKESSKADE_VURDERING_DOKUMENTER
@@ -197,6 +197,7 @@ CREATE TABLE SYKDOM_GRUNNLAG
 CREATE UNIQUE INDEX UIDX_SYKDOM_GRUNNLAG_HISTORIKK ON SYKDOM_GRUNNLAG (BEHANDLING_ID) WHERE (AKTIV = TRUE);
 
 -- personopplysninger
+
 CREATE TABLE PERSONOPPLYSNING
 (
     ID            SERIAL               NOT NULL PRIMARY KEY,
@@ -206,6 +207,8 @@ CREATE TABLE PERSONOPPLYSNING
 );
 
 CREATE UNIQUE INDEX IDX_PERSONOPPLYSNING_BEHANDLING_ID ON PERSONOPPLYSNING (BEHANDLING_ID) WHERE (AKTIV = TRUE);
+
+-- bistand
 
 CREATE TABLE BISTAND_GRUNNLAG
 (
@@ -217,6 +220,8 @@ CREATE TABLE BISTAND_GRUNNLAG
 );
 
 CREATE UNIQUE INDEX IDX_BISTAND_GRUNNLAG_BEHANDLING_ID ON BISTAND_GRUNNLAG (BEHANDLING_ID) WHERE (AKTIV = TRUE);
+
+-- fritak meldeplikt
 
 CREATE TABLE MELDEPLIKT_FRITAK_GRUNNLAG
 (
@@ -247,12 +252,14 @@ CREATE TABLE STUDENT_VURDERING
     oppfylt      boolean       not null,
     avbrutt_dato date          null
 );
+
 CREATE TABLE STUDENT_VURDERING_DOKUMENTER
 (
     ID           SERIAL      NOT NULL PRIMARY KEY,
     vurdering_id bigint      not null references STUDENT_VURDERING,
     journalpost  varchar(25) not null
 );
+
 CREATE TABLE STUDENT_GRUNNLAG
 (
     ID            SERIAL               NOT NULL PRIMARY KEY,
@@ -260,4 +267,5 @@ CREATE TABLE STUDENT_GRUNNLAG
     student_id    BIGINT               null references STUDENT_VURDERING,
     aktiv         boolean default true NOT NULL
 );
+
 CREATE UNIQUE INDEX UIDX_STUDENT_GRUNNLAG_HISTORIKK ON STUDENT_GRUNNLAG (BEHANDLING_ID) WHERE (AKTIV = TRUE);

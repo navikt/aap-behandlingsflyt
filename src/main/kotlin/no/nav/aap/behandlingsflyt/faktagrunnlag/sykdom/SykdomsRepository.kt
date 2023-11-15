@@ -78,7 +78,7 @@ class SykdomsRepository(private val connection: DBConnection) {
 
         val query = """
             INSERT INTO YRKESSKADE_VURDERING 
-            (begrunnelse, aarsakssammenheng, skadedato)
+            (begrunnelse, arsakssammenheng, skadedato)
             VALUES
             (?, ?, ?)
         """.trimIndent()
@@ -181,9 +181,7 @@ class SykdomsRepository(private val connection: DBConnection) {
             setParams {
                 setLong(1, behandlingId.toLong())
             }
-            setRowMapper {
-                mapGrunnlag(it)
-            }
+            setRowMapper(::mapGrunnlag)
         }
     }
 
@@ -206,14 +204,14 @@ class SykdomsRepository(private val connection: DBConnection) {
             setParams {
                 setLong(1, sykdomId)
             }
-            setRowMapper {
+            setRowMapper { row ->
                 Sykdomsvurdering(
-                    it.getString("begrunnelse"),
+                    row.getString("begrunnelse"),
                     hentSykdomsDokumenter(sykdomId),
-                    it.getBoolean("er_sykdom_skade_lyte_vesetling_del"),
-                    it.getBooleanOrNull("er_nedsettelse_høyere_enn_nedre_grense"),
-                    NedreGrense.valueOf(it.getString("nedre_grense")),
-                    it.getLocalDateOrNull("nedsettelses_dato")
+                    row.getBoolean("er_sykdom_skade_lyte_vesetling_del"),
+                    row.getBooleanOrNull("er_nedsettelse_høyere_enn_nedre_grense"),
+                    NedreGrense.valueOf(row.getString("nedre_grense")),
+                    row.getLocalDateOrNull("nedsettelses_dato")
                 )
             }
         }
@@ -227,8 +225,8 @@ class SykdomsRepository(private val connection: DBConnection) {
             setParams {
                 setLong(1, yrkesskadeId)
             }
-            setRowMapper {
-                JournalpostId(it.getString("journalpost"))
+            setRowMapper { row ->
+                JournalpostId(row.getString("journalpost"))
             }
         }
     }
@@ -244,12 +242,12 @@ class SykdomsRepository(private val connection: DBConnection) {
             setParams {
                 setLong(1, yrkesskadeId)
             }
-            setRowMapper {
+            setRowMapper { row ->
                 Yrkesskadevurdering(
-                    it.getString("begrunnelse"),
+                    row.getString("begrunnelse"),
                     hentYrkesskadeDokumenter(yrkesskadeId),
-                    it.getBoolean("aarsakssammenheng"),
-                    it.getLocalDateOrNull("skadedato")
+                    row.getBoolean("arsakssammenheng"),
+                    row.getLocalDateOrNull("skadedato")
                 )
             }
         }
@@ -263,8 +261,8 @@ class SykdomsRepository(private val connection: DBConnection) {
             setParams {
                 setLong(1, yrkesskadeId)
             }
-            setRowMapper {
-                JournalpostId(it.getString("journalpost"))
+            setRowMapper { row ->
+                JournalpostId(row.getString("journalpost"))
             }
         }
     }
