@@ -9,29 +9,30 @@ import no.nav.aap.behandlingsflyt.sak.SakService
 
 class YrkesskadeService : Grunnlag {
 
-    override fun oppdater(transaksjonsconnection: DBConnection, kontekst: FlytKontekst): Boolean {
-        val sakService = SakService(transaksjonsconnection)
+    override fun oppdater(connection: DBConnection, kontekst: FlytKontekst): Boolean {
+        val sakService = SakService(connection)
+        val yrkesskadeRepository = YrkesskadeRepository(connection)
 
         val sak = sakService.hent(kontekst.sakId)
         val yrkesskadePeriode = YrkesskadeRegisterMock.innhent(sak.person.identer(), sak.rettighetsperiode)
 
         val behandlingId = kontekst.behandlingId
-        val gamleData = YrkesskadeRepository.hentHvisEksisterer(behandlingId)
+        val gamleData = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
 
         if (yrkesskadePeriode.isNotEmpty()) {
-            YrkesskadeRepository.lagre(
+            yrkesskadeRepository.lagre(
                 behandlingId,
                 Yrkesskader(yrkesskadePeriode.map { periode -> Yrkesskade("ASDF", periode) })
             )
-        } else if (YrkesskadeRepository.hentHvisEksisterer(behandlingId) != null) {
-            YrkesskadeRepository.lagre(behandlingId, null)
+        } else if (yrkesskadeRepository.hentHvisEksisterer(behandlingId) != null) {
+            yrkesskadeRepository.lagre(behandlingId, null)
         }
-        val nyeData = YrkesskadeRepository.hentHvisEksisterer(behandlingId)
+        val nyeData = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
 
         return nyeData == gamleData
     }
 
-    fun hentHvisEksisterer(behandlingId: BehandlingId): YrkesskadeGrunnlag? {
-        return YrkesskadeRepository.hentHvisEksisterer(behandlingId)
+    fun hentHvisEksisterer(connection: DBConnection, behandlingId: BehandlingId): YrkesskadeGrunnlag? {
+        return YrkesskadeRepository(connection).hentHvisEksisterer(behandlingId)
     }
 }

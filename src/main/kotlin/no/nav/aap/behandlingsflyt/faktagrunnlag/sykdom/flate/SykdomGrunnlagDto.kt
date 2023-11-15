@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.Periode
 
-data class SykdomsGrunnlagDto(
+data class SykdomGrunnlagDto(
     val opplysninger: InnhentetSykdomsOpplysninger,
     val sykdomsvurdering: Sykdomsvurdering?,
     val erÅrsakssammenheng: Boolean?

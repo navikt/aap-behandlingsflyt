@@ -4,14 +4,14 @@ GRANT ALL ON ALL TABLES IN SCHEMA PUBLIC TO cloudsqliamuser;
 
 CREATE TABLE PERSON
 (
-    ID        SERIAL NOT NULL PRIMARY KEY,
-    REFERANSE uuid   NOT NULL UNIQUE
+    ID        BIGSERIAL NOT NULL PRIMARY KEY,
+    REFERANSE uuid      NOT NULL UNIQUE
 );
 CREATE INDEX IDX_PERSON_REFERANSE ON PERSON (REFERANSE);
 
 CREATE TABLE PERSON_IDENT
 (
-    ID        SERIAL             NOT NULL PRIMARY KEY,
+    ID        BIGSERIAL          NOT NULL PRIMARY KEY,
     PERSON_ID BIGINT             NOT NULL REFERENCES PERSON (ID),
     IDENT     varchar(19) UNIQUE NOT NULL
 );
@@ -20,7 +20,7 @@ CREATE INDEX IDX_PERSON_IDENT_IDENT ON PERSON_IDENT (IDENT);
 
 CREATE TABLE SAK
 (
-    ID                SERIAL                                 NOT NULL PRIMARY KEY,
+    ID                BIGSERIAL                              NOT NULL PRIMARY KEY,
     SAKSNUMMER        VARCHAR(19)                            NOT NULL,
     PERSON_ID         BIGINT                                 NOT NULL REFERENCES PERSON (ID),
     RETTIGHETSPERIODE daterange                              NOT NULL,
@@ -44,7 +44,7 @@ create sequence if not exists SEQ_SAKSNUMMER increment by 50 minvalue 10000000;
 
 CREATE TABLE BEHANDLING
 (
-    ID            SERIAL                                 NOT NULL PRIMARY KEY,
+    ID            BIGSERIAL                              NOT NULL PRIMARY KEY,
     sak_id        BIGINT                                 NOT NULL REFERENCES sak (ID),
     referanse     uuid unique                            NOT NULL,
     STATUS        VARCHAR(100)                           NOT NULL,
@@ -58,7 +58,7 @@ CREATE INDEX IDX_BEHANDLING_SAK_TID ON BEHANDLING (sak_id, OPPRETTET_TID);
 
 CREATE TABLE AVKLARINGSBEHOV
 (
-    ID              SERIAL                                 NOT NULL PRIMARY KEY,
+    ID              BIGSERIAL                              NOT NULL PRIMARY KEY,
     behandling_id   BIGINT                                 NOT NULL REFERENCES BEHANDLING (ID),
     definisjon      varchar(50)                            not null,
     funnet_i_steg   varchar(50)                            not null,
@@ -70,7 +70,7 @@ CREATE unique INDEX IDX_AVKLARINGSBEHOV_BEHANDLING_DEFINISJON ON AVKLARINGSBEHOV
 
 CREATE TABLE AVKLARINGSBEHOV_ENDRING
 (
-    ID                 SERIAL                                 NOT NULL PRIMARY KEY,
+    ID                 BIGSERIAL                              NOT NULL PRIMARY KEY,
     avklaringsbehov_id BIGINT                                 NOT NULL REFERENCES AVKLARINGSBEHOV (ID),
     status             varchar(50)                            not null,
     begrunnelse        text,
@@ -81,7 +81,7 @@ CREATE INDEX IDX_AVKLARINGSBEHOV_TID ON AVKLARINGSBEHOV (OPPRETTET_TID);
 
 CREATE TABLE STEG_HISTORIKK
 (
-    ID            SERIAL                                 NOT NULL PRIMARY KEY,
+    ID            BIGSERIAL                              NOT NULL PRIMARY KEY,
     behandling_id BIGINT                                 NOT NULL REFERENCES BEHANDLING (ID),
     aktiv         boolean      default true              NOT NULL,
     steg          varchar(50)                            not null,
@@ -94,7 +94,7 @@ CREATE UNIQUE INDEX UIDX_STEG_HISTORIKK ON STEG_HISTORIKK (BEHANDLING_ID) WHERE 
 
 CREATE TABLE VILKAR_RESULTAT
 (
-    ID            SERIAL               NOT NULL PRIMARY KEY,
+    ID            BIGSERIAL            NOT NULL PRIMARY KEY,
     behandling_id BIGINT               NOT NULL REFERENCES BEHANDLING (ID),
     aktiv         boolean default true NOT NULL
 );
@@ -103,7 +103,7 @@ CREATE UNIQUE INDEX UIDX_VILKAR_RESULTAT_HISTORIKK ON VILKAR_RESULTAT (BEHANDLIN
 
 CREATE TABLE VILKAR
 (
-    ID          SERIAL      NOT NULL PRIMARY KEY,
+    ID          BIGSERIAL   NOT NULL PRIMARY KEY,
     type        varchar(50) NOT NULL,
     resultat_id bigint      not null references VILKAR_RESULTAT (ID)
 );
@@ -112,7 +112,7 @@ CREATE UNIQUE INDEX UIDX_VILKAR ON VILKAR (resultat_id, type);
 
 CREATE TABLE VILKAR_PERIODE
 (
-    ID                SERIAL        NOT NULL PRIMARY KEY,
+    ID                BIGSERIAL     NOT NULL PRIMARY KEY,
     vilkar_id         bigint        not null references VILKAR (ID),
     periode           daterange     NOT NULL,
     utfall            varchar(50)   NOT NULL,
@@ -156,7 +156,7 @@ CREATE INDEX IDX_OPPGAVE_HISTORIKK_STATUS ON OPPGAVE_HISTORIKK (oppgave_id, stat
 -- sykdom
 CREATE TABLE SYKDOM_VURDERING
 (
-    ID                                     SERIAL      NOT NULL PRIMARY KEY,
+    ID                                     BIGSERIAL     NOT NULL PRIMARY KEY,
     begrunnelse                            text        not null,
     er_sykdom_skade_lyte_vesetling_del     boolean     not null,
     er_nedsettelse_høyere_enn_nedre_grense boolean     null,
@@ -166,7 +166,7 @@ CREATE TABLE SYKDOM_VURDERING
 
 CREATE TABLE SYKDOM_VURDERING_DOKUMENTER
 (
-    ID           SERIAL      NOT NULL PRIMARY KEY,
+    ID           BIGSERIAL   NOT NULL PRIMARY KEY,
     vurdering_id bigint      not null references SYKDOM_VURDERING,
     journalpost  varchar(25) not null
 );
@@ -174,14 +174,14 @@ CREATE UNIQUE INDEX UIDX_SYKDOM_VURDERING_DOKUMENTER ON SYKDOM_VURDERING_DOKUMEN
 
 CREATE TABLE YRKESSKADE_VURDERING
 (
-    ID               SERIAL  NOT NULL PRIMARY KEY,
-    begrunnelse      text    null,
-    arsakssammenheng boolean not null,
-    skadedato        date    null
+    ID               BIGSERIAL     NOT NULL PRIMARY KEY,
+    begrunnelse      text null,
+    arsakssammenheng boolean       not null,
+    skadedato        date          null
 );
 CREATE TABLE YRKESSKADE_VURDERING_DOKUMENTER
 (
-    ID           SERIAL      NOT NULL PRIMARY KEY,
+    ID           BIGSERIAL   NOT NULL PRIMARY KEY,
     vurdering_id bigint      not null references YRKESSKADE_VURDERING,
     journalpost  varchar(25) not null
 );
@@ -189,11 +189,11 @@ CREATE UNIQUE INDEX UIDX_YRKESSKADE_VURDERING_DOKUMENTER ON YRKESSKADE_VURDERING
 
 CREATE TABLE SYKDOM_GRUNNLAG
 (
-    ID            SERIAL                                 NOT NULL PRIMARY KEY,
-    behandling_id BIGINT                                 NOT NULL REFERENCES BEHANDLING (ID),
-    yrkesskade_id BIGINT                                 null references YRKESSKADE_VURDERING,
-    sykdom_id     BIGINT                                 null references SYKDOM_VURDERING,
-    aktiv         boolean      default true              NOT NULL,
+    ID            BIGSERIAL            NOT NULL PRIMARY KEY,
+    behandling_id BIGINT               NOT NULL REFERENCES BEHANDLING (ID),
+    yrkesskade_id BIGINT               null references YRKESSKADE_VURDERING,
+    sykdom_id     BIGINT               null references SYKDOM_VURDERING,
+    aktiv         boolean default true NOT NULL,
     opprettet_tid TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
@@ -203,10 +203,10 @@ CREATE UNIQUE INDEX UIDX_SYKDOM_GRUNNLAG_HISTORIKK ON SYKDOM_GRUNNLAG (BEHANDLIN
 
 CREATE TABLE PERSONOPPLYSNING
 (
-    ID            SERIAL                                 NOT NULL PRIMARY KEY,
-    BEHANDLING_ID BIGINT                                 NOT NULL REFERENCES BEHANDLING (ID),
-    FODSELSDATO   DATE                                   NOT NULL,
-    AKTIV         BOOLEAN      DEFAULT TRUE              NOT NULL,
+    ID            BIGSERIAL            NOT NULL PRIMARY KEY,
+    BEHANDLING_ID BIGINT               NOT NULL REFERENCES BEHANDLING (ID),
+    FODSELSDATO   DATE                 NOT NULL,
+    AKTIV         BOOLEAN DEFAULT TRUE NOT NULL,
     opprettet_tid TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
@@ -216,8 +216,8 @@ CREATE UNIQUE INDEX IDX_PERSONOPPLYSNING_BEHANDLING_ID ON PERSONOPPLYSNING (BEHA
 
 CREATE TABLE BISTAND_GRUNNLAG
 (
-    ID                   SERIAL                                 NOT NULL PRIMARY KEY,
-    BEHANDLING_ID        BIGINT                                 NOT NULL REFERENCES BEHANDLING (ID),
+    ID                   BIGSERIAL            NOT NULL PRIMARY KEY,
+    BEHANDLING_ID        BIGINT               NOT NULL REFERENCES BEHANDLING (ID),
     BEGRUNNELSE          text                                   NOT NULL,
     ER_BEHOV_FOR_BISTAND boolean                                NOT NULL,
     AKTIV                BOOLEAN      DEFAULT TRUE              NOT NULL,
@@ -230,9 +230,9 @@ CREATE UNIQUE INDEX IDX_BISTAND_GRUNNLAG_BEHANDLING_ID ON BISTAND_GRUNNLAG (BEHA
 
 CREATE TABLE MELDEPLIKT_FRITAK_GRUNNLAG
 (
-    ID            SERIAL                                 NOT NULL PRIMARY KEY,
-    BEHANDLING_ID BIGINT                                 NOT NULL REFERENCES BEHANDLING (ID),
-    AKTIV         BOOLEAN      DEFAULT TRUE              NOT NULL,
+    ID            BIGSERIAL            NOT NULL PRIMARY KEY,
+    BEHANDLING_ID BIGINT               NOT NULL REFERENCES BEHANDLING (ID),
+    AKTIV         BOOLEAN DEFAULT TRUE NOT NULL,
     opprettet_tid TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
@@ -240,9 +240,9 @@ CREATE UNIQUE INDEX IDX_MELDEPLIKT_FRITAK_GRUNNLAG_BEHANDLING_ID ON MELDEPLIKT_F
 
 CREATE TABLE MELDEPLIKT_FRITAK_VURDERING
 (
-    ID          SERIAL    NOT NULL PRIMARY KEY,
-    GRUNNLAG_ID BIGINT    NOT NULL REFERENCES MELDEPLIKT_FRITAK_GRUNNLAG (ID),
-    PERIODE     DATERANGE NOT NULL,
+    ID          BIGSERIAL     NOT NULL PRIMARY KEY,
+    GRUNNLAG_ID BIGINT        NOT NULL REFERENCES MELDEPLIKT_FRITAK_GRUNNLAG (ID),
+    PERIODE     DATERANGE     NOT NULL,
     BEGRUNNELSE text      NOT NULL,
     HAR_FRITAK  BOOLEAN   NOT NULL
 );
@@ -253,7 +253,7 @@ CREATE INDEX IDX_MELDEPLIKT_FRITAK_VURDERING_GRUNNLAG_ID ON MELDEPLIKT_FRITAK_VU
 
 CREATE TABLE STUDENT_VURDERING
 (
-    ID           SERIAL  NOT NULL PRIMARY KEY,
+    ID           BIGSERIAL     NOT NULL PRIMARY KEY,
     begrunnelse  text    null,
     oppfylt      boolean not null,
     avbrutt_dato date    null
@@ -261,7 +261,7 @@ CREATE TABLE STUDENT_VURDERING
 
 CREATE TABLE STUDENT_VURDERING_DOKUMENTER
 (
-    ID           SERIAL      NOT NULL PRIMARY KEY,
+    ID           BIGSERIAL   NOT NULL PRIMARY KEY,
     vurdering_id bigint      not null references STUDENT_VURDERING,
     journalpost  varchar(25) not null
 );
@@ -269,10 +269,10 @@ CREATE UNIQUE INDEX UIDX_STUDENT_VURDERING_DOKUMENTER ON STUDENT_VURDERING_DOKUM
 
 CREATE TABLE STUDENT_GRUNNLAG
 (
-    ID            SERIAL                                 NOT NULL PRIMARY KEY,
-    behandling_id BIGINT                                 NOT NULL REFERENCES BEHANDLING (ID),
-    student_id    BIGINT                                 null references STUDENT_VURDERING,
-    aktiv         boolean      default true              NOT NULL,
+    ID            BIGSERIAL            NOT NULL PRIMARY KEY,
+    behandling_id BIGINT               NOT NULL REFERENCES BEHANDLING (ID),
+    student_id    BIGINT               null references STUDENT_VURDERING,
+    aktiv         boolean default true NOT NULL,
     opprettet_tid TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
@@ -305,3 +305,23 @@ CREATE TABLE sykepenge_erstatning_grunnlag
 );
 
 CREATE UNIQUE INDEX UIDX_SYKEPENGE_VURDERING_GRUNNLAG_HISTORIKK ON sykepenge_erstatning_grunnlag (BEHANDLING_ID) WHERE (AKTIV = TRUE);
+-- yrkesskadegrunnlag
+
+CREATE TABLE YRKESSKADE_GRUNNLAG
+(
+    ID            BIGSERIAL            NOT NULL PRIMARY KEY,
+    BEHANDLING_ID BIGINT               NOT NULL REFERENCES BEHANDLING (ID),
+    AKTIV         BOOLEAN DEFAULT TRUE NOT NULL
+);
+
+CREATE UNIQUE INDEX UIDX_YRKESSKADE_GRUNNLAG_BEHANDLING_ID ON YRKESSKADE_GRUNNLAG (BEHANDLING_ID) WHERE (AKTIV = TRUE);
+
+CREATE TABLE YRKESSKADE_PERIODER
+(
+    ID          BIGSERIAL NOT NULL PRIMARY KEY,
+    GRUNNLAG_ID BIGINT    NOT NULL REFERENCES YRKESSKADE_GRUNNLAG (ID),
+    REFERANSE         TEXT      NOT NULL,
+    PERIODE     DATERANGE NOT NULL
+);
+
+CREATE INDEX IDX_YRKESSKADE_PERIODER_GRUNNLAG_ID ON YRKESSKADE_PERIODER (GRUNNLAG_ID);

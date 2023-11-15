@@ -8,9 +8,9 @@ import no.nav.aap.behandlingsflyt.sak.SakService
 
 class PersonopplysningService : Grunnlag {
 
-    override fun oppdater(transaksjonsconnection: DBConnection, kontekst: FlytKontekst): Boolean {
-        val personopplysningRepository = PersonopplysningRepository(transaksjonsconnection)
-        val sakService = SakService(transaksjonsconnection)
+    override fun oppdater(connection: DBConnection, kontekst: FlytKontekst): Boolean {
+        val personopplysningRepository = PersonopplysningRepository(connection)
+        val sakService = SakService(connection)
         val sak = sakService.hent(kontekst.sakId)
 
         val personopplysninger = PersonRegisterMock.innhent(sak.person.identer())

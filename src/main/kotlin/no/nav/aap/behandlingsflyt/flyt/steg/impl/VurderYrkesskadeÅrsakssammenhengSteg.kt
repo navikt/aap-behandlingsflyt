@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt.steg.impl
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.student.StudentGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykdomGrunnlag
@@ -16,7 +17,8 @@ class VurderYrkesskadeÅrsakssammenhengSteg(
     private val yrkesskadeService: YrkesskadeService,
     private val sykdomRepository: SykdomRepository,
     private val studentRepository: StudentRepository,
-    private val periodeTilVurderingService: PeriodeTilVurderingService
+    private val periodeTilVurderingService: PeriodeTilVurderingService,
+    private val connection: DBConnection
 ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekst): StegResultat {
@@ -24,7 +26,7 @@ class VurderYrkesskadeÅrsakssammenhengSteg(
             periodeTilVurderingService.utled(kontekst = kontekst, vilkår = Vilkårtype.SYKDOMSVILKÅRET)
 
         if (periodeTilVurdering.isNotEmpty()) {
-            val yrkesskadeGrunnlag = yrkesskadeService.hentHvisEksisterer(behandlingId = kontekst.behandlingId)
+            val yrkesskadeGrunnlag = yrkesskadeService.hentHvisEksisterer(connection, behandlingId = kontekst.behandlingId)
             val sykdomsGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId = kontekst.behandlingId)
             val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId = kontekst.behandlingId)
 

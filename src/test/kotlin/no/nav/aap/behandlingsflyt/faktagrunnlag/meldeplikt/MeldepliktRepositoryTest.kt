@@ -201,12 +201,8 @@ class MeldepliktRepositoryTest {
                     SELECT g.BEHANDLING_ID, g.AKTIV, v.PERIODE, v.BEGRUNNELSE, v.HAR_FRITAK
                     FROM MELDEPLIKT_FRITAK_GRUNNLAG g
                     INNER JOIN MELDEPLIKT_FRITAK_VURDERING v ON g.ID = v.GRUNNLAG_ID
-                    WHERE g.BEHANDLING_ID = ?
                     """.trimIndent()
                 ) {
-                    setParams {
-                        setLong(1, behandling.id.toLong())
-                    }
                     setRowMapper { row ->
                         Opplysning(
                             behandlingId = row.getLong("BEHANDLING_ID"),

@@ -16,7 +16,8 @@ object VurderYrkesskadeÅrsakssammenhengFlytSteg : FlytSteg {
             YrkesskadeService(),
             SykdomRepository(connection),
             StudentRepository(connection),
-            PeriodeTilVurderingService(SakService(connection))
+            PeriodeTilVurderingService(SakService(connection)),
+            connection
         )
     }
 

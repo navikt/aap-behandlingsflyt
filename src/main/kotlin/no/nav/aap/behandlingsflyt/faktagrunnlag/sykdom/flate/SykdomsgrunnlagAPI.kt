@@ -15,18 +15,19 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.YrkesskadeRepository
 fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: HikariDataSource) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/sykdom/sykdom") {
-            get<BehandlingReferanse, SykdomsGrunnlagDto> { req ->
-                val behandling: Behandling = dataSource.transaction {
-                    BehandlingReferanseService(it).behandling(req)
-                }
+            get<BehandlingReferanse, SykdomGrunnlagDto> { req ->
+                val (yrkesskadeGrunnlag, sykdomGrunnlag) = dataSource.transaction { connection ->
+                    val behandling: Behandling = BehandlingReferanseService(connection).behandling(req)
 
-                val yrkesskadeGrunnlag = YrkesskadeRepository.hentHvisEksisterer(behandlingId = behandling.id)
-                val sykdomsGrunnlag = dataSource.transaction {
-                    SykdomRepository(it).hentHvisEksisterer(behandlingId = behandling.id)
+                    val yrkesskadeGrunnlag =
+                        YrkesskadeRepository(connection).hentHvisEksisterer(behandlingId = behandling.id)
+                    val sykdomGrunnlag = SykdomRepository(connection).hentHvisEksisterer(behandlingId = behandling.id)
+
+                    yrkesskadeGrunnlag to sykdomGrunnlag
                 }
 
                 respond(
-                    SykdomsGrunnlagDto(
+                    SykdomGrunnlagDto(
                         opplysninger = InnhentetSykdomsOpplysninger(
                             oppgittYrkesskadeISøknad = false,
                             innhentedeYrkesskader = yrkesskadeGrunnlag?.yrkesskader?.yrkesskader?.map { yrkesskade ->
@@ -37,21 +38,22 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: HikariDataSource) {
                                 )
                             } ?: emptyList(),
                         ),
-                        sykdomsvurdering = sykdomsGrunnlag?.sykdomsvurdering,
-                        erÅrsakssammenheng = sykdomsGrunnlag?.yrkesskadevurdering?.erÅrsakssammenheng
+                        sykdomsvurdering = sykdomGrunnlag?.sykdomsvurdering,
+                        erÅrsakssammenheng = sykdomGrunnlag?.yrkesskadevurdering?.erÅrsakssammenheng
                     )
                 )
             }
         }
         route("/{referanse}/grunnlag/sykdom/yrkesskade") {
             get<BehandlingReferanse, YrkesskadeGrunnlagDto> { req ->
-                val behandling: Behandling = dataSource.transaction {
-                    BehandlingReferanseService(it).behandling(req)
-                }
+                val (yrkesskadeGrunnlag, sykdomGrunnlag) = dataSource.transaction { connection ->
+                    val behandling: Behandling = BehandlingReferanseService(connection).behandling(req)
 
-                val yrkesskadeGrunnlag = YrkesskadeRepository.hentHvisEksisterer(behandlingId = behandling.id)
-                val sykdomsGrunnlag = dataSource.transaction {
-                    SykdomRepository(it).hentHvisEksisterer(behandlingId = behandling.id)
+                    val yrkesskadeGrunnlag =
+                        YrkesskadeRepository(connection).hentHvisEksisterer(behandlingId = behandling.id)
+                    val sykdomGrunnlag = SykdomRepository(connection).hentHvisEksisterer(behandlingId = behandling.id)
+
+                    yrkesskadeGrunnlag to sykdomGrunnlag
                 }
 
                 respond(
@@ -66,7 +68,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: HikariDataSource) {
                                 )
                             } ?: emptyList()
                         ),
-                        yrkesskadevurdering = sykdomsGrunnlag?.yrkesskadevurdering,
+                        yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
                     )
                 )
             }

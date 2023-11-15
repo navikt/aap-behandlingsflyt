@@ -77,7 +77,7 @@ class MeldepliktRepository(private val connection: DBConnection) {
 
     fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         val fraId =
-            connection.queryFirst("SELECT ID FROM MELDEPLIKT_FRITAK_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?") {
+            connection.queryFirstOrNull("SELECT ID FROM MELDEPLIKT_FRITAK_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?") {
                 setParams {
                     setLong(1, fraBehandling.toLong())
                 }
@@ -85,13 +85,18 @@ class MeldepliktRepository(private val connection: DBConnection) {
                     row.getLong("ID")
                 }
             }
+
+        if (fraId == null) {
+            return
+        }
+
         val tilId = connection.executeReturnKey("INSERT INTO MELDEPLIKT_FRITAK_GRUNNLAG (BEHANDLING_ID) VALUES (?)") {
             setParams {
                 setLong(1, tilBehandling.toLong())
             }
         }
 
-        connection.execute("INSERT INTO MELDEPLIKT_FRITAK_VURDERING (GRUNNLAG_ID, PERIODE, BEGRUNNELSE, HAR_FRITAK) SELECT ?, PERIODE, BEGRUNNELSE, HAR_FRITAK FROM MELDEPLIKT_FRITAK_VURDERING WHERE GRUNNLAG_ID = ?"){
+        connection.execute("INSERT INTO MELDEPLIKT_FRITAK_VURDERING (GRUNNLAG_ID, PERIODE, BEGRUNNELSE, HAR_FRITAK) SELECT ?, PERIODE, BEGRUNNELSE, HAR_FRITAK FROM MELDEPLIKT_FRITAK_VURDERING WHERE GRUNNLAG_ID = ?") {
             setParams {
                 setLong(1, tilId)
                 setLong(2, fraId)
