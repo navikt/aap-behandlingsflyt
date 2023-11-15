@@ -26,7 +26,6 @@ class VurderSykdomSteg(
             val sykdomsGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId = kontekst.behandlingId)
             val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId = kontekst.behandlingId)
 
-            //TODO: Skrive om til å være lik uttrykket på linje 46
             val vilkårResultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
             if (sykdomsGrunnlag != null && sykdomsGrunnlag.erKonsistent() || studentGrunnlag?.studentvurdering?.oppfyller11_14 == true) {
                 for (periode in periodeTilVurdering) {
