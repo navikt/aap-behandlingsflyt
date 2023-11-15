@@ -146,7 +146,7 @@ class OppgaveRepository(private val connection: DBConnection) {
             setParams {
                 setLong(1, oppgaveInput.id)
                 setEnumName(2, OppgaveStatus.FEILET)
-                setString(3, exception.message.orEmpty().take(3000))
+                setString(3, exception.message.orEmpty())
             }
         }
     }
