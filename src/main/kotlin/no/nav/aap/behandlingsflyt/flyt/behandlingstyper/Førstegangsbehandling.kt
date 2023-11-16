@@ -22,10 +22,10 @@ object Førstegangsbehandling : BehandlingType {
     override fun flyt(): BehandlingFlyt {
         return BehandlingFlytBuilder()
             .medSteg(steg = StartBehandlingFlytSteg)
-            .medSteg(steg = VurderAlderFlytSteg, informasjonskrav = listOf(PersonopplysningService()))
+            .medSteg(steg = VurderAlderFlytSteg, informasjonskrav = listOf(PersonopplysningService))
             .medSteg(steg = GeneriskPlaceholderFlytSteg(StegType.VURDER_LOVVALG))
             .medSteg(steg = VurderStudentFlytSteg)
-            .medSteg(steg = VurderYrkesskadeÅrsakssammenhengFlytSteg, informasjonskrav = listOf(YrkesskadeService()))
+            .medSteg(steg = VurderYrkesskadeÅrsakssammenhengFlytSteg, informasjonskrav = listOf(YrkesskadeService))
             .medSteg(steg = VurderSykdomFlytSteg)
             .medSteg(steg = FritakMeldepliktFlytSteg)
             .medSteg(steg = VurderBistandsbehovFlytSteg)

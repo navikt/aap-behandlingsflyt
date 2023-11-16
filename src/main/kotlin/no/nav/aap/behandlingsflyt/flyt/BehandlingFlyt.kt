@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.EndringType
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlagkonstruktør
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 import java.util.*
@@ -20,7 +20,7 @@ class BehandlingFlyt private constructor(
 
     class Behandlingsflytsteg(
         val steg: FlytSteg,
-        val kravliste: List<Grunnlag>,
+        val kravliste: List<Grunnlagkonstruktør>,
         val oppdaterFaktagrunnlag: Boolean
     )
 
@@ -33,12 +33,12 @@ class BehandlingFlyt private constructor(
         parent = null
     )
 
-    fun faktagrunnlagForGjeldendeSteg(): List<Grunnlag> {
+    fun faktagrunnlagForGjeldendeSteg(): List<Grunnlagkonstruktør> {
         return aktivtSteg?.kravliste ?: emptyList()
     }
 
-    fun faktagrunnlagFremTilOgMedGjeldendeSteg(): List<Grunnlag> {
-        if (aktivtSteg?.oppdaterFaktagrunnlag != true){
+    fun faktagrunnlagFremTilOgMedGjeldendeSteg(): List<Grunnlagkonstruktør> {
+        if (aktivtSteg?.oppdaterFaktagrunnlag != true) {
             return emptyList()
         }
 
@@ -151,8 +151,10 @@ class BehandlingFlyt private constructor(
         return avklaringsbehov.map { it.løsesISteg() }.minWithOrNull(compareable())
     }
 
-    fun tilbakeflytEtterEndringer(oppdaterteGrunnlagstype: List<Grunnlag>): BehandlingFlyt {
-        val skalTilSteg = flyt.filter { it.kravliste.any { at -> oppdaterteGrunnlagstype.contains(at) } }.map { it.steg.type() }.minWithOrNull(compareable())
+    fun tilbakeflytEtterEndringer(oppdaterteGrunnlagstype: List<Grunnlagkonstruktør>): BehandlingFlyt {
+        val skalTilSteg =
+            flyt.filter { it.kravliste.any { at -> oppdaterteGrunnlagstype.contains(at) } }.map { it.steg.type() }
+                .minWithOrNull(compareable())
 
         if (skalTilSteg == null) {
             return BehandlingFlyt(emptyList(), emptyMap())
@@ -195,7 +197,7 @@ class BehandlingFlytBuilder {
     fun medSteg(
         steg: FlytSteg,
         vararg endringer: EndringType,
-        informasjonskrav: List<Grunnlag> = emptyList()
+        informasjonskrav: List<Grunnlagkonstruktør> = emptyList()
     ): BehandlingFlytBuilder {
         if (buildt) {
             throw IllegalStateException("[Utvikler feil] Builder er allerede bygget")

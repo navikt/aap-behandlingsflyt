@@ -13,11 +13,10 @@ object VurderYrkesskadeÅrsakssammenhengFlytSteg : FlytSteg {
 
     override fun konstruer(connection: DBConnection): BehandlingSteg {
         return VurderYrkesskadeÅrsakssammenhengSteg(
-            YrkesskadeService(),
+            YrkesskadeService.konstruer(connection),
             SykdomRepository(connection),
             StudentRepository(connection),
-            PeriodeTilVurderingService(SakService(connection)),
-            connection
+            PeriodeTilVurderingService(SakService(connection))
         )
     }
 

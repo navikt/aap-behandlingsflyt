@@ -2,13 +2,20 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlagkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.adapter.PersonRegisterMock
 import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sak.SakService
 
-class PersonopplysningService : Grunnlag {
+class PersonopplysningService private constructor(private val connection: DBConnection) : Grunnlag {
 
-    override fun oppdater(connection: DBConnection, kontekst: FlytKontekst): Boolean {
+    companion object : Grunnlagkonstruktør {
+        override fun konstruer(connection: DBConnection): PersonopplysningService {
+            return PersonopplysningService(connection)
+        }
+    }
+
+    override fun oppdater(kontekst: FlytKontekst): Boolean {
         val personopplysningRepository = PersonopplysningRepository(connection)
         val sakService = SakService(connection)
         val sak = sakService.hent(kontekst.sakId)

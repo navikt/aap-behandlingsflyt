@@ -3,13 +3,20 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade
 import no.nav.aap.behandlingsflyt.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlagkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.adapter.YrkesskadeRegisterMock
 import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sak.SakService
 
-class YrkesskadeService : Grunnlag {
+class YrkesskadeService private constructor(private val connection: DBConnection) : Grunnlag {
 
-    override fun oppdater(connection: DBConnection, kontekst: FlytKontekst): Boolean {
+    companion object : Grunnlagkonstruktør {
+        override fun konstruer(connection: DBConnection): YrkesskadeService {
+            return YrkesskadeService(connection)
+        }
+    }
+
+    override fun oppdater(kontekst: FlytKontekst): Boolean {
         val sakService = SakService(connection)
         val yrkesskadeRepository = YrkesskadeRepository(connection)
 
@@ -32,7 +39,7 @@ class YrkesskadeService : Grunnlag {
         return nyeData == gamleData
     }
 
-    fun hentHvisEksisterer(connection: DBConnection, behandlingId: BehandlingId): YrkesskadeGrunnlag? {
+    fun hentHvisEksisterer(behandlingId: BehandlingId): YrkesskadeGrunnlag? {
         return YrkesskadeRepository(connection).hentHvisEksisterer(behandlingId)
     }
 }

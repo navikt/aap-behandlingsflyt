@@ -41,8 +41,8 @@ class FaktagrunnlagTest {
     fun `Yrkesskadedata er oppdatert`() {
         val faktagrunnlag = Faktagrunnlag(dbConnection)
 
-        faktagrunnlag.oppdaterFaktagrunnlagForKravliste(listOf(YrkesskadeService()), kontekst)
-        val erOppdatert = faktagrunnlag.oppdaterFaktagrunnlagForKravliste(listOf(YrkesskadeService()), kontekst)
+        faktagrunnlag.oppdaterFaktagrunnlagForKravliste(listOf(YrkesskadeService), kontekst)
+        val erOppdatert = faktagrunnlag.oppdaterFaktagrunnlagForKravliste(listOf(YrkesskadeService), kontekst)
 
         assertThat(erOppdatert).isEmpty()
     }
@@ -51,22 +51,20 @@ class FaktagrunnlagTest {
     fun `Yrkesskadedata er ikke oppdatert`() {
         val faktagrunnlag = Faktagrunnlag(dbConnection)
 
-        val yrkesskadeService = YrkesskadeService()
-
         YrkesskadeRegisterMock.konstruer(ident = ident, periode = periode)
 
-        val erOppdatert = faktagrunnlag.oppdaterFaktagrunnlagForKravliste(listOf(yrkesskadeService), kontekst)
+        val erOppdatert = faktagrunnlag.oppdaterFaktagrunnlagForKravliste(listOf(YrkesskadeService), kontekst)
 
         assertThat(erOppdatert)
             .hasSize(1)
-            .allMatch { it === yrkesskadeService }
+            .allMatch { it === YrkesskadeService }
     }
 
     @Test
     fun `Yrkesskadedata er utdatert, men har ingen endring fra registeret`() {
         val faktagrunnlag = Faktagrunnlag(dbConnection)
 
-        val erOppdatert = faktagrunnlag.oppdaterFaktagrunnlagForKravliste(listOf(YrkesskadeService()), kontekst)
+        val erOppdatert = faktagrunnlag.oppdaterFaktagrunnlagForKravliste(listOf(YrkesskadeService), kontekst)
 
         assertThat(erOppdatert).isEmpty()
     }
