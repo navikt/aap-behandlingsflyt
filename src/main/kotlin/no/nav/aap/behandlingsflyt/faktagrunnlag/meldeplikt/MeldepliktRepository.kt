@@ -7,12 +7,12 @@ import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 class MeldepliktRepository(private val connection: DBConnection) {
 
     fun hentHvisEksisterer(behandlingId: BehandlingId): MeldepliktGrunnlag? {
-        return connection.queryFirstOrNull("SELECT ID FROM MELDEPLIKT_FRITAK_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?") {
+        return connection.queryFirstOrNull("SELECT MELDEPLIKT_ID FROM MELDEPLIKT_FRITAK_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?") {
             setParams {
                 setLong(1, behandlingId.toLong())
             }
             setRowMapper { row ->
-                val id = row.getLong("ID")
+                val id = row.getLong("MELDEPLIKT_ID")
                 MeldepliktGrunnlag(
                     id = id,
                     behandlingId = behandlingId,
@@ -23,7 +23,7 @@ class MeldepliktRepository(private val connection: DBConnection) {
     }
 
     private fun hentFritaksvurderinger(meldepliktId: Long): List<Fritaksvurdering> {
-        return connection.queryList("SELECT PERIODE, BEGRUNNELSE, HAR_FRITAK FROM MELDEPLIKT_FRITAK_VURDERING INNER JOIN MELDEPLIKT_FRITAK ON VURDERING_ID = ID WHERE GRUNNLAG_ID = ?") {
+        return connection.queryList("SELECT PERIODE, BEGRUNNELSE, HAR_FRITAK FROM MELDEPLIKT_FRITAK_VURDERING WHERE MELDEPLIKT_ID = ?") {
             setParams {
                 setLong(1, meldepliktId)
             }
@@ -46,26 +46,22 @@ class MeldepliktRepository(private val connection: DBConnection) {
             deaktiverEksisterende(behandlingId)
         }
 
-        val grunnlagId =
-            connection.executeReturnKey("INSERT INTO MELDEPLIKT_FRITAK_GRUNNLAG (BEHANDLING_ID) VALUES (?)") {
-                setParams {
-                    setLong(1, behandlingId.toLong())
-                }
+        val meldepliktId = connection.executeReturnKey("INSERT INTO MELDEPLIKT_FRITAK DEFAULT VALUES")
+
+        connection.execute("INSERT INTO MELDEPLIKT_FRITAK_GRUNNLAG (BEHANDLING_ID, MELDEPLIKT_ID) VALUES (?, ?)") {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setLong(2, meldepliktId)
             }
+        }
 
         vurderinger.forEach { vurdering ->
-            val vurderingId =
-                connection.executeReturnKey("INSERT INTO MELDEPLIKT_FRITAK_VURDERING (PERIODE, BEGRUNNELSE, HAR_FRITAK) VALUES (?::daterange, ?, ?)") {
-                    setParams {
-                        setPeriode(1, vurdering.periode)
-                        setString(2, vurdering.begrunnelse)
-                        setBoolean(3, vurdering.harFritak)
-                    }
-                }
-            connection.execute("INSERT INTO MELDEPLIKT_FRITAK (GRUNNLAG_ID, VURDERING_ID) VALUES (?, ?)") {
+            connection.execute("INSERT INTO MELDEPLIKT_FRITAK_VURDERING (MELDEPLIKT_ID, PERIODE, BEGRUNNELSE, HAR_FRITAK) VALUES (?, ?::daterange, ?, ?)") {
                 setParams {
-                    setLong(1, grunnlagId)
-                    setLong(2, vurderingId)
+                    setLong(1, meldepliktId)
+                    setPeriode(2, vurdering.periode)
+                    setString(3, vurdering.begrunnelse)
+                    setBoolean(4, vurdering.harFritak)
                 }
             }
         }
@@ -84,32 +80,23 @@ class MeldepliktRepository(private val connection: DBConnection) {
 
     fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         val fraId =
-            connection.queryList("SELECT VURDERING_ID FROM MELDEPLIKT_FRITAK_GRUNNLAG INNER JOIN MELDEPLIKT_FRITAK ON GRUNNLAG_ID = ID WHERE AKTIV AND BEHANDLING_ID = ?") {
+            connection.queryFirstOrNull("SELECT MELDEPLIKT_ID FROM MELDEPLIKT_FRITAK_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?") {
                 setParams {
                     setLong(1, fraBehandling.toLong())
                 }
                 setRowMapper { row ->
-                    row.getLong("VURDERING_ID")
+                    row.getLong("MELDEPLIKT_ID")
                 }
             }
 
-        if (fraId.isEmpty()) {
+        if (fraId == null) {
             return
         }
 
-        val grunnlagId =
-            connection.executeReturnKey("INSERT INTO MELDEPLIKT_FRITAK_GRUNNLAG (BEHANDLING_ID) VALUES (?)") {
-                setParams {
-                    setLong(1, tilBehandling.toLong())
-                }
-            }
-
-        fraId.forEach { vurderingId ->
-            connection.execute("INSERT INTO MELDEPLIKT_FRITAK (GRUNNLAG_ID, VURDERING_ID) VALUES (?, ?)") {
-                setParams {
-                    setLong(1, grunnlagId)
-                    setLong(2, vurderingId)
-                }
+        connection.execute("INSERT INTO MELDEPLIKT_FRITAK_GRUNNLAG (BEHANDLING_ID, MELDEPLIKT_ID) VALUES (?, ?)") {
+            setParams {
+                setLong(1, tilBehandling.toLong())
+                setLong(2, fraId)
             }
         }
     }

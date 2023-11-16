@@ -37,7 +37,7 @@ class MeldepliktRepositoryTest {
     @AfterEach
     fun tilbakestill() {
         InitTestDatabase.dataSource.transaction { connection ->
-            connection.execute("TRUNCATE TABLE SAK, MELDEPLIKT_FRITAK_VURDERING CASCADE")
+            connection.execute("TRUNCATE TABLE SAK, MELDEPLIKT_FRITAK CASCADE")
         }
     }
 
@@ -201,8 +201,7 @@ class MeldepliktRepositoryTest {
                     """
                     SELECT g.BEHANDLING_ID, g.AKTIV, v.PERIODE, v.BEGRUNNELSE, v.HAR_FRITAK
                     FROM MELDEPLIKT_FRITAK_GRUNNLAG g
-                    INNER JOIN MELDEPLIKT_FRITAK f ON g.ID = f.GRUNNLAG_ID
-                    INNER JOIN MELDEPLIKT_FRITAK_VURDERING v ON f.VURDERING_ID = v.ID
+                    INNER JOIN MELDEPLIKT_FRITAK_VURDERING v ON g.MELDEPLIKT_ID = v.MELDEPLIKT_ID
                     """.trimIndent()
                 ) {
                     setRowMapper { row ->
@@ -273,10 +272,10 @@ class MeldepliktRepositoryTest {
             val opplysninger =
                 connection.queryList(
                     """
-                    SELECT g.BEHANDLING_ID, g.AKTIV, v.PERIODE, v.BEGRUNNELSE, v.HAR_FRITAK
+                    SELECT f.ID, g.BEHANDLING_ID, g.AKTIV, v.PERIODE, v.BEGRUNNELSE, v.HAR_FRITAK
                     FROM MELDEPLIKT_FRITAK_GRUNNLAG g
-                    INNER JOIN MELDEPLIKT_FRITAK f ON g.ID = f.GRUNNLAG_ID
-                    INNER JOIN MELDEPLIKT_FRITAK_VURDERING v ON f.VURDERING_ID = v.ID
+                    INNER JOIN MELDEPLIKT_FRITAK f ON g.MELDEPLIKT_ID = f.ID
+                    INNER JOIN MELDEPLIKT_FRITAK_VURDERING v ON f.ID = v.MELDEPLIKT_ID
                     """.trimIndent()
                 ) {
                     setRowMapper { row ->
