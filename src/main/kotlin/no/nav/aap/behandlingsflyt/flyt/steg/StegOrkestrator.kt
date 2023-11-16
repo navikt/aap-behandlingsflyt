@@ -25,9 +25,7 @@ class StegOrkestrator(private val connection: DBConnection, private val aktivtSt
 
             if (resultat.funnetAvklaringsbehov().isNotEmpty()) {
                 log.info(
-                    "[{} - {}] Fant avklaringsbehov: {}",
-                    kontekst.sakId,
-                    kontekst.behandlingId,
+                    "Fant avklaringsbehov: {}",
                     resultat.funnetAvklaringsbehov()
                 )
                 leggTilAvklaringsbehov(behandling, resultat)
@@ -67,9 +65,7 @@ class StegOrkestrator(private val connection: DBConnection, private val aktivtSt
                 .filter { behov -> behov.skalLøsesISteg(aktivtSteg.type()) }
 
         log.debug(
-            "[{} - {}] Behandler steg({}) med status({})",
-            kontekst.sakId,
-            kontekst.behandlingId,
+            "Behandler steg({}) med status({})",
             aktivtSteg.type(),
             nesteStegStatus
         )

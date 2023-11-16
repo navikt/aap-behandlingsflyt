@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.TimeUnit
@@ -64,19 +65,16 @@ class Motor(
 
         private fun utførOppgave(oppgaveInput: OppgaveInput, connection: DBConnection) {
             try {
-                log.info(
-                    "[{} - {}}] Starter på oppgave '{}'",
-                    oppgaveInput.sakId(),
-                    oppgaveInput.behandlingId(),
-                    oppgaveInput.type()
-                )
+                MDC.put("oppgavetype", oppgaveInput.type())
+                MDC.put("sakId", oppgaveInput.sakIdOrNull().toString())
+                MDC.put("behandlingId", oppgaveInput.behandlingIdOrNull().toString())
+
+                log.info("Starter på oppgave")
+
                 oppgaveInput.oppgave.utfør(connection, oppgaveInput)
-                log.info(
-                    "[{} - {}}] Fullført oppgave '{}'",
-                    oppgaveInput.sakId(),
-                    oppgaveInput.behandlingId(),
-                    oppgaveInput.type()
-                )
+
+                log.info("Fullført oppgave")
+
                 OppgaveRepository(connection).markerKjørt(oppgaveInput)
             } catch (exception: Throwable) {
                 OppgaveRepository(connection).markerFeilet(oppgaveInput, exception)
@@ -86,6 +84,7 @@ class Motor(
                     exception
                 )
             }
+            MDC.clear()
         }
 
     }

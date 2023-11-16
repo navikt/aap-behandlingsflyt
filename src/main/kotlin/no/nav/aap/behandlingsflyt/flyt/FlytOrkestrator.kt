@@ -45,9 +45,7 @@ class FlytOrkestrator(
 
         if (!tilbakeføringsflyt.erTom()) {
             log.info(
-                "[{} - {}] Tilbakeført etter oppdatering av registeropplysninger fra '{}' til '{}'",
-                kontekst.sakId,
-                kontekst.behandlingId,
+                "Tilbakeført etter oppdatering av registeropplysninger fra '{}' til '{}'",
                 behandling.aktivtSteg(),
                 tilbakeføringsflyt.stegene().last()
             )
@@ -91,9 +89,7 @@ class FlytOrkestrator(
                 val tilbakeføringsflyt =
                     behandlingFlyt.tilbakeflyt(behandling.avklaringsbehovene().tilbakeførtFraBeslutter())
                 log.info(
-                    "[{} - {}] Tilakeført fra '{}' til '{}'",
-                    kontekst.sakId,
-                    kontekst.behandlingId,
+                    "Tilakeført fra '{}' til '{}'",
                     gjeldendeSteg.type(),
                     tilbakeføringsflyt.stegene().last()
                 )
@@ -103,8 +99,13 @@ class FlytOrkestrator(
             val neste = behandlingFlyt.neste()
 
             if (!result.kanFortsette() || neste == null) {
-                // Prosessen har stoppet opp, slipp ut hendelse om at den har stoppet opp og hvorfor?
-                loggStopp(kontekst, behandling)
+                if (neste == null) {
+                    // Avslutter behandling
+                    log.info("Behandlingen har nådd slutten, avslutter behandling")
+                } else {
+                    // Prosessen har stoppet opp, slipp ut hendelse om at den har stoppet opp og hvorfor?
+                    loggStopp(behandling)
+                }
                 return
             }
             gjeldendeSteg = neste
@@ -137,7 +138,7 @@ class FlytOrkestrator(
             val neste = behandlingFlyt.neste()
 
             if (neste == null) {
-                loggStopp(kontekst, behandling)
+                loggStopp(behandling)
                 return
             }
             StegOrkestrator(connection, neste).utførTilbakefør(
@@ -148,13 +149,10 @@ class FlytOrkestrator(
     }
 
     private fun loggStopp(
-        kontekst: FlytKontekst,
         behandling: Behandling
     ) {
         log.info(
-            "[{} - {}] Stopper opp ved {} med {}",
-            kontekst.sakId,
-            kontekst.behandlingId,
+            "Stopper opp ved {} med {}",
             behandling.aktivtSteg(),
             behandling.åpneAvklaringsbehov()
         )

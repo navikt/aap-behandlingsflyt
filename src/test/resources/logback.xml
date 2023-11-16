@@ -2,7 +2,7 @@
 <configuration>
     <appender name="pretty" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%cyan(%d{HH:mm:ss.SSS}) %gray([%thread]) %highlight(%-5level) %magenta(%logger{36}) - %msg%n
+            <pattern>%cyan(%d{HH:mm:ss.SSS}) %gray([%thread]) %highlight(%-5level) %magenta(%logger{36}) [oppgave='%X{oppgavetype}', sakId='%X{sakId}', behandlingId='%X{behandlingId}'] - %msg%n
             </pattern>
         </encoder>
     </appender>

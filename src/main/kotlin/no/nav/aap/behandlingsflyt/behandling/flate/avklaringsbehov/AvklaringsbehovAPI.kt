@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.flyt.ValiderBehandlingTilstand
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HendelsesMottak
 import no.nav.aap.behandlingsflyt.hendelse.mottak.LøsAvklaringsbehovBehandlingHendelse
 import no.nav.aap.behandlingsflyt.prosessering.TaSkriveLåsRepository
+import org.slf4j.MDC
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource) {
@@ -19,20 +20,24 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource) {
                 dataSource.transaction { connection ->
                     val taSkriveLåsRepository = TaSkriveLåsRepository(connection)
                     val lås = taSkriveLåsRepository.lås(request.referanse)
-                    val behandling = BehandlingRepository(connection).hent(lås.behandlingSkrivelås.id)
+                    MDC.putCloseable("sakId", lås.sakSkrivelås.id.toString()).use {
+                        MDC.putCloseable("behandlingId", lås.behandlingSkrivelås.id.toString()).use {
+                            val behandling = BehandlingRepository(connection).hent(lås.behandlingSkrivelås.id)
 
-                    ValiderBehandlingTilstand.validerTilstandBehandling(
-                        behandling = behandling,
-                        avklaringsbehov = listOf(request.behov.definisjon()),
-                        versjon = request.behandlingVersjon
-                    )
+                            ValiderBehandlingTilstand.validerTilstandBehandling(
+                                behandling = behandling,
+                                avklaringsbehov = listOf(request.behov.definisjon()),
+                                versjon = request.behandlingVersjon
+                            )
 
-                    HendelsesMottak(dataSource).håndtere(
-                        connection = connection,
-                        key = behandling.id,
-                        hendelse = LøsAvklaringsbehovBehandlingHendelse(request.behov)
-                    )
-                    taSkriveLåsRepository.verifiserSkrivelås(lås)
+                            HendelsesMottak(dataSource).håndtere(
+                                connection = connection,
+                                key = behandling.id,
+                                hendelse = LøsAvklaringsbehovBehandlingHendelse(request.behov)
+                            )
+                            taSkriveLåsRepository.verifiserSkrivelås(lås)
+                        }
+                    }
                 }
                 respond(request)
             }

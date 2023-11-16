@@ -60,7 +60,7 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
     ) {
         val behandling = BehandlingRepository(connection).hent(kontekst.behandlingId)
         val definisjoner = avklaringsbehov.map { løsning -> løsning.definisjon() }
-        log.info("Forsøker løse avklaringsbehov[${definisjoner}] på behandling[${behandling.referanse}")
+        log.info("Forsøker løse avklaringsbehov[${definisjoner}] på behandling[${behandling.referanse}]")
 
         ValiderBehandlingTilstand.validerTilstandBehandling(behandling, definisjoner)
 
