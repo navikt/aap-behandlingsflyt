@@ -20,6 +20,8 @@ class StegOrkestrator(private val connection: DBConnection, private val aktivtSt
     ): Transisjon {
 
         var gjeldendeStegStatus = StegStatus.START
+        log.info("Behandler steg({})", aktivtSteg.type())
+
         while (true) {
             val resultat = utførTilstandsEndring(kontekst, gjeldendeStegStatus, behandling)
 
