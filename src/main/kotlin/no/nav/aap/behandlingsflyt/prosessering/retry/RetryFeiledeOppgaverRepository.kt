@@ -13,7 +13,7 @@ internal class RetryFeiledeOppgaverRepository(private val connection: DBConnecti
     internal fun markerAlleFeiledeForKlare(): Int {
         val historikk = """
             INSERT INTO OPPGAVE_HISTORIKK (oppgave_id, status)
-            SELECT id, 'KLAR' FROM OPPGAVE WHERE status = ̈́'FEILET'
+            SELECT id, 'KLAR' FROM OPPGAVE WHERE status = 'FEILET'
         """.trimIndent()
 
         connection.execute(historikk) {
