@@ -1,7 +1,9 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger
 
 import no.nav.aap.behandlingsflyt.Periode
+import no.nav.aap.behandlingsflyt.behandling.Behandling
 import no.nav.aap.behandlingsflyt.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.InitTestDatabase
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.mars
@@ -10,7 +12,6 @@ import no.nav.aap.behandlingsflyt.sak.PersonRepository
 import no.nav.aap.behandlingsflyt.sak.Sak
 import no.nav.aap.behandlingsflyt.sak.SakRepository
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -32,17 +33,10 @@ class PersonopplysningRepositoryTest {
         }
     }
 
-    @AfterEach
-    fun tilbakestill() {
-        InitTestDatabase.dataSource.transaction { connection ->
-            connection.execute("TRUNCATE TABLE SAK CASCADE")
-        }
-    }
-
     @Test
     fun `Finner ikke personopplysninger hvis ikke lagret`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val behandling = BehandlingRepository(connection).opprettBehandling(sak.id, listOf())
+            val behandling = behandling(connection)
 
             val personopplysningRepository = PersonopplysningRepository(connection)
             val personopplysningGrunnlag = personopplysningRepository.hentHvisEksisterer(behandling.id)
@@ -53,7 +47,7 @@ class PersonopplysningRepositoryTest {
     @Test
     fun `Lagrer og henter personopplysninger`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val behandling = BehandlingRepository(connection).opprettBehandling(sak.id, listOf())
+            val behandling = behandling(connection)
 
             val personopplysningRepository = PersonopplysningRepository(connection)
             personopplysningRepository.lagre(behandling.id, Personopplysning(Fødselsdato(17 mars 1992)))
@@ -65,7 +59,7 @@ class PersonopplysningRepositoryTest {
     @Test
     fun `Lagrer ikke like opplysninger flere ganger`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val behandling = BehandlingRepository(connection).opprettBehandling(sak.id, listOf())
+            val behandling = behandling(connection)
 
             val personopplysningRepository = PersonopplysningRepository(connection)
             personopplysningRepository.lagre(behandling.id, Personopplysning(Fødselsdato(17 mars 1992)))
@@ -73,7 +67,10 @@ class PersonopplysningRepositoryTest {
             personopplysningRepository.lagre(behandling.id, Personopplysning(Fødselsdato(18 mars 1992)))
 
             val opplysninger =
-                connection.queryList("SELECT FODSELSDATO FROM PERSONOPPLYSNING") {
+                connection.queryList("SELECT FODSELSDATO FROM PERSONOPPLYSNING where behandling_id = ?") {
+                    setParams {
+                        setLong(1, behandling.id.toLong())
+                    }
                     setRowMapper { row -> row.getLocalDate("FODSELSDATO") }
                 }
             assertThat(opplysninger)
@@ -85,16 +82,12 @@ class PersonopplysningRepositoryTest {
     @Test
     fun `Kopierer personopplysninger fra en behandling til en annen`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val behandling1 = BehandlingRepository(connection).opprettBehandling(sak.id, listOf())
-            connection.execute("UPDATE BEHANDLING SET status = 'AVSLUTTET'")
-            val behandling2 = BehandlingRepository(connection).opprettBehandling(sak.id, listOf())
-
+            val behandling1 = behandling(connection)
             val personopplysningRepository = PersonopplysningRepository(connection)
             personopplysningRepository.lagre(behandling1.id, Personopplysning(Fødselsdato(17 mars 1992)))
-            personopplysningRepository.kopier(
-                fraBehandling = behandling1.id,
-                tilBehandling = behandling2.id
-            )
+            connection.execute("UPDATE BEHANDLING SET status = 'AVSLUTTET'")
+            val behandling2 = behandling(connection)
+
             val personopplysningGrunnlag = personopplysningRepository.hentHvisEksisterer(behandling2.id)
             assertThat(personopplysningGrunnlag?.personopplysning).isEqualTo(Personopplysning(Fødselsdato(17 mars 1992)))
         }
@@ -103,17 +96,14 @@ class PersonopplysningRepositoryTest {
     @Test
     fun `Kopierer personopplysninger fra en behandling til en annen der fraBehandlingen har to versjoner av opplysningene`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val behandling1 = BehandlingRepository(connection).opprettBehandling(sak.id, listOf())
-            connection.execute("UPDATE BEHANDLING SET status = 'AVSLUTTET'")
-            val behandling2 = BehandlingRepository(connection).opprettBehandling(sak.id, listOf())
-
+            val behandling1 = behandling(connection)
             val personopplysningRepository = PersonopplysningRepository(connection)
             personopplysningRepository.lagre(behandling1.id, Personopplysning(Fødselsdato(16 mars 1992)))
             personopplysningRepository.lagre(behandling1.id, Personopplysning(Fødselsdato(17 mars 1992)))
-            personopplysningRepository.kopier(
-                fraBehandling = behandling1.id,
-                tilBehandling = behandling2.id
-            )
+            connection.execute("UPDATE BEHANDLING SET status = 'AVSLUTTET'")
+
+            val behandling2 = behandling(connection)
+
             val personopplysningGrunnlag = personopplysningRepository.hentHvisEksisterer(behandling2.id)
             assertThat(personopplysningGrunnlag?.personopplysning).isEqualTo(Personopplysning(Fødselsdato(17 mars 1992)))
         }
@@ -122,7 +112,7 @@ class PersonopplysningRepositoryTest {
     @Test
     fun `Lagrer nye opplysninger som ny rad og deaktiverer forrige versjon av opplysningene`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val behandling = BehandlingRepository(connection).opprettBehandling(sak.id, listOf())
+            val behandling = behandling(connection)
             val personopplysningRepository = PersonopplysningRepository(connection)
 
             personopplysningRepository.lagre(behandling.id, Personopplysning(Fødselsdato(17 mars 1992)))
@@ -136,7 +126,10 @@ class PersonopplysningRepositoryTest {
             data class Opplysning(val behandlingId: Long, val fødselsdato: LocalDate, val aktiv: Boolean)
 
             val opplysninger =
-                connection.queryList("SELECT BEHANDLING_ID, FODSELSDATO, AKTIV FROM PERSONOPPLYSNING") {
+                connection.queryList("SELECT BEHANDLING_ID, FODSELSDATO, AKTIV FROM PERSONOPPLYSNING where behandling_id = ?") {
+                    setParams {
+                        setLong(1, behandling.id.toLong())
+                    }
                     setRowMapper { row ->
                         Opplysning(
                             behandlingId = row.getLong("BEHANDLING_ID"),
@@ -152,5 +145,13 @@ class PersonopplysningRepositoryTest {
                     Opplysning(behandling.id.toLong(), 18 mars 1992, true)
                 )
         }
+    }
+
+    private fun behandling(connection: DBConnection): Behandling {
+        val behandling = BehandlingRepository(connection).finnSisteBehandlingFor(sak.id)
+        if (behandling == null || behandling.status().erAvsluttet()) {
+            return BehandlingRepository(connection).opprettBehandling(sak.id, listOf())
+        }
+        return behandling
     }
 }

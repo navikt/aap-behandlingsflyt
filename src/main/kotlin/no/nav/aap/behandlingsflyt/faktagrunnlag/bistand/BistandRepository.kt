@@ -54,6 +54,7 @@ class BistandRepository(private val connection: DBConnection) {
     }
 
     fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+        require(fraBehandling != tilBehandling)
         connection.execute("INSERT INTO BISTAND_GRUNNLAG (BEHANDLING_ID, BEGRUNNELSE, ER_BEHOV_FOR_BISTAND) SELECT ?, BEGRUNNELSE, ER_BEHOV_FOR_BISTAND FROM BISTAND_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?") {
             setParams {
                 setLong(1, tilBehandling.toLong())

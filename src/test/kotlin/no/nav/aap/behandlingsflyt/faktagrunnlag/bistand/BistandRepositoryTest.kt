@@ -2,7 +2,9 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.bistand
 
 import no.nav.aap.behandlingsflyt.Periode
 import no.nav.aap.behandlingsflyt.avklaringsbehov.bistand.BistandVurdering
+import no.nav.aap.behandlingsflyt.behandling.Behandling
 import no.nav.aap.behandlingsflyt.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.InitTestDatabase
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.sak.Ident
@@ -10,7 +12,6 @@ import no.nav.aap.behandlingsflyt.sak.PersonRepository
 import no.nav.aap.behandlingsflyt.sak.Sak
 import no.nav.aap.behandlingsflyt.sak.SakRepository
 import org.assertj.core.api.Assertions
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -18,7 +19,7 @@ import java.time.LocalDate
 class BistandRepositoryTest {
 
     private companion object {
-        private val ident = Ident("123123123124")
+        private val ident = Ident("123123123129")
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 
@@ -29,13 +30,6 @@ class BistandRepositoryTest {
         InitTestDatabase.dataSource.transaction { connection ->
             sak = SakRepository(connection)
                 .finnEllerOpprett(PersonRepository(connection).finnEllerOpprett(ident), periode)
-        }
-    }
-
-    @AfterEach
-    fun tilbakestill() {
-        InitTestDatabase.dataSource.transaction { connection ->
-            connection.execute("TRUNCATE TABLE SAK CASCADE")
         }
     }
 
@@ -53,7 +47,7 @@ class BistandRepositoryTest {
     @Test
     fun `Lagrer og henter bistand`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val behandling = BehandlingRepository(connection).opprettBehandling(sak.id, listOf())
+            val behandling = behandling(connection)
 
             val bistandRepository = BistandRepository(connection)
             bistandRepository.lagre(behandling.id, BistandVurdering("begrunnelse", false))
@@ -65,7 +59,7 @@ class BistandRepositoryTest {
     @Test
     fun `Lagrer ikke like bistand flere ganger`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val behandling = BehandlingRepository(connection).opprettBehandling(sak.id, listOf())
+            val behandling = behandling(connection)
 
             val bistandRepository = BistandRepository(connection)
             bistandRepository.lagre(behandling.id, BistandVurdering("en begrunnelse", false))
@@ -82,19 +76,24 @@ class BistandRepositoryTest {
         }
     }
 
+    private fun behandling(connection: DBConnection): Behandling {
+        val behandling = BehandlingRepository(connection).finnSisteBehandlingFor(sak.id)
+        if (behandling == null || behandling.status().erAvsluttet()) {
+            return BehandlingRepository(connection).opprettBehandling(sak.id, listOf())
+        }
+        return behandling
+    }
+
     @Test
     fun `Kopierer bistand fra en behandling til en annen`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val behandling1 = BehandlingRepository(connection).opprettBehandling(sak.id, listOf())
-            connection.execute("UPDATE BEHANDLING SET status = 'AVSLUTTET'")
-            val behandling2 = BehandlingRepository(connection).opprettBehandling(sak.id, listOf())
-
+            val behandling1 = behandling(connection)
             val bistandRepository = BistandRepository(connection)
             bistandRepository.lagre(behandling1.id, BistandVurdering("begrunnelse", false))
-            bistandRepository.kopier(
-                fraBehandling = behandling1.id,
-                tilBehandling = behandling2.id
-            )
+            connection.execute("UPDATE BEHANDLING SET status = 'AVSLUTTET'")
+
+            val behandling2 = behandling(connection)
+
             val bistandGrunnlag = bistandRepository.hentHvisEksisterer(behandling2.id)
             Assertions.assertThat(bistandGrunnlag?.vurdering).isEqualTo(BistandVurdering("begrunnelse", false))
         }
@@ -103,17 +102,14 @@ class BistandRepositoryTest {
     @Test
     fun `Kopierer bistand fra en behandling til en annen der fraBehandlingen har to versjoner av opplysningene`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val behandling1 = BehandlingRepository(connection).opprettBehandling(sak.id, listOf())
-            connection.execute("UPDATE BEHANDLING SET status = 'AVSLUTTET'")
-            val behandling2 = BehandlingRepository(connection).opprettBehandling(sak.id, listOf())
-
+            val behandling1 = behandling(connection)
             val bistandRepository = BistandRepository(connection)
             bistandRepository.lagre(behandling1.id, BistandVurdering("en begrunnelse", false))
             bistandRepository.lagre(behandling1.id, BistandVurdering("annen begrunnelse", false))
-            bistandRepository.kopier(
-                fraBehandling = behandling1.id,
-                tilBehandling = behandling2.id
-            )
+            connection.execute("UPDATE BEHANDLING SET status = 'AVSLUTTET'")
+
+            val behandling2 = behandling(connection)
+
             val bistandGrunnlag = bistandRepository.hentHvisEksisterer(behandling2.id)
             Assertions.assertThat(bistandGrunnlag?.vurdering).isEqualTo(BistandVurdering("annen begrunnelse", false))
         }
@@ -122,7 +118,7 @@ class BistandRepositoryTest {
     @Test
     fun `Lagrer nye bistandsopplysninger som ny rad og deaktiverer forrige versjon av opplysningene`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val behandling = BehandlingRepository(connection).opprettBehandling(sak.id, listOf())
+            val behandling = behandling(connection)
             val bistandRepository = BistandRepository(connection)
 
             bistandRepository.lagre(behandling.id, BistandVurdering("en begrunnelse", false))
@@ -152,8 +148,8 @@ class BistandRepositoryTest {
                     }
                 }
             Assertions.assertThat(opplysninger)
-                .hasSize(2)
-                .containsExactly(
+                .hasSize(4)
+                .contains(
                     Opplysning(behandling.id.toLong(), "en begrunnelse", erBehovForBistand = false, aktiv = false),
                     Opplysning(behandling.id.toLong(), "annen begrunnelse", erBehovForBistand = false, aktiv = true)
                 )

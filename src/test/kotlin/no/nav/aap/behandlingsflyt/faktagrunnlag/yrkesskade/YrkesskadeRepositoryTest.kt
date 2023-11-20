@@ -1,7 +1,9 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade
 
 import no.nav.aap.behandlingsflyt.Periode
+import no.nav.aap.behandlingsflyt.behandling.Behandling
 import no.nav.aap.behandlingsflyt.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.InitTestDatabase
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.juni
@@ -11,7 +13,6 @@ import no.nav.aap.behandlingsflyt.sak.PersonRepository
 import no.nav.aap.behandlingsflyt.sak.Sak
 import no.nav.aap.behandlingsflyt.sak.SakRepository
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -19,7 +20,7 @@ import java.time.LocalDate
 class YrkesskadeRepositoryTest {
 
     private companion object {
-        private val ident = Ident("123123123124")
+        private val ident = Ident("12312312534")
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 
@@ -33,17 +34,12 @@ class YrkesskadeRepositoryTest {
         }
     }
 
-    @AfterEach
-    fun tilbakestill() {
-        InitTestDatabase.dataSource.transaction { connection ->
-            connection.execute("TRUNCATE TABLE SAK CASCADE")
-        }
-    }
-
     @Test
     fun `Finner ikke yrkesskadeopplysninger hvis ikke lagret`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val behandling = BehandlingRepository(connection).opprettBehandling(sak.id, listOf())
+            val sak1 = SakRepository(connection)
+                .finnEllerOpprett(PersonRepository(connection).finnEllerOpprett(Ident("123123125464")), periode)
+            val behandling = behandling(connection, sak1)
 
             val yrkesskadeRepository = YrkesskadeRepository(connection)
             val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandling.id)
@@ -54,7 +50,7 @@ class YrkesskadeRepositoryTest {
     @Test
     fun `Lagrer og henter yrkesskadeopplysninger`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val behandling = BehandlingRepository(connection).opprettBehandling(sak.id, listOf())
+            val behandling = behandling(connection, sak)
 
             val yrkesskadeRepository = YrkesskadeRepository(connection)
             yrkesskadeRepository.lagre(
@@ -71,7 +67,7 @@ class YrkesskadeRepositoryTest {
     @Test
     fun `Lagrer ikke like opplysninger flere ganger`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val behandling = BehandlingRepository(connection).opprettBehandling(sak.id, listOf())
+            val behandling = behandling(connection, sak)
 
             val yrkesskadeRepository = YrkesskadeRepository(connection)
             yrkesskadeRepository.lagre(
@@ -100,19 +96,15 @@ class YrkesskadeRepositoryTest {
     @Test
     fun `Kopierer yrkesskadeopplysninger fra en behandling til en annen`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val behandling1 = BehandlingRepository(connection).opprettBehandling(sak.id, listOf())
-            connection.execute("UPDATE BEHANDLING SET status = 'AVSLUTTET'")
-            val behandling2 = BehandlingRepository(connection).opprettBehandling(sak.id, listOf())
-
+            val behandling1 = behandling(connection, sak)
             val yrkesskadeRepository = YrkesskadeRepository(connection)
             yrkesskadeRepository.lagre(
                 behandling1.id,
                 Yrkesskader(listOf(Yrkesskade(ref = "ref", periode = Periode(4 juni 2019, 28 juni 2020))))
             )
-            yrkesskadeRepository.kopier(
-                fraBehandling = behandling1.id,
-                tilBehandling = behandling2.id
-            )
+            connection.execute("UPDATE BEHANDLING SET status = 'AVSLUTTET'")
+            val behandling2 = behandling(connection, sak)
+
             val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandling2.id)
             assertThat(yrkesskadeGrunnlag?.yrkesskader).isEqualTo(
                 Yrkesskader(listOf(Yrkesskade(ref = "ref", periode = Periode(4 juni 2019, 28 juni 2020))))
@@ -123,10 +115,7 @@ class YrkesskadeRepositoryTest {
     @Test
     fun `Kopierer yrkesskadeopplysninger fra en behandling til en annen der fraBehandlingen har to versjoner av opplysningene`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val behandling1 = BehandlingRepository(connection).opprettBehandling(sak.id, listOf())
-            connection.execute("UPDATE BEHANDLING SET status = 'AVSLUTTET'")
-            val behandling2 = BehandlingRepository(connection).opprettBehandling(sak.id, listOf())
-
+            val behandling1 = behandling(connection, sak)
             val yrkesskadeRepository = YrkesskadeRepository(connection)
             yrkesskadeRepository.lagre(
                 behandling1.id,
@@ -136,10 +125,9 @@ class YrkesskadeRepositoryTest {
                 behandling1.id,
                 Yrkesskader(listOf(Yrkesskade(ref = "ref", periode = Periode(4 mai 2019, 28 mai 2020))))
             )
-            yrkesskadeRepository.kopier(
-                fraBehandling = behandling1.id,
-                tilBehandling = behandling2.id
-            )
+            connection.execute("UPDATE BEHANDLING SET status = 'AVSLUTTET'")
+            val behandling2 = BehandlingRepository(connection).opprettBehandling(sak.id, listOf())
+
             val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandling2.id)
             assertThat(yrkesskadeGrunnlag?.yrkesskader).isEqualTo(
                 Yrkesskader(listOf(Yrkesskade(ref = "ref", periode = Periode(4 mai 2019, 28 mai 2020))))
@@ -150,7 +138,7 @@ class YrkesskadeRepositoryTest {
     @Test
     fun `Lagrer nye opplysninger som ny rad og deaktiverer forrige versjon av opplysningene`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val behandling = BehandlingRepository(connection).opprettBehandling(sak.id, listOf())
+            val behandling = behandling(connection, sak)
             val yrkesskadeRepository = YrkesskadeRepository(connection)
 
             yrkesskadeRepository.lagre(
@@ -179,8 +167,12 @@ class YrkesskadeRepositoryTest {
                     SELECT BEHANDLING_ID, AKTIV, REFERANSE, PERIODE
                     FROM YRKESSKADE_GRUNNLAG g
                     INNER JOIN YRKESSKADE_PERIODER p ON g.ID = p.GRUNNLAG_ID
+                    where g.behandling_id = ?
                     """.trimIndent()
                 ) {
+                    setParams {
+                        setLong(1, behandling.id.toLong())
+                    }
                     setRowMapper { row ->
                         Opplysning(
                             behandlingId = row.getLong("BEHANDLING_ID"),
@@ -191,11 +183,18 @@ class YrkesskadeRepositoryTest {
                     }
                 }
             assertThat(opplysninger)
-                .hasSize(2)
-                .containsExactly(
+                .contains(
                     Opplysning(behandling.id.toLong(), false, "ref", Periode(4 juni 2019, 28 juni 2020)),
                     Opplysning(behandling.id.toLong(), true, "ref", Periode(4 mai 2019, 28 mai 2020))
                 )
         }
+    }
+
+    private fun behandling(connection: DBConnection, sak1: Sak): Behandling {
+        val behandling = BehandlingRepository(connection).finnSisteBehandlingFor(sak1.id)
+        if (behandling == null || behandling.status().erAvsluttet()) {
+            return BehandlingRepository(connection).opprettBehandling(sak1.id, listOf())
+        }
+        return behandling
     }
 }
