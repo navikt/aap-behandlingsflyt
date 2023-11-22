@@ -97,7 +97,6 @@ class Behandling(
     }
 
     fun avklaringsbehov(): List<Avklaringsbehov> = avklaringsbehovene.alle()
-    fun avklaringsbehovene(): Avklaringsbehovene = avklaringsbehovene
 
     override fun compareTo(other: Behandling): Int {
         return this.opprettetTidspunkt.compareTo(other.opprettetTidspunkt)
