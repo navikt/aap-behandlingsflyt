@@ -8,6 +8,67 @@ import java.time.LocalDateTime
 
 class AvklaringsbehovRepository(private val connection: DBConnection) {
 
+    fun leggTilAvklaringsbehov(behandlingId: BehandlingId, definisjoner: List<Definisjon>, funnetISteg: StegType) {
+        definisjoner.forEach { definisjon -> leggTilAvklaringsbehov(behandlingId, definisjon, funnetISteg) }
+    }
+
+    fun leggTilAvklaringsbehov(behandlingId: BehandlingId, definisjon: Definisjon, funnetISteg: StegType) {
+        val avklaringsbehovId = hentRelevantAvklaringsbehov(behandlingId, definisjon, funnetISteg)
+
+        val queryEndring = """
+            INSERT INTO AVKLARINGSBEHOV_ENDRING (avklaringsbehov_id, status, begrunnelse, opprettet_av, opprettet_tid) 
+            VALUES (?, ?, ?, ?, ?)
+            """.trimIndent()
+
+        connection.execute(queryEndring) {
+            setParams {
+                setLong(1, avklaringsbehovId)
+                setEnumName(2, no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Status.OPPRETTET)
+                setString(3, "")
+                setString(4, "Kelvin")
+                setLocalDateTime(5, LocalDateTime.now())
+            }
+        }
+    }
+
+    private fun hentRelevantAvklaringsbehov(
+        behandlingId: BehandlingId,
+        definisjon: Definisjon,
+        funnetISteg: StegType
+    ): Long {
+
+        val selectQuery = """
+            SELECT id FROM AVKLARINGSBEHOV where behandling_id = ? AND definisjon = ?
+        """.trimIndent()
+
+        val avklaringsbehovId = connection.queryFirstOrNull(selectQuery) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setString(2, definisjon.kode)
+            }
+            setRowMapper {
+                it.getLong("id")
+            }
+        }
+
+        if (avklaringsbehovId != null) {
+            return avklaringsbehovId
+        }
+
+        val query = """
+                INSERT INTO AVKLARINGSBEHOV (behandling_id, definisjon, funnet_i_steg) 
+                VALUES (?, ?, ?)
+                """.trimIndent()
+
+        return connection.executeReturnKey(query) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setString(2, definisjon.kode)
+                setEnumName(3, funnetISteg)
+            }
+        }
+    }
+
     fun løs(behandlingId: BehandlingId, definisjon: Definisjon, begrunnelse: String, kreverToTrinn: Boolean?) {
         val avklaringsbehovene = hent(behandlingId)
 

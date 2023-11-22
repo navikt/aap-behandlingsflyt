@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.flyt.steg
 import no.nav.aap.behandlingsflyt.behandling.Behandling
 import no.nav.aap.behandlingsflyt.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.flyt.internal.FlytOperasjonRepository
@@ -13,6 +14,7 @@ private val log = LoggerFactory.getLogger(StegOrkestrator::class.java)
 class StegOrkestrator(private val connection: DBConnection, private val aktivtSteg: FlytSteg) {
 
     private val flytOperasjonRepository = FlytOperasjonRepository(connection)
+    private val avklaringsbehovRepository = AvklaringsbehovRepository(connection)
 
     fun utfør(
         kontekst: FlytKontekst,
@@ -46,7 +48,8 @@ class StegOrkestrator(private val connection: DBConnection, private val aktivtSt
     ) {
         val definisjoner = resultat.funnetAvklaringsbehov()
         behandling.leggTil(definisjoner)
-        flytOperasjonRepository.leggTilAvklaringsbehov(behandling.id, definisjoner, aktivtSteg.type())
+        //TODO: Skal dette gjøres utenfor stegene som her, eller i stegene?
+        avklaringsbehovRepository.leggTilAvklaringsbehov(behandling.id, definisjoner, aktivtSteg.type())
     }
 
     fun utførTilbakefør(

@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.flyt
 import no.nav.aap.behandlingsflyt.behandling.Behandling
 import no.nav.aap.behandlingsflyt.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
@@ -23,6 +24,8 @@ class FlytOrkestrator(
 
     private val faktagrunnlag = Faktagrunnlag(connection)
     private val flytOperasjonRepository = FlytOperasjonRepository(connection)
+    private val avklaringsbehovRepository = AvklaringsbehovRepository(connection)
+    private val behandlingRepository = BehandlingRepository(connection)
 
     fun forberedBehandling(kontekst: FlytKontekst) {
         val behandling = BehandlingRepository(connection).hent(kontekst.behandlingId)
@@ -176,9 +179,11 @@ class FlytOrkestrator(
     }
 
     fun settBehandlingPåVent(kontekst: FlytKontekst) {
-        val behandling = BehandlingRepository(connection).hent(kontekst.behandlingId)
+        val behandling = behandlingRepository.hent(kontekst.behandlingId)
         behandling.settPåVent()
-        flytOperasjonRepository.leggTilAvklaringsbehov(
+        //TODO: Vi må huske å lagre behandling etter at vi har endret status
+        //TODO: settPåVent oppretter også avklaringsbehov som under - duplikat?
+        avklaringsbehovRepository.leggTilAvklaringsbehov(
             behandling.id,
             Definisjon.MANUELT_SATT_PÅ_VENT,
             behandling.aktivtSteg()
