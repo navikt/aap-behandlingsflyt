@@ -30,7 +30,8 @@ class ForeslåVedtakSteg private constructor(
         if (relevanteBehov.isNotEmpty()) {
             avklaringsbehovene.avbryt(Definisjon.FORESLÅ_VEDTAK)
 
-            //TODO: Et argument for å ikke legge for mye logikk i selve Repository, er at vi kan teste domenet uten å koble på repository.
+            //TODO: Bør logikk legges i domenet eller repository?
+            // Et argument for å ikke legge for mye logikk i selve Repository, er at vi kan teste domenet uten å koble på repository.
             //Repository bør først og fremst være dumt, og sikre lagring. Ikke så mye annet.
             //Dersom det er riktig så må lagringen greie å identifisere hva som er lagret ned fra før, og hva som er endret.
             //avklaringsbehovRepository.lagre(avklaringsbehovene)

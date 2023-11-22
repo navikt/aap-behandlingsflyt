@@ -62,6 +62,10 @@ class Behandling(
 
     fun status(): Status = status
 
+    fun settPåVent() {
+        status = Status.PÅ_VENT
+    }
+
     fun stegHistorikk(): List<StegTilstand> = stegHistorikk.toList()
 
     private fun aktivtStegTilstand(): StegTilstand {
@@ -84,18 +88,6 @@ class Behandling(
                     tilstand = Tilstand(StegType.START_BEHANDLING, StegStatus.START)
                 )
             ).tilstand.steg()
-    }
-
-    fun settPåVent() {
-        status = Status.PÅ_VENT
-        avklaringsbehovene.leggTil(
-            Avklaringsbehov(
-                id = Long.MAX_VALUE,
-                definisjon = Definisjon.MANUELT_SATT_PÅ_VENT,
-                funnetISteg = aktivtSteg(),
-                kreverToTrinn = null
-            )
-        )
     }
 
     fun årsaker(): List<Årsak> = årsaker.toList()

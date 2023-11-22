@@ -88,6 +88,4 @@ class Avklaringsbehovene(avklaringsbehovene: List<Avklaringsbehov> = mutableList
     fun skalTilbakeføresEtterTotrinnsVurdering(): Boolean {
         return tilbakeførtFraBeslutter().isNotEmpty()
     }
-
-
 }

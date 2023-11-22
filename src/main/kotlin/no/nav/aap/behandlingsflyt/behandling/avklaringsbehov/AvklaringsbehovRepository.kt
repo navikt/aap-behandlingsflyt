@@ -55,10 +55,18 @@ class AvklaringsbehovRepository(private val connection: DBConnection) {
             return avklaringsbehovId
         }
 
+        return opprettAvklaringsbehov(behandlingId, definisjon, funnetISteg)
+    }
+
+    private fun opprettAvklaringsbehov(
+        behandlingId: BehandlingId,
+        definisjon: Definisjon,
+        funnetISteg: StegType
+    ): Long {
         val query = """
-                INSERT INTO AVKLARINGSBEHOV (behandling_id, definisjon, funnet_i_steg) 
-                VALUES (?, ?, ?)
-                """.trimIndent()
+                    INSERT INTO AVKLARINGSBEHOV (behandling_id, definisjon, funnet_i_steg) 
+                    VALUES (?, ?, ?)
+                    """.trimIndent()
 
         return connection.executeReturnKey(query) {
             setParams {
