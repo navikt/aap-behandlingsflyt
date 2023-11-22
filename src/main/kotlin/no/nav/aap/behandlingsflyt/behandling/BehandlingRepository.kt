@@ -1,7 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.Row
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
@@ -15,8 +13,6 @@ import java.time.LocalDateTime
 import java.util.*
 
 class BehandlingRepository(private val connection: DBConnection) {
-
-    private val avklaringsbehovRepository = AvklaringsbehovRepository(connection)
 
     fun opprettBehandling(sakId: SakId, årsaker: List<Årsak>): Behandling {
         val sisteBehandlingFor = finnSisteBehandlingFor(sakId)
@@ -77,7 +73,6 @@ class BehandlingRepository(private val connection: DBConnection) {
             sakId = SakId(it.getLong("sak_id")),
             type = utledType(it.getString("type")),
             status = Status.valueOf(it.getString("status")),
-            avklaringsbehovene = Avklaringsbehovene(), //avklaringsbehovRepository.hent(behandlingId),
             stegHistorikk = hentStegHistorikk(behandlingId),
             versjon = it.getLong("versjon")
         )

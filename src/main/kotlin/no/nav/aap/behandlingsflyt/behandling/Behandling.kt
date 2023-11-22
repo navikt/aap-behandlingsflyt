@@ -1,8 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.flyt.steg.StegStatus
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
@@ -18,7 +15,6 @@ class Behandling(
     val type: BehandlingType,
     private var status: Status = Status.OPPRETTET,
     private var årsaker: List<Årsak> = mutableListOf(),
-    private val avklaringsbehovene: Avklaringsbehovene = Avklaringsbehovene(mutableListOf()),
     private var stegHistorikk: List<StegTilstand> = mutableListOf(),
     val opprettetTidspunkt: LocalDateTime = LocalDateTime.now(),
     val versjon: Long
@@ -91,10 +87,6 @@ class Behandling(
     }
 
     fun årsaker(): List<Årsak> = årsaker.toList()
-
-    fun leggTil(funnetAvklaringsbehov: List<Definisjon>) {
-        avklaringsbehovene.leggTil(funnetAvklaringsbehov, aktivtSteg())
-    }
 
     override fun compareTo(other: Behandling): Int {
         return this.opprettetTidspunkt.compareTo(other.opprettetTidspunkt)
