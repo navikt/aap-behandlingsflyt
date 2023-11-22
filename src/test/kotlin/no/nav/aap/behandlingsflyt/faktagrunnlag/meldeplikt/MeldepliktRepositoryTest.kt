@@ -11,36 +11,18 @@ import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.sak.Ident
 import no.nav.aap.behandlingsflyt.sak.PersonRepository
 import no.nav.aap.behandlingsflyt.sak.Sak
-import no.nav.aap.behandlingsflyt.sak.SakId
 import no.nav.aap.behandlingsflyt.sak.SakRepository
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.util.concurrent.atomic.AtomicInteger
 
 class MeldepliktRepositoryTest {
-
-    private companion object {
-        private val ident = Ident("1231231231294")
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-    }
-
-    private lateinit var sak: Sak
-
-    @BeforeEach
-    fun setup() {
-        InitTestDatabase.dataSource.transaction { connection ->
-            sak = SakRepository(connection)
-                .finnEllerOpprett(PersonRepository(connection).finnEllerOpprett(ident), periode)
-        }
-    }
 
     @Test
     fun `Finner ikke fritaksvurderinger hvis ikke lagret`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val sak1 = SakRepository(connection)
-                .finnEllerOpprett(PersonRepository(connection).finnEllerOpprett(Ident("12312312312561234")), periode)
-            val behandling = behandling(connection, sak1.id)
+            val behandling = behandling(connection, sak(connection))
 
             val meldepliktRepository = MeldepliktRepository(connection)
             val meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling.id)
@@ -51,7 +33,7 @@ class MeldepliktRepositoryTest {
     @Test
     fun `Lagrer og henter fritaksvurderinger`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val behandling = behandling(connection, sak.id)
+            val behandling = behandling(connection, sak(connection))
 
             val meldepliktRepository = MeldepliktRepository(connection)
             meldepliktRepository.lagre(
@@ -88,7 +70,8 @@ class MeldepliktRepositoryTest {
     @Test
     fun `Lagrer ikke like opplysninger flere ganger`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val behandling = behandling(connection, sak.id)
+            val sak = sak(connection)
+            val behandling = behandling(connection, sak)
 
             val meldepliktRepository = MeldepliktRepository(connection)
             meldepliktRepository.lagre(
@@ -105,7 +88,19 @@ class MeldepliktRepositoryTest {
             )
 
             val opplysninger =
-                connection.queryList("SELECT BEGRUNNELSE FROM MELDEPLIKT_FRITAK_VURDERING") {
+                connection.queryList(
+                    """
+                    SELECT v.BEGRUNNELSE 
+                    FROM BEHANDLING b
+                    INNER JOIN MELDEPLIKT_FRITAK_GRUNNLAG g ON b.ID = g.BEHANDLING_ID
+                    INNER JOIN MELDEPLIKT_FRITAK f ON g.MELDEPLIKT_ID = f.ID
+                    INNER JOIN MELDEPLIKT_FRITAK_VURDERING v ON f.ID = v.MELDEPLIKT_ID
+                    WHERE b.SAK_ID = ?
+                """.trimMargin()
+                ) {
+                    setParams {
+                        setLong(1, sak.id.toLong())
+                    }
                     setRowMapper { row -> row.getString("BEGRUNNELSE") }
                 }
             assertThat(opplysninger)
@@ -117,14 +112,15 @@ class MeldepliktRepositoryTest {
     @Test
     fun `Kopierer fritaksvurderinger fra en behandling til en annen`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val behandling1 = BehandlingRepository(connection).opprettBehandling(sak.id, listOf())
+            val sak = sak(connection)
+            val behandling1 = behandling(connection, sak)
             val meldepliktRepository = MeldepliktRepository(connection)
             meldepliktRepository.lagre(
                 behandling1.id,
                 listOf(Fritaksvurdering(Periode(13 august 2023, 25 august 2023), "en begrunnelse", true))
             )
             connection.execute("UPDATE BEHANDLING SET status = 'AVSLUTTET'")
-            val behandling2 = BehandlingRepository(connection).opprettBehandling(sak.id, listOf())
+            val behandling2 = behandling(connection, sak)
 
             val meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling2.id)
             assertThat(meldepliktGrunnlag?.vurderinger)
@@ -135,7 +131,8 @@ class MeldepliktRepositoryTest {
     @Test
     fun `Kopierer fritaksvurderinger fra en behandling til en annen der fraBehandlingen har to versjoner av opplysningene`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val behandling1 = behandling(connection, sak.id)
+            val sak = sak(connection)
+            val behandling1 = behandling(connection, sak)
             val meldepliktRepository = MeldepliktRepository(connection)
             meldepliktRepository.lagre(
                 behandling1.id,
@@ -146,7 +143,7 @@ class MeldepliktRepositoryTest {
                 listOf(Fritaksvurdering(Periode(13 august 2023, 25 august 2023), "annen begrunnelse", true))
             )
             connection.execute("UPDATE BEHANDLING SET status = 'AVSLUTTET'")
-            val behandling2 = behandling(connection, sak.id)
+            val behandling2 = behandling(connection, sak)
 
             val meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling2.id)
             assertThat(meldepliktGrunnlag?.vurderinger)
@@ -157,7 +154,8 @@ class MeldepliktRepositoryTest {
     @Test
     fun `Lagrer nye fritaksvurderinger som nye rader og deaktiverer forrige versjon av opplysningene`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val behandling = behandling(connection, sak.id)
+            val sak = sak(connection)
+            val behandling = behandling(connection, sak)
             val meldepliktRepository = MeldepliktRepository(connection)
 
             meldepliktRepository.lagre(
@@ -188,13 +186,15 @@ class MeldepliktRepositoryTest {
                 connection.queryList(
                     """
                     SELECT g.BEHANDLING_ID, g.AKTIV, v.PERIODE, v.BEGRUNNELSE, v.HAR_FRITAK
-                    FROM MELDEPLIKT_FRITAK_GRUNNLAG g
-                    INNER JOIN MELDEPLIKT_FRITAK_VURDERING v ON g.MELDEPLIKT_ID = v.MELDEPLIKT_ID
-                    where g.behandling_id = ?
+                    FROM BEHANDLING b
+                    INNER JOIN MELDEPLIKT_FRITAK_GRUNNLAG g ON b.ID = g.BEHANDLING_ID
+                    INNER JOIN MELDEPLIKT_FRITAK f ON g.MELDEPLIKT_ID = f.ID
+                    INNER JOIN MELDEPLIKT_FRITAK_VURDERING v ON f.ID = v.MELDEPLIKT_ID
+                    WHERE b.SAK_ID = ?
                     """.trimIndent()
                 ) {
                     setParams {
-                        setLong(1, behandling.id.toLong())
+                        setLong(1, sak.id.toLong())
                     }
                     setRowMapper { row ->
                         Opplysning(
@@ -207,15 +207,9 @@ class MeldepliktRepositoryTest {
                     }
                 }
             assertThat(opplysninger)
-                .hasSize(3)
+                .hasSize(2)
                 .containsExactly(
                     Opplysning(
-                        behandlingId = behandling.id.toLong(),
-                        aktiv = false,
-                        periode = Periode(13 august 2023, 25 august 2023),
-                        begrunnelse = "annen begrunnelse",
-                        harFritak = true
-                    ),Opplysning(
                         behandlingId = behandling.id.toLong(),
                         aktiv = false,
                         periode = Periode(13 august 2023, 25 august 2023),
@@ -236,7 +230,8 @@ class MeldepliktRepositoryTest {
     @Test
     fun `Ved kopiering av fritaksvurderinger fra en avsluttet behandling til en ny skal kun referansen kopieres, ikke hele raden`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val behandling1 = behandling(connection, sak.id)
+            val sak = sak(connection)
+            val behandling1 = behandling(connection, sak)
             val meldepliktRepository = MeldepliktRepository(connection)
             meldepliktRepository.lagre(
                 behandling1.id,
@@ -247,7 +242,7 @@ class MeldepliktRepositoryTest {
                 listOf(Fritaksvurdering(Periode(13 august 2023, 25 august 2023), "annen begrunnelse", true))
             )
             connection.execute("UPDATE BEHANDLING SET status = 'AVSLUTTET'")
-            val behandling2 = behandling(connection, sak.id)
+            val behandling2 = behandling(connection, sak)
 
             data class Opplysning(
                 val behandlingId: Long,
@@ -261,12 +256,16 @@ class MeldepliktRepositoryTest {
                 connection.queryList(
                     """
                     SELECT f.ID, g.BEHANDLING_ID, g.AKTIV, v.PERIODE, v.BEGRUNNELSE, v.HAR_FRITAK
-                    FROM MELDEPLIKT_FRITAK_GRUNNLAG g
+                    FROM BEHANDLING b
+                    INNER JOIN MELDEPLIKT_FRITAK_GRUNNLAG g ON b.ID = g.BEHANDLING_ID
                     INNER JOIN MELDEPLIKT_FRITAK f ON g.MELDEPLIKT_ID = f.ID
                     INNER JOIN MELDEPLIKT_FRITAK_VURDERING v ON f.ID = v.MELDEPLIKT_ID
-                    WHERE g.behandling_id IN (${behandling1.id.toLong()}, ${behandling2.id.toLong()})
+                    WHERE b.SAK_ID = ?
                     """.trimIndent()
                 ) {
+                    setParams {
+                        setLong(1, sak.id.toLong())
+                    }
                     setRowMapper { row ->
                         Opplysning(
                             behandlingId = row.getLong("BEHANDLING_ID"),
@@ -278,7 +277,8 @@ class MeldepliktRepositoryTest {
                     }
                 }
             assertThat(opplysninger)
-                .contains(
+                .hasSize(3)
+                .containsExactly(
                     Opplysning(
                         behandlingId = behandling1.id.toLong(),
                         aktiv = false,
@@ -304,10 +304,26 @@ class MeldepliktRepositoryTest {
         }
     }
 
-    private fun behandling(connection: DBConnection, sakId: SakId): Behandling {
-        val behandling = BehandlingRepository(connection).finnSisteBehandlingFor(sakId)
+    private companion object {
+        private val identTeller = AtomicInteger(0)
+        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        private fun ident(): Ident {
+            return Ident(identTeller.getAndAdd(1).toString())
+        }
+    }
+
+    private fun sak(connection: DBConnection): Sak {
+        return SakRepository(connection).finnEllerOpprett(
+            person = PersonRepository(connection).finnEllerOpprett(ident()),
+            periode = periode
+        )
+    }
+
+    private fun behandling(connection: DBConnection, sak: Sak): Behandling {
+        val behandling = BehandlingRepository(connection).finnSisteBehandlingFor(sak.id)
         if (behandling == null || behandling.status().erAvsluttet()) {
-            return BehandlingRepository(connection).opprettBehandling(sakId, listOf())
+            return BehandlingRepository(connection).opprettBehandling(sak.id, listOf())
         }
         return behandling
     }
