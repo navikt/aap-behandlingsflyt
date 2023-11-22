@@ -15,6 +15,17 @@ class Avklaringsbehov(
         }
     }
 
+    fun erTotrinn(): Boolean {
+        if (definisjon.kreverToTrinn) {
+            return true
+        }
+        return kreverToTrinn == true
+    }
+
+    fun erTotrinnsVurdert(): Boolean {
+        return Status.TOTRINNS_VURDERT == historikk.last().status
+    }
+
     fun vurderTotrinn(begrunnelse: String, godkjent: Boolean) {
         require(definisjon.kreverToTrinn)
         val status = if (godkjent) {
@@ -30,7 +41,7 @@ class Avklaringsbehov(
     }
 
     fun erÅpent(): Boolean {
-        return historikk.last().status in setOf(Status.OPPRETTET, Status.SENDT_TILBAKE_FRA_BESLUTTER)
+        return status() in setOf(Status.OPPRETTET, Status.SENDT_TILBAKE_FRA_BESLUTTER)
     }
 
     fun skalStoppeHer(stegType: StegType): Boolean {
@@ -48,27 +59,16 @@ class Avklaringsbehov(
         historikk.add(Endring(status = Status.AVSLUTTET, begrunnelse = begrunnelse, endretAv = endretAv))
     }
 
-    fun erTotrinn(): Boolean {
-        if (definisjon.kreverToTrinn) {
-            return true
-        }
-        return kreverToTrinn == true
-    }
-
-    fun erTotrinnsVurdert(): Boolean {
-        return Status.TOTRINNS_VURDERT == historikk.last().status
+    fun avbryt() {
+        historikk += Endring(status = Status.AVBRUTT, begrunnelse = "", endretAv = "system")
     }
 
     fun erIkkeAvbrutt(): Boolean {
-        return Status.AVBRUTT != historikk.last().status
+        return Status.AVBRUTT != status()
     }
 
     fun status(): Status {
         return historikk.last().status
-    }
-
-    override fun toString(): String {
-        return "Avklaringsbehov(definisjon=$definisjon, status=${status()})"
     }
 
     fun skalLøsesISteg(type: StegType): Boolean {
@@ -84,11 +84,9 @@ class Avklaringsbehov(
             return funnetISteg
         }
         return definisjon.løsesISteg
-
     }
 
-    fun avbryt() {
-        historikk += Endring(status = Status.AVBRUTT, begrunnelse = "", endretAv = "system")
+    override fun toString(): String {
+        return "Avklaringsbehov(definisjon=$definisjon, status=${status()})"
     }
-
 }
