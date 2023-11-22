@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.sak.SakId
 import no.nav.aap.behandlingsflyt.sak.Status
 import java.time.LocalDateTime
 
+//TODO: Erstatte denne med å flytte kode ut i de relevante Repositoriene.
 class FlytOperasjonRepository(private val connection: DBConnection) {
 
     fun oppdaterSakStatus(sakId: SakId, status: Status) {
