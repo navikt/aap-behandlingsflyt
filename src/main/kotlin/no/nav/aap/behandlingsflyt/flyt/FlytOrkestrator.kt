@@ -52,7 +52,8 @@ class FlytOrkestrator(
                 tilbakeføringsflyt.stegene().last()
             )
         }
-        tilbakefør(kontekst, behandling, tilbakeføringsflyt)
+        val avklaringsbehovene = avklaringsbehovRepository.hent(kontekst.behandlingId)
+        tilbakefør(kontekst, behandling, tilbakeføringsflyt, avklaringsbehovene.åpne())
     }
 
     private fun starterOppBehandling(behandling: Behandling): Boolean {
@@ -96,7 +97,7 @@ class FlytOrkestrator(
                     gjeldendeSteg.type(),
                     tilbakeføringsflyt.stegene().last()
                 )
-                tilbakefør(kontekst, behandling, tilbakeføringsflyt)
+                tilbakefør(kontekst, behandling, tilbakeføringsflyt, avklaringsbehov)
             }
 
             val neste = behandlingFlyt.neste()
@@ -116,12 +117,13 @@ class FlytOrkestrator(
     }
 
     internal fun forberedLøsingAvBehov(definisjoner: List<Definisjon>, behandling: Behandling, kontekst: FlytKontekst) {
-        val behovForLøsninger = avklaringsbehovRepository.hent(kontekst.behandlingId).hentBehovForDefinisjon(definisjoner)
-
         val flyt = behandling.forberedtFlyt()
+
+        val avklaringsbehovene = avklaringsbehovRepository.hent(kontekst.behandlingId)
+        val behovForLøsninger = avklaringsbehovene.hentBehovForDefinisjon(definisjoner)
         val tilbakeføringsflyt = flyt.tilbakeflyt(behovForLøsninger)
 
-        tilbakefør(kontekst, behandling, tilbakeføringsflyt)
+        tilbakefør(kontekst, behandling, tilbakeføringsflyt, avklaringsbehovene.åpne())
 
         val skulleVærtISteg = flyt.skalTilStegForBehov(behovForLøsninger)
         require(skulleVærtISteg == behandling.aktivtSteg())
@@ -130,7 +132,8 @@ class FlytOrkestrator(
     private fun tilbakefør(
         kontekst: FlytKontekst,
         behandling: Behandling,
-        behandlingFlyt: BehandlingFlyt
+        behandlingFlyt: BehandlingFlyt,
+        åpneAvklaringsbehov: List<Avklaringsbehov>
     ) {
         if (behandlingFlyt.erTom()) {
             return
@@ -140,7 +143,7 @@ class FlytOrkestrator(
             val neste = behandlingFlyt.neste()
 
             if (neste == null) {
-                loggStopp(behandling, behandling.åpneAvklaringsbehov())
+                loggStopp(behandling, åpneAvklaringsbehov)
                 return
             }
             StegOrkestrator(connection, neste).utførTilbakefør(
