@@ -61,8 +61,9 @@ class FlytOrkestrator(
 
     fun prosesserBehandling(kontekst: FlytKontekst) {
         val behandling = BehandlingRepository(connection).hent(kontekst.behandlingId)
+        val avklaringsbehovene = avklaringsbehovRepository.hent(kontekst.behandlingId)
 
-        ValiderBehandlingTilstand.validerTilstandBehandling(behandling, listOf(), behandling.avklaringsbehov())
+        ValiderBehandlingTilstand.validerTilstandBehandling(behandling, listOf(), avklaringsbehovene.alle())
 
         val behandlingFlyt = behandling.flyt()
 
@@ -71,7 +72,7 @@ class FlytOrkestrator(
         while (true) {
             connection.markerSavepoint()
 
-            val avklaringsbehov = behandling.avklaringsbehovene().åpne()
+            val avklaringsbehov = avklaringsbehovene.åpne()
             validerPlassering(
                 behandlingFlyt,
                 avklaringsbehov.filter { it.status() != Status.SENDT_TILBAKE_FRA_BESLUTTER },
@@ -89,7 +90,7 @@ class FlytOrkestrator(
 
             if (result.erTilbakeføring()) {
                 val tilbakeføringsflyt =
-                    behandlingFlyt.tilbakeflyt(behandling.avklaringsbehovene().tilbakeførtFraBeslutter())
+                    behandlingFlyt.tilbakeflyt(avklaringsbehovene.tilbakeførtFraBeslutter())
                 log.info(
                     "Tilakeført fra '{}' til '{}'",
                     gjeldendeSteg.type(),
@@ -106,7 +107,7 @@ class FlytOrkestrator(
                     log.info("Behandlingen har nådd slutten, avslutter behandling")
                 } else {
                     // Prosessen har stoppet opp, slipp ut hendelse om at den har stoppet opp og hvorfor?
-                    loggStopp(behandling)
+                    loggStopp(behandling, avklaringsbehovene.åpne())
                 }
                 return
             }
@@ -139,7 +140,7 @@ class FlytOrkestrator(
             val neste = behandlingFlyt.neste()
 
             if (neste == null) {
-                loggStopp(behandling)
+                loggStopp(behandling, behandling.åpneAvklaringsbehov())
                 return
             }
             StegOrkestrator(connection, neste).utførTilbakefør(
@@ -150,12 +151,13 @@ class FlytOrkestrator(
     }
 
     private fun loggStopp(
-        behandling: Behandling
+        behandling: Behandling,
+        åpneAvklaringsbehov: List<Avklaringsbehov>
     ) {
         log.info(
             "Stopper opp ved {} med {}",
             behandling.aktivtSteg(),
-            behandling.åpneAvklaringsbehov()
+            åpneAvklaringsbehov
         )
     }
 
