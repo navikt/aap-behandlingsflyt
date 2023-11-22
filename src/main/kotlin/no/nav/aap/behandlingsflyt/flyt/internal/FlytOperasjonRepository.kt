@@ -12,20 +12,6 @@ import java.time.LocalDateTime
 //TODO: Erstatte denne med å flytte kode ut i de relevante Repositoriene.
 class FlytOperasjonRepository(private val connection: DBConnection) {
 
-    fun oppdaterSakStatus(sakId: SakId, status: Status) {
-        val query = """UPDATE sak SET status = ? WHERE ID = ?"""
-
-        return connection.execute(query) {
-            setParams {
-                setEnumName(1, status)
-                setLong(2, sakId.toLong())
-            }
-            setResultValidator {
-                require(it == 1)
-            }
-        }
-    }
-
     fun oppdaterBehandlingStatus(behandlingId: BehandlingId, status: no.nav.aap.behandlingsflyt.behandling.Status) {
         val query = """UPDATE behandling SET status = ? WHERE ID = ?"""
 

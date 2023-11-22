@@ -76,6 +76,21 @@ class SakRepository(private val connection: DBConnection) {
         return relevantesaker.first()
     }
 
+
+    fun oppdaterSakStatus(sakId: SakId, status: Status) {
+        val query = """UPDATE sak SET status = ? WHERE ID = ?"""
+
+        return connection.execute(query) {
+            setParams {
+                setEnumName(1, status)
+                setLong(2, sakId.toLong())
+            }
+            setResultValidator {
+                require(it == 1)
+            }
+        }
+    }
+
     fun finnSakerFor(person: Person): List<Sak> {
         return connection.queryList(
             "SELECT id, saksnummer, person_id, rettighetsperiode, status " +

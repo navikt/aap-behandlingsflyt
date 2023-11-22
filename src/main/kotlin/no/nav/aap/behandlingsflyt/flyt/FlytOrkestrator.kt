@@ -8,9 +8,9 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
-import no.nav.aap.behandlingsflyt.flyt.internal.FlytOperasjonRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.StegOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
+import no.nav.aap.behandlingsflyt.sak.SakRepository
 import org.slf4j.LoggerFactory
 
 private val log = LoggerFactory.getLogger(FlytOrkestrator::class.java)
@@ -21,21 +21,20 @@ private val log = LoggerFactory.getLogger(FlytOrkestrator::class.java)
 class FlytOrkestrator(
     private val connection: DBConnection
 ) {
-
     private val faktagrunnlag = Faktagrunnlag(connection)
-    private val flytOperasjonRepository = FlytOperasjonRepository(connection)
+    private val sakRepository = SakRepository(connection)
     private val avklaringsbehovRepository = AvklaringsbehovRepository(connection)
     private val behandlingRepository = BehandlingRepository(connection)
 
     fun forberedBehandling(kontekst: FlytKontekst) {
-        val behandling = BehandlingRepository(connection).hent(kontekst.behandlingId)
+        val behandling = behandlingRepository.hent(kontekst.behandlingId)
 
         ValiderBehandlingTilstand.validerTilstandBehandling(behandling, listOf())
 
         val behandlingFlyt = behandling.forberedtFlyt()
 
         if (starterOppBehandling(behandling)) {
-            flytOperasjonRepository.oppdaterSakStatus(kontekst.sakId, no.nav.aap.behandlingsflyt.sak.Status.UTREDES)
+            sakRepository.oppdaterSakStatus(kontekst.sakId, no.nav.aap.behandlingsflyt.sak.Status.UTREDES)
         }
 
         val oppdaterFaktagrunnlagForKravliste =
