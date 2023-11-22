@@ -96,8 +96,6 @@ class Behandling(
         avklaringsbehovene.leggTil(funnetAvklaringsbehov, aktivtSteg())
     }
 
-    fun avklaringsbehov(): List<Avklaringsbehov> = avklaringsbehovene.alle()
-
     override fun compareTo(other: Behandling): Int {
         return this.opprettetTidspunkt.compareTo(other.opprettetTidspunkt)
     }

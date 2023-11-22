@@ -7,6 +7,8 @@ import com.papsign.ktor.openapigen.route.route
 import com.zaxxer.hikari.HikariDataSource
 import no.nav.aap.behandlingsflyt.behandling.Behandling
 import no.nav.aap.behandlingsflyt.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.faktagrunnlag.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.flyt.flate.VilkårDTO
@@ -25,7 +27,8 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: HikariDataSource) {
                     type = behandling.type.identifikator(),
                     status = behandling.status(),
                     opprettet = behandling.opprettetTidspunkt,
-                    avklaringsbehov = behandling.avklaringsbehov().map { avklaringsbehov ->
+
+                    avklaringsbehov = avklaringsbehov(dataSource, behandling.id).alle().map { avklaringsbehov ->
                         AvklaringsbehovDTO(
                             definisjon = avklaringsbehov.definisjon,
                             status = avklaringsbehov.status(),
@@ -67,6 +70,12 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: HikariDataSource) {
 private fun behandling(dataSource: HikariDataSource, req: BehandlingReferanse): Behandling {
     return dataSource.transaction {
         BehandlingReferanseService(it).behandling(req)
+    }
+}
+
+private fun avklaringsbehov(dataSource: HikariDataSource, behandlingId: BehandlingId): Avklaringsbehovene {
+    return dataSource.transaction {
+        AvklaringsbehovRepository(it).hent(behandlingId)
     }
 }
 

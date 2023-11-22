@@ -7,6 +7,8 @@ import com.papsign.ktor.openapigen.route.route
 import com.zaxxer.hikari.HikariDataSource
 import no.nav.aap.behandlingsflyt.behandling.Behandling
 import no.nav.aap.behandlingsflyt.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.flate.AvklaringsbehovDTO
 import no.nav.aap.behandlingsflyt.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
@@ -29,7 +31,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
                         flyt = behandling.flyt().stegene().map { stegType ->
                             FlytSteg(
                                 stegType = stegType,
-                                avklaringsbehov = behandling.avklaringsbehov()
+                                avklaringsbehov = avklaringsbehov(dataSource, behandling.id).alle()
                                     .filter { avklaringsbehov -> avklaringsbehov.skalLøsesISteg(stegType) }
                                     .map { behov ->
                                         AvklaringsbehovDTO(
@@ -67,7 +69,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
                                 steg = steg.map { stegType ->
                                     FlytSteg(
                                         stegType = stegType,
-                                        avklaringsbehov = behandling.avklaringsbehov()
+                                        avklaringsbehov = avklaringsbehov(dataSource, behandling.id).alle()
                                             .filter { avklaringsbehov -> avklaringsbehov.skalLøsesISteg(stegType) }
                                             .map { behov ->
                                                 AvklaringsbehovDTO(
@@ -97,6 +99,12 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
 private fun behandling(dataSource: HikariDataSource, req: BehandlingReferanse): Behandling {
     return dataSource.transaction {
         BehandlingReferanseService(it).behandling(req)
+    }
+}
+
+private fun avklaringsbehov(dataSource: HikariDataSource, behandlingId: BehandlingId): Avklaringsbehovene {
+    return dataSource.transaction {
+        AvklaringsbehovRepository(it).hent(behandlingId)
     }
 }
 

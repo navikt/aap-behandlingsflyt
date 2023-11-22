@@ -65,7 +65,7 @@ class StegOrkestrator(private val connection: DBConnection, private val aktivtSt
         behandling: Behandling
     ): Transisjon {
         val relevanteAvklaringsbehov =
-            behandling.avklaringsbehov()
+            avklaringsbehovRepository.hent(kontekst.behandlingId).alle()
                 .filter { it.erÅpent() }
                 .filter { behov -> behov.skalLøsesISteg(aktivtSteg.type()) }
 

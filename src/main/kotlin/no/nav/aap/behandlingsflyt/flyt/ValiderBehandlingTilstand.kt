@@ -6,6 +6,20 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
 
 object ValiderBehandlingTilstand {
+
+    fun validerTilstandBehandling(
+        behandling: Behandling,
+        avklaringsbehov: List<Definisjon> = listOf(),
+        eksisterenedeAvklaringsbehov: List<Avklaringsbehov>,
+        versjon: Long
+    ) {
+        validerTilstandBehandling(behandling, avklaringsbehov, eksisterenedeAvklaringsbehov)
+
+        //if (behandling.versjon != versjon) {
+        //    throw OutdatedBehandlingException("Behandlingen har blitt oppdatert. Versjonsnummer ulikt fra siste")
+        //}
+    }
+
     fun validerTilstandBehandling(
         behandling: Behandling,
         avklaringsbehov: List<Definisjon> = listOf(),
@@ -22,17 +36,5 @@ object ValiderBehandlingTilstand {
             }) {
             throw IllegalArgumentException("Forsøker løse avklaringsbehov $avklaringsbehov ikke knyttet til behandlingen")
         }
-    }
-
-    fun validerTilstandBehandling(
-        behandling: Behandling,
-        avklaringsbehov: List<Definisjon> = listOf(),
-        versjon: Long
-    ) {
-        validerTilstandBehandling(behandling, avklaringsbehov, behandling.avklaringsbehov())
-
-        //if (behandling.versjon != versjon) {
-        //    throw OutdatedBehandlingException("Behandlingen har blitt oppdatert. Versjonsnummer ulikt fra siste")
-        //}
     }
 }

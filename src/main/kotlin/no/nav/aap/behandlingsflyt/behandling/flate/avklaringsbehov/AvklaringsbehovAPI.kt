@@ -5,6 +5,7 @@ import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.flyt.ValiderBehandlingTilstand
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HendelsesMottak
@@ -23,10 +24,12 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource) {
                     MDC.putCloseable("sakId", lås.sakSkrivelås.id.toString()).use {
                         MDC.putCloseable("behandlingId", lås.behandlingSkrivelås.id.toString()).use {
                             val behandling = BehandlingRepository(connection).hent(lås.behandlingSkrivelås.id)
+                            val avklaringsbehovene = AvklaringsbehovRepository(connection).hent(lås.behandlingSkrivelås.id)
 
                             ValiderBehandlingTilstand.validerTilstandBehandling(
                                 behandling = behandling,
                                 avklaringsbehov = listOf(request.behov.definisjon()),
+                                eksisterenedeAvklaringsbehov = avklaringsbehovene.alle(),
                                 versjon = request.behandlingVersjon
                             )
 
