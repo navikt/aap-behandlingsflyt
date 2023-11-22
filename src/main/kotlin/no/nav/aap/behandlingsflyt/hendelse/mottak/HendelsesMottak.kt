@@ -57,7 +57,10 @@ class HendelsesMottak(private val dataSource: DataSource) {
 
     fun håndtere(connection: DBConnection, key: BehandlingId, hendelse: LøsAvklaringsbehovBehandlingHendelse) {
         val behandling = BehandlingRepository(connection).hent(key)
-        ValiderBehandlingTilstand.validerTilstandBehandling(behandling = behandling)
+        ValiderBehandlingTilstand.validerTilstandBehandling(
+            behandling = behandling,
+            eksisterenedeAvklaringsbehov = behandling.avklaringsbehov()
+        )
 
         val kontekst = tilKontekst(behandling)
         val avklaringsbehovKontroller = AvklaringsbehovOrkestrator(connection)
@@ -70,7 +73,10 @@ class HendelsesMottak(private val dataSource: DataSource) {
     fun håndtere(key: BehandlingId, hendelse: BehandlingSattPåVent) {
         dataSource.transaction { connection ->
             val behandling = BehandlingRepository(connection).hent(key)
-            ValiderBehandlingTilstand.validerTilstandBehandling(behandling = behandling)
+            ValiderBehandlingTilstand.validerTilstandBehandling(
+                behandling = behandling,
+                eksisterenedeAvklaringsbehov = behandling.avklaringsbehov()
+            )
 
             val kontekst = tilKontekst(behandling)
             val kontroller = FlytOrkestrator(connection)
@@ -81,7 +87,10 @@ class HendelsesMottak(private val dataSource: DataSource) {
     fun håndtere(key: BehandlingId, hendelse: BehandlingHendelse) {
         dataSource.transaction { connection ->
             val behandling = BehandlingRepository(connection).hent(key)
-            ValiderBehandlingTilstand.validerTilstandBehandling(behandling = behandling)
+            ValiderBehandlingTilstand.validerTilstandBehandling(
+                behandling = behandling,
+                eksisterenedeAvklaringsbehov = behandling.avklaringsbehov()
+            )
 
             val kontekst = tilKontekst(behandling)
             if (behandling.status() == Status.PÅ_VENT) {

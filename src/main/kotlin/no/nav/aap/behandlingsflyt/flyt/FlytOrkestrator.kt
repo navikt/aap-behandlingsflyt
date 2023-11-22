@@ -29,7 +29,7 @@ class FlytOrkestrator(
     fun forberedBehandling(kontekst: FlytKontekst) {
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
 
-        ValiderBehandlingTilstand.validerTilstandBehandling(behandling, listOf())
+        ValiderBehandlingTilstand.validerTilstandBehandling(behandling, listOf(), behandling.avklaringsbehov())
 
         val behandlingFlyt = behandling.forberedtFlyt()
 
@@ -62,7 +62,7 @@ class FlytOrkestrator(
     fun prosesserBehandling(kontekst: FlytKontekst) {
         val behandling = BehandlingRepository(connection).hent(kontekst.behandlingId)
 
-        ValiderBehandlingTilstand.validerTilstandBehandling(behandling, listOf())
+        ValiderBehandlingTilstand.validerTilstandBehandling(behandling, listOf(), behandling.avklaringsbehov())
 
         val behandlingFlyt = behandling.flyt()
 
@@ -115,8 +115,7 @@ class FlytOrkestrator(
     }
 
     internal fun forberedLøsingAvBehov(definisjoner: List<Definisjon>, behandling: Behandling, kontekst: FlytKontekst) {
-
-        val behovForLøsninger = behandling.avklaringsbehovene().hentBehovForDefinisjon(definisjoner)
+        val behovForLøsninger = avklaringsbehovRepository.hent(kontekst.behandlingId).hentBehovForDefinisjon(definisjoner)
 
         val flyt = behandling.forberedtFlyt()
         val tilbakeføringsflyt = flyt.tilbakeflyt(behovForLøsninger)
