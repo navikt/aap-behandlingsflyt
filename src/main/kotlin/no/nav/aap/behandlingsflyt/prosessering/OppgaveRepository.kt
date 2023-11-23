@@ -12,6 +12,7 @@ class OppgaveRepository(private val connection: DBConnection) {
     private val log = LoggerFactory.getLogger(OppgaveRepository::class.java)
 
     fun leggTil(oppgaveInput: OppgaveInput) {
+        @Language("PostgreSQL")
         val oppgave = """
             INSERT INTO OPPGAVE 
             (sak_id, behandling_id, type, neste_kjoring) VALUES (?, ?, ?, ?)
@@ -26,6 +27,7 @@ class OppgaveRepository(private val connection: DBConnection) {
             }
         }
 
+        @Language("PostgreSQL")
         val historikk = """
             INSERT INTO OPPGAVE_HISTORIKK 
             (oppgave_id, status) VALUES (?, ?)
@@ -76,6 +78,7 @@ class OppgaveRepository(private val connection: DBConnection) {
             return null
         }
 
+        @Language("PostgreSQL")
         val historikk = """
             INSERT INTO OPPGAVE_HISTORIKK 
             (oppgave_id, status) VALUES (?, ?)
@@ -85,6 +88,18 @@ class OppgaveRepository(private val connection: DBConnection) {
             setParams {
                 setLong(1, plukketOppgave.id)
                 setEnumName(2, OppgaveStatus.PLUKKET)
+            }
+        }
+
+        @Language("PostgreSQL")
+        val pushNesteKjøring = """
+            UPDATE OPPGAVE SET neste_kjoring = ? WHERE id = ?
+        """.trimIndent()
+
+        connection.execute(pushNesteKjøring) {
+            setParams {
+                setLocalDateTime(1, LocalDateTime.now().plusMinutes(1))
+                setLong(2, plukketOppgave.id)
             }
         }
 
@@ -111,6 +126,7 @@ class OppgaveRepository(private val connection: DBConnection) {
             }
         }
 
+        @Language("PostgreSQL")
         val historikk = """
             INSERT INTO OPPGAVE_HISTORIKK 
             (oppgave_id, status) VALUES (?, ?)
@@ -137,6 +153,7 @@ class OppgaveRepository(private val connection: DBConnection) {
             }
         }
 
+        @Language("PostgreSQL")
         val historikk = """
             INSERT INTO OPPGAVE_HISTORIKK 
             (oppgave_id, status, feilmelding) VALUES (?, ?, ?)
@@ -153,9 +170,11 @@ class OppgaveRepository(private val connection: DBConnection) {
 
     fun harOppgaver(): Boolean {
         val antall =
-            connection.queryFirst("SELECT count(1) as antall " +
-                    "FROM OPPGAVE " +
-                    "WHERE status not in ('${OppgaveStatus.FERDIG.name}', '${OppgaveStatus.FEILET.name}')") {
+            connection.queryFirst(
+                "SELECT count(1) as antall " +
+                        "FROM OPPGAVE " +
+                        "WHERE status not in ('${OppgaveStatus.FERDIG.name}', '${OppgaveStatus.FEILET.name}')"
+            ) {
                 setRowMapper {
                     it.getLong("antall") > 0
                 }
