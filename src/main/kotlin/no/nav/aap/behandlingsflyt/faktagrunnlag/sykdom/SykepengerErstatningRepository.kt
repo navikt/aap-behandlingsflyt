@@ -83,7 +83,7 @@ class SykepengerErstatningRepository(private val connection: DBConnection) {
 
         val query = """
             INSERT INTO SYKEPENGE_ERSTATNING_GRUNNLAG (behandling_id, vurdering_id) 
-            VALUES (?, (select vurdering_id from SYKEPENGE_ERSTATNING_GRUNNLAG where behandling_id = ?))
+            SELECT ?, vurdering_id from SYKEPENGE_ERSTATNING_GRUNNLAG where behandling_id = ? and aktiv
         """.trimIndent()
 
         connection.execute(query) {

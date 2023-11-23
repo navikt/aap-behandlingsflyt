@@ -161,7 +161,7 @@ class SykdomRepository(private val connection: DBConnection) {
             return
         }
         val query = """
-            INSERT INTO SYKDOM_GRUNNLAG (behandling_id, yrkesskade_id, sykdom_id) VALUES (?, (select yrkesskade_id from SYKDOM_GRUNNLAG where behandling_id = ?), (select sykdom_id from SYKDOM_GRUNNLAG where behandling_id = ?))
+            INSERT INTO SYKDOM_GRUNNLAG (behandling_id, yrkesskade_id, sykdom_id) SELECT ?, yrkesskade_id, sykdom_id from SYKDOM_GRUNNLAG where behandling_id = ? and aktiv
         """.trimIndent()
 
         connection.execute(query) {
