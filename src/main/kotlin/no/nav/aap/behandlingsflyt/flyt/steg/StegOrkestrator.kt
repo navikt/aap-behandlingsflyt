@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.Behandling
-import no.nav.aap.behandlingsflyt.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.behandling.BehandlingFlytRepository
 import no.nav.aap.behandlingsflyt.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
@@ -13,7 +13,7 @@ private val log = LoggerFactory.getLogger(StegOrkestrator::class.java)
 
 class StegOrkestrator(private val connection: DBConnection, private val aktivtSteg: FlytSteg) {
 
-    private val behandlingRepository = BehandlingRepository(connection)
+    private val behandlingRepository = BehandlingFlytRepository(connection)
     private val avklaringsbehovRepository = AvklaringsbehovRepository(connection)
 
     fun utfør(

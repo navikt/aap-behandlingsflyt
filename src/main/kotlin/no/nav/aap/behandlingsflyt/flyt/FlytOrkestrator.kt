@@ -10,7 +10,7 @@ import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.flyt.steg.StegOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
-import no.nav.aap.behandlingsflyt.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sak.SakFlytRepository
 import org.slf4j.LoggerFactory
 
 private val log = LoggerFactory.getLogger(FlytOrkestrator::class.java)
@@ -22,7 +22,7 @@ class FlytOrkestrator(
     private val connection: DBConnection
 ) {
     private val faktagrunnlag = Faktagrunnlag(connection)
-    private val sakRepository = SakRepository(connection)
+    private val sakRepository = SakFlytRepository(connection)
     private val avklaringsbehovRepository = AvklaringsbehovRepository(connection)
     private val behandlingRepository = BehandlingRepository(connection)
 

@@ -30,7 +30,8 @@ class HendelsesMottak(private val dataSource: DataSource) {
         val sak: Sak = dataSource.transaction { connection ->
             val person = PersonRepository(connection).finnEllerOpprett(key)
 
-            SakRepository(connection).finnEllerOpprett(person, hendelse.periode())
+            val sakRepository = SakRepository(connection)
+            sakRepository.finnEllerOpprett(person, hendelse.periode())
 
             // Legg til kø for sak, men mocker ved å kalle videre bare
         }
@@ -39,7 +40,8 @@ class HendelsesMottak(private val dataSource: DataSource) {
 
     fun håndtere(key: Saksnummer, hendelse: SakHendelse) {
         val sisteBehandling: Behandling = dataSource.transaction { connection ->
-            val sak = SakRepository(connection).hent(key)
+            val sakRepository = SakRepository(connection)
+            val sak = sakRepository.hent(key)
             val behandlingRepository = BehandlingRepository(connection)
             val sisteBehandlingOpt = behandlingRepository.finnSisteBehandlingFor(sak.id)
 
