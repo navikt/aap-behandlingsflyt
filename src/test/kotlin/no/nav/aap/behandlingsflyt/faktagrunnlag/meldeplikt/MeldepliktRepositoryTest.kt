@@ -252,10 +252,12 @@ class MeldepliktRepositoryTest {
                 val harFritak: Boolean
             )
 
+            data class Grunnlag(val meldepliktId: Long, val opplysning: Opplysning)
+
             val opplysninger =
                 connection.queryList(
                     """
-                    SELECT f.ID, g.BEHANDLING_ID, g.AKTIV, v.PERIODE, v.BEGRUNNELSE, v.HAR_FRITAK
+                    SELECT g.ID AS BEHANDLING_ID, f.ID AS MELDEPLIKT_ID, g.AKTIV, v.PERIODE, v.BEGRUNNELSE, v.HAR_FRITAK
                     FROM BEHANDLING b
                     INNER JOIN MELDEPLIKT_FRITAK_GRUNNLAG g ON b.ID = g.BEHANDLING_ID
                     INNER JOIN MELDEPLIKT_FRITAK f ON g.MELDEPLIKT_ID = f.ID
@@ -267,16 +269,21 @@ class MeldepliktRepositoryTest {
                         setLong(1, sak.id.toLong())
                     }
                     setRowMapper { row ->
-                        Opplysning(
-                            behandlingId = row.getLong("BEHANDLING_ID"),
-                            aktiv = row.getBoolean("AKTIV"),
-                            periode = row.getPeriode("PERIODE"),
-                            begrunnelse = row.getString("BEGRUNNELSE"),
-                            harFritak = row.getBoolean("HAR_FRITAK")
+                        Grunnlag(
+                            meldepliktId = row.getLong("MELDEPLIKT_ID"),
+                            opplysning = Opplysning(
+                                behandlingId = row.getLong("BEHANDLING_ID"),
+                                aktiv = row.getBoolean("AKTIV"),
+                                periode = row.getPeriode("PERIODE"),
+                                begrunnelse = row.getString("BEGRUNNELSE"),
+                                harFritak = row.getBoolean("HAR_FRITAK")
+                            )
                         )
                     }
                 }
-            assertThat(opplysninger)
+            assertThat(opplysninger.map(Grunnlag::meldepliktId).distinct())
+                .hasSize(2)
+            assertThat(opplysninger.map(Grunnlag::opplysning))
                 .hasSize(3)
                 .containsExactly(
                     Opplysning(

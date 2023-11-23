@@ -165,11 +165,12 @@ class PersonopplysningRepositoryTest {
             val behandling2 = behandling(connection, sak)
 
             data class Opplysning(val behandlingId: Long, val fødselsdato: LocalDate, val aktiv: Boolean)
+            data class Grunnlag(val personopplysningId: Long, val opplysning: Opplysning)
 
             val opplysninger =
                 connection.queryList(
                     """
-                    SELECT b.ID, p.FODSELSDATO, g.AKTIV
+                    SELECT b.ID AS BEHANDLING_ID, p.ID AS PERSONOPPLYSNING_ID, p.FODSELSDATO, g.AKTIV
                     FROM BEHANDLING b
                     INNER JOIN PERSONOPPLYSNING_GRUNNLAG g ON b.ID = g.BEHANDLING_ID
                     INNER JOIN PERSONOPPLYSNING p ON g.PERSONOPPLYSNING_ID = p.ID
@@ -180,14 +181,19 @@ class PersonopplysningRepositoryTest {
                         setLong(1, sak.id.toLong())
                     }
                     setRowMapper { row ->
-                        Opplysning(
-                            behandlingId = row.getLong("ID"),
-                            fødselsdato = row.getLocalDate("FODSELSDATO"),
-                            aktiv = row.getBoolean("AKTIV")
+                        Grunnlag(
+                            personopplysningId = row.getLong("PERSONOPPLYSNING_ID"),
+                            opplysning = Opplysning(
+                                behandlingId = row.getLong("BEHANDLING_ID"),
+                                fødselsdato = row.getLocalDate("FODSELSDATO"),
+                                aktiv = row.getBoolean("AKTIV")
+                            )
                         )
                     }
                 }
-            assertThat(opplysninger)
+            assertThat(opplysninger.map(Grunnlag::personopplysningId).distinct())
+                .hasSize(2)
+            assertThat(opplysninger.map(Grunnlag::opplysning))
                 .hasSize(3)
                 .containsExactly(
                     Opplysning(
