@@ -73,7 +73,8 @@ class YrkesskadeRepositoryTest {
                     SELECT b.ID, g.AKTIV, p.REFERANSE, p.PERIODE
                     FROM BEHANDLING b
                     INNER JOIN YRKESSKADE_GRUNNLAG g ON b.ID = g.BEHANDLING_ID
-                    INNER JOIN YRKESSKADE_PERIODER p ON g.ID = p.GRUNNLAG_ID
+                    INNER JOIN YRKESSKADE y ON g.YRKESSKADE_ID = y.ID
+                    INNER JOIN YRKESSKADE_PERIODER p ON y.ID = p.YRKESSKADE_ID
                     WHERE b.SAK_ID = ?
                     """.trimIndent()
                 ) {
@@ -165,7 +166,8 @@ class YrkesskadeRepositoryTest {
                     SELECT b.ID, g.AKTIV, p.REFERANSE, p.PERIODE
                     FROM BEHANDLING b
                     INNER JOIN YRKESSKADE_GRUNNLAG g ON b.ID = g.BEHANDLING_ID
-                    INNER JOIN YRKESSKADE_PERIODER p ON g.ID = p.GRUNNLAG_ID
+                    INNER JOIN YRKESSKADE y ON g.YRKESSKADE_ID = y.ID
+                    INNER JOIN YRKESSKADE_PERIODER p ON y.ID = p.YRKESSKADE_ID
                     WHERE b.SAK_ID = ?
                     """.trimIndent()
                 ) {
@@ -186,6 +188,79 @@ class YrkesskadeRepositoryTest {
                 .containsExactly(
                     Opplysning(behandling.id.toLong(), false, "ref", Periode(4 juni 2019, 28 juni 2020)),
                     Opplysning(behandling.id.toLong(), true, "ref", Periode(4 mai 2019, 28 mai 2020))
+                )
+        }
+    }
+
+    @Test
+    fun `Ved kopiering av fritaksvurderinger fra en avsluttet behandling til en ny skal kun referansen kopieres, ikke hele raden`() {
+        InitTestDatabase.dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val behandling1 = behandling(connection, sak)
+            val yrkesskadeRepository = YrkesskadeRepository(connection)
+            yrkesskadeRepository.lagre(
+                behandling1.id,
+                Yrkesskader(listOf(Yrkesskade(ref = "ref", periode = Periode(4 juni 2019, 28 juni 2020))))
+            )
+            yrkesskadeRepository.lagre(
+                behandling1.id,
+                Yrkesskader(listOf(Yrkesskade(ref = "ref", periode = Periode(4 mai 2019, 28 mai 2020))))
+            )
+            connection.execute("UPDATE BEHANDLING SET status = 'AVSLUTTET'")
+            val behandling2 = behandling(connection, sak)
+
+            data class Opplysning(val behandlingId: Long, val aktiv: Boolean, val ref: String, val periode: Periode)
+            data class Grunnlag(val yrkesskadeId: Long, val opplysning: Opplysning)
+
+            val opplysninger =
+                connection.queryList(
+                    """
+                    SELECT b.ID AS BEHANDLING_ID, y.ID AS YRKESSKADE_ID, g.AKTIV, p.REFERANSE, p.PERIODE
+                    FROM BEHANDLING b
+                    INNER JOIN YRKESSKADE_GRUNNLAG g ON b.ID = g.BEHANDLING_ID
+                    INNER JOIN YRKESSKADE y ON g.YRKESSKADE_ID = y.ID
+                    INNER JOIN YRKESSKADE_PERIODER p ON y.ID = p.YRKESSKADE_ID
+                    WHERE b.SAK_ID = ?
+                    """.trimIndent()
+                ) {
+                    setParams {
+                        setLong(1, sak.id.toLong())
+                    }
+                    setRowMapper { row ->
+                        Grunnlag(
+                            yrkesskadeId = row.getLong("YRKESSKADE_ID"),
+                            opplysning = Opplysning(
+                                behandlingId = row.getLong("BEHANDLING_ID"),
+                                aktiv = row.getBoolean("AKTIV"),
+                                ref = row.getString("REFERANSE"),
+                                periode = row.getPeriode("PERIODE")
+                            )
+                        )
+                    }
+                }
+            assertThat(opplysninger.map(Grunnlag::yrkesskadeId).distinct())
+                .hasSize(2)
+            assertThat(opplysninger.map(Grunnlag::opplysning))
+                .hasSize(3)
+                .containsExactly(
+                    Opplysning(
+                        behandlingId = behandling1.id.toLong(),
+                        aktiv = false,
+                        ref = "ref",
+                        periode = Periode(4 juni 2019, 28 juni 2020)
+                    ),
+                    Opplysning(
+                        behandlingId = behandling1.id.toLong(),
+                        aktiv = true,
+                        ref = "ref",
+                        periode = Periode(4 mai 2019, 28 mai 2020)
+                    ),
+                    Opplysning(
+                        behandlingId = behandling2.id.toLong(),
+                        aktiv = true,
+                        ref = "ref",
+                        periode = Periode(4 mai 2019, 28 mai 2020)
+                    )
                 )
         }
     }

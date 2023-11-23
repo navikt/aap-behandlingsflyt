@@ -68,7 +68,7 @@ class MeldepliktRepository(private val connection: DBConnection) {
     }
 
     private fun deaktiverEksisterende(behandlingId: BehandlingId) {
-        connection.execute("UPDATE MELDEPLIKT_FRITAK_GRUNNLAG SET AKTIV = 'FALSE' WHERE AKTIV AND BEHANDLING_ID = ?") {
+        connection.execute("UPDATE MELDEPLIKT_FRITAK_GRUNNLAG SET AKTIV = FALSE WHERE AKTIV AND BEHANDLING_ID = ?") {
             setParams {
                 setLong(1, behandlingId.toLong())
             }

@@ -6,12 +6,16 @@ import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 class YrkesskadeRepository(private val connection: DBConnection) {
 
     fun hentHvisEksisterer(behandlingId: BehandlingId): YrkesskadeGrunnlag? {
-        return connection.queryFirstOrNull("SELECT ID FROM YRKESSKADE_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?") {
+        return connection.queryFirstOrNull("""
+            SELECT YRKESSKADE_ID
+            FROM YRKESSKADE_GRUNNLAG
+            WHERE AKTIV AND BEHANDLING_ID = ?
+            """.trimIndent()) {
             setParams {
                 setLong(1, behandlingId.toLong())
             }
             setRowMapper { row ->
-                val id = row.getLong("ID")
+                val id = row.getLong("YRKESSKADE_ID")
                 YrkesskadeGrunnlag(
                     id = id,
                     behandlingId = behandlingId,
@@ -22,7 +26,12 @@ class YrkesskadeRepository(private val connection: DBConnection) {
     }
 
     private fun hentYrkesskader(id: Long): List<Yrkesskade> {
-        return connection.queryList("SELECT REFERANSE, PERIODE FROM YRKESSKADE_PERIODER WHERE GRUNNLAG_ID = ?") {
+        return connection.queryList("""
+            SELECT p.REFERANSE AS REFERANSE, p.PERIODE AS PERIODE
+            FROM YRKESSKADE y
+            INNER JOIN YRKESSKADE_PERIODER p ON y.ID = p.YRKESSKADE_ID
+            WHERE y.ID = ?
+            """.trimIndent()) {
             setParams {
                 setLong(1, id)
             }
@@ -44,9 +53,12 @@ class YrkesskadeRepository(private val connection: DBConnection) {
             deaktiverEksisterende(behandlingId)
         }
 
-        val id = connection.executeReturnKey("INSERT INTO YRKESSKADE_GRUNNLAG (BEHANDLING_ID) VALUES (?)") {
+        val yrkesskadeId = connection.executeReturnKey("INSERT INTO YRKESSKADE DEFAULT VALUES")
+
+        connection.execute("INSERT INTO YRKESSKADE_GRUNNLAG (BEHANDLING_ID, YRKESSKADE_ID) VALUES (?, ?)") {
             setParams {
                 setLong(1, behandlingId.toLong())
+                setLong(2, yrkesskadeId)
             }
         }
 
@@ -55,9 +67,9 @@ class YrkesskadeRepository(private val connection: DBConnection) {
         }
 
         yrkesskader.yrkesskader.forEach { yrkesskade ->
-            connection.execute("INSERT INTO YRKESSKADE_PERIODER (GRUNNLAG_ID, REFERANSE, PERIODE) VALUES (?, ?, ?::daterange)") {
+            connection.execute("INSERT INTO YRKESSKADE_PERIODER (YRKESSKADE_ID, REFERANSE, PERIODE) VALUES (?, ?, ?::daterange)") {
                 setParams {
-                    setLong(1, id)
+                    setLong(1, yrkesskadeId)
                     setString(2, yrkesskade.ref)
                     setPeriode(3, yrkesskade.periode)
                 }
@@ -66,7 +78,7 @@ class YrkesskadeRepository(private val connection: DBConnection) {
     }
 
     private fun deaktiverEksisterende(behandlingId: BehandlingId) {
-        connection.execute("UPDATE YRKESSKADE_GRUNNLAG SET AKTIV = 'FALSE' WHERE AKTIV AND BEHANDLING_ID = ?") {
+        connection.execute("UPDATE YRKESSKADE_GRUNNLAG SET AKTIV = FALSE WHERE AKTIV AND BEHANDLING_ID = ?") {
             setParams {
                 setLong(1, behandlingId.toLong())
             }
@@ -77,30 +89,11 @@ class YrkesskadeRepository(private val connection: DBConnection) {
     }
 
     fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
-        val fraId =
-            connection.queryFirstOrNull("SELECT ID FROM YRKESSKADE_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?") {
-                setParams {
-                    setLong(1, fraBehandling.toLong())
-                }
-                setRowMapper { row ->
-                    row.getLong("ID")
-                }
-            }
-
-        if (fraId == null) {
-            return
-        }
-
-        val tilId = connection.executeReturnKey("INSERT INTO YRKESSKADE_GRUNNLAG (BEHANDLING_ID) VALUES (?)") {
+        require(fraBehandling != tilBehandling)
+        connection.execute("INSERT INTO YRKESSKADE_GRUNNLAG (BEHANDLING_ID, YRKESSKADE_ID) SELECT ?, YRKESSKADE_ID FROM YRKESSKADE_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?") {
             setParams {
                 setLong(1, tilBehandling.toLong())
-            }
-        }
-
-        connection.execute("INSERT INTO YRKESSKADE_PERIODER (GRUNNLAG_ID, REFERANSE, PERIODE) SELECT ?, REFERANSE, PERIODE FROM YRKESSKADE_PERIODER WHERE GRUNNLAG_ID = ?") {
-            setParams {
-                setLong(1, tilId)
-                setLong(2, fraId)
+                setLong(2, fraBehandling.toLong())
             }
         }
     }
