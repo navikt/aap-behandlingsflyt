@@ -43,15 +43,21 @@ class Motor(
         override fun run() {
             try {
                 while (running) {
-                    dataSource.transaction { connection ->
-                        val repository = OppgaveRepository(connection)
-                        val plukketOppgave = repository.plukkOppgave()
-                        if (plukketOppgave != null) {
-                            utførOppgave(plukketOppgave, connection)
-                        }
+                    try {
+                        dataSource.transaction { connection ->
+                            val repository = OppgaveRepository(connection)
+                            val plukketOppgave = repository.plukkOppgave()
+                            if (plukketOppgave != null) {
+                                utførOppgave(plukketOppgave, connection)
+                            }
 
-                        if (running && plukketOppgave == null) {
-                            running = false
+                            if (running && plukketOppgave == null) {
+                                running = false
+                            }
+                        }
+                    } catch (exception: WrappedOppgaveException) {
+                        dataSource.transaction { connection ->
+                            OppgaveRepository(connection).markerFeilet(exception.oppgaveInput, exception.exception)
                         }
                     }
                 }
@@ -77,15 +83,20 @@ class Motor(
 
                 OppgaveRepository(connection).markerKjørt(oppgaveInput)
             } catch (exception: Throwable) {
-                OppgaveRepository(connection).markerFeilet(oppgaveInput, exception)
+                // Kjører feil
                 log.warn(
                     "Feil under prosessering av oppgave {}",
                     oppgaveInput,
                     exception
                 )
+                throw WrappedOppgaveException(oppgaveInput, exception)
             }
             MDC.clear()
         }
 
     }
+}
+
+internal class WrappedOppgaveException(val oppgaveInput: OppgaveInput, val exception: Throwable) : RuntimeException() {
+
 }
