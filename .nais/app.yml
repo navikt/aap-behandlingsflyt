@@ -19,11 +19,11 @@ spec:
     requests:
       cpu: 500m
       memory: 512Mi
-    gcp:
-      sqlInstances:
-        - type: POSTGRES_14
-          databases:
-            - name: behandlingsflyt
+  gcp:
+    sqlInstances:
+      - type: POSTGRES_14
+        databases:
+          - name: behandlingsflyt
   liveness:
     path: /actuator/live
     initialDelay: 3
