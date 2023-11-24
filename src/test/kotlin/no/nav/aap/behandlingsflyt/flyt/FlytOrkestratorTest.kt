@@ -16,7 +16,7 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.Behandling
 import no.nav.aap.behandlingsflyt.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.behandling.Status
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.behandling.behandlingRepository
@@ -239,7 +239,7 @@ class FlytOrkestratorTest {
 
     private fun hentAvklaringsbehov(behandlingId: BehandlingId): Avklaringsbehovene {
         return dataSource.transaction { connection ->
-            AvklaringsbehovRepository(connection).hent(behandlingId)
+            AvklaringsbehovRepositoryImpl(connection).hent(behandlingId)
         }
     }
 

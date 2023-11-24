@@ -7,7 +7,7 @@ import com.papsign.ktor.openapigen.route.route
 import com.zaxxer.hikari.HikariDataSource
 import no.nav.aap.behandlingsflyt.behandling.Behandling
 import no.nav.aap.behandlingsflyt.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.faktagrunnlag.BehandlingReferanseService
@@ -75,7 +75,7 @@ private fun behandling(dataSource: HikariDataSource, req: BehandlingReferanse): 
 
 private fun avklaringsbehov(dataSource: HikariDataSource, behandlingId: BehandlingId): Avklaringsbehovene {
     return dataSource.transaction {
-        AvklaringsbehovRepository(it).hent(behandlingId)
+        AvklaringsbehovRepositoryImpl(it).hent(behandlingId)
     }
 }
 

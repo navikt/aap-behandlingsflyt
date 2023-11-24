@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt.steg.impl
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
@@ -10,7 +10,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 
 class ForeslåVedtakSteg private constructor(
-    private val avklaringsbehovRepository: AvklaringsbehovRepository
+    private val avklaringsbehovRepository: AvklaringsbehovRepositoryImpl
 ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekst): StegResultat {
@@ -40,7 +40,7 @@ class ForeslåVedtakSteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            return ForeslåVedtakSteg(AvklaringsbehovRepository(connection))
+            return ForeslåVedtakSteg(AvklaringsbehovRepositoryImpl(connection))
         }
 
         override fun type(): StegType {

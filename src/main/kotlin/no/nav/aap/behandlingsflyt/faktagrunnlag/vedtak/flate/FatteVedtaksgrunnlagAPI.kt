@@ -8,7 +8,7 @@ import com.zaxxer.hikari.HikariDataSource
 import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.Behandling
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.behandling.flate.BehandlingReferanse
@@ -23,7 +23,7 @@ fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(dataSource: HikariDataSource) {
                     BehandlingReferanseService(it).behandling(req)
                 }
                 val avklaringsbehov: Avklaringsbehovene = dataSource.transaction {
-                    AvklaringsbehovRepository(it).hent(behandling.id)
+                    AvklaringsbehovRepositoryImpl(it).hent(behandling.id)
                 }
                 respond(FatteVedtakGrunnlagDto(avklaringsbehov.alle()
                     .filter { it.erTotrinn() }

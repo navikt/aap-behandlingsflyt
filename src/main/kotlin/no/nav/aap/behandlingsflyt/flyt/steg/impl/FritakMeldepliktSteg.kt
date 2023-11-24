@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.flyt.steg.impl
 
 import no.nav.aap.behandlingsflyt.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Endring
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Status
@@ -15,7 +15,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 
 class FritakMeldepliktSteg private constructor(
     private val behandlingService: BehandlingService,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository
+    private val avklaringsbehovRepository: AvklaringsbehovRepositoryImpl
 ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekst): StegResultat {
@@ -49,7 +49,7 @@ class FritakMeldepliktSteg private constructor(
         override fun konstruer(connection: DBConnection): BehandlingSteg {
             return FritakMeldepliktSteg(
                 BehandlingService(connection),
-                AvklaringsbehovRepository(connection))
+                AvklaringsbehovRepositoryImpl(connection))
         }
 
         override fun type(): StegType {

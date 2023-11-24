@@ -12,7 +12,7 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.AvklarYrkesskadeLøser
 import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.FatteVedtakLøser
 import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.ForeslåVedtakLøser
 import no.nav.aap.behandlingsflyt.behandling.Behandling
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.behandling.behandlingRepository
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory
 class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
 
     private val avklaringsbehovsLøsere = mutableMapOf<Definisjon, AvklaringsbehovsLøser<*>>()
-    private val avklaringsbehovRepository = AvklaringsbehovRepository(connection)
+    private val avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection)
     private val behandlingRepository = behandlingRepository(connection)
 
     private val log = LoggerFactory.getLogger(AvklaringsbehovOrkestrator::class.java)

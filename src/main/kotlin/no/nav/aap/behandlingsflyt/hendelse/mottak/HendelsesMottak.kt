@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.Behandling
 import no.nav.aap.behandlingsflyt.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.behandling.EndringType
 import no.nav.aap.behandlingsflyt.behandling.Status
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.behandlingRepository
 import no.nav.aap.behandlingsflyt.behandling.Årsak
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
@@ -60,7 +60,7 @@ class HendelsesMottak(private val dataSource: DataSource) {
 
     fun håndtere(connection: DBConnection, key: BehandlingId, hendelse: LøsAvklaringsbehovBehandlingHendelse) {
         val behandling = behandlingRepository(connection).hent(key)
-        val avklaringsbehovene = AvklaringsbehovRepository(connection).hent(behandling.id)
+        val avklaringsbehovene = AvklaringsbehovRepositoryImpl(connection).hent(behandling.id)
         ValiderBehandlingTilstand.validerTilstandBehandling(
             behandling = behandling,
             eksisterenedeAvklaringsbehov = avklaringsbehovene.alle()
@@ -77,7 +77,7 @@ class HendelsesMottak(private val dataSource: DataSource) {
     fun håndtere(key: BehandlingId, hendelse: BehandlingSattPåVent) {
         dataSource.transaction { connection ->
             val behandling = behandlingRepository(connection).hent(key)
-            val avklaringsbehovene = AvklaringsbehovRepository(connection).hent(behandling.id)
+            val avklaringsbehovene = AvklaringsbehovRepositoryImpl(connection).hent(behandling.id)
             ValiderBehandlingTilstand.validerTilstandBehandling(
                 behandling = behandling,
                 eksisterenedeAvklaringsbehov = avklaringsbehovene.alle()
@@ -92,7 +92,7 @@ class HendelsesMottak(private val dataSource: DataSource) {
     fun håndtere(key: BehandlingId, hendelse: BehandlingHendelse) {
         dataSource.transaction { connection ->
             val behandling = behandlingRepository(connection).hent(key)
-            val avklaringsbehovene = AvklaringsbehovRepository(connection).hent(behandling.id)
+            val avklaringsbehovene = AvklaringsbehovRepositoryImpl(connection).hent(behandling.id)
             ValiderBehandlingTilstand.validerTilstandBehandling(
                 behandling = behandling,
                 eksisterenedeAvklaringsbehov = avklaringsbehovene.alle()

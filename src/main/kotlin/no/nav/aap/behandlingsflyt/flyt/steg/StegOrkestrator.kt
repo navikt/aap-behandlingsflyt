@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.Behandling
 import no.nav.aap.behandlingsflyt.behandling.BehandlingFlytRepository
 import no.nav.aap.behandlingsflyt.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
 import org.slf4j.LoggerFactory
@@ -14,7 +14,7 @@ private val log = LoggerFactory.getLogger(StegOrkestrator::class.java)
 class StegOrkestrator(private val connection: DBConnection, private val aktivtSteg: FlytSteg) {
 
     private val behandlingRepository = BehandlingFlytRepository(connection)
-    private val avklaringsbehovRepository = AvklaringsbehovRepository(connection)
+    private val avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection)
 
     fun utfør(
         kontekst: FlytKontekst,

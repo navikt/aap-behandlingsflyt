@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.Behandling
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.behandling.behandlingRepository
@@ -23,7 +23,7 @@ class FlytOrkestrator(
 ) {
     private val faktagrunnlag = Faktagrunnlag(connection)
     private val sakRepository = SakFlytRepository(connection)
-    private val avklaringsbehovRepository = AvklaringsbehovRepository(connection)
+    private val avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection)
     private val behandlingRepository = behandlingRepository(connection)
 
     fun forberedBehandling(kontekst: FlytKontekst) {

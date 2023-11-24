@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt.steg.impl
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykepengerErstatningRepository
@@ -19,7 +19,7 @@ class VurderSykepengeErstatningSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val sykepengerErstatningRepository: SykepengerErstatningRepository,
     private val sakService: SakService,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository
+    private val avklaringsbehovRepository: AvklaringsbehovRepositoryImpl
 ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekst): StegResultat {
@@ -66,7 +66,7 @@ class VurderSykepengeErstatningSteg private constructor(
                 VilkårsresultatRepository(connection),
                 SykepengerErstatningRepository(connection),
                 SakService(connection),
-                AvklaringsbehovRepository(connection)
+                AvklaringsbehovRepositoryImpl(connection)
             )
         }
 
