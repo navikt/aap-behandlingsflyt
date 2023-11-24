@@ -54,14 +54,17 @@ import no.nav.aap.behandlingsflyt.prosessering.retry.RetryService
 import no.nav.aap.behandlingsflyt.sak.Ident
 import no.nav.aap.behandlingsflyt.sak.flate.saksApi
 import org.flywaydb.core.Flyway
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import javax.sql.DataSource
 
+private val SECURE_LOGGER: Logger = LoggerFactory.getLogger("secureLog")
 
 class App
 
 fun main() {
+    Thread.currentThread().setUncaughtExceptionHandler { _, e -> SECURE_LOGGER.error("Uhåndtert feil", e) }
     embeddedServer(Netty, port = 8080) { server(DbConfig()) }.start(wait = true)
 }
 
