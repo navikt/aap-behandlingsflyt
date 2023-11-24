@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.dbconnect
 
+import org.intellij.lang.annotations.Language
 import java.sql.Connection
 import java.sql.Savepoint
 import java.sql.Statement
@@ -8,6 +9,7 @@ class DBConnection(private val connection: Connection) {
     private var savepoint: Savepoint? = null
 
     fun execute(
+        @Language("PostgreSQL")
         query: String,
         block: Execute.() -> Unit = {}
     ) {
@@ -19,6 +21,7 @@ class DBConnection(private val connection: Connection) {
     }
 
     fun executeReturnKey(
+        @Language("PostgreSQL")
         query: String,
         block: Execute.() -> Unit = {}
     ): Long {
@@ -30,6 +33,7 @@ class DBConnection(private val connection: Connection) {
     }
 
     fun executeReturnKeys(
+        @Language("PostgreSQL")
         query: String,
         block: Execute.() -> Unit = {}
     ): List<Long> {
@@ -41,6 +45,7 @@ class DBConnection(private val connection: Connection) {
     }
 
     fun <T> queryFirstOrNull(
+        @Language("PostgreSQL")
         query: String,
         block: Query<T?>.() -> Unit
     ): T? {
@@ -53,6 +58,7 @@ class DBConnection(private val connection: Connection) {
     }
 
     fun <T : Any> queryFirst(
+        @Language("PostgreSQL")
         query: String,
         block: Query<T>.() -> Unit
     ): T {
@@ -65,6 +71,7 @@ class DBConnection(private val connection: Connection) {
     }
 
     fun <T : Any> queryList(
+        @Language("PostgreSQL")
         query: String,
         block: Query<T>.() -> Unit
     ): List<T> {

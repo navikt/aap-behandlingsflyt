@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.Row
 import no.nav.aap.behandlingsflyt.sak.SakId
-import org.intellij.lang.annotations.Language
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
@@ -12,13 +11,12 @@ class OppgaveRepository(private val connection: DBConnection) {
     private val log = LoggerFactory.getLogger(OppgaveRepository::class.java)
 
     fun leggTil(oppgaveInput: OppgaveInput) {
-        @Language("PostgreSQL")
-        val oppgave = """
+        val oppgaveId = connection.executeReturnKey(
+            """
             INSERT INTO OPPGAVE 
             (sak_id, behandling_id, type, neste_kjoring) VALUES (?, ?, ?, ?)
-        """.trimIndent()
-
-        val oppgaveId = connection.executeReturnKey(oppgave) {
+            """.trimIndent()
+        ) {
             setParams {
                 setLong(1, oppgaveInput.sakIdOrNull()?.toLong())
                 setLong(2, oppgaveInput.behandlingIdOrNull()?.toLong())
@@ -27,13 +25,12 @@ class OppgaveRepository(private val connection: DBConnection) {
             }
         }
 
-        @Language("PostgreSQL")
-        val historikk = """
+        connection.execute(
+            """
             INSERT INTO OPPGAVE_HISTORIKK 
             (oppgave_id, status) VALUES (?, ?)
-        """.trimIndent()
-
-        connection.execute(historikk) {
+            """.trimIndent()
+        ) {
             setParams {
                 setLong(1, oppgaveId)
                 setEnumName(2, OppgaveStatus.KLAR)
@@ -43,8 +40,8 @@ class OppgaveRepository(private val connection: DBConnection) {
     }
 
     internal fun plukkOppgave(): OppgaveInput? {
-        @Language("PostgreSQL")
-        val query = """
+        val plukketOppgave = connection.queryFirstOrNull(
+            """
             SELECT id, type, sak_id, behandling_id, neste_kjoring, 
                 (SELECT count(1) FROM oppgave_historikk h WHERE h.oppgave_id = o.id AND h.status = '${OppgaveStatus.FEILET.name}') as antall_feil
             FROM OPPGAVE o
@@ -63,9 +60,8 @@ class OppgaveRepository(private val connection: DBConnection) {
             ORDER BY neste_kjoring ASC
             FOR UPDATE SKIP LOCKED
             LIMIT 1
-        """.trimIndent()
-
-        val plukketOppgave = connection.queryFirstOrNull(query) {
+            """.trimIndent()
+        ) {
             setParams {
                 setLocalDateTime(1, LocalDateTime.now())
             }
@@ -78,13 +74,12 @@ class OppgaveRepository(private val connection: DBConnection) {
             return null
         }
 
-        @Language("PostgreSQL")
-        val historikk = """
+        connection.execute(
+            """
             INSERT INTO OPPGAVE_HISTORIKK 
             (oppgave_id, status) VALUES (?, ?)
-        """.trimIndent()
-
-        connection.execute(historikk) {
+            """.trimIndent()
+        ) {
             setParams {
                 setLong(1, plukketOppgave.id)
                 setEnumName(2, OppgaveStatus.PLUKKET)
@@ -115,13 +110,12 @@ class OppgaveRepository(private val connection: DBConnection) {
             }
         }
 
-        @Language("PostgreSQL")
-        val historikk = """
+        connection.execute(
+            """
             INSERT INTO OPPGAVE_HISTORIKK 
             (oppgave_id, status) VALUES (?, ?)
-        """.trimIndent()
-
-        connection.execute(historikk) {
+            """.trimIndent()
+        ) {
             setParams {
                 setLong(1, oppgaveInput.id)
                 setEnumName(2, OppgaveStatus.FERDIG)
@@ -152,13 +146,12 @@ class OppgaveRepository(private val connection: DBConnection) {
             }
         }
 
-        @Language("PostgreSQL")
-        val historikk = """
+        connection.execute(
+            """
             INSERT INTO OPPGAVE_HISTORIKK 
             (oppgave_id, status, feilmelding) VALUES (?, ?, ?)
-        """.trimIndent()
-
-        connection.execute(historikk) {
+            """.trimIndent()
+        ) {
             setParams {
                 setLong(1, oppgaveInput.id)
                 setEnumName(2, OppgaveStatus.FEILET)
