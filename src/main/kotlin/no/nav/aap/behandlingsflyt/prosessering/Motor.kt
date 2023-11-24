@@ -23,7 +23,7 @@ class Motor(
     fun start() {
         log.info("Starter prosessering av oppgaver")
         IntRange(1, workers).forEach {
-            executor.schedule(OppgaveWorker(dataSource), 15L * it, TimeUnit.MILLISECONDS)
+            executor.schedule(Forbrenningskammer(dataSource), 15L * it, TimeUnit.MILLISECONDS)
         }
     }
 
@@ -36,8 +36,8 @@ class Motor(
         return executor.activeCount != 0
     }
 
-    inner class OppgaveWorker(private val dataSource: DataSource) : Runnable {
-        private val log = LoggerFactory.getLogger(OppgaveWorker::class.java)
+    inner class Forbrenningskammer(private val dataSource: DataSource) : Runnable {
+        private val log = LoggerFactory.getLogger(Forbrenningskammer::class.java)
 
         private var running = true
         override fun run() {
@@ -65,7 +65,7 @@ class Motor(
                 log.warn("Feil under plukking av oppgaver", excetion)
             }
             if (!stopped) {
-                executor.schedule(OppgaveWorker(dataSource), 500L, TimeUnit.MILLISECONDS)
+                executor.schedule(Forbrenningskammer(dataSource), 500L, TimeUnit.MILLISECONDS)
             }
         }
 
@@ -97,6 +97,4 @@ class Motor(
     }
 }
 
-internal class WrappedOppgaveException(val oppgaveInput: OppgaveInput, val exception: Throwable) : RuntimeException() {
-
-}
+internal class WrappedOppgaveException(val oppgaveInput: OppgaveInput, val exception: Throwable) : RuntimeException()
