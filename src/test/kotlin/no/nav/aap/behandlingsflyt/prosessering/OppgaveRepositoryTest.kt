@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.Periode
-import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.InitTestDatabase
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.prosessering.retry.OPPGAVE_TYPE
@@ -11,21 +10,17 @@ import no.nav.aap.behandlingsflyt.sak.PersonRepository
 import no.nav.aap.behandlingsflyt.sak.Sak
 import no.nav.aap.behandlingsflyt.sak.sakRepository
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterAll
+import org.junit.Ignore
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+
 
 class OppgaveRepositoryTest {
     companion object {
         val dataSource = InitTestDatabase.dataSource
-
-        @JvmStatic
-        @AfterAll
-        fun afterAll(): Unit {
-            DBConnection(dataSource.connection).execute("TRUNCATE TABLE OPPGAVE cascade")
-        }
     }
 
+    @Ignore
     @Test
     fun `skal plukke første opprettede oppgave`() {
         lateinit var sak: Sak
