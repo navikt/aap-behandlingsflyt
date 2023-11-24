@@ -44,7 +44,9 @@ allprojects {
         withType<Test> {
             reports.html.required.set(false)
             useJUnitPlatform()
-            maxParallelForks = Runtime.getRuntime().availableProcessors()
+            if (System.getenv("GITHUB_ACTIONS") != "true") {
+                maxParallelForks = Runtime.getRuntime().availableProcessors()
+            }
         }
     }
 
