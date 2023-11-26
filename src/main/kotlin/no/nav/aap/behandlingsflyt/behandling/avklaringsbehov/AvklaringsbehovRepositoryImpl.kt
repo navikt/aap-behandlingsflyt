@@ -13,15 +13,19 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
     }
 
     override fun leggTilAvklaringsbehov(behandlingId: BehandlingId, definisjon: Definisjon, funnetISteg: StegType) {
-        val avklaringsbehovId = hentRelevantAvklaringsbehov(behandlingId, definisjon, funnetISteg)
+        var avklaringsbehovId = hentRelevantAvklaringsbehov(behandlingId, definisjon)
+
+        if (avklaringsbehovId == null) {
+            avklaringsbehovId = opprettAvklaringsbehov(behandlingId, definisjon, funnetISteg)
+        }
+
         opprettAvklaringsbehovEndring(avklaringsbehovId, Status.OPPRETTET, "", "Kelvin")
     }
 
     private fun hentRelevantAvklaringsbehov(
         behandlingId: BehandlingId,
-        definisjon: Definisjon,
-        funnetISteg: StegType
-    ): Long {
+        definisjon: Definisjon
+    ): Long? {
 
         val selectQuery = """
             SELECT id FROM AVKLARINGSBEHOV where behandling_id = ? AND definisjon = ?
@@ -37,11 +41,7 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
             }
         }
 
-        if (avklaringsbehovId != null) {
-            return avklaringsbehovId
-        }
-
-        return opprettAvklaringsbehov(behandlingId, definisjon, funnetISteg)
+        return avklaringsbehovId
     }
 
     private fun opprettAvklaringsbehov(
