@@ -15,6 +15,7 @@ class FatteVedtakLøser(val connection: DBConnection) : AvklaringsbehovsLøser<F
     override fun løs(kontekst: FlytKontekst, løsning: FatteVedtakLøsning): LøsningsResultat {
         løsning.vurderinger.forEach { vurdering ->
             run {
+                //TODO: Kan denne blokka uttrykket med en metode på Avkarlingsbehovene?
                 val avklaringsbehovene = avklaringsbehovRepository.hent(kontekst.behandlingId)
 
                 val definisjon = Definisjon.forKode(vurdering.definisjon)
@@ -23,7 +24,7 @@ class FatteVedtakLøser(val connection: DBConnection) : AvklaringsbehovsLøser<F
                 if (avklaringsbehov == null) {
                     throw IllegalStateException("Fant ikke avklaringsbehov med $definisjon for behandling $kontekst.behandlingId")
                 }
-                if (!(avklaringsbehov.erTotrinn() && avklaringsbehov.status() == Status.AVSLUTTET)) {
+                if (!(avklaringsbehov.erTotrinn() && avklaringsbehov.erAvsluttet())) {
                     throw IllegalStateException("Har ikke rett tilstand på avklaringsbehov")
                 }
 

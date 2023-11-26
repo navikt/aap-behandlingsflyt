@@ -67,6 +67,10 @@ class Avklaringsbehov(
         return Status.AVBRUTT != status()
     }
 
+    fun erAvsluttet(): Boolean {
+        return status() == Status.AVSLUTTET
+    }
+
     fun status(): Status {
         return historikk.last().status
     }
@@ -89,4 +93,5 @@ class Avklaringsbehov(
     override fun toString(): String {
         return "Avklaringsbehov(definisjon=$definisjon, status=${status()})"
     }
+
 }
