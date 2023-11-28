@@ -31,7 +31,7 @@ jobs:
             DEPENDENCY_GRAPH_INCLUDE_CONFIGURATIONS: compileClasspath|runtimeClasspath
         with:
             dependency-graph: generate-and-submit
-            arguments: test buildFatJar --continue --no-daemon --configuration-cache --stacktrace --info
+            arguments: test buildFatJar installDist --continue --no-daemon --configuration-cache --stacktrace --info
 
       - uses: nais/docker-build-push@v0
         id: docker-push
