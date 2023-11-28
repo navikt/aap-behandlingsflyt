@@ -126,7 +126,9 @@ class FlytOrkestrator(
         tilbakefør(kontekst, behandling, tilbakeføringsflyt, avklaringsbehovene.åpne())
 
         val skulleVærtISteg = flyt.skalTilStegForBehov(behovForLøsninger)
-        require(skulleVærtISteg == behandling.aktivtSteg())
+        if (skulleVærtISteg != null) {
+            flyt.validerPlassering(skulleVærtISteg)
+        }
     }
 
     private fun tilbakefør(

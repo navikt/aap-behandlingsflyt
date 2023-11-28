@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.flate.AvklaringsbehovDTO
 import no.nav.aap.behandlingsflyt.behandling.flate.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.faktagrunnlag.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.flyt.steg.StegGruppe
@@ -24,14 +25,15 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
     route("/api/behandling") {
         route("/{referanse}/flyt") {
             get<BehandlingReferanse, BehandlingFlytOgTilstandDto> { req ->
-                val behandling = behandling(dataSource, req)
-
-                respond(
+                val dto = dataSource.transaction { connection ->
+                    val behandling = behandling(connection, req)
                     BehandlingFlytOgTilstandDto(
                         flyt = behandling.flyt().stegene().map { stegType ->
                             FlytSteg(
                                 stegType = stegType,
-                                avklaringsbehov = avklaringsbehov(dataSource, behandling.id).alle()
+                                avklaringsbehov = avklaringsbehov(connection, behandling.id).alleInkludertFrivillige(
+                                    behandling.flyt()
+                                )
                                     .filter { avklaringsbehov -> avklaringsbehov.skalLøsesISteg(stegType) }
                                     .map { behov ->
                                         AvklaringsbehovDTO(
@@ -41,25 +43,28 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
                                         )
                                     },
                                 vilkårDTO = hentUtRelevantVilkårForSteg(
-                                    vilkårResultat(dataSource, behandling.id),
+                                    vilkårResultat(connection, behandling.id),
                                     stegType
                                 )
                             )
                         },
                         aktivtSteg = behandling.aktivtSteg()
                     )
+                }
+                respond(
+                    dto
                 )
             }
         }
         route("/{referanse}/flyt-2") {
             get<BehandlingReferanse, BehandlingFlytOgTilstand2Dto> { req ->
-                val behandling = behandling(dataSource, req)
-                val stegGrupper: Map<StegGruppe, List<StegType>> =
-                    behandling.flyt().stegene().groupBy { steg -> steg.gruppe }
+                val dto = dataSource.transaction { connection ->
+                    val behandling = behandling(connection, req)
+                    val stegGrupper: Map<StegGruppe, List<StegType>> =
+                        behandling.flyt().stegene().groupBy { steg -> steg.gruppe }
 
-                val aktivtSteg = behandling.aktivtSteg()
-                var erFullført = true
-                respond(
+                    val aktivtSteg = behandling.aktivtSteg()
+                    var erFullført = true
                     BehandlingFlytOgTilstand2Dto(
                         flyt = stegGrupper.map { (gruppe, steg) ->
                             erFullført = erFullført && gruppe != aktivtSteg.gruppe
@@ -69,7 +74,10 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
                                 steg = steg.map { stegType ->
                                     FlytSteg(
                                         stegType = stegType,
-                                        avklaringsbehov = avklaringsbehov(dataSource, behandling.id).alle()
+                                        avklaringsbehov = avklaringsbehov(
+                                            connection,
+                                            behandling.id
+                                        ).alleInkludertFrivillige(behandling.flyt())
                                             .filter { avklaringsbehov -> avklaringsbehov.skalLøsesISteg(stegType) }
                                             .map { behov ->
                                                 AvklaringsbehovDTO(
@@ -79,7 +87,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
                                                 )
                                             },
                                         vilkårDTO = hentUtRelevantVilkårForSteg(
-                                            vilkårResultat(dataSource, behandling.id),
+                                            vilkårResultat(connection, behandling.id),
                                             stegType
                                         )
                                     )
@@ -90,28 +98,23 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
                         aktivGruppe = aktivtSteg.gruppe,
                         behandlingVersjon = behandling.versjon
                     )
-                )
+                }
+                respond(dto)
             }
         }
     }
 }
 
-private fun behandling(dataSource: HikariDataSource, req: BehandlingReferanse): Behandling {
-    return dataSource.transaction {
-        BehandlingReferanseService(it).behandling(req)
-    }
+private fun behandling(connection: DBConnection, req: BehandlingReferanse): Behandling {
+    return BehandlingReferanseService(connection).behandling(req)
 }
 
-private fun avklaringsbehov(dataSource: HikariDataSource, behandlingId: BehandlingId): Avklaringsbehovene {
-    return dataSource.transaction {
-        AvklaringsbehovRepositoryImpl(it).hent(behandlingId)
-    }
+private fun avklaringsbehov(connection: DBConnection, behandlingId: BehandlingId): Avklaringsbehovene {
+    return AvklaringsbehovRepositoryImpl(connection).hent(behandlingId)
 }
 
-private fun vilkårResultat(dataSource: HikariDataSource, behandlingId: BehandlingId): Vilkårsresultat {
-    return dataSource.transaction {
-        VilkårsresultatRepository(it).hent(behandlingId)
-    }
+private fun vilkårResultat(connection: DBConnection, behandlingId: BehandlingId): Vilkårsresultat {
+    return VilkårsresultatRepository(connection).hent(behandlingId)
 }
 
 private fun hentUtRelevantVilkårForSteg(vilkårsresultat: Vilkårsresultat, stegType: StegType): VilkårDTO? {

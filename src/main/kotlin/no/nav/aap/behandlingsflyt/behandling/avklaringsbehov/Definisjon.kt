@@ -22,50 +22,51 @@ const val FATTE_VEDTAK_KODE = "5099"
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 enum class Definisjon(
     @JsonProperty("kode") val kode: String,
-    private val type: BehovType = BehovType.MANUELT,
+    private val type: BehovType = BehovType.MANUELT_PÅKREVD,
     @JsonIgnore private val defaultFrist: Period = Period.ZERO,
     @JsonProperty("løsesISteg") val løsesISteg: StegType = StegType.UDEFINERT,
     val kreverToTrinn: Boolean = false
 ) {
     MANUELT_SATT_PÅ_VENT(
-            kode = MANUELT_SATT_PÅ_VENT_KODE,
-            type = BehovType.AUTOMATISK,
-            defaultFrist = Period.ofWeeks(3),
+        kode = MANUELT_SATT_PÅ_VENT_KODE,
+        type = BehovType.AUTOMATISK,
+        defaultFrist = Period.ofWeeks(3),
     ),
     AVKLAR_SYKDOM(
-            kode = AVKLAR_SYKDOM_KODE,
-            løsesISteg = StegType.AVKLAR_SYKDOM,
-            kreverToTrinn = true
+        kode = AVKLAR_SYKDOM_KODE,
+        løsesISteg = StegType.AVKLAR_SYKDOM,
+        kreverToTrinn = true
     ),
     AVKLAR_STUDENT(
-            kode = AVKLAR_STUDENT_KODE,
-            løsesISteg = StegType.AVKLAR_STUDENT,
+        kode = AVKLAR_STUDENT_KODE,
+        løsesISteg = StegType.AVKLAR_STUDENT,
     ),
     AVKLAR_BISTANDSBEHOV(
-            kode = AVKLAR_BISTANDSBEHOV_KODE,
-            løsesISteg = StegType.VURDER_BISTANDSBEHOV,
+        kode = AVKLAR_BISTANDSBEHOV_KODE,
+        løsesISteg = StegType.VURDER_BISTANDSBEHOV,
     ),
     FRITAK_MELDEPLIKT(
-            kode = FRITAK_MELDEPLIKT_KODE,
-            løsesISteg = StegType.FRITAK_MELDEPLIKT,
+        kode = FRITAK_MELDEPLIKT_KODE,
+        type = BehovType.MANUELT_FRIVILLIG,
+        løsesISteg = StegType.FRITAK_MELDEPLIKT,
     ),
     AVKLAR_YRKESSKADE(
-            kode = AVKLAR_YRKESSKADE_KODE,
-            løsesISteg = StegType.AVKLAR_YRKESSKADE,
-            kreverToTrinn = true
+        kode = AVKLAR_YRKESSKADE_KODE,
+        løsesISteg = StegType.AVKLAR_YRKESSKADE,
+        kreverToTrinn = true
     ),
     AVKLAR_SYKEPENGEERSTATNING(
-            kode = VURDER_SYKEPENGEERSTATNING_KODE,
-            løsesISteg = StegType.VURDER_SYKEPENGEERSTATNING,
-            kreverToTrinn = true
+        kode = VURDER_SYKEPENGEERSTATNING_KODE,
+        løsesISteg = StegType.VURDER_SYKEPENGEERSTATNING,
+        kreverToTrinn = true
     ),
     FORESLÅ_VEDTAK(
-            kode = FORESLÅ_VEDTAK_KODE,
-            løsesISteg = StegType.FORESLÅ_VEDTAK,
+        kode = FORESLÅ_VEDTAK_KODE,
+        løsesISteg = StegType.FORESLÅ_VEDTAK,
     ),
     FATTE_VEDTAK(
-            kode = FATTE_VEDTAK_KODE,
-            løsesISteg = StegType.FATTE_VEDTAK,
+        kode = FATTE_VEDTAK_KODE,
+        løsesISteg = StegType.FATTE_VEDTAK,
     );
 
     companion object {
@@ -75,9 +76,9 @@ enum class Definisjon(
 
         init {
             val unikeKoder =
-                    Arrays.stream(entries.toTypedArray())
-                            .map { it.kode }
-                            .collect(Collectors.toSet())
+                Arrays.stream(entries.toTypedArray())
+                    .map { it.kode }
+                    .collect(Collectors.toSet())
 
             if (unikeKoder.size != entries.size) {
                 throw IllegalStateException("Gjenbrukt koder for Avklaringsbehov")
@@ -90,7 +91,8 @@ enum class Definisjon(
     }
 
     enum class BehovType(val valideringsFunksjon: KFunction1<Definisjon, Unit>) {
-        MANUELT(Definisjon::validerManuelt),
+        MANUELT_PÅKREVD(Definisjon::validerManuelt),
+        MANUELT_FRIVILLIG(Definisjon::validerManuelt),
         AUTOMATISK(Definisjon::validerAutomatisk)
     }
 
@@ -104,7 +106,7 @@ enum class Definisjon(
     private fun validerManuelt() {
         if (this.løsesISteg.tekniskSteg) {
             throw IllegalArgumentException(
-                    "Avklaringsbehov må være knyttet til et funksjonelt steg"
+                "Avklaringsbehov må være knyttet til et funksjonelt steg"
             )
         }
     }
@@ -127,5 +129,9 @@ enum class Definisjon(
 
     override fun toString(): String {
         return "$name(kode='$kode')"
+    }
+
+    fun erFrivillig(): Boolean {
+        return type == BehovType.MANUELT_FRIVILLIG
     }
 }

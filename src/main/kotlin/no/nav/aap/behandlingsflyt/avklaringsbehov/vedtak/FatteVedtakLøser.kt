@@ -59,7 +59,6 @@ class FatteVedtakLøser(val connection: DBConnection) : AvklaringsbehovsLøser<F
             vurderingerSomMåReåpnes.forEach { vurdering ->
                 avklaringsbehovene.reåpne(definisjon = Definisjon.forKode(vurdering.definisjon))
             }
-
         } else {
             løsning.vurderinger.forEach { vurdering ->
                 avklaringsbehovene.vurderTotrinn(
@@ -69,8 +68,8 @@ class FatteVedtakLøser(val connection: DBConnection) : AvklaringsbehovsLøser<F
                     vurdertAv = "saksbehandler" // TODO: Hente fra context
                 )
             }
-            sammenstiltBegrunnelse = sammenstillBegrunnelse(løsning)
         }
+        sammenstiltBegrunnelse = sammenstillBegrunnelse(løsning)
 
         return LøsningsResultat(sammenstiltBegrunnelse)
     }

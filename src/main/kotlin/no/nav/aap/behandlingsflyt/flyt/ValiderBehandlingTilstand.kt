@@ -28,13 +28,15 @@ object ValiderBehandlingTilstand {
         if (Status.AVSLUTTET == behandling.status()) {
             throw IllegalArgumentException("Forsøker manipulere på behandling som er avsluttet")
         }
-        if (avklaringsbehov.any { !eksisterenedeAvklaringsbehov.map { a -> a.definisjon }.contains(it) }) {
+        if (avklaringsbehov.any {
+                !eksisterenedeAvklaringsbehov.map { a -> a.definisjon }.contains(it) && !it.erFrivillig()
+            }) {
             throw IllegalArgumentException("Forsøker løse avklaringsbehov $avklaringsbehov ikke knyttet til behandlingen, har $eksisterenedeAvklaringsbehov")
         }
         if (avklaringsbehov.any {
                 !behandling.type.flyt().erStegFørEllerLik(it.løsesISteg, behandling.aktivtSteg())
             }) {
-            throw IllegalArgumentException("Forsøker løse avklaringsbehov $avklaringsbehov ikke knyttet til behandlingen")
+            throw IllegalArgumentException("Forsøker løse avklaringsbehov $avklaringsbehov knyttet til et steg som ikke finnes i behandlingen av type ${behandling.type.identifikator()}")
         }
     }
 }

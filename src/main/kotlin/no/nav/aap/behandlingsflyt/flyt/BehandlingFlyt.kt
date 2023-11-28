@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.EndringType
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlagkonstruktør
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
@@ -78,6 +79,11 @@ class BehandlingFlyt private constructor(
         return null
     }
 
+    fun validerPlassering(skulleVærtIStegType: StegType) {
+        val aktivtStegType = requireNotNull(aktivtSteg).steg.type()
+        require(skulleVærtIStegType == aktivtStegType)
+    }
+
     /**
      * Avgjør hvilket steg prosessen skal fortsette fra. Hvis ingen endring så står pekeren stille
      */
@@ -125,6 +131,13 @@ class BehandlingFlyt private constructor(
      */
     fun stegene(): List<StegType> {
         return flyt.map { it.steg.type() }
+    }
+
+    fun frivilligeAvklaringsbehovRelevantForFlyten(): List<Definisjon> {
+        val stegene = stegene()
+        return Definisjon.entries.filter { def ->
+            stegene.contains(def.løsesISteg)
+        }
     }
 
     fun tilbakeflyt(avklaringsbehov: List<Avklaringsbehov>): BehandlingFlyt {
