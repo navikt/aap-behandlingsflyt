@@ -4,9 +4,6 @@ on:
   push:
     branches: [ main ]
 
-env:
-  IMAGE: europe-north1-docker.pkg.dev/${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}/aap/${{ github.repository }}:${{ github.sha }}
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -44,7 +41,7 @@ jobs:
             salsa: true # optional, defaults to true
             project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }} # required, but is defined as an organization variable
             identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }} # required, but is defined as an organization secret
-            tag: ${{ env.IMAGE }}
+            image_suffix: ${{ github.sha }}
             cache_from: type=gha
             cache_to: type=gha,mode=max
             byosbom: build/reports/bom.json
