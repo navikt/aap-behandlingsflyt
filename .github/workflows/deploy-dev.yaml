@@ -33,16 +33,13 @@ jobs:
         with:
           arguments: test buildFatJar --continue --no-daemon --configuration-cache --stacktrace --info
 
-      - name: Login GAR
-        uses: nais/login@v0
+      - uses: nais/docker-build-push@v0
+        id: docker-push
         with:
-            project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
-            identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
-            team: aap
-
-      - name: Build and push Docker
-        uses: docker/build-push-action@v4
-        with:
+            team: aap # required
+            salsa: true # optional, defaults to true
+            project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }} # required, but is defined as an organization variable
+            identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }} # required, but is defined as an organization secret
             context: .
             file: Dockerfile
             tags: ${{ env.IMAGE }}
