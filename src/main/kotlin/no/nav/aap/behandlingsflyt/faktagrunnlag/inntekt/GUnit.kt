@@ -6,11 +6,8 @@ import java.math.RoundingMode
 /**
  * Faktor av antall G for representasjon av størrelsen på det maksnimalet grunnlaget
  */
-class GUnit(private val verdi: BigDecimal) {
-
-    init {
-        verdi.setScale(10, RoundingMode.HALF_UP)
-    }
+class GUnit(verdi: BigDecimal) {
+    private val verdi = verdi.setScale(10, RoundingMode.HALF_UP)
 
     fun verdi(): BigDecimal {
         return verdi
