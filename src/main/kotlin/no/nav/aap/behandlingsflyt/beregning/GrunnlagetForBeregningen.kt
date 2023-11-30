@@ -24,13 +24,15 @@ class GrunnlagetForBeregningen(
             Grunnbeløp.finnGrunnlagsfaktor(inntekt.år, inntekt.beløp)
         }
 
-        val gUnitFørsteÅr = gUnits.first()
+        val gUnitsBegrensetTil6GUnits = gUnits.map(GUnit::begrensTil6GUnits)
+
+        val gUnitFørsteÅr = gUnitsBegrensetTil6GUnits.first()
 
         if (inntekter.size == 1) {
             return gUnitFørsteÅr
         }
 
-        val gUnitGjennomsnitt = GUnit.gjennomsnittlig(gUnits)
+        val gUnitGjennomsnitt = GUnit.gjennomsnittlig(gUnitsBegrensetTil6GUnits)
 
         return maxOf(gUnitFørsteÅr, gUnitGjennomsnitt)
     }

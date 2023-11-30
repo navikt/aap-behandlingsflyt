@@ -24,6 +24,11 @@ class GUnit(verdi: BigDecimal) : Comparable<GUnit> {
         return verdi
     }
 
+    fun begrensTil6GUnits(): GUnit {
+        val begrensetVerdi = minOf(verdi, BigDecimal(6))
+        return GUnit(begrensetVerdi)
+    }
+
     override fun compareTo(other: GUnit): Int {
         return this.verdi.compareTo(other.verdi)
     }

@@ -56,4 +56,46 @@ class GrunnlagetForBeregningenTest {
 
         assertThat(grunnlaget).isEqualTo(GUnit(BigDecimal(5)))
     }
+
+    @Test
+    fun `Siste årets inntekt begrenses oppad til 6G`() {
+        val inntektPerÅr = listOf(
+            InntektPerÅr(Year.of(2022), Beløp(BigDecimal(7 * 109_784))),   // 768 488
+            InntektPerÅr(Year.of(2021), Beløp(BigDecimal(2 * 104_716))),   // 209 432
+            InntektPerÅr(Year.of(2020), Beløp(BigDecimal(2 * 100_853)))    // 201 706
+        )
+        val grunnlagetForBeregningen = GrunnlagetForBeregningen(inntektPerÅr)
+
+        val grunnlaget = grunnlagetForBeregningen.beregnGrunnlaget()
+
+        assertThat(grunnlaget).isEqualTo(GUnit(BigDecimal(6)))
+    }
+
+    @Test
+    fun `Gjennomsnittlig inntekt siste tre år begrenses oppad til 6G`() {
+        val inntektPerÅr = listOf(
+            InntektPerÅr(Year.of(2022), Beløp(BigDecimal(7 * 109_784))),   // 768 488
+            InntektPerÅr(Year.of(2021), Beløp(BigDecimal(7 * 104_716))),   // 733 012
+            InntektPerÅr(Year.of(2020), Beløp(BigDecimal(7 * 100_853)))    // 705 971
+        )
+        val grunnlagetForBeregningen = GrunnlagetForBeregningen(inntektPerÅr)
+
+        val grunnlaget = grunnlagetForBeregningen.beregnGrunnlaget()
+
+        assertThat(grunnlaget).isEqualTo(GUnit(BigDecimal(6)))
+    }
+
+    @Test
+    fun `Hvert av kalenderårene begrenses individuelt oppad til 6G før gjennomsnittet beregnes`() {
+        val inntektPerÅr = listOf(
+            InntektPerÅr(Year.of(2022), Beløp(BigDecimal(3 * 109_784))),    //   329 352
+            InntektPerÅr(Year.of(2021), Beløp(BigDecimal(3 * 104_716))),    //   314 148
+            InntektPerÅr(Year.of(2020), Beløp(BigDecimal(12 * 100_853)))    // 1 210 236
+        )
+        val grunnlagetForBeregningen = GrunnlagetForBeregningen(inntektPerÅr)
+
+        val grunnlaget = grunnlagetForBeregningen.beregnGrunnlaget()
+
+        assertThat(grunnlaget).isEqualTo(GUnit(BigDecimal(4)))
+    }
 }
