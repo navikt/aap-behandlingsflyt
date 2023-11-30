@@ -12,14 +12,11 @@ class GrunnlagetForBeregningen(
         inntekter.toSortedSet(Comparator.comparing(InntektPerÅr::år).reversed())
 
     init {
+        require(inntekter.size == 3) { "Må oppgi tre inntekter" }
         require(inntekter.size == this.inntekter.size) { "Flere inntekter oppgitt for samme år" }
     }
 
     fun beregnGrunnlaget(): GUnit {
-        if (inntekter.isEmpty()) {
-            return GUnit(BigDecimal(0))
-        }
-
         val gUnits = inntekter.map { inntekt ->
             Grunnbeløp.finnGrunnlagsfaktor(inntekt.år, inntekt.beløp)
         }
@@ -27,10 +24,6 @@ class GrunnlagetForBeregningen(
         val gUnitsBegrensetTil6GUnits = gUnits.map(GUnit::begrensTil6GUnits)
 
         val gUnitFørsteÅr = gUnitsBegrensetTil6GUnits.first()
-
-        if (inntekter.size == 1) {
-            return gUnitFørsteÅr
-        }
 
         val gUnitGjennomsnitt = GUnit.gjennomsnittlig(gUnitsBegrensetTil6GUnits)
 
