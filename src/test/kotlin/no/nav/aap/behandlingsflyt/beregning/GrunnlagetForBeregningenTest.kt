@@ -5,10 +5,44 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.GUnit
 import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.adapter.InntektPerÅr
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import java.math.BigDecimal
 import java.time.Year
 
 class GrunnlagetForBeregningenTest {
+
+    @Test
+    fun `Det må oppgis tre inntekter for sammenhengende år, uten overlapp på år`() {
+        val inntekterForToÅr = listOf(
+            InntektPerÅr(Year.of(2022), Beløp(BigDecimal(0))),
+            InntektPerÅr(Year.of(2021), Beløp(BigDecimal(0)))
+        )
+        val toÅrException = assertThrows<IllegalArgumentException> {
+            GrunnlagetForBeregningen(inntekterForToÅr)
+        }
+        assertThat(toÅrException).hasMessage("Må oppgi tre inntekter")
+
+        val inntekterForTreIkkesammenhengendeÅr = listOf(
+            InntektPerÅr(Year.of(2022), Beløp(BigDecimal(0))),
+            InntektPerÅr(Year.of(2021), Beløp(BigDecimal(0))),
+            InntektPerÅr(Year.of(2019), Beløp(BigDecimal(0)))
+        )
+        val treIkkesammenhengendeÅrException = assertThrows<IllegalArgumentException> {
+            GrunnlagetForBeregningen(inntekterForTreIkkesammenhengendeÅr)
+        }
+        assertThat(treIkkesammenhengendeÅrException).hasMessage("Inntektene må representere tre sammenhengende år")
+
+        val inntekterForFlereInntekterPåSammeÅr = listOf(
+            InntektPerÅr(Year.of(2022), Beløp(BigDecimal(0))),
+            InntektPerÅr(Year.of(2021), Beløp(BigDecimal(0))),
+            InntektPerÅr(Year.of(2021), Beløp(BigDecimal(0))),
+            InntektPerÅr(Year.of(2020), Beløp(BigDecimal(0)))
+        )
+        val flereInntekterPåSammeÅrException = assertThrows<IllegalArgumentException> {
+            GrunnlagetForBeregningen(inntekterForFlereInntekterPåSammeÅr)
+        }
+        assertThat(flereInntekterPåSammeÅrException).hasMessage("Flere inntekter oppgitt for samme år")
+    }
 
     @Test
     fun `Hvis bruker ikke har inntekt beregnes grunnlaget til 0 kr`() {

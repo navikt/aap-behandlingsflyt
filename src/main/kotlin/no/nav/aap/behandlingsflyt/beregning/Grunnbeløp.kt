@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.beregning
 
-import no.nav.aap.behandlingsflyt.beregning.Grunnbeløp.Element.Companion.finnGrunnlagsfaktor
+import no.nav.aap.behandlingsflyt.beregning.Grunnbeløp.Element.Companion.finnGUnit
 import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.Beløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.GUnit
 import java.math.BigDecimal
@@ -63,13 +63,13 @@ internal object Grunnbeløp {
                     .first { år >= Year.from(it.dato) }
             }
 
-            fun Iterable<Element>.finnGrunnlagsfaktor(år: Year, beløp: Beløp): GUnit {
+            fun Iterable<Element>.finnGUnit(år: Year, beløp: Beløp): GUnit {
                 return GUnit(beløp.deltPå(finnGrunnbeløpForÅr(år).gjennomsnittBeløp))
             }
         }
     }
 
-    internal fun finnGrunnlagsfaktor(år: Year, beløp: Beløp): GUnit {
-        return grunnbeløp.finnGrunnlagsfaktor(år, beløp)
+    internal fun finnGUnit(år: Year, beløp: Beløp): GUnit {
+        return grunnbeløp.finnGUnit(år, beløp)
     }
 }

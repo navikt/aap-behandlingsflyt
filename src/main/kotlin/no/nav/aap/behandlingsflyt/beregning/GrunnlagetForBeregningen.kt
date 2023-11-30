@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.beregning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.GUnit
 import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.adapter.InntektPerÅr
-import java.math.BigDecimal
 import java.util.*
 
 class GrunnlagetForBeregningen(
@@ -12,13 +11,14 @@ class GrunnlagetForBeregningen(
         inntekter.toSortedSet(Comparator.comparing(InntektPerÅr::år).reversed())
 
     init {
-        require(inntekter.size == 3) { "Må oppgi tre inntekter" }
-        require(inntekter.size == this.inntekter.size) { "Flere inntekter oppgitt for samme år" }
+        require(this.inntekter.size == 3) { "Må oppgi tre inntekter" }
+        require(this.inntekter.first().år == this.inntekter.last().år.plusYears(2)) { "Inntektene må representere tre sammenhengende år" }
+        require(this.inntekter.size == inntekter.size) { "Flere inntekter oppgitt for samme år" }
     }
 
     fun beregnGrunnlaget(): GUnit {
         val gUnits = inntekter.map { inntekt ->
-            Grunnbeløp.finnGrunnlagsfaktor(inntekt.år, inntekt.beløp)
+            Grunnbeløp.finnGUnit(inntekt.år, inntekt.beløp)
         }
 
         val gUnitsBegrensetTil6GUnits = gUnits.map(GUnit::begrensTil6GUnits)
