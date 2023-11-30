@@ -24,6 +24,9 @@ import no.nav.aap.behandlingsflyt.behandling.dokumenter.JournalpostId
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.InitTestDatabase
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
+import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.Beløp
+import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.adapter.InntektPerÅr
+import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.adapter.InntektRegisterMock
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.adapter.PersonRegisterMock
@@ -51,8 +54,10 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.Year
 
 class FlytOrkestratorTest {
 
@@ -236,6 +241,16 @@ class FlytOrkestratorTest {
         // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
         PersonRegisterMock.konstruer(ident, Personopplysning(Fødselsdato(LocalDate.now().minusYears(18))))
         YrkesskadeRegisterMock.konstruer(ident = ident, periode = periode)
+        InntektRegisterMock.konstruer(
+            ident = ident, inntekterPerÅr = listOf(
+                InntektPerÅr(
+                    Year.now().minusYears(3),
+                    Beløp(
+                        BigDecimal(1000000)
+                    )
+                )
+            )
+        )
 
         // Sender inn en søknad
         hendelsesMottak.håndtere(ident, DokumentMottattPersonHendelse(periode = periode))

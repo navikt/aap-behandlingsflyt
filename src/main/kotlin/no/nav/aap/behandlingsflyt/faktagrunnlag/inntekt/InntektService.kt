@@ -17,8 +17,6 @@ class InntektService private constructor(
     private val repository: InntektGrunnlagRepository
 ) : Grunnlag {
 
-    private val behov = InntektsBehov()
-
     companion object : Grunnlagkonstruktør {
         override fun konstruer(connection: DBConnection): InntektService {
             return InntektService(
@@ -32,13 +30,14 @@ class InntektService private constructor(
     override fun oppdater(kontekst: FlytKontekst): Boolean {
         val behandlingId = kontekst.behandlingId
         val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
-        if (sykdomGrunnlag == null || sykdomGrunnlag.sykdomsvurdering == null) {
+        if (sykdomGrunnlag?.sykdomsvurdering?.nedsattArbeidsevneDato == null) {
             return false
         }
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
 
-        val nedsettelsesDato = sykdomGrunnlag.sykdomsvurdering!!.nedsattArbeidsevneDato
-        val inntektsBehov = behov.utled(Input(nedsettelsesDato = nedsettelsesDato!!))
+        val nedsettelsesDato = sykdomGrunnlag.sykdomsvurdering.nedsattArbeidsevneDato
+        val behov = InntektsBehov(Input(nedsettelsesDato = nedsettelsesDato))
+        val inntektsBehov = behov.utledAlleRelevanteÅr()
         val sak = sakService.hent(kontekst.sakId)
 
         val register = InntektRegisterMock

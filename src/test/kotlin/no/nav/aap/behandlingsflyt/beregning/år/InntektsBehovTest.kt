@@ -6,12 +6,11 @@ import java.time.LocalDate
 import java.time.Year
 
 class InntektsBehovTest {
-    private val behovUtleder = InntektsBehov()
 
     @Test
     fun `skal utlede de tre forutgående kalenderårene fra nedsettelsesdato`() {
         val nedsettelsesDato = LocalDate.now().minusYears(3)
-        val relevanteÅr = behovUtleder.utled(Input(nedsettelsesDato))
+        val relevanteÅr = InntektsBehov(Input(nedsettelsesDato)).utledAlleRelevanteÅr()
 
         val nedsattYear = Year.of(nedsettelsesDato.year)
 
@@ -27,7 +26,7 @@ class InntektsBehovTest {
     fun `skal utlede de tre forutgående kalenderårene fra nedsettelsesdato og tre forutgående kalenderårene fra ytterligere nedsattdato`() {
         val nedsettelsesDato = LocalDate.now().minusYears(6)
         val ytterligereNedsattDato = LocalDate.now().minusYears(2)
-        val relevanteÅr = behovUtleder.utled(Input(nedsettelsesDato, ytterligereNedsattDato))
+        val relevanteÅr = InntektsBehov(Input(nedsettelsesDato, ytterligereNedsattDato)).utledAlleRelevanteÅr()
 
         val nedsattYear = Year.of(nedsettelsesDato.year)
         val ytterligereNedsattYear = Year.of(ytterligereNedsattDato.year)

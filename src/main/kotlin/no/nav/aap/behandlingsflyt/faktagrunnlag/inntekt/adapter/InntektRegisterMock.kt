@@ -10,11 +10,11 @@ object InntektRegisterMock {
     fun innhent(identer: List<Ident>, år: Set<Year>): Set<InntektPerÅr> {
         val resultat: MutableSet<InntektPerÅr> = mutableSetOf()
         for (year in år) {
-            val innhentedeInntekter = inntekter.filter { entry -> identer.contains(entry.key) }
-                .flatMap { entry -> entry.value.filter { år.contains(year) } }
-                .toSortedSet()
-
-            val summerteInntekter = innhentedeInntekter.sumOf { it.beløp.verdi() }
+            val relevanteIdenter = inntekter.filter { entry -> identer.contains(entry.key) }
+            val summerteInntekter = relevanteIdenter
+                .flatMap { it.value }
+                .filter { it.år == year }
+                .sumOf { it.beløp.verdi() }
 
             resultat.add(InntektPerÅr(year, Beløp(summerteInntekter)))
         }
