@@ -64,7 +64,7 @@ internal object Grunnbeløp {
             }
 
             fun Iterable<Element>.finnGrunnlagsfaktor(år: Year, beløp: Beløp): GUnit {
-                return GUnit(beløp.verdi() / finnGrunnbeløpForÅr(år).gjennomsnittBeløp.verdi())
+                return GUnit(beløp.deltPå(finnGrunnbeløpForÅr(år).gjennomsnittBeløp))
             }
         }
     }

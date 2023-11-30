@@ -9,4 +9,8 @@ class Beløp(verdi: BigDecimal) {
     fun verdi(): BigDecimal {
         return verdi
     }
+
+    fun deltPå(nevner: Beløp): BigDecimal {
+        return this.verdi.divide(nevner.verdi, RoundingMode.HALF_UP)
+    }
 }
