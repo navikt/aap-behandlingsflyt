@@ -35,7 +35,10 @@ class StegOrkestrator(private val connection: DBConnection, private val aktivtSt
                 leggTilAvklaringsbehov(behandling, resultat)
             }
 
-            if (!resultat.kanFortsette() || resultat.erTilbakeføring() || gjeldendeStegStatus == StegStatus.AVSLUTTER) {
+            if (!resultat.kanFortsette() || resultat.erTilbakeføring()) {
+                return resultat
+            }
+            if (gjeldendeStegStatus == StegStatus.AVSLUTTER) {
                 return resultat
             }
             gjeldendeStegStatus = gjeldendeStegStatus.neste()
