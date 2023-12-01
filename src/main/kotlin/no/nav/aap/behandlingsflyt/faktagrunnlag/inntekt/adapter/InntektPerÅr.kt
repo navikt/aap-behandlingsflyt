@@ -1,9 +1,17 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.adapter
 
+import no.nav.aap.behandlingsflyt.beregning.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.Beløp
+import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.GUnit
 import java.time.Year
 
 class InntektPerÅr(val år: Year, val beløp: Beløp) : Comparable<InntektPerÅr> {
+    constructor(år: Int, beløp: Beløp) : this(Year.of(år), beløp)
+
+    fun gUnit(): GUnit {
+        return Grunnbeløp.finnGUnit(år, beløp)
+    }
+
     override fun compareTo(other: InntektPerÅr): Int {
         return this.år.compareTo(other.år)
     }
@@ -25,5 +33,4 @@ class InntektPerÅr(val år: Year, val beløp: Beløp) : Comparable<InntektPerÅ
         result = 31 * result + beløp.hashCode()
         return result
     }
-
 }

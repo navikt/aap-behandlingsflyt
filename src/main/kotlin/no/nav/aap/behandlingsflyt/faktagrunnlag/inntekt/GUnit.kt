@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt
 
+import no.nav.aap.behandlingsflyt.beregning.Prosent
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -8,6 +9,9 @@ import java.math.RoundingMode
  */
 class GUnit(verdi: BigDecimal) : Comparable<GUnit> {
     private val verdi = verdi.setScale(10, RoundingMode.HALF_UP)
+
+    constructor(intVerdi: Int) : this(BigDecimal(intVerdi))
+    constructor(stringVerdi: String) : this(BigDecimal(stringVerdi))
 
     companion object {
         fun gjennomsnittlig(gUnits: List<GUnit>): GUnit {
@@ -22,6 +26,14 @@ class GUnit(verdi: BigDecimal) : Comparable<GUnit> {
 
     fun verdi(): BigDecimal {
         return verdi
+    }
+
+    fun pluss(addend: GUnit): GUnit {
+        return GUnit(this.verdi + addend.verdi)
+    }
+
+    fun multiplisert(faktor: Prosent): GUnit {
+        return GUnit(faktor.multiplisert(this.verdi))
     }
 
     fun begrensTil6GUnits(): GUnit {
