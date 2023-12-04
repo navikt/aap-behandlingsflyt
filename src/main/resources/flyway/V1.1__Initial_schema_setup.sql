@@ -174,10 +174,12 @@ CREATE UNIQUE INDEX UIDX_SYKDOM_VURDERING_DOKUMENTER ON SYKDOM_VURDERING_DOKUMEN
 
 CREATE TABLE YRKESSKADE_VURDERING
 (
-    ID               BIGSERIAL NOT NULL PRIMARY KEY,
-    begrunnelse      text      null,
-    arsakssammenheng boolean   not null,
-    skadedato        date      null
+    ID                   BIGSERIAL      NOT NULL PRIMARY KEY,
+    BEGRUNNELSE          TEXT           NULL,
+    ARSAKSSAMMENHENG     BOOLEAN        NOT NULL,
+    SKADEDATO            DATE           NULL,
+    ANDEL_AV_NEDSETTELSE SMALLINT       NULL,
+    ANTATT_ARLIG_INNTEKT NUMERIC(19, 2) NULL
 );
 CREATE TABLE YRKESSKADE_VURDERING_DOKUMENTER
 (

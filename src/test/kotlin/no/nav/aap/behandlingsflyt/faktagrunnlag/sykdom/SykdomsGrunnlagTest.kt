@@ -3,6 +3,8 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom
 import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.NedreGrense
 import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.Yrkesskadevurdering
+import no.nav.aap.behandlingsflyt.beregning.Prosent
+import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.Beløp
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -53,7 +55,9 @@ class SykdomsGrunnlagTest {
                 begrunnelse = "",
                 dokumenterBruktIVurdering = emptyList(),
                 erÅrsakssammenheng = true,
-                skadetidspunkt = LocalDate.now()
+                skadetidspunkt = LocalDate.now(),
+                andelAvNedsettelse = Prosent.`100_PROSENT`,
+                antattÅrligInntekt = Beløp(1000)
             ),
             sykdomsvurdering = Sykdomsvurdering(
                 begrunnelse = "",
@@ -76,7 +80,9 @@ class SykdomsGrunnlagTest {
                 begrunnelse = "",
                 dokumenterBruktIVurdering = emptyList(),
                 erÅrsakssammenheng = true,
-                skadetidspunkt = LocalDate.now()
+                skadetidspunkt = LocalDate.now(),
+                andelAvNedsettelse = Prosent.`100_PROSENT`,
+                antattÅrligInntekt = Beløp(1000)
             ),
             sykdomsvurdering = Sykdomsvurdering(
                 begrunnelse = "",
@@ -99,7 +105,9 @@ class SykdomsGrunnlagTest {
                 begrunnelse = "",
                 dokumenterBruktIVurdering = emptyList(),
                 erÅrsakssammenheng = false,
-                skadetidspunkt = LocalDate.now()
+                skadetidspunkt = LocalDate.now(),
+                andelAvNedsettelse = Prosent.`100_PROSENT`,
+                antattÅrligInntekt = Beløp(1000)
             ),
             sykdomsvurdering = Sykdomsvurdering(
                 begrunnelse = "",
@@ -122,7 +130,9 @@ class SykdomsGrunnlagTest {
                 begrunnelse = "",
                 dokumenterBruktIVurdering = emptyList(),
                 erÅrsakssammenheng = false,
-                skadetidspunkt = LocalDate.now()
+                skadetidspunkt = LocalDate.now(),
+                andelAvNedsettelse = Prosent.`100_PROSENT`,
+                antattÅrligInntekt = Beløp(1000)
             ),
             sykdomsvurdering = Sykdomsvurdering(
                 begrunnelse = "",

@@ -5,8 +5,10 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.behandling.dokumenter.JournalpostId
+import no.nav.aap.behandlingsflyt.beregning.Prosent
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.Row
+import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.Beløp
 
 class SykdomRepository(private val connection: DBConnection) {
 
@@ -243,10 +245,12 @@ class SykdomRepository(private val connection: DBConnection) {
             }
             setRowMapper { row ->
                 Yrkesskadevurdering(
-                    row.getString("begrunnelse"),
+                    row.getString("BEGRUNNELSE"),
                     hentYrkesskadeDokumenter(yrkesskadeId),
-                    row.getBoolean("arsakssammenheng"),
-                    row.getLocalDateOrNull("skadedato")
+                    row.getBoolean("ARSAKSSAMMENHENG"),
+                    row.getLocalDateOrNull("SKADEDATO"),
+                    row.getIntOrNull("ANDEL_AV_NEDSETTELSE")?.let(::Prosent),
+                    row.getBigDecimalOrNull("ANTATT_ARLIG_INNTEKT")?.let(::Beløp)
                 )
             }
         }

@@ -30,6 +30,26 @@ class Row(private val resultSet: ResultSet) {
         return resultSet.getString(columnLabel)
     }
 
+    fun getInt(columnLabel: String): Int {
+        val int: Int? = getIntOrNull(columnLabel)
+        requireNotNull(int)
+        return int
+    }
+
+    fun getIntOrNull(columnLabel: String): Int? {
+        val int = resultSet.getInt(columnLabel)
+        if (int != 0) {
+            return int
+        }
+
+        val any: Any? = resultSet.getObject(columnLabel)
+        if (any == null) {
+            return null
+        }
+
+        return 0
+    }
+
     fun getLong(columnLabel: String): Long {
         val long: Long? = getLongOrNull(columnLabel)
         requireNotNull(long)

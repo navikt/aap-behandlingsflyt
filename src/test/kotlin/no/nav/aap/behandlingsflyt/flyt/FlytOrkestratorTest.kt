@@ -130,7 +130,9 @@ class FlytOrkestratorTest {
                             begrunnelse = "Er syk nok",
                             dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                             erÅrsakssammenheng = false,
-                            skadetidspunkt = null
+                            skadetidspunkt = null,
+                            andelAvNedsettelse = null,
+                            antattÅrligInntekt = null
                         )
                     )
                 )
@@ -294,7 +296,9 @@ class FlytOrkestratorTest {
                             begrunnelse = "Er ikke årsakssammenheng mellom yrkesskaden og nedsettelsen i arbeidsevne",
                             dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                             erÅrsakssammenheng = false,
-                            skadetidspunkt = null
+                            skadetidspunkt = null,
+                            andelAvNedsettelse = null,
+                            antattÅrligInntekt = null
                         )
                     )
                 )

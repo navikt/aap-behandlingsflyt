@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom
 
 import no.nav.aap.behandlingsflyt.behandling.dokumenter.JournalpostId
+import no.nav.aap.behandlingsflyt.beregning.Prosent
+import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.Beløp
 import java.time.LocalDate
 
 data class Sykdomsvurdering(
@@ -20,5 +22,7 @@ data class Yrkesskadevurdering(
     val begrunnelse: String,
     val dokumenterBruktIVurdering: List<JournalpostId>,
     val erÅrsakssammenheng: Boolean,
-    val skadetidspunkt: LocalDate?
+    val skadetidspunkt: LocalDate?,
+    val andelAvNedsettelse: Prosent?,
+    val antattÅrligInntekt: Beløp?
 )
