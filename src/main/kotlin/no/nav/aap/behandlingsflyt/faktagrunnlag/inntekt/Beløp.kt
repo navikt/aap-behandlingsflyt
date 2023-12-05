@@ -13,7 +13,7 @@ class Beløp(verdi: BigDecimal) {
         return verdi
     }
 
-    fun divitert(nevner: Beløp): BigDecimal {
-        return this.verdi.divide(nevner.verdi, RoundingMode.HALF_UP)
+    fun divitert(nevner: Beløp, scale: Int = 10): BigDecimal {
+        return this.verdi.divide(nevner.verdi, scale, RoundingMode.HALF_UP)
     }
 }

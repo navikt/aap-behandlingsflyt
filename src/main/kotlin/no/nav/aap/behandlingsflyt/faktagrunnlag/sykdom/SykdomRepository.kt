@@ -80,9 +80,9 @@ class SykdomRepository(private val connection: DBConnection) {
 
         val query = """
             INSERT INTO YRKESSKADE_VURDERING 
-            (begrunnelse, arsakssammenheng, skadedato)
+            (BEGRUNNELSE, ARSAKSSAMMENHENG, SKADEDATO, ANDEL_AV_NEDSETTELSE, ANTATT_ARLIG_INNTEKT)
             VALUES
-            (?, ?, ?)
+            (?, ?, ?, ?, ?)
         """.trimIndent()
 
         val id = connection.executeReturnKey(query) {
@@ -90,6 +90,8 @@ class SykdomRepository(private val connection: DBConnection) {
                 setString(1, vurdering.begrunnelse)
                 setBoolean(2, vurdering.erÅrsakssammenheng)
                 setLocalDate(3, vurdering.skadetidspunkt)
+                setInt(4, vurdering.andelAvNedsettelse?.prosentverdi())
+                setBigDecimal(5, vurdering.antattÅrligInntekt?.verdi())
             }
         }
 
