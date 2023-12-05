@@ -16,4 +16,22 @@ class Beløp(verdi: BigDecimal) {
     fun divitert(nevner: Beløp, scale: Int = 10): BigDecimal {
         return this.verdi.divide(nevner.verdi, scale, RoundingMode.HALF_UP)
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Beløp
+
+        return verdi == other.verdi
+    }
+
+    override fun hashCode(): Int {
+        return verdi.hashCode() ?: 0
+    }
+
+    override fun toString(): String {
+        return "Beløp(verdi=$verdi)"
+    }
+
 }
