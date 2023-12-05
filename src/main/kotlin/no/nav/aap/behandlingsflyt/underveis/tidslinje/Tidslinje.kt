@@ -10,9 +10,7 @@ class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>>) {
     private val segmenter: NavigableSet<Segment<T>> = TreeSet()
 
     init {
-        for (segment in initSegmenter) {
-            leggTilPeriode(segment, segmenter)
-        }
+        segmenter.addAll(initSegmenter)
         // Sjekk etter overlapp
         validerIkkeOverlapp()
     }
