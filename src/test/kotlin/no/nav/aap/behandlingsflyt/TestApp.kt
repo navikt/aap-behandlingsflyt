@@ -8,7 +8,7 @@ import org.testcontainers.containers.PostgreSQLContainer
 fun main() {
     val postgres = PostgreSQLContainer<Nothing>("postgres:16")
     postgres.start()
-
+    Thread.sleep(10000);
     embeddedServer(Netty, port = 8080) {
         server(
             DbConfig(
