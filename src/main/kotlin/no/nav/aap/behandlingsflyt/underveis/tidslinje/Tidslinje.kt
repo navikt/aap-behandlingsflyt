@@ -3,7 +3,10 @@ package no.nav.aap.behandlingsflyt.underveis.tidslinje
 import no.nav.aap.behandlingsflyt.Periode
 import java.util.*
 
-class Tidslinje<T>(initSegmenter: List<Segment<T>>) {
+class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>>) {
+
+    constructor(initSegmenter: List<Segment<T>>) : this(TreeSet(initSegmenter))
+
     private val segmenter: NavigableSet<Segment<T>> = TreeSet()
 
     init {
@@ -38,7 +41,7 @@ class Tidslinje<T>(initSegmenter: List<Segment<T>>) {
             leggTilPeriode(segment, nySammensetning)
         }
 
-        return Tidslinje(nySammensetning.toList())
+        return Tidslinje(nySammensetning)
     }
 
     fun compress(): Tidslinje<T> {
@@ -58,7 +61,7 @@ class Tidslinje<T>(initSegmenter: List<Segment<T>>) {
                 }
             }
         }
-        return Tidslinje(compressedSegmenter.toList())
+        return Tidslinje(compressedSegmenter)
     }
 
     private fun leggTilPeriode(segment: Segment<T>, segments: NavigableSet<Segment<T>>) {
