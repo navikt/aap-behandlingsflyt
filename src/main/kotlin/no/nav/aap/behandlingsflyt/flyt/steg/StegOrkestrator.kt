@@ -30,11 +30,11 @@ class StegOrkestrator(private val connection: DBConnection, private val aktivtSt
             if (gjeldendeStegStatus == StegStatus.AVSLUTTER) {
                 return resultat
             }
-            gjeldendeStegStatus = gjeldendeStegStatus.neste()
 
             if (!resultat.kanFortsette() || resultat.erTilbakeføring()) {
                 return resultat
             }
+            gjeldendeStegStatus = gjeldendeStegStatus.neste()
         }
     }
 
