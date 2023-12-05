@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.Behandling
 import no.nav.aap.behandlingsflyt.behandling.BehandlingFlytRepository
 import no.nav.aap.behandlingsflyt.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.behandling.StegTilstand
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
@@ -28,14 +27,6 @@ class StegOrkestrator(private val connection: DBConnection, private val aktivtSt
         while (true) {
             val resultat = utførTilstandsEndring(kontekst, gjeldendeStegStatus, behandling)
 
-            if (resultat.funnetAvklaringsbehov().isNotEmpty()) {
-                log.info(
-                    "Fant avklaringsbehov: {}",
-                    resultat.funnetAvklaringsbehov()
-                )
-                leggTilAvklaringsbehov(behandling, resultat)
-            }
-
             if (gjeldendeStegStatus == StegStatus.AVSLUTTER) {
                 return resultat
             }
@@ -48,13 +39,11 @@ class StegOrkestrator(private val connection: DBConnection, private val aktivtSt
     }
 
     private fun leggTilAvklaringsbehov(
-        behandling: Behandling,
+        behandlingId: BehandlingId,
         resultat: Transisjon
     ) {
         val definisjoner = resultat.funnetAvklaringsbehov()
-        //TODO: Skal dette gjøres utenfor stegene som her, eller i stegene?
-        // Dette er logikk som orkestratoren skal eie
-        avklaringsbehovRepository.leggTilAvklaringsbehov(behandling.id, definisjoner, aktivtSteg.type())
+        avklaringsbehovRepository.leggTilAvklaringsbehov(behandlingId, definisjoner, aktivtSteg.type())
     }
 
     fun utførTilbakefør(
@@ -112,7 +101,18 @@ class StegOrkestrator(private val connection: DBConnection, private val aktivtSt
         val steg = flytSteg.konstruer(connection)
         val stegResultat = steg.utfør(kontekst)
 
-        return stegResultat.transisjon()
+        val resultat = stegResultat.transisjon()
+
+        if (resultat.funnetAvklaringsbehov().isNotEmpty()) {
+            log.info(
+                "Fant avklaringsbehov: {}",
+                resultat.funnetAvklaringsbehov()
+            )
+            leggTilAvklaringsbehov(kontekst.behandlingId, resultat)
+        }
+
+
+        return resultat
     }
 
     private fun harAvklaringspunkt(
