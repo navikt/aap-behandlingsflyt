@@ -2,8 +2,10 @@ package no.nav.aap.behandlingsflyt.underveis.tidslinje
 
 import no.nav.aap.behandlingsflyt.Periode
 import java.time.LocalDate
+import java.util.*
 
-class Segment<T>(val periode: Periode, val verdi: T) : Comparable<Segment<T>> {
+
+class Segment<T>(val periode: Periode, val verdi: T?) : Comparable<Segment<T>> {
     fun overlapper(segment: Segment<T>): Boolean {
         return periode.overlapper(segment.periode)
     }
@@ -33,6 +35,22 @@ class Segment<T>(val periode: Periode, val verdi: T) : Comparable<Segment<T>> {
         return periode.tom == other.periode.fom.minusDays(1) || other.periode.tom == periode.fom.minusDays(1)
     }
 
+    /** Returnerer deler av this som ikke overlapper i #annen.  */
+    fun except(annen: Segment<T>): NavigableSet<Periode> {
+        if (!this.periode.overlapper(annen.periode)) {
+            return TreeSet(listOf(periode))
+        }
+        val resultat: NavigableSet<Periode> = TreeSet()
+        if (periode.fom.isBefore(annen.periode.fom)) {
+            resultat.add(Periode(periode.fom, min(periode.tom, annen.periode.fom.minusDays(1))))
+        }
+        if (periode.tom.isAfter(annen.periode.tom)) {
+            resultat.add(Periode(max(periode.fom, annen.periode.tom.plusDays(1)), periode.tom))
+        }
+        return resultat
+    }
+
+
     override fun compareTo(other: Segment<T>): Int {
         return this.periode.compareTo(other.periode)
     }
@@ -58,4 +76,32 @@ class Segment<T>(val periode: Periode, val verdi: T) : Comparable<Segment<T>> {
         result = 31 * result + (verdi?.hashCode() ?: 0)
         return result
     }
+
+    fun splittEtter(annen: Segment<T>): NavigableSet<Periode> {
+        if (periode == annen.periode) {
+            return TreeSet(listOf(this.periode))
+        }
+
+        val resultat: NavigableSet<Periode> = TreeSet()
+        resultat.addAll(except(annen))
+        val overlapp = periode.overlapp(annen.periode)
+        if (overlapp != null) {
+            resultat.add(overlapp)
+        }
+        return resultat
+    }
+}
+
+internal fun min(dato: LocalDate, dato1: LocalDate): LocalDate {
+    if (dato.isBefore(dato1)) {
+        return dato
+    }
+    return dato1
+}
+
+internal fun max(dato: LocalDate, dato1: LocalDate): LocalDate {
+    if (dato.isAfter(dato1)) {
+        return dato
+    }
+    return dato1
 }

@@ -66,8 +66,23 @@ class TidslinjeTest {
         val tidslinje = Tidslinje(listOf(firstSegment))
         val tidslinje1 = Tidslinje(listOf(secondSegment))
 
-        val mergetTidslinje = tidslinje.mergeMed(tidslinje1)
+        val mergetTidslinje = tidslinje.mergeMed(tidslinje1).compress()
 
         assertThat(mergetTidslinje.segmenter()).containsExactly(secondSegment, expectedFirstSegment)
     }
+
+    @Test
+    fun `skal kunne styre prioritet mellom tidslinjer`() {
+        val firstSegment = Segment(Periode(LocalDate.now().minusDays(2), LocalDate.now().plusDays(10)), Beløp(100))
+        val secondSegment = Segment(Periode(LocalDate.now().minusDays(10), LocalDate.now().minusDays(1)), Beløp(200))
+        val expectedSecondSegment = Segment(Periode(LocalDate.now().minusDays(10), LocalDate.now().minusDays(3)), Beløp(200))
+        val tidslinje = Tidslinje(listOf(firstSegment))
+        val tidslinje1 = Tidslinje(listOf(secondSegment))
+
+        val mergetTidslinje = tidslinje.mergeMed(tidslinje1, PrioriteVenstreSide()).compress()
+
+        assertThat(mergetTidslinje.segmenter()).containsExactly(expectedSecondSegment, firstSegment)
+    }
+
+
 }

@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt
 
+import no.nav.aap.behandlingsflyt.underveis.tidslinje.max
+import no.nav.aap.behandlingsflyt.underveis.tidslinje.min
 import java.time.LocalDate
 
 class Periode(val fom: LocalDate, val tom: LocalDate) : Comparable<Periode> {
@@ -50,5 +52,15 @@ class Periode(val fom: LocalDate, val tom: LocalDate) : Comparable<Periode> {
 
     fun jsonValue(): String {
         return "$fom/$tom"
+    }
+
+    fun overlapp(periode: Periode): Periode? {
+        return if (!this.overlapper(periode)) {
+            null
+        } else if (this == periode) {
+            this
+        } else {
+            Periode(max(fom, periode.fom), min(tom, periode.tom))
+        }
     }
 }

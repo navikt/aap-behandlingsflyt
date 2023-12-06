@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.underveis.tidslinje
 
-import no.nav.aap.behandlingsflyt.Periode
 import java.util.*
 
 class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>>) {
@@ -33,10 +32,10 @@ class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>>) {
      * Merge av to tidslinjer, prioriterer verdier fra den som merges over den som det kalles på
      * oppretter en tredje slik at orginale verdier bevares
      */
-    fun mergeMed(tidslinje: Tidslinje<T>): Tidslinje<T> {
+    fun mergeMed(tidslinje: Tidslinje<T>, sammenslåer: SegmentSammenslåer<T> = PrioriterHøyreSide()): Tidslinje<T> {
         val nySammensetning: NavigableSet<Segment<T>> = TreeSet(segmenter)
         for (segment in tidslinje.segmenter) {
-            leggTilPeriode(segment, nySammensetning)
+            leggTilPeriode(segment, nySammensetning, sammenslåer)
         }
 
         return Tidslinje(nySammensetning)
@@ -62,40 +61,37 @@ class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>>) {
         return Tidslinje(compressedSegmenter)
     }
 
-    private fun leggTilPeriode(segment: Segment<T>, segments: NavigableSet<Segment<T>>) {
+    private fun leggTilPeriode(
+        segment: Segment<T>,
+        segments: NavigableSet<Segment<T>>,
+        sammenslåer: SegmentSammenslåer<T>
+    ) {
         if (segments.any { vp -> vp.periode.overlapper(segment.periode) }) {
             // Overlapper og må justere innholdet i listen
-            val justertePerioder = segments
-                .filter { vp -> vp.periode.overlapper(segment.periode) }
-                .filter { vp ->
-                    vp.periode.tom > segment.periode.tom || vp.periode.fom < segment.periode.fom
-                }
-                .map { vp ->
-                    Segment(justerPeriode(vp.periode, segment.periode), vp.verdi)
-                }
+            val skalHåndteres = segments
+                .filter { eksisterendeSegment -> eksisterendeSegment.periode.overlapper(segment.periode) }
+                .toSet()
 
-            segments.removeIf { vp -> vp.periode.overlapper(segment.periode) }
-            segments.addAll(justertePerioder)
-            segments.add(segment)
+            segments.removeAll(skalHåndteres)
+
+            skalHåndteres.forEach { eksisterendeSegment ->
+                (eksisterendeSegment.splittEtter(segment) + segment.except(eksisterendeSegment)).forEach {
+                    val left = if (eksisterendeSegment.periode.overlapper(it)) {
+                        eksisterendeSegment
+                    } else {
+                        null
+                    }
+                    val right = if (segment.periode.overlapper(it)) {
+                        segment
+                    } else {
+                        null
+                    }
+                    segments.add(sammenslåer.sammenslå(it, left, right))
+                }
+            }
         } else {
             segments.add(segment)
         }
     }
 
-    private fun justerPeriode(leftPeriode: Periode, rightPeriode: Periode): Periode {
-        if (!leftPeriode.overlapper(rightPeriode)) {
-            return leftPeriode
-        }
-        val fom = if (rightPeriode.fom.isBefore(leftPeriode.fom)) {
-            rightPeriode.tom.plusDays(1)
-        } else {
-            leftPeriode.fom
-        }
-        val tom = if (rightPeriode.tom.isAfter(leftPeriode.tom)) {
-            rightPeriode.fom.minusDays(1)
-        } else {
-            leftPeriode.tom
-        }
-        return Periode(fom, tom)
-    }
 }
