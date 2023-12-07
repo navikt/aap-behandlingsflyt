@@ -78,4 +78,8 @@ class Periode(val fom: LocalDate, val tom: LocalDate) : Comparable<Periode> {
         }
         return resultat
     }
+
+    fun inneholder(dato: LocalDate): Boolean {
+        return overlapp(Periode(dato, dato)) != null
+    }
 }

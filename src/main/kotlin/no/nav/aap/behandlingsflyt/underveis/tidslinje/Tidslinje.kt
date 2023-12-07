@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.underveis.tidslinje
 
+import java.time.LocalDate
 import java.util.*
 
 class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>>) {
@@ -24,8 +25,8 @@ class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>>) {
         }
     }
 
-    fun segmenter(): List<Segment<T>> {
-        return segmenter.toList()
+    fun segmenter(): SortedSet<Segment<T>> {
+        return segmenter.toSortedSet()
     }
 
     /**
@@ -60,6 +61,14 @@ class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>>) {
         return Tidslinje(nySammensetning)
     }
 
+    fun <V> kryss(other: Tidslinje<V>) : Tidslinje<T> {
+        return kombiner(other, InnerJoinVenstre())
+    }
+
+    /**
+     * Komprimerer tidslinjen
+     * - Slår sammen segmetner hvor verdien er identisk (benytter equals for sjekk)
+     */
     fun komprimer(): Tidslinje<T> {
         val compressedSegmenter: NavigableSet<Segment<T>> = TreeSet()
         segmenter.forEach { segment ->
@@ -78,5 +87,12 @@ class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>>) {
             }
         }
         return Tidslinje(compressedSegmenter)
+    }
+
+    /**
+     * Henter segmentet som inneholder datoen
+     */
+    fun segment(dato: LocalDate): Segment<T>? {
+        return segmenter.firstOrNull { segment -> segment.inneholder(dato) }
     }
 }
