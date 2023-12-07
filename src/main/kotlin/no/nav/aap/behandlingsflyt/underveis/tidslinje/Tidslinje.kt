@@ -46,8 +46,8 @@ class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>>) {
         while (periodeIterator.hasNext()) {
             val periode = periodeIterator.next()
 
-            val left =
-                this.segmenter.firstOrNull { segment -> segment.periode.overlapper(periode) }?.tilpassetPeriode(periode)
+            val left = this.segmenter.firstOrNull { segment -> segment.periode.overlapper(periode) }
+                ?.tilpassetPeriode(periode)
             val right = other.segmenter.firstOrNull { segment -> segment.periode.overlapper(periode) }
                 ?.tilpassetPeriode(periode)
 
