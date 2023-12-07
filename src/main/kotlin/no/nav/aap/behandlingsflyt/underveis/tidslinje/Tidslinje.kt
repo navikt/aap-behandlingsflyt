@@ -32,7 +32,7 @@ class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>>) {
      * Merge av to tidslinjer, prioriterer verdier fra den som merges over den som det kalles på
      * oppretter en tredje slik at orginale verdier bevares
      */
-    fun mergeMed(tidslinje: Tidslinje<T>, sammenslåer: SegmentSammenslåer<T> = PrioriterHøyreSide()): Tidslinje<T> {
+    fun kombiner(tidslinje: Tidslinje<T>, sammenslåer: SegmentSammenslåer<T> = PrioriterHøyreSide()): Tidslinje<T> {
         val nySammensetning: NavigableSet<Segment<T>> = TreeSet(segmenter)
         for (segment in tidslinje.segmenter) {
             leggTilPeriode(segment, nySammensetning, sammenslåer)
@@ -41,7 +41,7 @@ class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>>) {
         return Tidslinje(nySammensetning)
     }
 
-    fun compress(): Tidslinje<T> {
+    fun komprimer(): Tidslinje<T> {
         val compressedSegmenter: NavigableSet<Segment<T>> = TreeSet()
         segmenter.forEach { segment ->
             if (compressedSegmenter.isEmpty()) {

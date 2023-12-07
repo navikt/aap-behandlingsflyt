@@ -34,7 +34,7 @@ class TidslinjeTest {
         )
 
         assertThat(tidslinje.segmenter()).containsExactly(secondSegment, firstSegment)
-        assertThat(tidslinje.compress().segmenter()).containsExactly(
+        assertThat(tidslinje.komprimer().segmenter()).containsExactly(
             Segment(
                 Periode(
                     secondSegment.periode.fom,
@@ -53,7 +53,7 @@ class TidslinjeTest {
         val tidslinje = Tidslinje(listOf(firstSegment))
         val tidslinje1 = Tidslinje(listOf(secondSegment))
 
-        val mergetTidslinje = tidslinje.mergeMed(tidslinje1)
+        val mergetTidslinje = tidslinje.kombiner(tidslinje1)
 
         assertThat(mergetTidslinje.segmenter()).containsExactly(secondSegment, firstSegment)
     }
@@ -66,7 +66,7 @@ class TidslinjeTest {
         val tidslinje = Tidslinje(listOf(firstSegment))
         val tidslinje1 = Tidslinje(listOf(secondSegment))
 
-        val mergetTidslinje = tidslinje.mergeMed(tidslinje1).compress()
+        val mergetTidslinje = tidslinje.kombiner(tidslinje1).komprimer()
 
         assertThat(mergetTidslinje.segmenter()).containsExactly(secondSegment, expectedFirstSegment)
     }
@@ -79,7 +79,7 @@ class TidslinjeTest {
         val tidslinje = Tidslinje(listOf(firstSegment))
         val tidslinje1 = Tidslinje(listOf(secondSegment))
 
-        val mergetTidslinje = tidslinje.mergeMed(tidslinje1, PrioriteVenstreSide()).compress()
+        val mergetTidslinje = tidslinje.kombiner(tidslinje1, PrioriteVenstreSide()).komprimer()
 
         assertThat(mergetTidslinje.segmenter()).containsExactly(expectedSecondSegment, firstSegment)
     }
