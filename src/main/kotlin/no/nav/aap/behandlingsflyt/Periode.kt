@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt
 import no.nav.aap.behandlingsflyt.underveis.tidslinje.max
 import no.nav.aap.behandlingsflyt.underveis.tidslinje.min
 import java.time.LocalDate
+import java.util.*
 
 class Periode(val fom: LocalDate, val tom: LocalDate) : Comparable<Periode> {
 
@@ -62,5 +63,19 @@ class Periode(val fom: LocalDate, val tom: LocalDate) : Comparable<Periode> {
         } else {
             Periode(max(fom, periode.fom), min(tom, periode.tom))
         }
+    }
+
+    fun minus(annen: Periode): NavigableSet<Periode> {
+        if (!this.overlapper(annen)) {
+            return TreeSet(listOf(this))
+        }
+        val resultat: NavigableSet<Periode> = TreeSet()
+        if (fom.isBefore(annen.fom)) {
+            resultat.add(Periode(fom, min(tom, annen.fom.minusDays(1))))
+        }
+        if (tom.isAfter(annen.tom)) {
+            resultat.add(Periode(max(fom, annen.tom.plusDays(1)), tom))
+        }
+        return resultat
     }
 }

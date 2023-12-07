@@ -147,7 +147,7 @@ class UtregningSammenslåer : SegmentSammenslåer<Beløp, Prosent, Utbetaling> {
         periode: Periode,
         venstreSegment: Segment<Beløp>?,
         høyreSegment: Segment<Prosent>?
-    ): Segment<Utbetaling>? {
+    ): Segment<Utbetaling> {
 //        if (venstreSegment?.verdi == null || høyreSegment?.verdi == null) {
 //            return null
 //        }
