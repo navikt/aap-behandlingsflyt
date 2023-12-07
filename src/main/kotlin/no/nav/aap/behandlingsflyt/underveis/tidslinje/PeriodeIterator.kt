@@ -6,14 +6,15 @@ import java.util.*
 class PeriodeIterator<T, E>(
     leftSegments: NavigableSet<Segment<T>>,
     rightSegments: NavigableSet<Segment<E>>
-) {
+) : Iterator<Periode> {
 
     private val unikePerioder: NavigableSet<Periode> = TreeSet()
     private var dateIterator: Iterator<Periode>
 
     init {
-        unikePerioder.addAll(leftSegments.map { it.periode })
-        rightSegments.map { it.periode }.forEach { periode ->
+        val temp = TreeSet(leftSegments.map { it.periode })
+        temp.addAll(rightSegments.map { it.periode })
+        temp.forEach { periode ->
             val overlappendePerioder = unikePerioder.filter { it.overlapper(periode) }
             if (overlappendePerioder.isNotEmpty()) {
                 unikePerioder.removeIf { it.overlapper(periode) }
@@ -33,11 +34,11 @@ class PeriodeIterator<T, E>(
         dateIterator = unikePerioder.iterator()
     }
 
-    fun hasNext(): Boolean {
+    override fun hasNext(): Boolean {
         return dateIterator.hasNext()
     }
 
-    fun next(): Periode {
+    override fun next(): Periode {
         return dateIterator.next()
     }
 }
