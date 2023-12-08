@@ -43,14 +43,23 @@ class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>>) {
         sammenslåer: SegmentSammenslåer<T, E, V>,
         joinStyle: JoinStyle = JoinStyle.CROSS_JOIN
     ): Tidslinje<V> {
+        if (this.segmenter.isEmpty()) {
+            val nyeSegmenter = other.segmenter.map { segment ->
+                sammenslåer.sammenslå(segment.periode, null, segment)
+            }
+            return Tidslinje(nyeSegmenter.toCollection(TreeSet()))
+        }
+        if (other.segmenter.isEmpty()) {
+            val nyeSegmenter = this.segmenter.map { segment ->
+                sammenslåer.sammenslå(segment.periode, segment, null)
+            }
+            return Tidslinje(nyeSegmenter.toCollection(TreeSet()))
+        }
 
         val periodeIterator = PeriodeIterator(
             perioder(),
             other.perioder()
         )
-        if (!periodeIterator.hasNext()) {
-            return Tidslinje(emptyList()) //begge input-tidslinjer var tomme
-        }
 
         val nySammensetning: NavigableSet<Segment<V>> = TreeSet()
         while (periodeIterator.hasNext()) {
