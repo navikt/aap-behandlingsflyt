@@ -1,7 +1,7 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import java.io.ByteArrayOutputStream
 
-val ktorVersion = "2.3.6"
+val ktorVersion = "2.3.7"
 
 plugins {
     kotlin("jvm") version "1.9.21"
