@@ -17,6 +17,10 @@ class Beløp(verdi: BigDecimal) {
         return Beløp(this.verdi.add(beløp.verdi))
     }
 
+    fun ganger(antall: Int): Beløp {
+        return Beløp(this.verdi.multiply(BigDecimal(antall)))
+    }
+
     fun divitert(nevner: Beløp, scale: Int = 10): BigDecimal {
         return this.verdi.divide(nevner.verdi, scale, RoundingMode.HALF_UP)
     }

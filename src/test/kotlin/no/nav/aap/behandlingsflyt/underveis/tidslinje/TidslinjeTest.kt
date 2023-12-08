@@ -158,7 +158,39 @@ class TidslinjeTest {
             Segment(Periode(LocalDate.now().minusDays(6), LocalDate.now().minusDays(6)), beløp),
             Segment(delPeriode2, Beløp(50)),
             Segment(delPeriode3, Beløp(78)),
-            Segment(delPeriode4, Beløp(99)))
+            Segment(delPeriode4, Beløp(99))
+        )
+    }
+
+    @Test
+    fun `enkel test med barnetilegg`() {
+        val fullPeriode = Periode(LocalDate.now().minusDays(10), LocalDate.now().plusDays(10))
+
+        val delPeriode1 = Periode(LocalDate.now().minusDays(10), LocalDate.now())
+        val delPeriode2 = Periode(LocalDate.now().plusDays(1), LocalDate.now().plusDays(10))
+
+        val beløp = Beløp(756)
+        val firstSegment = Segment(fullPeriode, beløp)
+
+        val grunnlagTidslinje = Tidslinje(listOf(firstSegment))
+        val barnetileggSats = Tidslinje(listOf(Segment(fullPeriode, Beløp(36))))
+        val antallBarnTidslinje = Tidslinje(
+            listOf(
+                Segment(Periode(LocalDate.now().minusDays(2), LocalDate.now().plusDays(10)), 1)
+            )
+        )
+        val uttakTidslinje = Tidslinje(
+            listOf(
+                Segment(delPeriode1, Prosent(67)),
+                Segment(delPeriode2, Prosent(73)),
+            )
+        )
+
+        val barneUtreningTidslinje = antallBarnTidslinje.kombiner(barnetileggSats, BarneTileggUtbetaling())
+        val komplettTidslinje =
+            grunnlagTidslinje.kombiner(uttakTidslinje, UtregningSammenslåer()).kombiner(barneUtreningTidslinje, KombinertUtbetaling())
+
+        assertThat(komplettTidslinje.segmenter()).hasSize(3)
     }
 }
 
@@ -170,7 +202,43 @@ data class Utbetaling(val beløp: Beløp, val prosent: Prosent) {
     override fun toString(): String {
         return "Utbetaling(beløp=$beløp, prosent=$prosent, utbetaling=${beløp()})"
     }
+}
 
+data class UtbetalingMedBarneTilegg(val beløp: Beløp, val barnetilegg: Beløp, val prosent: Prosent) {
+    fun beløp(): Beløp {
+        return Beløp(prosent.multiplisert(beløp.pluss(barnetilegg).verdi()))
+    }
+
+    override fun toString(): String {
+        return "Utbetaling(beløp=$beløp, barnetilegg=$barnetilegg, prosent=$prosent, utbetaling=${beløp()})"
+    }
+}
+
+class BarneTileggUtbetaling : SegmentSammenslåer<Int, Beløp, Beløp> {
+    override fun sammenslå(
+        periode: Periode,
+        venstreSegment: Segment<Int>?,
+        høyreSegment: Segment<Beløp>?
+    ): Segment<Beløp> {
+        val prosent = venstreSegment?.verdi ?: 0
+        val beløp = høyreSegment?.verdi ?: Beløp(0)
+        return Segment(periode, beløp.ganger(prosent))
+    }
+}
+
+class KombinertUtbetaling : SegmentSammenslåer<Utbetaling, Beløp, UtbetalingMedBarneTilegg> {
+    override fun sammenslå(
+        periode: Periode,
+        venstreSegment: Segment<Utbetaling>?,
+        høyreSegment: Segment<Beløp>?
+    ): Segment<UtbetalingMedBarneTilegg>? {
+        if (venstreSegment?.verdi == null) {
+            return null
+        }
+        val utbetaling = venstreSegment.verdi
+        val beløp = høyreSegment?.verdi ?: Beløp(0)
+        return Segment(periode, UtbetalingMedBarneTilegg(utbetaling!!.beløp, beløp, utbetaling.prosent))
+    }
 }
 
 class UtregningSammenslåer : SegmentSammenslåer<Beløp, Prosent, Utbetaling> {
@@ -179,12 +247,8 @@ class UtregningSammenslåer : SegmentSammenslåer<Beløp, Prosent, Utbetaling> {
         venstreSegment: Segment<Beløp>?,
         høyreSegment: Segment<Prosent>?
     ): Segment<Utbetaling> {
-//        if (venstreSegment?.verdi == null || høyreSegment?.verdi == null) {
-//            return null
-//        }
         val beløp = venstreSegment?.verdi ?: Beløp(0)
         val prosent = høyreSegment?.verdi ?: Prosent(0)
         return Segment(periode, Utbetaling(beløp, prosent))
     }
-
 }
