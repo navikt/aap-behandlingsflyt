@@ -129,6 +129,37 @@ class TidslinjeTest {
             Segment(delPeriode3, Utbetaling(beløp, Prosent(78)))
         )
     }
+
+    @Test
+    fun `skal slå sammen to tidslinjer med overlapp, frittstående elementer i en av tidslinjene og hull`() {
+        val fullPeriode = Periode(LocalDate.now().minusDays(10), LocalDate.now().plusDays(10))
+        val delPeriode1 = Periode(LocalDate.now().minusDays(10), LocalDate.now().minusDays(7))
+        val delPeriode2 = Periode(LocalDate.now().minusDays(5), LocalDate.now())
+        val delPeriode3 = Periode(LocalDate.now().plusDays(1), LocalDate.now().plusDays(10))
+        val delPeriode4 = Periode(LocalDate.now().plusDays(15), LocalDate.now().plusDays(20))
+
+        val beløp = Beløp(756)
+        val firstSegment = Segment(fullPeriode, beløp)
+
+        val tidslinje = Tidslinje(listOf(firstSegment))
+        val tidslinje1 = Tidslinje(
+            listOf(
+                Segment(delPeriode1, Beløp(10)),
+                Segment(delPeriode2, Beløp(50)),
+                Segment(delPeriode3, Beløp(78)),
+                Segment(delPeriode4, Beløp(99))
+            )
+        )
+
+        val mergetTidslinje: Tidslinje<Beløp> = tidslinje.kombiner(tidslinje1, PrioriterHøyreSide()).komprimer()
+
+        assertThat(mergetTidslinje.segmenter()).containsExactly(
+            Segment(delPeriode1, Beløp(10)),
+            Segment(Periode(LocalDate.now().minusDays(6), LocalDate.now().minusDays(6)), beløp),
+            Segment(delPeriode2, Beløp(50)),
+            Segment(delPeriode3, Beløp(78)),
+            Segment(delPeriode4, Beløp(99)))
+    }
 }
 
 data class Utbetaling(val beløp: Beløp, val prosent: Prosent) {
