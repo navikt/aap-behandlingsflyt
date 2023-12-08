@@ -1,8 +1,6 @@
 package no.nav.aap.behandlingsflyt.underveis.tidslinje
 
 import no.nav.aap.behandlingsflyt.Periode
-import no.nav.aap.behandlingsflyt.beregning.Prosent
-import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.Beløp
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -17,16 +15,13 @@ class PeriodeIteratorTest {
         val delPeriode2 = Periode(LocalDate.now().minusDays(5), LocalDate.now())
         val delPeriode3 = Periode(LocalDate.now().plusDays(1), LocalDate.now().plusDays(10))
 
-        val beløp = Beløp(756)
-        val firstSegment = Segment(fullPeriode, beløp)
-
-        val segmenter1 = TreeSet(listOf(firstSegment))
+        val segmenter1 = TreeSet(listOf(fullPeriode))
         val segmenter2 = TreeSet(
-            listOf(
-                Segment(delPeriode1, Prosent(10)),
-                Segment(delPeriode2, Prosent(50)),
-                Segment(delPeriode3, Prosent(78))
-            )
+            TreeSet(listOf(
+                delPeriode1,
+                delPeriode2,
+                delPeriode3
+            ))
         )
 
         val iterator = PeriodeIterator(segmenter1, segmenter2)
@@ -59,16 +54,13 @@ class PeriodeIteratorTest {
         val delPeriode2 = Periode(LocalDate.now().minusDays(5), LocalDate.now())
         val delPeriode3 = Periode(LocalDate.now().plusDays(12), LocalDate.now().plusDays(20))
 
-        val beløp = Beløp(756)
-        val firstSegment = Segment(fullPeriode, beløp)
-
-        val segmenter1 = TreeSet(listOf(firstSegment))
+        val segmenter1 = TreeSet(listOf(fullPeriode))
         val segmenter2 = TreeSet(
-            listOf(
-                Segment(delPeriode1, Prosent(10)),
-                Segment(delPeriode2, Prosent(50)),
-                Segment(delPeriode3, Prosent(78))
-            )
+            TreeSet(listOf(
+                delPeriode1,
+                delPeriode2,
+                delPeriode3
+            ))
         )
 
         val iterator = PeriodeIterator(segmenter1, segmenter2)

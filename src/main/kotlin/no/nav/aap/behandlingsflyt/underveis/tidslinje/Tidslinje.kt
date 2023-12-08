@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.underveis.tidslinje
 
+import no.nav.aap.behandlingsflyt.Periode
 import java.time.LocalDate
 import java.util.*
 
@@ -29,6 +30,10 @@ class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>>) {
         return segmenter.toSortedSet()
     }
 
+    fun perioder(): NavigableSet<Periode> {
+        return TreeSet(segmenter.map { it.periode })
+    }
+
     /**
      * Merge av to tidslinjer, prioriterer verdier fra den som merges over den som det kalles på
      * oppretter en tredje slik at orginale verdier bevares
@@ -39,7 +44,10 @@ class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>>) {
         joinStyle: JoinStyle = JoinStyle.CROSS_JOIN
     ): Tidslinje<V> {
 
-        val periodeIterator: PeriodeIterator<T, E> = PeriodeIterator(this.segmenter, other.segmenter)
+        val periodeIterator = PeriodeIterator(
+            perioder(),
+            other.perioder()
+        )
         if (!periodeIterator.hasNext()) {
             return Tidslinje(emptyList()) //begge input-tidslinjer var tomme
         }

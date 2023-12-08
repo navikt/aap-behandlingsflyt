@@ -3,17 +3,16 @@ package no.nav.aap.behandlingsflyt.underveis.tidslinje
 import no.nav.aap.behandlingsflyt.Periode
 import java.util.*
 
-class PeriodeIterator<T, E>(
-    leftSegments: NavigableSet<Segment<T>>,
-    rightSegments: NavigableSet<Segment<E>>
+class PeriodeIterator(
+    leftPerioder: NavigableSet<Periode>,
+    rightPerioder: NavigableSet<Periode>
 ) : Iterator<Periode> {
 
     private val unikePerioder: NavigableSet<Periode> = TreeSet()
     private var dateIterator: Iterator<Periode>
 
     init {
-        val temp = TreeSet(leftSegments.map { it.periode })
-        temp.addAll(rightSegments.map { it.periode })
+        val temp = TreeSet(leftPerioder + rightPerioder)
         temp.forEach { periode ->
             val overlappendePerioder = unikePerioder.filter { it.overlapper(periode) }
             if (overlappendePerioder.isNotEmpty()) {
