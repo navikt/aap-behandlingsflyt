@@ -1,65 +1,37 @@
 package no.nav.aap.behandlingsflyt.flyt.vilkår
 
 import no.nav.aap.behandlingsflyt.Periode
+import no.nav.aap.behandlingsflyt.underveis.tidslinje.PrioriterHøyreSide
+import no.nav.aap.behandlingsflyt.underveis.tidslinje.Segment
+import no.nav.aap.behandlingsflyt.underveis.tidslinje.Tidslinje
 
 class Vilkår(
     val type: Vilkårtype,
     vilkårsperioder: Set<Vilkårsperiode> = emptySet()
 ) {
-    private val vilkårsperioder: MutableSet<Vilkårsperiode> = vilkårsperioder.toMutableSet()
+    private var vilkårTidslinje = Tidslinje(vilkårsperioder.map { vp -> Segment(vp.periode, Vilkårsvurdering(vp)) })
 
     fun vilkårsperioder(): List<Vilkårsperiode> {
-        return this.vilkårsperioder.toList()
+        return vilkårTidslinje.segmenter()
+            .filter { it.verdi != null }
+            .map { segment -> Vilkårsperiode(segment.periode, segment.verdi!!) }
     }
 
     fun leggTilVurdering(vilkårsperiode: Vilkårsperiode) {
-        if (vilkårsperioder.any { vp -> vp.periode.overlapper(vilkårsperiode.periode) }) {
-            // Overlapper og må justere innholdet i listen
-            val justertePerioder = vilkårsperioder
-                .filter { vp -> vp.periode.overlapper(vilkårsperiode.periode) }
-                .filter { vp ->
-                    vp.periode.tom > vilkårsperiode.periode.tom || vp.periode.fom < vilkårsperiode.periode.fom
-                }
-                .map { vp ->
-                    Vilkårsperiode(
-                        justerPeriode(vp.periode, vilkårsperiode.periode),
-                        vp.utfall,
-                        vp.manuellVurdering,
-                        vp.begrunnelse,
-                        vp.innvilgelsesårsak,
-                        vp.avslagsårsak,
-                        vp.faktagrunnlag,
-                        vp.versjon
+        vilkårTidslinje = vilkårTidslinje.kombiner(
+            Tidslinje(
+                listOf(
+                    Segment(
+                        vilkårsperiode.periode,
+                        Vilkårsvurdering(vilkårsperiode)
                     )
-                }
-
-            this.vilkårsperioder.removeIf { vp -> vp.periode.overlapper(vilkårsperiode.periode) }
-            this.vilkårsperioder.addAll(justertePerioder)
-            this.vilkårsperioder.add(vilkårsperiode)
-        } else {
-            this.vilkårsperioder.add(vilkårsperiode)
-        }
-    }
-
-    internal fun justerPeriode(leftPeriode: Periode, rightPeriode: Periode): Periode {
-        if (!leftPeriode.overlapper(rightPeriode)) {
-            return leftPeriode
-        }
-        val fom = if (rightPeriode.fom.isBefore(leftPeriode.fom)) {
-            rightPeriode.tom.plusDays(1)
-        } else {
-            leftPeriode.fom
-        }
-        val tom = if (rightPeriode.tom.isAfter(leftPeriode.tom)) {
-            rightPeriode.fom.minusDays(1)
-        } else {
-            leftPeriode.tom
-        }
-        return Periode(fom, tom)
+                )
+            ), PrioriterHøyreSide()
+        )
     }
 
     fun leggTilIkkeVurdertPeriode(rettighetsperiode: Periode) {
-        this.vilkårsperioder.add(
+        this.leggTilVurdering(
             Vilkårsperiode(
                 periode = rettighetsperiode,
                 utfall = Utfall.IKKE_VURDERT,
@@ -71,10 +43,10 @@ class Vilkår(
     }
 
     fun harPerioderSomIkkeErVurdert(periodeTilVurdering: Set<Periode>): Boolean {
-        return this.vilkårsperioder
-            .filter { periode -> periodeTilVurdering.any { vp -> periode.periode.overlapper(vp) } }
-            .any { periode -> periode.erIkkeVurdert() }
-
+        return vilkårTidslinje.kryss(Tidslinje(periodeTilVurdering.map { Segment(it, Unit) }))
+            .segmenter()
+            .filter { it.verdi != null }
+            .any { periode -> periode.verdi!!.erIkkeVurdert() }
     }
 
     override fun toString(): String {
@@ -88,14 +60,14 @@ class Vilkår(
         other as Vilkår
 
         if (type != other.type) return false
-        if (vilkårsperioder != other.vilkårsperioder) return false
+        if (vilkårTidslinje != other.vilkårTidslinje) return false
 
         return true
     }
 
     override fun hashCode(): Int {
         var result = type.hashCode()
-        result = 31 * result + vilkårsperioder.hashCode()
+        result = 31 * result + vilkårTidslinje.hashCode()
         return result
     }
 }

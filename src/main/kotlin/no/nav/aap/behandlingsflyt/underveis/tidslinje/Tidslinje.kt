@@ -98,4 +98,18 @@ class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>>) {
     fun segment(dato: LocalDate): Segment<T>? {
         return segmenter.firstOrNull { segment -> segment.inneholder(dato) }
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Tidslinje<*>
+
+        // Benytter hashset for å slippe rør med compareTo osv..
+        return HashSet(segmenter) == HashSet(other.segmenter)
+    }
+
+    override fun hashCode(): Int {
+        return segmenter.hashCode()
+    }
 }

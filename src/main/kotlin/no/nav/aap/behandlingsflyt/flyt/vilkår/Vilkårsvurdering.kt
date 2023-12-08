@@ -1,48 +1,23 @@
 package no.nav.aap.behandlingsflyt.flyt.vilkår
 
-import no.nav.aap.behandlingsflyt.Periode
-
-class Vilkårsperiode(
-    val periode: Periode,
-    val utfall: Utfall,
-    val manuellVurdering: Boolean = false,
-    val begrunnelse: String?,
-    val innvilgelsesårsak: Innvilgelsesårsak? = null,
-    val avslagsårsak: Avslagsårsak? = null,
-    internal val faktagrunnlag: Faktagrunnlag?,
+class Vilkårsvurdering(vilkårsperiode: Vilkårsperiode) {
+    val utfall: Utfall
+    val manuellVurdering: Boolean
+    val begrunnelse: String?
+    val innvilgelsesårsak: Innvilgelsesårsak?
+    val avslagsårsak: Avslagsårsak?
+    internal val faktagrunnlag: Faktagrunnlag?
     internal val versjon: String
-) {
-    constructor(
-        periode: Periode,
-        utfall: Utfall,
-        manuellVurdering: Boolean,
-        faktagrunnlag: Faktagrunnlag?,
-        begrunnelse: String?,
-        avslagsårsak: Avslagsårsak? = null,
-        innvilgelsesårsak: Innvilgelsesårsak? = null,
-    ) : this(
-        periode,
-        utfall,
-        manuellVurdering,
-        begrunnelse,
-        innvilgelsesårsak,
-        avslagsårsak,
-        faktagrunnlag,
-        ApplikasjonsVersjon.versjon
-    )
-
-    internal constructor(periode: Periode, vilkårsvurdering: Vilkårsvurdering) : this(
-        periode,
-        vilkårsvurdering.utfall,
-        vilkårsvurdering.manuellVurdering,
-        vilkårsvurdering.begrunnelse,
-        vilkårsvurdering.innvilgelsesårsak,
-        vilkårsvurdering.avslagsårsak,
-        vilkårsvurdering.faktagrunnlag,
-        ApplikasjonsVersjon.versjon
-    )
 
     init {
+        utfall = vilkårsperiode.utfall
+        manuellVurdering = vilkårsperiode.manuellVurdering
+        begrunnelse = vilkårsperiode.begrunnelse
+        innvilgelsesårsak = vilkårsperiode.innvilgelsesårsak
+        avslagsårsak = vilkårsperiode.avslagsårsak
+        faktagrunnlag = vilkårsperiode.faktagrunnlag
+        versjon = vilkårsperiode.versjon
+
         if (utfall == Utfall.IKKE_OPPFYLT && avslagsårsak == null) {
             throw IllegalStateException("Avslagsårsak må være satt ved IKKE_OPPFYLT som utfall")
         }
@@ -57,7 +32,7 @@ class Vilkårsperiode(
     }
 
     override fun toString(): String {
-        return "Vilkårsperiode(periode=$periode, utfall=$utfall)"
+        return "Vilkårsvurdering(utfall=$utfall)"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -66,7 +41,6 @@ class Vilkårsperiode(
 
         other as Vilkårsperiode
 
-        if (periode != other.periode) return false
         if (utfall != other.utfall) return false
         if (begrunnelse != other.begrunnelse) return false
         if (manuellVurdering != other.manuellVurdering) return false
@@ -77,8 +51,7 @@ class Vilkårsperiode(
     }
 
     override fun hashCode(): Int {
-        var result = periode.hashCode()
-        result = 31 * result + utfall.hashCode()
+        var result = utfall.hashCode()
         result = 31 * result + begrunnelse.hashCode()
         result = 31 * result + manuellVurdering.hashCode()
         result = 31 * result + innvilgelsesårsak.hashCode()
