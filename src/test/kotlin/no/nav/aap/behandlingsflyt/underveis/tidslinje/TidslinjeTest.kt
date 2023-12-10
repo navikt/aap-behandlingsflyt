@@ -54,7 +54,7 @@ class TidslinjeTest {
         val tidslinje = Tidslinje(listOf(firstSegment))
         val tidslinje1 = Tidslinje(listOf(secondSegment))
 
-        val mergetTidslinje = tidslinje.kombiner(tidslinje1, PrioriterHøyreSide())
+        val mergetTidslinje = tidslinje.kombiner(tidslinje1, StandardSammenslåere.prioriterHøyreSide())
 
         assertThat(mergetTidslinje.segmenter()).containsExactly(secondSegment, firstSegment)
     }
@@ -67,7 +67,7 @@ class TidslinjeTest {
         val tidslinje = Tidslinje(listOf(firstSegment))
         val tidslinje1 = Tidslinje(listOf(secondSegment))
 
-        val mergetTidslinje: Tidslinje<Beløp> = tidslinje.kombiner(tidslinje1, PrioriterHøyreSide()).komprimer()
+        val mergetTidslinje: Tidslinje<Beløp> = tidslinje.kombiner(tidslinje1, StandardSammenslåere.prioriterHøyreSide()).komprimer()
 
         assertThat(mergetTidslinje.segmenter()).containsExactly(secondSegment, expectedFirstSegment)
     }
@@ -79,7 +79,7 @@ class TidslinjeTest {
         val tidslinje = Tidslinje(listOf(firstSegment))
         val tidslinje1 = Tidslinje(listOf(secondSegment))
 
-        val mergetTidslinje: Tidslinje<Beløp> = tidslinje.kombiner(tidslinje1, Summer()).komprimer()
+        val mergetTidslinje: Tidslinje<Beløp> = tidslinje.kombiner(tidslinje1, StandardSammenslåere.summerer()).komprimer()
 
         assertThat(mergetTidslinje.segmenter()).containsExactly(
             Segment(Periode(LocalDate.now().minusDays(10), LocalDate.now().minusDays(3)), Beløp(200)),
@@ -97,7 +97,7 @@ class TidslinjeTest {
         val tidslinje = Tidslinje(listOf(firstSegment))
         val tidslinje1 = Tidslinje(listOf(secondSegment))
 
-        val mergetTidslinje = tidslinje.kombiner(tidslinje1, PrioriteVenstreSide()).komprimer()
+        val mergetTidslinje = tidslinje.kombiner(tidslinje1, StandardSammenslåere.prioriterVenstreSide()).komprimer()
 
         assertThat(mergetTidslinje.segmenter()).containsExactly(expectedSecondSegment, firstSegment)
     }
@@ -151,7 +151,7 @@ class TidslinjeTest {
             )
         )
 
-        val mergetTidslinje: Tidslinje<Beløp> = tidslinje.kombiner(tidslinje1, PrioriterHøyreSide()).komprimer()
+        val mergetTidslinje: Tidslinje<Beløp> = tidslinje.kombiner(tidslinje1, StandardSammenslåere.prioriterHøyreSide()).komprimer()
 
         assertThat(mergetTidslinje.segmenter()).containsExactly(
             Segment(delPeriode1, Beløp(10)),

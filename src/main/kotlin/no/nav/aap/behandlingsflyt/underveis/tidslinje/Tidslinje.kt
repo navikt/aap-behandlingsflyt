@@ -82,7 +82,7 @@ class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>> = TreeSet()) {
     }
 
     fun <V> kryss(other: Tidslinje<V>): Tidslinje<T> {
-        return kombiner(other, KunVenstre(), JoinStyle.INNER_JOIN)
+        return kombiner(other, StandardSammenslåere.kunVenstre(), JoinStyle.INNER_JOIN)
     }
 
     /**

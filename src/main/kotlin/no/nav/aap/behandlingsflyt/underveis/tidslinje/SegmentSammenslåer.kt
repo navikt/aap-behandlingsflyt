@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.underveis.tidslinje
 
 import no.nav.aap.behandlingsflyt.Periode
 
-interface SegmentSammenslåer<Q, E, V> {
+fun interface SegmentSammenslåer<Q, E, V> {
 
     fun sammenslå(periode: Periode, venstreSegment: Segment<Q>?, høyreSegment: Segment<E>?): Segment<V>?
 }

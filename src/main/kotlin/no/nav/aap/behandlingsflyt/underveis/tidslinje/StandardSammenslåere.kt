@@ -1,53 +1,57 @@
 package no.nav.aap.behandlingsflyt.underveis.tidslinje
 
-import no.nav.aap.behandlingsflyt.Periode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.Beløp
 import java.math.BigDecimal
 
-class PrioriterHøyreSide<T> : SegmentSammenslåer<T, T, T> {
-    override fun sammenslå(periode: Periode, venstreSegment: Segment<T>?, høyreSegment: Segment<T>?): Segment<T> {
-        if (høyreSegment == null) {
-            return Segment(periode, venstreSegment?.verdi)
+object StandardSammenslåere {
+    fun summerer(): SegmentSammenslåer<Beløp, Beløp, Beløp> {
+        return SegmentSammenslåer { periode, venstreSegment, høyreSegment ->
+            val høyreVerdi = høyreSegment?.verdi ?: Beløp(BigDecimal.ZERO)
+            val venstreVerdi = venstreSegment?.verdi ?: Beløp(BigDecimal.ZERO)
+
+            Segment(periode, høyreVerdi.pluss(venstreVerdi))
         }
-        return Segment(periode, høyreSegment.verdi)
     }
-}
 
-class PrioriteVenstreSide<T> : SegmentSammenslåer<T, T, T> {
-    override fun sammenslå(periode: Periode, venstreSegment: Segment<T>?, høyreSegment: Segment<T>?): Segment<T> {
-        if (venstreSegment == null) {
-            return Segment(periode, høyreSegment?.verdi)
+    fun <T> prioriterHøyreSide(): SegmentSammenslåer<T, T, T> {
+        return SegmentSammenslåer { periode, venstreSegment, høyreSegment ->
+            if (høyreSegment == null) {
+                Segment(periode, venstreSegment?.verdi)
+            } else {
+                Segment(periode, høyreSegment.verdi)
+            }
         }
-        return Segment(periode, venstreSegment.verdi)
     }
-}
 
-class KunHøyre<T> : SegmentSammenslåer<T, T, T> {
-    override fun sammenslå(periode: Periode, venstreSegment: Segment<T>?, høyreSegment: Segment<T>?): Segment<T> {
-        return Segment(periode, høyreSegment?.verdi)
-    }
-}
-
-class KunVenstre<T, E> : SegmentSammenslåer<T, E, T> {
-    override fun sammenslå(periode: Periode, venstreSegment: Segment<T>?, høyreSegment: Segment<E>?): Segment<T>? {
-        val verdi = venstreSegment?.verdi
-        if (verdi == null) {
-            return null
+    fun <T> prioriterVenstreSide(): SegmentSammenslåer<T, T, T> {
+        return SegmentSammenslåer { periode, venstreSegment, høyreSegment ->
+            if (venstreSegment == null) {
+                Segment(periode, høyreSegment?.verdi)
+            } else {
+                Segment(periode, venstreSegment.verdi)
+            }
         }
-        return Segment(periode, verdi)
-    }
-}
-
-class Summer : SegmentSammenslåer<Beløp, Beløp, Beløp> {
-    override fun sammenslå(
-        periode: Periode,
-        venstreSegment: Segment<Beløp>?,
-        høyreSegment: Segment<Beløp>?
-    ): Segment<Beløp> {
-        val høyreVerdi = høyreSegment?.verdi ?: Beløp(BigDecimal.ZERO)
-        val venstreVerdi = venstreSegment?.verdi ?: Beløp(BigDecimal.ZERO)
-
-        return Segment(periode, høyreVerdi.pluss(venstreVerdi))
     }
 
+    fun <T, E> kunVenstre(): SegmentSammenslåer<T, E, T> {
+        return SegmentSammenslåer { periode, venstreSegment, høyreSegment ->
+            val verdi = venstreSegment?.verdi
+            if (verdi == null) {
+                null
+            } else {
+                Segment(periode, verdi)
+            }
+        }
+    }
+
+    fun <T> kunHøyre(): SegmentSammenslåer<T, T, T> {
+        return SegmentSammenslåer { periode, venstreSegment, høyreSegment ->
+            val verdi = høyreSegment?.verdi
+            if (verdi == null) {
+                null
+            } else {
+                Segment(periode, verdi)
+            }
+        }
+    }
 }

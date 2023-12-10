@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.flyt.vilkår
 
 import no.nav.aap.behandlingsflyt.Periode
-import no.nav.aap.behandlingsflyt.underveis.tidslinje.PrioriterHøyreSide
 import no.nav.aap.behandlingsflyt.underveis.tidslinje.Segment
+import no.nav.aap.behandlingsflyt.underveis.tidslinje.StandardSammenslåere
 import no.nav.aap.behandlingsflyt.underveis.tidslinje.Tidslinje
 
 class Vilkår(
@@ -26,7 +26,7 @@ class Vilkår(
                         Vilkårsvurdering(vilkårsperiode)
                     )
                 )
-            ), PrioriterHøyreSide()
+            ), StandardSammenslåere.prioriterHøyreSide()
         )
     }
 
