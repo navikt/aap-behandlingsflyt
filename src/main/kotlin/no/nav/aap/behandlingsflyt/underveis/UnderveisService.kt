@@ -38,7 +38,7 @@ class UnderveisService(private val vilkårsresultatRepository: VilkårsresultatR
         val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
             .alle()
             .filter { v ->
-                v.type in setOf(
+                v.type in setOf( // TODO: add medlemskap
                     Vilkårtype.ALDERSVILKÅRET,
                     Vilkårtype.SYKDOMSVILKÅRET,
                     Vilkårtype.BISTANDSVILKÅRET
