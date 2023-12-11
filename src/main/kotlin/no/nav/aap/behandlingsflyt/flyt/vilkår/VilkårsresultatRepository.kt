@@ -144,8 +144,8 @@ class VilkårsresultatRepository(private val connection: DBConnection) {
             manuellVurdering = row.getBoolean("manuell_vurdering"),
             faktagrunnlag = LazyFaktaGrunnlag(connection = connection, periodeId = row.getLong("id")),
             begrunnelse = row.getStringOrNull("begrunnelse"),
-            avslagsårsak = row.getEnumOrNull<Avslagsårsak>("avslagsarsak"),
-            innvilgelsesårsak = row.getEnumOrNull<Innvilgelsesårsak>("innvilgelsesarsak"),
+            avslagsårsak = row.getEnumOrNull("avslagsarsak"),
+            innvilgelsesårsak = row.getEnumOrNull("innvilgelsesarsak"),
             versjon = row.getString("versjon")
         )
     }

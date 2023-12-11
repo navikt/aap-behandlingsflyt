@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom
 
-import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.NedreGrense
 import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.behandling.BehandlingId
@@ -216,7 +215,7 @@ class SykdomRepository(private val connection: DBConnection) {
                     hentSykdomsDokumenter(sykdomId),
                     row.getBoolean("ER_SYKDOM_SKADE_LYTE_VESETLING_DEL"),
                     row.getBooleanOrNull("ER_NEDSETTELSE_HOYERE_ENN_NEDRE_GRENSE"),
-                    row.getEnumOrNull<NedreGrense>("NEDRE_GRENSE"),
+                    row.getEnumOrNull("NEDRE_GRENSE"),
                     row.getLocalDateOrNull("NEDSATT_ARBEIDSEVNE_DATO"),
                     row.getLocalDateOrNull("YTTERLIGERE_NEDSATT_ARBEIDSEVNE_DATO")
                 )

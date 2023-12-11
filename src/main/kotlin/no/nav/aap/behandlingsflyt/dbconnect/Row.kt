@@ -34,8 +34,8 @@ class Row(private val resultSet: ResultSet) {
         return enumValueOf<T>(getString(columnLabel))
     }
 
-    inline fun <reified T : Enum<T>> getEnumOrNull(columnLabel: String): T? {
-        return getStringOrNull(columnLabel)?.let<String, T>(::enumValueOf)
+    inline fun <reified T : Enum<T & Any>?> getEnumOrNull(columnLabel: String): T? {
+        return getStringOrNull(columnLabel)?.let<String, T & Any>(::enumValueOf)
     }
 
     fun getInt(columnLabel: String): Int {
