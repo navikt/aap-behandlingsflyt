@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.Periode
 import no.nav.aap.behandlingsflyt.underveis.tidslinje.Segment
 import no.nav.aap.behandlingsflyt.underveis.tidslinje.StandardSammenslåere
 import no.nav.aap.behandlingsflyt.underveis.tidslinje.Tidslinje
+import java.time.LocalDate
 
 class Vilkår(
     val type: Vilkårtype,
@@ -69,5 +70,9 @@ class Vilkår(
         var result = type.hashCode()
         result = 31 * result + vilkårTidslinje.hashCode()
         return result
+    }
+
+    fun førsteDatoTilVurdering(): LocalDate {
+        return vilkårTidslinje.minDato()
     }
 }

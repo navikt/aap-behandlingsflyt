@@ -29,7 +29,7 @@ class UnderveisServiceTest {
         val bistandVilkåret =
             Vilkår(Vilkårtype.BISTANDSVILKÅRET, setOf(Vilkårsperiode(periode, Utfall.OPPFYLT, false, null, null)))
         val relevanteVilkår = listOf(aldersVilkåret, bistandVilkåret, sykdomsVilkåret)
-        val input = UnderveisInput(relevanteVilkår = relevanteVilkår)
+        val input = UnderveisInput(førsteFastsatteDag = søknadsdato, relevanteVilkår = relevanteVilkår)
 
         val vurderingTidslinje = underveisService.vurderRegler(input)
 

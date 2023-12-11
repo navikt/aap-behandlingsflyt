@@ -67,6 +67,14 @@ class Segment<T>(val periode: Periode, val verdi: T?) : Comparable<Segment<T>> {
     fun inneholder(dato: LocalDate): Boolean {
         return periode.inneholder(dato)
     }
+
+    fun fom(): LocalDate {
+        return periode.fom
+    }
+
+    fun tom(): LocalDate {
+        return periode.tom
+    }
 }
 
 internal fun min(dato: LocalDate, dato1: LocalDate): LocalDate {

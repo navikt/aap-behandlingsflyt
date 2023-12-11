@@ -12,8 +12,8 @@ class Vurdering {
         vurderinger[vilkårtype] = utfall
     }
 
-    fun leggTilGradering(prosent: Prosent) {
-        gradering = Gradering(prosent)
+    fun leggTilGradering(gradering: Gradering) {
+        this.gradering = gradering
     }
 
     fun vurderinger(): Map<Vilkårtype, Utfall> {

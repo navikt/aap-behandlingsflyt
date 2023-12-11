@@ -36,6 +36,7 @@ class UnderveisService(private val vilkårsresultatRepository: VilkårsresultatR
 
     fun genererInput(behandlingId: BehandlingId): UnderveisInput {
         val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
+        val relevanteVilkår = vilkårsresultat
             .alle()
             .filter { v ->
                 v.type in setOf( // TODO: add medlemskap
@@ -44,6 +45,8 @@ class UnderveisService(private val vilkårsresultatRepository: VilkårsresultatR
                     Vilkårtype.BISTANDSVILKÅRET
                 )
             }
-        return UnderveisInput(vilkårsresultat)
+        val førsteSøknadstidspunkt = vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET).førsteDatoTilVurdering()
+
+        return UnderveisInput(førsteSøknadstidspunkt, relevanteVilkår)
     }
 }

@@ -3,6 +3,12 @@ package no.nav.aap.behandlingsflyt.underveis.regler
 import no.nav.aap.behandlingsflyt.beregning.Prosent
 import no.nav.aap.behandlingsflyt.underveis.tidslinje.Segment
 import no.nav.aap.behandlingsflyt.underveis.tidslinje.Tidslinje
+import java.math.BigDecimal
+import java.time.Period
+import java.util.*
+
+private const val ANTALL_DAGER_I_MELDEPERIODE = 14
+private const val ANTALL_TIMER_I_ARBEIDSUKE = 37.5
 
 /**
  * Graderer arbeid der hvor det ikke er avslått pga en regel tidliger i løpet
@@ -12,8 +18,42 @@ import no.nav.aap.behandlingsflyt.underveis.tidslinje.Tidslinje
 class GraderingArbeidRegel : UnderveisRegel {
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
         // TODO: Legge inn noe reelt
-        val arbeidsTidslinje = Tidslinje(resultat.perioder().map { Segment(it, Prosent(100)) })
+        val arbeidsTidslinje =
+            Tidslinje(resultat.splittOppEtter(Period.ofDays(1))
+                .segmenter()
+                .map { it.periode }
+                .map { Segment(it, TimerArbeid(BigDecimal.ZERO)) })
+                .splittOppOgMapOmEtter(Period.ofDays(ANTALL_DAGER_I_MELDEPERIODE)) { arbeidsSegmenter ->
+                    regnUtGradering(arbeidsSegmenter)
+                }.komprimer()
 
-        return resultat.kombiner(arbeidsTidslinje, LeggTilGraderingPåVurderingerSammenslåer())
+        return resultat.kombiner(arbeidsTidslinje, { periode, venstreSegment, høyreSegment ->
+            if (venstreSegment?.verdi == null && høyreSegment?.verdi != null) {
+                val nyVurdering = Vurdering()
+                nyVurdering.leggTilGradering(høyreSegment.verdi)
+                Segment(periode, nyVurdering)
+            } else {
+                val vurdering = venstreSegment?.verdi
+                if (høyreSegment?.verdi != null) {
+                    vurdering?.leggTilGradering(høyreSegment.verdi)
+                }
+                Segment(periode, vurdering)
+            }
+        })
+    }
+
+    private fun regnUtGradering(arbeidsSegmenter: NavigableSet<Segment<TimerArbeid>>): NavigableSet<Segment<Gradering>> {
+        val antallTimerArbeid = arbeidsSegmenter.sumOf { it.verdi?.antallTimer ?: BigDecimal.ZERO }
+        val gradering =
+            Prosent(antallTimerArbeid.divide(BigDecimal(ANTALL_TIMER_I_ARBEIDSUKE).multiply(BigDecimal.TWO)).toInt())
+        return TreeSet(arbeidsSegmenter.map { segment ->
+            Segment(
+                segment.periode, Gradering(
+                    segment?.verdi ?: TimerArbeid(
+                        BigDecimal.ZERO
+                    ), gradering
+                )
+            )
+        })
     }
 }

@@ -2,12 +2,15 @@ package no.nav.aap.behandlingsflyt.underveis.tidslinje
 
 import no.nav.aap.behandlingsflyt.Periode
 import java.time.LocalDate
+import java.time.Period
 import java.util.*
+import java.util.function.Function
 
 
 class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>> = TreeSet()) : Iterable<Segment<T>> {
 
     constructor(initSegmenter: List<Segment<T>>) : this(TreeSet(initSegmenter))
+    constructor(periode: Periode, verdi: T?) : this(TreeSet(listOf(Segment(periode, verdi))))
 
     private val segmenter: NavigableSet<Segment<T>> = TreeSet()
 
@@ -91,6 +94,10 @@ class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>> = TreeSet()) : Iterab
         return kombiner(other, combinator, JoinStyle.DISJOINT)
     }
 
+    fun kryss(periode: Periode): Tidslinje<T> {
+        return kombiner(Tidslinje(periode, null), StandardSammenslåere.kunVenstre(), JoinStyle.INNER_JOIN)
+    }
+
     fun <V> kryss(other: Tidslinje<V>): Tidslinje<T> {
         return kombiner(other, StandardSammenslåere.kunVenstre(), JoinStyle.INNER_JOIN)
     }
@@ -119,6 +126,83 @@ class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>> = TreeSet()) : Iterab
         return Tidslinje(compressedSegmenter)
     }
 
+    fun <R> mapValue(mapper: Function<T?, R>): Tidslinje<R> {
+        val newSegments: NavigableSet<Segment<R>> = TreeSet()
+        segmenter.forEach { s ->
+            newSegments.add(
+                Segment(
+                    s.periode,
+                    mapper.apply(s.verdi)
+                )
+            )
+        }
+        return Tidslinje(newSegments)
+    }
+
+    fun splittOppEtter(period: Period): Tidslinje<T> {
+        return splittOppEtter(minDato(), maxDato(), period)
+    }
+
+    fun splittOppEtter(startDato: LocalDate, period: Period): Tidslinje<T> {
+        return splittOppEtter(startDato, maxDato(), period)
+    }
+
+    /**
+     * Knekker opp segmenterene i henhold til period fom startDato tom sluttDato
+     */
+    fun splittOppEtter(startDato: LocalDate, sluttDato: LocalDate, period: Period): Tidslinje<T> {
+        require(!(LocalDate.MIN == startDato || LocalDate.MAX == sluttDato || sluttDato.isBefore(startDato))) {
+            String.format(
+                "kan ikke periodisere tidslinjen mellom angitte datoer: [%s, %s]",
+                startDato,
+                sluttDato
+            )
+        }
+
+        val segmenter: NavigableSet<Segment<T>> = TreeSet()
+
+        val maxLocalDate: LocalDate = minOf(maxDato(), sluttDato)
+        var dt = startDato
+        while (!dt.isAfter(maxLocalDate)) {
+            val nextDt = dt.plus(period)
+
+            val nesteSegmenter: NavigableSet<Segment<T>> = kryss(Periode(dt, nextDt.minusDays(1))).segmenter
+            segmenter.addAll(nesteSegmenter)
+            dt = nextDt
+        }
+        return Tidslinje(segmenter)
+    }
+
+    fun <R> splittOppOgMapOmEtter(period: Period, mapper: Function<NavigableSet<Segment<T>>, NavigableSet<Segment<R>>>): Tidslinje<R> {
+        return splittOppOgMapOmEtter(minDato(), maxDato(), period, mapper)
+    }
+
+    /**
+     * Knekker opp segmenterene i henhold til period fom startDato tom sluttDato
+     */
+    fun <R> splittOppOgMapOmEtter(startDato: LocalDate, sluttDato: LocalDate, period: Period, mapper: Function<NavigableSet<Segment<T>>, NavigableSet<Segment<R>>>): Tidslinje<R> {
+        require(!(LocalDate.MIN == startDato || LocalDate.MAX == sluttDato || sluttDato.isBefore(startDato))) {
+            String.format(
+                "kan ikke periodisere tidslinjen mellom angitte datoer: [%s, %s]",
+                startDato,
+                sluttDato
+            )
+        }
+
+        val segmenter: NavigableSet<Segment<R>> = TreeSet()
+
+        val maxLocalDate: LocalDate = minOf(maxDato(), sluttDato)
+        var dt = startDato
+        while (!dt.isAfter(maxLocalDate)) {
+            val nextDt = dt.plus(period)
+
+            val nesteSegmenter: NavigableSet<Segment<T>> = kryss(Periode(dt, nextDt.minusDays(1))).segmenter
+            segmenter.addAll(mapper.apply(nesteSegmenter))
+            dt = nextDt
+        }
+        return Tidslinje(segmenter)
+    }
+
     /**
      * Henter segmentet som inneholder datoen
      */
@@ -128,6 +212,20 @@ class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>> = TreeSet()) : Iterab
 
     override fun iterator(): Iterator<Segment<T>> {
         return segmenter.iterator()
+    }
+
+    fun minDato(): LocalDate {
+        check(!segmenter.isEmpty()) {
+            "Timeline is empty" //$NON-NLS-1$
+        }
+        return segmenter.first().fom()
+    }
+
+    fun maxDato(): LocalDate {
+        check(!segmenter.isEmpty()) {
+            "Timeline is empty" //$NON-NLS-1$
+        }
+        return segmenter.last().tom()
     }
 
     override fun equals(other: Any?): Boolean {
