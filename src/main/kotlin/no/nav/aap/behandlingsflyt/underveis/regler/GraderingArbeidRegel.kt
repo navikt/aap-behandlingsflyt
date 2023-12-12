@@ -37,15 +37,15 @@ class GraderingArbeidRegel : UnderveisRegel {
             .kombiner(opptrappingTidslinje, StandardSammenslåere.prioriterHøyreSide())
 
         return resultat.kombiner(grenseverdiGradering, { periode, venstreSegment, høyreSegment ->
-            val vurdering = venstreSegment?.verdi
+            var vurdering: Vurdering? = venstreSegment?.verdi
             if (høyreSegment?.verdi != null) {
-                vurdering?.leggTilGrenseverdi(høyreSegment.verdi)
+                vurdering = vurdering?.leggTilGrenseverdi(høyreSegment.verdi)
             }
             Segment(periode, vurdering)
         }).kombiner(arbeidsTidslinje, { periode, venstreSegment, høyreSegment ->
-            val vurdering = venstreSegment?.verdi
+            var vurdering: Vurdering? = venstreSegment?.verdi
             if (høyreSegment?.verdi != null) {
-                vurdering?.leggTilGradering(høyreSegment.verdi)
+                vurdering = vurdering?.leggTilGradering(høyreSegment.verdi)
             }
             Segment(periode, vurdering)
         })

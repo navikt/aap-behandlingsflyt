@@ -3,26 +3,42 @@ package no.nav.aap.behandlingsflyt.underveis.regler
 import no.nav.aap.behandlingsflyt.beregning.Prosent
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Utfall
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårtype
+import java.util.*
 
-class Vurdering {
-    private val vurderinger: HashMap<Vilkårtype, Utfall> = HashMap()
-    private var gradering: Gradering? = null
-    private var grenseverdi: Prosent? = null
+class Vurdering(
+    private val vurderinger: EnumMap<Vilkårtype, Utfall> = EnumMap(Vilkårtype::class.java),
+    private val gradering: Gradering? = null,
+    private val grenseverdi: Prosent? = null
+) {
 
-    fun leggTilVurdering(vilkårtype: Vilkårtype, utfall: Utfall) {
-        vurderinger[vilkårtype] = utfall
+    fun leggTilVurdering(vilkårtype: Vilkårtype, utfall: Utfall): Vurdering {
+        val kopi = EnumMap(vurderinger)
+        kopi[vilkårtype] = utfall
+        return Vurdering(
+            vurderinger = kopi,
+            gradering = gradering,
+            grenseverdi = grenseverdi
+        )
     }
 
-    fun leggTilGradering(gradering: Gradering) {
-        this.gradering = gradering
+    fun leggTilGradering(gradering: Gradering): Vurdering {
+        return Vurdering(
+            vurderinger = this.vurderinger,
+            gradering = gradering,
+            grenseverdi = this.grenseverdi
+        )
     }
 
-    fun leggTilGrenseverdi(grenseverdi: Prosent) {
-        this.grenseverdi = grenseverdi
+    fun leggTilGrenseverdi(grenseverdi: Prosent): Vurdering {
+        return Vurdering(
+            vurderinger = this.vurderinger,
+            gradering = this.gradering,
+            grenseverdi = grenseverdi
+        )
     }
 
     fun vurderinger(): Map<Vilkårtype, Utfall> {
-        return vurderinger
+        return vurderinger.toMap()
     }
 
     fun harRett(): Boolean {

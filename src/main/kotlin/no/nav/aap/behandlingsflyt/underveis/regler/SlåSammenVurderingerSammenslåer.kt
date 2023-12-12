@@ -11,13 +11,13 @@ class SlåSammenVurderingerSammenslåer : SegmentSammenslåer<Vurdering, EnkelVu
         høyreSegment: Segment<EnkelVurdering>?
     ): Segment<Vurdering> {
         return if (venstreSegment?.verdi == null && høyreSegment?.verdi != null) {
-            val nyVurdering = Vurdering()
-            nyVurdering.leggTilVurdering(høyreSegment.verdi.vilkår, høyreSegment.verdi.utfall)
+            var nyVurdering = Vurdering()
+            nyVurdering = nyVurdering.leggTilVurdering(høyreSegment.verdi.vilkår, høyreSegment.verdi.utfall)
             Segment(periode, nyVurdering)
         } else {
-            val vurdering = venstreSegment?.verdi
+            var vurdering = venstreSegment?.verdi
             if (høyreSegment?.verdi != null) {
-                vurdering?.leggTilVurdering(høyreSegment.verdi.vilkår, høyreSegment.verdi.utfall)
+                vurdering = vurdering?.leggTilVurdering(høyreSegment.verdi.vilkår, høyreSegment.verdi.utfall)
             }
             Segment(periode, vurdering)
         }

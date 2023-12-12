@@ -31,7 +31,7 @@ class Row(private val resultSet: ResultSet) {
     }
 
     inline fun <reified T : Enum<T>> getEnum(columnLabel: String): T {
-        return enumValueOf<T>(getString(columnLabel))
+        return enumValueOf(getString(columnLabel))
     }
 
     inline fun <reified T : Enum<T & Any>?> getEnumOrNull(columnLabel: String): T? {
