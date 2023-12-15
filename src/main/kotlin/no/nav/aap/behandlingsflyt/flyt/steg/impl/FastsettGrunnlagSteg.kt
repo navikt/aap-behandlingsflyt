@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.beregning.BeregningService
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.InntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykdomRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.YrkesskadeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -28,7 +28,8 @@ class FastsettGrunnlagSteg(private val beregningService: BeregningService) : Beh
             return FastsettGrunnlagSteg(
                 BeregningService(
                     InntektGrunnlagRepository(connection),
-                    SykdomRepository(connection)
+                    SykdomRepository(connection),
+                    UføreRepository(connection)
                 )
             )
         }

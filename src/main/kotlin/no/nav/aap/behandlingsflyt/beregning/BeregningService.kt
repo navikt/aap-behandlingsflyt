@@ -8,16 +8,19 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.InntektGrunnlagRepositor
 import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.adapter.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.uføre.UføreRepository
 import java.time.Year
 
 class BeregningService(
     private val inntektGrunnlagRepository: InntektGrunnlagRepository,
-    private val sykdomRepository: SykdomRepository
+    private val sykdomRepository: SykdomRepository,
+    private val uføreRepository: UføreRepository
 ) {
 
     fun beregnGrunnlag(behandlingId: BehandlingId): GUnit {
         val inntektGrunnlag = inntektGrunnlagRepository.hent(behandlingId)
         val sykdomGrunnlag = sykdomRepository.hent(behandlingId)
+        val uføre = uføreRepository.hentHvisEksisterer(behandlingId)
 
         val inntekter = utledInput(sykdomGrunnlag)
 
@@ -25,7 +28,9 @@ class BeregningService(
 
         val inntekterYtterligereNedsatt = inntekter.utledForYtterligereNedsatt(inntektGrunnlag.inntekter)
 
-        if (inntekterYtterligereNedsatt != null) {
+        val uføregrad = uføre?.vurdering?.uføregrad
+
+        if (inntekterYtterligereNedsatt != null && uføregrad != null) {
             val beregningMedYrkesskadeVedYtterligereNedsatt = beregn(sykdomGrunnlag, inntekterYtterligereNedsatt)
             val uføreberegning = UføreBeregning(
                 beregningMedYrkesskade,
@@ -33,7 +38,7 @@ class BeregningService(
                 //TODO:
                 // Hva hvis bruker har flere uføregrader?
                 // Skal saksbahandler velge den som er knyttet til ytterligere nedsatt-tidspunktet?
-                Prosent.`0_PROSENT` //FIXME: Finn uføregrad
+                uføregrad = uføregrad
             )
             return uføreberegning.beregnUføre().grunnlaget()
         }
