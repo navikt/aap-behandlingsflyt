@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Personopplysn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykepengerErstatningRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.flyt.vilkår.VilkårsresultatRepository
 
@@ -23,6 +24,7 @@ class GrunnlagKopierer(connection: DBConnection) {
     private val meldepliktRepository = MeldepliktRepository(connection)
     private val sykepengerErstatningRepository = SykepengerErstatningRepository(connection)
     private val arbeidsevneRepository = ArbeidsevneRepository(connection)
+    private val uføreRepository = UføreRepository(connection)
 
     fun overfør(fraBehandling: Behandling, tilBehandling: Behandling) {
         vilkårsresultatRepository.kopier(fraBehandling.id, tilBehandling.id)
@@ -34,5 +36,6 @@ class GrunnlagKopierer(connection: DBConnection) {
         meldepliktRepository.kopier(fraBehandling.id, tilBehandling.id)
         sykepengerErstatningRepository.kopier(fraBehandling.id, tilBehandling.id)
         arbeidsevneRepository.kopier(fraBehandling.id, tilBehandling.id)
+        uføreRepository.kopier(fraBehandling.id, tilBehandling.id)
     }
 }

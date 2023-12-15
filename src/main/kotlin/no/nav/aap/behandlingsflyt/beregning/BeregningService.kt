@@ -30,6 +30,9 @@ class BeregningService(
             val uføreberegning = UføreBeregning(
                 beregningMedYrkesskade,
                 beregningMedYrkesskadeVedYtterligereNedsatt,
+                //TODO:
+                // Hva hvis bruker har flere uføregrader?
+                // Skal saksbahandler velge den som er knyttet til ytterligere nedsatt-tidspunktet?
                 Prosent.`0_PROSENT` //FIXME: Finn uføregrad
             )
             return uføreberegning.beregnUføre().grunnlaget()
