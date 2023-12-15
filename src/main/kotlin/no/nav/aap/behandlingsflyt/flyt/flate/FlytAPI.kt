@@ -24,7 +24,7 @@ import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårtype
 fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
     route("/api/behandling") {
         route("/{referanse}/flyt") {
-            get<BehandlingReferanse, BehandlingFlytOgTilstand2Dto> { req ->
+            get<BehandlingReferanse, BehandlingFlytOgTilstandDto> { req ->
                 val dto = dataSource.transaction { connection ->
                     val behandling = behandling(connection, req)
                     val stegGrupper: Map<StegGruppe, List<StegType>> =
@@ -32,7 +32,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
 
                     val aktivtSteg = behandling.aktivtSteg()
                     var erFullført = true
-                    BehandlingFlytOgTilstand2Dto(
+                    BehandlingFlytOgTilstandDto(
                         flyt = stegGrupper.map { (gruppe, steg) ->
                             erFullført = erFullført && gruppe != aktivtSteg.gruppe
                             FlytGruppe(
