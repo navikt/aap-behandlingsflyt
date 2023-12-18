@@ -135,8 +135,8 @@ class BehandlingFlyt private constructor(
 
     fun frivilligeAvklaringsbehovRelevantForFlyten(): List<Definisjon> {
         val stegene = stegene()
-        return Definisjon.entries.filter { def ->
-            stegene.contains(def.løsesISteg) && def.erFrivillig()
+        return Definisjon.entries
+            .filter { def -> stegene.contains(def.løsesISteg) && def.erFrivillig()
         }
     }
 

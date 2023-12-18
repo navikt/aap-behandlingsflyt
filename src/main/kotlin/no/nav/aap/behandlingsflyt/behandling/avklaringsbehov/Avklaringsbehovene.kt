@@ -12,26 +12,11 @@ class Avklaringsbehovene(
 
     private var avklaringsbehovene: MutableList<Avklaringsbehov> = repository.hentBehovene(behandlingId).toMutableList()
 
-    fun leggTil(avklaringsbehov: Avklaringsbehov) {
-        val relevantBehov = alle().firstOrNull { it.definisjon == avklaringsbehov.definisjon }
-
-        //TODO: Flytte denne sjekken et hakk opp?
-        if (relevantBehov != null) {
-            repository.endreAvklaringsbehov(
-                avklaringsbehovId = relevantBehov.id,
-                status = avklaringsbehov.status(),
-                begrunnelse = "",
-                opprettetAv = "system"
-            )
-            relevantBehov.reåpne()
-        } else {
-            repository.leggTilAvklaringsbehov(
-                behandlingId = behandlingId,
-                definisjon = avklaringsbehov.definisjon,
-                funnetISteg = avklaringsbehov.funnetISteg
-            )
-            avklaringsbehovene.add(avklaringsbehov)
-        }
+    fun løsAvklaringsbehov(definisjon: Definisjon, begrunnelse: String, endretAv: String, kreverToTrinn: Boolean) {
+        val avklaringsbehov = alle().single { it.definisjon == definisjon }
+        avklaringsbehov.løs(begrunnelse = begrunnelse, endretAv = endretAv, kreverToTrinn = kreverToTrinn)
+        repository.kreverToTrinn(avklaringsbehov.id, kreverToTrinn)
+        repository.endre(avklaringsbehov)
     }
 
     fun løsAvklaringsbehov(definisjon: Definisjon, begrunnelse: String, endretAv: String) {
@@ -53,11 +38,26 @@ class Avklaringsbehovene(
         repository.endre(avklaringsbehov)
     }
 
-    fun løsAvklaringsbehov(definisjon: Definisjon, begrunnelse: String, endretAv: String, kreverToTrinn: Boolean) {
-        val avklaringsbehov = alle().single { it.definisjon == definisjon }
-        avklaringsbehov.løs(begrunnelse = begrunnelse, endretAv = endretAv, kreverToTrinn = kreverToTrinn)
-        repository.kreverToTrinn(avklaringsbehov.id, kreverToTrinn)
-        repository.endre(avklaringsbehov)
+    fun leggTil(avklaringsbehov: Avklaringsbehov) {
+        val relevantBehov = alle().firstOrNull { it.definisjon == avklaringsbehov.definisjon }
+
+        //TODO: Flytte denne sjekken et hakk opp?
+        if (relevantBehov != null) {
+            repository.endreAvklaringsbehov(
+                avklaringsbehovId = relevantBehov.id,
+                status = avklaringsbehov.status(),
+                begrunnelse = "",
+                opprettetAv = "system"
+            )
+            relevantBehov.reåpne()
+        } else {
+            repository.leggTilAvklaringsbehov(
+                behandlingId = behandlingId,
+                definisjon = avklaringsbehov.definisjon,
+                funnetISteg = avklaringsbehov.funnetISteg
+            )
+            avklaringsbehovene.add(avklaringsbehov)
+        }
     }
 
     fun alle(): List<Avklaringsbehov> {
