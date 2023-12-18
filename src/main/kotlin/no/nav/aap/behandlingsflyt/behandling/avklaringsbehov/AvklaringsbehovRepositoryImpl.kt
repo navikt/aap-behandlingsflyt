@@ -73,16 +73,7 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         }
 
         if (kreverToTrinn != null) {
-            val query = """
-            UPDATE AVKLARINGSBEHOV SET krever_to_trinn = ? WHERE id = ?
-            """.trimIndent()
-
-            connection.execute(query) {
-                setParams {
-                    setLong(2, avklaringsbehov.id)
-                    setBoolean(1, kreverToTrinn)
-                }
-            }
+            kreverToTrinn(avklaringsbehov.id, kreverToTrinn)
         }
 
         opprettAvklaringsbehovEndring(avklaringsbehov.id, Status.AVSLUTTET, begrunnelse, "Saksbehandler")
