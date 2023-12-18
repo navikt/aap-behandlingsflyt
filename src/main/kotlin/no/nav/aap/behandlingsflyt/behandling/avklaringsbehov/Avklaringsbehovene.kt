@@ -39,7 +39,7 @@ class Avklaringsbehovene(
 
     fun leggTil(definisjoner: List<Definisjon>, stegType: StegType) {
         definisjoner.forEach { definisjon ->
-            repository.leggTilAvklaringsbehov(
+            repository.opprett(
                 behandlingId = behandlingId,
                 definisjon = definisjon,
                 funnetISteg = stegType
@@ -62,11 +62,12 @@ class Avklaringsbehovene(
             )
             relevantBehov.reåpne()
         } else {
-            repository.leggTilAvklaringsbehov(
+            repository.opprett(
                 behandlingId = behandlingId,
                 definisjon = avklaringsbehov.definisjon,
                 funnetISteg = avklaringsbehov.funnetISteg
             )
+            //TODO: Her legger vi til en avklaring som ikke er gyldig
             avklaringsbehovene.add(avklaringsbehov)
         }
     }

@@ -7,7 +7,7 @@ class FakeAvklaringsbehovRepository : AvklaringsbehovRepository, Avklaringsbehov
 
     private val behovPerBehandling = HashMap<BehandlingId, MutableList<Avklaringsbehov>>()
 
-    override fun leggTilAvklaringsbehov(behandlingId: BehandlingId, definisjon: Definisjon, funnetISteg: StegType) {
+    override fun opprett(behandlingId: BehandlingId, definisjon: Definisjon, funnetISteg: StegType) {
         val avklaringsbehov = behovPerBehandling.getOrDefault(behandlingId, mutableListOf())
 
         avklaringsbehov.add(

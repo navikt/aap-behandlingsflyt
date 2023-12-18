@@ -15,7 +15,7 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         )
     }
 
-    override fun leggTilAvklaringsbehov(behandlingId: BehandlingId, definisjon: Definisjon, funnetISteg: StegType) {
+    override fun opprett(behandlingId: BehandlingId, definisjon: Definisjon, funnetISteg: StegType) {
         //TODO: Kan vi utelukke denne sjekken? LeggTil burde alltid opprette - finnes den fra før må den evt. endres.
         var avklaringsbehovId = hentRelevantAvklaringsbehov(behandlingId, definisjon)
 
