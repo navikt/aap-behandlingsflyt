@@ -1,4 +1,74 @@
 package no.nav.aap.behandlingsflyt.mottak
 
-class MottattDokumentRepository {
+import no.nav.aap.behandlingsflyt.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.behandling.dokumenter.JournalpostId
+import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
+import no.nav.aap.behandlingsflyt.sak.SakId
+
+class MottattDokumentRepository(private val connection: DBConnection) {
+    fun lagre(mottattDokument: MottattDokument) {
+        val query = """
+            INSERT INTO MOTTATT_DOKUMENT (sak_id, journalpost_id, mottatt_tidspunkt, type, status) VALUES (?, ?, ?, ?, ?)
+        """.trimIndent()
+
+        connection.execute(query) {
+            setParams {
+                setLong(1, mottattDokument.sakId.toLong())
+                setString(2, mottattDokument.journalpostId.identifikator)
+                setLocalDateTime(3, mottattDokument.mottattTidspunkt)
+                setEnumName(4, mottattDokument.type)
+                setEnumName(5, mottattDokument.status)
+            }
+        }
+    }
+
+    fun oppdaterStatus(journalpostId: JournalpostId, behandlingId: BehandlingId, status: Status) {
+        val query = """
+            UPDATE MOTTATT_DOKUMENT SET behandling_id = ?, status = ? WHERE journalpost_id = ?
+        """.trimIndent()
+        connection.execute(query) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setEnumName(2, status)
+                setString(3, journalpostId.identifikator)
+            }
+        }
+    }
+
+    fun hentUbehandledeDokumenterAvType(sakId: SakId, dokumentType: DokumentType): Set<JournalpostId> {
+        val query = """
+            SELECT journalpost_id FROM MOTTATT_DOKUMENT WHERE sak_id = ? AND status = ? AND type = ?
+        """.trimIndent()
+
+        return connection.queryList(query) {
+            setParams {
+                setLong(1, sakId.toLong())
+                setEnumName(2, Status.MOTTATT)
+                setEnumName(3, dokumentType)
+            }
+            setRowMapper {
+                JournalpostId(it.getString("journalpost_id"))
+            }
+        }.toSet()
+    }
+
+    fun hentDokumentRekkefølge(sakId: SakId, type: DokumentType): Set<DokumentRekkefølge> {
+        val query = """
+            SELECT journalpost_id, mottatt_tidspunkt FROM MOTTATT_DOKUMENT WHERE sak_id = ? AND status = ? AND type = ?
+        """.trimIndent()
+
+        return connection.queryList(query) {
+            setParams {
+                setLong(1, sakId.toLong())
+                setEnumName(2, Status.BEHANDLET)
+                setEnumName(3, type)
+            }
+            setRowMapper {
+                DokumentRekkefølge(
+                    JournalpostId(it.getString("journalpost_id")),
+                    it.getLocalDateTime("mottatt_tidspunkt")
+                )
+            }
+        }.toSet()
+    }
 }

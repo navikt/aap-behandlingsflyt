@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt.behandlingstyper
 
 import no.nav.aap.behandlingsflyt.behandling.BehandlingType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.arbeid.PliktkortService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.InntektService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.PersonopplysningService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.YrkesskadeService
@@ -37,8 +38,8 @@ object Førstegangsbehandling : BehandlingType {
             .medSteg(steg = VurderSykepengeErstatningSteg)
             .medSteg(steg = GeneriskPlaceholderFlytSteg(StegType.VURDER_MEDLEMSKAP))
             .medSteg(steg = FastsettGrunnlagSteg, informasjonskrav = listOf(InntektService))
-            .medSteg(steg = UnderveisSteg)
             .medSteg(steg = GeneriskPlaceholderFlytSteg(StegType.BARNETILLEGG))
+            .medSteg(steg = UnderveisSteg, informasjonskrav = listOf(PliktkortService))
             .medSteg(steg = GeneriskPlaceholderFlytSteg(StegType.SAMORDNING))
             .medSteg(steg = GeneriskPlaceholderFlytSteg(StegType.SIMULERING))
             .medSteg(steg = GeneriskPlaceholderFlytSteg(StegType.BEREGN_TILKJENT_YTELSE))

@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.mottak.pliktkort
+package no.nav.aap.behandlingsflyt.faktagrunnlag.arbeid
 
 import no.nav.aap.behandlingsflyt.behandling.dokumenter.JournalpostId
 

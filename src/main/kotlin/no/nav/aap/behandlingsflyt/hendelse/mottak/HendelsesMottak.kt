@@ -32,9 +32,8 @@ class HendelsesMottak(private val dataSource: DataSource) {
 
             val sakRepository = sakRepository(connection)
             sakRepository.finnEllerOpprett(person, hendelse.periode())
-
-            // Legg til kø for sak, men mocker ved å kalle videre bare
         }
+        // Legg til kø for sak, men mocker ved å kalle videre bare
         håndtere(sak.saksnummer, hendelse.tilSakshendelse())
     }
 
