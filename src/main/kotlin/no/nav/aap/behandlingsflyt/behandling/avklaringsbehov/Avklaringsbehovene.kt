@@ -62,24 +62,14 @@ class Avklaringsbehovene(
         }
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
         avklaringsbehov.løs(begrunnelse, endretAv = endretAv)
-        repository.endreAvklaringsbehov(
-            avklaringsbehovId = avklaringsbehov.id,
-            status = Status.AVSLUTTET,
-            begrunnelse = begrunnelse,
-            opprettetAv = endretAv
-        )
+        repository.endre(avklaringsbehov)
     }
 
     fun løsAvklaringsbehov(definisjon: Definisjon, begrunnelse: String, endretAv: String, kreverToTrinn: Boolean) {
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
         avklaringsbehov.løs(begrunnelse = begrunnelse, endretAv = endretAv, kreverToTrinn = kreverToTrinn)
         repository.kreverToTrinn(avklaringsbehov.id, kreverToTrinn)
-        repository.endreAvklaringsbehov(
-            avklaringsbehovId = avklaringsbehov.id,
-            status = Status.AVSLUTTET,
-            begrunnelse = begrunnelse,
-            opprettetAv = endretAv
-        )
+        repository.endre(avklaringsbehov)
     }
 
     fun alle(): List<Avklaringsbehov> {
@@ -148,12 +138,7 @@ class Avklaringsbehovene(
     fun avbryt(definisjon: Definisjon) {
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
         avklaringsbehov.avbryt()
-        repository.endreAvklaringsbehov(
-            avklaringsbehovId = avklaringsbehov.id,
-            status = Status.AVBRUTT,
-            begrunnelse = "",
-            opprettetAv = "system"
-        )
+        repository.endre(avklaringsbehov)
     }
 
     fun harHattAvklaringsbehov(): Boolean {
@@ -179,12 +164,7 @@ class Avklaringsbehovene(
     fun reåpne(definisjon: Definisjon) {
         val avklaringsbehov = avklaringsbehovene.single { it.definisjon == definisjon }
         avklaringsbehov.reåpne()
-        repository.endreAvklaringsbehov(
-            avklaringsbehovId = avklaringsbehov.id,
-            status = Status.OPPRETTET,
-            begrunnelse = "",
-            opprettetAv = "system"
-        )
+        repository.endre(avklaringsbehov)
     }
 
     fun harVærtSendtTilbakeFraBeslutterTidligere(): Boolean {
