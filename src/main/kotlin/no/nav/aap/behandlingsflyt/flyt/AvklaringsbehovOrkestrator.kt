@@ -124,11 +124,5 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
                 løsningsResultat.kreverToTrinn
             )
         }
-        avklaringsbehovRepository.løs(
-            behandlingId = behandling.id,
-            definisjon = it.definisjon(),
-            begrunnelse = løsningsResultat.begrunnelse,
-            kreverToTrinn = løsningsResultat.kreverToTrinn
-        )
     }
 }
