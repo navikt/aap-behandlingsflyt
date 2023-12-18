@@ -53,7 +53,7 @@ class FakeAvklaringsbehovRepository : AvklaringsbehovRepository, Avklaringsbehov
 
     }
 
-    override fun opprettAvklaringsbehovEndring(
+    override fun endreAvklaringsbehov(
         avklaringsbehovId: Long,
         status: Status,
         begrunnelse: String,

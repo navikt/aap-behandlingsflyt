@@ -29,7 +29,7 @@ class Avklaringsbehovene(
         val relevantBehov = alle().firstOrNull { it.definisjon == avklaringsbehov.definisjon }
 
         if (relevantBehov != null) {
-            repository.opprettAvklaringsbehovEndring(
+            repository.endreAvklaringsbehov(
                 avklaringsbehovId = relevantBehov.id,
                 status = avklaringsbehov.status(),
                 begrunnelse = "",
@@ -62,7 +62,7 @@ class Avklaringsbehovene(
         }
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
         avklaringsbehov.løs(begrunnelse, endretAv = endretAv)
-        repository.opprettAvklaringsbehovEndring(
+        repository.endreAvklaringsbehov(
             avklaringsbehovId = avklaringsbehov.id,
             status = Status.AVSLUTTET,
             begrunnelse = begrunnelse,
@@ -74,7 +74,7 @@ class Avklaringsbehovene(
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
         avklaringsbehov.løs(begrunnelse = begrunnelse, endretAv = endretAv, kreverToTrinn = kreverToTrinn)
         repository.kreverToTrinn(avklaringsbehov.id, kreverToTrinn)
-        repository.opprettAvklaringsbehovEndring(
+        repository.endreAvklaringsbehov(
             avklaringsbehovId = avklaringsbehov.id,
             status = Status.AVSLUTTET,
             begrunnelse = begrunnelse,
@@ -137,7 +137,7 @@ class Avklaringsbehovene(
         } else {
             Status.SENDT_TILBAKE_FRA_BESLUTTER
         }
-        repository.opprettAvklaringsbehovEndring(
+        repository.endreAvklaringsbehov(
             avklaringsbehovId = avklaringsbehov.id,
             status = status,
             begrunnelse = begrunnelse,
@@ -148,7 +148,7 @@ class Avklaringsbehovene(
     fun avbryt(definisjon: Definisjon) {
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
         avklaringsbehov.avbryt()
-        repository.opprettAvklaringsbehovEndring(
+        repository.endreAvklaringsbehov(
             avklaringsbehovId = avklaringsbehov.id,
             status = Status.AVBRUTT,
             begrunnelse = "",
@@ -179,7 +179,7 @@ class Avklaringsbehovene(
     fun reåpne(definisjon: Definisjon) {
         val avklaringsbehov = avklaringsbehovene.single { it.definisjon == definisjon }
         avklaringsbehov.reåpne()
-        repository.opprettAvklaringsbehovEndring(
+        repository.endreAvklaringsbehov(
             avklaringsbehovId = avklaringsbehov.id,
             status = Status.OPPRETTET,
             begrunnelse = "",

@@ -12,5 +12,5 @@ interface AvklaringsbehovOperasjonerRepository {
     fun løs(behandlingId: BehandlingId, definisjon: Definisjon, begrunnelse: String, kreverToTrinn: Boolean?)
     fun hentBehovene(behandlingId: BehandlingId): List<Avklaringsbehov>
     fun kreverToTrinn(avklaringsbehovId: Long, kreverToTrinn: Boolean)
-    fun opprettAvklaringsbehovEndring(avklaringsbehovId: Long, status: Status, begrunnelse: String, opprettetAv: String)
+    fun endreAvklaringsbehov(avklaringsbehovId: Long, status: Status, begrunnelse: String, opprettetAv: String)
 }

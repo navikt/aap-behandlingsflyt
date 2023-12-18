@@ -23,7 +23,7 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
             avklaringsbehovId = opprettAvklaringsbehov(behandlingId, definisjon, funnetISteg)
         }
 
-        opprettAvklaringsbehovEndring(avklaringsbehovId, Status.OPPRETTET, "", "Kelvin")
+        endreAvklaringsbehov(avklaringsbehovId, Status.OPPRETTET, "", "Kelvin")
     }
 
     private fun hentRelevantAvklaringsbehov(
@@ -76,10 +76,10 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
             kreverToTrinn(avklaringsbehov.id, kreverToTrinn)
         }
 
-        opprettAvklaringsbehovEndring(avklaringsbehov.id, Status.AVSLUTTET, begrunnelse, "Saksbehandler")
+        endreAvklaringsbehov(avklaringsbehov.id, Status.AVSLUTTET, begrunnelse, "Saksbehandler")
     }
 
-    override fun opprettAvklaringsbehovEndring(
+    override fun endreAvklaringsbehov(
         avklaringsbehovId: Long,
         status: Status,
         begrunnelse: String,
