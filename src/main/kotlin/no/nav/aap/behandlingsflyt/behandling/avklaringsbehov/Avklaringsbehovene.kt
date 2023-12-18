@@ -121,18 +121,7 @@ class Avklaringsbehovene(
     fun vurderTotrinn(definisjon: Definisjon, godkjent: Boolean, begrunnelse: String, vurdertAv: String) {
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
         avklaringsbehov.vurderTotrinn(begrunnelse, godkjent)
-        require(avklaringsbehov.erTotrinn())
-        val status = if (godkjent) {
-            Status.TOTRINNS_VURDERT
-        } else {
-            Status.SENDT_TILBAKE_FRA_BESLUTTER
-        }
-        repository.endreAvklaringsbehov(
-            avklaringsbehovId = avklaringsbehov.id,
-            status = status,
-            begrunnelse = begrunnelse,
-            opprettetAv = vurdertAv
-        )
+        repository.endre(avklaringsbehov)
     }
 
     fun avbryt(definisjon: Definisjon) {
