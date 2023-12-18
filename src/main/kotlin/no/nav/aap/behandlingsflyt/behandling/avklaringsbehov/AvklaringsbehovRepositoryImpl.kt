@@ -8,14 +8,6 @@ import java.time.LocalDateTime
 
 class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : AvklaringsbehovRepository, AvklaringsbehovOperasjonerRepository {
 
-    override fun leggTilAvklaringsbehov(
-        behandlingId: BehandlingId,
-        definisjoner: List<Definisjon>,
-        funnetISteg: StegType
-    ) {
-        definisjoner.forEach { definisjon -> leggTilAvklaringsbehov(behandlingId, definisjon, funnetISteg) }
-    }
-
     override fun leggTilAvklaringsbehov(behandlingId: BehandlingId, definisjon: Definisjon, funnetISteg: StegType) {
         var avklaringsbehovId = hentRelevantAvklaringsbehov(behandlingId, definisjon)
 

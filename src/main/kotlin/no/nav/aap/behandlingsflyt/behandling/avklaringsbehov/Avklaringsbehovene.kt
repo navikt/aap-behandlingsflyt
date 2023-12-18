@@ -9,7 +9,6 @@ class Avklaringsbehovene(
     private val repository: AvklaringsbehovOperasjonerRepository,
     private val behandlingId: BehandlingId
 ) {
-
     private var avklaringsbehovene: MutableList<Avklaringsbehov> = repository.hentAvklaringsbehovene(behandlingId).toMutableList()
 
     fun løsAvklaringsbehov(definisjon: Definisjon, begrunnelse: String, endretAv: String, kreverToTrinn: Boolean) {
@@ -38,12 +37,14 @@ class Avklaringsbehovene(
         repository.endre(avklaringsbehov)
     }
 
-    fun leggTil(definisjon: Definisjon, stegType: StegType) {
-        repository.leggTilAvklaringsbehov(
-            behandlingId = behandlingId,
-            definisjon = definisjon,
-            funnetISteg = stegType
-        )
+    fun leggTil(definisjoner: List<Definisjon>, stegType: StegType) {
+        definisjoner.forEach { definisjon ->
+            repository.leggTilAvklaringsbehov(
+                behandlingId = behandlingId,
+                definisjon = definisjon,
+                funnetISteg = stegType
+            )
+        }
     }
 
     fun leggTil(avklaringsbehov: Avklaringsbehov) {

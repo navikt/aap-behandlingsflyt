@@ -9,7 +9,6 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 interface AvklaringsbehovOperasjonerRepository {
     fun hentAvklaringsbehovene(behandlingId: BehandlingId): List<Avklaringsbehov>
     fun leggTilAvklaringsbehov(behandlingId: BehandlingId, definisjon: Definisjon, funnetISteg: StegType)
-    fun leggTilAvklaringsbehov(behandlingId: BehandlingId, definisjoner: List<Definisjon>, funnetISteg: StegType)
 
     @Deprecated("Vi ønsker å endre domeneobjektet, og la det lagre seg selv. Bruk `endre(avklaringsbehov)` i stedet.", replaceWith= ReplaceWith("endre"), DeprecationLevel.WARNING)
     fun endreAvklaringsbehov(avklaringsbehovId: Long, status: Status, begrunnelse: String, opprettetAv: String)

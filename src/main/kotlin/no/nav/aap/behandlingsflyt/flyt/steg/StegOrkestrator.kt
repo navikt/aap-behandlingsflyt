@@ -85,8 +85,7 @@ class StegOrkestrator(private val connection: DBConnection, private val aktivtSt
                 resultat.funnetAvklaringsbehov()
             )
             val avklaringsbehovene = avklaringsbehovRepository.hent(kontekst.behandlingId)
-            resultat.funnetAvklaringsbehov()
-                .forEach { definisjon -> avklaringsbehovene.leggTil(definisjon, aktivtSteg.type()) }
+            avklaringsbehovene.leggTil(resultat.funnetAvklaringsbehov(), aktivtSteg.type())
         }
 
         return resultat
