@@ -84,7 +84,7 @@ class StegOrkestrator(private val connection: DBConnection, private val aktivtSt
                 "Fant avklaringsbehov: {}",
                 resultat.funnetAvklaringsbehov()
             )
-            val avklaringsbehovene = avklaringsbehovRepository.hent(kontekst.behandlingId)
+            val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
             avklaringsbehovene.leggTil(resultat.funnetAvklaringsbehov(), aktivtSteg.type())
         }
 
@@ -96,7 +96,7 @@ class StegOrkestrator(private val connection: DBConnection, private val aktivtSt
         behandlingId: BehandlingId
     ): Transisjon {
         val relevanteAvklaringsbehov =
-            avklaringsbehovRepository.hent(behandlingId).alle()
+            avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId).alle()
                 .filter { it.erÅpent() }
                 .filter { behov -> behov.skalLøsesISteg(aktivtSteg.type()) }
 

@@ -8,6 +8,13 @@ import java.time.LocalDateTime
 
 class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : AvklaringsbehovRepository, AvklaringsbehovOperasjonerRepository {
 
+    override fun hentAvklaringsbehovene(behandlingId: BehandlingId): Avklaringsbehovene {
+        return Avklaringsbehovene(
+            repository = this,
+            behandlingId = behandlingId
+        )
+    }
+
     override fun leggTilAvklaringsbehov(behandlingId: BehandlingId, definisjon: Definisjon, funnetISteg: StegType) {
         //TODO: Kan vi utelukke denne sjekken? LeggTil burde alltid opprette - finnes den fra før må den evt. endres.
         var avklaringsbehovId = hentRelevantAvklaringsbehov(behandlingId, definisjon)
@@ -81,6 +88,7 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         )
     }
 
+    //TODO: Når denne ikke brukes utenfor repo kan den gjøres private - krever en liten avklaring
     override fun endreAvklaringsbehov(
         avklaringsbehovId: Long,
         status: Status,
@@ -103,14 +111,7 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         }
     }
 
-    override fun hent(behandlingId: BehandlingId): Avklaringsbehovene {
-        return Avklaringsbehovene(
-            repository = this,
-            behandlingId = behandlingId
-        )
-    }
-
-    override fun hentAvklaringsbehovene(behandlingId: BehandlingId): List<Avklaringsbehov> {
+    override fun hent(behandlingId: BehandlingId): List<Avklaringsbehov> {
         val query = """
             SELECT * FROM AVKLARINGSBEHOV WHERE behandling_id = ?
             """.trimIndent()

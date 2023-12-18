@@ -7,7 +7,6 @@ import no.nav.aap.behandlingsflyt.behandling.behandlingRepository
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.InitTestDatabase
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
-import no.nav.aap.behandlingsflyt.faktagrunnlag.uføre.UføreRepositoryTest
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 import no.nav.aap.behandlingsflyt.sak.Ident
 import no.nav.aap.behandlingsflyt.sak.PersonRepository
@@ -36,7 +35,7 @@ class AvklaringsbehovRepositoryTest {
                 )
             )
 
-            val avklaringsbehov = repository.hent(behandling.id)
+            val avklaringsbehov = repository.hentAvklaringsbehovene(behandling.id)
             assertThat(avklaringsbehov.alle()).hasSize(1)
             assertThat(avklaringsbehov.alle().get(0).erAvsluttet()).isFalse()
 
@@ -47,7 +46,7 @@ class AvklaringsbehovRepositoryTest {
                 kreverToTrinn = true
             )
 
-            val avklaringsbehovEtterLøst = repository.hent(BehandlingId(1))
+            val avklaringsbehovEtterLøst = repository.hentAvklaringsbehovene(BehandlingId(1))
             assertThat(avklaringsbehovEtterLøst.alle().get(0).erAvsluttet()).isTrue()
         }
     }

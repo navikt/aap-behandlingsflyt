@@ -15,7 +15,7 @@ class FatteVedtakLøser(val connection: DBConnection) : AvklaringsbehovsLøser<F
 
     override fun løs(kontekst: FlytKontekst, løsning: FatteVedtakLøsning): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
-        val avklaringsbehovene = avklaringsbehovRepository.hent(behandlingId = kontekst.behandlingId)
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId = kontekst.behandlingId)
 
         lateinit var sammenstiltBegrunnelse: String
         if (skalSendesTilbake(løsning.vurderinger)) {

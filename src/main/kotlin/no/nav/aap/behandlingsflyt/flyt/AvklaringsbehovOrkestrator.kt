@@ -64,7 +64,7 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
         ingenEndringIGruppe: Boolean
     ) {
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
-        val avklaringsbehovene = avklaringsbehovRepository.hent(kontekst.behandlingId)
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         if (ingenEndringIGruppe && avklaringsbehovene.harVærtSendtTilbakeFraBeslutterTidligere()) {
             val flyt = behandling.forberedtFlyt()
@@ -87,7 +87,7 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
         val definisjoner = avklaringsbehov.definisjon()
         log.info("Forsøker løse avklaringsbehov[${definisjoner}] på behandling[${behandling.referanse}]")
 
-        val eksisterenedeAvklaringsbehov = avklaringsbehovRepository.hent(kontekst.behandlingId).alle()
+        val eksisterenedeAvklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId).alle()
         ValiderBehandlingTilstand.validerTilstandBehandling(behandling, definisjoner, eksisterenedeAvklaringsbehov)
 
         // løses det behov som fremtvinger tilbakehopp?
@@ -109,7 +109,7 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
         val avklaringsbehovsLøser =
             avklaringsbehovsLøsere.getValue(it.definisjon()) as AvklaringsbehovsLøser<AvklaringsbehovLøsning>
         val løsningsResultat = avklaringsbehovsLøser.løs(kontekst = kontekst, løsning = it)
-        val avklaringsbehovene = avklaringsbehovRepository.hent(kontekst.behandlingId)
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         if (løsningsResultat.kreverToTrinn == null) {
             avklaringsbehovene.løsAvklaringsbehov(
                 it.definisjon(),

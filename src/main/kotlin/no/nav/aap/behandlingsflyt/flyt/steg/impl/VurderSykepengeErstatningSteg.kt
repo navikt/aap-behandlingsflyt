@@ -47,7 +47,7 @@ class VurderSykepengeErstatningSteg private constructor(
                 return StegResultat(listOf(Definisjon.AVKLAR_SYKEPENGEERSTATNING))
             }
         } else {
-            val avklaringsbehovene = avklaringsbehovRepository.hent(kontekst.behandlingId)
+            val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
             val sykepengeerstatningsBehov =
                 avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
 

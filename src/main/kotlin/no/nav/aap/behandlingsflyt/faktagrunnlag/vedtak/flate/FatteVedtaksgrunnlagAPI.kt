@@ -22,7 +22,7 @@ fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(dataSource: HikariDataSource) {
                     BehandlingReferanseService(it).behandling(req)
                 }
                 val dto = dataSource.transaction { connection ->
-                    val avklaringsbehovene = AvklaringsbehovRepositoryImpl(connection).hent(behandling.id)
+                    val avklaringsbehovene = AvklaringsbehovRepositoryImpl(connection).hentAvklaringsbehovene(behandling.id)
 
                     FatteVedtakGrunnlagDto(avklaringsbehovene.alle()
                         .filter { it.erTotrinn() }

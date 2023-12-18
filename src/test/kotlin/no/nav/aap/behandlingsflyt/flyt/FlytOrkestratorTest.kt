@@ -653,7 +653,7 @@ class FlytOrkestratorTest {
     }
 
     private fun hentAvklaringsbehov(behandlingId: BehandlingId, connection: DBConnection): Avklaringsbehovene {
-        return AvklaringsbehovRepositoryImpl(connection).hent(behandlingId)
+        return AvklaringsbehovRepositoryImpl(connection).hentAvklaringsbehovene(behandlingId)
     }
 
     private fun ventPåSvar() {

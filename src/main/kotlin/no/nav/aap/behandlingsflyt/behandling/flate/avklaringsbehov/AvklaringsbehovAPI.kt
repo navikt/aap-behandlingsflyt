@@ -25,7 +25,7 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource) {
                         MDC.putCloseable("behandlingId", lås.behandlingSkrivelås.id.toString()).use {
                             val behandling = behandlingRepository(connection).hent(lås.behandlingSkrivelås.id)
                             val avklaringsbehovene =
-                                AvklaringsbehovRepositoryImpl(connection).hent(lås.behandlingSkrivelås.id)
+                                AvklaringsbehovRepositoryImpl(connection).hentAvklaringsbehovene(lås.behandlingSkrivelås.id)
 
                             ValiderBehandlingTilstand.validerTilstandBehandling(
                                 behandling = behandling,

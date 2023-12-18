@@ -22,11 +22,11 @@ class FakeAvklaringsbehovRepository : AvklaringsbehovRepository, Avklaringsbehov
         behovPerBehandling[behandlingId] = avklaringsbehov
     }
 
-    override fun hent(behandlingId: BehandlingId): Avklaringsbehovene {
+    override fun hentAvklaringsbehovene(behandlingId: BehandlingId): Avklaringsbehovene {
         return Avklaringsbehovene(this, behandlingId)
     }
 
-    override fun hentAvklaringsbehovene(behandlingId: BehandlingId): List<Avklaringsbehov> {
+    override fun hent(behandlingId: BehandlingId): List<Avklaringsbehov> {
         return behovPerBehandling.getOrDefault(behandlingId, listOf())
     }
 

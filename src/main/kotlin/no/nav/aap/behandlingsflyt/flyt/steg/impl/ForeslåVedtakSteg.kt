@@ -14,7 +14,7 @@ class ForeslåVedtakSteg private constructor(
 ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekst): StegResultat {
-        val avklaringsbehov = avklaringsbehovRepository.hent(kontekst.behandlingId)
+        val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         if (avklaringsbehov.harHattAvklaringsbehov() && avklaringsbehov.harIkkeForeslåttVedtak()) {
             return StegResultat(listOf(Definisjon.FORESLÅ_VEDTAK))
@@ -24,7 +24,7 @@ class ForeslåVedtakSteg private constructor(
     }
 
     override fun vedTilbakeføring(kontekst: FlytKontekst) {
-        val avklaringsbehovene = avklaringsbehovRepository.hent(kontekst.behandlingId)
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val relevanteBehov = avklaringsbehovene.hentBehovForDefinisjon(listOf(Definisjon.FORESLÅ_VEDTAK))
 
         if (relevanteBehov.isNotEmpty()) {

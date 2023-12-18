@@ -27,7 +27,7 @@ class FlytOrkestrator(
 
     fun forberedBehandling(kontekst: FlytKontekst) {
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
-        val avklaringsbehovene = avklaringsbehovRepository.hent(kontekst.behandlingId)
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         ValiderBehandlingTilstand.validerTilstandBehandling(
             behandling = behandling,
@@ -64,7 +64,7 @@ class FlytOrkestrator(
 
     fun prosesserBehandling(kontekst: FlytKontekst) {
         val behandling = behandlingRepository(connection).hent(kontekst.behandlingId)
-        val avklaringsbehovene = avklaringsbehovRepository.hent(kontekst.behandlingId)
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         ValiderBehandlingTilstand.validerTilstandBehandling(
             behandling = behandling,
@@ -120,7 +120,7 @@ class FlytOrkestrator(
     internal fun forberedLøsingAvBehov(definisjoner: Definisjon, behandling: Behandling, kontekst: FlytKontekst) {
         val flyt = behandling.forberedtFlyt()
 
-        val avklaringsbehovene = avklaringsbehovRepository.hent(kontekst.behandlingId)
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val behovForLøsninger = avklaringsbehovene.hentBehovForDefinisjon(definisjoner)
         val tilbakeføringsflyt = flyt.tilbakeflyt(behovForLøsninger)
 
@@ -189,7 +189,7 @@ class FlytOrkestrator(
         //TODO: Vi må huske å lagre behandling etter at vi har endret status
         behandling.settPåVent()
 
-        val avklaringsbehovene = avklaringsbehovRepository.hent(kontekst.behandlingId)
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         avklaringsbehovene.leggTil(listOf(Definisjon.MANUELT_SATT_PÅ_VENT), behandling.aktivtSteg())
     }
 }

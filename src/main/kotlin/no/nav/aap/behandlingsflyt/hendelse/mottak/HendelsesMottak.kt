@@ -59,7 +59,7 @@ class HendelsesMottak(private val dataSource: DataSource) {
 
     fun håndtere(connection: DBConnection, key: BehandlingId, hendelse: LøsAvklaringsbehovBehandlingHendelse) {
         val behandling = behandlingRepository(connection).hent(key)
-        val avklaringsbehovene = AvklaringsbehovRepositoryImpl(connection).hent(behandling.id)
+        val avklaringsbehovene = AvklaringsbehovRepositoryImpl(connection).hentAvklaringsbehovene(behandling.id)
         ValiderBehandlingTilstand.validerTilstandBehandling(
             behandling = behandling,
             eksisterenedeAvklaringsbehov = avklaringsbehovene.alle()
@@ -77,7 +77,7 @@ class HendelsesMottak(private val dataSource: DataSource) {
     fun håndtere(key: BehandlingId, hendelse: BehandlingSattPåVent) {
         dataSource.transaction { connection ->
             val behandling = behandlingRepository(connection).hent(key)
-            val avklaringsbehovene = AvklaringsbehovRepositoryImpl(connection).hent(behandling.id)
+            val avklaringsbehovene = AvklaringsbehovRepositoryImpl(connection).hentAvklaringsbehovene(behandling.id)
             ValiderBehandlingTilstand.validerTilstandBehandling(
                 behandling = behandling,
                 eksisterenedeAvklaringsbehov = avklaringsbehovene.alle()
@@ -92,7 +92,7 @@ class HendelsesMottak(private val dataSource: DataSource) {
     fun håndtere(key: BehandlingId, hendelse: BehandlingHendelse) {
         dataSource.transaction { connection ->
             val behandling = behandlingRepository(connection).hent(key)
-            val avklaringsbehovene = AvklaringsbehovRepositoryImpl(connection).hent(behandling.id)
+            val avklaringsbehovene = AvklaringsbehovRepositoryImpl(connection).hentAvklaringsbehovene(behandling.id)
             ValiderBehandlingTilstand.validerTilstandBehandling(
                 behandling = behandling,
                 eksisterenedeAvklaringsbehov = avklaringsbehovene.alle()

@@ -14,7 +14,7 @@ class FatteVedtakSteg private constructor(
 ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekst): StegResultat {
-        val avklaringsbehov = avklaringsbehovRepository.hent(kontekst.behandlingId)
+        val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         if (avklaringsbehov.skalTilbakeføresEtterTotrinnsVurdering()) {
             return StegResultat(tilbakeførtFraBeslutter = true)

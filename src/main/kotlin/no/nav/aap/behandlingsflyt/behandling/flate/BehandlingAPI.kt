@@ -77,7 +77,7 @@ private fun behandling(connection: DBConnection, req: BehandlingReferanse): Beha
 }
 
 private fun avklaringsbehov(connection: DBConnection, behandlingId: BehandlingId): Avklaringsbehovene {
-    return AvklaringsbehovRepositoryImpl(connection).hent(behandlingId)
+    return AvklaringsbehovRepositoryImpl(connection).hentAvklaringsbehovene(behandlingId)
 }
 
 private fun vilkårResultat(connection: DBConnection, behandlingId: BehandlingId): Vilkårsresultat {
