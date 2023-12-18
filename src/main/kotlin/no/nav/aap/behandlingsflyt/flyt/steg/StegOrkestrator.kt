@@ -56,10 +56,10 @@ class StegOrkestrator(private val connection: DBConnection, private val aktivtSt
             nesteStegStatus
         )
         val transisjon = when (nesteStegStatus) {
-            StegStatus.UTFØRER -> behandleSteg(aktivtSteg, kontekst)
+            StegStatus.UTFØRER -> behandleSteg(kontekst, aktivtSteg.konstruer(connection))
             StegStatus.AVKLARINGSPUNKT -> harAvklaringspunkt(aktivtSteg.type(), kontekst.behandlingId)
             StegStatus.AVSLUTTER -> Fortsett
-            StegStatus.TILBAKEFØRT -> behandleStegBakover(aktivtSteg, kontekst)
+            StegStatus.TILBAKEFØRT -> behandleStegBakover(kontekst, aktivtSteg.konstruer(connection))
             else -> Fortsett
         }
 
@@ -69,8 +69,7 @@ class StegOrkestrator(private val connection: DBConnection, private val aktivtSt
         return transisjon
     }
 
-    private fun behandleSteg(flytSteg: FlytSteg, kontekst: FlytKontekst): Transisjon {
-        val steg = flytSteg.konstruer(connection)
+    private fun behandleSteg(kontekst: FlytKontekst, steg: BehandlingSteg): Transisjon {
         val stegResultat = steg.utfør(kontekst)
 
         val resultat = stegResultat.transisjon()
@@ -111,10 +110,8 @@ class StegOrkestrator(private val connection: DBConnection, private val aktivtSt
         return Fortsett
     }
 
-    private fun behandleStegBakover(flytSteg: FlytSteg, kontekst: FlytKontekst): Transisjon {
-        val steg = flytSteg.konstruer(connection)
+    private fun behandleStegBakover(kontekst: FlytKontekst, steg: BehandlingSteg): Transisjon {
         steg.vedTilbakeføring(kontekst)
-
         return Fortsett
     }
 
