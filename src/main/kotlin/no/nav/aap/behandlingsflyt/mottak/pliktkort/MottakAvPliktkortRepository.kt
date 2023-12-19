@@ -7,7 +7,7 @@ class MottakAvPliktkortRepository(private val connection: DBConnection) {
 
     fun lagre(pliktkort: UbehandletPliktkort) {
         val query = """
-            INSERT INTO SAK_PLIKTKORT (JOURNALPOST_ID) VALUES (?)
+            INSERT INTO SAK_PLIKTKORT (journalpost) VALUES (?)
         """.trimIndent()
 
         val pliktkortId = connection.executeReturnKey(query) {
@@ -34,7 +34,7 @@ class MottakAvPliktkortRepository(private val connection: DBConnection) {
 
     fun hent(journalpostIder: Set<JournalpostId>): List<UbehandletPliktkort> {
         val query = """
-            SELECT * FROM SAK_PLIKTKORT WHERE JOURNALPOST_ID in (?)
+            SELECT * FROM SAK_PLIKTKORT WHERE journalpost in (?)
         """.trimIndent()
         return connection.queryList(query) {
             setParams {

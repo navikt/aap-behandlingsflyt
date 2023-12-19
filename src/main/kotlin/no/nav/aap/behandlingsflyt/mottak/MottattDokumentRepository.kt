@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.sak.SakId
 class MottattDokumentRepository(private val connection: DBConnection) {
     fun lagre(mottattDokument: MottattDokument) {
         val query = """
-            INSERT INTO MOTTATT_DOKUMENT (sak_id, journalpost_id, mottatt_tidspunkt, type, status) VALUES (?, ?, ?, ?, ?)
+            INSERT INTO MOTTATT_DOKUMENT (sak_id, journalpost, mottatt_tidspunkt, type, status) VALUES (?, ?, ?, ?, ?)
         """.trimIndent()
 
         connection.execute(query) {
@@ -24,7 +24,7 @@ class MottattDokumentRepository(private val connection: DBConnection) {
 
     fun oppdaterStatus(journalpostId: JournalpostId, behandlingId: BehandlingId, status: Status) {
         val query = """
-            UPDATE MOTTATT_DOKUMENT SET behandling_id = ?, status = ? WHERE journalpost_id = ?
+            UPDATE MOTTATT_DOKUMENT SET behandling_id = ?, status = ? WHERE journalpost = ?
         """.trimIndent()
         connection.execute(query) {
             setParams {
@@ -37,7 +37,7 @@ class MottattDokumentRepository(private val connection: DBConnection) {
 
     fun hentUbehandledeDokumenterAvType(sakId: SakId, dokumentType: DokumentType): Set<JournalpostId> {
         val query = """
-            SELECT journalpost_id FROM MOTTATT_DOKUMENT WHERE sak_id = ? AND status = ? AND type = ?
+            SELECT journalpost FROM MOTTATT_DOKUMENT WHERE sak_id = ? AND status = ? AND type = ?
         """.trimIndent()
 
         return connection.queryList(query) {
@@ -47,14 +47,14 @@ class MottattDokumentRepository(private val connection: DBConnection) {
                 setEnumName(3, dokumentType)
             }
             setRowMapper {
-                JournalpostId(it.getString("journalpost_id"))
+                JournalpostId(it.getString("journalpost"))
             }
         }.toSet()
     }
 
     fun hentDokumentRekkefølge(sakId: SakId, type: DokumentType): Set<DokumentRekkefølge> {
         val query = """
-            SELECT journalpost_id, mottatt_tidspunkt FROM MOTTATT_DOKUMENT WHERE sak_id = ? AND status = ? AND type = ?
+            SELECT journalpost, mottatt_tidspunkt FROM MOTTATT_DOKUMENT WHERE sak_id = ? AND status = ? AND type = ?
         """.trimIndent()
 
         return connection.queryList(query) {
@@ -65,7 +65,7 @@ class MottattDokumentRepository(private val connection: DBConnection) {
             }
             setRowMapper {
                 DokumentRekkefølge(
-                    JournalpostId(it.getString("journalpost_id")),
+                    JournalpostId(it.getString("journalpost")),
                     it.getLocalDateTime("mottatt_tidspunkt")
                 )
             }

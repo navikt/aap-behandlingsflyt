@@ -22,6 +22,10 @@ class PliktkortService private constructor(private val mottaDokumentService: Mot
     }
 
     override fun oppdater(kontekst: FlytKontekst): Boolean {
-        return false
+        val pliktkortSomIkkeErBehandlet = mottaDokumentService.pliktkortSomIkkeErBehandlet(kontekst.sakId)
+        if (pliktkortSomIkkeErBehandlet.isEmpty()) {
+            return false
+        }
+        return false // TODO fiks
     }
 }

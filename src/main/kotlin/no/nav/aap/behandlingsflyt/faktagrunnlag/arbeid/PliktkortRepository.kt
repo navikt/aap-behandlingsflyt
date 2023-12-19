@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.mottak.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.sak.SakId
 import no.nav.aap.behandlingsflyt.underveis.regler.TimerArbeid
 
-class TimerArbeidRepository(private val connection: DBConnection) {
+class PliktkortRepository(private val connection: DBConnection) {
 
     private val mottattDokumentRepository = MottattDokumentRepository(connection)
 
@@ -90,8 +90,12 @@ class TimerArbeidRepository(private val connection: DBConnection) {
         if (eksisterendeKort != pliktkortene) {
             deaktiverGrunnlag(behandlingId)
 
-
+            lagreNyttGrunnlag(behandlingId, pliktkortene)
         }
+    }
+
+    private fun lagreNyttGrunnlag(behandlingId: BehandlingId, pliktkortene: Set<Pliktkort>) {
+        TODO("Not yet implemented")
     }
 
     private fun deaktiverGrunnlag(behandlingId: BehandlingId) {
@@ -104,19 +108,19 @@ class TimerArbeidRepository(private val connection: DBConnection) {
     }
 
     fun kopier(fraBehandlingId: BehandlingId, tilBehandlingId: BehandlingId) {
-//        val eksisterendeGrunnlag = hentHvisEksisterer(fraBehandlingId)
-//        if (eksisterendeGrunnlag == null) {
-//            return
-//        }
-//        val query = """
-//            INSERT INTO PLIKKORT_GRUNNLAG (behandling_id, pliktkortene_id) SELECT ?, pliktkortene_id from PLIKKORT_GRUNNLAG where behandling_id = ? and aktiv
-//        """.trimIndent()
-//
-//        connection.execute(query) {
-//            setParams {
-//                setLong(1, tilBehandlingId.toLong())
-//                setLong(2, fraBehandlingId.toLong())
-//            }
-//        }
+        val eksisterendeGrunnlag = hentHvisEksisterer(fraBehandlingId)
+        if (eksisterendeGrunnlag == null) {
+            return
+        }
+        val query = """
+            INSERT INTO PLIKKORT_GRUNNLAG (behandling_id, pliktkortene_id) SELECT ?, pliktkortene_id from PLIKKORT_GRUNNLAG where behandling_id = ? and aktiv
+        """.trimIndent()
+
+        connection.execute(query) {
+            setParams {
+                setLong(1, tilBehandlingId.toLong())
+                setLong(2, fraBehandlingId.toLong())
+            }
+        }
     }
 }
