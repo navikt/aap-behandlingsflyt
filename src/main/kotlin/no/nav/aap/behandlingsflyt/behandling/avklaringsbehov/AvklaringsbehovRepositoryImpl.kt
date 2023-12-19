@@ -88,8 +88,7 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         )
     }
 
-    //TODO: Når denne ikke brukes utenfor repo kan den gjøres private - krever en liten avklaring
-    override fun endreAvklaringsbehov(
+    private fun endreAvklaringsbehov(
         avklaringsbehovId: Long,
         status: Status,
         begrunnelse: String,

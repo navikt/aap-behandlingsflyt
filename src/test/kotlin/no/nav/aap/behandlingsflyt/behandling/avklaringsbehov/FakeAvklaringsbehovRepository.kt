@@ -31,19 +31,8 @@ class FakeAvklaringsbehovRepository : AvklaringsbehovRepository, Avklaringsbehov
     }
 
     override fun kreverToTrinn(avklaringsbehovId: Long, kreverToTrinn: Boolean) {
-
-    }
-
-    override fun endreAvklaringsbehov(
-        avklaringsbehovId: Long,
-        status: Status,
-        begrunnelse: String,
-        opprettetAv: String
-    ) {
-
     }
 
     override fun endre(avklaringsbehov: Avklaringsbehov) {
-
     }
 }
