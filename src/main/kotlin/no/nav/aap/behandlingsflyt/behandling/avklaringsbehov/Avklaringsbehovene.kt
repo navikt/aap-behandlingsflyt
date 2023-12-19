@@ -22,14 +22,7 @@ class Avklaringsbehovene(
         if (definisjon.erFrivillig()) {
             if (hentBehovForDefinisjon(definisjon) == null) {
                 // Legger til frivillig behov
-                leggTil(
-                    Avklaringsbehov(
-                        id = Long.MAX_VALUE,
-                        definisjon = definisjon,
-                        funnetISteg = definisjon.løsesISteg,
-                        kreverToTrinn = null
-                    )
-                )
+                leggTil(listOf(definisjon), definisjon.løsesISteg)
             }
         }
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
@@ -46,29 +39,6 @@ class Avklaringsbehovene(
             )
             //TODO: Må legge til avklaringsbehov til listen
             //avklaringsbehovene.add(avklaringsbehov)
-        }
-    }
-
-    fun leggTil(avklaringsbehov: Avklaringsbehov) {
-        val relevantBehov = alle().firstOrNull { it.definisjon == avklaringsbehov.definisjon }
-
-        //TODO: Flytte denne sjekken et hakk opp?
-        if (relevantBehov != null) {
-            repository.endreAvklaringsbehov(
-                avklaringsbehovId = relevantBehov.id,
-                status = avklaringsbehov.status(),
-                begrunnelse = "",
-                opprettetAv = "system"
-            )
-            relevantBehov.reåpne()
-        } else {
-            repository.opprett(
-                behandlingId = behandlingId,
-                definisjon = avklaringsbehov.definisjon,
-                funnetISteg = avklaringsbehov.funnetISteg
-            )
-            //TODO: Her legger vi til en avklaring som ikke er gyldig
-            avklaringsbehovene.add(avklaringsbehov)
         }
     }
 

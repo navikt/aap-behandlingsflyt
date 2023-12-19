@@ -27,12 +27,7 @@ class AvklaringsbehovRepositoryTest {
             val repository = AvklaringsbehovRepositoryImpl(connection)
             val avklaringsbehovene = Avklaringsbehovene(repository, behandling.id)
             avklaringsbehovene.leggTil(
-                Avklaringsbehov(
-                    definisjon = Definisjon.AVKLAR_SYKDOM,
-                    funnetISteg = StegType.AVKLAR_SYKDOM,
-                    id = 1L,
-                    kreverToTrinn = true
-                )
+                listOf(Definisjon.AVKLAR_SYKDOM), StegType.AVKLAR_SYKDOM
             )
 
             val avklaringsbehov = repository.hentAvklaringsbehovene(behandling.id)
