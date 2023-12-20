@@ -12,8 +12,8 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.AvklarSykepengerErstatn
 import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.AvklarYrkesskadeLøser
 import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.FatteVedtakLøser
 import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.ForeslåVedtakLøser
-import no.nav.aap.behandlingsflyt.behandling.Behandling
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.behandling.behandlingRepository
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
@@ -48,8 +48,13 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
         avklaringsbehov: AvklaringsbehovLøsning,
         ingenEndringIGruppe: Boolean
     ) {
-        løsAvklaringsbehov(kontekst, avklaringsbehov)
-        markerAvklaringsbehovISammeGruppeForLøst(kontekst, ingenEndringIGruppe)
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+        løsAvklaringsbehov(kontekst, avklaringsbehovene, avklaringsbehov)
+        markerAvklaringsbehovISammeGruppeForLøst(
+            kontekst,
+            ingenEndringIGruppe,
+            avklaringsbehovene
+        )
 
         OppgaveRepository(connection).leggTil(
             OppgaveInput(oppgave = ProsesserBehandlingOppgave).forBehandling(
@@ -61,10 +66,10 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
 
     private fun markerAvklaringsbehovISammeGruppeForLøst(
         kontekst: FlytKontekst,
-        ingenEndringIGruppe: Boolean
+        ingenEndringIGruppe: Boolean,
+        avklaringsbehovene: Avklaringsbehovene
     ) {
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         if (ingenEndringIGruppe && avklaringsbehovene.harVærtSendtTilbakeFraBeslutterTidligere()) {
             val flyt = behandling.forberedtFlyt()
@@ -81,13 +86,14 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
 
     fun løsAvklaringsbehov(
         kontekst: FlytKontekst,
+        avklaringsbehovene: Avklaringsbehovene,
         avklaringsbehov: AvklaringsbehovLøsning
     ) {
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
         val definisjoner = avklaringsbehov.definisjon()
         log.info("Forsøker løse avklaringsbehov[${definisjoner}] på behandling[${behandling.referanse}]")
 
-        val eksisterenedeAvklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId).alle()
+        val eksisterenedeAvklaringsbehov = avklaringsbehovene.alle()
         ValiderBehandlingTilstand.validerTilstandBehandling(behandling, definisjoner, eksisterenedeAvklaringsbehov)
 
         // løses det behov som fremtvinger tilbakehopp?
@@ -95,21 +101,20 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
         flytOrkestrator.forberedLøsingAvBehov(definisjoner, behandling, kontekst)
 
         // Bør ideelt kalle på
-        løsAvklaringsbehov(kontekst, behandling, avklaringsbehov)
+        løsFaktiskAvklaringsbehov(kontekst, avklaringsbehovene, avklaringsbehov)
     }
 
 
     @Suppress("UNCHECKED_CAST")
-    private fun løsAvklaringsbehov(
+    private fun løsFaktiskAvklaringsbehov(
         kontekst: FlytKontekst,
-        behandling: Behandling,
+        avklaringsbehovene: Avklaringsbehovene,
         it: AvklaringsbehovLøsning
     ) {
         // Liker denne casten fryktelig lite godt -_- men må til pga generics *
         val avklaringsbehovsLøser =
             avklaringsbehovsLøsere.getValue(it.definisjon()) as AvklaringsbehovsLøser<AvklaringsbehovLøsning>
         val løsningsResultat = avklaringsbehovsLøser.løs(kontekst = kontekst, løsning = it)
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         avklaringsbehovene.leggTilFrivilligHvisMangler(it.definisjon())
 
