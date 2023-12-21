@@ -8,7 +8,7 @@ import com.zaxxer.hikari.HikariDataSource
 import no.nav.aap.behandlingsflyt.behandling.Behandling
 import no.nav.aap.behandlingsflyt.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
-import no.nav.aap.behandlingsflyt.faktagrunnlag.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.behandling.flate.BehandlingReferanseService
 
 fun NormalOpenAPIRoute.medlemskapsgrunnlagApi(dataSource: HikariDataSource) {
     route("/api/behandling") {

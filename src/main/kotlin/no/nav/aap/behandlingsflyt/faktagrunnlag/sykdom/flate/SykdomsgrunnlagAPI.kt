@@ -8,7 +8,7 @@ import com.zaxxer.hikari.HikariDataSource
 import no.nav.aap.behandlingsflyt.behandling.Behandling
 import no.nav.aap.behandlingsflyt.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
-import no.nav.aap.behandlingsflyt.faktagrunnlag.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.YrkesskadeRepository
 

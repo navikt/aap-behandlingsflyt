@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag
+package no.nav.aap.behandlingsflyt.behandling.flate
 
 import no.nav.aap.behandlingsflyt.ElementNotFoundException
 import no.nav.aap.behandlingsflyt.behandling.Behandling

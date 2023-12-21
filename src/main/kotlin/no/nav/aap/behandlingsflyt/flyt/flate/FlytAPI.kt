@@ -14,7 +14,7 @@ import no.nav.aap.behandlingsflyt.behandling.flate.AvklaringsbehovDTO
 import no.nav.aap.behandlingsflyt.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
-import no.nav.aap.behandlingsflyt.faktagrunnlag.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.flyt.steg.StegGruppe
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkår

@@ -12,7 +12,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FrivilligeAvklaringsbehov
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
-import no.nav.aap.behandlingsflyt.faktagrunnlag.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.flyt.flate.VilkårDTO
 import no.nav.aap.behandlingsflyt.flyt.flate.VilkårsperiodeDTO
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårsresultat
