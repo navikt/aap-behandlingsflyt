@@ -103,6 +103,7 @@ class HendelsesMottak(private val dataSource: DataSource) {
                 val avklaringsbehovKontroller = AvklaringsbehovOrkestrator(connection)
                 avklaringsbehovKontroller.løsAvklaringsbehov(
                     kontekst = kontekst,
+                    avklaringsbehovene,
                     avklaringsbehov = SattPåVentLøsning()
                 )
             }
