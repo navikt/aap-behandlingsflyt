@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.avklaringsbehov
+package no.nav.aap.behandlingsflyt.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection

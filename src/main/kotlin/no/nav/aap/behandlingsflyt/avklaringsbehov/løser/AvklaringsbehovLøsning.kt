@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.avklaringsbehov
+package no.nav.aap.behandlingsflyt.avklaringsbehov.løser
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo

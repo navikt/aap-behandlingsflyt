@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak
 
-import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovsLøser
-import no.nav.aap.behandlingsflyt.avklaringsbehov.LøsningsResultat
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.AvklaringsbehovsLøser
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.LøsningsResultat
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.behandling.behandlingRepository
