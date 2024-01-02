@@ -29,21 +29,16 @@ class SakHendelsesHåndterer(connection: DBConnection) {
         pliktkortRepository = MottakAvPliktkortRepository(connection)
     )
 
-    private fun finnEnRelevantBehandling(key: Saksnummer): BehandlingId {
-        val sak = sakRepository.hent(key)
+    fun håndtere(key: Saksnummer, hendelse: SakHendelse): BehandlingId? {
+        return when (hendelse) {
+            is DokumentMottattSakHendelse -> {
+                håndtere(key, hendelse)
+            }
 
-        val sisteBehandlingOpt = behandlingRepository.finnSisteBehandlingFor(sak.id)
-
-        val sisteBehandling = if (sisteBehandlingOpt != null && !sisteBehandlingOpt.status().erAvsluttet()) {
-            sisteBehandlingOpt
-        } else {
-            // Har ikke behandling så oppretter en
-            behandlingRepository.opprettBehandling(
-                sak.id,
-                listOf(Årsak(EndringType.MOTTATT_SØKNAD))
-            ) // TODO: Reeltsett oppdatere denne
+            else -> {
+                finnEnRelevantBehandling(key)
+            }
         }
-        return sisteBehandling.id
     }
 
     fun håndtere(key: Saksnummer, hendelse: DokumentMottattSakHendelse): BehandlingId? {
@@ -85,15 +80,20 @@ class SakHendelsesHåndterer(connection: DBConnection) {
         return relevantBehandling
     }
 
-    fun håndtere(key: Saksnummer, hendelse: SakHendelse): BehandlingId? {
-        return when (hendelse) {
-            is DokumentMottattSakHendelse -> {
-                håndtere(key, hendelse)
-            }
+    private fun finnEnRelevantBehandling(key: Saksnummer): BehandlingId {
+        val sak = sakRepository.hent(key)
 
-            else -> {
-                finnEnRelevantBehandling(key)
-            }
+        val sisteBehandlingOpt = behandlingRepository.finnSisteBehandlingFor(sak.id)
+
+        val sisteBehandling = if (sisteBehandlingOpt != null && !sisteBehandlingOpt.status().erAvsluttet()) {
+            sisteBehandlingOpt
+        } else {
+            // Har ikke behandling så oppretter en
+            behandlingRepository.opprettBehandling(
+                sak.id,
+                listOf(Årsak(EndringType.MOTTATT_SØKNAD))
+            ) // TODO: Reeltsett oppdatere denne
         }
+        return sisteBehandling.id
     }
 }
