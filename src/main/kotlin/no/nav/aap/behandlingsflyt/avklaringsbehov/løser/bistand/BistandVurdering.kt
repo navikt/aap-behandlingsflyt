@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.avklaringsbehov.bistand
+package no.nav.aap.behandlingsflyt.avklaringsbehov.løser.bistand
 
 data class BistandVurdering(
     val begrunnelse: String,

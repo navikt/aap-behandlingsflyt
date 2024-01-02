@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.bistand
 
 import no.nav.aap.behandlingsflyt.Periode
-import no.nav.aap.behandlingsflyt.avklaringsbehov.bistand.BistandVurdering
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.bistand.BistandVurdering
 import no.nav.aap.behandlingsflyt.behandling.Behandling
 import no.nav.aap.behandlingsflyt.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.behandling.behandlingRepository
