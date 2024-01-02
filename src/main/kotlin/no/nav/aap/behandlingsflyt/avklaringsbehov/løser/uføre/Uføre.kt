@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.avklaringsbehov.uføre
+package no.nav.aap.behandlingsflyt.avklaringsbehov.løser.uføre
 
 import no.nav.aap.behandlingsflyt.beregning.Prosent
 
