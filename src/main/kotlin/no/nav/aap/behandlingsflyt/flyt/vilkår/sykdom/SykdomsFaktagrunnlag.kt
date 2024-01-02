@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt.vilkår.sykdom
 
-import no.nav.aap.behandlingsflyt.avklaringsbehov.student.StudentVurdering
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Faktagrunnlag

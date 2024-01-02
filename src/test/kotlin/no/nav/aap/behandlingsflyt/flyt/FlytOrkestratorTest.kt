@@ -3,8 +3,8 @@ package no.nav.aap.behandlingsflyt.flyt
 import no.nav.aap.behandlingsflyt.Periode
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.bistand.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.bistand.BistandVurdering
-import no.nav.aap.behandlingsflyt.avklaringsbehov.student.AvklarStudentLøsning
-import no.nav.aap.behandlingsflyt.avklaringsbehov.student.StudentVurdering
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.student.AvklarStudentLøsning
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.AvklarYrkesskadeLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.NedreGrense

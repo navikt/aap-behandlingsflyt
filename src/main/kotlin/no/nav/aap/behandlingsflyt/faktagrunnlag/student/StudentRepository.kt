@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.student
 
-import no.nav.aap.behandlingsflyt.avklaringsbehov.student.StudentVurdering
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.behandling.dokumenter.JournalpostId
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
