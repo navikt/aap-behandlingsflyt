@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
 

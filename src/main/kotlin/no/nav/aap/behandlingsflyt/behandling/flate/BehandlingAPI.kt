@@ -7,9 +7,9 @@ import com.papsign.ktor.openapigen.route.route
 import com.zaxxer.hikari.HikariDataSource
 import no.nav.aap.behandlingsflyt.behandling.Behandling
 import no.nav.aap.behandlingsflyt.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FrivilligeAvklaringsbehov
+import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovRepositoryImpl
+import no.nav.aap.behandlingsflyt.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.avklaringsbehov.FrivilligeAvklaringsbehov
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.flyt.flate.VilkårDTO

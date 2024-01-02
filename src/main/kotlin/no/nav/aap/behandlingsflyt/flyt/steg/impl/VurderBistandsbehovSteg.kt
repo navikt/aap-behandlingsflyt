@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt.steg.impl
 
 import no.nav.aap.behandlingsflyt.Periode
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.student.StudentGrunnlag

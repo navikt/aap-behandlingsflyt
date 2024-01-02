@@ -1,5 +1,10 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
+import no.nav.aap.behandlingsflyt.avklaringsbehov.Avklaringsbehov
+import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovOperasjonerRepository
+import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 

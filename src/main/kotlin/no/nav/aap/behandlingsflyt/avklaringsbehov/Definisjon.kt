@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
+package no.nav.aap.behandlingsflyt.avklaringsbehov
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnore

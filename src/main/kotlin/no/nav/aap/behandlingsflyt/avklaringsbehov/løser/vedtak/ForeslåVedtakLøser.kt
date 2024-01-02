@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak
 
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.AvklaringsbehovsLøser
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.LøsningsResultat
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
 

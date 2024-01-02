@@ -33,7 +33,7 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.AvklarSykepenger
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.AvklarYrkesskadeLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak.ForeslåVedtakLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.behandling.dokumenter.JournalpostId
 import no.nav.aap.behandlingsflyt.behandling.flate.avklaringsbehov.avklaringsbehovApi

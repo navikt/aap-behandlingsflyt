@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
+package no.nav.aap.behandlingsflyt.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
@@ -6,7 +6,8 @@ import no.nav.aap.behandlingsflyt.dbconnect.Row
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
 import java.time.LocalDateTime
 
-class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : AvklaringsbehovRepository, AvklaringsbehovOperasjonerRepository {
+class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : AvklaringsbehovRepository,
+    AvklaringsbehovOperasjonerRepository {
 
     override fun hentAvklaringsbehovene(behandlingId: BehandlingId): Avklaringsbehovene {
         return Avklaringsbehovene(

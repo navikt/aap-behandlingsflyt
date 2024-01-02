@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
+package no.nav.aap.behandlingsflyt.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType

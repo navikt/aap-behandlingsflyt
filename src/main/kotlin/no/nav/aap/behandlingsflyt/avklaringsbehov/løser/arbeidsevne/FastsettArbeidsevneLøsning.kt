@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeName
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.AvklaringsbehovLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FASTSETT_ARBEIDSEVNE_KODE
+import no.nav.aap.behandlingsflyt.avklaringsbehov.FASTSETT_ARBEIDSEVNE_KODE
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = FASTSETT_ARBEIDSEVNE_KODE)

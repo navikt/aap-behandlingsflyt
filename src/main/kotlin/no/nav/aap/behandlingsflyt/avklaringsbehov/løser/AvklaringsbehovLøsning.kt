@@ -7,12 +7,12 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.AvklarSykdomLøs
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.student.AvklarStudentLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AVKLAR_SYKDOM_KODE
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FATTE_VEDTAK_KODE
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FORESLÅ_VEDTAK_KODE
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AVKLAR_STUDENT_KODE
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.MANUELT_SATT_PÅ_VENT_KODE
+import no.nav.aap.behandlingsflyt.avklaringsbehov.AVKLAR_SYKDOM_KODE
+import no.nav.aap.behandlingsflyt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.avklaringsbehov.FATTE_VEDTAK_KODE
+import no.nav.aap.behandlingsflyt.avklaringsbehov.FORESLÅ_VEDTAK_KODE
+import no.nav.aap.behandlingsflyt.avklaringsbehov.AVKLAR_STUDENT_KODE
+import no.nav.aap.behandlingsflyt.avklaringsbehov.MANUELT_SATT_PÅ_VENT_KODE
 
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "@type", visible = true)

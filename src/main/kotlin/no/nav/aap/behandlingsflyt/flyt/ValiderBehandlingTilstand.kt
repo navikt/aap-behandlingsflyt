@@ -2,8 +2,8 @@ package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.Behandling
 import no.nav.aap.behandlingsflyt.behandling.Status
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.avklaringsbehov.Avklaringsbehov
+import no.nav.aap.behandlingsflyt.avklaringsbehov.Definisjon
 
 object ValiderBehandlingTilstand {
 

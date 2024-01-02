@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
+package no.nav.aap.behandlingsflyt.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import java.time.LocalDateTime
