@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom
+package no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom
 
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.AvklaringsbehovsLøser
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.LøsningsResultat
@@ -8,21 +8,21 @@ import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
 
-class AvklarSykdomLøser(connection: DBConnection) : AvklaringsbehovsLøser<AvklarSykdomLøsning> {
+class AvklarYrkesskadeLøser(val connection: DBConnection) : AvklaringsbehovsLøser<AvklarYrkesskadeLøsning> {
 
     private val behandlingRepository = behandlingRepository(connection)
     private val sykdomRepository = SykdomRepository(connection)
 
-    override fun løs(kontekst: FlytKontekst, løsning: AvklarSykdomLøsning): LøsningsResultat {
+    override fun løs(kontekst: FlytKontekst, løsning: AvklarYrkesskadeLøsning): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
 
         sykdomRepository.lagre(
             behandlingId = behandling.id,
-            sykdomsvurdering = løsning.sykdomsvurdering
+            yrkesskadevurdering = løsning.yrkesskadevurdering,
         )
 
         return LøsningsResultat(
-            begrunnelse = løsning.sykdomsvurdering.begrunnelse
+            begrunnelse = løsning.yrkesskadevurdering.begrunnelse
         )
     }
 

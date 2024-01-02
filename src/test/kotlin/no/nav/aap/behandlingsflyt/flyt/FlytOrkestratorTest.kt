@@ -5,11 +5,11 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.bistand.AvklarBistandsb
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.bistand.BistandVurdering
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.student.AvklarStudentLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.student.StudentVurdering
-import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.AvklarSykdomLøsning
-import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.AvklarYrkesskadeLøsning
-import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.NedreGrense
-import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.Sykdomsvurdering
-import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.Yrkesskadevurdering
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.AvklarSykdomLøsning
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.AvklarYrkesskadeLøsning
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.NedreGrense
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.Sykdomsvurdering
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.TotrinnsVurdering

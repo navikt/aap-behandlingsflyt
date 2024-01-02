@@ -4,9 +4,9 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.arbeidsevne.FastsettArb
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.bistand.AvklarBistandLøser
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.meldeplikt.FritakFraMeldepliktLøser
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.student.AvklarStudentLøser
-import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.AvklarSykdomLøser
-import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.AvklarSykepengerErstatningLøser
-import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.AvklarYrkesskadeLøser
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.AvklarSykdomLøser
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.AvklarSykepengerErstatningLøser
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.AvklarYrkesskadeLøser
 import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.FatteVedtakLøser
 import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.ForeslåVedtakLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl

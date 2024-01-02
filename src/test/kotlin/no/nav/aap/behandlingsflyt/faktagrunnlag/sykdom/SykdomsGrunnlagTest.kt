@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom
 
-import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.NedreGrense
-import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.Sykdomsvurdering
-import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.Yrkesskadevurdering
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.NedreGrense
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.Sykdomsvurdering
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.beregning.Prosent
 import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.Beløp
 import org.assertj.core.api.Assertions.assertThat

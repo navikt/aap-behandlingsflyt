@@ -28,9 +28,9 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.arbeidsevne.FastsettArb
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.bistand.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.meldeplikt.FritakMeldepliktLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.student.AvklarStudentLøsning
-import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.AvklarSykdomLøsning
-import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.AvklarSykepengerErstatningLøsning
-import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.AvklarYrkesskadeLøsning
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.AvklarSykdomLøsning
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.AvklarSykepengerErstatningLøsning
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.AvklarYrkesskadeLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.vedtak.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon

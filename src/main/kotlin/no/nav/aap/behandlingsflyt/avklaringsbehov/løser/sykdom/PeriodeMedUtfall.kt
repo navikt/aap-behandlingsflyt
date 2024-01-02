@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom
+package no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Utfall

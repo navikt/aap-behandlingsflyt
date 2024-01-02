@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom
 
-import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.Sykdomsvurdering
-import no.nav.aap.behandlingsflyt.avklaringsbehov.sykdom.Yrkesskadevurdering
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.Sykdomsvurdering
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.behandling.dokumenter.JournalpostId
 import no.nav.aap.behandlingsflyt.beregning.Prosent
