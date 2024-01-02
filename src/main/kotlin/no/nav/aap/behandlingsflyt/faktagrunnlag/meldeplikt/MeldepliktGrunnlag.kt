@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.meldeplikt
 
-import no.nav.aap.behandlingsflyt.avklaringsbehov.meldeplikt.Fritaksvurdering
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.behandling.BehandlingId
 
 data class MeldepliktGrunnlag(

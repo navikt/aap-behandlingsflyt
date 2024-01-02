@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.avklaringsbehov.meldeplikt
+package no.nav.aap.behandlingsflyt.avklaringsbehov.løser.meldeplikt
 
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.AvklaringsbehovsLøser
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.LøsningsResultat
