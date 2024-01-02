@@ -14,7 +14,6 @@ class AvklaringsbehovHendelseHåndterer(connection: DBConnection) {
     private val avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection)
     private val avklaringsbehovOrkestrator = AvklaringsbehovOrkestrator(connection)
 
-
     fun håndtere(key: BehandlingId, hendelse: LøsAvklaringsbehovBehandlingHendelse) {
         val behandling = behandlingRepository.hent(key)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)

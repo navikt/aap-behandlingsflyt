@@ -36,7 +36,7 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak.ForeslåVedtakL�
 import no.nav.aap.behandlingsflyt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.behandling.dokumenter.JournalpostId
-import no.nav.aap.behandlingsflyt.behandling.flate.avklaringsbehov.avklaringsbehovApi
+import no.nav.aap.behandlingsflyt.avklaringsbehov.flate.avklaringsbehovApi
 import no.nav.aap.behandlingsflyt.behandling.flate.behandlingApi
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.faktagrunnlag.bistand.flate.bistandsgrunnlagApi
