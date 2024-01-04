@@ -6,10 +6,10 @@ import no.nav.aap.behandlingsflyt.desember
 import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.Beløp
 import no.nav.aap.behandlingsflyt.januar
 import no.nav.aap.behandlingsflyt.mai
-import no.nav.aap.behandlingsflyt.underveis.tidslinje.JoinStyle
-import no.nav.aap.behandlingsflyt.underveis.tidslinje.Segment
-import no.nav.aap.behandlingsflyt.underveis.tidslinje.StandardSammenslåere
-import no.nav.aap.behandlingsflyt.underveis.tidslinje.Tidslinje
+import no.nav.aap.behandlingsflyt.tidslinje.JoinStyle
+import no.nav.aap.behandlingsflyt.tidslinje.Segment
+import no.nav.aap.behandlingsflyt.tidslinje.StandardSammenslåere
+import no.nav.aap.behandlingsflyt.tidslinje.Tidslinje
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 

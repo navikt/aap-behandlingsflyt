@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.underveis.tidslinje
+package no.nav.aap.behandlingsflyt.tidslinje
 
 fun interface JoinStyle {
     fun accept(harLhs: Boolean, harRhs: Boolean): Boolean

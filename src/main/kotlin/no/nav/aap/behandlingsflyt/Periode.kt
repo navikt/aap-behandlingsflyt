@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt
 
-import no.nav.aap.behandlingsflyt.underveis.tidslinje.max
-import no.nav.aap.behandlingsflyt.underveis.tidslinje.min
+import no.nav.aap.behandlingsflyt.tidslinje.max
+import no.nav.aap.behandlingsflyt.tidslinje.min
 import java.time.LocalDate
 import java.time.Period
 import java.util.*

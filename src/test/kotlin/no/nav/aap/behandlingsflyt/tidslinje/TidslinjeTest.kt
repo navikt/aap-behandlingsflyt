@@ -1,8 +1,12 @@
-package no.nav.aap.behandlingsflyt.underveis.tidslinje
+package no.nav.aap.behandlingsflyt.tidslinje
 
 import no.nav.aap.behandlingsflyt.Periode
 import no.nav.aap.behandlingsflyt.beregning.Prosent
 import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.Beløp
+import no.nav.aap.behandlingsflyt.tidslinje.Segment
+import no.nav.aap.behandlingsflyt.tidslinje.SegmentSammenslåer
+import no.nav.aap.behandlingsflyt.tidslinje.StandardSammenslåere
+import no.nav.aap.behandlingsflyt.tidslinje.Tidslinje
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate

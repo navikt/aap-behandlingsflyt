@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.underveis.tidslinje
+package no.nav.aap.behandlingsflyt.tidslinje
 
 import no.nav.aap.behandlingsflyt.Periode
 import java.util.*
