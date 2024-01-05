@@ -13,7 +13,7 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.AvklarSykdomLøs
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.AvklarYrkesskadeLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.NedreGrense
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.Sykdomsvurdering
-import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.Yrkesskadevurdering
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.YrkesskadevurderingDto
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak.TotrinnsVurdering
@@ -137,7 +137,7 @@ class FlytOrkestratorTest {
                 behandling.id,
                 LøsAvklaringsbehovBehandlingHendelse(
                     løsning = AvklarYrkesskadeLøsning(
-                        yrkesskadevurdering = Yrkesskadevurdering(
+                        yrkesskadevurdering = YrkesskadevurderingDto(
                             begrunnelse = "Er syk nok",
                             dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                             erÅrsakssammenheng = false,
@@ -319,12 +319,12 @@ class FlytOrkestratorTest {
                 behandling.id,
                 LøsAvklaringsbehovBehandlingHendelse(
                     løsning = AvklarYrkesskadeLøsning(
-                        yrkesskadevurdering = Yrkesskadevurdering(
+                        yrkesskadevurdering = YrkesskadevurderingDto(
                             begrunnelse = "Er syk nok",
                             dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                             erÅrsakssammenheng = true,
                             skadetidspunkt = LocalDate.now().minusYears(1),
-                            andelAvNedsettelse = Prosent.`30_PROSENT`,
+                            andelAvNedsettelse = Prosent.`30_PROSENT`.prosentverdi(),
                             antattÅrligInntekt = Beløp(1_000_000)
                         )
                     )
@@ -486,7 +486,7 @@ class FlytOrkestratorTest {
                 behandling.id,
                 LøsAvklaringsbehovBehandlingHendelse(
                     løsning = AvklarYrkesskadeLøsning(
-                        yrkesskadevurdering = Yrkesskadevurdering(
+                        yrkesskadevurdering = YrkesskadevurderingDto(
                             begrunnelse = "Er ikke årsakssammenheng mellom yrkesskaden og nedsettelsen i arbeidsevne",
                             dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                             erÅrsakssammenheng = false,

@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom
 
+import no.nav.aap.behandlingsflyt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.AvklaringsbehovsLøser
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.LøsningsResultat
-import no.nav.aap.behandlingsflyt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.behandling.behandlingRepository
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykdomRepository
@@ -18,7 +18,7 @@ class AvklarYrkesskadeLøser(val connection: DBConnection) : AvklaringsbehovsLø
 
         sykdomRepository.lagre(
             behandlingId = behandling.id,
-            yrkesskadevurdering = løsning.yrkesskadevurdering,
+            yrkesskadevurdering = løsning.yrkesskadevurdering.toYrkesskadevurdering(),
         )
 
         return LøsningsResultat(

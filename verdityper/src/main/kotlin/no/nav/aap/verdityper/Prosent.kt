@@ -1,6 +1,5 @@
 package no.nav.aap.verdityper
 
-import com.fasterxml.jackson.annotation.JsonCreator
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -8,7 +7,6 @@ class Prosent private constructor(verdi: BigDecimal) : Comparable<Prosent> {
     //TODO: Hva skal scale være her? Hvor mange desimaler skal det være i prosenten?
     private val verdi = verdi.setScale(2, RoundingMode.HALF_UP)
 
-    @JsonCreator
     constructor(intVerdi: Int) : this(BigDecimal(intVerdi).divide(BigDecimal(100), 2, RoundingMode.HALF_UP))
 
     fun getProsent(): Int {
