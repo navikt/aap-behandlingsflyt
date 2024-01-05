@@ -56,7 +56,7 @@ dependencies {
     implementation("io.ktor:ktor-client-core:$ktorVersion")
 
     implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.16.0")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.16.1")
     implementation("dev.forst:ktor-openapi-generator:0.6.1")
 
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.16.1")
@@ -65,7 +65,7 @@ dependencies {
     implementation("net.logstash.logback:logstash-logback-encoder:7.4")
 
     implementation("com.zaxxer:HikariCP:5.1.0")
-    implementation("org.flywaydb:flyway-core:10.1.0")
+    implementation("org.flywaydb:flyway-core:10.4.1")
     implementation("org.flywaydb:flyway-database-postgresql:10.4.1")
     runtimeOnly("org.postgresql:postgresql:42.7.1")
 
