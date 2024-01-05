@@ -1,3 +1,5 @@
+import java.io.ByteArrayOutputStream
+
 val ktorVersion = "2.3.7"
 
 plugins {
@@ -6,6 +8,36 @@ plugins {
 
 application {
     mainClass.set("no.nav.aap.behandlingsflyt.AppKt")
+}
+
+tasks {
+    val projectProps by registering(WriteProperties::class) {
+        destinationFile = layout.buildDirectory.file("version.properties")
+        // Define property.
+        property("project.version", getCheckedOutGitCommitHash())
+    }
+
+    processResources {
+        // Depend on output of the task to create properties,
+        // so the properties file will be part of the Java resources.
+        from(projectProps)
+    }
+}
+
+fun runCommand(command: String): String {
+    val byteOut = ByteArrayOutputStream()
+    project.exec {
+        commandLine = command.split("\\s".toRegex())
+        standardOutput = byteOut
+    }
+    return String(byteOut.toByteArray()).trim()
+}
+
+fun getCheckedOutGitCommitHash(): String {
+    if (System.getenv("GITHUB_ACTIONS") == "true") {
+        return System.getenv("GITHUB_SHA")
+    }
+    return runCommand("git rev-parse --verify HEAD")
 }
 
 dependencies {

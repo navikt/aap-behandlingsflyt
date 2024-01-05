@@ -1,5 +1,4 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import java.io.ByteArrayOutputStream
 
 val ktorVersion = "2.3.7"
 
@@ -20,23 +19,14 @@ subprojects {
         mavenCentral()
         maven("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
     }
+
     apply(plugin = "org.jetbrains.kotlin.jvm")
 
     tasks {
-        val projectProps by registering(WriteProperties::class) {
-            destinationFile = layout.buildDirectory.file("version.properties")
-            // Define property.
-            property("project.version", getCheckedOutGitCommitHash())
-        }
-
-        processResources {
-            // Depend on output of the task to create properties,
-            // so the properties file will be part of the Java resources.
-            from(projectProps)
-        }
         withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
             kotlinOptions.jvmTarget = "$javaVersion"
         }
+
         withType<ShadowJar> {
             mergeServiceFiles()
         }
@@ -52,20 +42,4 @@ subprojects {
     kotlin.sourceSets["test"].kotlin.srcDirs("test/kotlin")
     sourceSets["main"].resources.srcDirs("main/resources")
     sourceSets["test"].resources.srcDirs("test/resources")
-}
-
-fun runCommand(command: String): String {
-    val byteOut = ByteArrayOutputStream()
-    project.exec {
-        commandLine = command.split("\\s".toRegex())
-        standardOutput = byteOut
-    }
-    return String(byteOut.toByteArray()).trim()
-}
-
-fun getCheckedOutGitCommitHash(): String {
-    if (System.getenv("GITHUB_ACTIONS") == "true") {
-        return System.getenv("GITHUB_SHA")
-    }
-    return runCommand("git rev-parse --verify HEAD")
 }
