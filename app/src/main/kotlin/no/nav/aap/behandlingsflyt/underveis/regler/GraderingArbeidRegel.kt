@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.underveis.regler
 
-import no.nav.aap.behandlingsflyt.beregning.Prosent
 import no.nav.aap.behandlingsflyt.faktagrunnlag.arbeid.Pliktkort
 import no.nav.aap.behandlingsflyt.tidslinje.Segment
 import no.nav.aap.behandlingsflyt.tidslinje.StandardSammenslåere
 import no.nav.aap.behandlingsflyt.tidslinje.Tidslinje
+import no.nav.aap.behandlingsflyt.verdityper.Prosent
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.Period

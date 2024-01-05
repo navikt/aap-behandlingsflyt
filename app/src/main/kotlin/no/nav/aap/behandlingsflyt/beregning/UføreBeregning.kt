@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.beregning
 
+import no.nav.aap.behandlingsflyt.verdityper.Prosent
+
 class UføreBeregning(
     private val grunnlag: Beregningsgrunnlag,
     private val ytterligereNedsattGrunnlag: Beregningsgrunnlag,

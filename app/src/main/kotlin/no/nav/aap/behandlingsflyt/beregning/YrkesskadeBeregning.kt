@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.beregning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.adapter.InntektPerÅr
+import no.nav.aap.behandlingsflyt.verdityper.Prosent
 
 class YrkesskadeBeregning(
     private val grunnlag11_19: Grunnlag11_19,

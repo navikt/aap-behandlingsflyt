@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.beregning
+package no.nav.aap.behandlingsflyt.verdityper
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import java.math.BigDecimal
