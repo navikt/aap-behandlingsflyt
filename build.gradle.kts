@@ -4,13 +4,10 @@ plugins {
     kotlin("jvm") version "1.9.22"
     id("io.ktor.plugin") version "2.3.7" apply false
 }
+
 group = "no.nav.aap"
+
 val javaVersion = 21
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(javaVersion)
-    }
-}
 
 allprojects {
     repositories {

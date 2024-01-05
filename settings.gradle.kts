@@ -1,5 +1,7 @@
 rootProject.name = "behandlingflyt"
 
-include("app")
-include("verdityper")
-include("tidslinje")
+include(
+    "app",
+    "verdityper",
+    "tidslinje"
+)
