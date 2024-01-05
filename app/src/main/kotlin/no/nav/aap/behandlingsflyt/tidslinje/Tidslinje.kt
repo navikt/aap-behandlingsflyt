@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.tidslinje
 
-import no.nav.aap.behandlingsflyt.Periode
+import no.nav.aap.behandlingsflyt.verdityper.Periode
 import java.time.LocalDate
 import java.time.Period
 import java.util.*

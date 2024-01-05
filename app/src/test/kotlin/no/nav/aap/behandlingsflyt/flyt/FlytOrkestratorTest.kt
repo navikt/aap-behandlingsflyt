@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt
 
-import no.nav.aap.behandlingsflyt.Periode
+import no.nav.aap.behandlingsflyt.verdityper.Periode
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.bistand.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.bistand.BistandVurdering
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.student.AvklarStudentLøsning
@@ -27,7 +27,7 @@ import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.InitTestDatabase
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.faktagrunnlag.arbeid.ArbeidIPeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.Beløp
+import no.nav.aap.behandlingsflyt.verdityper.Beløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.adapter.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.adapter.InntektRegisterMock
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Fødselsdato

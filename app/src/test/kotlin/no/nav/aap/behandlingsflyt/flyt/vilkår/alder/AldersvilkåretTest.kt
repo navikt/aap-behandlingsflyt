@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt.vilkår.alder
 
-import no.nav.aap.behandlingsflyt.Periode
+import no.nav.aap.behandlingsflyt.verdityper.Periode
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Utfall
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Fødselsdato

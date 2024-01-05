@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.arbeid
 
-import no.nav.aap.behandlingsflyt.Periode
+import no.nav.aap.behandlingsflyt.verdityper.Periode
 import no.nav.aap.behandlingsflyt.underveis.regler.TimerArbeid
 import java.math.BigDecimal
 import java.math.RoundingMode

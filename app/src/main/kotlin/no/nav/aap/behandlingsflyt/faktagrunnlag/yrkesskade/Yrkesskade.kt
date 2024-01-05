@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade
 
-import no.nav.aap.behandlingsflyt.Periode
+import no.nav.aap.behandlingsflyt.verdityper.Periode
 
 class Yrkesskade(val ref: String, val periode: Periode){
     override fun equals(other: Any?): Boolean {

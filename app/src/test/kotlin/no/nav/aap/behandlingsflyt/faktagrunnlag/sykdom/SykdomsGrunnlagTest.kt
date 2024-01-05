@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.NedreGrense
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.beregning.Prosent
-import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.Beløp
+import no.nav.aap.behandlingsflyt.verdityper.Beløp
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate

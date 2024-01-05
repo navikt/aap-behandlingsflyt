@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.underveis.regler
 
-import no.nav.aap.behandlingsflyt.Periode
+import no.nav.aap.behandlingsflyt.verdityper.Periode
 import no.nav.aap.behandlingsflyt.tidslinje.Segment
 import no.nav.aap.behandlingsflyt.tidslinje.SegmentSammenslåer
 

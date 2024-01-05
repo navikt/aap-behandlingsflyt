@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
-import no.nav.aap.behandlingsflyt.Periode
+import no.nav.aap.behandlingsflyt.verdityper.Periode
 import no.nav.aap.behandlingsflyt.behandling.behandlingRepository
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.InitTestDatabase

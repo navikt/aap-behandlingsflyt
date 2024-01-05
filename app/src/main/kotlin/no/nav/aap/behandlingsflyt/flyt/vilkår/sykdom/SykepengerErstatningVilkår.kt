@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt.vilkår.sykdom
 
-import no.nav.aap.behandlingsflyt.Periode
+import no.nav.aap.behandlingsflyt.verdityper.Periode
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Avslagsårsak
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Utfall
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkår

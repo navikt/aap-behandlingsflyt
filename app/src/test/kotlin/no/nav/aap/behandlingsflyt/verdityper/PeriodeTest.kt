@@ -1,6 +1,6 @@
-package no.nav.aap.behandlingsflyt
+package no.nav.aap.behandlingsflyt.verdityper
 
-import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
@@ -27,17 +27,17 @@ class PeriodeTest {
             Periode(LocalDate.now().minusDays(14), LocalDate.now().minusDays(7))
         val periode2 = Periode(LocalDate.now().minusDays(8), LocalDate.now())
 
-        assertThat(periode.overlapper(periode2)).isTrue()
+        Assertions.assertThat(periode.overlapper(periode2)).isTrue()
 
         val periode1 = Periode(LocalDate.now(), LocalDate.now())
         val periode3 = Periode(LocalDate.now(), LocalDate.now())
 
-        assertThat(periode1.overlapper(periode3)).isTrue()
+        Assertions.assertThat(periode1.overlapper(periode3)).isTrue()
 
         val periode4 = Periode(LocalDate.now().minusDays(8), LocalDate.now())
         val periode5 = Periode(LocalDate.now(), LocalDate.now().plusDays(8))
 
-        assertThat(periode4.overlapper(periode5)).isTrue()
+        Assertions.assertThat(periode4.overlapper(periode5)).isTrue()
     }
 
     @Test
@@ -46,6 +46,6 @@ class PeriodeTest {
             Periode(LocalDate.now().minusDays(14), LocalDate.now().minusDays(7))
         val periode2 = Periode(LocalDate.now().minusDays(6), LocalDate.now())
 
-        assertThat(periode.overlapper(periode2)).isFalse()
+        Assertions.assertThat(periode.overlapper(periode2)).isFalse()
     }
 }

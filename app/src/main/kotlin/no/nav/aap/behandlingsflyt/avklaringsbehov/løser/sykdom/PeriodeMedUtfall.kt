@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Utfall
-import no.nav.aap.behandlingsflyt.Periode
+import no.nav.aap.behandlingsflyt.verdityper.Periode
 
 data class PeriodeMedUtfall(
     @JsonProperty("periode") val periode: Periode,

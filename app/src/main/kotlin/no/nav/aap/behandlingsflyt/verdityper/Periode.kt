@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt
+package no.nav.aap.behandlingsflyt.verdityper
 
 import no.nav.aap.behandlingsflyt.tidslinje.max
 import no.nav.aap.behandlingsflyt.tidslinje.min

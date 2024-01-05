@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.beregning
 
-import no.nav.aap.behandlingsflyt.Periode
+import no.nav.aap.behandlingsflyt.verdityper.Periode
 import no.nav.aap.behandlingsflyt.april
 import no.nav.aap.behandlingsflyt.desember
-import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.Beløp
+import no.nav.aap.behandlingsflyt.verdityper.Beløp
 import no.nav.aap.behandlingsflyt.januar
 import no.nav.aap.behandlingsflyt.mai
 import no.nav.aap.behandlingsflyt.tidslinje.JoinStyle

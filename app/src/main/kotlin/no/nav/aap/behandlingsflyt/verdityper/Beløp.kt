@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt
+package no.nav.aap.behandlingsflyt.verdityper
 
 import java.math.BigDecimal
 import java.math.RoundingMode

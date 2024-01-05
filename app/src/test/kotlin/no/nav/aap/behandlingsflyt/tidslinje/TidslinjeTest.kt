@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.tidslinje
 
-import no.nav.aap.behandlingsflyt.Periode
+import no.nav.aap.behandlingsflyt.verdityper.Periode
 import no.nav.aap.behandlingsflyt.beregning.Prosent
-import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.Beløp
+import no.nav.aap.behandlingsflyt.verdityper.Beløp
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate

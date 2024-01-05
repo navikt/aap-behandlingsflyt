@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.hendelse.mottak
 
-import no.nav.aap.behandlingsflyt.Periode
+import no.nav.aap.behandlingsflyt.verdityper.Periode
 import no.nav.aap.behandlingsflyt.behandling.dokumenter.JournalpostId
 import no.nav.aap.behandlingsflyt.hendelse.mottak.dokument.StrukturertDokument
 import java.time.LocalDateTime

@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.tidslinje
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.Beløp
+import no.nav.aap.behandlingsflyt.verdityper.Beløp
 import java.math.BigDecimal
 
 object StandardSammenslåere {

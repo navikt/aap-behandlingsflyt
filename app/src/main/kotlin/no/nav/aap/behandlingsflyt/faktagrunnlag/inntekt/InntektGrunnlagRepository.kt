@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.Row
 import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.adapter.InntektPerÅr
+import no.nav.aap.behandlingsflyt.verdityper.Beløp
 import java.time.Year
 
 class InntektGrunnlagRepository(private val connection: DBConnection) {
