@@ -8,12 +8,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.YrkesskadeService
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlytBuilder
 import no.nav.aap.behandlingsflyt.flyt.steg.StegType
+import no.nav.aap.behandlingsflyt.flyt.steg.impl.BarnetilleggSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.impl.FastsettArbeidsevneSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.impl.FastsettGrunnlagSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.impl.FatteVedtakSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.impl.ForeslåVedtakSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.impl.FritakMeldepliktSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.impl.GeneriskPlaceholderFlytSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.impl.SamordningSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.impl.StartBehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.impl.UnderveisSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.impl.VurderAlderSteg
@@ -38,9 +40,9 @@ object Førstegangsbehandling : BehandlingType {
             .medSteg(steg = VurderSykepengeErstatningSteg)
             .medSteg(steg = GeneriskPlaceholderFlytSteg(StegType.VURDER_MEDLEMSKAP))
             .medSteg(steg = FastsettGrunnlagSteg, informasjonskrav = listOf(InntektService))
-            .medSteg(steg = GeneriskPlaceholderFlytSteg(StegType.BARNETILLEGG))
             .medSteg(steg = UnderveisSteg, informasjonskrav = listOf(PliktkortService))
-            .medSteg(steg = GeneriskPlaceholderFlytSteg(StegType.SAMORDNING))
+            .medSteg(steg = BarnetilleggSteg)
+            .medSteg(steg = SamordningSteg)
             .medSteg(steg = GeneriskPlaceholderFlytSteg(StegType.SIMULERING))
             .medSteg(steg = GeneriskPlaceholderFlytSteg(StegType.BEREGN_TILKJENT_YTELSE))
             .medSteg(steg = ForeslåVedtakSteg) // en-trinn
