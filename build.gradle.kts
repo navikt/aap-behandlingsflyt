@@ -24,7 +24,7 @@ subprojects {
 
     tasks {
         val projectProps by registering(WriteProperties::class) {
-            destinationFile = file("${layout.buildDirectory}/version.properties")
+            destinationFile = layout.buildDirectory.file("version.properties")
             // Define property.
             property("project.version", getCheckedOutGitCommitHash())
         }
