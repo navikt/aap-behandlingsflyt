@@ -2,8 +2,8 @@ package no.nav.aap.behandlingsflyt.beregning
 
 import no.nav.aap.behandlingsflyt.beregning.Grunnbeløp.Element.Companion.finnGUnit
 import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.GUnit
-import no.nav.aap.behandlingsflyt.tidslinje.Segment
-import no.nav.aap.behandlingsflyt.tidslinje.Tidslinje
+import no.nav.aap.tidslinje.Segment
+import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.Periode
 import java.math.BigDecimal

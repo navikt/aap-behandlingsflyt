@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.flyt.vilkår
 
-import no.nav.aap.behandlingsflyt.tidslinje.Segment
-import no.nav.aap.behandlingsflyt.tidslinje.StandardSammenslåere
-import no.nav.aap.behandlingsflyt.tidslinje.Tidslinje
+import no.nav.aap.tidslinje.Segment
+import no.nav.aap.tidslinje.StandardSammenslåere
+import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.Periode
 import java.time.LocalDate
 

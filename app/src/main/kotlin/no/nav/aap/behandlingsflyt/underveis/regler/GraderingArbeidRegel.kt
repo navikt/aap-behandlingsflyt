@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.underveis.regler
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.arbeid.Pliktkort
-import no.nav.aap.behandlingsflyt.tidslinje.Segment
-import no.nav.aap.behandlingsflyt.tidslinje.StandardSammenslåere
-import no.nav.aap.behandlingsflyt.tidslinje.Tidslinje
+import no.nav.aap.tidslinje.Segment
+import no.nav.aap.tidslinje.StandardSammenslåere
+import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.Prosent
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -39,13 +39,13 @@ class GraderingArbeidRegel : UnderveisRegel {
         return resultat.kombiner(grenseverdiGradering, { periode, venstreSegment, høyreSegment ->
             var vurdering: Vurdering? = venstreSegment?.verdi
             if (høyreSegment?.verdi != null) {
-                vurdering = vurdering?.leggTilGrenseverdi(høyreSegment.verdi)
+                vurdering = vurdering?.leggTilGrenseverdi(høyreSegment.verdi as Prosent)
             }
             Segment(periode, vurdering)
         }).kombiner(arbeidsTidslinje, { periode, venstreSegment, høyreSegment ->
             var vurdering: Vurdering? = venstreSegment?.verdi
             if (høyreSegment?.verdi != null) {
-                vurdering = vurdering?.leggTilGradering(høyreSegment.verdi)
+                vurdering = vurdering?.leggTilGradering(høyreSegment.verdi as Gradering)
             }
             Segment(periode, vurdering)
         })

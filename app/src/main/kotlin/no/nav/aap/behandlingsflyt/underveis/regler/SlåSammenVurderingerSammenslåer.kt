@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.underveis.regler
 
-import no.nav.aap.behandlingsflyt.tidslinje.Segment
-import no.nav.aap.behandlingsflyt.tidslinje.SegmentSammenslåer
+import no.nav.aap.tidslinje.Segment
+import no.nav.aap.tidslinje.SegmentSammenslåer
 import no.nav.aap.verdityper.Periode
 
 class SlåSammenVurderingerSammenslåer : SegmentSammenslåer<Vurdering, EnkelVurdering, Vurdering> {
@@ -12,12 +12,12 @@ class SlåSammenVurderingerSammenslåer : SegmentSammenslåer<Vurdering, EnkelVu
     ): Segment<Vurdering> {
         return if (venstreSegment?.verdi == null && høyreSegment?.verdi != null) {
             var nyVurdering = Vurdering()
-            nyVurdering = nyVurdering.leggTilVurdering(høyreSegment.verdi.vilkår, høyreSegment.verdi.utfall)
+            nyVurdering = nyVurdering.leggTilVurdering(høyreSegment.verdi!!.vilkår, høyreSegment.verdi!!.utfall)
             Segment(periode, nyVurdering)
         } else {
             var vurdering = venstreSegment?.verdi
             if (høyreSegment?.verdi != null) {
-                vurdering = vurdering?.leggTilVurdering(høyreSegment.verdi.vilkår, høyreSegment.verdi.utfall)
+                vurdering = vurdering?.leggTilVurdering(høyreSegment.verdi!!.vilkår, høyreSegment.verdi!!.utfall)
             }
             Segment(periode, vurdering)
         }

@@ -10,7 +10,7 @@ import no.nav.aap.behandlingsflyt.underveis.regler.GraderingArbeidRegel
 import no.nav.aap.behandlingsflyt.underveis.regler.RettTilRegel
 import no.nav.aap.behandlingsflyt.underveis.regler.UnderveisInput
 import no.nav.aap.behandlingsflyt.underveis.regler.Vurdering
-import no.nav.aap.behandlingsflyt.tidslinje.Tidslinje
+import no.nav.aap.tidslinje.Tidslinje
 
 class UnderveisService(private val vilkårsresultatRepository: VilkårsresultatRepository, private val pliktkortRepository: PliktkortRepository) {
 

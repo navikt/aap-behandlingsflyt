@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.underveis.regler
 
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårtype
-import no.nav.aap.behandlingsflyt.tidslinje.Segment
-import no.nav.aap.behandlingsflyt.tidslinje.Tidslinje
+import no.nav.aap.tidslinje.Segment
+import no.nav.aap.tidslinje.Tidslinje
 
 /**
  * Setter opp tidslinjen hvor bruker har grunnleggende rett til ytelsen

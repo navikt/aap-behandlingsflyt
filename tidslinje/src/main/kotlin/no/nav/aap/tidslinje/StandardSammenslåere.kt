@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.tidslinje
+package no.nav.aap.tidslinje
 
 import no.nav.aap.verdityper.Beløp
 import java.math.BigDecimal
