@@ -34,7 +34,14 @@ class Row(private val resultSet: ResultSet) {
         return enumValueOf(getString(columnLabel))
     }
 
-    inline fun <reified T : E?, reified E : Enum<E>> getEnumOrNull(columnLabel: String): E? {
+    /**
+     * Siden enumValueOf ikke kan forholde seg til nullable typer,
+     * og compileren ikke kan forstå at typen ikke er null når databaseverdien er null,
+     * så innføres [T] for å gi compileren hint om at returtypen kan være null
+     */
+    inline fun <reified T, reified E> getEnumOrNull(columnLabel: String): E?
+            where T : E?,
+                  E : Enum<E> {
         return getStringOrNull(columnLabel)?.let<String, E>(::enumValueOf)
     }
 
