@@ -21,8 +21,9 @@ class RettTilRegel : UnderveisRegel {
 
         var retur = resultat
         input.relevanteVilkår.forEach { vilkår ->
-            val segmenter =
-                vilkår.vilkårsperioder().map { Segment(it.periode, EnkelVurdering(vilkår.type, it.utfall)) }
+            val segmenter = vilkår.vilkårsperioder()
+                .map { Segment(it.periode, EnkelVurdering(vilkår.type, it.utfall)) }
+
             retur = retur.kombiner(Tidslinje(segmenter), SlåSammenVurderingerSammenslåer())
         }
         return retur

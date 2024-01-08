@@ -26,7 +26,8 @@ class GraderingArbeidRegel : UnderveisRegel {
 
         // Regner kun ut gradering for perioden det er sendt noe inn for
         val arbeidsTidslinje =
-            pliktkortTidslinje.splittOppOgMapOmEtter(Period.ofDays(ANTALL_DAGER_I_MELDEPERIODE)) { arbeidsSegmenter ->
+            pliktkortTidslinje.splittOppOgMapOmEtter(Period.ofDays(ANTALL_DAGER_I_MELDEPERIODE))
+            { arbeidsSegmenter ->
                 regnUtGradering(arbeidsSegmenter)
             }.komprimer()
 
@@ -37,15 +38,17 @@ class GraderingArbeidRegel : UnderveisRegel {
             .kombiner(opptrappingTidslinje, StandardSammenslåere.prioriterHøyreSide())
 
         return resultat.kombiner(grenseverdiGradering, { periode, venstreSegment, høyreSegment ->
-            var vurdering: Vurdering? = venstreSegment?.verdi
-            if (høyreSegment?.verdi != null) {
-                vurdering = vurdering?.leggTilGrenseverdi(høyreSegment.verdi as Prosent)
+            var vurdering = venstreSegment?.verdi
+            val høyreSegmentVerdi = høyreSegment?.verdi
+            if (høyreSegmentVerdi != null) {
+                vurdering = vurdering?.leggTilGrenseverdi(høyreSegmentVerdi)
             }
             Segment(periode, vurdering)
         }).kombiner(arbeidsTidslinje, { periode, venstreSegment, høyreSegment ->
             var vurdering: Vurdering? = venstreSegment?.verdi
-            if (høyreSegment?.verdi != null) {
-                vurdering = vurdering?.leggTilGradering(høyreSegment.verdi as Gradering)
+            val høyreSegmentVerdi = høyreSegment?.verdi
+            if (høyreSegmentVerdi != null) {
+                vurdering = vurdering?.leggTilGradering(høyreSegmentVerdi)
             }
             Segment(periode, vurdering)
         })
@@ -67,7 +70,13 @@ class GraderingArbeidRegel : UnderveisRegel {
     private fun regnUtGradering(arbeidsSegmenter: NavigableSet<Segment<TimerArbeid>>): NavigableSet<Segment<Gradering>> {
         val antallTimerArbeid = arbeidsSegmenter.sumOf { it.verdi?.antallTimer ?: BigDecimal.ZERO }
         val gradering =
-            Prosent(antallTimerArbeid.divide(BigDecimal(ANTALL_TIMER_I_ARBEIDSUKE).multiply(BigDecimal.TWO), 3, RoundingMode.HALF_UP).toInt())
+            Prosent(
+                antallTimerArbeid.divide(
+                    BigDecimal(ANTALL_TIMER_I_ARBEIDSUKE).multiply(BigDecimal.TWO),
+                    3,
+                    RoundingMode.HALF_UP
+                ).toInt()
+            )
         return TreeSet(arbeidsSegmenter.map { segment ->
             Segment(
                 segment.periode, Gradering(

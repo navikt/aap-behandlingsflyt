@@ -10,14 +10,17 @@ class SlåSammenVurderingerSammenslåer : SegmentSammenslåer<Vurdering, EnkelVu
         venstreSegment: Segment<Vurdering>?,
         høyreSegment: Segment<EnkelVurdering>?
     ): Segment<Vurdering> {
-        return if (venstreSegment?.verdi == null && høyreSegment?.verdi != null) {
+        val høyreSegmentVerdi = høyreSegment?.verdi
+        val venstreSegmentVerdi = venstreSegment?.verdi
+
+        return if (venstreSegmentVerdi == null && høyreSegmentVerdi != null) {
             var nyVurdering = Vurdering()
-            nyVurdering = nyVurdering.leggTilVurdering(høyreSegment.verdi!!.vilkår, høyreSegment.verdi!!.utfall)
+            nyVurdering = nyVurdering.leggTilVurdering(høyreSegmentVerdi.vilkår, høyreSegmentVerdi.utfall)
             Segment(periode, nyVurdering)
         } else {
-            var vurdering = venstreSegment?.verdi
-            if (høyreSegment?.verdi != null) {
-                vurdering = vurdering?.leggTilVurdering(høyreSegment.verdi!!.vilkår, høyreSegment.verdi!!.utfall)
+            var vurdering = venstreSegmentVerdi
+            if (høyreSegmentVerdi != null) {
+                vurdering = vurdering?.leggTilVurdering(høyreSegmentVerdi.vilkår, høyreSegmentVerdi.utfall)
             }
             Segment(periode, vurdering)
         }
