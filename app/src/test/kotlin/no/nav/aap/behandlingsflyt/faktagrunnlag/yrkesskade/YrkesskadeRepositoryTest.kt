@@ -7,8 +7,8 @@ import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.database.InitTestDatabase
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.ident
-import no.nav.aap.behandlingsflyt.juni
-import no.nav.aap.behandlingsflyt.mai
+import no.nav.aap.behandlingsflyt.dbtest.juni
+import no.nav.aap.behandlingsflyt.dbtest.mai
 import no.nav.aap.behandlingsflyt.sak.PersonRepository
 import no.nav.aap.behandlingsflyt.sak.Sak
 import no.nav.aap.behandlingsflyt.sak.sakRepository

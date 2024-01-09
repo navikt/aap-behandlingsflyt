@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.beregning
 
-import no.nav.aap.behandlingsflyt.april
-import no.nav.aap.behandlingsflyt.desember
-import no.nav.aap.behandlingsflyt.januar
-import no.nav.aap.behandlingsflyt.mai
+import no.nav.aap.behandlingsflyt.dbtest.april
+import no.nav.aap.behandlingsflyt.dbtest.desember
+import no.nav.aap.behandlingsflyt.dbtest.januar
+import no.nav.aap.behandlingsflyt.dbtest.mai
 import no.nav.aap.tidslinje.JoinStyle
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.StandardSammenslåere

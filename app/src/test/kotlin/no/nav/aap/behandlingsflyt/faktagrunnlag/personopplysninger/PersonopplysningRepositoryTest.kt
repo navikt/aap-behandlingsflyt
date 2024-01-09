@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger
 
-import no.nav.aap.behandlingsflyt.april
+import no.nav.aap.behandlingsflyt.dbtest.april
 import no.nav.aap.behandlingsflyt.behandling.Behandling
 import no.nav.aap.behandlingsflyt.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.behandling.behandlingRepository
@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.database.InitTestDatabase
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.ident
-import no.nav.aap.behandlingsflyt.mars
+import no.nav.aap.behandlingsflyt.dbtest.mars
 import no.nav.aap.behandlingsflyt.sak.PersonRepository
 import no.nav.aap.behandlingsflyt.sak.Sak
 import no.nav.aap.behandlingsflyt.sak.sakRepository
