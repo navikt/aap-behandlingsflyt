@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlagkonstruktør
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
-import no.nav.aap.behandlingsflyt.flyt.steg.StegType
+import no.nav.aap.verdityper.flyt.StegType
 import java.util.*
 
 

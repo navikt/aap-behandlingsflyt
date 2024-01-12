@@ -15,8 +15,8 @@ import no.nav.aap.behandlingsflyt.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.behandling.flate.BehandlingReferanseService
-import no.nav.aap.behandlingsflyt.flyt.steg.StegGruppe
-import no.nav.aap.behandlingsflyt.flyt.steg.StegType
+import no.nav.aap.verdityper.flyt.StegGruppe
+import no.nav.aap.verdityper.flyt.StegType
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkår
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.flyt.vilkår.VilkårsresultatRepository

@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Personopplysn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.YrkesskadeService
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlytBuilder
-import no.nav.aap.behandlingsflyt.flyt.steg.StegType
+import no.nav.aap.verdityper.flyt.StegType
 import no.nav.aap.behandlingsflyt.flyt.steg.impl.BarnetilleggSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.impl.FastsettArbeidsevneSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.impl.FastsettGrunnlagSteg

@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.flyt.steg.StegOrkestrator
 import no.nav.aap.behandlingsflyt.sak.SakFlytRepository
+import no.nav.aap.behandlingsflyt.sak.Status.*
 import org.slf4j.LoggerFactory
 
 private val log = LoggerFactory.getLogger(FlytOrkestrator::class.java)
@@ -37,7 +38,7 @@ class FlytOrkestrator(
         val behandlingFlyt = behandling.forberedtFlyt()
 
         if (starterOppBehandling(behandling)) {
-            sakRepository.oppdaterSakStatus(kontekst.sakId, no.nav.aap.behandlingsflyt.sak.Status.UTREDES)
+            sakRepository.oppdaterSakStatus(kontekst.sakId, UTREDES)
         }
 
         val oppdaterFaktagrunnlagForKravliste =

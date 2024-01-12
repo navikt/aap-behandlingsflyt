@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.avklaringsbehov
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
-import no.nav.aap.behandlingsflyt.flyt.steg.StegType
+import no.nav.aap.verdityper.flyt.StegType
 import java.time.Period
 import java.util.*
 import java.util.stream.Collectors

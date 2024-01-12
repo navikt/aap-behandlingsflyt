@@ -1,6 +1,4 @@
-package no.nav.aap.behandlingsflyt.flyt.steg
-
-import no.nav.aap.behandlingsflyt.behandling.Status
+package no.nav.aap.verdityper.flyt
 
 enum class StegType(val gruppe: StegGruppe, val status: Status, val tekniskSteg: Boolean = false) {
     START_BEHANDLING(

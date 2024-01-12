@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.behandling
+package no.nav.aap.verdityper.flyt
 
 enum class Status {
     OPPRETTET,

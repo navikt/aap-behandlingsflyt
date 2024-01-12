@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.flyt.steg
+package no.nav.aap.verdityper.flyt
 
 enum class StegGruppe {
     START_BEHANDLING,

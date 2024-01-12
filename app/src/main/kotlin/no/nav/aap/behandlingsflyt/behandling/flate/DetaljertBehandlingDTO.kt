@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.flate
 
-import no.nav.aap.behandlingsflyt.behandling.Status
+import no.nav.aap.verdityper.flyt.Status
 import no.nav.aap.behandlingsflyt.flyt.flate.VilkårDTO
-import no.nav.aap.behandlingsflyt.flyt.steg.StegType
+import no.nav.aap.verdityper.flyt.StegType
 import java.time.LocalDateTime
 import java.util.*
 

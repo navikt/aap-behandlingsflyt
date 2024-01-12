@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.avklaringsbehov
 
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
-import no.nav.aap.behandlingsflyt.flyt.steg.StegType
+import no.nav.aap.verdityper.flyt.StegType
 
 /**
  * Kun for bruk innad i Avklaringsbehovene
