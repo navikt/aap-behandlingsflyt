@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.dokument.mottak
 
-import no.nav.aap.behandlingsflyt.behandling.dokumenter.JournalpostId
+import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDateTime
 
 class DokumentRekkefølge(val journalpostId: JournalpostId, val mottattTidspunkt: LocalDateTime) :

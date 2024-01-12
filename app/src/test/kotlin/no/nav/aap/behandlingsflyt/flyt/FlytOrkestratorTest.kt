@@ -22,7 +22,7 @@ import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.flyt.Status
 import no.nav.aap.behandlingsflyt.behandling.behandlingRepository
 import no.nav.aap.behandlingsflyt.behandling.dokumenter.Brevkode
-import no.nav.aap.behandlingsflyt.behandling.dokumenter.JournalpostId
+import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.database.InitTestDatabase
 import no.nav.aap.behandlingsflyt.dbconnect.transaction

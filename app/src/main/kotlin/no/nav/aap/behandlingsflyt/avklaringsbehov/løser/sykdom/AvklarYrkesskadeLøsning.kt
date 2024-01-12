@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeName
 import no.nav.aap.behandlingsflyt.avklaringsbehov.AVKLAR_YRKESSKADE_KODE
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.AvklaringsbehovLøsning
-import no.nav.aap.behandlingsflyt.behandling.dokumenter.JournalpostId
+import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.Prosent
 import java.time.LocalDate

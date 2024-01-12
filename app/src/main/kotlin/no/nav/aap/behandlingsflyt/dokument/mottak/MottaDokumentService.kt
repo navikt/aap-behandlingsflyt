@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.dokument.mottak
 
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
-import no.nav.aap.behandlingsflyt.behandling.dokumenter.JournalpostId
+import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.behandlingsflyt.dokument.mottak.pliktkort.MottakAvPliktkortRepository
 import no.nav.aap.behandlingsflyt.dokument.mottak.pliktkort.UbehandletPliktkort
 import no.nav.aap.verdityper.sakogbehandling.SakId

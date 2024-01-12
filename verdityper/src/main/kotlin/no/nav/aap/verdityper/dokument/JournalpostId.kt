@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.behandling.dokumenter
+package no.nav.aap.verdityper.dokument
 
 data class JournalpostId(val identifikator: String) {
 
