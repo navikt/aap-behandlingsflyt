@@ -23,13 +23,13 @@ class Periode(val fom: LocalDate, val tom: LocalDate) : Comparable<Periode> {
     }
 
     override fun compareTo(other: Periode): Int {
-        val compareFom = fom.compareTo(other.fom);
+        val compareFom = fom.compareTo(other.fom)
 
         if (compareFom != 0) {
-            return compareFom;
+            return compareFom
         }
 
-        return tom.compareTo(other.tom);
+        return tom.compareTo(other.tom)
     }
 
     override fun equals(other: Any?): Boolean {

@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.underveis
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
-import no.nav.aap.behandlingsflyt.database.MockConnection
+import no.nav.aap.behandlingsflyt.dbtest.MockConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.arbeid.PliktkortRepository
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Utfall
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkår

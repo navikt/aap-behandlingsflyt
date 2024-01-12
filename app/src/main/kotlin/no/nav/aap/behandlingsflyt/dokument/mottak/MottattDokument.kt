@@ -12,5 +12,4 @@ data class MottattDokument(
     val mottattTidspunkt: LocalDateTime,
     val type: DokumentType,
     val status: Status = Status.MOTTATT
-) {
-}
+)

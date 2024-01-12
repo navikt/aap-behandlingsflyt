@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.database
+package no.nav.aap.behandlingsflyt.dbtest
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource

@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.verdityper.flyt.StegType
 import org.slf4j.LoggerFactory
 
-class SamordningSteg() : BehandlingSteg {
+class SamordningSteg : BehandlingSteg {
     private val log = LoggerFactory.getLogger(SamordningSteg::class.java)
 
     override fun utfør(kontekst: FlytKontekst): StegResultat {

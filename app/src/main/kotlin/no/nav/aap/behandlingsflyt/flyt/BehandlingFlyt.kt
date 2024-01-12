@@ -91,7 +91,7 @@ class BehandlingFlyt private constructor(
         if (endringer.isNotEmpty()) {
             val nåværendeIndex = flyt.indexOfFirst { it.steg.type() == nåværendeSteg }
             if (nåværendeIndex == -1) {
-                throw IllegalStateException("[Utvikler feil] Nåværende steg '" + nåværendeSteg + "' er ikke en del av den definerte prosessen")
+                throw IllegalStateException("[Utvikler feil] Nåværende steg '$nåværendeSteg' er ikke en del av den definerte prosessen")
             }
 
             val endringsIndex =

@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.database
 
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
+import no.nav.aap.behandlingsflyt.dbtest.InitTestDatabase
 import no.nav.aap.verdityper.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach

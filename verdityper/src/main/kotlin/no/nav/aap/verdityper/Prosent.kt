@@ -10,7 +10,7 @@ class Prosent private constructor(verdi: BigDecimal) : Comparable<Prosent> {
     constructor(intVerdi: Int) : this(BigDecimal(intVerdi).divide(BigDecimal(100), 2, RoundingMode.HALF_UP))
 
     fun getProsent(): Int {
-        return prosentverdi();
+        return prosentverdi()
     }
 
     init {

@@ -28,6 +28,6 @@ fun utledType(identifikator: String): BehandlingType {
     if (Anke.identifikator() == identifikator) {
         return Anke
     }
-    throw IllegalArgumentException("Ukjent identifikator ${identifikator}")
+    throw IllegalArgumentException("Ukjent identifikator $identifikator")
 }
 

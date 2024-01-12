@@ -6,6 +6,4 @@ data class TotrinnsVurdering(
     @JsonProperty(required = true, value = "definisjon") val definisjon: String,
     @JsonProperty(required = true, value = "godkjent") val godkjent: Boolean?,
     @JsonProperty(required = true, value = "begrunnelse") val begrunnelse: String?
-) {
-
-}
+)

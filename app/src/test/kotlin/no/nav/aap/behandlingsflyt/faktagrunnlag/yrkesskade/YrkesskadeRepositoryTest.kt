@@ -4,8 +4,8 @@ import no.nav.aap.behandlingsflyt.behandling.Behandling
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.behandlingsflyt.behandling.behandlingRepository
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
-import no.nav.aap.behandlingsflyt.database.InitTestDatabase
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
+import no.nav.aap.behandlingsflyt.dbtest.InitTestDatabase
 import no.nav.aap.behandlingsflyt.ident
 import no.nav.aap.behandlingsflyt.dbtest.juni
 import no.nav.aap.behandlingsflyt.dbtest.mai
