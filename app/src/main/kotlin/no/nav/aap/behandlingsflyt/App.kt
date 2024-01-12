@@ -58,6 +58,7 @@ import no.nav.aap.behandlingsflyt.prosessering.Motor
 import no.nav.aap.behandlingsflyt.prosessering.retry.RetryService
 import no.nav.aap.behandlingsflyt.sak.Ident
 import no.nav.aap.behandlingsflyt.sak.flate.saksApi
+import no.nav.aap.verdityper.feilhåndtering.ElementNotFoundException
 import no.nav.aap.verdityper.Periode
 import org.flywaydb.core.Flyway
 import org.slf4j.Logger

@@ -1,3 +1,3 @@
-package no.nav.aap.behandlingsflyt
+package no.nav.aap.verdityper.feilhåndtering
 
 class ElementNotFoundException : RuntimeException()

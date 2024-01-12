@@ -11,7 +11,7 @@ class PersonHendelsesHåndterer(connection: DBConnection) {
     private val personRepository = PersonRepository(connection)
     private val sakRepository = sakRepository(connection)
 
-    fun håndtere(key: Ident, hendelse: PersonHendelse): Saksnummer? {
+    fun håndtere(key: Ident, hendelse: PersonHendelse): Saksnummer {
         val person = personRepository.finnEllerOpprett(key)
 
         return sakRepository.finnEllerOpprett(person, hendelse.periode()).saksnummer

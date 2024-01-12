@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.flate
 
-import no.nav.aap.behandlingsflyt.ElementNotFoundException
+import no.nav.aap.verdityper.feilhåndtering.ElementNotFoundException
 import no.nav.aap.behandlingsflyt.behandling.Behandling
 import no.nav.aap.behandlingsflyt.behandling.behandlingRepository
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
