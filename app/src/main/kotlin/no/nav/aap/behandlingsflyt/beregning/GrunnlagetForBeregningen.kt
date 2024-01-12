@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.beregning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.GUnit
-import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.adapter.InntektPerÅr
+import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.InntektPerÅr
 import java.util.*
 
 class GrunnlagetForBeregningen(

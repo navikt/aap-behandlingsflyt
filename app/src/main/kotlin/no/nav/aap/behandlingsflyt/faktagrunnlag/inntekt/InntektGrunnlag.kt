@@ -1,7 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.adapter.InntektPerÅr
-
 class InntektGrunnlag(
     private val id: Long?,
     val inntekter: Set<InntektPerÅr>

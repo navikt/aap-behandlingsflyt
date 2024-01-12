@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.Row
-import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.adapter.InntektPerÅr
 import no.nav.aap.verdityper.Beløp
 import java.time.Year
 

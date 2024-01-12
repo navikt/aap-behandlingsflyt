@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.beregning.år.Input
 import no.nav.aap.behandlingsflyt.faktagrunnlag.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.GUnit
 import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.InntektGrunnlagRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.adapter.InntektPerÅr
+import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.uføre.UføreRepository

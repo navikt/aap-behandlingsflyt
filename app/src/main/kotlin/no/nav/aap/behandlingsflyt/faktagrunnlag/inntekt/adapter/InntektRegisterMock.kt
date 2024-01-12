@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.adapter
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.sak.Ident
 import no.nav.aap.verdityper.Beløp
 import java.time.Year

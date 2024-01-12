@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.beregning
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.adapter.InntektPerÅr
+import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.InntektPerÅr
 import no.nav.aap.verdityper.Prosent
 
 class YrkesskadeBeregning(

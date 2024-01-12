@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.beregning.år
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.adapter.InntektPerÅr
+import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.InntektPerÅr
 import java.time.LocalDate
 import java.time.Year
 

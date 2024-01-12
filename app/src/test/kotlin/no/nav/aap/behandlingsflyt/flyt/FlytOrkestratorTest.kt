@@ -27,7 +27,7 @@ import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.database.InitTestDatabase
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.faktagrunnlag.arbeid.ArbeidIPeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.adapter.InntektPerÅr
+import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.adapter.InntektRegisterMock
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Personopplysning
