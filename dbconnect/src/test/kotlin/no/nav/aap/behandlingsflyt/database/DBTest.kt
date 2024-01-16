@@ -223,7 +223,8 @@ internal class DBTest {
             }
             connection.queryFirst("SELECT * FROM TEST_DATERANGE") {
                 setRowMapper { row ->
-                    assertThat(row.getPeriodeOrNull("TEST")).isEqualTo(Periode(LocalDate.now(), LocalDate.now()))
+                    assertThat(row.getPeriodeOrNull("TEST"))
+                        .isEqualTo(Periode(LocalDate.now(), LocalDate.now()))
                     assertThat(row.getPeriode("TEST")).isEqualTo(Periode(LocalDate.now(), LocalDate.now()))
                     assertThat(row.getPeriodeOrNull("TEST_NULL")).isNull()
                     assertThrows<IllegalArgumentException> { row.getPeriode("TEST_NULL") }
