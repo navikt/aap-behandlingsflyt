@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt.vilkår.bistand
 
-import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.bistand.BistandVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.bistand.BistandVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Faktagrunnlag
 import java.time.LocalDate

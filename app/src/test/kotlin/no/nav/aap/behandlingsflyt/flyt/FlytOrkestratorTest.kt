@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.avklaringsbehov.LøsAvklaringsbehovBehandlingHendelse
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.bistand.AvklarBistandsbehovLøsning
-import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.bistand.BistandVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.bistand.BistandVurdering
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.student.AvklarStudentLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.AvklarSykdomLøsning
