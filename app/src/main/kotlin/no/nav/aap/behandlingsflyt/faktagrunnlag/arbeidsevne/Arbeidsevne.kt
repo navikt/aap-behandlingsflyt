@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.avklaringsbehov.løser.arbeidsevne
+package no.nav.aap.behandlingsflyt.faktagrunnlag.arbeidsevne
 
 import no.nav.aap.verdityper.Prosent
 
