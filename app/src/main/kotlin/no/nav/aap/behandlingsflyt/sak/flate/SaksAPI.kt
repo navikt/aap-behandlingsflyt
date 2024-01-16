@@ -8,7 +8,7 @@ import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.verdityper.feilhåndtering.ElementNotFoundException
 import no.nav.aap.behandlingsflyt.behandling.behandlingRepository
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
-import no.nav.aap.behandlingsflyt.sak.Ident
+import no.nav.aap.verdityper.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sak.PersonRepository
 import no.nav.aap.behandlingsflyt.sak.Sak
 import no.nav.aap.behandlingsflyt.sak.Saksnummer

@@ -56,7 +56,7 @@ import no.nav.aap.behandlingsflyt.hendelse.mottak.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.hendelse.mottak.dokument.søknad.Søknad
 import no.nav.aap.behandlingsflyt.prosessering.Motor
 import no.nav.aap.behandlingsflyt.prosessering.retry.RetryService
-import no.nav.aap.behandlingsflyt.sak.Ident
+import no.nav.aap.verdityper.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sak.flate.saksApi
 import no.nav.aap.verdityper.feilhåndtering.ElementNotFoundException
 import no.nav.aap.verdityper.Periode

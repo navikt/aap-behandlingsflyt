@@ -1,6 +1,6 @@
-package no.nav.aap.behandlingsflyt
+package no.nav.aap.behandlingsflyt.dbtest
 
-import no.nav.aap.behandlingsflyt.sak.Ident
+import no.nav.aap.verdityper.sakogbehandling.Ident
 import java.util.concurrent.atomic.AtomicInteger
 
 private val identTeller = AtomicInteger(0)

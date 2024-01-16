@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.sak
 
+import no.nav.aap.verdityper.sakogbehandling.Ident
 import java.util.*
 
 class Person(val id: Long, val identifikator: UUID, private var identer: List<Ident>) {

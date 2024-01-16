@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.hendelse.mottak
 
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
-import no.nav.aap.behandlingsflyt.sak.Ident
+import no.nav.aap.verdityper.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sak.Saksnummer
 import javax.sql.DataSource
 

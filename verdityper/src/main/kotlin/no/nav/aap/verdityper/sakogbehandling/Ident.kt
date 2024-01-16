@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.sak
+package no.nav.aap.verdityper.sakogbehandling
 
 class Ident(val identifikator: String) {
     override fun equals(other: Any?): Boolean {

@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.sak
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.Row
+import no.nav.aap.verdityper.sakogbehandling.Ident
 import java.util.*
 
 class PersonRepository(private val connection: DBConnection) {

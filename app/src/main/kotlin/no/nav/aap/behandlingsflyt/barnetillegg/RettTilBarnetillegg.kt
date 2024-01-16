@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.barnetillegg
 
-import no.nav.aap.behandlingsflyt.sak.Ident
+import no.nav.aap.verdityper.sakogbehandling.Ident
 
 class RettTilBarnetillegg {
     private val barn = mutableSetOf<Ident>()

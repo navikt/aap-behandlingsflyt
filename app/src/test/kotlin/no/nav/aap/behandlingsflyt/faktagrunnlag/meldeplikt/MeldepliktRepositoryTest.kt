@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.dbtest.InitTestDatabase
 import no.nav.aap.behandlingsflyt.dbtest.august
 import no.nav.aap.behandlingsflyt.faktagrunnlag.bistand.BistandRepository
-import no.nav.aap.behandlingsflyt.ident
+import no.nav.aap.behandlingsflyt.dbtest.ident
 import no.nav.aap.behandlingsflyt.sak.PersonRepository
 import no.nav.aap.behandlingsflyt.sak.Sak
 import no.nav.aap.behandlingsflyt.sak.SakOgBehandlingService
