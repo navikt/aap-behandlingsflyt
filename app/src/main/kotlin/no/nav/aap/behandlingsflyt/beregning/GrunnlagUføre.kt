@@ -1,7 +1,8 @@
 package no.nav.aap.behandlingsflyt.beregning
 
-import no.nav.aap.verdityper.GUnit
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Faktagrunnlag
+import no.nav.aap.verdityper.GUnit
+import java.math.BigDecimal
 
 class GrunnlagUføre(
     private val grunnlaget: GUnit,
@@ -19,8 +20,21 @@ class GrunnlagUføre(
     }
 
     override fun faktagrunnlag(): Faktagrunnlag {
-        return object : Faktagrunnlag {}
+        return Fakta(
+            grunnlaget = grunnlaget.verdi(),
+            gjeldende = gjeldende,
+            grunnlag = grunnlag.faktagrunnlag(),
+            grunnlagYtterligereNedsatt = grunnlagYtterligereNedsatt.faktagrunnlag()
+        )
     }
+
+    internal class Fakta(
+        // FIXME: BigDecimal serialiseres til JSON på standardform
+        val grunnlaget: BigDecimal,
+        val gjeldende: Type,
+        val grunnlag: Faktagrunnlag,
+        val grunnlagYtterligereNedsatt: Faktagrunnlag
+    ) : Faktagrunnlag
 
     fun gjeldende(): Type {
         return gjeldende
