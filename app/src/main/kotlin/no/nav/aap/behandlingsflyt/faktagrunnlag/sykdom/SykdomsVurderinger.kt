@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom
+package no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom
 
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.Beløp

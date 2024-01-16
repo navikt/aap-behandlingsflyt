@@ -1,7 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom
 
-import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.SykepengerVurdering
-
 class SykepengerErstatningGrunnlag(
     val id: Long? = null,
     val vurdering: SykepengerVurdering?

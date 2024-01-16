@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom
 
-import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.SykepengerVurdering
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection

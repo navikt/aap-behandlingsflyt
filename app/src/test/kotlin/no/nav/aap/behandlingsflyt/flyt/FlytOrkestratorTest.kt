@@ -11,8 +11,8 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.student.AvklarStudentL�
 import no.nav.aap.behandlingsflyt.faktagrunnlag.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.AvklarYrkesskadeLøsning
-import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.NedreGrense
-import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.Sykdomsvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.NedreGrense
+import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.YrkesskadevurderingDto
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak.ForeslåVedtakLøsning

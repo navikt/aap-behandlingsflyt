@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.flate
 
-import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.Sykdomsvurdering
-import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.Yrkesskadevurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.Sykdomsvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.Yrkesskadevurdering
 import no.nav.aap.verdityper.Periode
 
 data class SykdomGrunnlagDto(
