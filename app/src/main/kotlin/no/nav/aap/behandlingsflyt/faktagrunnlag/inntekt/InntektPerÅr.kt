@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt
 
-import no.nav.aap.behandlingsflyt.beregning.Grunnbeløp
 import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.GUnit
 import java.time.Year

@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.dbtest.april
 import no.nav.aap.behandlingsflyt.dbtest.desember
 import no.nav.aap.behandlingsflyt.dbtest.januar
 import no.nav.aap.behandlingsflyt.dbtest.mai
+import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.Grunnbeløp
 import no.nav.aap.tidslinje.JoinStyle
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.StandardSammenslåere
