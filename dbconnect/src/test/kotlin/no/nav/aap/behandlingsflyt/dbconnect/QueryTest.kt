@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.dbconnect
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
 
-class QueryTest {
+internal class QueryTest {
 
     @Test
     fun `negative tester`() {

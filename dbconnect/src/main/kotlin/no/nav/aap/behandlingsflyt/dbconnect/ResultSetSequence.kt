@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.dbconnect
 
 import java.sql.ResultSet
 
-fun <T> ResultSet.map(block: (rs: ResultSet) -> T): Sequence<T> {
+internal fun <T> ResultSet.map(block: (rs: ResultSet) -> T): Sequence<T> {
     return mapToSequence(this, block)
 }
 

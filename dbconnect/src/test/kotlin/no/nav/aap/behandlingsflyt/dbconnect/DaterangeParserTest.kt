@@ -5,7 +5,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class DaterangeParserTest {
+internal class DaterangeParserTest {
 
     @Test
     fun `Konverterer Periode til lukket daterange`() {

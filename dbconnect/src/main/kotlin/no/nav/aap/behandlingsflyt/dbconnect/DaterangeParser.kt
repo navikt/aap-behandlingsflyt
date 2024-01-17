@@ -4,15 +4,15 @@ import no.nav.aap.verdityper.Periode
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-object DaterangeParser {
+internal object DaterangeParser {
 
     private val formater = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
-    fun toSQL(periode: Periode): String {
+    internal fun toSQL(periode: Periode): String {
         return "[${formater.format(periode.fom)},${formater.format(periode.tom)}]"
     }
 
-    fun fromSQL(daterange: String): Periode {
+    internal fun fromSQL(daterange: String): Periode {
         val (lower, upper) = daterange.split(",")
 
         val lowerEnd = lower.first()

@@ -13,16 +13,16 @@ class Execute(private val preparedStatement: PreparedStatement) {
         resultValidator = block
     }
 
-    fun execute() {
+    internal fun execute() {
         val rowsUpdated = preparedStatement.executeUpdate()
         resultValidator(rowsUpdated)
     }
 
-    fun executeReturnKey(): Long {
+    internal fun executeReturnKey(): Long {
         return executeReturnKeysPrivate().single()
     }
 
-    fun executeReturnKeys(): List<Long> {
+    internal fun executeReturnKeys(): List<Long> {
         return executeReturnKeysPrivate().toList()
     }
 

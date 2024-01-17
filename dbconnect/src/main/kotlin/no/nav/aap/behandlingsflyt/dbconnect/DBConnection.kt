@@ -87,7 +87,7 @@ class DBConnection(private val connection: Connection) {
         savepoint = this.connection.setSavepoint()
     }
 
-    fun rollback() {
+    internal fun rollback() {
         if (savepoint != null) {
             this.connection.rollback(savepoint)
         } else {
