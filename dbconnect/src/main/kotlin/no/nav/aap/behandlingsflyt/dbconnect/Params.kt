@@ -23,22 +23,6 @@ class Params(private val preparedStatement: PreparedStatement) {
         preparedStatement.setString(index, value?.name)
     }
 
-    fun setLocalDate(index: Int, localDate: LocalDate?) {
-        preparedStatement.setDate(index, localDate?.let(Date::valueOf))
-    }
-
-    fun setLocalDateTime(index: Int, localDateTime: LocalDateTime?) {
-        preparedStatement.setTimestamp(index, localDateTime?.let(Timestamp::valueOf))
-    }
-
-    fun setUUID(index: Int, uuid: UUID?) {
-        preparedStatement.setObject(index, uuid)
-    }
-
-    fun setPeriode(index: Int, periode: Periode?) {
-        preparedStatement.setString(index, periode?.let(DaterangeParser::toSQL))
-    }
-
     fun setInt(index: Int, value: Int?) {
         if (value == null) {
             preparedStatement.setNull(index, Types.SMALLINT)
@@ -55,6 +39,18 @@ class Params(private val preparedStatement: PreparedStatement) {
         }
     }
 
+    fun setBigDecimal(index: Int, value: BigDecimal?) {
+        if (value == null) {
+            preparedStatement.setNull(index, Types.NUMERIC)
+        } else {
+            preparedStatement.setBigDecimal(index, value)
+        }
+    }
+
+    fun setUUID(index: Int, uuid: UUID?) {
+        preparedStatement.setObject(index, uuid)
+    }
+
     fun setBoolean(index: Int, value: Boolean?) {
         if (value == null) {
             preparedStatement.setNull(index, Types.BOOLEAN)
@@ -63,11 +59,15 @@ class Params(private val preparedStatement: PreparedStatement) {
         }
     }
 
-    fun setBigDecimal(index: Int, value: BigDecimal?) {
-        if (value == null) {
-            preparedStatement.setNull(index, Types.NUMERIC)
-        } else {
-            preparedStatement.setBigDecimal(index, value)
-        }
+    fun setPeriode(index: Int, periode: Periode?) {
+        preparedStatement.setString(index, periode?.let(DaterangeParser::toSQL))
+    }
+
+    fun setLocalDate(index: Int, localDate: LocalDate?) {
+        preparedStatement.setDate(index, localDate?.let(Date::valueOf))
+    }
+
+    fun setLocalDateTime(index: Int, localDateTime: LocalDateTime?) {
+        preparedStatement.setTimestamp(index, localDateTime?.let(Timestamp::valueOf))
     }
 }

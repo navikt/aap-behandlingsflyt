@@ -6,100 +6,19 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Month
 import java.util.*
 
-internal class DBTest {
+internal class ParamsOgRowTest {
 
     @BeforeEach
     fun setup() {
         InitTestDatabase.dataSource.transaction { connection ->
-            connection.execute("TRUNCATE TEST, TEST_BYTES, TEST_STRING, TEST_LONG, TEST_UUID, TEST_DATERANGE, TEST_BOOLEAN, TEST_LOCALDATETIME; ALTER SEQUENCE test_id_seq RESTART WITH 1")
+            connection.execute("TRUNCATE TEST_BYTES, TEST_STRING, TEST_ENUM, TEST_INT, TEST_LONG, TEST_BIG_DECIMAL, TEST_UUID, TEST_BOOLEAN, TEST_DATERANGE, TEST_LOCALDATE, TEST_LOCALDATETIME")
         }
-    }
-
-    @Test
-    fun `Skriver og henter en rad mot DB`() {
-        val result = InitTestDatabase.dataSource.transaction { connection ->
-            connection.execute("INSERT INTO test (test) VALUES ('a')")
-            connection.queryFirst("SELECT test FROM test") {
-                setRowMapper { row -> row.getString("test") }
-            }
-        }
-
-        assertThat(result).isEqualTo("a")
-    }
-
-    @Test
-    fun `Skriver og henter to rader mot DB`() {
-        val result = InitTestDatabase.dataSource.transaction { connection ->
-            connection.execute("INSERT INTO test (test) VALUES ('a'), ('b')")
-            connection.queryList("SELECT test FROM test") {
-                setRowMapper { row -> row.getString("test") }
-            }
-        }
-
-        assertThat(result)
-            .hasSize(2)
-            .contains("a", "b")
-    }
-
-    @Test
-    fun `Henter ingen rader fra DB`() {
-        val result = InitTestDatabase.dataSource.transaction { connection ->
-            connection.queryFirstOrNull("SELECT test FROM test") {
-                setRowMapper { row -> row.getString("test") }
-            }
-        }
-
-        assertThat(result).isNull()
-    }
-
-    @Test
-    fun `Skriver og henter key og verdier fra DB`() {
-        val (result, key) = InitTestDatabase.dataSource.transaction { connection ->
-            connection.execute("INSERT INTO test (test) VALUES ('a')")
-            val key = connection.executeReturnKey("INSERT INTO test (test) VALUES ('b')")
-            connection.queryList("SELECT test FROM test") {
-                setRowMapper { row -> row.getString("test") }
-            } to key
-        }
-
-        assertThat(result)
-            .hasSize(2)
-            .contains("a", "b")
-        assertThat(key).isEqualTo(2)
-    }
-
-    @Test
-    fun `Skriver og henter keys og verdier fra DB`() {
-        val (result, keys) = InitTestDatabase.dataSource.transaction { connection ->
-            connection.execute("INSERT INTO test (test) VALUES ('a'), ('b')")
-            val keys = connection.executeReturnKeys("INSERT INTO test (test) VALUES ('c'), ('d')")
-            connection.queryList("SELECT test FROM test") {
-                setRowMapper { row -> row.getString("test") }
-            } to keys
-        }
-
-        assertThat(result)
-            .hasSize(4)
-            .contains("a", "b", "c", "d")
-        assertThat(keys)
-            .hasSize(2)
-            .contains(3, 4)
-    }
-
-    @Test
-    fun `Henter tomt resultat fra DB`() {
-        val result = InitTestDatabase.dataSource.transaction { connection ->
-            connection.queryList("SELECT test FROM test") {
-                setRowMapper { row -> row.getString("test") }
-            }
-        }
-
-        assertThat(result).isEmpty()
     }
 
     @Test
@@ -152,6 +71,63 @@ internal class DBTest {
         }
     }
 
+    enum class TestEnum {
+        TEST
+    }
+
+    @Test
+    fun `Skriver og leser Enum og null-verdi riktig`() {
+        InitTestDatabase.dataSource.transaction { connection ->
+            connection.execute(
+                """
+                    INSERT INTO TEST_ENUM (TEST, TEST_NULL)
+                    VALUES (?, ?)
+                """.trimMargin()
+            ) {
+                setParams {
+                    setEnumName(1, TestEnum.TEST)
+                    setEnumName(2, null)
+                }
+            }
+            connection.queryFirst("SELECT * FROM TEST_ENUM") {
+                setRowMapper { row ->
+                    assertThat(row.getEnumOrNull<TestEnum?, TestEnum>("TEST")).isEqualTo(TestEnum.TEST)
+                    assertThat(row.getEnum<TestEnum>("TEST")).isEqualTo(TestEnum.TEST)
+                    assertThat(row.getEnumOrNull<TestEnum?, TestEnum>("TEST_NULL")).isNull()
+                    assertThrows<IllegalArgumentException> { row.getEnum<TestEnum>("TEST_NULL") }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `Skriver og leser Int og null-verdi riktig`() {
+        InitTestDatabase.dataSource.transaction { connection ->
+            connection.execute(
+                """
+                    INSERT INTO TEST_INT (TEST_0, TEST_1, TEST_NULL)
+                    VALUES (?, ?, ?)
+                """.trimMargin()
+            ) {
+                setParams {
+                    setInt(1, 0)
+                    setInt(2, 1)
+                    setInt(3, null)
+                }
+            }
+            connection.queryFirst("SELECT * FROM TEST_INT") {
+                setRowMapper { row ->
+                    assertThat(row.getIntOrNull("TEST_0")).isEqualTo(0)
+                    assertThat(row.getInt("TEST_0")).isEqualTo(0)
+                    assertThat(row.getIntOrNull("TEST_1")).isEqualTo(1)
+                    assertThat(row.getInt("TEST_1")).isEqualTo(1)
+                    assertThat(row.getIntOrNull("TEST_NULL")).isNull()
+                    assertThrows<IllegalArgumentException> { row.getInt("TEST_NULL") }
+                }
+            }
+        }
+    }
+
     @Test
     fun `Skriver og leser Long og null-verdi riktig`() {
         InitTestDatabase.dataSource.transaction { connection ->
@@ -175,6 +151,35 @@ internal class DBTest {
                     assertThat(row.getLong("TEST_1")).isEqualTo(1)
                     assertThat(row.getLongOrNull("TEST_NULL")).isNull()
                     assertThrows<IllegalArgumentException> { row.getLong("TEST_NULL") }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `Skriver og leser BigDecimal og null-verdi riktig`() {
+        InitTestDatabase.dataSource.transaction { connection ->
+            connection.execute(
+                """
+                    INSERT INTO TEST_BIG_DECIMAL (TEST_0, TEST_1, TEST_NULL)
+                    VALUES (?, ?, ?)
+                """.trimMargin()
+            ) {
+                setParams {
+                    setBigDecimal(1, BigDecimal.ZERO)
+                    setBigDecimal(2, BigDecimal("12.34"))
+                    setBigDecimal(3, null)
+                }
+            }
+            connection.queryFirst("SELECT * FROM TEST_BIG_DECIMAL") {
+                setRowMapper { row ->
+                    // Er lik 0.00 fordi kolonnen i tabellen precision = 4 og scale = 2
+                    assertThat(row.getBigDecimalOrNull("TEST_0")).isEqualTo("0.00")
+                    assertThat(row.getBigDecimal("TEST_0")).isEqualTo("0.00")
+                    assertThat(row.getBigDecimalOrNull("TEST_1")).isEqualTo(BigDecimal("12.34"))
+                    assertThat(row.getBigDecimal("TEST_1")).isEqualTo(BigDecimal("12.34"))
+                    assertThat(row.getBigDecimalOrNull("TEST_NULL")).isNull()
+                    assertThrows<IllegalArgumentException> { row.getBigDecimal("TEST_NULL") }
                 }
             }
         }
@@ -207,32 +212,6 @@ internal class DBTest {
     }
 
     @Test
-    fun `Skriver og leser Periode og null-verdi riktig`() {
-        InitTestDatabase.dataSource.transaction { connection ->
-            connection.execute(
-                """
-                    INSERT INTO TEST_DATERANGE (TEST, TEST_NULL)
-                    VALUES (?::daterange, ?::daterange)
-                """.trimMargin()
-            ) {
-                setParams {
-                    setPeriode(1, Periode(LocalDate.now(), LocalDate.now()))
-                    setPeriode(2, null)
-                }
-            }
-            connection.queryFirst("SELECT * FROM TEST_DATERANGE") {
-                setRowMapper { row ->
-                    assertThat(row.getPeriodeOrNull("TEST"))
-                        .isEqualTo(Periode(LocalDate.now(), LocalDate.now()))
-                    assertThat(row.getPeriode("TEST")).isEqualTo(Periode(LocalDate.now(), LocalDate.now()))
-                    assertThat(row.getPeriodeOrNull("TEST_NULL")).isNull()
-                    assertThrows<IllegalArgumentException> { row.getPeriode("TEST_NULL") }
-                }
-            }
-        }
-    }
-
-    @Test
     fun `Skriver og leser Boolean og null-verdi riktig`() {
         InitTestDatabase.dataSource.transaction { connection ->
             connection.execute(
@@ -255,6 +234,32 @@ internal class DBTest {
                     assertThat(row.getBoolean("TEST_TRUE")).isTrue
                     assertThat(row.getBooleanOrNull("TEST_NULL")).isNull()
                     assertThrows<IllegalArgumentException> { row.getBoolean("TEST_NULL") }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `Skriver og leser Periode og null-verdi riktig`() {
+        InitTestDatabase.dataSource.transaction { connection ->
+            connection.execute(
+                """
+                    INSERT INTO TEST_DATERANGE (TEST, TEST_NULL)
+                    VALUES (?::daterange, ?::daterange)
+                """.trimMargin()
+            ) {
+                setParams {
+                    setPeriode(1, Periode(LocalDate.now(), LocalDate.now()))
+                    setPeriode(2, null)
+                }
+            }
+            connection.queryFirst("SELECT * FROM TEST_DATERANGE") {
+                setRowMapper { row ->
+                    assertThat(row.getPeriodeOrNull("TEST"))
+                        .isEqualTo(Periode(LocalDate.now(), LocalDate.now()))
+                    assertThat(row.getPeriode("TEST")).isEqualTo(Periode(LocalDate.now(), LocalDate.now()))
+                    assertThat(row.getPeriodeOrNull("TEST_NULL")).isNull()
+                    assertThrows<IllegalArgumentException> { row.getPeriode("TEST_NULL") }
                 }
             }
         }

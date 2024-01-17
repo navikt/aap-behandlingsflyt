@@ -85,6 +85,17 @@ class Row(private val resultSet: ResultSet) {
         return 0L
     }
 
+    fun getBigDecimal(columnLabel: String): BigDecimal {
+        val bigDecimal = getBigDecimalOrNull(columnLabel)
+        requireNotNull(bigDecimal)
+        return bigDecimal
+    }
+
+    fun getBigDecimalOrNull(columnLabel: String): BigDecimal? {
+        val bigDecimal: BigDecimal? = resultSet.getBigDecimal(columnLabel)
+        return bigDecimal
+    }
+
     fun getUUID(columnLabel: String): UUID {
         return UUID.fromString(getString(columnLabel))
     }
@@ -95,18 +106,6 @@ class Row(private val resultSet: ResultSet) {
             return null
         }
         return UUID.fromString(string)
-    }
-
-    fun getPeriode(columnLabel: String): Periode {
-        return DaterangeParser.fromSQL(getString(columnLabel))
-    }
-
-    fun getPeriodeOrNull(columnLabel: String): Periode? {
-        val dateRange = getStringOrNull(columnLabel)
-        if (dateRange == null) {
-            return null
-        }
-        return DaterangeParser.fromSQL(dateRange)
     }
 
     fun getBoolean(columnLabel: String): Boolean {
@@ -129,6 +128,18 @@ class Row(private val resultSet: ResultSet) {
         return false
     }
 
+    fun getPeriode(columnLabel: String): Periode {
+        return DaterangeParser.fromSQL(getString(columnLabel))
+    }
+
+    fun getPeriodeOrNull(columnLabel: String): Periode? {
+        val dateRange = getStringOrNull(columnLabel)
+        if (dateRange == null) {
+            return null
+        }
+        return DaterangeParser.fromSQL(dateRange)
+    }
+
     fun getLocalDate(columnLabel: String): LocalDate {
         val localDate = getLocalDateOrNull(columnLabel)
         requireNotNull(localDate)
@@ -149,16 +160,5 @@ class Row(private val resultSet: ResultSet) {
     fun getLocalDateTimeOrNull(columnLabel: String): LocalDateTime? {
         val timestamp: Timestamp? = resultSet.getTimestamp(columnLabel)
         return timestamp?.toLocalDateTime()
-    }
-
-    fun getBigDecimalOrNull(columnLabel: String): BigDecimal? {
-        val bigDecimal: BigDecimal? = resultSet.getBigDecimal(columnLabel)
-        return bigDecimal
-    }
-
-    fun getBigDecimal(columnLabel: String): BigDecimal {
-        val bigDecimal = getBigDecimalOrNull(columnLabel)
-        requireNotNull(bigDecimal)
-        return bigDecimal
     }
 }
