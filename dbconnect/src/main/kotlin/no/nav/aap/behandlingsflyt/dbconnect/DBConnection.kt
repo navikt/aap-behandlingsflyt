@@ -94,4 +94,16 @@ class DBConnection(private val connection: Connection) {
             this.connection.rollback()
         }
     }
+
+    internal fun commit() {
+        this.connection.commit()
+    }
+
+    internal fun autoCommitOn() {
+        this.connection.autoCommit = true
+    }
+
+    internal fun autoCommitOff() {
+        this.connection.autoCommit = false
+    }
 }
