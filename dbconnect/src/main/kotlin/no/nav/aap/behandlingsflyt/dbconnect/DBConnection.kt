@@ -14,9 +14,9 @@ class DBConnection internal constructor(private val connection: Connection) {
         block: Execute.() -> Unit = {}
     ) {
         return this.connection.prepareStatement(query).use { preparedStatement ->
-            val myPreparedStatement = Execute(preparedStatement)
-            myPreparedStatement.block()
-            myPreparedStatement.execute()
+            val executeStatement = Execute(preparedStatement)
+            executeStatement.block()
+            executeStatement.execute()
         }
     }
 
@@ -26,9 +26,9 @@ class DBConnection internal constructor(private val connection: Connection) {
         block: Execute.() -> Unit = {}
     ): Long {
         return this.connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS).use { preparedStatement ->
-            val myPreparedStatement = Execute(preparedStatement)
-            myPreparedStatement.block()
-            return@use myPreparedStatement.executeReturnKey()
+            val executeStatement = Execute(preparedStatement)
+            executeStatement.block()
+            return@use executeStatement.executeReturnKey()
         }
     }
 
@@ -38,9 +38,9 @@ class DBConnection internal constructor(private val connection: Connection) {
         block: Execute.() -> Unit = {}
     ): List<Long> {
         return this.connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS).use { preparedStatement ->
-            val myPreparedStatement = Execute(preparedStatement)
-            myPreparedStatement.block()
-            return@use myPreparedStatement.executeReturnKeys()
+            val executeStatement = Execute(preparedStatement)
+            executeStatement.block()
+            return@use executeStatement.executeReturnKeys()
         }
     }
 
