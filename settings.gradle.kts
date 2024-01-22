@@ -4,6 +4,7 @@ include(
     "app",
     "verdityper",
     "tidslinje",
+    "dbflyway",
     "dbconnect",
     "dbtest",
     "dbtestdata"

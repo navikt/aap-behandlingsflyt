@@ -66,6 +66,7 @@ dependencies {
 
     implementation(project(":verdityper"))
     implementation(project(":tidslinje"))
+    implementation(project(":dbflyway"))
     implementation(project(":dbconnect"))
     implementation("com.zaxxer:HikariCP:5.1.0")
     implementation("org.flywaydb:flyway-core:10.6.0")
