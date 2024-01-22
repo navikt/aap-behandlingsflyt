@@ -16,21 +16,7 @@ internal class DBTransactionTest {
     }
 
     @Test
-    fun `Skriver og henter en rad mot DB`() {
-        assertThrows<IllegalStateException> {
-            InitTestDatabase.dataSource.transaction { connection ->
-                connection.execute("INSERT INTO TEST_TRANSACTION (TEST) VALUES ('a')")
-                connection.markerSavepoint()
-                connection.execute("INSERT INTO TEST_TRANSACTION (TEST) VALUES ('b')")
-                error("error")
-            }
-        }
-        assertThrows<IllegalStateException> {
-            InitTestDatabase.dataSource.transaction { connection ->
-                connection.execute("INSERT INTO TEST_TRANSACTION (TEST) VALUES ('c')")
-                error("error")
-            }
-        }
+    fun `Kan skrive til DB i en transaksjon`() {
         InitTestDatabase.dataSource.transaction { connection ->
             connection.execute("INSERT INTO TEST_TRANSACTION (TEST) VALUES ('d')")
         }
@@ -42,7 +28,49 @@ internal class DBTransactionTest {
         }
 
         assertThat(result)
+            .hasSize(1)
+            .containsExactly("d")
+    }
+
+    @Test
+    fun `Feil i en transaksjon fører til en rollback`() {
+        assertThrows<IllegalStateException> {
+            InitTestDatabase.dataSource.transaction { connection ->
+                connection.execute("INSERT INTO TEST_TRANSACTION (TEST) VALUES ('c')")
+                error("error")
+            }
+        }
+
+        val result = InitTestDatabase.dataSource.transaction { connection ->
+            connection.queryList("SELECT TEST FROM TEST_TRANSACTION") {
+                setRowMapper { row -> row.getString("TEST") }
+            }
+        }
+
+        assertThat(result).isEmpty()
+    }
+
+    @Test
+    fun `Feil i en transaksjon med savepoint fører til en rollback tilbake til siste savepoint`() {
+        assertThrows<IllegalStateException> {
+            InitTestDatabase.dataSource.transaction { connection ->
+                connection.execute("INSERT INTO TEST_TRANSACTION (TEST) VALUES ('a')")
+                connection.markerSavepoint()
+                connection.execute("INSERT INTO TEST_TRANSACTION (TEST) VALUES ('b')")
+                connection.markerSavepoint()
+                connection.execute("INSERT INTO TEST_TRANSACTION (TEST) VALUES ('c')")
+                error("error")
+            }
+        }
+
+        val result = InitTestDatabase.dataSource.transaction { connection ->
+            connection.queryList("SELECT TEST FROM TEST_TRANSACTION") {
+                setRowMapper { row -> row.getString("TEST") }
+            }
+        }
+
+        assertThat(result)
             .hasSize(2)
-            .containsExactly("a", "d")
+            .containsExactly("a", "b")
     }
 }
