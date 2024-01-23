@@ -254,6 +254,6 @@ class PersonopplysningRepositoryTest {
     }
 
     private fun behandling(connection: DBConnection, sak: Sak): Behandling {
-        return SakOgBehandlingService(connection).finnEllerOpprettBehandling(sak.saksnummer)
+        return SakOgBehandlingService(connection).finnEllerOpprettBehandling(sak.saksnummer).behandling
     }
 }

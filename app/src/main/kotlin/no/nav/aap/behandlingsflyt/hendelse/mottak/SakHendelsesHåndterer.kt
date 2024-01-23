@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.dokument.mottak.MottaDokumentService
 import no.nav.aap.behandlingsflyt.dokument.mottak.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.dokument.mottak.pliktkort.MottakAvPliktkortRepository
 import no.nav.aap.behandlingsflyt.dokument.mottak.pliktkort.UbehandletPliktkort
+import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.hendelse.mottak.dokument.pliktkort.Pliktkort
 import no.nav.aap.behandlingsflyt.prosessering.SakSkrivelås
 import no.nav.aap.behandlingsflyt.prosessering.TaSkriveLåsRepository
@@ -22,6 +23,7 @@ class SakHendelsesHåndterer(connection: DBConnection) {
 
     private val sakOgBehandlingService = SakOgBehandlingService(connection)
     private val låsRepository = TaSkriveLåsRepository(connection)
+    private val grunnlagKopierer = GrunnlagKopierer(connection)
     private val mottaDokumentService = MottaDokumentService(
         mottattDokumentRepository = MottattDokumentRepository(connection),
         pliktkortRepository = MottakAvPliktkortRepository(connection)
@@ -29,7 +31,12 @@ class SakHendelsesHåndterer(connection: DBConnection) {
 
     fun håndtere(key: Saksnummer, hendelse: SakHendelse): BehandlingId? {
         val sakSkrivelås = låsRepository.låsSak(key)
-        val relevantBehandling = sakOgBehandlingService.finnEllerOpprettBehandling(key)
+        val beriketBehandling = sakOgBehandlingService.finnEllerOpprettBehandling(key)
+        val relevantBehandling = beriketBehandling.behandling
+
+        if (beriketBehandling.skalKopierFraSisteBehandling()) {
+            grunnlagKopierer.overfør(requireNotNull(beriketBehandling.sisteAvsluttedeBehandling), relevantBehandling.id)
+        }
 
         if (hendelse is DokumentMottattSakHendelse) {
             håndtere(key, hendelse, sakSkrivelås, relevantBehandling)

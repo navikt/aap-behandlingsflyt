@@ -30,7 +30,7 @@ class FaktagrunnlagTest {
         val ident = ident()
         val person = PersonRepository(connection).finnEllerOpprett(ident)
         val sak = sakRepository(connection).finnEllerOpprett(person, periode)
-        val behandling = SakOgBehandlingService(connection).finnEllerOpprettBehandling(sak.saksnummer)
+        val behandling = SakOgBehandlingService(connection).finnEllerOpprettBehandling(sak.saksnummer).behandling
 
         PersonRegisterMock.konstruer(ident, Personopplysning(Fødselsdato(LocalDate.now().minusYears(18))))
 
