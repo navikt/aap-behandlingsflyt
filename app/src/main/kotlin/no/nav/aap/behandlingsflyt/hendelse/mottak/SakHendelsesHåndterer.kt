@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.hendelse.mottak
 
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dokument.mottak.DokumentType
 import no.nav.aap.behandlingsflyt.dokument.mottak.MottaDokumentService
@@ -8,7 +7,10 @@ import no.nav.aap.behandlingsflyt.dokument.mottak.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.dokument.mottak.pliktkort.MottakAvPliktkortRepository
 import no.nav.aap.behandlingsflyt.dokument.mottak.pliktkort.UbehandletPliktkort
 import no.nav.aap.behandlingsflyt.hendelse.mottak.dokument.pliktkort.Pliktkort
+import no.nav.aap.behandlingsflyt.prosessering.SakSkrivelås
 import no.nav.aap.behandlingsflyt.prosessering.TaSkriveLåsRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Saksnummer
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
@@ -26,20 +28,22 @@ class SakHendelsesHåndterer(connection: DBConnection) {
     )
 
     fun håndtere(key: Saksnummer, hendelse: SakHendelse): BehandlingId? {
-        return when (hendelse) {
-            is DokumentMottattSakHendelse -> {
-                håndtere(key, hendelse)
-            }
-
-            else -> {
-                sakOgBehandlingService.finnEnRelevantBehandling(key).id
-            }
-        }
-    }
-
-    fun håndtere(key: Saksnummer, hendelse: DokumentMottattSakHendelse): BehandlingId {
         val sakSkrivelås = låsRepository.låsSak(key)
         val relevantBehandling = sakOgBehandlingService.finnEnRelevantBehandling(key)
+
+        if (hendelse is DokumentMottattSakHendelse) {
+            håndtere(key, hendelse, sakSkrivelås, relevantBehandling)
+        }
+        låsRepository.verifiserSkrivelås(sakSkrivelås)
+        return relevantBehandling.id
+    }
+
+    fun håndtere(
+        key: Saksnummer,
+        hendelse: DokumentMottattSakHendelse,
+        sakSkrivelås: SakSkrivelås,
+        relevantBehandling: Behandling
+    ) {
         val behandlingSkrivelås = låsRepository.låsBehandling(relevantBehandling.id)
 
         log.info("Mottatt dokument av typen {} på sak {}", hendelse.strukturertDokument.brevkode, key)
@@ -71,9 +75,6 @@ class SakHendelsesHåndterer(connection: DBConnection) {
                 throw IllegalArgumentException("Ukjent brevkode[${hendelse.strukturertDokument.brevkode}], vet ikke hvordan denne skal håndteres")
             }
         }
-        låsRepository.verifiserSkrivelås(sakSkrivelås)
         låsRepository.verifiserSkrivelås(behandlingSkrivelås)
-        return relevantBehandling.id
     }
-
 }
