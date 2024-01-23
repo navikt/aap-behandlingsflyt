@@ -6,6 +6,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.EndringType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.behandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
+import no.nav.aap.verdityper.sakogbehandling.BehandlingId
+import no.nav.aap.verdityper.sakogbehandling.SakId
 
 class SakOgBehandlingService(connection: DBConnection) {
 
@@ -37,5 +39,14 @@ class SakOgBehandlingService(connection: DBConnection) {
                 return sisteBehandlingForSak
             }
         }
+    }
+
+    fun finnForrigeBehandling(sakId: SakId, behandlingId: BehandlingId): Behandling {
+        val alleBehandlinger = behandlingRepository.hentAlleFor(sakId)
+
+        //TODO: Legg på nødvendig kontroller for å finne riktig behandling. Trenger vi f.eks. å verifisere at den er avsluttet?
+        return alleBehandlinger
+            .filterNot { behandling -> behandling.id == behandlingId }
+            .first()
     }
 }

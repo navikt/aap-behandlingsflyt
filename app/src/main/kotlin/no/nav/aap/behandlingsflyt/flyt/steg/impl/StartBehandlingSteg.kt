@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt.steg.impl
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
+import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -8,12 +9,15 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.flyt.vilkår.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårtype
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.verdityper.flyt.StegType
 
 class StartBehandlingSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val sakService: SakService
+    private val sakService: SakService,
+    private val sakOgBehandlingService: SakOgBehandlingService,
+    private val grunnlagKopierer: GrunnlagKopierer
 ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekst): StegResultat {
@@ -32,14 +36,21 @@ class StartBehandlingSteg private constructor(
             vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
         }
 
-        //TODO: Sørge for å kopiere over Faktagrunnlag for Revurdering - usikker på om dette bør ligge her, eller få et eget steg
+        if (kontekst.behandlingType == TypeBehandling.Revurdering) {
+            val forrigeBehandling = sakOgBehandlingService.finnForrigeBehandling(kontekst.sakId, kontekst.behandlingId)
+            grunnlagKopierer.overfør(forrigeBehandling.id, kontekst.behandlingId)
+        }
 
         return StegResultat()
     }
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            return StartBehandlingSteg(VilkårsresultatRepository(connection), SakService(connection))
+            return StartBehandlingSteg(
+                VilkårsresultatRepository(connection),
+                SakService(connection),
+                SakOgBehandlingService(connection),
+                GrunnlagKopierer(connection))
         }
 
         override fun type(): StegType {
