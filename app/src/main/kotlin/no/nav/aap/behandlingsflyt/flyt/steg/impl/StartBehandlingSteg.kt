@@ -32,6 +32,8 @@ class StartBehandlingSteg private constructor(
             vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
         }
 
+        //TODO: Sørge for å kopiere over Faktagrunnlag for Revurdering - usikker på om dette bør ligge her, eller få et eget steg
+
         return StegResultat()
     }
 

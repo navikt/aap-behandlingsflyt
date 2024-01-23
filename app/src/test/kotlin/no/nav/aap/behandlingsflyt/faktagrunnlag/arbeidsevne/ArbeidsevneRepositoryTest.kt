@@ -87,6 +87,7 @@ class ArbeidsevneRepositoryTest {
             }
 
             val behandling2 = behandling(connection, sak)
+            arbeidsevneRepository.kopier(behandling1.id, behandling2.id)
 
             val arbeidsevneGrunnlag = arbeidsevneRepository.hentHvisEksisterer(behandling2.id)
             assertThat(arbeidsevneGrunnlag?.vurdering).isEqualTo(Arbeidsevne("begrunnelse", Prosent(100)))
@@ -118,6 +119,7 @@ class ArbeidsevneRepositoryTest {
             }
 
             val behandling2 = behandling(connection, sak)
+            arbeidsevneRepository.kopier(behandling1.id, behandling2.id)
 
             val arbeidsevneGrunnlag = arbeidsevneRepository.hentHvisEksisterer(behandling2.id)
             assertThat(arbeidsevneGrunnlag?.vurdering).isEqualTo(Arbeidsevne("annen begrunnelse", Prosent(100)))
@@ -189,6 +191,7 @@ class ArbeidsevneRepositoryTest {
                 }
             }
             val behandling2 = behandling(connection, sak)
+            arbeidsevneRepository.kopier(behandling1.id, behandling2.id)
 
             data class Opplysning(
                 val behandlingId: Long,

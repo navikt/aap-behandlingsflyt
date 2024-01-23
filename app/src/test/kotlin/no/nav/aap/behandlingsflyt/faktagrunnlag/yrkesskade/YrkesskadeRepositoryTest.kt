@@ -106,6 +106,7 @@ class YrkesskadeRepositoryTest {
                 }
             }
             val behandling2 = behandling(connection, sak)
+            yrkesskadeRepository.kopier(behandling1.id, behandling2.id)
 
             val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandling2.id)
             assertThat(yrkesskadeGrunnlag?.yrkesskader).isEqualTo(
@@ -144,6 +145,7 @@ class YrkesskadeRepositoryTest {
                 }
             }
             val behandling2 = behandling(connection, sak)
+            yrkesskadeRepository.kopier(behandling1.id, behandling2.id)
 
             val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandling2.id)
             assertThat(yrkesskadeGrunnlag?.yrkesskader).isEqualTo(
@@ -231,6 +233,7 @@ class YrkesskadeRepositoryTest {
                 }
             }
             val behandling2 = behandling(connection, sak)
+            yrkesskadeRepository.kopier(behandling1.id, behandling2.id)
 
             data class Opplysning(val behandlingId: Long, val aktiv: Boolean, val ref: String, val periode: Periode)
             data class Grunnlag(val yrkesskadeId: Long, val opplysning: Opplysning)

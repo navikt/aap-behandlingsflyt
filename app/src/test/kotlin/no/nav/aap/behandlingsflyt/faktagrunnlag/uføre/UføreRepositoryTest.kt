@@ -87,6 +87,7 @@ class UføreRepositoryTest {
             }
 
             val behandling2 = behandling(connection, sak)
+            uføreRepository.kopier(behandling1.id, behandling2.id)
 
             val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandling2.id)
             assertThat(uføreGrunnlag?.vurdering).isEqualTo(Uføre(Prosent(100)))
@@ -118,6 +119,7 @@ class UføreRepositoryTest {
             }
 
             val behandling2 = behandling(connection, sak)
+            uføreRepository.kopier(behandling1.id, behandling2.id)
 
             val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandling2.id)
             assertThat(uføreGrunnlag?.vurdering).isEqualTo(Uføre(Prosent(80)))
@@ -187,6 +189,7 @@ class UføreRepositoryTest {
                 }
             }
             val behandling2 = behandling(connection, sak)
+            uføreRepository.kopier(behandling1.id, behandling2.id)
 
             data class Opplysning(
                 val behandlingId: Long,
