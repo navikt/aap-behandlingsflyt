@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.sakogbehandling.behandling
+package no.nav.aap.verdityper.sakogbehandling
 
 enum class TypeBehandling(private var identifikator: String) {
 

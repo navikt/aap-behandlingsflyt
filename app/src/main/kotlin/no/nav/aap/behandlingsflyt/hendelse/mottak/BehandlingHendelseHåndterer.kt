@@ -1,18 +1,17 @@
 package no.nav.aap.behandlingsflyt.hendelse.mottak
 
-import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.SattPåVentLøsning
-import no.nav.aap.verdityper.sakogbehandling.BehandlingId
-import no.nav.aap.verdityper.sakogbehandling.Status
-import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.behandlingRepository
-import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovOrkestrator
+import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovRepositoryImpl
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.SattPåVentLøsning
+import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.ValiderBehandlingTilstand
-import no.nav.aap.behandlingsflyt.flyt.tilKontekst
 import no.nav.aap.behandlingsflyt.prosessering.OppgaveInput
 import no.nav.aap.behandlingsflyt.prosessering.OppgaveRepository
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingOppgave
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.behandlingRepository
+import no.nav.aap.verdityper.sakogbehandling.BehandlingId
+import no.nav.aap.verdityper.sakogbehandling.Status
 
 class BehandlingHendelseHåndterer(connection: DBConnection) {
 
@@ -32,7 +31,7 @@ class BehandlingHendelseHåndterer(connection: DBConnection) {
                     eksisterenedeAvklaringsbehov = avklaringsbehovene.alle()
                 )
 
-                val kontekst = tilKontekst(behandling)
+                val kontekst = behandling.flytKontekst()
 
                 kontroller.settBehandlingPåVent(kontekst)
             }
@@ -45,7 +44,7 @@ class BehandlingHendelseHåndterer(connection: DBConnection) {
                     eksisterenedeAvklaringsbehov = avklaringsbehovene.alle()
                 )
 
-                val kontekst = tilKontekst(behandling)
+                val kontekst = behandling.flytKontekst()
                 if (behandling.status() == Status.PÅ_VENT) {
                     val avklaringsbehovKontroller = avklaringsbehovOrkestrator
                     avklaringsbehovKontroller.løsAvklaringsbehov(

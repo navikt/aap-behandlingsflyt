@@ -4,7 +4,6 @@ import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.behandlingRepository
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.flyt.ValiderBehandlingTilstand
-import no.nav.aap.behandlingsflyt.flyt.tilKontekst
 
 class AvklaringsbehovHendelseHåndterer(connection: DBConnection) {
 
@@ -20,7 +19,7 @@ class AvklaringsbehovHendelseHåndterer(connection: DBConnection) {
             eksisterenedeAvklaringsbehov = avklaringsbehovene.alle()
         )
 
-        val kontekst = tilKontekst(behandling)
+        val kontekst = behandling.flytKontekst()
 
         avklaringsbehovOrkestrator.løsAvklaringsbehovOgFortsettProsessering(
             kontekst = kontekst,

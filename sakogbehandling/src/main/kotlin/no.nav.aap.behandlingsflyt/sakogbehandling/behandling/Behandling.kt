@@ -1,10 +1,12 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.behandling
 
+import no.nav.aap.verdityper.flyt.FlytKontekst
 import no.nav.aap.verdityper.flyt.StegStatus
 import no.nav.aap.verdityper.flyt.StegType
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.SakId
 import no.nav.aap.verdityper.sakogbehandling.Status
+import no.nav.aap.verdityper.sakogbehandling.TypeBehandling
 import java.time.LocalDateTime
 import java.util.*
 
@@ -22,6 +24,10 @@ class Behandling(
 ) : Comparable<Behandling> {
 
     fun typeBehandling(): TypeBehandling = typeBehandling
+
+    fun flytKontekst(): FlytKontekst {
+        return FlytKontekst(sakId, id, typeBehandling)
+    }
 
     fun visit(stegTilstand: StegTilstand) {
         if (!stegTilstand.aktiv) {

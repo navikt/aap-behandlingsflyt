@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.dokument.mottak.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.dokument.mottak.pliktkort.MottakAvPliktkortRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlagkonstruktør
-import no.nav.aap.behandlingsflyt.flyt.FlytKontekst
+import no.nav.aap.verdityper.flyt.FlytKontekst
 
 class PliktkortService private constructor(
     private val mottaDokumentService: MottaDokumentService,

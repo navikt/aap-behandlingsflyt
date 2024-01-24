@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.sakogbehandling.sak
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.EndringType
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.TypeBehandling
+import no.nav.aap.verdityper.sakogbehandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.behandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 

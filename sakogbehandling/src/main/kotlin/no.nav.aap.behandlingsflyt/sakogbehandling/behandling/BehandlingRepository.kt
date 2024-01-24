@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.sakogbehandling.behandling
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.SakId
+import no.nav.aap.verdityper.sakogbehandling.TypeBehandling
 import java.util.*
 
 interface BehandlingRepository {
