@@ -53,10 +53,11 @@ import no.nav.aap.behandlingsflyt.hendelse.mottak.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HendelsesMottak
 import no.nav.aap.behandlingsflyt.hendelse.mottak.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.hendelse.mottak.dokument.søknad.Søknad
-import no.nav.aap.behandlingsflyt.prosessering.Motor
-import no.nav.aap.behandlingsflyt.prosessering.retry.RetryService
+import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsOppgaver
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
+import no.nav.aap.motor.Motor
+import no.nav.aap.motor.retry.RetryService
 import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.feilhåndtering.ElementNotFoundException
@@ -147,10 +148,10 @@ internal fun Application.server(dbConfig: DbConfig) {
 }
 
 fun Application.module(dataSource: DataSource) {
-    val motor = Motor(dataSource)
+    val motor = Motor(dataSource = dataSource, workers = 5, oppgaver = ProsesseringsOppgaver.alle())
 
-    dataSource.transaction {
-        RetryService(it).enable()
+    dataSource.transaction { dbConnection ->
+        RetryService(dbConnection).enable()
     }
 
     environment.monitor.subscribe(ApplicationStarted) {

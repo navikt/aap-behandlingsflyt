@@ -7,10 +7,10 @@ import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovHendelseHåndterer
 import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.avklaringsbehov.LøsAvklaringsbehovBehandlingHendelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.behandlingRepository
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.flyt.ValiderBehandlingTilstand
-import no.nav.aap.behandlingsflyt.prosessering.TaSkriveLåsRepository
+import no.nav.aap.behandlingsflyt.lås.TaSkriveLåsRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.behandlingRepository
 import org.slf4j.MDC
 import javax.sql.DataSource
 

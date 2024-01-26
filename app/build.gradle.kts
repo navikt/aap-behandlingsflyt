@@ -64,6 +64,7 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.4.14")
     implementation("net.logstash.logback:logstash-logback-encoder:7.4")
 
+    implementation(project(":motor"))
     implementation(project(":sakogbehandling"))
     implementation(project(":verdityper"))
     implementation(project(":tidslinje"))

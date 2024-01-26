@@ -1,10 +1,10 @@
-package no.nav.aap.behandlingsflyt.prosessering
+package no.nav.aap.behandlingsflyt.lås
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
-import no.nav.aap.verdityper.sakogbehandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Saksnummer
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.SakId
+import no.nav.aap.verdityper.sakogbehandling.TypeBehandling
 import java.util.*
 
 class TaSkriveLåsRepository(private val connection: DBConnection) {
@@ -40,7 +40,8 @@ class TaSkriveLåsRepository(private val connection: DBConnection) {
                     BehandlingId(it.getLong("id")),
                     it.getLong("versjon"),
                     TypeBehandling.from(it.getString("type"))
-                ))
+                )
+                )
             }
         }
     }

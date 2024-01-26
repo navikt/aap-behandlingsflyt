@@ -1,13 +1,16 @@
-package no.nav.aap.behandlingsflyt.prosessering
+package no.nav.aap.motor
 
-import no.nav.aap.behandlingsflyt.prosessering.retry.RekjørFeiledeOppgaver
+import no.nav.aap.motor.retry.RekjørFeiledeOppgaver
 
 object OppgaveType {
     private val oppgaver = HashMap<String, Oppgave>()
 
     init {
-        oppgaver[ProsesserBehandlingOppgave.type()] = ProsesserBehandlingOppgave
         oppgaver[RekjørFeiledeOppgaver.type()] = RekjørFeiledeOppgaver
+    }
+
+    fun leggTil(oppgave: Oppgave) {
+        oppgaver[oppgave.type()] = oppgave
     }
 
     fun parse(type: String): Oppgave {

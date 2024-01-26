@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.prosessering
+package no.nav.aap.motor
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
@@ -11,8 +11,15 @@ import javax.sql.DataSource
 
 class Motor(
     private val dataSource: DataSource,
-    private val workers: Int = 5
+    private val workers: Int = 5,
+    oppgaver: List<Oppgave>
 ) {
+
+    init {
+        for (oppgave in oppgaver) {
+            OppgaveType.leggTil(oppgave)
+        }
+    }
 
     private val log = LoggerFactory.getLogger(Motor::class.java)
 
@@ -23,7 +30,7 @@ class Motor(
     fun start() {
         log.info("Starter prosessering av oppgaver")
         IntRange(1, workers).forEach {
-            executor.schedule(Forbrenningskammer(dataSource), 15L * it, TimeUnit.MILLISECONDS)
+            executor.schedule(Forbrenningskammer(dataSource), 15L * it, TimeUnit.MILLISECONDS) // Legger inn en liten spread så det ikke pumpes på tabellen likt
         }
     }
 
@@ -43,21 +50,15 @@ class Motor(
         override fun run() {
             try {
                 while (running) {
-                    try {
-                        dataSource.transaction { connection ->
-                            val repository = OppgaveRepository(connection)
-                            val plukketOppgave = repository.plukkOppgave()
-                            if (plukketOppgave != null) {
-                                utførOppgave(plukketOppgave, connection)
-                            }
-
-                            if (running && plukketOppgave == null) {
-                                running = false
-                            }
+                    dataSource.transaction { connection ->
+                        val repository = OppgaveRepository(connection)
+                        val plukketOppgave = repository.plukkOppgave()
+                        if (plukketOppgave != null) {
+                            utførOppgave(plukketOppgave, connection)
                         }
-                    } catch (exception: WrappedOppgaveException) {
-                        dataSource.transaction { connection ->
-                            OppgaveRepository(connection).markerFeilet(exception.oppgaveInput, exception.exception)
+
+                        if (running && plukketOppgave == null) {
+                            running = false
                         }
                     }
                 }
@@ -71,16 +72,17 @@ class Motor(
 
         private fun utførOppgave(oppgaveInput: OppgaveInput, connection: DBConnection) {
             try {
-                MDC.put("oppgavetype", oppgaveInput.type())
-                MDC.put("sakId", oppgaveInput.sakIdOrNull().toString())
-                MDC.put("behandlingId", oppgaveInput.behandlingIdOrNull().toString())
+                dataSource.transaction { nyConnection ->
+                    MDC.put("oppgavetype", oppgaveInput.type())
+                    MDC.put("sakId", oppgaveInput.sakIdOrNull().toString())
+                    MDC.put("behandlingId", oppgaveInput.behandlingIdOrNull().toString())
 
-                log.info("Starter på oppgave")
+                    log.info("Starter på oppgave")
 
-                oppgaveInput.oppgave.utfør(connection, oppgaveInput)
+                    oppgaveInput.oppgave.utfør(nyConnection, oppgaveInput)
 
-                log.info("Fullført oppgave")
-
+                    log.info("Fullført oppgave")
+                }
                 OppgaveRepository(connection).markerKjørt(oppgaveInput)
             } catch (exception: Throwable) {
                 // Kjører feil
@@ -89,7 +91,7 @@ class Motor(
                     oppgaveInput,
                     exception
                 )
-                throw WrappedOppgaveException(oppgaveInput, exception)
+                OppgaveRepository(connection).markerFeilet(oppgaveInput, exception)
             }
             MDC.clear()
         }

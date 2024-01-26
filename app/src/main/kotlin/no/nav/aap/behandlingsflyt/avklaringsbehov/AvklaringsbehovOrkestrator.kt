@@ -13,14 +13,14 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.AvklarYrkesskade
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak.FatteVedtakLøser
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak.ForeslåVedtakLøser
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
-import no.nav.aap.verdityper.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.ValiderBehandlingTilstand
 import no.nav.aap.behandlingsflyt.flyt.utledType
-import no.nav.aap.behandlingsflyt.prosessering.OppgaveInput
-import no.nav.aap.behandlingsflyt.prosessering.OppgaveRepository
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingOppgave
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.behandlingRepository
+import no.nav.aap.motor.OppgaveInput
+import no.nav.aap.motor.OppgaveRepository
+import no.nav.aap.verdityper.flyt.FlytKontekst
 import org.slf4j.LoggerFactory
 
 class AvklaringsbehovOrkestrator(private val connection: DBConnection) {

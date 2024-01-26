@@ -1,7 +1,7 @@
-package no.nav.aap.behandlingsflyt.prosessering.retry
+package no.nav.aap.motor.retry
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
-import no.nav.aap.behandlingsflyt.prosessering.OppgaveStatus
+import no.nav.aap.motor.OppgaveStatus
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 

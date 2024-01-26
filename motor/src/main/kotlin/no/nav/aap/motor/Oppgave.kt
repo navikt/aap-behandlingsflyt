@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.prosessering
+package no.nav.aap.motor
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 

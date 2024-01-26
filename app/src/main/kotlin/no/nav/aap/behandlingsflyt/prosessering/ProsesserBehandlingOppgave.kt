@@ -1,8 +1,11 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
-import no.nav.aap.verdityper.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
+import no.nav.aap.behandlingsflyt.lås.TaSkriveLåsRepository
+import no.nav.aap.motor.Oppgave
+import no.nav.aap.motor.OppgaveInput
+import no.nav.aap.verdityper.flyt.FlytKontekst
 
 object ProsesserBehandlingOppgave : Oppgave() {
 

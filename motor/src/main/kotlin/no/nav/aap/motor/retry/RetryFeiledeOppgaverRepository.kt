@@ -1,9 +1,9 @@
-package no.nav.aap.behandlingsflyt.prosessering.retry
+package no.nav.aap.motor.retry
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
-import no.nav.aap.behandlingsflyt.prosessering.OppgaveInput
-import no.nav.aap.behandlingsflyt.prosessering.OppgaveRepository
-import no.nav.aap.behandlingsflyt.prosessering.OppgaveStatus
+import no.nav.aap.motor.OppgaveInput
+import no.nav.aap.motor.OppgaveRepository
+import no.nav.aap.motor.OppgaveStatus
 import java.time.LocalDateTime
 
 internal class RetryFeiledeOppgaverRepository(private val connection: DBConnection) {

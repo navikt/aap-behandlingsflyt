@@ -1,8 +1,6 @@
-package no.nav.aap.behandlingsflyt.prosessering
+package no.nav.aap.motor
 
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.verdityper.sakogbehandling.SakId
 import java.time.LocalDateTime
 
@@ -16,19 +14,6 @@ class OppgaveInput(val oppgave: Oppgave) {
 
     internal fun medId(id: Long): OppgaveInput {
         this.id = id
-        return this
-    }
-
-    fun forSak(sak: Sak): OppgaveInput {
-        sakId = sak.id
-
-        return this
-    }
-
-    fun forBehandling(behandling: Behandling): OppgaveInput {
-        sakId = behandling.sakId
-        behandlingId = behandling.id
-
         return this
     }
 
@@ -82,6 +67,6 @@ class OppgaveInput(val oppgave: Oppgave) {
     }
 
     fun skalMarkeresSomFeilet(): Boolean {
-        return oppgave.retries() >= antallFeil+1
+        return oppgave.retries() >= antallFeil + 1
     }
 }

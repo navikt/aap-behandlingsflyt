@@ -8,8 +8,8 @@ import no.nav.aap.behandlingsflyt.dokument.mottak.pliktkort.MottakAvPliktkortRep
 import no.nav.aap.behandlingsflyt.dokument.mottak.pliktkort.UbehandletPliktkort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.hendelse.mottak.dokument.pliktkort.Pliktkort
-import no.nav.aap.behandlingsflyt.prosessering.SakSkrivelås
-import no.nav.aap.behandlingsflyt.prosessering.TaSkriveLåsRepository
+import no.nav.aap.behandlingsflyt.lås.SakSkrivelås
+import no.nav.aap.behandlingsflyt.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakOgBehandlingService
