@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovHendelseHåndte
 import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.avklaringsbehov.LøsAvklaringsbehovBehandlingHendelse
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
-import no.nav.aap.behandlingsflyt.flyt.ValiderBehandlingTilstand
+import no.nav.aap.behandlingsflyt.avklaringsbehov.ValiderBehandlingTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.behandlingRepository
 import org.slf4j.MDC

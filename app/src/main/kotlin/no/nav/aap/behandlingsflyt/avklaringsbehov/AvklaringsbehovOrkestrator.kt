@@ -14,7 +14,6 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak.FatteVedtakLøse
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak.ForeslåVedtakLøser
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
-import no.nav.aap.behandlingsflyt.flyt.ValiderBehandlingTilstand
 import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingOppgave
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.behandlingRepository
