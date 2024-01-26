@@ -100,7 +100,6 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
         avklaringsbehovene.validateTilstand(
             behandling = behandling,
             avklaringsbehov = definisjoner,
-            versjon = request.behandlingVersjon
         )
 
         // løses det behov som fremtvinger tilbakehopp?

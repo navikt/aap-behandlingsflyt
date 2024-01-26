@@ -131,7 +131,7 @@ class Avklaringsbehovene(
         return alle().any { avklaringsbehov -> avklaringsbehov.harVærtSendtTilbakeFraBeslutterTidligere() }
     }
 
-    fun validateTilstand(behandling: Behandling, avklaringsbehov: Definisjon? = null, versjon: Long) {
+    fun validateTilstand(behandling: Behandling, avklaringsbehov: Definisjon? = null, versjon: Long? = null) {
         ValiderBehandlingTilstand.validerTilstandBehandling(
             behandling = behandling,
             avklaringsbehov = avklaringsbehov,

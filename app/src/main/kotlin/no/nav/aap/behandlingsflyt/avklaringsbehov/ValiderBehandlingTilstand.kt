@@ -10,7 +10,7 @@ internal object ValiderBehandlingTilstand {
         behandling: Behandling,
         avklaringsbehov: Definisjon?,
         eksisterenedeAvklaringsbehov: List<Avklaringsbehov>,
-        versjon: Long
+        versjon: Long? = null
     ) {
         validerTilstandBehandling(behandling, avklaringsbehov, eksisterenedeAvklaringsbehov)
 

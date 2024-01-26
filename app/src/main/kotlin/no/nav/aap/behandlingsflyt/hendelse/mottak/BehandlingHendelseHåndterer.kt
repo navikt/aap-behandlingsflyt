@@ -25,7 +25,7 @@ class BehandlingHendelseHåndterer(connection: DBConnection) {
             is BehandlingSattPåVent -> {
                 val behandling = behandlingRepository.hent(key)
                 val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-                avklaringsbehovene.validateTilstand(behandling = behandling, versjon = request.behandlingVersjon)
+                avklaringsbehovene.validateTilstand(behandling = behandling)
 
                 kontroller.settBehandlingPåVent(behandling.flytKontekst())
             }
@@ -33,7 +33,7 @@ class BehandlingHendelseHåndterer(connection: DBConnection) {
             else -> {
                 val behandling = behandlingRepository.hent(key)
                 val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-                avklaringsbehovene.validateTilstand(behandling = behandling, versjon = request.behandlingVersjon)
+                avklaringsbehovene.validateTilstand(behandling = behandling)
 
                 val kontekst = behandling.flytKontekst()
                 if (behandling.status() == Status.PÅ_VENT) {

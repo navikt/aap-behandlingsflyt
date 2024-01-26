@@ -14,7 +14,7 @@ class AvklaringsbehovHendelseHåndterer(connection: DBConnection) {
         val behandling = behandlingRepository.hent(key)
 
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-        avklaringsbehovene.validateTilstand(behandling = behandling, versjon = request.behandlingVersjon)
+        avklaringsbehovene.validateTilstand(behandling = behandling)
 
         avklaringsbehovOrkestrator.løsAvklaringsbehovOgFortsettProsessering(
             kontekst = behandling.flytKontekst(),

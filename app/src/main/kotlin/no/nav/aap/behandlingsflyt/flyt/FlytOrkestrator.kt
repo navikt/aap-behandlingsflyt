@@ -31,7 +31,7 @@ class FlytOrkestrator(
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
-        avklaringsbehovene.validateTilstand(behandling = behandling, versjon = request.behandlingVersjon)
+        avklaringsbehovene.validateTilstand(behandling = behandling)
 
         val behandlingFlyt = utledFlytFra(behandling)
         behandlingFlyt.forberedFlyt(behandling.aktivtSteg())
@@ -66,7 +66,7 @@ class FlytOrkestrator(
         val behandling = behandlingRepository(connection).hent(kontekst.behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
-        avklaringsbehovene.validateTilstand(behandling = behandling, versjon = request.behandlingVersjon)
+        avklaringsbehovene.validateTilstand(behandling = behandling)
 
         val behandlingFlyt = utledFlytFra(behandling)
 
