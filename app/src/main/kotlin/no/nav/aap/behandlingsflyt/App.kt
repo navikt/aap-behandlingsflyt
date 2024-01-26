@@ -148,7 +148,7 @@ internal fun Application.server(dbConfig: DbConfig) {
 }
 
 fun Application.module(dataSource: DataSource) {
-    val motor = Motor(dataSource = dataSource, workers = 5, oppgaver = ProsesseringsOppgaver.alle())
+    val motor = Motor(dataSource = dataSource, antallKammer = 5, oppgaver = ProsesseringsOppgaver.alle())
 
     dataSource.transaction { dbConnection ->
         RetryService(dbConnection).enable()

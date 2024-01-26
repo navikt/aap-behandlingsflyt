@@ -11,7 +11,7 @@ import javax.sql.DataSource
 
 class Motor(
     private val dataSource: DataSource,
-    private val workers: Int = 5,
+    private val antallKammer: Int = 8,
     oppgaver: List<Oppgave>
 ) {
 
@@ -23,13 +23,13 @@ class Motor(
 
     private val log = LoggerFactory.getLogger(Motor::class.java)
 
-    private val executor = Executors.newScheduledThreadPool(workers) as ScheduledThreadPoolExecutor
+    private val executor = Executors.newScheduledThreadPool(antallKammer) as ScheduledThreadPoolExecutor
 
     private var stopped = false
 
     fun start() {
         log.info("Starter prosessering av oppgaver")
-        IntRange(1, workers).forEach {
+        IntRange(1, antallKammer).forEach {
             executor.schedule(Forbrenningskammer(dataSource), 15L * it, TimeUnit.MILLISECONDS) // Legger inn en liten spread så det ikke pumpes på tabellen likt
         }
     }
