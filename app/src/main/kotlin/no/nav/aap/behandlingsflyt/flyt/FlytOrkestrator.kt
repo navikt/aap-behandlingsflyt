@@ -191,7 +191,6 @@ class FlytOrkestrator(
         avklaringsbehovene.leggTil(listOf(Definisjon.MANUELT_SATT_PÅ_VENT), behandling.aktivtSteg())
     }
 
-    private fun utledFlytFra(behandling: Behandling) =
-        utledType(behandling.typeBehandling()).flyt()
+    private fun utledFlytFra(behandling: Behandling) = utledType(behandling.typeBehandling()).flyt()
 
 }
