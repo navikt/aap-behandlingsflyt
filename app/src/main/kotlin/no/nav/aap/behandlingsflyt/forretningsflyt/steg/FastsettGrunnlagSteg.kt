@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.flyt.steg.impl
+package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.beregning.BeregningService
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection

@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.verdityper.flyt.StegType
-import no.nav.aap.behandlingsflyt.flyt.steg.impl.GeneriskPlaceholderFlytSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.GeneriskPlaceholderFlytSteg
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 

@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.flyt.steg.impl
+package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
@@ -11,7 +11,6 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.verdityper.flyt.StegType
 import no.nav.aap.behandlingsflyt.vilkår.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.vilkår.Vilkårtype
-import no.nav.aap.behandlingsflyt.vilkår.sykdom.SykdomsFaktagrunnlag
 import no.nav.aap.behandlingsflyt.vilkår.sykdom.Sykdomsvilkår
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 

@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.flyt.steg.impl
+package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.verdityper.flyt.FlytKontekst
@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.verdityper.flyt.StegType
 
-class FritakMeldepliktSteg private constructor() : BehandlingSteg {
+class FastsettArbeidsevneSteg private constructor() : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekst): StegResultat {
         return StegResultat()
@@ -15,11 +15,11 @@ class FritakMeldepliktSteg private constructor() : BehandlingSteg {
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            return FritakMeldepliktSteg()
+            return FastsettArbeidsevneSteg()
         }
 
         override fun type(): StegType {
-            return StegType.FRITAK_MELDEPLIKT
+            return StegType.FASTSETT_ARBEIDSEVNE
         }
     }
 }

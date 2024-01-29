@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.flyt
 
-import no.nav.aap.behandlingsflyt.flyt.behandlingstyper.Anke
-import no.nav.aap.behandlingsflyt.flyt.behandlingstyper.Førstegangsbehandling
-import no.nav.aap.behandlingsflyt.flyt.behandlingstyper.Klage
-import no.nav.aap.behandlingsflyt.flyt.behandlingstyper.Revurdering
-import no.nav.aap.behandlingsflyt.flyt.behandlingstyper.Tilbakekreving
+import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Anke
+import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Førstegangsbehandling
+import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Klage
+import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Revurdering
+import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Tilbakekreving
 import no.nav.aap.verdityper.sakogbehandling.TypeBehandling
 
 interface BehandlingType {
