@@ -10,9 +10,7 @@ class Vilkår(
     val type: Vilkårtype,
     vilkårsperioder: Set<Vilkårsperiode> = emptySet()
 ) {
-    private var vilkårTidslinje = Tidslinje(vilkårsperioder.map { vp -> Segment(vp.periode,
-        no.nav.aap.behandlingsflyt.vilkår.Vilkårsvurdering(vp)
-    ) })
+    private var vilkårTidslinje = Tidslinje(vilkårsperioder.map { vp -> Segment(vp.periode, Vilkårsvurdering(vp)) })
 
     fun vilkårsperioder(): List<Vilkårsperiode> {
         return vilkårTidslinje.segmenter()
@@ -26,7 +24,7 @@ class Vilkår(
                 listOf(
                     Segment(
                         vilkårsperiode.periode,
-                        no.nav.aap.behandlingsflyt.vilkår.Vilkårsvurdering(vilkårsperiode)
+                        Vilkårsvurdering(vilkårsperiode)
                     )
                 )
             ), StandardSammenslåere.prioriterHøyreSide()
