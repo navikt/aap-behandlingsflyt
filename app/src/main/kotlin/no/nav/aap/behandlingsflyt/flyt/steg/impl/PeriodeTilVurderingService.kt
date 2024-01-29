@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt.steg.impl
 
 import no.nav.aap.verdityper.flyt.FlytKontekst
-import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårtype
+import no.nav.aap.behandlingsflyt.vilkår.Vilkårtype
 import no.nav.aap.verdityper.sakogbehandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.verdityper.Periode

@@ -7,10 +7,10 @@ import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.verdityper.flyt.StegType
-import no.nav.aap.behandlingsflyt.flyt.vilkår.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårtype
-import no.nav.aap.behandlingsflyt.flyt.vilkår.alder.Aldersgrunnlag
-import no.nav.aap.behandlingsflyt.flyt.vilkår.alder.Aldersvilkåret
+import no.nav.aap.behandlingsflyt.vilkår.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.vilkår.Vilkårtype
+import no.nav.aap.behandlingsflyt.vilkår.alder.Aldersgrunnlag
+import no.nav.aap.behandlingsflyt.vilkår.alder.Aldersvilkåret
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 
 class VurderAlderSteg private constructor(

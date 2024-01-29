@@ -1,12 +1,12 @@
-package no.nav.aap.behandlingsflyt.flyt.vilkår
+package no.nav.aap.behandlingsflyt.vilkår
 
-class Vilkårsvurdering(vilkårsperiode: Vilkårsperiode) {
-    val utfall: Utfall
+class Vilkårsvurdering(vilkårsperiode: no.nav.aap.behandlingsflyt.vilkår.Vilkårsperiode) {
+    val utfall: no.nav.aap.behandlingsflyt.vilkår.Utfall
     val manuellVurdering: Boolean
     val begrunnelse: String?
-    val innvilgelsesårsak: Innvilgelsesårsak?
-    val avslagsårsak: Avslagsårsak?
-    internal val faktagrunnlag: Faktagrunnlag?
+    val innvilgelsesårsak: no.nav.aap.behandlingsflyt.vilkår.Innvilgelsesårsak?
+    val avslagsårsak: no.nav.aap.behandlingsflyt.vilkår.Avslagsårsak?
+    internal val faktagrunnlag: no.nav.aap.behandlingsflyt.vilkår.Faktagrunnlag?
     internal val versjon: String
 
     init {
@@ -18,16 +18,16 @@ class Vilkårsvurdering(vilkårsperiode: Vilkårsperiode) {
         faktagrunnlag = vilkårsperiode.faktagrunnlag
         versjon = vilkårsperiode.versjon
 
-        if (utfall == Utfall.IKKE_OPPFYLT && avslagsårsak == null) {
+        if (utfall == no.nav.aap.behandlingsflyt.vilkår.Utfall.IKKE_OPPFYLT && avslagsårsak == null) {
             throw IllegalStateException("Avslagsårsak må være satt ved IKKE_OPPFYLT som utfall")
         }
     }
 
     fun erOppfylt(): Boolean {
-        return utfall == Utfall.OPPFYLT
+        return utfall == no.nav.aap.behandlingsflyt.vilkår.Utfall.OPPFYLT
     }
 
-    fun faktagrunnlag(): Faktagrunnlag? {
+    fun faktagrunnlag(): no.nav.aap.behandlingsflyt.vilkår.Faktagrunnlag? {
         return faktagrunnlag
     }
 
@@ -39,7 +39,7 @@ class Vilkårsvurdering(vilkårsperiode: Vilkårsperiode) {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as Vilkårsperiode
+        other as no.nav.aap.behandlingsflyt.vilkår.Vilkårsperiode
 
         if (utfall != other.utfall) return false
         if (begrunnelse != other.begrunnelse) return false
@@ -60,7 +60,10 @@ class Vilkårsvurdering(vilkårsperiode: Vilkårsperiode) {
     }
 
     fun erIkkeVurdert(): Boolean {
-        return utfall !in setOf(Utfall.IKKE_OPPFYLT, Utfall.OPPFYLT)
+        return utfall !in setOf(
+            no.nav.aap.behandlingsflyt.vilkår.Utfall.IKKE_OPPFYLT,
+            no.nav.aap.behandlingsflyt.vilkår.Utfall.OPPFYLT
+        )
     }
 
     fun faktagrunnlagSomString(): String? {

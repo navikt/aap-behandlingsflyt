@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.flyt.vilkår
+package no.nav.aap.behandlingsflyt.vilkår
 
 interface Vilkårsvurderer<T : Faktagrunnlag> {
 

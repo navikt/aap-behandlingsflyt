@@ -3,11 +3,11 @@ package no.nav.aap.behandlingsflyt.underveis
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.dbtestdata.MockDataSource
 import no.nav.aap.behandlingsflyt.faktagrunnlag.arbeid.PliktkortRepository
-import no.nav.aap.behandlingsflyt.flyt.vilkår.Utfall
-import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkår
-import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårsperiode
-import no.nav.aap.behandlingsflyt.flyt.vilkår.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårtype
+import no.nav.aap.behandlingsflyt.vilkår.Utfall
+import no.nav.aap.behandlingsflyt.vilkår.Vilkår
+import no.nav.aap.behandlingsflyt.vilkår.Vilkårsperiode
+import no.nav.aap.behandlingsflyt.vilkår.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.vilkår.Vilkårtype
 import no.nav.aap.behandlingsflyt.underveis.regler.UnderveisInput
 import no.nav.aap.verdityper.Periode
 import org.assertj.core.api.Assertions.assertThat

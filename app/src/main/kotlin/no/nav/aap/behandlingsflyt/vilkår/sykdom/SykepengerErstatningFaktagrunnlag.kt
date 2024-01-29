@@ -1,7 +1,7 @@
-package no.nav.aap.behandlingsflyt.flyt.vilkår.sykdom
+package no.nav.aap.behandlingsflyt.vilkår.sykdom
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykepengerVurdering
-import no.nav.aap.behandlingsflyt.flyt.vilkår.Faktagrunnlag
+import no.nav.aap.behandlingsflyt.vilkår.Faktagrunnlag
 import java.time.LocalDate
 
 class SykepengerErstatningFaktagrunnlag(

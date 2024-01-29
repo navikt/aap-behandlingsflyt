@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.flyt.vilkår
+package no.nav.aap.behandlingsflyt.vilkår
 
 enum class Vilkårtype(
     val kode: String,

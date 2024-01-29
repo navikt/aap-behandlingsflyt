@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.flyt.vilkår
+package no.nav.aap.behandlingsflyt.vilkår
 
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.StandardSammenslåere
@@ -10,7 +10,9 @@ class Vilkår(
     val type: Vilkårtype,
     vilkårsperioder: Set<Vilkårsperiode> = emptySet()
 ) {
-    private var vilkårTidslinje = Tidslinje(vilkårsperioder.map { vp -> Segment(vp.periode, Vilkårsvurdering(vp)) })
+    private var vilkårTidslinje = Tidslinje(vilkårsperioder.map { vp -> Segment(vp.periode,
+        no.nav.aap.behandlingsflyt.vilkår.Vilkårsvurdering(vp)
+    ) })
 
     fun vilkårsperioder(): List<Vilkårsperiode> {
         return vilkårTidslinje.segmenter()
@@ -24,7 +26,7 @@ class Vilkår(
                 listOf(
                     Segment(
                         vilkårsperiode.periode,
-                        Vilkårsvurdering(vilkårsperiode)
+                        no.nav.aap.behandlingsflyt.vilkår.Vilkårsvurdering(vilkårsperiode)
                     )
                 )
             ), StandardSammenslåere.prioriterHøyreSide()

@@ -1,10 +1,10 @@
-package no.nav.aap.behandlingsflyt.flyt.vilkår.sykdom
+package no.nav.aap.behandlingsflyt.vilkår.sykdom
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.NedreGrense
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.Sykdomsvurdering
-import no.nav.aap.behandlingsflyt.flyt.vilkår.Utfall
-import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårsresultat
-import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårtype
+import no.nav.aap.behandlingsflyt.vilkår.Utfall
+import no.nav.aap.behandlingsflyt.vilkår.Vilkårsresultat
+import no.nav.aap.behandlingsflyt.vilkår.Vilkårtype
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -18,7 +18,7 @@ class SykdomsvilkårTest {
         vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SYKDOMSVILKÅRET)
 
         Sykdomsvilkår(vilkårsresultat).vurder(
-            SykdomsFaktagrunnlag(
+            no.nav.aap.behandlingsflyt.vilkår.sykdom.SykdomsFaktagrunnlag(
                 vurderingsdato = LocalDate.now(),
                 sisteDagMedMuligYtelse = LocalDate.now().plusYears(3),
                 yrkesskadevurdering = null,
@@ -39,7 +39,7 @@ class SykdomsvilkårTest {
         assertThat(vilkår.vilkårsperioder()).hasSize(1).allMatch { periode -> periode.utfall == Utfall.OPPFYLT }
 
         Sykdomsvilkår(vilkårsresultat).vurder(
-            SykdomsFaktagrunnlag(
+            no.nav.aap.behandlingsflyt.vilkår.sykdom.SykdomsFaktagrunnlag(
                 vurderingsdato = LocalDate.now(),
                 sisteDagMedMuligYtelse = LocalDate.now().plusYears(3),
                 yrkesskadevurdering = null,

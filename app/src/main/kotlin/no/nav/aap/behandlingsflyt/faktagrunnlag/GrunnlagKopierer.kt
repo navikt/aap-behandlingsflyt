@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykepengerErstatningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.YrkesskadeRepository
-import no.nav.aap.behandlingsflyt.flyt.vilkår.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.vilkår.VilkårsresultatRepository
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
 class GrunnlagKopierer(connection: DBConnection) {

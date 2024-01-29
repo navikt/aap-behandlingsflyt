@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.flyt.vilkår
+package no.nav.aap.behandlingsflyt.vilkår
 
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection

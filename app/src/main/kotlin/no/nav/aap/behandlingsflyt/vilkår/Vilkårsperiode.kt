@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.flyt.vilkår
+package no.nav.aap.behandlingsflyt.vilkår
 
 import no.nav.aap.verdityper.Periode
 
@@ -13,7 +13,7 @@ class Vilkårsperiode(
     internal val versjon: String = ApplikasjonsVersjon.versjon
 ) {
 
-    internal constructor(periode: Periode, vilkårsvurdering: Vilkårsvurdering) : this(
+    internal constructor(periode: Periode, vilkårsvurdering: no.nav.aap.behandlingsflyt.vilkår.Vilkårsvurdering) : this(
         periode,
         vilkårsvurdering.utfall,
         vilkårsvurdering.manuellVurdering,

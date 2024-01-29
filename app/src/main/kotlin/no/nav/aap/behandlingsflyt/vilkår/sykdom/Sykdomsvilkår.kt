@@ -1,24 +1,24 @@
-package no.nav.aap.behandlingsflyt.flyt.vilkår.sykdom
+package no.nav.aap.behandlingsflyt.vilkår.sykdom
 
-import no.nav.aap.behandlingsflyt.flyt.vilkår.Avslagsårsak
-import no.nav.aap.behandlingsflyt.flyt.vilkår.Innvilgelsesårsak
-import no.nav.aap.behandlingsflyt.flyt.vilkår.Utfall
-import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkår
-import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårsperiode
-import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårsresultat
-import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårsvurderer
-import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårtype
-import no.nav.aap.behandlingsflyt.flyt.vilkår.VurderingsResultat
+import no.nav.aap.behandlingsflyt.vilkår.Avslagsårsak
+import no.nav.aap.behandlingsflyt.vilkår.Innvilgelsesårsak
+import no.nav.aap.behandlingsflyt.vilkår.Utfall
+import no.nav.aap.behandlingsflyt.vilkår.Vilkår
+import no.nav.aap.behandlingsflyt.vilkår.Vilkårsperiode
+import no.nav.aap.behandlingsflyt.vilkår.Vilkårsresultat
+import no.nav.aap.behandlingsflyt.vilkår.Vilkårsvurderer
+import no.nav.aap.behandlingsflyt.vilkår.Vilkårtype
+import no.nav.aap.behandlingsflyt.vilkår.VurderingsResultat
 import no.nav.aap.verdityper.Periode
 
-class Sykdomsvilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<SykdomsFaktagrunnlag> {
+class Sykdomsvilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<no.nav.aap.behandlingsflyt.vilkår.sykdom.SykdomsFaktagrunnlag> {
     private val vilkår: Vilkår
 
     init {
         this.vilkår = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
     }
 
-    override fun vurder(grunnlag: SykdomsFaktagrunnlag): VurderingsResultat {
+    override fun vurder(grunnlag: no.nav.aap.behandlingsflyt.vilkår.sykdom.SykdomsFaktagrunnlag): VurderingsResultat {
         val utfall: Utfall
         var avslagsårsak: Avslagsårsak? = null
         var innvilgelsesårsak: Innvilgelsesårsak? = null
@@ -55,7 +55,7 @@ class Sykdomsvilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<Sykd
         )
     }
 
-    private fun lagre(grunnlag: SykdomsFaktagrunnlag, vurderingsResultat: VurderingsResultat): VurderingsResultat {
+    private fun lagre(grunnlag: no.nav.aap.behandlingsflyt.vilkår.sykdom.SykdomsFaktagrunnlag, vurderingsResultat: VurderingsResultat): VurderingsResultat {
         vilkår.leggTilVurdering(
             Vilkårsperiode(
                 Periode(grunnlag.vurderingsdato, grunnlag.sisteDagMedMuligYtelse),

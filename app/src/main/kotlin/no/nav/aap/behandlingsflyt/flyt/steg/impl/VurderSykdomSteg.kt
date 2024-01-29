@@ -9,10 +9,10 @@ import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.verdityper.flyt.StegType
-import no.nav.aap.behandlingsflyt.flyt.vilkår.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårtype
-import no.nav.aap.behandlingsflyt.flyt.vilkår.sykdom.SykdomsFaktagrunnlag
-import no.nav.aap.behandlingsflyt.flyt.vilkår.sykdom.Sykdomsvilkår
+import no.nav.aap.behandlingsflyt.vilkår.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.vilkår.Vilkårtype
+import no.nav.aap.behandlingsflyt.vilkår.sykdom.SykdomsFaktagrunnlag
+import no.nav.aap.behandlingsflyt.vilkår.sykdom.Sykdomsvilkår
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 
 class VurderSykdomSteg private constructor(
@@ -33,7 +33,7 @@ class VurderSykdomSteg private constructor(
             val vilkårResultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
             if (sykdomsGrunnlag != null && sykdomsGrunnlag.erKonsistent() || studentGrunnlag?.studentvurdering?.oppfyller11_14 == true) {
                 for (periode in periodeTilVurdering) {
-                    val faktagrunnlag = SykdomsFaktagrunnlag(
+                    val faktagrunnlag = no.nav.aap.behandlingsflyt.vilkår.sykdom.SykdomsFaktagrunnlag(
                         periode.fom,
                         periode.tom,
                         sykdomsGrunnlag?.yrkesskadevurdering,

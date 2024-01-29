@@ -1,13 +1,13 @@
-package no.nav.aap.behandlingsflyt.flyt.vilkår.alder
+package no.nav.aap.behandlingsflyt.vilkår.alder
 
-import no.nav.aap.behandlingsflyt.flyt.vilkår.Avslagsårsak
-import no.nav.aap.behandlingsflyt.flyt.vilkår.Utfall
-import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkår
-import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårsperiode
-import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårsresultat
-import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårsvurderer
-import no.nav.aap.behandlingsflyt.flyt.vilkår.Vilkårtype
-import no.nav.aap.behandlingsflyt.flyt.vilkår.VurderingsResultat
+import no.nav.aap.behandlingsflyt.vilkår.Avslagsårsak
+import no.nav.aap.behandlingsflyt.vilkår.Utfall
+import no.nav.aap.behandlingsflyt.vilkår.Vilkår
+import no.nav.aap.behandlingsflyt.vilkår.Vilkårsperiode
+import no.nav.aap.behandlingsflyt.vilkår.Vilkårsresultat
+import no.nav.aap.behandlingsflyt.vilkår.Vilkårsvurderer
+import no.nav.aap.behandlingsflyt.vilkår.Vilkårtype
+import no.nav.aap.behandlingsflyt.vilkår.VurderingsResultat
 
 class Aldersvilkåret(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<Aldersgrunnlag> {
     private val vilkår: Vilkår

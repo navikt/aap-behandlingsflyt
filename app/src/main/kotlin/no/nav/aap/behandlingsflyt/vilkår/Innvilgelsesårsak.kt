@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.flyt.vilkår
+package no.nav.aap.behandlingsflyt.vilkår
 
 enum class Innvilgelsesårsak(val kode: String, val hjemmel: String) {
     YRKESSKADE_ÅRSAKSSAMMENHENG("11-5_11-22", "§ 11-5 jamfør § 11-22 1. ledd"),
