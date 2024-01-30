@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.vilkår
+package no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat
 
 enum class Utfall {
     IKKE_VURDERT,

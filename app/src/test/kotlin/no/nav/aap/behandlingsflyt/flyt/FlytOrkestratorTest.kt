@@ -28,9 +28,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.NedreGrense
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.adapter.YrkesskadeRegisterMock
-import no.nav.aap.behandlingsflyt.vilkår.Vilkårsresultat
-import no.nav.aap.behandlingsflyt.vilkår.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.vilkår.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.Vilkårsresultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.hendelse.mottak.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HendelsesMottak

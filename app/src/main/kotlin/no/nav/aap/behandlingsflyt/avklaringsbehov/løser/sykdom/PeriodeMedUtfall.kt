@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import no.nav.aap.behandlingsflyt.vilkår.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.Utfall
 import no.nav.aap.verdityper.Periode
 
 data class PeriodeMedUtfall(

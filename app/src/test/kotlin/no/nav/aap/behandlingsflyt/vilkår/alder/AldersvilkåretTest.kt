@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.vilkår.alder
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.vilkår.Utfall
-import no.nav.aap.behandlingsflyt.vilkår.Vilkårsresultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.verdityper.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test

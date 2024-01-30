@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.underveis.regler
 
-import no.nav.aap.behandlingsflyt.vilkår.Avslagsårsak
-import no.nav.aap.behandlingsflyt.vilkår.Utfall
-import no.nav.aap.behandlingsflyt.vilkår.Vilkår
-import no.nav.aap.behandlingsflyt.vilkår.Vilkårsperiode
-import no.nav.aap.behandlingsflyt.vilkår.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.Avslagsårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.Vilkår
+import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.Vilkårsperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.Vilkårtype
 import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.Periode
 import org.assertj.core.api.Assertions.assertThat
@@ -20,29 +20,38 @@ class RettTilRegelTest {
         val søknadsdato = LocalDate.now().minusDays(29)
         val periode = Periode(søknadsdato, søknadsdato.plusYears(3))
         val aldersVilkåret =
-            Vilkår(Vilkårtype.ALDERSVILKÅRET, setOf(Vilkårsperiode(
+            Vilkår(
+                Vilkårtype.ALDERSVILKÅRET, setOf(
+                    Vilkårsperiode(
                 periode,
                 Utfall.OPPFYLT,
                 false,
                 null,
                 faktagrunnlag = null
-            )))
+            )
+                ))
         val sykdomsVilkåret =
-            Vilkår(Vilkårtype.SYKDOMSVILKÅRET, setOf(Vilkårsperiode(
+            Vilkår(
+                Vilkårtype.SYKDOMSVILKÅRET, setOf(
+                    Vilkårsperiode(
                 periode,
                 Utfall.OPPFYLT,
                 false,
                 null,
                 faktagrunnlag = null
-            )))
+            )
+                ))
         val bistandVilkåret =
-            Vilkår(Vilkårtype.BISTANDSVILKÅRET, setOf(Vilkårsperiode(
+            Vilkår(
+                Vilkårtype.BISTANDSVILKÅRET, setOf(
+                    Vilkårsperiode(
                 periode,
                 Utfall.OPPFYLT,
                 false,
                 null,
                 faktagrunnlag = null
-            )))
+            )
+                ))
 
         val input = UnderveisInput(
             førsteFastsatteDag = søknadsdato,
@@ -80,21 +89,27 @@ class RettTilRegelTest {
                 )
             )
         val sykdomsVilkåret =
-            Vilkår(Vilkårtype.SYKDOMSVILKÅRET, setOf(Vilkårsperiode(
+            Vilkår(
+                Vilkårtype.SYKDOMSVILKÅRET, setOf(
+                    Vilkårsperiode(
                 periode,
                 Utfall.OPPFYLT,
                 false,
                 null,
                 faktagrunnlag = null
-            )))
+            )
+                ))
         val bistandVilkåret =
-            Vilkår(Vilkårtype.BISTANDSVILKÅRET, setOf(Vilkårsperiode(
+            Vilkår(
+                Vilkårtype.BISTANDSVILKÅRET, setOf(
+                    Vilkårsperiode(
                 periode,
                 Utfall.OPPFYLT,
                 false,
                 null,
                 faktagrunnlag = null
-            )))
+            )
+                ))
 
         val input = UnderveisInput(
             førsteFastsatteDag = søknadsdato,

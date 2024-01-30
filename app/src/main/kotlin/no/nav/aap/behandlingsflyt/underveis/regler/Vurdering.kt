@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.underveis.regler
 
-import no.nav.aap.behandlingsflyt.vilkår.Utfall
-import no.nav.aap.behandlingsflyt.vilkår.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.Vilkårtype
 import no.nav.aap.verdityper.Prosent
 import java.util.*
 

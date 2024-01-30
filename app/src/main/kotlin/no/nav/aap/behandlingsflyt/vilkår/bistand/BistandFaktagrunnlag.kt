@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.vilkår.bistand
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.bistand.BistandVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.student.StudentVurdering
-import no.nav.aap.behandlingsflyt.vilkår.Faktagrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.Faktagrunnlag
 import java.time.LocalDate
 
 class BistandFaktagrunnlag(

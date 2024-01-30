@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.vilkår
+package no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat
 
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.StandardSammenslåere

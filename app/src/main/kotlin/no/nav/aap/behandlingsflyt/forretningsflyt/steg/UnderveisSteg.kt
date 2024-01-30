@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.verdityper.flyt.StegType
-import no.nav.aap.behandlingsflyt.vilkår.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.underveis.UnderveisService
 import org.slf4j.LoggerFactory
 

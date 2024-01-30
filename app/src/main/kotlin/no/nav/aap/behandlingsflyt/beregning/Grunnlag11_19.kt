@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.beregning
 
-import no.nav.aap.behandlingsflyt.vilkår.Faktagrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.Faktagrunnlag
 import no.nav.aap.verdityper.GUnit
 import java.math.BigDecimal
 

@@ -10,10 +10,10 @@ import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.verdityper.flyt.StegType
-import no.nav.aap.behandlingsflyt.vilkår.Innvilgelsesårsak
-import no.nav.aap.behandlingsflyt.vilkår.Vilkår
-import no.nav.aap.behandlingsflyt.vilkår.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.vilkår.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.Innvilgelsesårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.Vilkår
+import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.vilkår.bistand.BistandFaktagrunnlag
 import no.nav.aap.behandlingsflyt.vilkår.bistand.Bistandsvilkåret
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService

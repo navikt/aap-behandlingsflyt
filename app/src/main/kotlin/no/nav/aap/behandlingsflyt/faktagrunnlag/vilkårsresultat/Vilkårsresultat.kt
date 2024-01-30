@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.vilkår
+package no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat
 
 class Vilkårsresultat(
     internal var id: Long? = null,

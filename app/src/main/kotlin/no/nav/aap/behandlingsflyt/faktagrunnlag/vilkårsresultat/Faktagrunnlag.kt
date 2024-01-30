@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.vilkår
+package no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature

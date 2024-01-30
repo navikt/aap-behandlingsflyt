@@ -2,9 +2,9 @@ package no.nav.aap.behandlingsflyt.vilkår.sykdom
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.NedreGrense
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.Sykdomsvurdering
-import no.nav.aap.behandlingsflyt.vilkår.Utfall
-import no.nav.aap.behandlingsflyt.vilkår.Vilkårsresultat
-import no.nav.aap.behandlingsflyt.vilkår.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.Vilkårsresultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.Vilkårtype
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate

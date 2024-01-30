@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.vilkår
+package no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat
 
 enum class Avslagsårsak(val kode: String, val hjemmel: String) {
     BRUKER_UNDER_18(kode = "11-4-1-1", hjemmel = "§ 11-4 1. ledd"),
