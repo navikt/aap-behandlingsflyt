@@ -28,28 +28,17 @@ class BeregnTilkjentYtelseSteg(
 
         val underveisTidslinje = Tidslinje(underveisGrunnlag.perioder.map { Segment(it.periode, it) })
 
-        val gsnittTidslinjeForUttaket =
-            Grunnbeløp.tilTidslinjeGjennomsnitt().kombiner(
-                underveisTidslinje,
-                JoinStyle.INNER_JOIN
-            ) { periode, venstreSegment, høyreSegment ->
-                val venstre = venstreSegment?.verdi
-                if (venstre == null) {
-                    null
-                } else {
-                    Segment(periode, venstre)
-                }
-            }
-
         val grunnlagsfaktor = beregningsgrunnlag.grunnlaget()
 
         val maksDagsatsHeleUttaket =
-            gsnittTidslinjeForUttaket.mapValue { verdi -> verdi?.multiplisert(grunnlagsfaktor) }
-                .kombiner(underveisTidslinje) { periode, venstreSegment, høyreSegment ->
-                    val dagsats = venstreSegment?.verdi ?: Beløp(0)
-                    val gradering = høyreSegment?.verdi?.gradering?.prosent ?: Prosent.`0_PROSENT`
-                    Segment(periode, Tilkjent(dagsats, gradering))
-                }
+            underveisTidslinje.kombiner(
+                Grunnbeløp.tilTidslinjeGjennomsnitt(),
+                JoinStyle.INNER_JOIN
+            ) { periode, venstre, høyre ->
+                val dagsats = høyre?.verdi?.multiplisert(grunnlagsfaktor) ?: Beløp(0)
+                val gradering = venstre?.verdi?.gradering?.prosent ?: Prosent.`0_PROSENT`
+                Segment(periode, Tilkjent(dagsats, gradering))
+            }
 
         log.info("Beregnet tilkjent ytelse: $maksDagsatsHeleUttaket")
 
