@@ -58,7 +58,7 @@ class OppgaveInput(val oppgave: Oppgave) {
     }
 
     override fun toString(): String {
-        return "[${oppgave.type()}] - sakId = $sakId, behandlingId = $behandlingId"
+        return "[${oppgave.type()}] - id = $id, sakId = $sakId, behandlingId = $behandlingId"
     }
 
     fun medNesteKjøring(nesteKjøring: LocalDateTime): OppgaveInput {
