@@ -42,6 +42,6 @@ class BarnetilleggService(
             )
         }
 
-        return resultat.disjoint(sak.rettighetsperiode)
+        return resultat
     }
 }
