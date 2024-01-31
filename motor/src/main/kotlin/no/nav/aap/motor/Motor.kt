@@ -31,7 +31,11 @@ class Motor(
     fun start() {
         log.info("Starter prosessering av oppgaver")
         IntRange(1, antallKammer).forEach {
-            executor.schedule(Forbrenningskammer(dataSource), 15L * it, TimeUnit.MILLISECONDS) // Legger inn en liten spread så det ikke pumpes på tabellen likt
+            executor.schedule(
+                Forbrenningskammer(dataSource),
+                15L * it,
+                TimeUnit.MILLISECONDS
+            ) // Legger inn en liten spread så det ikke pumpes på tabellen likt
         }
     }
 
@@ -74,6 +78,7 @@ class Motor(
         private fun utførOppgave(oppgaveInput: OppgaveInput, connection: DBConnection) {
             try {
                 dataSource.transaction { nyConnection ->
+                    MDC.put("oppgaveid", "" + oppgaveInput.id)
                     MDC.put("oppgavetype", oppgaveInput.type())
                     MDC.put("sakId", oppgaveInput.sakIdOrNull().toString())
                     MDC.put("behandlingId", oppgaveInput.behandlingIdOrNull().toString())
