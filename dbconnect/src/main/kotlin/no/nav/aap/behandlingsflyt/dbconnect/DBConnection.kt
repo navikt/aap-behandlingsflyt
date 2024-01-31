@@ -5,6 +5,8 @@ import java.sql.Connection
 import java.sql.Savepoint
 import java.sql.Statement
 
+private const val QUERY_TIMEOUT_IN_SECONDS = 90
+
 class DBConnection internal constructor(private val connection: Connection) {
     private var savepoint: Savepoint? = null
 
@@ -13,7 +15,9 @@ class DBConnection internal constructor(private val connection: Connection) {
         query: String,
         block: Execute.() -> Unit = {}
     ) {
-        return this.connection.prepareStatement(query).use { preparedStatement ->
+        val prepareStatement = this.connection.prepareStatement(query)
+        prepareStatement.queryTimeout = QUERY_TIMEOUT_IN_SECONDS
+        return prepareStatement.use { preparedStatement ->
             val executeStatement = Execute(preparedStatement)
             executeStatement.block()
             executeStatement.execute()
@@ -25,7 +29,9 @@ class DBConnection internal constructor(private val connection: Connection) {
         query: String,
         block: Execute.() -> Unit = {}
     ): Long {
-        return this.connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS).use { preparedStatement ->
+        val prepareStatement = this.connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)
+        prepareStatement.queryTimeout = QUERY_TIMEOUT_IN_SECONDS
+        return prepareStatement.use { preparedStatement ->
             val executeStatement = Execute(preparedStatement)
             executeStatement.block()
             return@use executeStatement.executeReturnKey()
@@ -37,7 +43,9 @@ class DBConnection internal constructor(private val connection: Connection) {
         query: String,
         block: Execute.() -> Unit = {}
     ): List<Long> {
-        return this.connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS).use { preparedStatement ->
+        val prepareStatement = this.connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)
+        prepareStatement.queryTimeout = QUERY_TIMEOUT_IN_SECONDS
+        return prepareStatement.use { preparedStatement ->
             val executeStatement = Execute(preparedStatement)
             executeStatement.block()
             return@use executeStatement.executeReturnKeys()
@@ -49,7 +57,9 @@ class DBConnection internal constructor(private val connection: Connection) {
         query: String,
         block: Query<T?>.() -> Unit
     ): T? {
-        return this.connection.prepareStatement(query).use { preparedStatement ->
+        val prepareStatement = this.connection.prepareStatement(query)
+        prepareStatement.queryTimeout = QUERY_TIMEOUT_IN_SECONDS
+        return prepareStatement.use { preparedStatement ->
             val queryStatement = Query<T?>(preparedStatement)
             queryStatement.block()
             val result = queryStatement.executeQuery()
@@ -62,7 +72,9 @@ class DBConnection internal constructor(private val connection: Connection) {
         query: String,
         block: Query<T>.() -> Unit
     ): T {
-        return this.connection.prepareStatement(query).use { preparedStatement ->
+        val prepareStatement = this.connection.prepareStatement(query)
+        prepareStatement.queryTimeout = QUERY_TIMEOUT_IN_SECONDS
+        return prepareStatement.use { preparedStatement ->
             val queryStatement = Query<T>(preparedStatement)
             queryStatement.block()
             val result = queryStatement.executeQuery()
@@ -75,7 +87,9 @@ class DBConnection internal constructor(private val connection: Connection) {
         query: String,
         block: Query<T>.() -> Unit
     ): List<T> {
-        return this.connection.prepareStatement(query).use { preparedStatement ->
+        val prepareStatement = this.connection.prepareStatement(query)
+        prepareStatement.queryTimeout = QUERY_TIMEOUT_IN_SECONDS
+        return prepareStatement.use { preparedStatement ->
             val queryStatement = Query<T>(preparedStatement)
             queryStatement.block()
             val result = queryStatement.executeQuery()
