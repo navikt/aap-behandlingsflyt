@@ -21,6 +21,10 @@ class Beløp(verdi: BigDecimal) {
         return Beløp(this.verdi.multiply(BigDecimal(faktor)))
     }
 
+    fun multiplisert(faktor: BigDecimal): Beløp {
+        return Beløp(this.verdi.multiply(faktor))
+    }
+
     fun divitert(nevner: Beløp, scale: Int = 10): BigDecimal {
         return this.verdi.divide(nevner.verdi, scale, RoundingMode.HALF_UP)
     }

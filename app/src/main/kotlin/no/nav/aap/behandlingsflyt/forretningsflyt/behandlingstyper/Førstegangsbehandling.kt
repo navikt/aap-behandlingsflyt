@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper
 
-import no.nav.aap.behandlingsflyt.flyt.BehandlingType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.arbeid.PliktkortService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.barn.BarnService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.InntektService
@@ -8,8 +7,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.Personopplysn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.YrkesskadeService
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlytBuilder
-import no.nav.aap.verdityper.flyt.StegType
+import no.nav.aap.behandlingsflyt.flyt.BehandlingType
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BarnetilleggSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BeregnTilkjentYtelseSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettArbeidsevneSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettGrunnlagSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FatteVedtakSteg
@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderStudentSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykdomSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykepengeErstatningSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderYrkesskadeÅrsakssammenhengSteg
+import no.nav.aap.verdityper.flyt.StegType
 
 object Førstegangsbehandling : BehandlingType {
     override fun flyt(): BehandlingFlyt {
@@ -44,7 +45,7 @@ object Førstegangsbehandling : BehandlingType {
             .medSteg(steg = UnderveisSteg, informasjonskrav = listOf(PliktkortService))
             .medSteg(steg = BarnetilleggSteg, informasjonskrav = listOf(BarnService))
             .medSteg(steg = SamordningSteg)
-            .medSteg(steg = GeneriskPlaceholderFlytSteg(StegType.BEREGN_TILKJENT_YTELSE))
+            .medSteg(steg = BeregnTilkjentYtelseSteg)
             .medSteg(steg = GeneriskPlaceholderFlytSteg(StegType.SIMULERING))
             .medSteg(steg = ForeslåVedtakSteg) // en-trinn
             .sluttÅOppdatereFaktagrunnlag()

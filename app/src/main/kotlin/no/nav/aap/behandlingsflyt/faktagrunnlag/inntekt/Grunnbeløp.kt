@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.Grunnbeløp.Element.Companion.finnGUnit
-import no.nav.aap.verdityper.GUnit
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.Beløp
+import no.nav.aap.verdityper.GUnit
 import no.nav.aap.verdityper.Periode
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -110,11 +110,11 @@ internal object Grunnbeløp {
         return grunnbeløp.finnGUnit(år, beløp)
     }
 
-    internal fun tilTidslinje(): Tidslinje<Beløp> {
+    fun tilTidslinje(): Tidslinje<Beløp> {
         return Element.tilTidslinje()
     }
 
-    internal fun tilTidslinjeGjennomsnitt(): Tidslinje<Beløp> {
+    fun tilTidslinjeGjennomsnitt(): Tidslinje<Beløp> {
         return Element.tilTidslinjeGjennomsnitt()
     }
 }
