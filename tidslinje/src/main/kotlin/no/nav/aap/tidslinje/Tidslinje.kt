@@ -50,13 +50,13 @@ class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>> = TreeSet()) : Iterab
         if (this.segmenter.isEmpty()) {
             val nyeSegmenter = other.segmenter.map { segment ->
                 sammenslåer.sammenslå(segment.periode, null, segment)
-            }
+            }.filterNotNull()
             return Tidslinje(nyeSegmenter.toCollection(TreeSet()))
         }
         if (other.segmenter.isEmpty()) {
             val nyeSegmenter = this.segmenter.map { segment ->
                 sammenslåer.sammenslå(segment.periode, segment, null)
-            }
+            }.filterNotNull()
             return Tidslinje(nyeSegmenter.toCollection(TreeSet()))
         }
 
