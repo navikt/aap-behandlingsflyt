@@ -245,6 +245,10 @@ class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>> = TreeSet()) : Iterab
         return segmenter.last().tom()
     }
 
+    fun helePerioden(): Periode {
+        return Periode(minDato(), maxDato())
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

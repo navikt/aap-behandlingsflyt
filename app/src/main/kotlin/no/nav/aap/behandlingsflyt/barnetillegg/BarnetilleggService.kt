@@ -1,16 +1,24 @@
 package no.nav.aap.behandlingsflyt.barnetillegg
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.barn.BarnRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.tidslinje.JoinStyle
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
-class BarnetilleggService(private val barnRepository: BarnRepository) {
+class BarnetilleggService(
+    private val barnRepository: BarnRepository,
+    private val behandlingRepository: BehandlingRepository,
+    private val sakRepository: SakRepository
+) {
 
     fun beregn(behandlingId: BehandlingId): Tidslinje<RettTilBarnetillegg> {
 
         val relevanteBarn = barnRepository.hentHvisEksisterer(behandlingId)?.barn ?: emptyList()
+        val behandling = behandlingRepository.hent(behandlingId)
+        val sak = sakRepository.hent(behandling.sakId)
 
         var resultat: Tidslinje<RettTilBarnetillegg> = Tidslinje(listOf())
 
@@ -34,6 +42,6 @@ class BarnetilleggService(private val barnRepository: BarnRepository) {
             )
         }
 
-        return resultat
+        return resultat.disjoint(sak.rettighetsperiode)
     }
 }
