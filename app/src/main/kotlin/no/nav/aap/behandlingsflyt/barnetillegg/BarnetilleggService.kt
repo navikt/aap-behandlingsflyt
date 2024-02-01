@@ -19,19 +19,15 @@ class BarnetilleggService(
         val behandling = behandlingRepository.hent(behandlingId)
         val sak = sakRepository.hent(behandling.sakId)
 
-        var resultat: Tidslinje<RettTilBarnetillegg> = Tidslinje(listOf())
+        var resultat: Tidslinje<RettTilBarnetillegg> =
+            Tidslinje(listOf(Segment(sak.rettighetsperiode, RettTilBarnetillegg())))
 
         for (barn in relevanteBarn) {
             resultat = resultat.kombiner(
                 Tidslinje(listOf(Segment(barn.periodeMedRettTil(), barn)))
             ) { periode, venstreSegment, høyreSegment ->
-                val venstreVerdi = venstreSegment?.verdi
                 val høyreVerdi = høyreSegment?.verdi
-                val nyVenstreVerdi = if (venstreVerdi == null) {
-                    RettTilBarnetillegg()
-                } else {
-                    venstreVerdi
-                }
+                val nyVenstreVerdi = venstreSegment?.verdi ?: RettTilBarnetillegg()
                 if (høyreVerdi != null) {
                     nyVenstreVerdi.leggTilBarn(høyreVerdi.ident)
                 }
@@ -40,6 +36,6 @@ class BarnetilleggService(
             }
         }
 
-        return resultat
+        return resultat.kryss(sak.rettighetsperiode)
     }
 }
