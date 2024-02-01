@@ -51,7 +51,7 @@ class Vurdering(
     }
 
     private fun arbeiderMindreEnnGrenseverdi(): Boolean {
-        return grenseverdi() >= (gradering?.andelArbeid ?: Prosent.`0_PROSENT`)
+        return gradering == null || grenseverdi() >= gradering.andelArbeid
     }
 
     fun grenseverdi(): Prosent {
