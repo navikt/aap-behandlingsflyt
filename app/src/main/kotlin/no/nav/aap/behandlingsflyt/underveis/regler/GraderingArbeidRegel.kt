@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.underveis.regler
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.arbeid.Pliktkort
+import no.nav.aap.behandlingsflyt.faktagrunnlag.underveis.Gradering
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.StandardSammenslåere
 import no.nav.aap.tidslinje.Tidslinje

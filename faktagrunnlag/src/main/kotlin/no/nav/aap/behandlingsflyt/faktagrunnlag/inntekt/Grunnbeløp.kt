@@ -10,7 +10,7 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.Year
 
-internal object Grunnbeløp {
+object Grunnbeløp {
     private val grunnbeløp = listOf(
         Element(2023, 5, 1, 118620, 116239),
         Element(2022, 5, 1, 111477, 109784),

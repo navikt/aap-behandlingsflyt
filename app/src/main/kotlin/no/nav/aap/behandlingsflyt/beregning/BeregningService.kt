@@ -1,10 +1,9 @@
 package no.nav.aap.behandlingsflyt.beregning
 
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
-import no.nav.aap.behandlingsflyt.faktagrunnlag.beregning.år.Inntektsbehov
-import no.nav.aap.behandlingsflyt.faktagrunnlag.beregning.år.Input
 import no.nav.aap.behandlingsflyt.faktagrunnlag.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.beregning.BeregningsgrunnlagRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.beregning.GrunnlagetForBeregningen
 import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.InntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykdomGrunnlag
@@ -24,7 +23,7 @@ class BeregningService(
         val sykdomGrunnlag = sykdomRepository.hent(behandlingId)
         val uføre = uføreRepository.hentHvisEksisterer(behandlingId)
 
-        val inntekter = utledInput(sykdomGrunnlag)
+        val inntekter = sykdomGrunnlag.utledInput()
 
         val beregningMedYrkesskade = beregn(sykdomGrunnlag, inntekter.utledForOrdinær(inntektGrunnlag.inntekter))
 
@@ -73,14 +72,5 @@ class BeregningService(
         }
 
         return grunnlag11_19
-    }
-
-    private fun utledInput(sykdomGrunnlag: SykdomGrunnlag): Inntektsbehov {
-        return Inntektsbehov(
-            Input(
-                nedsettelsesDato = sykdomGrunnlag.sykdomsvurdering?.nedsattArbeidsevneDato!!,
-                ytterligereNedsettelsesDato = sykdomGrunnlag.sykdomsvurdering.ytterligereNedsattArbeidsevneDato
-            )
-        )
     }
 }

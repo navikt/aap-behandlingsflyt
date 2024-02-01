@@ -4,6 +4,10 @@ class SykepengerErstatningGrunnlag(
     val id: Long? = null,
     val vurdering: SykepengerVurdering?
 ) {
+    fun vurdering(): SykepengerVurdering? {
+        return vurdering
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

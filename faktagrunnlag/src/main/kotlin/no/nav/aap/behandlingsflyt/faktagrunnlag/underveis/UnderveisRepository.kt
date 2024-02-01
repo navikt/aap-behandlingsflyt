@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.underveis
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.Row
-import no.nav.aap.behandlingsflyt.underveis.regler.Gradering
 import no.nav.aap.verdityper.Prosent
 import no.nav.aap.verdityper.TimerArbeid
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId

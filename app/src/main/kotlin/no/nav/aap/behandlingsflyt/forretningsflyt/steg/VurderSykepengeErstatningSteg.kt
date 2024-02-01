@@ -39,7 +39,7 @@ class VurderSykepengeErstatningSteg private constructor(
                 val faktagrunnlag = SykepengerErstatningFaktagrunnlag(
                     vurderingsdato,
                     vurderingsdato.plusMonths(6),
-                    grunnlag.vurdering
+                    grunnlag.vurdering()!!
                 )
                 SykepengerErstatningVilkår(vilkårsresultat).vurder(faktagrunnlag)
                 vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)

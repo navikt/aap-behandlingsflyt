@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.underveis.regler
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.underveis.Gradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.underveis.UnderveisAvslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.Vilkårtype

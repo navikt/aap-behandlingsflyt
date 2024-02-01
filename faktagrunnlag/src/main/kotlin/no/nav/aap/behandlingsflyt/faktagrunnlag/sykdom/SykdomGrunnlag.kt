@@ -1,10 +1,22 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.beregning.år.Inntektsbehov
+import no.nav.aap.behandlingsflyt.faktagrunnlag.beregning.år.Input
+
 class SykdomGrunnlag(
     private val id: Long?,
     val yrkesskadevurdering: Yrkesskadevurdering?,
     val sykdomsvurdering: Sykdomsvurdering?
 ) {
+    fun utledInput(): Inntektsbehov {
+        return Inntektsbehov(
+            Input(
+                nedsettelsesDato = sykdomsvurdering?.nedsattArbeidsevneDato!!,
+                ytterligereNedsettelsesDato = sykdomsvurdering.ytterligereNedsattArbeidsevneDato
+            )
+        )
+    }
+
     fun erKonsistent(): Boolean {
         if (sykdomsvurdering == null) {
             return false

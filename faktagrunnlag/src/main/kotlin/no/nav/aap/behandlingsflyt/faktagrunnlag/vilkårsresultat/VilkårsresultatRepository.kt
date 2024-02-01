@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.Row
-
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import org.slf4j.LoggerFactory
 

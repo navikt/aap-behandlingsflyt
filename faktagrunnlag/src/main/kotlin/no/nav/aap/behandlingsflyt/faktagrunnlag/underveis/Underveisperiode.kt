@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.underveis
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.underveis.regler.Gradering
 import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.Prosent
 
