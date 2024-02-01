@@ -1,6 +1,6 @@
 import java.io.ByteArrayOutputStream
 
-val ktorVersion = "2.3.7"
+val ktorVersion = "2.3.8"
 
 plugins {
     id("io.ktor.plugin")
