@@ -35,8 +35,10 @@ class BeregnTilkjentYtelseSteg(
                 Grunnbeløp.tilTidslinjeGjennomsnitt(),
                 JoinStyle.INNER_JOIN
             ) { periode, venstre, høyre ->
-                val dagsats = høyre?.verdi?.multiplisert(grunnlagsfaktor) ?: Beløp(0)
-                val gradering = venstre?.verdi?.gradering?.prosent ?: Prosent.`0_PROSENT`
+                val dagsats =
+                    høyre?.verdi?.multiplisert(grunnlagsfaktor)?.divitert(Beløp(250))?.let { Beløp(it) } ?: Beløp(0)
+
+                val gradering = venstre?.verdi?.utbetalingsgrad() ?: Prosent.`0_PROSENT`
                 Segment(periode, Tilkjent(dagsats, gradering))
             }
 
@@ -61,11 +63,11 @@ class BeregnTilkjentYtelseSteg(
 
 class Tilkjent(val dagsats: Beløp, val gradering: Prosent) {
 
-    fun tilUtbetaling(): Beløp {
+    fun redusertDagsats(): Beløp {
         return dagsats.multiplisert(gradering)
     }
 
     override fun toString(): String {
-        return "Tilkjent(dagsats=$dagsats, gradering=$gradering, totalt=${tilUtbetaling()})"
+        return "Tilkjent(dagsats=$dagsats, gradering=$gradering, redusertDagsats=${redusertDagsats()})"
     }
 }

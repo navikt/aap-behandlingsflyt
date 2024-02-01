@@ -1,5 +1,7 @@
 package no.nav.aap.verdityper.sakogbehandling
 
+import kotlin.math.min
+
 class Ident(val identifikator: String) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -15,7 +17,7 @@ class Ident(val identifikator: String) {
     }
 
     override fun toString(): String {
-        return "Ident(identifikator='${identifikator.substring(0, 6)}*****')"
+        return "Ident(identifikator='${identifikator.substring(0, min(identifikator.length, 6))}*****')"
     }
 
 

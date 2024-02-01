@@ -27,10 +27,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger.adapter.Perso
 import no.nav.aap.behandlingsflyt.faktagrunnlag.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.NedreGrense
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.Sykdomsvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.adapter.YrkesskadeRegisterMock
+import no.nav.aap.behandlingsflyt.faktagrunnlag.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.adapter.YrkesskadeRegisterMock
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.hendelse.mottak.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HendelsesMottak
@@ -96,6 +97,16 @@ class FlytOrkestratorTest {
         // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
         PersonRegisterMock.konstruer(ident, Personopplysning(Fødselsdato(LocalDate.now().minusYears(18))))
         YrkesskadeRegisterMock.konstruer(ident = ident, periode = periode)
+        InntektRegisterMock.konstruer(
+            ident = ident, inntekterPerÅr = listOf(
+                InntektPerÅr(
+                    Year.now().minusYears(3),
+                    Beløp(
+                        BigDecimal(1000000)
+                    )
+                )
+            )
+        )
 
         // Sender inn en søknad
         hendelsesMottak.håndtere(
@@ -203,8 +214,13 @@ class FlytOrkestratorTest {
                     Pliktkort(
                         timerArbeidPerPeriode = setOf(
                             ArbeidIPeriode(
-                                Periode(LocalDate.now(), LocalDate.now().plusDays(14)), TimerArbeid(
+                                Periode(LocalDate.now(), LocalDate.now().plusDays(13)), TimerArbeid(
                                     BigDecimal(20)
+                                )
+                            ),
+                            ArbeidIPeriode(
+                                Periode(LocalDate.now().plusDays(14), LocalDate.now().plusDays(27)), TimerArbeid(
+                                    BigDecimal(60)
                                 )
                             )
                         )
@@ -268,6 +284,13 @@ class FlytOrkestratorTest {
         assertThat(sykdomsvilkåret.vilkårsperioder())
             .hasSize(1)
             .allMatch { vilkårsperiode -> vilkårsperiode.erOppfylt() }
+
+        val underveisGrunnlag = dataSource.transaction { connection ->
+            UnderveisRepository(connection).hent(behandling.id)
+        }
+
+        assertThat(underveisGrunnlag.perioder).isNotEmpty
+        assertThat(underveisGrunnlag.perioder.any { (it.gradering?.gradering?.prosentverdi() ?: 0) > 0 }).isTrue()
     }
 
     @Test

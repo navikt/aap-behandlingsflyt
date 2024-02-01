@@ -54,7 +54,8 @@ class UnderveisRepository(private val connection: DBConnection) {
         val gradering = if (antallTimer == null || graderingProsent == null) {
             null
         } else {
-            Gradering(TimerArbeid(antallTimer), Prosent(graderingProsent))
+            val gradering = Prosent(graderingProsent)
+            Gradering(TimerArbeid(antallTimer), Prosent.`100_PROSENT`.minus(gradering), gradering)
         }
 
         return Underveisperiode(
@@ -100,7 +101,7 @@ class UnderveisRepository(private val connection: DBConnection) {
                 setEnumName(4, periode.avslagsårsak)
                 setInt(5, periode.grenseverdi.prosentverdi())
                 setBigDecimal(6, periode.gradering?.totaltAntallTimer?.antallTimer)
-                setInt(7, periode.gradering?.prosent?.prosentverdi())
+                setInt(7, periode.gradering?.gradering?.prosentverdi())
             }
         }
 

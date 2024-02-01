@@ -13,6 +13,13 @@ class Underveisperiode(
     val gradering: Gradering?
 ) : Comparable<Underveisperiode> {
 
+    fun utbetalingsgrad(): Prosent {
+        if(utfall == Utfall.IKKE_OPPFYLT) {
+            return Prosent.`0_PROSENT`
+        }
+        return gradering?.gradering ?: Prosent.`0_PROSENT`
+    }
+
     override fun compareTo(other: Underveisperiode): Int {
         return periode.compareTo(other.periode)
     }
@@ -42,7 +49,7 @@ class Underveisperiode(
     }
 
     override fun toString(): String {
-        return "Underveisperiode(periode=$periode, utfall=$utfall, avslagsårsak=$avslagsårsak, grenseverdi=$grenseverdi, gradering=$gradering)"
+        return "Underveisperiode(periode=$periode, utfall=$utfall, utbetalingsgrad=${utbetalingsgrad()}, avslagsårsak=$avslagsårsak, grenseverdi=$grenseverdi, gradering=$gradering)"
     }
 
 }

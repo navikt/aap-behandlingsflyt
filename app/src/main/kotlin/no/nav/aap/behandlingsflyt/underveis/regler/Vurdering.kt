@@ -43,7 +43,15 @@ class Vurdering(
     }
 
     fun harRett(): Boolean {
+        return ingenVilkårErAvslått() && arbeiderMindreEnnGrenseverdi()
+    }
+
+    private fun ingenVilkårErAvslått(): Boolean {
         return vurderinger.isNotEmpty() && vurderinger.none { it.value == Utfall.IKKE_OPPFYLT }
+    }
+
+    private fun arbeiderMindreEnnGrenseverdi(): Boolean {
+        return grenseverdi() >= (gradering?.andelArbeid ?: Prosent.`0_PROSENT`)
     }
 
     fun grenseverdi(): Prosent {
@@ -66,8 +74,13 @@ class Vurdering(
         if (harRett()) {
             return null
         }
-        // TODO: Håndtere varianter
-        return UnderveisAvslagsårsak.IKKE_GRUNNLEGGENDE_RETT
+
+        if (!ingenVilkårErAvslått()) {
+            return UnderveisAvslagsårsak.IKKE_GRUNNLEGGENDE_RETT
+        } else if (!arbeiderMindreEnnGrenseverdi()) {
+            return UnderveisAvslagsårsak.ARBEIDER_MER_ENN_GRENSEVERDI
+        }
+        throw IllegalStateException("Ukjent avslagsårsak")
     }
 
     override fun equals(other: Any?): Boolean {
@@ -89,7 +102,7 @@ class Vurdering(
     }
 
     override fun toString(): String {
-        return "Vurdering(harRett=${harRett()}, gradering=${gradering?.prosent ?: Prosent(0)})"
+        return "Vurdering(harRett=${harRett()}, gradering=${gradering?.gradering ?: Prosent(0)})"
     }
 
 }

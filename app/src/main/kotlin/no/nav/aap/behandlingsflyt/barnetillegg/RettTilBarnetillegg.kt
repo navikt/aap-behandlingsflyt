@@ -27,5 +27,7 @@ class RettTilBarnetillegg {
         return barn.hashCode()
     }
 
-
+    override fun toString(): String {
+        return "RettTilBarnetillegg(antallBarn=${barn.size})"
+    }
 }

@@ -48,8 +48,8 @@ class GraderingArbeidRegel : UnderveisRegel {
         }.kombiner(arbeidsTidslinje) { periode, venstreSegment, høyreSegment ->
             var vurdering: Vurdering? = venstreSegment?.verdi
             val høyreSegmentVerdi = høyreSegment?.verdi
-            if (høyreSegmentVerdi != null) {
-                vurdering = vurdering?.leggTilGradering(høyreSegmentVerdi)
+            if (høyreSegmentVerdi != null && vurdering != null) {
+                vurdering = vurdering!!.leggTilGradering(høyreSegmentVerdi)
             }
             Segment(periode, vurdering)
         }
@@ -70,20 +70,21 @@ class GraderingArbeidRegel : UnderveisRegel {
 
     private fun regnUtGradering(arbeidsSegmenter: NavigableSet<Segment<TimerArbeid>>): NavigableSet<Segment<Gradering>> {
         val antallTimerArbeid = arbeidsSegmenter.sumOf { it.verdi?.antallTimer ?: BigDecimal.ZERO }
-        val gradering =
+        val ethundre = BigDecimal.valueOf(100)
+        val andelArbeid =
             Prosent(
                 antallTimerArbeid.divide(
                     BigDecimal(ANTALL_TIMER_I_ARBEIDSUKE).multiply(BigDecimal.TWO),
                     3,
                     RoundingMode.HALF_UP
-                ).toInt()
+                ).multiply(ethundre).toInt()
             )
         return TreeSet(arbeidsSegmenter.map { segment ->
             Segment(
                 segment.periode, Gradering(
                     segment?.verdi ?: TimerArbeid(
                         BigDecimal.ZERO
-                    ), gradering
+                    ), andelArbeid, Prosent.`100_PROSENT`.minus(andelArbeid)
                 )
             )
         })
