@@ -16,6 +16,8 @@ import no.nav.aap.verdityper.flyt.FlytKontekst
 import no.nav.aap.verdityper.flyt.StegType
 import org.slf4j.LoggerFactory
 
+private const val ANTALL_ÅRLIGE_ARBEIDSDAGER = 260
+
 class BeregnTilkjentYtelseSteg(
     private val underveisRepository: UnderveisRepository,
     private val beregningsgrunnlagRepository: BeregningsgrunnlagRepository
@@ -36,7 +38,7 @@ class BeregnTilkjentYtelseSteg(
                 JoinStyle.INNER_JOIN
             ) { periode, venstre, høyre ->
                 val dagsats =
-                    høyre?.verdi?.multiplisert(grunnlagsfaktor)?.divitert(Beløp(250))?.let { Beløp(it) } ?: Beløp(0)
+                    høyre?.verdi?.multiplisert(grunnlagsfaktor)?.divitert(Beløp(ANTALL_ÅRLIGE_ARBEIDSDAGER))?.let { Beløp(it) } ?: Beløp(0)
 
                 val gradering = venstre?.verdi?.utbetalingsgrad() ?: Prosent.`0_PROSENT`
                 Segment(periode, Tilkjent(dagsats, gradering))
