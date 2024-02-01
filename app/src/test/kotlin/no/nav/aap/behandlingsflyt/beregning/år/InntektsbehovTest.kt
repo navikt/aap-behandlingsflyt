@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.beregning.år
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.beregning.år.Inntektsbehov
+import no.nav.aap.behandlingsflyt.faktagrunnlag.beregning.år.Input
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate

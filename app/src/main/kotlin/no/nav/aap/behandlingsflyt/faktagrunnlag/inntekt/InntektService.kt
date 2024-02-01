@@ -1,15 +1,15 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt
 
-import no.nav.aap.verdityper.sakogbehandling.BehandlingId
-import no.nav.aap.behandlingsflyt.beregning.år.Inntektsbehov
-import no.nav.aap.behandlingsflyt.beregning.år.Input
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlagkonstruktør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.beregning.år.Inntektsbehov
+import no.nav.aap.behandlingsflyt.faktagrunnlag.beregning.år.Input
 import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.adapter.InntektRegisterMock
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykdomRepository
-import no.nav.aap.verdityper.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.verdityper.flyt.FlytKontekst
+import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
 class InntektService private constructor(
     private val sakService: SakService,

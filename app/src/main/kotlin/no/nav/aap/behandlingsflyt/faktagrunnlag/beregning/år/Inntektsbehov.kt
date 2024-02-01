@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.beregning.år
+package no.nav.aap.behandlingsflyt.faktagrunnlag.beregning.år
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.inntekt.InntektPerÅr
 import java.time.LocalDate

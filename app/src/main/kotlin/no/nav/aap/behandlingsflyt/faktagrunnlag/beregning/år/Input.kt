@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.beregning.år
+package no.nav.aap.behandlingsflyt.faktagrunnlag.beregning.år
 
 import java.time.LocalDate
 
