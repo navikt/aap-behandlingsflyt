@@ -10,8 +10,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom.SykepengerErstatningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.uføre.UføreRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.YrkesskadeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade.YrkesskadeRepository
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
 class GrunnlagKopierer(connection: DBConnection) {
@@ -27,6 +28,7 @@ class GrunnlagKopierer(connection: DBConnection) {
     private val arbeidsevneRepository = ArbeidsevneRepository(connection)
     private val uføreRepository = UføreRepository(connection)
     private val pliktkortRepository = PliktkortRepository(connection)
+    private val underveisRepository = UnderveisRepository(connection)
 
     fun overfør(fraBehandlingId: BehandlingId, tilBehandlingId: BehandlingId) {
         vilkårsresultatRepository.kopier(fraBehandlingId, tilBehandlingId)
@@ -40,5 +42,6 @@ class GrunnlagKopierer(connection: DBConnection) {
         arbeidsevneRepository.kopier(fraBehandlingId, tilBehandlingId)
         uføreRepository.kopier(fraBehandlingId, tilBehandlingId)
         pliktkortRepository.kopier(fraBehandlingId, tilBehandlingId)
+        underveisRepository.kopier(fraBehandlingId, tilBehandlingId)
     }
 }
