@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.beregning
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.verdityper.GUnit
 import no.nav.aap.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
@@ -11,8 +12,8 @@ class UføreBeregningTest {
     @Test
     fun `Hvis uføregraden er 0 prosent, endres ikke grunnlaget`() {
         val uføreBeregning = UføreBeregning(
-            grunnlag = no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning.Grunnlag11_19(GUnit(4)),
-            ytterligereNedsattGrunnlag = no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning.Grunnlag11_19(
+            grunnlag = Grunnlag11_19(GUnit(4)),
+            ytterligereNedsattGrunnlag = Grunnlag11_19(
                 GUnit(5)
             ),
             uføregrad = Prosent.`0_PROSENT`
@@ -27,8 +28,8 @@ class UføreBeregningTest {
     fun `Hvis bruker har en uføregrad på 100 prosent, skal ikke uføreberegningen gjøres`() {
         assertThrows<IllegalArgumentException> {
             UføreBeregning(
-                grunnlag = no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning.Grunnlag11_19(GUnit(4)),
-                ytterligereNedsattGrunnlag = no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning.Grunnlag11_19(
+                grunnlag = Grunnlag11_19(GUnit(4)),
+                ytterligereNedsattGrunnlag = Grunnlag11_19(
                     GUnit(4)
                 ),
                 uføregrad = Prosent.`100_PROSENT`
@@ -39,8 +40,8 @@ class UføreBeregningTest {
     @Test
     fun `Hvis bruker hadde høyere inntekt ved ytterligere nedsatt, justert for uføregrad, brukes inntekter fra ytteligere nedsatt`() {
         val uføreBeregning = UføreBeregning(
-            grunnlag = no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning.Grunnlag11_19(GUnit(4)),
-            ytterligereNedsattGrunnlag = no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning.Grunnlag11_19(
+            grunnlag = Grunnlag11_19(GUnit(4)),
+            ytterligereNedsattGrunnlag = Grunnlag11_19(
                 GUnit("3.5")
             ),
             uføregrad = Prosent.`30_PROSENT`
@@ -54,8 +55,8 @@ class UføreBeregningTest {
     @Test
     fun `Hvis bruker hadde lavere inntekt ved ytterligere nedsatt, justert for uføregrad, brukes inntekter fra nedsatt med halvparten`() {
         val uføreBeregning = UføreBeregning(
-            grunnlag = no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning.Grunnlag11_19(GUnit(4)),
-            ytterligereNedsattGrunnlag = no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning.Grunnlag11_19(
+            grunnlag = Grunnlag11_19(GUnit(4)),
+            ytterligereNedsattGrunnlag = Grunnlag11_19(
                 GUnit("3.5")
             ),
             uføregrad = Prosent.`30_PROSENT`

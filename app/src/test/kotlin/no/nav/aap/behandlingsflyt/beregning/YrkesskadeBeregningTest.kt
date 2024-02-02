@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.beregning
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.GUnit
 import no.nav.aap.verdityper.Prosent
@@ -14,7 +15,7 @@ class YrkesskadeBeregningTest {
 
     @Test
     fun `Hvis ingen yrkesskadeandel, så returneres samme grunnlag som 11-19`() {
-        val grunnlag11_19 = no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning.Grunnlag11_19(GUnit(4))
+        val grunnlag11_19 = Grunnlag11_19(GUnit(4))
 
         val yrkesskadeBeregning = YrkesskadeBeregning(
             grunnlag11_19 = grunnlag11_19,
@@ -32,7 +33,7 @@ class YrkesskadeBeregningTest {
 
     @Test
     fun `Hvis antatt årlig arbeidsinntekt er lavere enn 11-19, så settes grunnlaget tilsvarende grunnlag fra 11-19 uavhengig av yrkesskadeandel`() {
-        val grunnlag11_19 = no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning.Grunnlag11_19(GUnit(4))
+        val grunnlag11_19 = Grunnlag11_19(GUnit(4))
 
         val yrkesskadeBeregning = YrkesskadeBeregning(
             grunnlag11_19 = grunnlag11_19,
@@ -50,7 +51,7 @@ class YrkesskadeBeregningTest {
 
     @Test
     fun `Hvis yrkesskadeandel er 70 prosent, og antatt årlig arbeidsinntekt er høyere enn 11-19, beregnes grunnlaget med 30 prosent 11-19 og 70 prosent yrkesskade`() {
-        val grunnlag11_19 = no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning.Grunnlag11_19(GUnit(2))
+        val grunnlag11_19 = Grunnlag11_19(GUnit(2))
 
         val yrkesskadeBeregning = YrkesskadeBeregning(
             grunnlag11_19 = grunnlag11_19,
@@ -68,7 +69,7 @@ class YrkesskadeBeregningTest {
 
     @Test
     fun `Hvis yrkesskadeandel er 71 prosent, og antatt årlig arbeidsinntekt er høyere enn 11-19, beregnes grunnlaget med 0 prosent 11-19 og 100 prosent yrkesskade`() {
-        val grunnlag11_19 = no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning.Grunnlag11_19(GUnit(2))
+        val grunnlag11_19 = Grunnlag11_19(GUnit(2))
 
         val yrkesskadeBeregning = YrkesskadeBeregning(
             grunnlag11_19 = grunnlag11_19,
@@ -86,7 +87,7 @@ class YrkesskadeBeregningTest {
 
     @Test
     fun `Hvis yrkesskadeandel er 100 prosent, og antatt årlig arbeidsinntekt er høyere enn 11-19, så settes grunnlaget tilsvarende antatt årlig arbeidsinntekt`() {
-        val grunnlag11_19 = no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning.Grunnlag11_19(GUnit(2))
+        val grunnlag11_19 = Grunnlag11_19(GUnit(2))
 
         val yrkesskadeBeregning = YrkesskadeBeregning(
             grunnlag11_19 = grunnlag11_19,

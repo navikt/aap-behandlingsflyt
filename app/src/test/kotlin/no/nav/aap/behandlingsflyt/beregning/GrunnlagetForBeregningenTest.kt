@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.beregning
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning.GrunnlagetForBeregningen
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagetForBeregningen
 import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.GUnit
 import org.assertj.core.api.Assertions.assertThat
@@ -60,7 +61,7 @@ class GrunnlagetForBeregningenTest {
         val grunnlaget = grunnlagetForBeregningen.beregnGrunnlaget()
 
         assertThat(grunnlaget).isEqualTo(
-            no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning.Grunnlag11_19(
+            Grunnlag11_19(
                 GUnit(BigDecimal(0))
             )
         )
@@ -84,7 +85,7 @@ class GrunnlagetForBeregningenTest {
         val grunnlaget = grunnlagetForBeregningen.beregnGrunnlaget()
 
         assertThat(grunnlaget).isEqualTo(
-            no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning.Grunnlag11_19(
+            Grunnlag11_19(
                 GUnit(BigDecimal(5))
             )
         )
@@ -111,7 +112,7 @@ class GrunnlagetForBeregningenTest {
         val grunnlaget = grunnlagetForBeregningen.beregnGrunnlaget()
 
         assertThat(grunnlaget).isEqualTo(
-            no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning.Grunnlag11_19(
+            Grunnlag11_19(
                 GUnit(BigDecimal(5))
             )
         )
@@ -138,7 +139,7 @@ class GrunnlagetForBeregningenTest {
         val grunnlaget = grunnlagetForBeregningen.beregnGrunnlaget()
 
         assertThat(grunnlaget).isEqualTo(
-            no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning.Grunnlag11_19(
+            Grunnlag11_19(
                 GUnit(BigDecimal(5))
             )
         )
@@ -165,7 +166,7 @@ class GrunnlagetForBeregningenTest {
         val grunnlaget = grunnlagetForBeregningen.beregnGrunnlaget()
 
         assertThat(grunnlaget).isEqualTo(
-            no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning.Grunnlag11_19(
+            Grunnlag11_19(
                 GUnit(BigDecimal(6))
             )
         )
@@ -192,7 +193,7 @@ class GrunnlagetForBeregningenTest {
         val grunnlaget = grunnlagetForBeregningen.beregnGrunnlaget()
 
         assertThat(grunnlaget).isEqualTo(
-            no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning.Grunnlag11_19(
+            Grunnlag11_19(
                 GUnit(BigDecimal(6))
             )
         )
@@ -219,7 +220,7 @@ class GrunnlagetForBeregningenTest {
         val grunnlaget = grunnlagetForBeregningen.beregnGrunnlaget()
 
         assertThat(grunnlaget).isEqualTo(
-            no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning.Grunnlag11_19(
+            Grunnlag11_19(
                 GUnit(BigDecimal(4))
             )
         )

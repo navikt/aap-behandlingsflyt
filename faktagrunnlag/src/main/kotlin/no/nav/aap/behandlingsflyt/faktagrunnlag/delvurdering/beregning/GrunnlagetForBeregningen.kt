@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning
+package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt.Grunnbeløp
 import no.nav.aap.verdityper.GUnit
@@ -15,7 +15,7 @@ class GrunnlagetForBeregningen(
         require(this.inntekter.first().år == this.inntekter.last().år.plusYears(2)) { "Inntektene må representere tre sammenhengende år" }
     }
 
-    fun beregnGrunnlaget(): no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning.Grunnlag11_19 {
+    fun beregnGrunnlaget(): Grunnlag11_19 {
         val gUnits = inntekter.map { inntekt ->
             Grunnbeløp.finnGUnit(inntekt.år, inntekt.beløp)
         }
@@ -26,7 +26,7 @@ class GrunnlagetForBeregningen(
 
         val gUnitGjennomsnitt = GUnit.gjennomsnittlig(gUnitsBegrensetTil6GUnits)
 
-        return no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning.Grunnlag11_19(
+        return Grunnlag11_19(
             maxOf(
                 gUnitFørsteÅr,
                 gUnitGjennomsnitt

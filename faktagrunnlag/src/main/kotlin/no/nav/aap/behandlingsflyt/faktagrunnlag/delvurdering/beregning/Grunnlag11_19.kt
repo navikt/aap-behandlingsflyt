@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning
+package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.vilkårsresultat.Faktagrunnlag
 import no.nav.aap.verdityper.GUnit
@@ -6,14 +6,14 @@ import java.math.BigDecimal
 
 class Grunnlag11_19(
     private val grunnlaget: GUnit
-) : no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning.Beregningsgrunnlag {
+) : Beregningsgrunnlag {
 
     override fun grunnlaget(): GUnit {
         return grunnlaget
     }
 
     override fun faktagrunnlag(): Faktagrunnlag {
-        return no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning.Grunnlag11_19.Fakta(
+        return Fakta(
             grunnlaget = grunnlaget.verdi()
         )
     }
@@ -31,7 +31,7 @@ class Grunnlag11_19(
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning.Grunnlag11_19
+        other as Grunnlag11_19
 
         return grunnlaget == other.grunnlaget
     }

@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning
+package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.vilkårsresultat.Faktagrunnlag
 import no.nav.aap.verdityper.GUnit
@@ -6,7 +6,7 @@ import java.math.BigDecimal
 
 class GrunnlagYrkesskade(
     private val grunnlaget: GUnit,
-    private val beregningsgrunnlag: no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning.Grunnlag11_19
+    private val beregningsgrunnlag: Grunnlag11_19
 ) : Beregningsgrunnlag {
 
     override fun grunnlaget(): GUnit {
@@ -26,7 +26,7 @@ class GrunnlagYrkesskade(
         val beregningsgrunnlag: Faktagrunnlag
     ) : Faktagrunnlag
 
-    fun underliggende(): no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning.Grunnlag11_19 {
+    fun underliggende(): Grunnlag11_19 {
         return beregningsgrunnlag
     }
 

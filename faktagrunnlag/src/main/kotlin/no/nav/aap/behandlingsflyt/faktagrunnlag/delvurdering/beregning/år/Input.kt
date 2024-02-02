@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning.år
+package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år
 
 import java.time.LocalDate
 

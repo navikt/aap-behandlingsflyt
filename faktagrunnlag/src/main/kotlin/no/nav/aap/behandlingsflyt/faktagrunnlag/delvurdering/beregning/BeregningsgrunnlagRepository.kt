@@ -1,7 +1,7 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning
+package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
-import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning.BeregningsgrunnlagRepository.Beregningsdata.Companion.toBeregningsgrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository.Beregningsdata.Companion.toBeregningsgrunnlag
 import no.nav.aap.verdityper.GUnit
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
@@ -20,7 +20,7 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
         val gUnitYrkesskade: GUnit?
     ) {
         fun parseBeregning(): Beregningsgrunnlag {
-            val beregningsgrunnlag = no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning.Grunnlag11_19(
+            val beregningsgrunnlag = Grunnlag11_19(
                 gUnitHoved
             )
 
@@ -186,7 +186,7 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
                 lagreGrunnlagYrkesskade(beregningHovedId, beregningsgrunnlag)
             }
 
-            is no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning.Grunnlag11_19 -> {
+            is Grunnlag11_19 -> {
                 lagreGrunnlag11_19(beregningUføreId, beregningsgrunnlag)
             }
         }
@@ -194,7 +194,7 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
 
     private fun lagreGrunnlag11_19(
         beregningUføreId: Long,
-        grunnlag11_19: no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning.Grunnlag11_19
+        grunnlag11_19: Grunnlag11_19
     ): Long {
         return connection.executeReturnKey("INSERT INTO BEREGNING_HOVED (BEREGNING_UFORE_ID, G_UNIT) VALUES (?, ?)") {
             setParams {

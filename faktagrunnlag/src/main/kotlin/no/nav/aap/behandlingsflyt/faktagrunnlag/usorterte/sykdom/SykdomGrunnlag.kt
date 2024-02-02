@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.sykdom
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning.år.Inntektsbehov
-import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.beregning.år.Input
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Input
 
 class SykdomGrunnlag(
     private val id: Long?,
