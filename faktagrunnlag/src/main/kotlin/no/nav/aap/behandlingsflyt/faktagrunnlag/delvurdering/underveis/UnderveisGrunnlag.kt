@@ -1,3 +1,3 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.underveis
+package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis
 
 data class UnderveisGrunnlag(val id: Long, val perioder: List<Underveisperiode>)

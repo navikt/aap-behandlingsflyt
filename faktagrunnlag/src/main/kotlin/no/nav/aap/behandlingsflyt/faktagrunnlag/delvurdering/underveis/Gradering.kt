@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.underveis
+package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis
 
 import no.nav.aap.verdityper.Prosent
 import no.nav.aap.verdityper.TimerArbeid

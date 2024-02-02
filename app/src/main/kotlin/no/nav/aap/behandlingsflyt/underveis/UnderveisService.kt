@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.underveis
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.underveis.regler.AktivitetRegel

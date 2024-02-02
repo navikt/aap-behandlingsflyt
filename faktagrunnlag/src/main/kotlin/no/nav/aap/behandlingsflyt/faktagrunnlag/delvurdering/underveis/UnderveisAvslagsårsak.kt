@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.underveis
+package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis
 
 enum class UnderveisAvslagsårsak {
     IKKE_GRUNNLEGGENDE_RETT,
