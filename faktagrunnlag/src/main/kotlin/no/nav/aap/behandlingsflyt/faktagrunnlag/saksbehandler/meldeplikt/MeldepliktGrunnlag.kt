@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.meldeplikt
+package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt
 
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 

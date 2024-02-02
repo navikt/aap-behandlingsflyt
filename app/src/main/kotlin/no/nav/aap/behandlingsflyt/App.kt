@@ -39,8 +39,8 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak.ForeslåVedtakL�
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.dbflyway.Migrering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.bistandsgrunnlagApi
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.meldepliktsgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.medlemskap.medlemskapsgrunnlagApi
-import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.meldeplikt.flate.meldepliktsgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.personopplysninger.adapter.PersonRegisterMock
