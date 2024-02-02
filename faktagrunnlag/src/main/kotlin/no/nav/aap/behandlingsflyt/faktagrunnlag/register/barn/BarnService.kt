@@ -1,9 +1,9 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.barn
+package no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlagkonstruktør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.barn.adapter.BarnRelasjonerMock
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.BarnRelasjonerMock
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.verdityper.flyt.FlytKontekst
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId

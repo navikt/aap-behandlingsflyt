@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.barn
+package no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId

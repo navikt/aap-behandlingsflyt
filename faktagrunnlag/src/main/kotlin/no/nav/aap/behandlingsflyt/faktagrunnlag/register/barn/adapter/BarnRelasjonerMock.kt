@@ -1,6 +1,6 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.barn.adapter
+package no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.barn.Barn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.sakogbehandling.Ident
 

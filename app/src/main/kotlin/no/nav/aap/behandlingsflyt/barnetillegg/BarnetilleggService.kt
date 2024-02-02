@@ -1,12 +1,13 @@
 package no.nav.aap.behandlingsflyt.barnetillegg
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.barn.BarnRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
+//TODO: Må se på om faktagrunnlag.barn skal deles i to, en for registeropplysninger og en for delvurdering fra saksbehandler
 class BarnetilleggService(
     private val barnRepository: BarnRepository,
     private val behandlingRepository: BehandlingRepository,

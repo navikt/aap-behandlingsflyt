@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.barn
+package no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn
 
 class BarnGrunnlag(private val id: Long, val barn: List<Barn>) {
     override fun equals(other: Any?): Boolean {
