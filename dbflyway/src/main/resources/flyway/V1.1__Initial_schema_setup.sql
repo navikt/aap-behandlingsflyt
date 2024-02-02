@@ -1,11 +1,11 @@
 -- give access to IAM users (GCP)
-create extension if not exists btree_gist;
-GRANT ALL ON ALL TABLES IN SCHEMA PUBLIC TO cloudsqliamuser;
+CREATE EXTENSION IF NOT EXISTS BTREE_GIST;
+GRANT ALL ON ALL TABLES IN SCHEMA PUBLIC TO CLOUDSQLIAMUSER;
 
 CREATE TABLE PERSON
 (
     ID        BIGSERIAL NOT NULL PRIMARY KEY,
-    REFERANSE uuid      NOT NULL UNIQUE
+    REFERANSE UUID      NOT NULL UNIQUE
 );
 CREATE INDEX IDX_PERSON_REFERANSE ON PERSON (REFERANSE);
 
@@ -13,7 +13,7 @@ CREATE TABLE PERSON_IDENT
 (
     ID        BIGSERIAL          NOT NULL PRIMARY KEY,
     PERSON_ID BIGINT             NOT NULL REFERENCES PERSON (ID),
-    IDENT     varchar(19) UNIQUE NOT NULL
+    IDENT     VARCHAR(19) UNIQUE NOT NULL
 );
 
 CREATE INDEX IDX_PERSON_IDENT_IDENT ON PERSON_IDENT (IDENT);
@@ -23,16 +23,16 @@ CREATE TABLE SAK
     ID                BIGSERIAL                              NOT NULL PRIMARY KEY,
     SAKSNUMMER        VARCHAR(19)                            NOT NULL,
     PERSON_ID         BIGINT                                 NOT NULL REFERENCES PERSON (ID),
-    RETTIGHETSPERIODE daterange                              NOT NULL,
+    RETTIGHETSPERIODE DATERANGE                              NOT NULL,
     STATUS            VARCHAR(100)                           NOT NULL,
     VERSJON           BIGINT       DEFAULT 0                 NOT NULL,
     OPPRETTET_TID     TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
--- avhenger av: "create extension if not exists btree_gist;" som superbruker
+-- avhenger av: "CREATE EXTENSION IF NOT EXISTS BTREE_GIST;" som superbruker
 
-alter table sak
-    add constraint sak_ikke_overlapp_periode EXCLUDE USING GIST (
+ALTER TABLE SAK
+    ADD CONSTRAINT SAK_IKKE_OVERLAPP_PERIODE EXCLUDE USING GIST (
         PERSON_ID WITH =,
         RETTIGHETSPERIODE WITH &&
         );
@@ -40,41 +40,41 @@ alter table sak
 CREATE INDEX IDX_SAK_SAKSNUMMER ON SAK (SAKSNUMMER);
 CREATE INDEX IDX_SAK_PERSON ON SAK (PERSON_ID);
 
-create sequence if not exists SEQ_SAKSNUMMER increment by 50 minvalue 10000000;
+CREATE SEQUENCE IF NOT EXISTS SEQ_SAKSNUMMER INCREMENT BY 50 MINVALUE 10000000;
 
 CREATE TABLE BEHANDLING
 (
     ID            BIGSERIAL                              NOT NULL PRIMARY KEY,
-    sak_id        BIGINT                                 NOT NULL REFERENCES sak (ID),
-    referanse     uuid unique                            NOT NULL,
+    SAK_ID        BIGINT                                 NOT NULL REFERENCES SAK (ID),
+    REFERANSE     UUID UNIQUE                            NOT NULL,
     STATUS        VARCHAR(100)                           NOT NULL,
-    type          varchar(100)                           not null,
+    TYPE          VARCHAR(100)                           NOT NULL,
     VERSJON       BIGINT       DEFAULT 0                 NOT NULL,
     OPPRETTET_TID TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
-CREATE INDEX IDX_BEHANDLING_REFERANSE ON BEHANDLING (referanse);
-CREATE INDEX IDX_BEHANDLING_SAK_TID ON BEHANDLING (sak_id, OPPRETTET_TID);
+CREATE INDEX IDX_BEHANDLING_REFERANSE ON BEHANDLING (REFERANSE);
+CREATE INDEX IDX_BEHANDLING_SAK_TID ON BEHANDLING (SAK_ID, OPPRETTET_TID);
 
 CREATE TABLE AVKLARINGSBEHOV
 (
     ID              BIGSERIAL                              NOT NULL PRIMARY KEY,
-    behandling_id   BIGINT                                 NOT NULL REFERENCES BEHANDLING (ID),
-    definisjon      varchar(50)                            not null,
-    funnet_i_steg   varchar(50)                            not null,
-    krever_to_trinn boolean,
+    BEHANDLING_ID   BIGINT                                 NOT NULL REFERENCES BEHANDLING (ID),
+    DEFINISJON      VARCHAR(50)                            NOT NULL,
+    FUNNET_I_STEG   VARCHAR(50)                            NOT NULL,
+    KREVER_TO_TRINN BOOLEAN,
     OPPRETTET_TID   TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
-CREATE INDEX IDX_AVKLARINGSBEHOV_DEFINISJON ON AVKLARINGSBEHOV (definisjon);
-CREATE unique INDEX IDX_AVKLARINGSBEHOV_BEHANDLING_DEFINISJON ON AVKLARINGSBEHOV (behandling_id, definisjon);
+CREATE INDEX IDX_AVKLARINGSBEHOV_DEFINISJON ON AVKLARINGSBEHOV (DEFINISJON);
+CREATE UNIQUE INDEX IDX_AVKLARINGSBEHOV_BEHANDLING_DEFINISJON ON AVKLARINGSBEHOV (BEHANDLING_ID, DEFINISJON);
 
 CREATE TABLE AVKLARINGSBEHOV_ENDRING
 (
     ID                 BIGSERIAL                              NOT NULL PRIMARY KEY,
-    avklaringsbehov_id BIGINT                                 NOT NULL REFERENCES AVKLARINGSBEHOV (ID),
-    status             varchar(50)                            not null,
-    begrunnelse        text,
-    OPPRETTET_AV       varchar(100)                           NOT NULL,
+    AVKLARINGSBEHOV_ID BIGINT                                 NOT NULL REFERENCES AVKLARINGSBEHOV (ID),
+    STATUS             VARCHAR(50)                            NOT NULL,
+    BEGRUNNELSE        TEXT,
+    OPPRETTET_AV       VARCHAR(100)                           NOT NULL,
     OPPRETTET_TID      TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 CREATE INDEX IDX_AVKLARINGSBEHOV_TID ON AVKLARINGSBEHOV (OPPRETTET_TID);
@@ -82,10 +82,10 @@ CREATE INDEX IDX_AVKLARINGSBEHOV_TID ON AVKLARINGSBEHOV (OPPRETTET_TID);
 CREATE TABLE STEG_HISTORIKK
 (
     ID            BIGSERIAL                              NOT NULL PRIMARY KEY,
-    behandling_id BIGINT                                 NOT NULL REFERENCES BEHANDLING (ID),
-    aktiv         boolean      default true              NOT NULL,
-    steg          varchar(50)                            not null,
-    status        varchar(50)                            not null,
+    BEHANDLING_ID BIGINT                                 NOT NULL REFERENCES BEHANDLING (ID),
+    AKTIV         BOOLEAN      DEFAULT TRUE              NOT NULL,
+    STEG          VARCHAR(50)                            NOT NULL,
+    STATUS        VARCHAR(50)                            NOT NULL,
     OPPRETTET_TID TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 CREATE UNIQUE INDEX UIDX_STEG_HISTORIKK ON STEG_HISTORIKK (BEHANDLING_ID) WHERE (AKTIV = TRUE);
@@ -93,22 +93,22 @@ CREATE UNIQUE INDEX UIDX_STEG_HISTORIKK ON STEG_HISTORIKK (BEHANDLING_ID) WHERE 
 --
 CREATE TABLE OPPGAVE
 (
-    id            BIGSERIAL                              NOT NULL PRIMARY KEY,
-    status        varchar(50)  DEFAULT 'KLAR'            not null,
-    type          varchar(50)                            not null,
-    sak_id        bigint                                 null REFERENCES SAK (id),
-    behandling_id bigint                                 null REFERENCES BEHANDLING (id),
-    neste_kjoring TIMESTAMP(3)                           NOT NULL,
-    opprettet_tid TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
+    ID            BIGSERIAL                              NOT NULL PRIMARY KEY,
+    STATUS        VARCHAR(50)  DEFAULT 'KLAR'            NOT NULL,
+    TYPE          VARCHAR(50)                            NOT NULL,
+    SAK_ID        BIGINT                                 NULL REFERENCES SAK (ID),
+    BEHANDLING_ID BIGINT                                 NULL REFERENCES BEHANDLING (ID),
+    NESTE_KJORING TIMESTAMP(3)                           NOT NULL,
+    OPPRETTET_TID TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
-CREATE INDEX IDX_OPPGAVE_STATUS ON OPPGAVE (status, sak_id, behandling_id, neste_kjoring);
+CREATE INDEX IDX_OPPGAVE_STATUS ON OPPGAVE (STATUS, SAK_ID, BEHANDLING_ID, NESTE_KJORING);
 CREATE TABLE OPPGAVE_HISTORIKK
 (
-    id            BIGSERIAL                              NOT NULL PRIMARY KEY,
-    oppgave_id    BIGINT                                 not null REFERENCES OPPGAVE (id),
-    status        varchar(50)                            not null,
-    feilmelding   text                                   null,
-    opprettet_tid TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
+    ID            BIGSERIAL                              NOT NULL PRIMARY KEY,
+    OPPGAVE_ID    BIGINT                                 NOT NULL REFERENCES OPPGAVE (ID),
+    STATUS        VARCHAR(50)                            NOT NULL,
+    FEILMELDING   TEXT                                   NULL,
+    OPPRETTET_TID TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
-CREATE INDEX IDX_OPPGAVE_HISTORIKK_STATUS ON OPPGAVE_HISTORIKK (oppgave_id, status);
+CREATE INDEX IDX_OPPGAVE_HISTORIKK_STATUS ON OPPGAVE_HISTORIKK (OPPGAVE_ID, STATUS);
