@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.yrkesskade
+package no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade
 
 class Yrkesskader(val yrkesskader: List<Yrkesskade>) {
 

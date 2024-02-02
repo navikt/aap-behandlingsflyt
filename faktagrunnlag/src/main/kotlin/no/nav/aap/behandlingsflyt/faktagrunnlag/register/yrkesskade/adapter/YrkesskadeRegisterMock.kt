@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.yrkesskade.adapter
+package no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter
 
 import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.sakogbehandling.Ident

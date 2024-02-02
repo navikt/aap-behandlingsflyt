@@ -6,9 +6,9 @@ import no.nav.aap.behandlingsflyt.dbtest.InitTestDatabase
 import no.nav.aap.behandlingsflyt.dbtestdata.ident
 import no.nav.aap.behandlingsflyt.dbtestdata.juni
 import no.nav.aap.behandlingsflyt.dbtestdata.mai
-import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.yrkesskade.Yrkesskade
-import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.yrkesskade.YrkesskadeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.yrkesskade.Yrkesskader
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak

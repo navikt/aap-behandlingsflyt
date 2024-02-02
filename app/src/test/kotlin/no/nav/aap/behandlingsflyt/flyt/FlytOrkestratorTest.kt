@@ -27,11 +27,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.Inntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PersonRegisterMock
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeRegisterMock
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.NedreGrense
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.yrkesskade.adapter.YrkesskadeRegisterMock
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.hendelse.mottak.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HendelsesMottak

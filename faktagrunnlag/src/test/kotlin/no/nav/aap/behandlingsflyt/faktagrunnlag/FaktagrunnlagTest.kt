@@ -7,8 +7,8 @@ import no.nav.aap.behandlingsflyt.dbtestdata.ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PersonRegisterMock
-import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.yrkesskade.YrkesskadeService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.yrkesskade.adapter.YrkesskadeRegisterMock
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeRegisterMock
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.sakRepository
