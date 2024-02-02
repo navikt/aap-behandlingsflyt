@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.vilkår.sykdom
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.sykdom.NedreGrense
-import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.sykdom.Sykdomsvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.NedreGrense
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.vilkårsresultat.Vilkårtype

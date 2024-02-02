@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.sykdom
+package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom
 
 class SykepengerErstatningGrunnlag(
     val id: Long? = null,
