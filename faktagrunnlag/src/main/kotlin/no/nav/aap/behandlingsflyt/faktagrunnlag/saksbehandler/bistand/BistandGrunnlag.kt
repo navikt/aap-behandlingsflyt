@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.bistand
+package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand
 
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
