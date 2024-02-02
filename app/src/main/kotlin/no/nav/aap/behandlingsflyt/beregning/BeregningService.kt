@@ -3,7 +3,8 @@ package no.nav.aap.behandlingsflyt.beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagetForBeregningen
-import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt.InntektGrunnlagRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.uføre.UføreRepository
@@ -52,7 +53,7 @@ class BeregningService(
 
     private fun beregn(
         sykdomGrunnlag: SykdomGrunnlag,
-        inntekterPerÅr: Set<no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt.InntektPerÅr>
+        inntekterPerÅr: Set<InntektPerÅr>
     ): Beregningsgrunnlag {
         val grunnlag11_19 =
             GrunnlagetForBeregningen(inntekterPerÅr).beregnGrunnlaget()
@@ -61,7 +62,7 @@ class BeregningService(
         val antattÅrligInntekt = sykdomGrunnlag.yrkesskadevurdering?.antattÅrligInntekt
         val andelAvNedsettelsenSomSkyldesYrkesskaden = sykdomGrunnlag.yrkesskadevurdering?.andelAvNedsettelse
         if (skadetidspunkt != null && antattÅrligInntekt != null && andelAvNedsettelsenSomSkyldesYrkesskaden != null) {
-            val inntektPerÅr = no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt.InntektPerÅr(
+            val inntektPerÅr = InntektPerÅr(
                 Year.from(skadetidspunkt),
                 antattÅrligInntekt
             )

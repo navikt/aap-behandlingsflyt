@@ -18,8 +18,9 @@ import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.dbtest.InitTestDatabase
 import no.nav.aap.behandlingsflyt.dbtestdata.ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektRegisterMock
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt.adapter.InntektRegisterMock
 import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.personopplysninger.adapter.PersonRegisterMock
@@ -98,7 +99,7 @@ class FlytOrkestratorTest {
         YrkesskadeRegisterMock.konstruer(ident = ident, periode = periode)
         InntektRegisterMock.konstruer(
             ident = ident, inntekterPerÅr = listOf(
-                no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt.InntektPerÅr(
+                InntektPerÅr(
                     Year.now().minusYears(3),
                     Beløp(
                         BigDecimal(1000000)
@@ -459,7 +460,7 @@ class FlytOrkestratorTest {
         YrkesskadeRegisterMock.konstruer(ident = ident, periode = periode)
         InntektRegisterMock.konstruer(
             ident = ident, inntekterPerÅr = listOf(
-                no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt.InntektPerÅr(
+                InntektPerÅr(
                     Year.now().minusYears(3),
                     Beløp(
                         BigDecimal(1000000)

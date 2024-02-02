@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt
+package no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.Row
@@ -19,7 +19,7 @@ class InntektGrunnlagRepository(private val connection: DBConnection) {
 
     fun lagre(
         behandlingId: BehandlingId,
-        inntekter: Set<no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt.InntektPerÅr>
+        inntekter: Set<InntektPerÅr>
     ) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         val nyttGrunnlag = InntektGrunnlag(
@@ -51,7 +51,7 @@ class InntektGrunnlagRepository(private val connection: DBConnection) {
         }
     }
 
-    private fun lagreInntekter(inntekter: Set<no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt.InntektPerÅr>): Long? {
+    private fun lagreInntekter(inntekter: Set<InntektPerÅr>): Long? {
         if (inntekter == null || inntekter.isEmpty()) {
             return null
         }
@@ -112,7 +112,7 @@ class InntektGrunnlagRepository(private val connection: DBConnection) {
         )
     }
 
-    private fun mapInntekter(inntektId: Long?): Set<no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt.InntektPerÅr> {
+    private fun mapInntekter(inntektId: Long?): Set<InntektPerÅr> {
         if (inntektId == null) {
             return setOf()
         }
@@ -125,7 +125,7 @@ class InntektGrunnlagRepository(private val connection: DBConnection) {
                 setLong(1, inntektId)
             }
             setRowMapper {
-                no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt.InntektPerÅr(
+                InntektPerÅr(
                     Year.parse(it.getString("ar")),
                     Beløp(it.getBigDecimal("belop"))
                 )

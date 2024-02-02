@@ -1,13 +1,14 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt.Grunnbeløp
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.verdityper.GUnit
 import java.util.*
 
 class GrunnlagetForBeregningen(
-    inntekter: Set<no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt.InntektPerÅr>
+    inntekter: Set<InntektPerÅr>
 ) {
-    private val inntekter: SortedSet<no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt.InntektPerÅr> =
+    private val inntekter: SortedSet<InntektPerÅr> =
         inntekter.toSortedSet().reversed()
 
     init {

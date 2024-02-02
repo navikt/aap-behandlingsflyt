@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import java.time.LocalDate
 import java.time.Year
 
@@ -16,11 +17,11 @@ class Inntektsbehov(private val input: Input) {
         return 3.downTo(1L).map(nedsettelsesår::minusYears).toSortedSet()
     }
 
-    fun utledForOrdinær(inntekter: Set<no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt.InntektPerÅr>): Set<no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt.InntektPerÅr> {
+    fun utledForOrdinær(inntekter: Set<InntektPerÅr>): Set<InntektPerÅr> {
         return filtrerInntekter(input.nedsettelsesDato, inntekter)
     }
 
-    fun utledForYtterligereNedsatt(inntekter: Set<no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt.InntektPerÅr>): Set<no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt.InntektPerÅr>? {
+    fun utledForYtterligereNedsatt(inntekter: Set<InntektPerÅr>): Set<InntektPerÅr>? {
         val ytterligereNedsettelsesDato = input.ytterligereNedsettelsesDato
         if (ytterligereNedsettelsesDato == null) {
             return null
@@ -30,8 +31,8 @@ class Inntektsbehov(private val input: Input) {
 
     private fun filtrerInntekter(
         nedsettelsesdato: LocalDate,
-        inntekter: Set<no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt.InntektPerÅr>
-    ): Set<no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt.InntektPerÅr> {
+        inntekter: Set<InntektPerÅr>
+    ): Set<InntektPerÅr> {
         val relevanteÅr = treÅrForutFor(nedsettelsesdato)
         return inntekter.filter { inntektPerÅr -> inntektPerÅr.år in relevanteÅr }.toSortedSet()
     }

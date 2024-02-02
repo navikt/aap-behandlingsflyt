@@ -1,18 +1,19 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt.adapter
+package no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import java.time.Year
 
 object InntektRegisterMock {
     private val inntekter =
-        HashMap<Ident, List<no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt.InntektPerÅr>>()
+        HashMap<Ident, List<InntektPerÅr>>()
 
     fun innhent(
         identer: List<Ident>,
         år: Set<Year>
-    ): Set<no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt.InntektPerÅr> {
-        val resultat: MutableSet<no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt.InntektPerÅr> =
+    ): Set<InntektPerÅr> {
+        val resultat: MutableSet<InntektPerÅr> =
             mutableSetOf()
         for (year in år) {
             val relevanteIdenter = inntekter.filter { entry -> identer.contains(entry.key) }
@@ -22,7 +23,7 @@ object InntektRegisterMock {
                 .sumOf { it.beløp.verdi() }
 
             resultat.add(
-                no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt.InntektPerÅr(
+                InntektPerÅr(
                     year,
                     Beløp(summerteInntekter)
                 )
@@ -33,7 +34,7 @@ object InntektRegisterMock {
 
     fun konstruer(
         ident: Ident,
-        inntekterPerÅr: List<no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt.InntektPerÅr>
+        inntekterPerÅr: List<InntektPerÅr>
     ) {
         inntekter[ident] = inntekterPerÅr
     }

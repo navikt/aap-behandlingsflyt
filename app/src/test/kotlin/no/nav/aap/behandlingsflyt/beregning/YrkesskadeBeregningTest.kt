@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.beregning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.GUnit
 import no.nav.aap.verdityper.Prosent
@@ -19,7 +20,7 @@ class YrkesskadeBeregningTest {
 
         val yrkesskadeBeregning = YrkesskadeBeregning(
             grunnlag11_19 = grunnlag11_19,
-            antattÅrligInntekt = no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt.InntektPerÅr(
+            antattÅrligInntekt = InntektPerÅr(
                 2022,
                 Beløp(0)
             ),
@@ -37,7 +38,7 @@ class YrkesskadeBeregningTest {
 
         val yrkesskadeBeregning = YrkesskadeBeregning(
             grunnlag11_19 = grunnlag11_19,
-            antattÅrligInntekt = no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt.InntektPerÅr(
+            antattÅrligInntekt = InntektPerÅr(
                 2022,
                 Beløp(2 * GRUNNBELØP_2022)
             ),   // 219 568
@@ -55,7 +56,7 @@ class YrkesskadeBeregningTest {
 
         val yrkesskadeBeregning = YrkesskadeBeregning(
             grunnlag11_19 = grunnlag11_19,
-            antattÅrligInntekt = no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt.InntektPerÅr(
+            antattÅrligInntekt = InntektPerÅr(
                 2022,
                 Beløp(4 * GRUNNBELØP_2022)
             ), // 439 136
@@ -73,7 +74,7 @@ class YrkesskadeBeregningTest {
 
         val yrkesskadeBeregning = YrkesskadeBeregning(
             grunnlag11_19 = grunnlag11_19,
-            antattÅrligInntekt = no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt.InntektPerÅr(
+            antattÅrligInntekt = InntektPerÅr(
                 2022,
                 Beløp(4 * GRUNNBELØP_2022)
             ), // 439 136
@@ -91,7 +92,7 @@ class YrkesskadeBeregningTest {
 
         val yrkesskadeBeregning = YrkesskadeBeregning(
             grunnlag11_19 = grunnlag11_19,
-            antattÅrligInntekt = no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt.InntektPerÅr(
+            antattÅrligInntekt = InntektPerÅr(
                 2022,
                 Beløp(4 * GRUNNBELØP_2022)
             ),   // 439 136

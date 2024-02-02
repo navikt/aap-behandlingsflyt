@@ -1,6 +1,6 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt
+package no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt.Grunnbeløp.Element.Companion.finnGUnit
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp.Element.Companion.finnGUnit
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.Beløp

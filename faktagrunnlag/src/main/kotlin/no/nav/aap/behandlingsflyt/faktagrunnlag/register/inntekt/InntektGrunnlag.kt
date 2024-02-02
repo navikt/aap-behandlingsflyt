@@ -1,8 +1,8 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt
+package no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt
 
 class InntektGrunnlag(
     private val id: Long?,
-    val inntekter: Set<no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt.InntektPerÅr>
+    val inntekter: Set<InntektPerÅr>
 ) {
 
     override fun equals(other: Any?): Boolean {

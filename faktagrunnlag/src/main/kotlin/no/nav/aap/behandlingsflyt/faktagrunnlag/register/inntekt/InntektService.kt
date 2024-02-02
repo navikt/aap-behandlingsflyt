@@ -1,11 +1,11 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt
+package no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlagkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Input
-import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.inntekt.adapter.InntektRegisterMock
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektRegisterMock
 import no.nav.aap.behandlingsflyt.faktagrunnlag.usorterte.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.verdityper.flyt.FlytKontekst
