@@ -1,10 +1,11 @@
 package no.nav.aap.behandlingsflyt.flyt.steg
 
+import kotlinx.coroutines.runBlocking
+import no.nav.aap.behandlingsflyt.avklaringsbehov.FakePdlGateway
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.dbtest.InitTestDatabase
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.flyt.StegStatus
 import no.nav.aap.verdityper.sakogbehandling.Ident
@@ -24,8 +25,8 @@ class StegOrkestratorTest {
         dataSource.transaction { connection ->
             val ident = Ident("123123123126")
             val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-            val person = PersonRepository(connection).finnEllerOpprett(listOf(ident))
-            val sak = SakRepositoryImpl(connection).finnEllerOpprett(person, periode)
+
+            val sak = runBlocking {PersonOgSakService(connection, FakePdlGateway).finnEllerOpprett(ident, periode) }
             val behandling = SakOgBehandlingService(connection).finnEllerOpprettBehandling(sak.saksnummer).behandling
             assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
 

@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.sakogbehandling.sak
+package no.nav.aap.behandlingsflyt.sakogbehandling.sak.db
 
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.dbtest.InitTestDatabase

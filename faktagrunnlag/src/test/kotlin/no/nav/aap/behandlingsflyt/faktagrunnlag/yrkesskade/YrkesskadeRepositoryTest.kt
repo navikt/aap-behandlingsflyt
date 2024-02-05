@@ -1,15 +1,18 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade
 
+import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.dbtest.InitTestDatabase
 import no.nav.aap.behandlingsflyt.dbtestdata.ident
 import no.nav.aap.behandlingsflyt.dbtestdata.juni
 import no.nav.aap.behandlingsflyt.dbtestdata.mai
+import no.nav.aap.behandlingsflyt.faktagrunnlag.arbeidsevne.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakOgBehandlingService
@@ -26,7 +29,8 @@ class YrkesskadeRepositoryTest {
     @Test
     fun `Finner ikke yrkesskadeopplysninger hvis ikke lagret`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val behandling = behandling(connection, sak(connection))
+            val sak = runBlocking { sak(connection) }
+            val behandling = behandling(connection, sak)
 
             val yrkesskadeRepository = YrkesskadeRepository(connection)
             val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandling.id)
@@ -37,7 +41,8 @@ class YrkesskadeRepositoryTest {
     @Test
     fun `Lagrer og henter yrkesskadeopplysninger`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val behandling = behandling(connection, sak(connection))
+            val sak = runBlocking { sak(connection) }
+            val behandling = behandling(connection, sak)
 
             val yrkesskadeRepository = YrkesskadeRepository(connection)
             yrkesskadeRepository.lagre(
@@ -54,7 +59,7 @@ class YrkesskadeRepositoryTest {
     @Test
     fun `Lagrer ikke like opplysninger flere ganger`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val sak = sak(connection)
+            val sak = runBlocking { sak(connection) }
             val behandling = behandling(connection, sak)
 
             val yrkesskadeRepository = YrkesskadeRepository(connection)
@@ -96,7 +101,7 @@ class YrkesskadeRepositoryTest {
     @Test
     fun `Kopierer yrkesskadeopplysninger fra en behandling til en annen`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val sak = sak(connection)
+            val sak = runBlocking { sak(connection) }
             val behandling1 = behandling(connection, sak)
             val yrkesskadeRepository = YrkesskadeRepository(connection)
             yrkesskadeRepository.lagre(
@@ -131,7 +136,7 @@ class YrkesskadeRepositoryTest {
     @Test
     fun `Kopierer yrkesskadeopplysninger fra en behandling til en annen der fraBehandlingen har to versjoner av opplysningene`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val sak = sak(connection)
+            val sak = runBlocking { sak(connection) }
             val behandling1 = behandling(connection, sak)
             val yrkesskadeRepository = YrkesskadeRepository(connection)
             yrkesskadeRepository.lagre(
@@ -160,7 +165,7 @@ class YrkesskadeRepositoryTest {
     @Test
     fun `Lagrer nye opplysninger som ny rad og deaktiverer forrige versjon av opplysningene`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val sak = sak(connection)
+            val sak = runBlocking { sak(connection) }
             val behandling = behandling(connection, sak)
             val yrkesskadeRepository = YrkesskadeRepository(connection)
 
@@ -219,7 +224,7 @@ class YrkesskadeRepositoryTest {
     @Test
     fun `Ved kopiering av fritaksvurderinger fra en avsluttet behandling til en ny skal kun referansen kopieres, ikke hele raden`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val sak = sak(connection)
+            val sak = runBlocking { sak(connection) }
             val behandling1 = behandling(connection, sak)
             val yrkesskadeRepository = YrkesskadeRepository(connection)
             yrkesskadeRepository.lagre(
@@ -298,11 +303,8 @@ class YrkesskadeRepositoryTest {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 
-    private fun sak(connection: DBConnection): Sak {
-        return SakRepositoryImpl(connection).finnEllerOpprett(
-            person = PersonRepository(connection).finnEllerOpprett(listOf(ident())),
-            periode = periode
-        )
+    private suspend fun sak(connection: DBConnection): Sak {
+        return PersonOgSakService(connection, FakePdlGateway).finnEllerOpprett(ident(), periode)
     }
 
     private fun behandling(connection: DBConnection, sak: Sak): Behandling {

@@ -1,19 +1,20 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger
 
+import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.dbtest.InitTestDatabase
 import no.nav.aap.behandlingsflyt.dbtestdata.april
 import no.nav.aap.behandlingsflyt.dbtestdata.ident
 import no.nav.aap.behandlingsflyt.dbtestdata.mars
+import no.nav.aap.behandlingsflyt.faktagrunnlag.arbeidsevne.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import org.assertj.core.api.Assertions.assertThat
@@ -26,7 +27,8 @@ class PersonopplysningRepositoryTest {
     @Test
     fun `Finner ikke personopplysninger hvis ikke lagret`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val behandling = behandling(connection, sak(connection))
+            val sak = runBlocking { sak(connection) }
+            val behandling = behandling(connection, sak)
 
             val personopplysningRepository = PersonopplysningRepository(connection)
             val personopplysningGrunnlag = personopplysningRepository.hentHvisEksisterer(behandling.id)
@@ -37,7 +39,8 @@ class PersonopplysningRepositoryTest {
     @Test
     fun `Lagrer og henter personopplysninger`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val behandling = behandling(connection, sak(connection))
+            val sak = runBlocking { sak(connection) }
+            val behandling = behandling(connection, sak)
 
             val personopplysningRepository = PersonopplysningRepository(connection)
             personopplysningRepository.lagre(behandling.id, Personopplysning(Fødselsdato(17 mars 1992)))
@@ -49,7 +52,7 @@ class PersonopplysningRepositoryTest {
     @Test
     fun `Lagrer ikke like opplysninger flere ganger`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val sak = sak(connection)
+            val sak = runBlocking { sak(connection) }
             val behandling = behandling(connection, sak)
 
             val personopplysningRepository = PersonopplysningRepository(connection)
@@ -81,7 +84,7 @@ class PersonopplysningRepositoryTest {
     @Test
     fun `Kopierer personopplysninger fra en behandling til en annen`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val sak = sak(connection)
+            val sak = runBlocking { sak(connection) }
             val behandling1 = behandling(connection, sak)
             val personopplysningRepository = PersonopplysningRepository(connection)
             personopplysningRepository.lagre(behandling1.id, Personopplysning(Fødselsdato(17 mars 1992)))
@@ -111,7 +114,7 @@ class PersonopplysningRepositoryTest {
     @Test
     fun `Kopierer personopplysninger fra en behandling til en annen der fraBehandlingen har to versjoner av opplysningene`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val sak = sak(connection)
+            val sak = runBlocking { sak(connection) }
             val behandling1 = behandling(connection, sak)
             val personopplysningRepository = PersonopplysningRepository(connection)
             personopplysningRepository.lagre(behandling1.id, Personopplysning(Fødselsdato(16 mars 1992)))
@@ -133,7 +136,7 @@ class PersonopplysningRepositoryTest {
     @Test
     fun `Lagrer nye opplysninger som ny rad og deaktiverer forrige versjon av opplysningene`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val sak = sak(connection)
+            val sak = runBlocking { sak(connection) }
             val behandling = behandling(connection, sak)
             val personopplysningRepository = PersonopplysningRepository(connection)
 
@@ -180,7 +183,7 @@ class PersonopplysningRepositoryTest {
     @Test
     fun `Ved kopiering av opplysninger fra en avsluttet behandling til en ny skal kun referansen kopieres, ikke hele raden`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val sak = sak(connection)
+            val sak = runBlocking { sak(connection) }
             val behandling1 = behandling(connection, sak)
             val personopplysningRepository = PersonopplysningRepository(connection)
             personopplysningRepository.lagre(behandling1.id, Personopplysning(Fødselsdato(17 mars 1992)))
@@ -249,11 +252,8 @@ class PersonopplysningRepositoryTest {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 
-    private fun sak(connection: DBConnection): Sak {
-        return SakRepositoryImpl(connection).finnEllerOpprett(
-            person = PersonRepository(connection).finnEllerOpprett(listOf(ident())),
-            periode = periode
-        )
+    private suspend fun sak(connection: DBConnection): Sak {
+        return PersonOgSakService(connection, FakePdlGateway).finnEllerOpprett(ident(), periode)
     }
 
     private fun behandling(connection: DBConnection, sak: Sak): Behandling {

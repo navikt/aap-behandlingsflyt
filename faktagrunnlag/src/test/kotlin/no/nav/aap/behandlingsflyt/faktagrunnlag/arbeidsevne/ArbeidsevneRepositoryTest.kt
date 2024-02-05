@@ -278,5 +278,4 @@ object FakePdlGateway : PdlGateway {
     override suspend fun hentAlleIdenterForPerson(ident: Ident): List<Ident> {
         return listOf(ident)
     }
-
 }

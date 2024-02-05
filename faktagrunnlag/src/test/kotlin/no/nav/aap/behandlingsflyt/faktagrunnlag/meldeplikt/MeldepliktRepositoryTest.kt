@@ -1,18 +1,19 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.meldeplikt
 
+import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.dbtest.InitTestDatabase
 import no.nav.aap.behandlingsflyt.dbtestdata.august
 import no.nav.aap.behandlingsflyt.dbtestdata.ident
+import no.nav.aap.behandlingsflyt.faktagrunnlag.arbeidsevne.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import org.assertj.core.api.Assertions.assertThat
@@ -25,7 +26,8 @@ class MeldepliktRepositoryTest {
     @Test
     fun `Finner ikke fritaksvurderinger hvis ikke lagret`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val behandling = behandling(connection, sak(connection))
+            val sak = runBlocking { sak(connection) }
+            val behandling = behandling(connection, sak)
 
             val meldepliktRepository = MeldepliktRepository(connection)
             val meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling.id)
@@ -36,7 +38,8 @@ class MeldepliktRepositoryTest {
     @Test
     fun `Lagrer og henter fritaksvurderinger`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val behandling = behandling(connection, sak(connection))
+            val sak = runBlocking { sak(connection) }
+            val behandling = behandling(connection, sak)
 
             val meldepliktRepository = MeldepliktRepository(connection)
             meldepliktRepository.lagre(
@@ -73,7 +76,7 @@ class MeldepliktRepositoryTest {
     @Test
     fun `Lagrer ikke like opplysninger flere ganger`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val sak = sak(connection)
+            val sak = runBlocking { sak(connection) }
             val behandling = behandling(connection, sak)
 
             val meldepliktRepository = MeldepliktRepository(connection)
@@ -115,7 +118,7 @@ class MeldepliktRepositoryTest {
     @Test
     fun `Kopierer fritaksvurderinger fra en behandling til en annen`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val sak = sak(connection)
+            val sak = runBlocking { sak(connection) }
             val behandling1 = behandling(connection, sak)
             val meldepliktRepository = MeldepliktRepository(connection)
             meldepliktRepository.lagre(
@@ -149,7 +152,7 @@ class MeldepliktRepositoryTest {
     @Test
     fun `Kopierer fritaksvurderinger fra en behandling til en annen der fraBehandlingen har to versjoner av opplysningene`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val sak = sak(connection)
+            val sak = runBlocking { sak(connection) }
             val behandling1 = behandling(connection, sak)
             val meldepliktRepository = MeldepliktRepository(connection)
             meldepliktRepository.lagre(
@@ -177,7 +180,7 @@ class MeldepliktRepositoryTest {
     @Test
     fun `Lagrer nye fritaksvurderinger som nye rader og deaktiverer forrige versjon av opplysningene`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val sak = sak(connection)
+            val sak = runBlocking { sak(connection) }
             val behandling = behandling(connection, sak)
             val meldepliktRepository = MeldepliktRepository(connection)
 
@@ -253,7 +256,7 @@ class MeldepliktRepositoryTest {
     @Test
     fun `Ved kopiering av fritaksvurderinger fra en avsluttet behandling til en ny skal kun referansen kopieres, ikke hele raden`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val sak = sak(connection)
+            val sak = runBlocking { sak(connection) }
             val behandling1 = behandling(connection, sak)
             val meldepliktRepository = MeldepliktRepository(connection)
             meldepliktRepository.lagre(
@@ -343,11 +346,8 @@ class MeldepliktRepositoryTest {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 
-    private fun sak(connection: DBConnection): Sak {
-        return SakRepositoryImpl(connection).finnEllerOpprett(
-            person = PersonRepository(connection).finnEllerOpprett(listOf(ident())),
-            periode = periode
-        )
+    private suspend fun sak(connection: DBConnection): Sak {
+        return PersonOgSakService(connection, FakePdlGateway).finnEllerOpprett(ident(), periode)
     }
 
     private fun behandling(connection: DBConnection, sak: Sak): Behandling {
