@@ -7,6 +7,7 @@ import no.nav.aap.tidslinje.Tidslinje
  *
  * - Utland
  * - Institusjon
+ * - Straffegjennomføring
  *
  */
 class EtAnnetStedRegel : UnderveisRegel {
