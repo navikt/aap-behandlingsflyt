@@ -34,8 +34,8 @@ class BeregningService(
         if (inntekterYtterligereNedsatt != null && uføregrad != null) {
             val beregningMedYrkesskadeVedYtterligereNedsatt = beregn(sykdomGrunnlag, inntekterYtterligereNedsatt)
             val uføreberegning = UføreBeregning(
-                beregningMedYrkesskade,
-                beregningMedYrkesskadeVedYtterligereNedsatt,
+                grunnlag = beregningMedYrkesskade,
+                ytterligereNedsattGrunnlag = beregningMedYrkesskadeVedYtterligereNedsatt,
                 //TODO:
                 // Hva hvis bruker har flere uføregrader?
                 // Skal saksbahandler velge den som er knyttet til ytterligere nedsatt-tidspunktet?
