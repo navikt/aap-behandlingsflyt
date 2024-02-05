@@ -4,45 +4,58 @@ import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import no.nav.aap.HttpClientFactory
+import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.ktor.client.AzureAdTokenProvider
 import no.nav.aap.ktor.client.AzureConfig
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.util.*
 
-internal class PdlConfig(
+class PdlConfig(
     scope: String,
-    url: String
-) : GraphQLConfig(scope, url, listOf(
-    "Nav-Consumer-Id" to "sakogbehandling",
-    "TEMA" to "AAP",
-))
+    url: String,
+) : GraphQLConfig(
+    scope = scope,
+    url = url,
+    additionalHeaders = listOf(
+        "Nav-Consumer-Id" to "sakogbehandling",
+        "TEMA" to "AAP",
+    )
+)
 
-private val SECURE_LOGGER: Logger = LoggerFactory.getLogger("secureLog")
+object PersonService {
+    private lateinit var azureConfig: AzureConfig
+    private lateinit var pdlConfig: PdlConfig
+    private lateinit var graphQLClient: PdlClient
 
-internal class PersonService(config: AzureConfig, pdlConfig: PdlConfig) {
-    private val graphQLClient = GraphQLClient(config, pdlConfig)
-
-    suspend fun hentPerson(ident: Ident): Person {
-        val identliste = hentAlleIdenterForPerson(ident)
-        return Person(1L, UUID.randomUUID(), identliste)
+    fun init(
+        azure: AzureConfig,
+        pdl: PdlConfig
+    ) {
+        azureConfig = azure
+        pdlConfig = pdl
+        graphQLClient = PdlClient(azureConfig, pdlConfig)
     }
 
-    private suspend fun hentAlleIdenterForPerson(ident: Ident): List<Ident> { // TODO: returner execption, option, result eller emptylist
-        val response: Result<GraphQLResponse<PdlData>> = graphQLClient.query<GraphQLRequest<IdentVariables>, PdlData>(
-            GraphQLRequest(
-                IDENT_QUERY,
-                IdentVariables(ident.identifikator)
-            )
-        )
+    // todo: caching av identer? slå opp i db før graphql?
+    suspend fun hentPerson(ident: Ident, connection: DBConnection): Person {
+        val identliste = hentAlleIdenterForPerson(ident)
+        val personRepository = PersonRepository(connection)
+        return personRepository.finnEllerOpprett(identliste)
+    }
 
-        fun onSuccess(resp: GraphQLResponse<PdlData>): List<Ident> {
-            return resp.data?.hentIdenter?.identer?.filter {
-                it.gruppe == PdlGruppe.FOLKEREGISTERIDENT
-            }?.map {
-                Ident(identifikator = it.ident)
-            } ?: emptyList()
+    // TODO: returner execption, option, result eller emptylist
+    private suspend fun hentAlleIdenterForPerson(ident: Ident): List<Ident> {
+        val request = PdlRequest(IDENT_QUERY, IdentVariables(ident.identifikator))
+        val response: Result<PdlResponse> = graphQLClient.query(request)
+
+        fun onSuccess(resp: PdlResponse): List<Ident> {
+            return resp.data
+                ?.hentIdenter
+                ?.identer
+                ?.filter { it.gruppe == PdlGruppe.FOLKEREGISTERIDENT }
+                ?.map { Ident(identifikator = it.ident, aktivIdent = it.historisk.not()) }
+                ?: emptyList()
         }
 
         fun onFailure(ex: Throwable): List<Ident> {
@@ -55,35 +68,41 @@ internal class PersonService(config: AzureConfig, pdlConfig: PdlConfig) {
 }
 
 open class GraphQLConfig(
-    internal val scope: String,
-    internal val url: String,
-    internal val additionalHeaders: List<Pair<String, String>> = emptyList()
+    val scope: String,
+    val url: String,
+    val additionalHeaders: List<Pair<String, String>> = emptyList()
 )
 
-internal class GraphQLClient(config: AzureConfig, val graphQLConfig: GraphQLConfig) {
-    val httpClient = HttpClientFactory.createClient()
-    val tokenProvider = AzureAdTokenProvider(config, graphQLConfig.scope)
-
-    suspend inline fun <reified Q : Any, R> query(query: Q): Result<GraphQLResponse<R>> {
-        return runCatching {
-            httpClient.post(graphQLConfig.url) {
-                accept(ContentType.Application.Json)
-                contentType(ContentType.Application.Json)
-                bearerAuth(tokenProvider.getClientCredentialToken())
-                additionalHeaders(graphQLConfig.additionalHeaders)
-                setBody(query)
-            }
-        }.map {
-            it.body<GraphQLResponse<R>>()
-        }
-    }
+interface GraphQLClient<T : Any, R : Any> {
+    suspend fun query(req: T): Result<R>
 
     fun HttpMessageBuilder.additionalHeaders(additionalHeaders: List<Pair<String, String>>) {
         additionalHeaders.map { (key, value) ->
             header(key, value)
         }
     }
+}
 
+class PdlClient(
+    config: AzureConfig,
+    private val graphQLConfig: GraphQLConfig
+) : GraphQLClient<PdlRequest, PdlResponse> {
+    private val httpClient = HttpClientFactory.createClient()
+    private val tokenProvider = AzureAdTokenProvider(config, graphQLConfig.scope)
+
+    override suspend fun query(req: PdlRequest): Result<PdlResponse> {
+        return runCatching {
+            httpClient.post(graphQLConfig.url) {
+                accept(ContentType.Application.Json)
+                contentType(ContentType.Application.Json)
+                bearerAuth(tokenProvider.getClientCredentialToken())
+                additionalHeaders(graphQLConfig.additionalHeaders)
+                setBody(req)
+            }
+        }.map {
+            it.body()
+        }
+    }
 }
 
 private const val ident = "\$ident"
@@ -101,17 +120,17 @@ private val IDENT_QUERY = """
     }
 """.trimIndent()
 
-data class GraphQLRequest<T : Any>(
+data class PdlRequest(
     val query: String,
-    val variables: T
+    val variables: IdentVariables
 )
 
 data class IdentVariables(
     val ident: String
 )
 
-data class GraphQLResponse<T>(
-    val data: T?,
+data class PdlResponse(
+    val data: PdlData?,
     val errors: List<GraphQLError>?,
     val extensions: GraphQLExtensions?
 )
@@ -165,3 +184,4 @@ class GraphQLWarning(
     val details: String?,
 )
 
+private val SECURE_LOGGER: Logger = LoggerFactory.getLogger("secureLog")

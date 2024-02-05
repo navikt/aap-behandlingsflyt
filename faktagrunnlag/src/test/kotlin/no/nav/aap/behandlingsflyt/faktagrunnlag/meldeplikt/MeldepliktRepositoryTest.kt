@@ -345,7 +345,7 @@ class MeldepliktRepositoryTest {
 
     private fun sak(connection: DBConnection): Sak {
         return sakRepository(connection).finnEllerOpprett(
-            person = PersonRepository(connection).finnEllerOpprett(ident()),
+            person = PersonRepository(connection).finnEllerOpprett(listOf(ident())),
             periode = periode
         )
     }

@@ -27,7 +27,7 @@ class FaktagrunnlagTest {
 
     private fun klargjør(connection: DBConnection): Pair<Ident, FlytKontekst> {
         val ident = ident()
-        val person = PersonRepository(connection).finnEllerOpprett(ident)
+        val person = PersonRepository(connection).finnEllerOpprett(listOf(ident))
         val sak = sakRepository(connection).finnEllerOpprett(person, periode)
         val behandling = SakOgBehandlingService(connection).finnEllerOpprettBehandling(sak.saksnummer).behandling
 

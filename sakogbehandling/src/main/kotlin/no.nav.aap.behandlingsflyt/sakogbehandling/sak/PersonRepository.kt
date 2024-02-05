@@ -7,15 +7,15 @@ import java.util.*
 
 class PersonRepository(private val connection: DBConnection) {
 
-    fun finnEllerOpprett(ident: Ident): Person {
+    fun finnEllerOpprett(identer: List<Ident>): Person {
         val relevantePersoner = connection.queryList(
             """SELECT person.id, person.referanse 
                     FROM person 
                     INNER JOIN person_ident ON person_ident.person_id = person.id 
-                    WHERE person_ident.ident = ?"""
+                    WHERE person_ident.ident IN (?)"""
         ) {
             setParams {
-                setString(1, ident.identifikator)
+                setString(1, identer.joinToString(",") { it.identifikator })
             }
             setRowMapper(::mapPerson)
         }
@@ -25,7 +25,7 @@ class PersonRepository(private val connection: DBConnection) {
             }
             relevantePersoner.first()
         } else {
-            opprettPerson(ident)
+            opprettPerson(identer.single { it.aktivIdent })
         }
     }
 

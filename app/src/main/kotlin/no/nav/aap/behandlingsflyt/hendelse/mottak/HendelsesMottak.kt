@@ -1,16 +1,20 @@
 package no.nav.aap.behandlingsflyt.hendelse.mottak
 
-import no.nav.aap.verdityper.sakogbehandling.BehandlingId
+import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Saksnummer
+import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import javax.sql.DataSource
 
 class HendelsesMottak(private val dataSource: DataSource) {
 
     fun håndtere(key: Ident, hendelse: PersonHendelse) {
         val saksnummer: Saksnummer? = dataSource.transaction { connection ->
-            PersonHendelsesHåndterer(connection).håndtere(key, hendelse)
+            // todo: lage en asyncTransaction?
+            runBlocking {
+                PersonHendelsesHåndterer(connection).håndtere(key, hendelse)
+            }
         }
         // Legg til kø for sak, men mocker ved å kalle videre bare
         if (saksnummer != null) {

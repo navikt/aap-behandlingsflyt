@@ -3,7 +3,7 @@ val aapLibVersion = "3.7.140"
 dependencies {
     implementation("dev.forst:ktor-openapi-generator:0.6.1")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.16.1")
-    implementation("com.github.navikt.aap-libs:ktor-auth-azuread:$aapLibVersion")
+    api("com.github.navikt.aap-libs:ktor-auth-azuread:$aapLibVersion")
 
     implementation(project(":verdityper"))
     implementation(project(":dbconnect"))

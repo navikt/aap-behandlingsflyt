@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt
 
+import no.nav.aap.behandlingsflyt.Fakes
 import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovHendelseHåndterer
 import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.avklaringsbehov.Avklaringsbehovene
@@ -44,6 +45,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.behandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.sakRepository
 import no.nav.aap.motor.Motor
@@ -75,17 +77,20 @@ class FlytOrkestratorTest {
         val dataSource = InitTestDatabase.dataSource
         val motor = Motor(dataSource, 1, ProsesseringsOppgaver.alle())
         val hendelsesMottak = HendelsesMottak(dataSource)
+        val fakes = Fakes()
 
         @BeforeAll
         @JvmStatic
         internal fun beforeAll() {
             motor.start()
+            PersonService.init(fakes.azureConf, fakes.pdlConf)
         }
 
         @AfterAll
         @JvmStatic
         internal fun afterAll() {
             motor.stop()
+            fakes.close()
         }
     }
 
@@ -688,7 +693,10 @@ class FlytOrkestratorTest {
 
     private fun hentSak(ident: Ident, periode: Periode): Sak {
         return dataSource.transaction { connection ->
-            sakRepository(connection).finnEllerOpprett(PersonRepository(connection).finnEllerOpprett(ident), periode)
+            sakRepository(connection).finnEllerOpprett(
+                PersonRepository(connection).finnEllerOpprett(listOf(ident)),
+                periode
+            )
         }
     }
 
@@ -757,7 +765,7 @@ class FlytOrkestratorTest {
     private fun hentPerson(ident: Ident): Person {
         var person: Person? = null
         dataSource.transaction {
-            person = PersonRepository(it).finnEllerOpprett(ident)
+            person = PersonRepository(it).finnEllerOpprett(listOf(ident))
         }
         return person!!
     }

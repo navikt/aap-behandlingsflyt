@@ -16,7 +16,7 @@ internal class SakRepositoryTest {
             val personRepository = PersonRepository(connection)
             val sakRepository = sakRepository(connection)
 
-            val person = personRepository.finnEllerOpprett(Ident("23067823253"))
+            val person = personRepository.finnEllerOpprett(listOf(Ident("23067823253")))
 
             val sak = sakRepository.finnEllerOpprett(
                 person,

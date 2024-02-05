@@ -24,7 +24,7 @@ class StegOrkestratorTest {
         dataSource.transaction { connection ->
             val ident = Ident("123123123126")
             val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-            val person = PersonRepository(connection).finnEllerOpprett(ident)
+            val person = PersonRepository(connection).finnEllerOpprett(listOf(ident))
             val sak = sakRepository(connection).finnEllerOpprett(person, periode)
             val behandling = SakOgBehandlingService(connection).finnEllerOpprettBehandling(sak.saksnummer).behandling
             assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)

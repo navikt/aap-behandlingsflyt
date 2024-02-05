@@ -1,18 +1,17 @@
 package no.nav.aap.behandlingsflyt.hendelse.mottak
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
-import no.nav.aap.verdityper.sakogbehandling.Ident
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.sakRepository
+import no.nav.aap.verdityper.sakogbehandling.Ident
 
-class PersonHendelsesHåndterer(connection: DBConnection) {
-
-    private val personRepository = PersonRepository(connection)
-    private val sakRepository = sakRepository(connection)
-
-    fun håndtere(key: Ident, hendelse: PersonHendelse): Saksnummer {
-        val person = personRepository.finnEllerOpprett(key)
+class PersonHendelsesHåndterer(
+    private val connection: DBConnection
+) {
+    suspend fun håndtere(key: Ident, hendelse: PersonHendelse): Saksnummer {
+        val person = PersonService.hentPerson(key, connection)
+        val sakRepository = sakRepository(connection)
 
         return sakRepository.finnEllerOpprett(person, hendelse.periode()).saksnummer
     }

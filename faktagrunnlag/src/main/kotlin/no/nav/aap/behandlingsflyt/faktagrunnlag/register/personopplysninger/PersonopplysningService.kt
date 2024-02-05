@@ -22,7 +22,7 @@ class PersonopplysningService private constructor(private val connection: DBConn
 
         val personopplysninger = PersonRegisterMock.innhent(sak.person.identer())
         if (personopplysninger.size != 1) {
-            throw IllegalStateException("fant flere personer enn forventet")
+            error("fant ingen eller fler personer enn forventet")
         }
 
         val behandlingId = kontekst.behandlingId

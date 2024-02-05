@@ -2,8 +2,8 @@ package no.nav.aap.verdityper.sakogbehandling
 
 import kotlin.math.min
 
-// TODO: Skal vi sette aktiv / historisk på ident?
-class Ident(val identifikator: String) {
+// TODO: vi antar at inlogget identifikator er aktiv, etter oppslag i PDL får vi den faktiske fasiten
+class Ident(val identifikator: String, val aktivIdent: Boolean = true) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

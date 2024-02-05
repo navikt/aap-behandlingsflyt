@@ -55,7 +55,10 @@ import no.nav.aap.behandlingsflyt.hendelse.mottak.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.hendelse.mottak.dokument.søknad.Søknad
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsOppgaver
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PdlConfig
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
+import no.nav.aap.ktor.client.AzureConfig
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.retry.RetryService
 import no.nav.aap.verdityper.Periode
@@ -64,6 +67,7 @@ import no.nav.aap.verdityper.feilhåndtering.ElementNotFoundException
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.net.URI
 import java.time.LocalDate
 import java.time.LocalDateTime
 import javax.sql.DataSource
@@ -126,6 +130,19 @@ internal fun Application.server(dbConfig: DbConfig) {
 
     val dataSource = initDatasource(dbConfig)
     Migrering.migrate(dataSource)
+
+    PersonService.init(
+        AzureConfig(
+            tokenEndpoint = URI(System.getenv("AZURE_OPENID_CONFIG_TOKEN_ENDPOINT")).toURL(),
+            clientId = System.getenv("AZURE_APP_CLIENT_ID"),
+            clientSecret = System.getenv("AZURE_APP_CLIENT_SECRET"),
+        ),
+        PdlConfig(
+            scope = System.getenv("PDL_SCOPE"),
+            url = System.getenv("PDL_BASE_URL"),
+        ),
+    )
+
     apiRouting {
         configApi()
         saksApi(dataSource)
