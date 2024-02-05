@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlGateway
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PdlGateway
 import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.Prosent
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId

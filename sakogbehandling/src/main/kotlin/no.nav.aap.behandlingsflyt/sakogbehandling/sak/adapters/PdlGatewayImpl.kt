@@ -4,6 +4,7 @@ import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import no.nav.aap.HttpClientFactory
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PdlGateway
 import no.nav.aap.ktor.client.AzureAdTokenProvider
 import no.nav.aap.ktor.client.AzureConfig
 import no.nav.aap.verdityper.sakogbehandling.Ident

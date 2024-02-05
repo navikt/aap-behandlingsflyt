@@ -1,16 +1,18 @@
 package no.nav.aap.behandlingsflyt.avklaringsbehov
 
+import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.dbtest.InitTestDatabase
 import no.nav.aap.behandlingsflyt.dbtestdata.ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PdlGateway
 import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.flyt.StegType
+import no.nav.aap.verdityper.sakogbehandling.Ident
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -20,7 +22,7 @@ class AvklaringsbehovRepositoryTest {
     @Test
     fun `løs avklaringsbehov skal avslutte avklaringsbehovet`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val sak = sak(connection)
+            val sak = runBlocking { sak(connection) }
             val behandling = behandling(connection, sak)
             val repository = AvklaringsbehovRepositoryImpl(connection)
             val avklaringsbehovene = Avklaringsbehovene(repository, behandling.id)
@@ -48,14 +50,18 @@ class AvklaringsbehovRepositoryTest {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 
-    private fun sak(connection: DBConnection): Sak {
-        return SakRepositoryImpl(connection).finnEllerOpprett(
-            person = PersonRepository(connection).finnEllerOpprett(listOf(ident())),
-            periode = periode
-        )
+    private suspend fun sak(connection: DBConnection): Sak {
+        return PersonOgSakService(connection, fakePdlGateway).finnEllerOpprett(ident(), periode)
     }
 
     private fun behandling(connection: DBConnection, sak: Sak): Behandling {
         return SakOgBehandlingService(connection).finnEllerOpprettBehandling(sak.saksnummer).behandling
     }
+}
+
+object fakePdlGateway : PdlGateway {
+    override suspend fun hentAlleIdenterForPerson(ident: Ident): List<Ident> {
+        return listOf(ident())
+    }
+
 }

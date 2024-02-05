@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters
+package no.nav.aap.behandlingsflyt.sakogbehandling.sak
 
 import no.nav.aap.verdityper.sakogbehandling.Ident
 
