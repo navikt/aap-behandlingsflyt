@@ -55,8 +55,8 @@ import no.nav.aap.behandlingsflyt.hendelse.mottak.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.hendelse.mottak.dokument.søknad.Søknad
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsOppgaver
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PdlConfig
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlConfig
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.ktor.client.AzureConfig
 import no.nav.aap.motor.Motor

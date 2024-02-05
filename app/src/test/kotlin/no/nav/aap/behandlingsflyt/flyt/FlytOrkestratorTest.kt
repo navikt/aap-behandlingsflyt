@@ -45,7 +45,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.behandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.sakRepository
 import no.nav.aap.motor.Motor

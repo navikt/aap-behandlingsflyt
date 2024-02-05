@@ -1,10 +1,11 @@
-package no.nav.aap.behandlingsflyt.sakogbehandling.sak
+package no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters
 
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import no.nav.aap.HttpClientFactory
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.ktor.client.AzureAdTokenProvider
 import no.nav.aap.ktor.client.AzureConfig
