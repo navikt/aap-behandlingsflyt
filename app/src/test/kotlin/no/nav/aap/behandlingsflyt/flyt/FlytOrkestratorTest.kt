@@ -144,7 +144,8 @@ class FlytOrkestratorTest {
                             oppfyller11_14 = false,
                             avbruttStudieDato = null
                         )
-                    )
+                    ),
+                    behandlingVersjon = behandling.versjon
                 )
             )
         }
@@ -163,7 +164,8 @@ class FlytOrkestratorTest {
                             andelAvNedsettelse = null,
                             antattÅrligInntekt = null
                         )
-                    )
+                    ),
+                    behandlingVersjon = behandling.versjon
                 )
             )
         }
@@ -183,7 +185,8 @@ class FlytOrkestratorTest {
                             nedsattArbeidsevneDato = LocalDate.now(),
                             ytterligereNedsattArbeidsevneDato = null
                         )
-                    )
+                    ),
+                    behandlingVersjon = behandling.versjon
                 )
             )
         }
@@ -198,7 +201,8 @@ class FlytOrkestratorTest {
                             begrunnelse = "Trenger hjelp fra nav",
                             erBehovForBistand = true
                         ),
-                    )
+                    ),
+                    behandlingVersjon = behandling.versjon
                 )
             )
         }
@@ -245,7 +249,8 @@ class FlytOrkestratorTest {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
                 LøsAvklaringsbehovBehandlingHendelse(
-                    løsning = ForeslåVedtakLøsning("Begrunnelse")
+                    løsning = ForeslåVedtakLøsning("Begrunnelse"),
+                    behandlingVersjon = behandling.versjon
                 )
             )
         }
@@ -266,7 +271,8 @@ class FlytOrkestratorTest {
                 LøsAvklaringsbehovBehandlingHendelse(
                     løsning = FatteVedtakLøsning(avklaringsbehov.alle()
                         .filter { behov -> behov.erTotrinn() }
-                        .map { behov -> TotrinnsVurdering(behov.definisjon.kode, true, "begrunnelse") })
+                        .map { behov -> TotrinnsVurdering(behov.definisjon.kode, true, "begrunnelse") }),
+                    behandlingVersjon = behandling.versjon
                 )
             )
         }
@@ -338,7 +344,8 @@ class FlytOrkestratorTest {
                             oppfyller11_14 = false,
                             avbruttStudieDato = null
                         )
-                    )
+                    ),
+                    behandlingVersjon = behandling.versjon
                 )
             )
         }
@@ -357,7 +364,8 @@ class FlytOrkestratorTest {
                             andelAvNedsettelse = Prosent.`30_PROSENT`.prosentverdi(),
                             antattÅrligInntekt = Beløp(1_000_000)
                         )
-                    )
+                    ),
+                    behandlingVersjon = behandling.versjon
                 )
             )
         }
@@ -377,7 +385,8 @@ class FlytOrkestratorTest {
                             nedsattArbeidsevneDato = LocalDate.now(),
                             ytterligereNedsattArbeidsevneDato = null
                         )
-                    )
+                    ),
+                    behandlingVersjon = behandling.versjon
                 )
             )
         }
@@ -392,7 +401,8 @@ class FlytOrkestratorTest {
                             begrunnelse = "Trenger hjelp fra nav",
                             erBehovForBistand = true
                         ),
-                    )
+                    ),
+                    behandlingVersjon = behandling.versjon
                 )
             )
         }
@@ -409,7 +419,8 @@ class FlytOrkestratorTest {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
                 LøsAvklaringsbehovBehandlingHendelse(
-                    løsning = ForeslåVedtakLøsning("Begrunnelse")
+                    løsning = ForeslåVedtakLøsning("Begrunnelse"),
+                    behandlingVersjon = behandling.versjon
                 )
             )
         }
@@ -430,7 +441,8 @@ class FlytOrkestratorTest {
                 LøsAvklaringsbehovBehandlingHendelse(
                     løsning = FatteVedtakLøsning(avklaringsbehov.alle()
                         .filter { behov -> behov.erTotrinn() }
-                        .map { behov -> TotrinnsVurdering(behov.definisjon.kode, true, "begrunnelse") })
+                        .map { behov -> TotrinnsVurdering(behov.definisjon.kode, true, "begrunnelse") }),
+                    behandlingVersjon = behandling.versjon
                 )
             )
         }
@@ -505,7 +517,8 @@ class FlytOrkestratorTest {
                             oppfyller11_14 = false,
                             avbruttStudieDato = null
                         )
-                    )
+                    ),
+                    behandlingVersjon = behandling.versjon
                 )
             )
         }
@@ -524,7 +537,8 @@ class FlytOrkestratorTest {
                             andelAvNedsettelse = null,
                             antattÅrligInntekt = null
                         )
-                    )
+                    ),
+                    behandlingVersjon = behandling.versjon
                 )
             )
         }
@@ -544,7 +558,8 @@ class FlytOrkestratorTest {
                             nedsattArbeidsevneDato = LocalDate.now(),
                             ytterligereNedsattArbeidsevneDato = null
                         )
-                    )
+                    ),
+                    behandlingVersjon = behandling.versjon
                 )
             )
         }
@@ -559,7 +574,8 @@ class FlytOrkestratorTest {
                             begrunnelse = "Trenger hjelp fra nav",
                             erBehovForBistand = true
                         ),
-                    )
+                    ),
+                    behandlingVersjon = behandling.versjon
                 )
             )
         }
@@ -576,7 +592,8 @@ class FlytOrkestratorTest {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
                 LøsAvklaringsbehovBehandlingHendelse(
-                    løsning = ForeslåVedtakLøsning("Begrunnelse")
+                    løsning = ForeslåVedtakLøsning("Begrunnelse"),
+                    behandlingVersjon = behandling.versjon
                 )
             )
         }
@@ -603,7 +620,8 @@ class FlytOrkestratorTest {
                                 behov.definisjon != Definisjon.AVKLAR_SYKDOM,
                                 "begrunnelse"
                             )
-                        })
+                        }),
+                    behandlingVersjon = behandling.versjon
                 )
             )
         }
@@ -631,7 +649,8 @@ class FlytOrkestratorTest {
                             ytterligereNedsattArbeidsevneDato = null
                         )
                     ),
-                    ingenEndringIGruppe = true
+                    ingenEndringIGruppe = true,
+                    behandlingVersjon = behandling.versjon
                 )
             )
         }
@@ -648,7 +667,8 @@ class FlytOrkestratorTest {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
                 LøsAvklaringsbehovBehandlingHendelse(
-                    løsning = ForeslåVedtakLøsning("Begrunnelse")
+                    løsning = ForeslåVedtakLøsning("Begrunnelse"),
+                    behandlingVersjon = behandling.versjon
                 )
             )
         }
@@ -669,7 +689,8 @@ class FlytOrkestratorTest {
                 LøsAvklaringsbehovBehandlingHendelse(
                     løsning = FatteVedtakLøsning(avklaringsbehov.alle()
                         .filter { behov -> behov.erTotrinn() }
-                        .map { behov -> TotrinnsVurdering(behov.definisjon.kode, true, "begrunnelse") })
+                        .map { behov -> TotrinnsVurdering(behov.definisjon.kode, true, "begrunnelse") }),
+                    behandlingVersjon = behandling.versjon
                 )
             )
         }
