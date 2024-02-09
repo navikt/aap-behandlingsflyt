@@ -56,7 +56,7 @@ import no.nav.aap.behandlingsflyt.hendelse.mottak.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.hendelse.mottak.dokument.søknad.Søknad
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsOppgaver
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlGatewayImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.ktor.client.auth.azure.AzureConfig
 import no.nav.aap.motor.Motor
@@ -68,7 +68,6 @@ import no.nav.aap.verdityper.feilhåndtering.ElementNotFoundException
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.net.URI
 import java.time.LocalDate
 import java.time.LocalDateTime
 import javax.sql.DataSource
@@ -132,7 +131,7 @@ internal fun Application.server(dbConfig: DbConfig) {
     val dataSource = initDatasource(dbConfig)
     Migrering.migrate(dataSource)
 
-    PdlGatewayImpl.init(
+    PdlIdentGateway.init(
         AzureConfig(),
         PdlConfig(
             scope = System.getenv("PDL_SCOPE"),
@@ -215,7 +214,7 @@ fun Route.testIntegrasjoner() {
             val ident = call.request.header("personident")
                 ?: return@get call.respond(HttpStatusCode.BadRequest, "Mangler header personident")
 
-            val identer = PdlGatewayImpl.hentAlleIdenterForPerson(Ident(ident))
+            val identer = PdlIdentGateway.hentAlleIdenterForPerson(Ident(ident))
             call.respond(identer)
         }
     }

@@ -45,7 +45,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlGatewayImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.motor.Motor
@@ -83,7 +83,7 @@ class FlytOrkestratorTest {
         @JvmStatic
         internal fun beforeAll() {
             motor.start()
-            PdlGatewayImpl.init(fakes.azureConf, fakes.pdlConf)
+            PdlIdentGateway.init(fakes.azureConf, fakes.pdlConf)
         }
 
         @AfterAll

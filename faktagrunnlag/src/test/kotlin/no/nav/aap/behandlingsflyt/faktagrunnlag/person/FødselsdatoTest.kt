@@ -36,4 +36,10 @@ class FødselsdatoTest {
 
         assertThat(fødselsdato.alderPåDato(gittDato)).isEqualTo(-1)
     }
+
+    @Test
+    fun `fødselsdato parses fra formatet YYYY-mm-dd`() {
+        val fødselsdato = Fødselsdato.parse("2020-02-25")
+        assertThat(fødselsdato.toLocalDate()).isEqualTo(LocalDate.of(2020, 2, 25))
+    }
 }

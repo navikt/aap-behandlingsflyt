@@ -10,12 +10,12 @@ object FakePersonopplysningGateway : PersonopplysningGateway {
 
     private val LOCK = Object()
 
-    override fun innhent(identer: List<Ident>): Set<Personopplysning> {
+    override suspend fun innhent(identer: List<Ident>): Personopplysning? {
         synchronized(LOCK) {
             return personer
                 .filterKeys { ident -> ident in identer }
                 .map { it.value }
-                .toSet()
+                .first()
         }
     }
 

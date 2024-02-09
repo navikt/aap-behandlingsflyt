@@ -11,7 +11,7 @@ import no.nav.aap.verdityper.sakogbehandling.Ident
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-object PdlGatewayImpl : IdentGateway {
+object PdlIdentGateway : IdentGateway {
     private lateinit var azureConfig: AzureConfig
     private lateinit var pdlConfig: PdlConfig
     private lateinit var graphQL: PdlClient

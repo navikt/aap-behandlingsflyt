@@ -33,4 +33,10 @@ class Fødselsdato(private val dato: LocalDate) {
     override fun hashCode(): Int {
         return dato.hashCode()
     }
+
+    companion object {
+        fun parse(fødselsdato: CharSequence): Fødselsdato {
+            return Fødselsdato(LocalDate.parse(fødselsdato))
+        }
+    }
 }
