@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.MinsteÅrligYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.Tilkjent
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.TilkjentGUnit
 import no.nav.aap.tidslinje.JoinStyle
@@ -16,6 +17,7 @@ import no.nav.aap.verdityper.Prosent
 
 
 class BeregnTilkjentYtelseService(
+    private val fødselsdato: Fødselsdato,
     private val beregningsgrunnlag: Beregningsgrunnlag,
     private val underveisgrunnlag: UnderveisGrunnlag
 ){
@@ -24,13 +26,23 @@ class BeregnTilkjentYtelseService(
     }
 
     fun beregnTilkjentYtelse(): Tidslinje<Tilkjent>{
+        val minsteÅrligYtelseAlderStrategiTidslinje = MinsteÅrligYtelseAlderTidslinje(fødselsdato).tilTidslinje()
         val underveisTidslinje = Tidslinje(underveisgrunnlag.perioder.map { Segment(it.periode, it) })
-
         val grunnlagsfaktor = beregningsgrunnlag.grunnlaget()
 
         val utgangspunktForÅrligYtelse = grunnlagsfaktor.multiplisert(Prosent.`66_PROSENT`)
         val minsteÅrligYtelseTidslinje = MinsteÅrligYtelse.tilTidslinje()
-        val årligYtelseTidslinje = minsteÅrligYtelseTidslinje.mapValue { minsteÅrligYtelse ->
+
+        val minsteÅrligYtelseMedAlderTidslinje = minsteÅrligYtelseAlderStrategiTidslinje.kombiner(
+            minsteÅrligYtelseTidslinje,
+            JoinStyle.INNER_JOIN
+        ) { periode, venstre:Segment<MinsteÅrligYtelseStrategi>?, høyre: Segment<GUnit>? ->
+            val minsteÅrligYtelse = requireNotNull(høyre?.verdi)
+            val aldersfunksjon = requireNotNull(venstre?.verdi)
+            Segment(periode, aldersfunksjon.aldersjustertMinsteÅrligYtelse(minsteÅrligYtelse))
+        }
+
+        val årligYtelseTidslinje = minsteÅrligYtelseMedAlderTidslinje.mapValue { minsteÅrligYtelse ->
             maxOf(requireNotNull(minsteÅrligYtelse), utgangspunktForÅrligYtelse)
         }
 
