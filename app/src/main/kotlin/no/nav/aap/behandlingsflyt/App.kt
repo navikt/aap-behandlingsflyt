@@ -20,6 +20,7 @@ import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.micrometer.prometheus.PrometheusConfig
@@ -157,8 +158,10 @@ internal fun Application.server(dbConfig: DbConfig) {
         avklaringsbehovApi(dataSource)
 
         hendelsesApi(dataSource)
+
         routing {
             actuator(prometheus)
+            testIntegrasjoner()
         }
     }
     module(dataSource)
@@ -205,6 +208,19 @@ private fun Routing.actuator(prometheus: PrometheusMeterRegistry) {
         get("/ready") {
             val status = HttpStatusCode.OK
             call.respond(status, "Oppe!")
+        }
+    }
+}
+
+@Deprecated("Test av integrasjoner")
+fun Route.testIntegrasjoner() {
+    route("/test/pdl") {
+        get {
+            val ident = call.request.header("personident")
+                ?: return@get call.respond(HttpStatusCode.BadRequest, "Mangler header personident")
+
+            val identer = PdlGatewayImpl.hentAlleIdenterForPerson(Ident(ident))
+            call.respond(identer)
         }
     }
 }

@@ -8,6 +8,8 @@ metadata:
     sub: behandlingsflyt
 spec:
   image: {{image}}
+  ingresses:
+      - "https://aap-behandlingsflyt.intern.dev.nav.no"
   replicas:
     cpuThresholdPercentage: 90
     disableAutoScaling: true
