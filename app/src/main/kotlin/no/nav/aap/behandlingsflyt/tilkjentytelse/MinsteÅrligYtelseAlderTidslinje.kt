@@ -12,7 +12,7 @@ internal interface AlderStrategi {
 
     object Under25 : AlderStrategi {
         override fun aldersjustering(misteÅrligYtelseVerdi: GUnit): GUnit {
-            return misteÅrligYtelseVerdi.totredjedeler()
+            return misteÅrligYtelseVerdi.toTredjedeler()
         }
     }
 
