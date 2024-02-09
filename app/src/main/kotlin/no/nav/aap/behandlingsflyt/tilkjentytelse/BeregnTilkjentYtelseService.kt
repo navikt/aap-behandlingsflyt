@@ -36,10 +36,10 @@ class BeregnTilkjentYtelseService(
         val minsteÅrligYtelseMedAlderTidslinje = minsteÅrligYtelseAlderStrategiTidslinje.kombiner(
             minsteÅrligYtelseTidslinje,
             JoinStyle.INNER_JOIN
-        ) { periode, venstre:Segment<MinsteÅrligYtelseStrategi>?, høyre: Segment<GUnit>? ->
+        ) { periode, venstre:Segment<AlderStrategi>?, høyre: Segment<GUnit>? ->
             val minsteÅrligYtelse = requireNotNull(høyre?.verdi)
-            val aldersfunksjon = requireNotNull(venstre?.verdi)
-            Segment(periode, aldersfunksjon.aldersjustertMinsteÅrligYtelse(minsteÅrligYtelse))
+            val alderStrategi = requireNotNull(venstre?.verdi)
+            Segment(periode, alderStrategi.aldersjustering(minsteÅrligYtelse))
         }
 
         val årligYtelseTidslinje = minsteÅrligYtelseMedAlderTidslinje.mapValue { minsteÅrligYtelse ->

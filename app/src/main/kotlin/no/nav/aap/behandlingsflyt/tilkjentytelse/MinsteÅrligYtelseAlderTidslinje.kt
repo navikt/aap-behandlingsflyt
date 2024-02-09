@@ -7,33 +7,33 @@ import no.nav.aap.verdityper.GUnit
 import no.nav.aap.verdityper.Periode
 import java.time.LocalDate
 
-interface MinsteÅrligYtelseStrategi {
-    fun aldersjustertMinsteÅrligYtelse(minsteÅrligYtelseVerdi: GUnit): GUnit
-}
+internal interface AlderStrategi {
+    fun aldersjustering(minsteÅrligYtelseVerdi: GUnit): GUnit
 
-object under25 : MinsteÅrligYtelseStrategi {
-    override fun aldersjustertMinsteÅrligYtelse(misteÅrligYtelseVerdi: GUnit): GUnit {
-        return misteÅrligYtelseVerdi.multiplisert(2).dividert(3)
+    object Under25 : AlderStrategi {
+        override fun aldersjustering(misteÅrligYtelseVerdi: GUnit): GUnit {
+            return misteÅrligYtelseVerdi.totredjedeler()
+        }
+    }
+
+    object Over25 : AlderStrategi {
+        override fun aldersjustering(misteÅrligYtelseVerdi: GUnit): GUnit {
+            return misteÅrligYtelseVerdi
+        }
     }
 }
 
-object over25 : MinsteÅrligYtelseStrategi {
-    override fun aldersjustertMinsteÅrligYtelse(misteÅrligYtelseVerdi: GUnit): GUnit {
-        return misteÅrligYtelseVerdi
-    }
-}
-
-class MinsteÅrligYtelseAlderTidslinje(val fødselsdato: Fødselsdato) {
-    fun tilTidslinje(): Tidslinje<MinsteÅrligYtelseStrategi> {
+internal class MinsteÅrligYtelseAlderTidslinje(val fødselsdato: Fødselsdato) {
+    fun tilTidslinje(): Tidslinje<AlderStrategi> {
         return Tidslinje(
             listOf(
                 Segment(
                     periode = Periode(LocalDate.MIN, fødselsdato.`25årsDagen`().minusDays(1)),
-                    verdi = under25
+                    verdi = AlderStrategi.Under25
                 ),
                 Segment(
                     periode = Periode(fødselsdato.`25årsDagen`(), LocalDate.MAX),
-                    verdi = over25
+                    verdi = AlderStrategi.Over25
                 )
             )
         )
