@@ -56,12 +56,12 @@ import no.nav.aap.behandlingsflyt.hendelse.mottak.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.hendelse.mottak.dokument.søknad.Søknad
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsOppgaver
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlConfig
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlGatewayImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.ktor.client.AzureConfig
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.retry.RetryService
+import no.nav.aap.pdlclient.PdlConfig
 import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.feilhåndtering.ElementNotFoundException

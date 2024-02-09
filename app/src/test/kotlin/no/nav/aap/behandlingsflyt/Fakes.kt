@@ -9,14 +9,14 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.coroutines.runBlocking
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlConfig
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlData
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlGruppe
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdent
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdenter
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlRequest
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlResponse
 import no.nav.aap.ktor.client.AzureConfig
+import no.nav.aap.pdlclient.PdlConfig
+import no.nav.aap.pdlclient.PdlData
+import no.nav.aap.pdlclient.PdlGruppe
+import no.nav.aap.pdlclient.PdlIdent
+import no.nav.aap.pdlclient.PdlIdenter
+import no.nav.aap.pdlclient.PdlRequest
+import no.nav.aap.pdlclient.PdlResponse
 import java.net.URI
 
 class Fakes : AutoCloseable {
