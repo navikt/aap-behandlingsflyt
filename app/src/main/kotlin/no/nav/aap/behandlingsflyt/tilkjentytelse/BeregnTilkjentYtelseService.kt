@@ -9,23 +9,37 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.Tilkjent
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.TilkjentGUnit
 import no.nav.aap.tidslinje.JoinStyle
 import no.nav.aap.tidslinje.Segment
+import no.nav.aap.tidslinje.SegmentSammenslåer
 import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.GUnit
+import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.Prosent
-
 
 
 class BeregnTilkjentYtelseService(
     private val fødselsdato: Fødselsdato,
     private val beregningsgrunnlag: Beregningsgrunnlag,
     private val underveisgrunnlag: UnderveisGrunnlag
-){
-    private companion object {
+) {
+    internal companion object {
         private const val ANTALL_ÅRLIGE_ARBEIDSDAGER = 260
+
+        internal object AldersjusteringAvMinsteÅrligYtelse :
+            SegmentSammenslåer<AlderStrategi, GUnit, GUnit> {
+            override fun sammenslå(
+                periode: Periode,
+                venstreSegment: Segment<AlderStrategi>?,
+                høyreSegment: Segment<GUnit>?
+            ): Segment<GUnit> {
+                val minsteÅrligYtelse = requireNotNull(høyreSegment?.verdi)
+                val aldersfunksjon = requireNotNull(venstreSegment?.verdi)
+                return Segment(periode, aldersfunksjon.aldersjustering(minsteÅrligYtelse))
+            }
+        }
     }
 
-    fun beregnTilkjentYtelse(): Tidslinje<Tilkjent>{
+    fun beregnTilkjentYtelse(): Tidslinje<Tilkjent> {
         val minsteÅrligYtelseAlderStrategiTidslinje = MinsteÅrligYtelseAlderTidslinje(fødselsdato).tilTidslinje()
         val underveisTidslinje = Tidslinje(underveisgrunnlag.perioder.map { Segment(it.periode, it) })
         val grunnlagsfaktor = beregningsgrunnlag.grunnlaget()
@@ -35,12 +49,8 @@ class BeregnTilkjentYtelseService(
 
         val minsteÅrligYtelseMedAlderTidslinje = minsteÅrligYtelseAlderStrategiTidslinje.kombiner(
             minsteÅrligYtelseTidslinje,
-            JoinStyle.INNER_JOIN
-        ) { periode, venstre:Segment<AlderStrategi>?, høyre: Segment<GUnit>? ->
-            val minsteÅrligYtelse = requireNotNull(høyre?.verdi)
-            val alderStrategi = requireNotNull(venstre?.verdi)
-            Segment(periode, alderStrategi.aldersjustering(minsteÅrligYtelse))
-        }
+            AldersjusteringAvMinsteÅrligYtelse
+        )
 
         val årligYtelseTidslinje = minsteÅrligYtelseMedAlderTidslinje.mapValue { minsteÅrligYtelse ->
             maxOf(requireNotNull(minsteÅrligYtelse), utgangspunktForÅrligYtelse)
@@ -57,14 +67,16 @@ class BeregnTilkjentYtelseService(
 
 
         return gradertÅrligYtelseTidslinje.kombiner(
-                Grunnbeløp.tilTidslinje(),
-                JoinStyle.INNER_JOIN
-            ) { periode, venstre, høyre ->
-                val dagsats =
-                    høyre?.verdi?.multiplisert(requireNotNull(venstre?.verdi?.dagsats)) ?: Beløp(0)
+            Grunnbeløp.tilTidslinje(),
+            JoinStyle.INNER_JOIN
+        ) { periode, venstre, høyre ->
+            val dagsats =
+                høyre?.verdi?.multiplisert(requireNotNull(venstre?.verdi?.dagsats)) ?: Beløp(0)
 
-                val utbetalingsgrad = venstre?.verdi?.gradering ?: Prosent.`0_PROSENT`
-                Segment(periode, Tilkjent(dagsats, utbetalingsgrad))
-            }
+            val utbetalingsgrad = venstre?.verdi?.gradering ?: Prosent.`0_PROSENT`
+            Segment(periode, Tilkjent(dagsats, utbetalingsgrad))
+        }
     }
+
+
 }

@@ -56,12 +56,8 @@ class MinsteÅrligYtelseAlderTidslinjeTest {
 
         val tidslinje = minsteÅrligYtelseAlderTidslinje.kombiner(
             minsteÅrligYtelseTidslinje,
-            JoinStyle.INNER_JOIN
-        ) { periode, venstre:Segment<AlderStrategi>?, høyre: Segment<GUnit>? ->
-            val minsteÅrligYtelse = requireNotNull(høyre?.verdi)
-            val aldersfunksjon = requireNotNull(venstre?.verdi)
-            Segment(periode, aldersfunksjon.aldersjustering(minsteÅrligYtelse))
-        }
+            JoinStyle.INNER_JOIN, BeregnTilkjentYtelseService.Companion.AldersjusteringAvMinsteÅrligYtelse
+        )
 
 
         assertThat(tidslinje.segmenter()).containsExactly(
@@ -79,4 +75,6 @@ class MinsteÅrligYtelseAlderTidslinjeTest {
             )
         )
     }
+
+
 }
