@@ -50,6 +50,9 @@ spec:
     inbound:
       rules:
         - application: aap-saksbehandling
+    outbound:
+      external:
+        - host: pdl-api.dev-fss-pub.nais.io
   env:
     - name: PDL_BASE_URL
       value: https://pdl-api.dev-fss-pub.nais.io/graphql
