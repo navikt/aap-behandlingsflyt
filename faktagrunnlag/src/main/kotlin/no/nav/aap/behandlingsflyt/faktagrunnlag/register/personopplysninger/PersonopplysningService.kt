@@ -4,20 +4,21 @@ import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlagkonstruktør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.FakePersonopplysningGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PdlPersonopplysningGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.verdityper.flyt.FlytKontekst
 
 class PersonopplysningService private constructor(
     private val connection: DBConnection,
-    private val personopplysningGateway: PersonopplysningGateway
+    private val personopplysningGateway: PersonopplysningGateway,
 ) : Grunnlag {
 
     companion object : Grunnlagkonstruktør {
         override fun konstruer(connection: DBConnection): PersonopplysningService {
             return PersonopplysningService(
                 connection,
-                FakePersonopplysningGateway)
+                PdlPersonopplysningGateway
+            )
         }
     }
 
@@ -26,22 +27,19 @@ class PersonopplysningService private constructor(
         val sakService = SakService(connection)
         val sak = sakService.hent(kontekst.sakId)
 
-        var oppdatert : Boolean
+        val eksisterendeData = personopplysningRepository.hentHvisEksisterer(kontekst.behandlingId)
+        val skalInnhente = eksisterendeData?.personopplysning?.skalInnhentes() ?: true
 
-        //TODO: hvor bør håndtere denne?
-        runBlocking {
-            val personopplysninger = personopplysningGateway.innhent(sak.person)
+        if (skalInnhente) {
+            val personopplysninger = runBlocking {
+                personopplysningGateway.innhent(sak.person) ?: error("fødselsdato skal alltid eksistere i PDL")
+            }
 
-            val behandlingId = kontekst.behandlingId
-            val gamleData = personopplysningRepository.hentHvisEksisterer(behandlingId)
-
-            //TODO: kan personopplysninger være null?
-            personopplysningRepository.lagre(behandlingId, personopplysninger!!)
-            val nyeData = personopplysningRepository.hentHvisEksisterer(behandlingId)
-
-            oppdatert = nyeData == gamleData
+            if (personopplysninger != eksisterendeData?.personopplysning) {
+                personopplysningRepository.lagre(kontekst.behandlingId, personopplysninger)
+                return true
+            }
         }
-
-        return oppdatert
+        return false
     }
 }

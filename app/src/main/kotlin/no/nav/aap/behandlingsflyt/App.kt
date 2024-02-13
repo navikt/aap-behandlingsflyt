@@ -42,6 +42,7 @@ import no.nav.aap.behandlingsflyt.dbflyway.Migrering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.FakePersonopplysningGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PdlPersonopplysningGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeRegisterMock
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.bistandsgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.medlemskap.medlemskapsgrunnlagApi
@@ -131,13 +132,14 @@ internal fun Application.server(dbConfig: DbConfig) {
     val dataSource = initDatasource(dbConfig)
     Migrering.migrate(dataSource)
 
-    PdlIdentGateway.init(
-        AzureConfig(),
-        PdlConfig(
-            scope = System.getenv("PDL_SCOPE"),
-            url = System.getenv("PDL_BASE_URL"),
-        ),
+    val azure = AzureConfig()
+    val pdl = PdlConfig(
+        scope = System.getenv("PDL_SCOPE"),
+        url = System.getenv("PDL_BASE_URL"),
     )
+
+    PdlIdentGateway.init(azure, pdl)
+    PdlPersonopplysningGateway.init(azure, pdl)
 
     apiRouting {
         configApi()
@@ -226,7 +228,10 @@ fun NormalOpenAPIRoute.hendelsesApi(dataSource: DataSource) {
         post<Unit, OpprettTestcaseDTO, OpprettTestcaseDTO> { _, dto ->
 
             val ident = Ident(dto.ident)
-            FakePersonopplysningGateway.konstruer(ident, Personopplysning(Fødselsdato(dto.fødselsdato)))
+            FakePersonopplysningGateway.konstruer(ident, Personopplysning(
+                fødselsdato = Fødselsdato(dto.fødselsdato),
+                opprettetTid = LocalDateTime.now(),
+            ))
             val periode = Periode(
                 LocalDate.now().minusYears(3),
                 LocalDate.now().plusYears(3)

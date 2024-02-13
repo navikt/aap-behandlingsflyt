@@ -8,7 +8,7 @@ class PersonopplysningRepository(private val connection: DBConnection) {
     fun hentHvisEksisterer(behandlingId: BehandlingId): PersonopplysningGrunnlag? {
         return connection.queryFirstOrNull(
             """
-            SELECT p.FODSELSDATO
+            SELECT p.FODSELSDATO, p.OPPRETTET_TID
             FROM PERSONOPPLYSNING_GRUNNLAG g
             INNER JOIN PERSONOPPLYSNING p ON g.PERSONOPPLYSNING_ID = p.ID
             WHERE g.AKTIV AND g.BEHANDLING_ID = ?
@@ -20,7 +20,10 @@ class PersonopplysningRepository(private val connection: DBConnection) {
             setRowMapper { row ->
                 PersonopplysningGrunnlag(
                     behandlingId.toLong(),
-                    Personopplysning(Fødselsdato(row.getLocalDate("FODSELSDATO")))
+                    Personopplysning(
+                        fødselsdato = Fødselsdato(row.getLocalDate("FODSELSDATO")),
+                        opprettetTid = row.getLocalDateTime("OPPRETTET_TID"),
+                    )
                 )
             }
         }

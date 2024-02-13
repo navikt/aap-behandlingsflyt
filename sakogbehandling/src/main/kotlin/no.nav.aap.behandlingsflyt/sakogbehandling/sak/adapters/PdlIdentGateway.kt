@@ -51,7 +51,7 @@ object PdlIdentGateway : IdentGateway {
 
 private const val ident = "\$ident"
 
-private val IDENT_QUERY = """
+val IDENT_QUERY = """
     query($ident: ID!) {
 
         hentIdenter(ident: $ident, historikk: true) {

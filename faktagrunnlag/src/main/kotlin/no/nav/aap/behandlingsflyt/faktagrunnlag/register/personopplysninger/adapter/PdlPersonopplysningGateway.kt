@@ -12,6 +12,7 @@ import no.nav.aap.pdl.PdlRequest
 import no.nav.aap.pdl.PdlResponse
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 
 object PdlPersonopplysningGateway : PersonopplysningGateway {
     private lateinit var azureConfig: AzureConfig
@@ -27,7 +28,6 @@ object PdlPersonopplysningGateway : PersonopplysningGateway {
         graphQL = PdlClient(azureConfig, pdlConfig)
     }
 
-    // TODO: returner execption, option, result eller emptylist
     override suspend fun innhent(person: Person): Personopplysning? {
         val request = PdlRequest(PERSON_QUERY, IdentVariables(person.aktivIdent().identifikator))
         val response: Result<PdlResponse<PdlData>> = graphQL.query(request)
@@ -37,9 +37,12 @@ object PdlPersonopplysningGateway : PersonopplysningGateway {
                 .data
                 ?.hentPerson
                 ?.foedselsdato
-                ?:throw NotImplementedError("Fant ikke fødselsdato")
+                ?: return null
 
-            return Personopplysning(Fødselsdato.parse(foedselsdato))
+            return Personopplysning(
+                fødselsdato = Fødselsdato.parse(foedselsdato),
+                opprettetTid = LocalDateTime.now(),
+            )
         }
 
         fun onFailure(ex: Throwable): Personopplysning? {
@@ -53,7 +56,7 @@ object PdlPersonopplysningGateway : PersonopplysningGateway {
 
 private const val ident = "\$ident"
 
-private val PERSON_QUERY = """
+val PERSON_QUERY = """
     query($ident: ID!){
       hentPerson(ident: $ident) {
     	foedselsdato
