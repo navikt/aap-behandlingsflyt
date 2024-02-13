@@ -17,6 +17,7 @@ class BarnetilleggService(
             Tidslinje(listOf(Segment(sak.rettighetsperiode, RettTilBarnetillegg())))
 
         val relevanteBarn = barnRepository.hentHvisEksisterer(behandlingId)?.barn ?: emptyList()
+
         for (barn in relevanteBarn) {
             resultat = resultat.kombiner(
                 Tidslinje(listOf(Segment(barn.periodeMedRettTil(), barn)))
@@ -30,6 +31,8 @@ class BarnetilleggService(
                 Segment(periode, nyVenstreVerdi)
             }
         }
+
+
 
         return resultat.kryss(sak.rettighetsperiode)
     }

@@ -84,10 +84,7 @@ class UnderveisRepository(private val connection: DBConnection) {
         val pliktkorteneQuery = """
             INSERT INTO UNDERVEIS_PERIODER DEFAULT VALUES
             """.trimIndent()
-        val perioderId = connection.executeReturnKey(pliktkorteneQuery) {
-            setParams {
-            }
-        }
+        val perioderId = connection.executeReturnKey(pliktkorteneQuery)
 
         val query = """
             INSERT INTO UNDERVEIS_PERIODE (perioder_id, periode, utfall, avslagsarsak, grenseverdi, timer_arbeid, gradering) VALUES (?, ?::daterange, ?, ?, ?, ?, ?)
