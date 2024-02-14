@@ -76,6 +76,23 @@ class BarnetilleggRepository(private val connection: DBConnection) {
         }
     }
 
+    fun kopier(fraBehandlingId: BehandlingId, tilBehandlingId: BehandlingId) {
+        val eksisterendeGrunnlag = hentHvisEksisterer(fraBehandlingId)
+        if (eksisterendeGrunnlag == null) {
+            return
+        }
+        val query = """
+            INSERT INTO BARNETILLEGG_GRUNNLAG (behandling_id, perioder_id) SELECT ?, perioder_id from BARNETILLEGG_GRUNNLAG where behandling_id = ? and aktiv
+        """.trimIndent()
+
+        connection.execute(query) {
+            setParams {
+                setLong(1, tilBehandlingId.toLong())
+                setLong(2, fraBehandlingId.toLong())
+            }
+        }
+    }
+
     private fun deaktiverGrunnlag(behandlingId: BehandlingId) {
         connection.execute("UPDATE BARNETILLEGG_GRUNNLAG set aktiv = false WHERE behandling_id = ? and aktiv = true") {
             setParams {
