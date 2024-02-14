@@ -2,8 +2,8 @@ package no.nav.aap.behandlingsflyt.barnetillegg
 
 import no.nav.aap.verdityper.sakogbehandling.Ident
 
-class RettTilBarnetillegg {
-    private val barn = mutableSetOf<Ident>()
+class RettTilBarnetillegg(barn:Set<Ident> = emptySet()) {
+    private val barn = barn.toMutableSet()
 
     fun leggTilBarn(ident: Ident): RettTilBarnetillegg {
         barn.add(ident)

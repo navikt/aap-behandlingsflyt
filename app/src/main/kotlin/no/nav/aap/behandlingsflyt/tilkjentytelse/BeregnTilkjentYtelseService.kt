@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.tilkjentytelse
 
+import no.nav.aap.behandlingsflyt.barnetillegg.RettTilBarnetillegg
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
@@ -19,8 +21,23 @@ import no.nav.aap.verdityper.Prosent
 class BeregnTilkjentYtelseService(
     private val fødselsdato: Fødselsdato,
     private val beregningsgrunnlag: Beregningsgrunnlag,
-    private val underveisgrunnlag: UnderveisGrunnlag
+    private val underveisgrunnlag: UnderveisGrunnlag,
+    private val barnetilleggGrunnlag: BarnetilleggGrunnlag
 ) {
+
+    private fun tilTidslinje(barnetilleggGrunnlag: BarnetilleggGrunnlag): Tidslinje<RettTilBarnetillegg> {
+        return Tidslinje(
+            barnetilleggGrunnlag.perioder.map {
+                Segment(
+                    it.periode,
+                    RettTilBarnetillegg(
+                        it.personIdenter
+                    )
+                )
+            }
+        )
+    }
+
     internal companion object {
         private const val ANTALL_ÅRLIGE_ARBEIDSDAGER = 260
 
@@ -42,7 +59,7 @@ class BeregnTilkjentYtelseService(
         val minsteÅrligYtelseAlderStrategiTidslinje = MinsteÅrligYtelseAlderTidslinje(fødselsdato).tilTidslinje()
         val underveisTidslinje = Tidslinje(underveisgrunnlag.perioder.map { Segment(it.periode, it) })
         val grunnlagsfaktor = beregningsgrunnlag.grunnlaget()
-
+        val barnetilleggGrunnlagTidslinje = tilTidslinje(barnetilleggGrunnlag)
         val utgangspunktForÅrligYtelse = grunnlagsfaktor.multiplisert(Prosent.`66_PROSENT`)
 
         val minsteÅrligYtelseMedAlderTidslinje = minsteÅrligYtelseAlderStrategiTidslinje.kombiner(
@@ -64,7 +81,7 @@ class BeregnTilkjentYtelseService(
         }
 
 
-        return gradertÅrligYtelseTidslinje.kombiner(
+        val gradertÅrligTilkjentYtelseBeløp = gradertÅrligYtelseTidslinje.kombiner(
             Grunnbeløp.tilTidslinje(),
             JoinStyle.INNER_JOIN
         ) { periode, venstre, høyre ->
@@ -74,7 +91,22 @@ class BeregnTilkjentYtelseService(
             val utbetalingsgrad = venstre?.verdi?.gradering ?: Prosent.`0_PROSENT`
             Segment(periode, Tilkjent(dagsats, utbetalingsgrad))
         }
-    }
 
+        val barnetilleggTidslinje = BARNETILLEGGSATS_TIDSLINJE.kombiner(
+            barnetilleggGrunnlagTidslinje,
+            JoinStyle.INNER_JOIN
+        ){ periode, venstre, høyre ->
+            Segment(periode, venstre?.verdi?.multiplisert(høyre?.verdi?.barn()?.size?:0)?:Beløp(0))
+        }
+
+        return gradertÅrligTilkjentYtelseBeløp.kombiner(
+            barnetilleggTidslinje,
+            JoinStyle.INNER_JOIN
+        ){ periode, venstre, høyre ->
+            val dagsats = venstre?.verdi?.dagsats?.pluss(høyre!!.verdi)?:Beløp(0)
+            val gradering = venstre?.verdi?.gradering?:Prosent.`0_PROSENT`
+            Segment(periode, Tilkjent(dagsats,gradering))
+        }
+    }
 
 }

@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
@@ -19,7 +20,8 @@ import org.slf4j.LoggerFactory
 class BeregnTilkjentYtelseSteg private constructor(
     private val underveisRepository: UnderveisRepository,
     private val beregningsgrunnlagRepository: BeregningsgrunnlagRepository,
-    private val personopplysningRepository: PersonopplysningRepository
+    private val personopplysningRepository: PersonopplysningRepository,
+    private val barnetilleggRepository: BarnetilleggRepository
 ) : BehandlingSteg {
     private val log = LoggerFactory.getLogger(BeregnTilkjentYtelseSteg::class.java)
 
@@ -27,8 +29,9 @@ class BeregnTilkjentYtelseSteg private constructor(
         val beregningsgrunnlag = requireNotNull(beregningsgrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId))
         val underveisgrunnlag = underveisRepository.hent(kontekst.behandlingId)
         val fødselsdato = requireNotNull(personopplysningRepository.hentHvisEksisterer(kontekst.behandlingId)?.personopplysning?.fødselsdato)
+        val barnetilleggGrunnlag = requireNotNull(barnetilleggRepository.hentHvisEksisterer(kontekst.behandlingId))
 
-        val beregnetTilkjentYtelse = BeregnTilkjentYtelseService(fødselsdato, beregningsgrunnlag, underveisgrunnlag).beregnTilkjentYtelse()
+        val beregnetTilkjentYtelse = BeregnTilkjentYtelseService(fødselsdato, beregningsgrunnlag, underveisgrunnlag, barnetilleggGrunnlag).beregnTilkjentYtelse()
 
         log.info("Beregnet tilkjent ytelse: $beregnetTilkjentYtelse")
 
@@ -40,7 +43,8 @@ class BeregnTilkjentYtelseSteg private constructor(
             return BeregnTilkjentYtelseSteg(
                 UnderveisRepository(connection),
                 BeregningsgrunnlagRepository(connection),
-                PersonopplysningRepository(connection)
+                PersonopplysningRepository(connection),
+                BarnetilleggRepository(connection)
             )
         }
 
