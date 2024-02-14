@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.barnetillegg.BarnetilleggService
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -28,6 +29,7 @@ class BarnetilleggSteg(private val barnetilleggService: BarnetilleggService) : B
             return BarnetilleggSteg(
                 BarnetilleggService(
                     BarnRepository(connection),
+                    BarnetilleggRepository(connection),
                     SakOgBehandlingService(connection)
                 )
             )

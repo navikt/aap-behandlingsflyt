@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.barnetillegg
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakOgBehandlingService
 import no.nav.aap.tidslinje.Segment
@@ -9,6 +11,7 @@ import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 //TODO: Må se på om faktagrunnlag.barn skal deles i to, en for registeropplysninger og en for delvurdering fra saksbehandler
 class BarnetilleggService(
     private val barnRepository: BarnRepository,
+    private val barnetilleggRepository: BarnetilleggRepository,
     private val sakOgBehandlingService: SakOgBehandlingService
 ) {
     fun beregn(behandlingId: BehandlingId): Tidslinje<RettTilBarnetillegg> {
@@ -32,7 +35,16 @@ class BarnetilleggService(
             }
         }
 
-
+        barnetilleggRepository.lagre(
+            behandlingId,
+            resultat.segmenter()
+                .map {
+                    BarnetilleggPeriode(
+                        it.periode,
+                        it.verdi.barn()
+                    )
+                }
+        )
 
         return resultat.kryss(sak.rettighetsperiode)
     }

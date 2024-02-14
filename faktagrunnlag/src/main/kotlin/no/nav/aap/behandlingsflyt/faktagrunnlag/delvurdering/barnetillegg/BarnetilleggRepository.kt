@@ -9,7 +9,7 @@ class BarnetilleggRepository(private val connection: DBConnection) {
 
     fun hentHvisEksisterer(behandlingsId: BehandlingId): BarnetilleggGrunnlag? {
         val query = """
-            SELECT * FROM BARNETILLEGG_PERIODER WHERE behandling_id = ? and aktiv = true
+            SELECT * FROM BARNETILLEGG_GRUNNLAG WHERE behandling_id = ? and aktiv = true
         """.trimIndent()
         return connection.queryFirstOrNull(query) {
             setParams {
@@ -41,13 +41,27 @@ class BarnetilleggRepository(private val connection: DBConnection) {
             """.trimIndent()
         val perioderId = connection.executeReturnKey(barnetilleggPeriodeQuery)
 
+
         val query = """
             INSERT INTO BARNETILLEGG_PERIODE (perioder_id, periode) VALUES (?, ?::daterange)
             """.trimIndent()
-        connection.executeBatch(query, barnetilleggPerioder) {
-            setParams { periode ->
-                setLong(1, perioderId)
-                setPeriode(2, periode.periode)
+        val insertBarnQuery = """
+            INSERT INTO BARN (ident, barnetillegg_periode_id) VALUES (?, ?)
+        """.trimIndent()
+
+        barnetilleggPerioder.forEach{ periode ->
+            val periodeId = connection.executeReturnKey(query){
+                setParams {
+                    setLong(1, perioderId)
+                    setPeriode(2, periode.periode)
+                }
+            }
+
+            connection.executeBatch(insertBarnQuery,periode.personIdenter){
+                setParams { ident ->
+                    setString(1,ident.identifikator)
+                    setLong(2,periodeId)
+                }
             }
         }
 
@@ -72,7 +86,7 @@ class BarnetilleggRepository(private val connection: DBConnection) {
     }
 
     private fun mapGrunnlag(row: Row): BarnetilleggGrunnlag {
-        val pliktkorteneId = row.getLong("perioder_id")
+        val periodeneId = row.getLong("perioder_id")
 
         val query = """
             SELECT * FROM BARNETILLEGG_PERIODE WHERE perioder_id = ?
@@ -80,7 +94,7 @@ class BarnetilleggRepository(private val connection: DBConnection) {
 
         val barnetilleggPerioder = connection.queryList(query) {
             setParams {
-                setLong(1, pliktkorteneId)
+                setLong(1, periodeneId)
             }
             setRowMapper {
                 mapPeriode(it)
@@ -105,7 +119,7 @@ class BarnetilleggRepository(private val connection: DBConnection) {
 
         return BarnetilleggPeriode(
             periodeRow.getPeriode("periode"),
-            identer
+            identer.toSet()
         )
     }
 }
