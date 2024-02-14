@@ -10,6 +10,11 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.coroutines.runBlocking
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.BARN_RELASJON_QUERY
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.HentPersonBolkResult
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.PERSON_BOLK_QUERY
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.PdlFoedsel
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.PdlRelasjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PERSON_QUERY
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.IDENT_QUERY
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlData
@@ -22,6 +27,9 @@ import no.nav.aap.pdl.PdlRequest
 import no.nav.aap.pdl.PdlResponse
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.PdlData as BarnPdlData
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.PdlPerson as BarnPdlPerson
 
 class Fakes : AutoCloseable {
     private val pdl = embeddedServer(Netty, port = 0, module = Application::pdlFake).apply { start() }
@@ -66,11 +74,40 @@ fun Application.pdlFake() {
             when (req.query) {
                 IDENT_QUERY -> call.respond(identer(req))
                 PERSON_QUERY -> call.respond(personopplysninger(req))
+                BARN_RELASJON_QUERY -> call.respond(barnRelasjoner())
+                PERSON_BOLK_QUERY -> call.respond(barn())
                 else -> call.respond(HttpStatusCode.BadRequest)
             }
         }
     }
 }
+
+private fun barn() = PdlResponse(
+    errors = null,
+    extensions = null,
+    data = BarnPdlData(
+        hentPersonBolk = listOf(
+            HentPersonBolkResult(
+                ident = "10123456789",
+                person = BarnPdlPerson(
+                    foedsel = listOf(PdlFoedsel("2020-01-01"))
+                )
+            )
+        )
+    )
+)
+
+private fun barnRelasjoner() = PdlResponse(
+    errors = null,
+    extensions = null,
+    data = BarnPdlData(
+        hentPerson = BarnPdlPerson(
+            forelderBarnRelasjon = listOf(
+                PdlRelasjon(relatertPersonsIdent = "10123456789")
+            )
+        )
+    )
+)
 
 private fun identer(req: PdlRequest) = PdlResponse(
     errors = null,
@@ -78,7 +115,7 @@ private fun identer(req: PdlRequest) = PdlResponse(
     data = PdlData(
         hentIdenter = PdlIdenter(
             identer = listOf(
-                PdlIdent(req.variables.ident, false, PdlGruppe.FOLKEREGISTERIDENT),
+                PdlIdent(req.variables.ident ?: "", false, PdlGruppe.FOLKEREGISTERIDENT),
                 PdlIdent("12345678911", false, PdlGruppe.NPID),
                 PdlIdent("1234567890123", false, PdlGruppe.AKTORID)
             )

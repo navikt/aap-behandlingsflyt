@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn
 
-class BarnGrunnlag(private val id: Long, val barn: List<Barn>) {
+class BarnGrunnlag(val barn: List<Barn>) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

@@ -33,7 +33,8 @@ data class PdlRequest(
 )
 
 data class IdentVariables(
-    val ident: String
+    val ident: String? = null,
+    val identer: List<String>? = null
 )
 
 data class PdlResponse<T>(
