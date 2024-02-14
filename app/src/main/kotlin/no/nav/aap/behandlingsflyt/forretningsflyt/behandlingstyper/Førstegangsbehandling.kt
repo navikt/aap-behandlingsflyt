@@ -16,7 +16,6 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FatteVedtakSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.ForeslåVedtakSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FritakMeldepliktSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.GeneriskPlaceholderFlytSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.StartBehandlingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.UnderveisSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderAlderSteg
@@ -44,7 +43,6 @@ object Førstegangsbehandling : BehandlingType {
             .medSteg(steg = FastsettGrunnlagSteg, informasjonskrav = listOf(InntektService))
             .medSteg(steg = UnderveisSteg, informasjonskrav = listOf(PliktkortService))
             .medSteg(steg = BarnetilleggSteg, informasjonskrav = listOf(BarnService))
-            .medSteg(steg = SamordningSteg)
             .medSteg(steg = BeregnTilkjentYtelseSteg, informasjonskrav = listOf(PersonopplysningService))
             .medSteg(steg = GeneriskPlaceholderFlytSteg(StegType.SIMULERING))
             .medSteg(steg = ForeslåVedtakSteg) // en-trinn

@@ -11,5 +11,6 @@ data class UnderveisInput(
     val relevanteVilkår: List<Vilkår>,
     val opptrappingPerioder: List<Periode>,
     val pliktkort: List<Pliktkort>,
-    val innsendingsTidspunkt: Map<LocalDate, JournalpostId>
+    val innsendingsTidspunkt: Map<LocalDate, JournalpostId>,
+    val dødsdato: LocalDate? = null
 )

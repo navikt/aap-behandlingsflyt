@@ -10,7 +10,9 @@ import no.nav.aap.behandlingsflyt.underveis.regler.AktivitetRegel
 import no.nav.aap.behandlingsflyt.underveis.regler.EtAnnetStedRegel
 import no.nav.aap.behandlingsflyt.underveis.regler.GraderingArbeidRegel
 import no.nav.aap.behandlingsflyt.underveis.regler.RettTilRegel
+import no.nav.aap.behandlingsflyt.underveis.regler.SamordningRegel
 import no.nav.aap.behandlingsflyt.underveis.regler.UnderveisInput
+import no.nav.aap.behandlingsflyt.underveis.regler.VarighetRegel
 import no.nav.aap.behandlingsflyt.underveis.regler.Vurdering
 import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
@@ -26,7 +28,9 @@ class UnderveisService(
         RettTilRegel(),
         EtAnnetStedRegel(),
         AktivitetRegel(),
-        GraderingArbeidRegel()
+        GraderingArbeidRegel(),
+        SamordningRegel(),
+        VarighetRegel()
     )
 
     fun vurder(behandlingId: BehandlingId): Tidslinje<Vurdering> {
@@ -36,14 +40,13 @@ class UnderveisService(
         underveisRepository.lagre(
             behandlingId,
             vurderRegler.segmenter()
-                .filter { it.verdi != null }
                 .map {
                     Underveisperiode(
                         it.periode,
-                        it.verdi!!.utfall(),
-                        it.verdi!!.avslagsårsak(),
-                        it.verdi!!.grenseverdi(),
-                        it.verdi!!.gradering()
+                        it.verdi.utfall(),
+                        it.verdi.avslagsårsak(),
+                        it.verdi.grenseverdi(),
+                        it.verdi.gradering()
                     )
                 })
         return vurderRegler
@@ -57,7 +60,7 @@ class UnderveisService(
         return resultat
     }
 
-    fun genererInput(behandlingId: BehandlingId): UnderveisInput {
+    private fun genererInput(behandlingId: BehandlingId): UnderveisInput {
         val sak = behandlingService.hentSakFor(behandlingId)
         val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
         val relevanteVilkår = vilkårsresultat

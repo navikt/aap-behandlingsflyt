@@ -9,8 +9,6 @@ import no.nav.aap.tidslinje.Tidslinje
  *
  * - Alder (18 - 67)
  * - Perioder med ytelse (Sykdom, Bistand, Sykepengeerstatning, Student)
- * - Varigheten (11-12)
- *   - 3 år per "krav"
  *
  */
 class RettTilRegel : UnderveisRegel {

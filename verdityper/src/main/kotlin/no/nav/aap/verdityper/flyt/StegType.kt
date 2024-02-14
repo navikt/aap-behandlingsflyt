@@ -33,10 +33,6 @@ enum class StegType(val gruppe: StegGruppe, val status: Status, val tekniskSteg:
         status = Status.UTREDES
     ),
     BARNETILLEGG(gruppe = StegGruppe.BARNETILLEGG, status = Status.UTREDES),
-    SAMORDNING(
-        gruppe = StegGruppe.SAMORDNING,
-        status = Status.UTREDES
-    ),
     AVKLAR_YRKESSKADE(gruppe = StegGruppe.SYKDOM, status = Status.UTREDES),
     AVKLAR_SYKDOM(
         gruppe = StegGruppe.SYKDOM,
