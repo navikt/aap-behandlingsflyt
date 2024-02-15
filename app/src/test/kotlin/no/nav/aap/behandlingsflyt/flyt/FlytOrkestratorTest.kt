@@ -107,9 +107,7 @@ class FlytOrkestratorTest {
             ident = ident, inntekterPerÅr = listOf(
                 InntektPerÅr(
                     Year.now().minusYears(3),
-                    Beløp(
-                        BigDecimal(1000000)
-                    )
+                    Beløp(1000000)
                 )
             )
         )
@@ -478,9 +476,7 @@ class FlytOrkestratorTest {
             ident = ident, inntekterPerÅr = listOf(
                 InntektPerÅr(
                     Year.now().minusYears(3),
-                    Beløp(
-                        BigDecimal(1000000)
-                    )
+                    Beløp(1000000)
                 )
             )
         )
