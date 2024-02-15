@@ -5,8 +5,12 @@ import no.nav.aap.tidslinje.Tidslinje
 /**
  * Håndterer varighetsbestemmelsene (11-12 + unntak fra denne)
  *
- * - Varigheten på ordinær
+ * - Varigheten på ordinær (3 år)
  * - Unntak
+ *   - Utvidelse (2 år)
+ *   - Sykepengererstatning (6 måneder)
+ *   - Venter på uføre (4 + 4 måneder)
+ *   - Avklart arbeid (??)
  * - Dødsfall på bruker
  *
  */
