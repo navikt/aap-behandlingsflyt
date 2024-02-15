@@ -1,12 +1,10 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp.Element.Companion.finnGUnit
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.GUnit
 import no.nav.aap.verdityper.Periode
-import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.Year
 
@@ -61,53 +59,50 @@ object Grunnbeløp {
         gjennomsnittBeløp: Int?
     ) {
         private val dato: LocalDate = LocalDate.of(år, måned, dag)
-        private val beløp: Beløp = Beløp(BigDecimal(beløp))
+        private val beløp: Beløp = Beløp(beløp)
         private val gjennomsnittBeløp: Beløp? = gjennomsnittBeløp?.let(::Beløp)
 
         companion object {
-            private fun Iterable<Element>.finnGrunnbeløpForÅr(år: Year): Element {
-                return this
-                    .filter { it.gjennomsnittBeløp != null }
-                    .sortedByDescending { it.dato }
-                    .first { år >= Year.from(it.dato) }
-            }
-
-            fun Iterable<Element>.finnGUnit(år: Year, beløp: Beløp): GUnit {
-                return GUnit(beløp.divitert(nevner = finnGrunnbeløpForÅr(år).gjennomsnittBeløp!!, scale = GUnit.SCALE))
+            fun finnGUnit(år: Year, beløp: Beløp): GUnit {
+                return GUnit(beløp.divitert(tilTidslinjeGjennomsnitt().segment(år.atDay(1))!!.verdi, GUnit.SCALE))
             }
 
             fun tilTidslinje(): Tidslinje<Beløp> {
-                return grunnbeløp
+                val grunnbeløp = grunnbeløp
+                    .map { element -> element.dato to element.beløp }
                     .reversed()
-                    .zipWithNext { gjeldende, neste ->
-                        val periode = Periode(gjeldende.dato, neste.dato.minusDays(1))
-                        Segment(periode, gjeldende.beløp)
+
+                val (sisteDato, sisteBeløp) = grunnbeløp.last()
+
+                return grunnbeløp
+                    .zipWithNext { (gjeldendeDato, gjeldendeBeløp), (nesteDato, _) ->
+                        val periode = Periode(gjeldendeDato, nesteDato.minusDays(1))
+                        Segment(periode, gjeldendeBeløp)
                     }
-                    .plus(Segment(Periode(grunnbeløp.first().dato, LocalDate.MAX), grunnbeløp.first().beløp))
+                    .plus(Segment(Periode(sisteDato, LocalDate.MAX), sisteBeløp))
                     .let(::Tidslinje)
             }
 
             fun tilTidslinjeGjennomsnitt(): Tidslinje<Beløp> {
-                return grunnbeløp
-                    .filter { it.gjennomsnittBeløp != null }
+                val gjennomsnittligeGrunnbeløp = grunnbeløp
+                    .mapNotNull { element -> element.gjennomsnittBeløp?.let { beløp -> element.dato to beløp } }
                     .reversed()
-                    .zipWithNext { gjeldende, neste ->
-                        val periode = Periode(gjeldende.dato.withDayOfYear(1), neste.dato.withDayOfYear(1).minusDays(1))
-                        Segment(periode, gjeldende.gjennomsnittBeløp!!)
+
+                val (sisteDato, sisteGjennomsnittBeløp) = gjennomsnittligeGrunnbeløp.last()
+
+                return gjennomsnittligeGrunnbeløp
+                    .zipWithNext { (gjeldendeDato, gjeldendeGjennomsnittBeløp), (nesteDato, _) ->
+                        val periode = Periode(gjeldendeDato.withDayOfYear(1), nesteDato.withDayOfYear(1).minusDays(1))
+                        Segment(periode, gjeldendeGjennomsnittBeløp)
                     }
-                    .plus(
-                        Segment(
-                            Periode(grunnbeløp.first().dato.withDayOfYear(1), LocalDate.MAX),
-                            grunnbeløp.first().gjennomsnittBeløp!!
-                        )
-                    )
+                    .plus(Segment(Periode(sisteDato.withDayOfYear(1), LocalDate.MAX), sisteGjennomsnittBeløp))
                     .let(::Tidslinje)
             }
         }
     }
 
     fun finnGUnit(år: Year, beløp: Beløp): GUnit {
-        return grunnbeløp.finnGUnit(år, beløp)
+        return Element.finnGUnit(år, beløp)
     }
 
     fun tilTidslinje(): Tidslinje<Beløp> {
