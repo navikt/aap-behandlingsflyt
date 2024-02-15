@@ -47,6 +47,27 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
         avklaringsbehovsLøsere[Definisjon.FATTE_VEDTAK] = FatteVedtakLøser(connection)
     }
 
+    fun løsAvklaringsbehovOgFortsettProsessering(behandlingId: BehandlingId) {
+        val behandling = behandlingRepository.hent(behandlingId)
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+        avklaringsbehovene.validateTilstand(behandling = behandling)
+
+        val kontekst = behandling.flytKontekst()
+        if (behandling.status() == Status.PÅ_VENT) {
+            this.løsAvklaringsbehov(
+                kontekst = kontekst,
+                avklaringsbehovene = avklaringsbehovene,
+                avklaringsbehov = SattPåVentLøsning()
+            )
+        }
+        oppgaveRepository.leggTil(
+            OppgaveInput(oppgave = ProsesserBehandlingOppgaveUtfører).forBehandling(
+                kontekst.sakId,
+                kontekst.behandlingId
+            )
+        )
+    }
+
     fun løsAvklaringsbehovOgFortsettProsessering(
         kontekst: FlytKontekst,
         avklaringsbehov: AvklaringsbehovLøsning,
@@ -145,26 +166,5 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
         behandling.settPåVent()
 
         avklaringsbehovene.leggTil(listOf(Definisjon.MANUELT_SATT_PÅ_VENT), behandling.aktivtSteg())
-    }
-
-    fun settBehandlingPåVentPgaMottattDokument(behandlingId: BehandlingId) {
-        val behandling = behandlingRepository.hent(behandlingId)
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-        avklaringsbehovene.validateTilstand(behandling = behandling)
-
-        val kontekst = behandling.flytKontekst()
-        if (behandling.status() == Status.PÅ_VENT) {
-            this.løsAvklaringsbehov(
-                kontekst = kontekst,
-                avklaringsbehovene = avklaringsbehovene,
-                avklaringsbehov = SattPåVentLøsning()
-            )
-        }
-        oppgaveRepository.leggTil(
-            OppgaveInput(oppgave = ProsesserBehandlingOppgaveUtfører).forBehandling(
-                kontekst.sakId,
-                kontekst.behandlingId
-            )
-        )
     }
 }

@@ -15,7 +15,7 @@ class BehandlingHendelseHåndterer(connection: DBConnection) {
             }
 
             else -> {
-                avklaringsbehovOrkestrator.settBehandlingPåVentPgaMottattDokument(key)
+                avklaringsbehovOrkestrator.løsAvklaringsbehovOgFortsettProsessering(key)
             }
         }
     }
