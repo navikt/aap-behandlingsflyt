@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.PdlBarnException
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.ktor.client.auth.azure.AzureConfig
@@ -12,9 +13,6 @@ import no.nav.aap.pdl.PdlConfig
 import no.nav.aap.pdl.PdlRequest
 import no.nav.aap.pdl.PdlResponse
 import no.nav.aap.verdityper.sakogbehandling.Ident
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import java.time.LocalDate
 
 object PdlBarnGateway : BarnGateway {
     private lateinit var azureConfig: AzureConfig
@@ -53,8 +51,7 @@ object PdlBarnGateway : BarnGateway {
         }
 
         fun onFailure(ex: Throwable): List<Ident> {
-            SECURE_LOGGER.error("Feil ved henting av identer for person", ex)
-            return emptyList()
+            throw PdlBarnException("Feil ved henting av identer for person", ex)
         }
 
         return response.fold(::onSuccess, ::onFailure)
@@ -86,13 +83,11 @@ object PdlBarnGateway : BarnGateway {
         }
 
         fun onFailure(ex: Throwable): List<Barn> {
-            SECURE_LOGGER.error("Feil ved henting av identer for person", ex)
-            return emptyList()
+            throw PdlBarnException("Feil ved henting av identer for person", ex)
         }
 
         return response.fold(::onSuccess, ::onFailure)
     }
-
 }
 
 private const val ident = "\$ident"
@@ -152,5 +147,3 @@ data class PdlFoedsel(
 data class PdlRelasjon(
     val relatertPersonsIdent: String
 )
-
-private val SECURE_LOGGER: Logger = LoggerFactory.getLogger("secureLog")

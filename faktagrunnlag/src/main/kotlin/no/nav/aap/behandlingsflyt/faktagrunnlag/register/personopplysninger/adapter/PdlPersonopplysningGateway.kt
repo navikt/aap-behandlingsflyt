@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PdlPersonopplysningException
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
@@ -10,8 +11,6 @@ import no.nav.aap.pdl.PdlClient
 import no.nav.aap.pdl.PdlConfig
 import no.nav.aap.pdl.PdlRequest
 import no.nav.aap.pdl.PdlResponse
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
 object PdlPersonopplysningGateway : PersonopplysningGateway {
@@ -46,8 +45,7 @@ object PdlPersonopplysningGateway : PersonopplysningGateway {
         }
 
         fun onFailure(ex: Throwable): Personopplysning? {
-            SECURE_LOGGER.error("Feil ved henting av identer for person", ex)
-            return null
+            throw PdlPersonopplysningException("Feil ved henting av identer for person", ex)
         }
 
         return response.fold(::onSuccess, ::onFailure)
@@ -71,5 +69,3 @@ data class PdlData(
 data class PdlPerson(
     val foedselsdato: String
 )
-
-private val SECURE_LOGGER: Logger = LoggerFactory.getLogger("secureLog")

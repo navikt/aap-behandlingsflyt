@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PdlIdentException
 import no.nav.aap.ktor.client.auth.azure.AzureConfig
 import no.nav.aap.pdl.IdentVariables
 import no.nav.aap.pdl.PdlClient
@@ -8,8 +9,6 @@ import no.nav.aap.pdl.PdlConfig
 import no.nav.aap.pdl.PdlRequest
 import no.nav.aap.pdl.PdlResponse
 import no.nav.aap.verdityper.sakogbehandling.Ident
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 object PdlIdentGateway : IdentGateway {
     private lateinit var azureConfig: AzureConfig
@@ -25,7 +24,6 @@ object PdlIdentGateway : IdentGateway {
         graphQL = PdlClient(azureConfig, pdlConfig)
     }
 
-    // TODO: returner execption, option, result eller emptylist
     override suspend fun hentAlleIdenterForPerson(ident: Ident): List<Ident> {
         val request = PdlRequest(IDENT_QUERY, IdentVariables(ident.identifikator))
         val response: Result<PdlResponse<PdlData>> = graphQL.query(request)
@@ -40,8 +38,7 @@ object PdlIdentGateway : IdentGateway {
         }
 
         fun onFailure(ex: Throwable): List<Ident> {
-            SECURE_LOGGER.error("Feil ved henting av identer for person", ex)
-            return emptyList()
+            throw PdlIdentException("Feil ved henting av identer for person", ex)
         }
 
         return response.fold(::onSuccess, ::onFailure)
@@ -83,5 +80,3 @@ enum class PdlGruppe {
     AKTORID,
     NPID,
 }
-
-private val SECURE_LOGGER: Logger = LoggerFactory.getLogger("secureLog")
