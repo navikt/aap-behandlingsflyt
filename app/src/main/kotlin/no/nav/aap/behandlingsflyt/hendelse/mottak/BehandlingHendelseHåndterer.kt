@@ -2,13 +2,14 @@ package no.nav.aap.behandlingsflyt.hendelse.mottak
 
 import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovRepositoryImpl
+import no.nav.aap.behandlingsflyt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.SattPåVentLøsning
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
-import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingOppgaveUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.motor.OppgaveInput
 import no.nav.aap.motor.OppgaveRepository
+import no.nav.aap.verdityper.flyt.FlytKontekst
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.Status
 
@@ -18,7 +19,6 @@ class BehandlingHendelseHåndterer(connection: DBConnection) {
     private val avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection)
     private val avklaringsbehovOrkestrator = AvklaringsbehovOrkestrator(connection)
     private val oppgaveRepository = OppgaveRepository(connection)
-    private val kontroller = FlytOrkestrator(connection)
 
     fun håndtere(key: BehandlingId, hendelse: BehandlingHendelse) {
 
@@ -28,7 +28,7 @@ class BehandlingHendelseHåndterer(connection: DBConnection) {
 
         when (hendelse) {
             is BehandlingSattPåVent -> {
-                kontroller.settBehandlingPåVent(behandling.flytKontekst())
+                settBehandlingPåVent(behandling.flytKontekst())
             }
 
             else -> {
@@ -49,5 +49,14 @@ class BehandlingHendelseHåndterer(connection: DBConnection) {
             }
         }
 
+    }
+
+    fun settBehandlingPåVent(kontekst: FlytKontekst) {
+        val behandling = behandlingRepository.hent(kontekst.behandlingId)
+        //TODO: Vi må huske å lagre behandling etter at vi har endret status
+        behandling.settPåVent()
+
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+        avklaringsbehovene.leggTil(listOf(Definisjon.MANUELT_SATT_PÅ_VENT), behandling.aktivtSteg())
     }
 }

@@ -191,15 +191,6 @@ class FlytOrkestrator(
         }
     }
 
-    fun settBehandlingPåVent(kontekst: FlytKontekst) {
-        val behandling = behandlingRepository.hent(kontekst.behandlingId)
-        //TODO: Vi må huske å lagre behandling etter at vi har endret status
-        behandling.settPåVent()
-
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        avklaringsbehovene.leggTil(listOf(Definisjon.MANUELT_SATT_PÅ_VENT), behandling.aktivtSteg())
-    }
-
     private fun utledFlytFra(behandling: Behandling) = utledType(behandling.typeBehandling()).flyt()
 
 }
