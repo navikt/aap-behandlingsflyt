@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.beregning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagetForBeregningen
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository

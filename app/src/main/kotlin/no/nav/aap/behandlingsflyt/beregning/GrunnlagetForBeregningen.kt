@@ -1,5 +1,6 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning
+package no.nav.aap.behandlingsflyt.beregning
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.verdityper.GUnit

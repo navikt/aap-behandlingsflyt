@@ -106,7 +106,7 @@ object Grunnbeløp {
         }
     }
 
-    internal fun finnGUnit(år: Year, beløp: Beløp): GUnit {
+    fun finnGUnit(år: Year, beløp: Beløp): GUnit {
         return grunnbeløp.finnGUnit(år, beløp)
     }
 
