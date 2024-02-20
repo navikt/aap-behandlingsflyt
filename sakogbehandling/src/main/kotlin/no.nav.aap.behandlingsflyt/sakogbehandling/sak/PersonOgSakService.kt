@@ -11,7 +11,7 @@ class PersonOgSakService(
     private val pdlGateway: IdentGateway
 ) {
 
-    suspend fun finnEllerOpprett(ident: Ident, periode: Periode) : Sak {
+    fun finnEllerOpprett(ident: Ident, periode: Periode) : Sak {
         val identliste = pdlGateway.hentAlleIdenterForPerson(ident)
 
         val personRepository = PersonRepository(connection)

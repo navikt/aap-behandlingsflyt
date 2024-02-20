@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.beregning
 
-import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.dbtest.InitTestDatabase
@@ -25,7 +24,7 @@ class BeregningsgrunnlagRepositoryTest {
     @Test
     fun `Lagre og hente opp beregningsgrunnlaget med uføre og yrkesskade`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val sak = runBlocking { sak(connection) }
+            val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
             val grunnlag11_19Standard =
@@ -54,7 +53,7 @@ class BeregningsgrunnlagRepositoryTest {
     @Test
     fun `Lagre og hente opp beregningsgrunnlaget med uføre uten yrkesskade`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val sak = runBlocking { sak(connection) }
+            val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
             val grunnlag11_19Standard =
@@ -77,7 +76,7 @@ class BeregningsgrunnlagRepositoryTest {
     @Test
     fun `Lagre og hente opp beregningsgrunnlaget uten uføre og yrkesskade`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val sak = runBlocking { sak(connection) }
+            val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
             val grunnlag11_19Standard =
@@ -97,7 +96,7 @@ class BeregningsgrunnlagRepositoryTest {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 
-    private suspend fun sak(connection: DBConnection): Sak {
+    private fun sak(connection: DBConnection): Sak {
         return PersonOgSakService(connection, FakePdlGateway).finnEllerOpprett(ident(), periode)
     }
 

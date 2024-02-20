@@ -9,7 +9,7 @@ import no.nav.aap.verdityper.sakogbehandling.Ident
 class PersonHendelsesHåndterer(
     private val connection: DBConnection
 ) {
-    suspend fun håndtere(key: Ident, hendelse: PersonHendelse): Saksnummer {
+    fun håndtere(key: Ident, hendelse: PersonHendelse): Saksnummer {
         val sak = PersonOgSakService(connection, PdlIdentGateway).finnEllerOpprett(key, hendelse.periode())
         return sak.saksnummer
     }

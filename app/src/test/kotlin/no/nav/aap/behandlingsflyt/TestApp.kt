@@ -1,10 +1,8 @@
 package no.nav.aap.behandlingsflyt
 
+import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.PdlBarnGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PdlPersonopplysningGateway
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.test.Fakes
 import org.testcontainers.containers.PostgreSQLContainer
 
@@ -12,8 +10,7 @@ import org.testcontainers.containers.PostgreSQLContainer
 fun main() {
     val postgres = postgreSQLContainer()
 
-    // Setter opp virtuell sandkasse lokalt
-    setupFakes()
+
 
     // Starter server
     embeddedServer(Netty, port = 8080) {
@@ -27,6 +24,7 @@ fun main() {
                 password = postgres.password
             )
         )
+        module()
     }.start(wait = true)
 }
 
@@ -37,9 +35,17 @@ private fun postgreSQLContainer(): PostgreSQLContainer<Nothing> {
     return postgres
 }
 
-fun setupFakes() {
+fun Application.module() {
+    // Setter opp virtuell sandkasse lokalt
     val fakes = Fakes()
-    PdlIdentGateway.init(fakes.azureConf, fakes.pdlConf)
-    PdlPersonopplysningGateway.init(fakes.azureConf, fakes.pdlConf)
-    PdlBarnGateway.init(fakes.azureConf, fakes.pdlConf)
+
+    environment.monitor.subscribe(ApplicationStarted) {
+    }
+    environment.monitor.subscribe(ApplicationStopped) { application ->
+        application.environment.log.info("Server har stoppet")
+        fakes.close()
+        // Release resources and unsubscribe from events
+        application.environment.monitor.unsubscribe(ApplicationStarted) {}
+        application.environment.monitor.unsubscribe(ApplicationStopped) {}
+    }
 }

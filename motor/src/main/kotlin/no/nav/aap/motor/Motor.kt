@@ -6,6 +6,8 @@ import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import java.util.*
 import java.util.concurrent.Executors
+import java.util.concurrent.Future
+import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
 
@@ -24,24 +26,33 @@ class Motor(
     private val log = LoggerFactory.getLogger(Motor::class.java)
 
     // Benytter virtuals threads istedenfor plattform tråder
-    private val executor =
-        Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("forbrenningskammer-", 1L).factory())
+    private val executor = Executors.newThreadPerTaskExecutor(
+        Thread.ofVirtual()
+            .name("forbrenningskammer-", 1L)
+            .factory()
+    )
+    private val watchdogExecutor = Executors.newScheduledThreadPool(1) as ScheduledThreadPoolExecutor
 
     private var stopped = false
+    private val workers = HashMap<Int, Future<*>>()
 
     fun start() {
         log.info("Starter prosessering av oppgaver")
         IntRange(1, antallKammer).forEach { i ->
-            executor.execute(Forbrenningskammer(dataSource)) // Legger inn en liten spread så det ikke pumpes på tabellen likt
+            val kammer = Forbrenningskammer(dataSource)
+            workers[i] = executor.submit(kammer) // Legger inn en liten spread så det ikke pumpes på tabellen likt
             if (i != antallKammer) {
                 Thread.sleep(100)
             }
         }
+        log.info("Startet prosessering av oppgaver")
+        watchdogExecutor.schedule(Watchdog(), 1, TimeUnit.MINUTES)
     }
 
     fun stop() {
         log.info("Avslutter prosessering av oppgaver")
         stopped = true
+        watchdogExecutor.shutdownNow()
         executor.awaitTermination(10L, TimeUnit.SECONDS)
     }
 
@@ -99,9 +110,47 @@ class Motor(
                     exception
                 )
                 OppgaveRepository(connection).markerFeilet(oppgaveInput, exception)
+            } finally {
+                MDC.clear()
             }
-            MDC.clear()
         }
+    }
 
+    /**
+     * Watchdog som sjekker om alle workers kjører
+     */
+    inner class Watchdog : Runnable {
+        val logger = LoggerFactory.getLogger(Watchdog::class.java)
+        override fun run() {
+            logger.info("Sjekker status på workers")
+            try {
+                val allRunning = workers.values.all { !it.isDone }
+
+                if (!allRunning && !stopped) {
+                    val nyeWorkers: List<Pair<Int, Forbrenningskammer>> = listOf()
+                    workers.forEach { (key, value) ->
+                        if (value.state() in setOf(Future.State.CANCELLED, Future.State.SUCCESS)) {
+                            logger.info("Fant workers som uventet har stoppet [{}]", value)
+                            nyeWorkers.addLast(Pair(key, Forbrenningskammer(dataSource)))
+                        } else if (value.state() == Future.State.FAILED) {
+                            logger.info(
+                                "Fant workers som uventet har blitt terminert [{}]",
+                                value,
+                                value.exceptionNow()
+                            )
+                            nyeWorkers.addLast(Pair(key, Forbrenningskammer(dataSource)))
+                        }
+                    }
+                    nyeWorkers.forEach {
+                        workers[it.first] = executor.submit(it.second)
+                    }
+                } else if (!stopped) {
+                    logger.debug("Alle workers OK")
+                }
+            } catch (exception: Throwable) {
+                logger.warn("Ukjent feil under watchdog aktivtet", exception)
+            }
+            watchdogExecutor.schedule(Watchdog(), 1, TimeUnit.MINUTES)
+        }
     }
 }

@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg
 
-import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.dbtest.InitTestDatabase
@@ -21,7 +20,7 @@ class BarnetilleggRepositoryTest {
     @Test
     fun `Finner ikke barnetilleggGrunnlag hvis ikke lagret`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val sak = runBlocking { sak(connection) }
+            val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
             val barnetilleggRepository = BarnetilleggRepository(connection)
@@ -33,7 +32,7 @@ class BarnetilleggRepositoryTest {
     @Test
     fun `Lagrer og henter barnetilleggGrunnlag`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val sak = runBlocking { sak(connection) }
+            val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
             val barnetilleggRepository = BarnetilleggRepository(connection)
@@ -63,7 +62,7 @@ class BarnetilleggRepositoryTest {
     @Test
     fun `lager nytt deaktiverer og lager nytt grunnlag ved ny lagring`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val sak = runBlocking { sak(connection) }
+            val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
             val barnetilleggRepository = BarnetilleggRepository(connection)
@@ -95,7 +94,7 @@ class BarnetilleggRepositoryTest {
     @Test
     fun `Kopierer barnetilleggGrunnlag fra en behandling til en annen`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val sak = runBlocking { sak(connection) }
+            val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
             val barnetilleggRepository = BarnetilleggRepository(connection)
             barnetilleggRepository.lagre(
@@ -130,7 +129,7 @@ class BarnetilleggRepositoryTest {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 
-    private suspend fun sak(connection: DBConnection): Sak {
+    private fun sak(connection: DBConnection): Sak {
         return PersonOgSakService(connection, FakePdlGateway).finnEllerOpprett(
             ident(),
             periode

@@ -3,90 +3,74 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.PdlBarnException
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.ktor.client.auth.azure.AzureConfig
+import no.nav.aap.httpclient.ClientConfig
+import no.nav.aap.httpclient.RestClient
+import no.nav.aap.httpclient.request.PostRequest
+import no.nav.aap.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.pdl.IdentVariables
-import no.nav.aap.pdl.PdlClient
-import no.nav.aap.pdl.PdlConfig
+import no.nav.aap.pdl.PdlRelasjonDataResponse
 import no.nav.aap.pdl.PdlRequest
-import no.nav.aap.pdl.PdlResponse
+import no.nav.aap.requiredConfigForKey
 import no.nav.aap.verdityper.sakogbehandling.Ident
+import java.net.URI
 
 object PdlBarnGateway : BarnGateway {
-    private lateinit var azureConfig: AzureConfig
-    private lateinit var pdlConfig: PdlConfig
-    private lateinit var graphQL: PdlClient
 
-    fun init(
-        azure: AzureConfig,
-        pdl: PdlConfig
-    ) {
-        azureConfig = azure
-        pdlConfig = pdl
-        graphQL = PdlClient(azureConfig, pdlConfig)
+    private val url = URI.create(requiredConfigForKey("integrasjon.pdl.url"))
+    private val client = RestClient(
+        config = ClientConfig(scope = requiredConfigForKey("integrasjon.pdl.scope")),
+        tokenProvider = ClientCredentialsTokenProvider
+    )
+
+    private fun query(request: PdlRequest): PdlRelasjonDataResponse {
+        val httpRequest = PostRequest(body = request, responseClazz = PdlRelasjonDataResponse::class.java)
+        return requireNotNull(client.post(uri = url, request = httpRequest))
     }
 
-    override suspend fun hentBarn(person: Person): List<Barn> {
+    override fun hentBarn(person: Person): List<Barn> {
         return hentBarn(hentBarnRelasjoner(person))
     }
 
-    private suspend fun hentBarnRelasjoner(person: Person): List<Ident> {
+    private fun hentBarnRelasjoner(person: Person): List<Ident> {
         val request = PdlRequest(BARN_RELASJON_QUERY, IdentVariables(person.aktivIdent().identifikator))
-        val response: Result<PdlResponse<PdlData>> = graphQL.query(request)
+        val response: PdlRelasjonDataResponse = query(request)
 
-        fun onSuccess(resp: PdlResponse<PdlData>): List<Ident> {
-            val relasjoner = resp
-                .data
-                ?.hentPerson
-                ?.forelderBarnRelasjon
-                ?: return emptyList()
+        val relasjoner = (response.data
+            ?.hentPerson
+            ?.forelderBarnRelasjon
+            ?: return emptyList())
 
-            return relasjoner.map {
-                Ident(
-                    it.relatertPersonsIdent
-                )
-            }
+        return relasjoner.map {
+            Ident(
+                it.relatertPersonsIdent
+            )
         }
-
-        fun onFailure(ex: Throwable): List<Ident> {
-            throw PdlBarnException("Feil ved henting av identer for person", ex)
-        }
-
-        return response.fold(::onSuccess, ::onFailure)
     }
 
-    private suspend fun hentBarn(identer: List<Ident>): List<Barn> {
+    private fun hentBarn(identer: List<Ident>): List<Barn> {
         val request = PdlRequest(PERSON_BOLK_QUERY, IdentVariables(identer = identer.map { it.identifikator }))
-        val response: Result<PdlResponse<PdlData>> = graphQL.query(request)
+        val response: PdlRelasjonDataResponse = query(request)
 
-        fun onSuccess(resp: PdlResponse<PdlData>): List<Barn> {
-            val bolk = resp
-                .data
-                ?.hentPersonBolk
-                ?: return emptyList()
+        val bolk = response
+            .data
+            ?.hentPersonBolk
+            ?: return emptyList()
 
-            return bolk.mapNotNull { res ->
-                res.person?.let { person ->
-                    person.foedsel?.let { foedsel ->
-                        foedsel.singleOrNull()?.let { fdato ->
-                            Barn(
-                                ident = Ident(res.ident),
-                                fødselsdato = Fødselsdato.parse(fdato.foedselsdato),
-                                dødsdato = person.doedsfall?.first()?.doedsdato?.let { Dødsdato.parse(it) }
-                            )
-                        }
+        return bolk.mapNotNull { res ->
+            res.person?.let { person ->
+                person.foedsel?.let { foedsel ->
+                    foedsel.singleOrNull()?.let { fdato ->
+                        Barn(
+                            ident = Ident(res.ident),
+                            fødselsdato = Fødselsdato.parse(fdato.foedselsdato),
+                            dødsdato = person.doedsfall?.first()?.doedsdato?.let { Dødsdato.parse(it) }
+                        )
                     }
                 }
             }
         }
-
-        fun onFailure(ex: Throwable): List<Barn> {
-            throw PdlBarnException("Feil ved henting av identer for person", ex)
-        }
-
-        return response.fold(::onSuccess, ::onFailure)
     }
 }
 
@@ -119,31 +103,3 @@ val PERSON_BOLK_QUERY = """
         }
     }
 """.trimIndent()
-
-data class PdlData(
-    val hentPerson: PdlPerson? = null,
-    val hentPersonBolk: List<HentPersonBolkResult>? = null
-)
-
-data class HentPersonBolkResult(
-    val ident: String,
-    val person: PdlPerson? = null
-)
-
-data class PdlPerson(
-    val forelderBarnRelasjon: List<PdlRelasjon>? = null,
-    val foedsel: List<PdlFoedsel>? = null,
-    val doedsfall: Set<PDLDødsfall>? = null
-)
-
-data class PDLDødsfall(
-    val doedsdato: String
-)
-
-data class PdlFoedsel(
-    val foedselsdato: String
-)
-
-data class PdlRelasjon(
-    val relatertPersonsIdent: String
-)

@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn
 
-import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlagkonstruktør
@@ -32,14 +31,12 @@ class BarnService private constructor(
         val harBehandlingsgrunnlag = vurderBehandlingsgrunnlag(behandlingId)
         val eksisterendeData = barnRepository.hentHvisEksisterer(behandlingId)
         val barn = if (harBehandlingsgrunnlag) {
-            runBlocking {
-                barnGateway.hentBarn(sak.person)
-            }
+            barnGateway.hentBarn(sak.person)
         } else {
             emptyList()
         }
 
-        if(barn.toSet() != eksisterendeData.barn.toSet()) {
+        if (barn.toSet() != eksisterendeData.barn.toSet()) {
             barnRepository.lagre(behandlingId, barn)
             return true
         }

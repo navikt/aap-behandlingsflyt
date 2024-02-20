@@ -39,7 +39,6 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak.FatteVedtakLøsn
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.dbflyway.Migrering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PdlPersonopplysningGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeRegisterMock
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.bistandsgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.medlemskap.medlemskapsgrunnlagApi
@@ -56,10 +55,8 @@ import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsOppgaver
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
-import no.nav.aap.ktor.client.auth.azure.AzureConfig
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.retry.RetryService
-import no.nav.aap.pdl.PdlConfig
 import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.feilhåndtering.ElementNotFoundException
@@ -128,15 +125,6 @@ internal fun Application.server(dbConfig: DbConfig) {
 
     val dataSource = initDatasource(dbConfig)
     Migrering.migrate(dataSource)
-
-    val azure = AzureConfig()
-    val pdl = PdlConfig(
-        scope = System.getenv("PDL_SCOPE"),
-        url = System.getenv("PDL_BASE_URL"),
-    )
-
-    PdlIdentGateway.init(azure, pdl)
-    PdlPersonopplysningGateway.init(azure, pdl)
 
     apiRouting {
         configApi()

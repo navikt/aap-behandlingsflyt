@@ -1,54 +1,47 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PdlPersonopplysningException
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.ktor.client.auth.azure.AzureConfig
+import no.nav.aap.httpclient.ClientConfig
+import no.nav.aap.httpclient.RestClient
+import no.nav.aap.httpclient.request.PostRequest
+import no.nav.aap.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.pdl.IdentVariables
-import no.nav.aap.pdl.PdlClient
-import no.nav.aap.pdl.PdlConfig
+import no.nav.aap.pdl.PdlPersoninfoDataResponse
 import no.nav.aap.pdl.PdlRequest
-import no.nav.aap.pdl.PdlResponse
+import no.nav.aap.requiredConfigForKey
+import java.net.URI
 import java.time.LocalDateTime
 
 object PdlPersonopplysningGateway : PersonopplysningGateway {
-    private lateinit var azureConfig: AzureConfig
-    private lateinit var pdlConfig: PdlConfig
-    private lateinit var graphQL: PdlClient
 
-    fun init(
-        azure: AzureConfig,
-        pdl: PdlConfig
-    ) {
-        azureConfig = azure
-        pdlConfig = pdl
-        graphQL = PdlClient(azureConfig, pdlConfig)
+    private val url = URI.create(requiredConfigForKey("integrasjon.pdl.url"))
+    private val client = RestClient(
+        config = ClientConfig(scope = requiredConfigForKey("integrasjon.pdl.scope")),
+        tokenProvider = ClientCredentialsTokenProvider
+    )
+
+    private fun query(request: PdlRequest): PdlPersoninfoDataResponse {
+        val httpRequest = PostRequest(body = request, responseClazz = PdlPersoninfoDataResponse::class.java)
+        return requireNotNull(client.post(uri = url, request = httpRequest))
     }
 
-    override suspend fun innhent(person: Person): Personopplysning? {
+    override fun innhent(person: Person): Personopplysning? {
         val request = PdlRequest(PERSON_QUERY, IdentVariables(person.aktivIdent().identifikator))
-        val response: Result<PdlResponse<PdlData>> = graphQL.query(request)
+        val response: PdlPersoninfoDataResponse = query(request)
 
-        fun onSuccess(resp: PdlResponse<PdlData>): Personopplysning? {
-            val foedselsdato = resp
-                .data
-                ?.hentPerson
-                ?.foedselsdato
-                ?: return null
+        val foedselsdato = response
+            .data
+            ?.hentPerson
+            ?.foedselsdato
+            ?: return null
 
-            return Personopplysning(
-                fødselsdato = Fødselsdato.parse(foedselsdato),
-                opprettetTid = LocalDateTime.now(),
-            )
-        }
-
-        fun onFailure(ex: Throwable): Personopplysning? {
-            throw PdlPersonopplysningException("Feil ved henting av identer for person", ex)
-        }
-
-        return response.fold(::onSuccess, ::onFailure)
+        return Personopplysning(
+            fødselsdato = Fødselsdato.parse(foedselsdato),
+            opprettetTid = LocalDateTime.now(),
+        )
     }
 }
 
@@ -62,10 +55,3 @@ val PERSON_QUERY = """
     }
 """.trimIndent()
 
-data class PdlData(
-    val hentPerson: PdlPerson?,
-)
-
-data class PdlPerson(
-    val foedselsdato: String
-)

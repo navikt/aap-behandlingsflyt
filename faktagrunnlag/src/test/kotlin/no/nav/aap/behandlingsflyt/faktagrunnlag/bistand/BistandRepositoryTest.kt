@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.bistand
 
-import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.dbtest.InitTestDatabase
@@ -24,7 +23,7 @@ class BistandRepositoryTest {
     @Test
     fun `Finner ikke bistand hvis ikke lagret`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val sak = runBlocking { sak(connection) }
+            val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
             val bistandRepository = BistandRepository(connection)
@@ -36,7 +35,7 @@ class BistandRepositoryTest {
     @Test
     fun `Lagrer og henter bistand`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val sak = runBlocking { sak(connection) }
+            val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
             val bistandRepository = BistandRepository(connection)
@@ -49,7 +48,7 @@ class BistandRepositoryTest {
     @Test
     fun `Lagrer ikke like bistand flere ganger`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val sak = runBlocking { sak(connection) }
+            val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
             val bistandRepository = BistandRepository(connection)
@@ -80,7 +79,7 @@ class BistandRepositoryTest {
     @Test
     fun `Kopierer bistand fra en behandling til en annen`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val sak = runBlocking { sak(connection) }
+            val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
             val bistandRepository = BistandRepository(connection)
             bistandRepository.lagre(behandling1.id, BistandVurdering("begrunnelse", false))
@@ -111,7 +110,7 @@ class BistandRepositoryTest {
     @Test
     fun `Kopierer bistand fra en behandling til en annen der fraBehandlingen har to versjoner av opplysningene`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val sak = runBlocking { sak(connection) }
+            val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
             val bistandRepository = BistandRepository(connection)
             bistandRepository.lagre(behandling1.id, BistandVurdering("en begrunnelse", false))
@@ -133,7 +132,7 @@ class BistandRepositoryTest {
     @Test
     fun `Lagrer nye bistandsopplysninger som ny rad og deaktiverer forrige versjon av opplysningene`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val sak = runBlocking { sak(connection) }
+            val sak = sak(connection)
             val behandling = behandling(connection, sak)
             val bistandRepository = BistandRepository(connection)
 
@@ -184,7 +183,7 @@ class BistandRepositoryTest {
     @Test
     fun `Ved kopiering av bistandsopplysninger fra en avsluttet behandling til en ny skal kun referansen kopieres, ikke hele raden`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val sak = runBlocking { sak(connection) }
+            val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
             val bistandRepository = BistandRepository(connection)
             bistandRepository.lagre(behandling1.id, BistandVurdering("en begrunnelse", false))
@@ -262,7 +261,7 @@ class BistandRepositoryTest {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 
-    private suspend fun sak(connection: DBConnection): Sak {
+    private fun sak(connection: DBConnection): Sak {
         return PersonOgSakService(connection, FakePdlGateway).finnEllerOpprett(ident(), periode)
     }
 

@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger
 
-import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlagkonstruktør
@@ -28,9 +27,7 @@ class PersonopplysningService private constructor(
         val sak = sakService.hent(kontekst.sakId)
 
         val eksisterendeData = personopplysningRepository.hentHvisEksisterer(kontekst.behandlingId)
-        val personopplysninger = runBlocking {
-            personopplysningGateway.innhent(sak.person) ?: error("fødselsdato skal alltid eksistere i PDL")
-        }
+        val personopplysninger = personopplysningGateway.innhent(sak.person) ?: error("fødselsdato skal alltid eksistere i PDL")
 
         if (personopplysninger != eksisterendeData?.personopplysning) {
             personopplysningRepository.lagre(kontekst.behandlingId, personopplysninger)

@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.barn
 
-import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.dbtest.InitTestDatabase
@@ -24,7 +23,7 @@ class BarnRepositoryTest {
     @Test
     fun `Finner ikke barn hvis det ikke finnes barn`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val sak = runBlocking { sak(connection) }
+            val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
             val barnRepository = BarnRepository(connection)
@@ -36,7 +35,7 @@ class BarnRepositoryTest {
     @Test
     fun `Lagrer og henter barn`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val sak = runBlocking { sak(connection) }
+            val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
             val barnRepository = BarnRepository(connection)
@@ -58,7 +57,7 @@ class BarnRepositoryTest {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 
-    private suspend fun sak(connection: DBConnection): Sak {
+    private fun sak(connection: DBConnection): Sak {
         return PersonOgSakService(connection, FakePdlGateway).finnEllerOpprett(
             ident(),
             periode

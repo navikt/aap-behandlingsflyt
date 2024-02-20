@@ -11,38 +11,44 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.BARN_RELASJON_QUERY
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.HentPersonBolkResult
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.PERSON_BOLK_QUERY
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.PdlFoedsel
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.PdlRelasjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PERSON_QUERY
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.IDENT_QUERY
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlData
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlGruppe
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdent
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdenter
-import no.nav.aap.ktor.client.auth.azure.AzureConfig
-import no.nav.aap.pdl.PdlConfig
+import no.nav.aap.pdl.HentPersonBolkResult
+import no.nav.aap.pdl.PdlFoedsel
+import no.nav.aap.pdl.PdlGruppe
+import no.nav.aap.pdl.PdlIdent
+import no.nav.aap.pdl.PdlIdenter
+import no.nav.aap.pdl.PdlIdenterData
+import no.nav.aap.pdl.PdlIdenterDataResponse
+import no.nav.aap.pdl.PdlPersoninfo
+import no.nav.aap.pdl.PdlPersoninfoData
+import no.nav.aap.pdl.PdlPersoninfoDataResponse
+import no.nav.aap.pdl.PdlRelasjon
+import no.nav.aap.pdl.PdlRelasjonDataResponse
 import no.nav.aap.pdl.PdlRequest
-import no.nav.aap.pdl.PdlResponse
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.PdlData as BarnPdlData
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.PdlPerson as BarnPdlPerson
+import no.nav.aap.pdl.PdlPerson as BarnPdlPerson
+import no.nav.aap.pdl.PdlRelasjonData as BarnPdlData
 
 class Fakes : AutoCloseable {
+    private var azure: NettyApplicationEngine =
+        embeddedServer(Netty, port = 0, module = Application::azureFake).apply { start() }
     private val pdl = embeddedServer(Netty, port = 0, module = Application::pdlFake).apply { start() }
-    val pdlConf = PdlConfig("", "http://localhost:${pdl.port()}")
 
-    private val azure = embeddedServer(Netty, port = 0, module = Application::azureFake).apply { start() }
-    val azureConf = AzureConfig(
-        tokenEndpoint = "http://localhost:${azure.port()}/token",
-        clientId = "",
-        clientSecret = "",
-        jwksUri = "",
-        issuer = ""
-    )
+    init {
+        // Azure
+        System.setProperty("azure.openid.config.token.endpoint", "http://localhost:${azure.port()}/token")
+        System.setProperty("azure.app.client.id", "")
+        System.setProperty("azure.app.client.secret", "")
+        System.setProperty("azure.openid.config.jwks.uri", "")
+        System.setProperty("azure.openid.config.issuer", "")
+
+        // Pdl
+        System.setProperty("integrasjon.pdl.url", "http://localhost:${pdl.port()}")
+        System.setProperty("integrasjon.pdl.scope", "pdl")
+    }
 
     override fun close() {
         pdl.stop(0L, 0L)
@@ -82,7 +88,7 @@ fun Application.pdlFake() {
     }
 }
 
-private fun barn() = PdlResponse(
+private fun barn() = PdlRelasjonDataResponse(
     errors = null,
     extensions = null,
     data = BarnPdlData(
@@ -97,7 +103,7 @@ private fun barn() = PdlResponse(
     )
 )
 
-private fun barnRelasjoner() = PdlResponse(
+private fun barnRelasjoner() = PdlRelasjonDataResponse(
     errors = null,
     extensions = null,
     data = BarnPdlData(
@@ -109,10 +115,10 @@ private fun barnRelasjoner() = PdlResponse(
     )
 )
 
-private fun identer(req: PdlRequest) = PdlResponse(
+private fun identer(req: PdlRequest) = PdlIdenterDataResponse(
     errors = null,
     extensions = null,
-    data = PdlData(
+    data = PdlIdenterData(
         hentIdenter = PdlIdenter(
             identer = listOf(
                 PdlIdent(req.variables.ident ?: "", false, PdlGruppe.FOLKEREGISTERIDENT),
@@ -123,11 +129,11 @@ private fun identer(req: PdlRequest) = PdlResponse(
     ),
 )
 
-private fun personopplysninger(req: PdlRequest) = PdlResponse(
+private fun personopplysninger(req: PdlRequest) = PdlPersoninfoDataResponse(
     errors = null,
     extensions = null,
-    data = no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PdlData(
-        hentPerson = no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PdlPerson(
+    data = PdlPersoninfoData(
+        hentPerson = PdlPersoninfo(
             foedselsdato = fakedFødselsdatoResponsees[req.variables.ident] ?: "1990-01-01"
         )
     ),
@@ -145,6 +151,10 @@ fun Application.azureFake() {
 }
 
 internal data class TestToken(
-    val exprires_in: Int = 3599,
-    val access_token: String = "very.secure.token"
+    val access_token: String = "very.secure.token",
+    val refresh_token: String = "very.secure.token",
+    val id_token: String = "very.secure.token",
+    val token_type: String = "token-type",
+    val scope: String? = null,
+    val expires_in: Int = 3599,
 )
