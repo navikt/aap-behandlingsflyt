@@ -2,30 +2,11 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.Row
-import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
 class SykdomRepository(private val connection: DBConnection) {
-
-    fun lagre(behandlingId: BehandlingId, yrkesskadevurdering: Yrkesskadevurdering?) {
-
-        val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
-        val nyttGrunnlag = SykdomGrunnlag(
-            null,
-            yrkesskadevurdering = yrkesskadevurdering,
-            sykdomsvurdering = eksisterendeGrunnlag?.sykdomsvurdering
-        )
-
-        if (eksisterendeGrunnlag != nyttGrunnlag) {
-            eksisterendeGrunnlag?.let {
-                deaktiverGrunnlag(behandlingId)
-            }
-
-            lagre(behandlingId, nyttGrunnlag)
-        }
-    }
 
     private fun deaktiverGrunnlag(behandlingId: BehandlingId) {
         connection.execute("UPDATE SYKDOM_GRUNNLAG SET AKTIV = FALSE WHERE BEHANDLING_ID = ? AND AKTIV = TRUE") {
@@ -36,11 +17,11 @@ class SykdomRepository(private val connection: DBConnection) {
         }
     }
 
-    fun lagre(behandlingId: BehandlingId, sykdomsvurdering: Sykdomsvurdering?) {
+    fun lagre(behandlingId: BehandlingId, sykdomsvurdering: Sykdomsvurdering?, yrkesskadevurdering: Yrkesskadevurdering?) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         val nyttGrunnlag = SykdomGrunnlag(
             null,
-            yrkesskadevurdering = eksisterendeGrunnlag?.yrkesskadevurdering,
+            yrkesskadevurdering = yrkesskadevurdering,
             sykdomsvurdering = sykdomsvurdering
         )
 
@@ -77,9 +58,9 @@ class SykdomRepository(private val connection: DBConnection) {
 
         val query = """
             INSERT INTO YRKESSKADE_VURDERING 
-            (BEGRUNNELSE, ARSAKSSAMMENHENG, SKADEDATO, ANDEL_AV_NEDSETTELSE, ANTATT_ARLIG_INNTEKT)
+            (BEGRUNNELSE, ARSAKSSAMMENHENG, SKADEDATO, ANDEL_AV_NEDSETTELSE)
             VALUES
-            (?, ?, ?, ?, ?)
+            (?, ?, ?, ?)
         """.trimIndent()
 
         val id = connection.executeReturnKey(query) {
@@ -88,29 +69,10 @@ class SykdomRepository(private val connection: DBConnection) {
                 setBoolean(2, vurdering.erÅrsakssammenheng)
                 setLocalDate(3, vurdering.skadetidspunkt)
                 setInt(4, vurdering.andelAvNedsettelse?.prosentverdi())
-                setBigDecimal(5, vurdering.antattÅrligInntekt?.verdi())
             }
-        }
-
-        vurdering.dokumenterBruktIVurdering.forEach {
-            lagreYrkesskadeDokument(id, it)
         }
 
         return id
-    }
-
-    private fun lagreYrkesskadeDokument(vurderingId: Long, journalpostId: JournalpostId) {
-        val query = """
-            INSERT INTO YRKESSKADE_VURDERING_DOKUMENTER (vurdering_id, journalpost) 
-            VALUES (?, ?)
-        """.trimIndent()
-
-        connection.execute(query) {
-            setParams {
-                setLong(1, vurderingId)
-                setString(2, journalpostId.identifikator)
-            }
-        }
     }
 
     private fun lagreSykdom(vurdering: Sykdomsvurdering?): Long? {
@@ -120,9 +82,9 @@ class SykdomRepository(private val connection: DBConnection) {
 
         val query = """
             INSERT INTO SYKDOM_VURDERING 
-            (BEGRUNNELSE, ER_SYKDOM_SKADE_LYTE_VESETLING_DEL, ER_NEDSETTELSE_HOYERE_ENN_NEDRE_GRENSE, NEDRE_GRENSE, NEDSATT_ARBEIDSEVNE_DATO, YTTERLIGERE_NEDSATT_ARBEIDSEVNE_DATO)
+            (BEGRUNNELSE, ER_SYKDOM_SKADE_LYTE_VESETLING_DEL, ER_NEDSETTELSE_HOYERE_ENN_NEDRE_GRENSE, NEDRE_GRENSE)
             VALUES
-            (?, ?, ?, ?, ?, ?)
+            (?, ?, ?, ?)
         """.trimIndent()
 
         val id = connection.executeReturnKey(query) {
@@ -131,8 +93,6 @@ class SykdomRepository(private val connection: DBConnection) {
                 setBoolean(2, vurdering.erSkadeSykdomEllerLyteVesentligdel)
                 setBoolean(3, vurdering.erNedsettelseIArbeidsevneHøyereEnnNedreGrense)
                 setEnumName(4, vurdering.nedreGrense)
-                setLocalDate(5, vurdering.nedsattArbeidsevneDato)
-                setLocalDate(6, vurdering.ytterligereNedsattArbeidsevneDato)
             }
         }
 
@@ -200,7 +160,7 @@ class SykdomRepository(private val connection: DBConnection) {
         }
         return connection.queryFirstOrNull(
             """
-            SELECT BEGRUNNELSE, ER_SYKDOM_SKADE_LYTE_VESETLING_DEL, ER_NEDSETTELSE_HOYERE_ENN_NEDRE_GRENSE, NEDRE_GRENSE, NEDSATT_ARBEIDSEVNE_DATO, YTTERLIGERE_NEDSATT_ARBEIDSEVNE_DATO
+            SELECT BEGRUNNELSE, ER_SYKDOM_SKADE_LYTE_VESETLING_DEL, ER_NEDSETTELSE_HOYERE_ENN_NEDRE_GRENSE, NEDRE_GRENSE
             FROM SYKDOM_VURDERING WHERE id = ?
             """.trimIndent()
         ) {
@@ -213,9 +173,7 @@ class SykdomRepository(private val connection: DBConnection) {
                     hentSykdomsDokumenter(sykdomId),
                     row.getBoolean("ER_SYKDOM_SKADE_LYTE_VESETLING_DEL"),
                     row.getBooleanOrNull("ER_NEDSETTELSE_HOYERE_ENN_NEDRE_GRENSE"),
-                    row.getEnumOrNull("NEDRE_GRENSE"),
-                    row.getLocalDateOrNull("NEDSATT_ARBEIDSEVNE_DATO"),
-                    row.getLocalDateOrNull("YTTERLIGERE_NEDSATT_ARBEIDSEVNE_DATO")
+                    row.getEnumOrNull("NEDRE_GRENSE")
                 )
             }
         }
@@ -237,7 +195,7 @@ class SykdomRepository(private val connection: DBConnection) {
             return null
         }
         val query = """
-            SELECT BEGRUNNELSE, ARSAKSSAMMENHENG, SKADEDATO, ANDEL_AV_NEDSETTELSE, ANTATT_ARLIG_INNTEKT
+            SELECT BEGRUNNELSE, ARSAKSSAMMENHENG, SKADEDATO, ANDEL_AV_NEDSETTELSE
             FROM YRKESSKADE_VURDERING
             WHERE ID = ?
         """.trimIndent()
@@ -248,26 +206,10 @@ class SykdomRepository(private val connection: DBConnection) {
             setRowMapper { row ->
                 Yrkesskadevurdering(
                     row.getString("BEGRUNNELSE"),
-                    hentYrkesskadeDokumenter(yrkesskadeId),
                     row.getBoolean("ARSAKSSAMMENHENG"),
                     row.getLocalDateOrNull("SKADEDATO"),
-                    row.getIntOrNull("ANDEL_AV_NEDSETTELSE")?.let(::Prosent),
-                    row.getBigDecimalOrNull("ANTATT_ARLIG_INNTEKT")?.let(::Beløp)
+                    row.getIntOrNull("ANDEL_AV_NEDSETTELSE")?.let(::Prosent)
                 )
-            }
-        }
-    }
-
-    private fun hentYrkesskadeDokumenter(yrkesskadeId: Long): List<JournalpostId> {
-        val query = """
-            SELECT JOURNALPOST FROM YRKESSKADE_VURDERING_DOKUMENTER WHERE VURDERING_ID = ?
-        """.trimIndent()
-        return connection.queryList(query) {
-            setParams {
-                setLong(1, yrkesskadeId)
-            }
-            setRowMapper { row ->
-                JournalpostId(row.getString("JOURNALPOST"))
             }
         }
     }

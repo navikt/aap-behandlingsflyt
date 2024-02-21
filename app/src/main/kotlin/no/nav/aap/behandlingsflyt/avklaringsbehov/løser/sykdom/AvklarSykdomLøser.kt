@@ -18,7 +18,8 @@ class AvklarSykdomLøser(connection: DBConnection) : AvklaringsbehovsLøser<Avkl
 
         sykdomRepository.lagre(
             behandlingId = behandling.id,
-            sykdomsvurdering = løsning.sykdomsvurdering
+            sykdomsvurdering = løsning.sykdomsvurdering.toSykdomsvurdering(),
+            yrkesskadevurdering = løsning.sykdomsvurdering.toYrkesskadevurdering()
         )
 
         return LøsningsResultat(

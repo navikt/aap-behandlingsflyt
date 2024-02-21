@@ -33,7 +33,6 @@ enum class StegType(val gruppe: StegGruppe, val status: Status, val tekniskSteg:
         status = Status.UTREDES
     ),
     BARNETILLEGG(gruppe = StegGruppe.BARNETILLEGG, status = Status.UTREDES),
-    AVKLAR_YRKESSKADE(gruppe = StegGruppe.SYKDOM, status = Status.UTREDES),
     AVKLAR_SYKDOM(
         gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES
@@ -42,6 +41,7 @@ enum class StegType(val gruppe: StegGruppe, val status: Status, val tekniskSteg:
         gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES
     ),
+    FASTSETT_BEREGNINGSTIDSPUNKT(gruppe = StegGruppe.GRUNNLAG, status = Status.UTREDES),
     FASTSETT_GRUNNLAG(gruppe = StegGruppe.GRUNNLAG, status = Status.UTREDES),
     FASTSETT_UTTAK(
         gruppe = StegGruppe.UTTAK,

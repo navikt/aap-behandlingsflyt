@@ -5,6 +5,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
@@ -14,24 +16,30 @@ class BeregningService(
     private val inntektGrunnlagRepository: InntektGrunnlagRepository,
     private val sykdomRepository: SykdomRepository,
     private val uføreRepository: UføreRepository,
-    private val beregningsgrunnlagRepository: BeregningsgrunnlagRepository
+    private val beregningsgrunnlagRepository: BeregningsgrunnlagRepository,
+    private val beregningVurderingRepository: BeregningVurderingRepository
 ) {
 
     fun beregnGrunnlag(behandlingId: BehandlingId): Beregningsgrunnlag {
         val inntektGrunnlag = inntektGrunnlagRepository.hent(behandlingId)
         val sykdomGrunnlag = sykdomRepository.hent(behandlingId)
         val uføre = uføreRepository.hentHvisEksisterer(behandlingId)
+        val beregningVurdering = beregningVurderingRepository.hent(behandlingId)
 
-        val inntekter = sykdomGrunnlag.utledInput()
+        val inntekter = beregningVurdering.utledInput()
 
-        val beregningMedYrkesskade = beregn(sykdomGrunnlag, inntekter.utledForOrdinær(inntektGrunnlag.inntekter))
+        val beregningMedYrkesskade = beregn(sykdomGrunnlag, beregningVurdering, inntekter.utledForOrdinær(inntektGrunnlag.inntekter))
 
         val inntekterYtterligereNedsatt = inntekter.utledForYtterligereNedsatt(inntektGrunnlag.inntekter)
 
         val uføregrad = uføre?.vurdering?.uføregrad
 
         if (inntekterYtterligereNedsatt != null && uføregrad != null) {
-            val beregningMedYrkesskadeVedYtterligereNedsatt = beregn(sykdomGrunnlag, inntekterYtterligereNedsatt)
+            val beregningMedYrkesskadeVedYtterligereNedsatt = beregn(
+                sykdomGrunnlag,
+                beregningVurdering,
+                inntekterYtterligereNedsatt
+            )
             val uføreberegning = UføreBeregning(
                 grunnlag = beregningMedYrkesskade,
                 ytterligereNedsattGrunnlag = beregningMedYrkesskadeVedYtterligereNedsatt,
@@ -52,13 +60,14 @@ class BeregningService(
 
     private fun beregn(
         sykdomGrunnlag: SykdomGrunnlag,
+        beregningVurdering: BeregningVurdering,
         inntekterPerÅr: Set<InntektPerÅr>
     ): Beregningsgrunnlag {
         val grunnlag11_19 =
             GrunnlagetForBeregningen(inntekterPerÅr).beregnGrunnlaget()
 
         val skadetidspunkt = sykdomGrunnlag.yrkesskadevurdering?.skadetidspunkt
-        val antattÅrligInntekt = sykdomGrunnlag.yrkesskadevurdering?.antattÅrligInntekt
+        val antattÅrligInntekt = beregningVurdering.antattÅrligInntekt
         val andelAvNedsettelsenSomSkyldesYrkesskaden = sykdomGrunnlag.yrkesskadevurdering?.andelAvNedsettelse
         if (skadetidspunkt != null && antattÅrligInntekt != null && andelAvNedsettelsenSomSkyldesYrkesskaden != null) {
             val inntektPerÅr = InntektPerÅr(

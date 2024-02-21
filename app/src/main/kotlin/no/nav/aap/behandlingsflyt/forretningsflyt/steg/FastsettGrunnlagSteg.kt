@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -61,7 +62,8 @@ class FastsettGrunnlagSteg(
                     InntektGrunnlagRepository(connection),
                     SykdomRepository(connection),
                     UføreRepository(connection),
-                    BeregningsgrunnlagRepository(connection)
+                    BeregningsgrunnlagRepository(connection),
+                    BeregningVurderingRepository(connection)
                 ),
                 VilkårsresultatRepository(connection),
                 PeriodeTilVurderingService(SakService(connection))

@@ -1,32 +1,32 @@
-package no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom
+package no.nav.aap.behandlingsflyt.avklaringsbehov.løser.beregning
 
 import no.nav.aap.behandlingsflyt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.AvklaringsbehovsLøser
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.LøsningsResultat
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.verdityper.flyt.FlytKontekst
 
-class AvklarYrkesskadeLøser(val connection: DBConnection) : AvklaringsbehovsLøser<AvklarYrkesskadeLøsning> {
+class FastsettBeregningstidspunktLøser(connection: DBConnection) : AvklaringsbehovsLøser<FastsettBeregningstidspunktLøsning> {
 
     private val behandlingRepository = BehandlingRepositoryImpl(connection)
-    private val sykdomRepository = SykdomRepository(connection)
+    private val beregningVurderingRepository = BeregningVurderingRepository(connection)
 
-    override fun løs(kontekst: FlytKontekst, løsning: AvklarYrkesskadeLøsning): LøsningsResultat {
+    override fun løs(kontekst: FlytKontekst, løsning: FastsettBeregningstidspunktLøsning): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
 
-        sykdomRepository.lagre(
+        beregningVurderingRepository.lagre(
             behandlingId = behandling.id,
-            yrkesskadevurdering = løsning.yrkesskadevurdering.toYrkesskadevurdering(),
+            vurdering = løsning.vurdering
         )
 
         return LøsningsResultat(
-            begrunnelse = løsning.yrkesskadevurdering.begrunnelse
+            begrunnelse = løsning.vurdering.begrunnelse
         )
     }
 
     override fun forBehov(): Definisjon {
-        return Definisjon.AVKLAR_SYKDOM
+        return Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT
     }
 }

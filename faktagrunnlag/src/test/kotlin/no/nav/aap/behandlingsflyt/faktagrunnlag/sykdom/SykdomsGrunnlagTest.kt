@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.NedreGrense
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
-import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -23,8 +22,6 @@ class SykdomsGrunnlagTest {
                 erSkadeSykdomEllerLyteVesentligdel = true,
                 erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                 nedreGrense = NedreGrense.FEMTI,
-                nedsattArbeidsevneDato = LocalDate.now(),
-                ytterligereNedsattArbeidsevneDato = null
             )
         )
 
@@ -42,8 +39,6 @@ class SykdomsGrunnlagTest {
                 erSkadeSykdomEllerLyteVesentligdel = true,
                 erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                 nedreGrense = NedreGrense.TRETTI,
-                nedsattArbeidsevneDato = LocalDate.now(),
-                ytterligereNedsattArbeidsevneDato = null
             )
         )
 
@@ -56,11 +51,9 @@ class SykdomsGrunnlagTest {
             id = 1L,
             yrkesskadevurdering = Yrkesskadevurdering(
                 begrunnelse = "",
-                dokumenterBruktIVurdering = emptyList(),
                 erÅrsakssammenheng = true,
                 skadetidspunkt = LocalDate.now(),
                 andelAvNedsettelse = Prosent.`100_PROSENT`,
-                antattÅrligInntekt = Beløp(1000)
             ),
             sykdomsvurdering = Sykdomsvurdering(
                 begrunnelse = "",
@@ -68,8 +61,6 @@ class SykdomsGrunnlagTest {
                 erSkadeSykdomEllerLyteVesentligdel = true,
                 erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                 nedreGrense = NedreGrense.TRETTI,
-                nedsattArbeidsevneDato = LocalDate.now(),
-                ytterligereNedsattArbeidsevneDato = null
             )
         )
 
@@ -82,11 +73,9 @@ class SykdomsGrunnlagTest {
             id = 1L,
             yrkesskadevurdering = Yrkesskadevurdering(
                 begrunnelse = "",
-                dokumenterBruktIVurdering = emptyList(),
                 erÅrsakssammenheng = true,
                 skadetidspunkt = LocalDate.now(),
                 andelAvNedsettelse = Prosent.`100_PROSENT`,
-                antattÅrligInntekt = Beløp(1000)
             ),
             sykdomsvurdering = Sykdomsvurdering(
                 begrunnelse = "",
@@ -94,8 +83,6 @@ class SykdomsGrunnlagTest {
                 erSkadeSykdomEllerLyteVesentligdel = true,
                 erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                 nedreGrense = NedreGrense.FEMTI,
-                nedsattArbeidsevneDato = LocalDate.now(),
-                ytterligereNedsattArbeidsevneDato = null
             )
         )
 
@@ -108,11 +95,9 @@ class SykdomsGrunnlagTest {
             id = 1L,
             yrkesskadevurdering = Yrkesskadevurdering(
                 begrunnelse = "",
-                dokumenterBruktIVurdering = emptyList(),
                 erÅrsakssammenheng = false,
                 skadetidspunkt = LocalDate.now(),
                 andelAvNedsettelse = Prosent.`100_PROSENT`,
-                antattÅrligInntekt = Beløp(1000)
             ),
             sykdomsvurdering = Sykdomsvurdering(
                 begrunnelse = "",
@@ -120,8 +105,6 @@ class SykdomsGrunnlagTest {
                 erSkadeSykdomEllerLyteVesentligdel = true,
                 erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                 nedreGrense = NedreGrense.TRETTI,
-                nedsattArbeidsevneDato = LocalDate.now(),
-                ytterligereNedsattArbeidsevneDato = null
             )
         )
 
@@ -134,11 +117,9 @@ class SykdomsGrunnlagTest {
             id = 1L,
             yrkesskadevurdering = Yrkesskadevurdering(
                 begrunnelse = "",
-                dokumenterBruktIVurdering = emptyList(),
                 erÅrsakssammenheng = false,
                 skadetidspunkt = LocalDate.now(),
                 andelAvNedsettelse = Prosent.`100_PROSENT`,
-                antattÅrligInntekt = Beløp(1000)
             ),
             sykdomsvurdering = Sykdomsvurdering(
                 begrunnelse = "",
@@ -146,8 +127,6 @@ class SykdomsGrunnlagTest {
                 erSkadeSykdomEllerLyteVesentligdel = true,
                 erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                 nedreGrense = NedreGrense.FEMTI,
-                nedsattArbeidsevneDato = LocalDate.now(),
-                ytterligereNedsattArbeidsevneDato = null
             )
         )
 

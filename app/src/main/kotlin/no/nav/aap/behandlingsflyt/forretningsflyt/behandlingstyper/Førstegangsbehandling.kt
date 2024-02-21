@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.flyt.BehandlingType
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BarnetilleggSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BeregnTilkjentYtelseSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettArbeidsevneSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettBeregningstidspunktSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettGrunnlagSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FatteVedtakSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.ForeslåVedtakSteg
@@ -23,7 +24,6 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderBistandsbehovSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderStudentSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykdomSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykepengeErstatningSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderYrkesskadeÅrsakssammenhengSteg
 import no.nav.aap.verdityper.flyt.StegType
 
 object Førstegangsbehandling : BehandlingType {
@@ -33,13 +33,13 @@ object Førstegangsbehandling : BehandlingType {
             .medSteg(steg = VurderAlderSteg, informasjonskrav = listOf(PersonopplysningService))
             .medSteg(steg = GeneriskPlaceholderFlytSteg(StegType.VURDER_LOVVALG))
             .medSteg(steg = VurderStudentSteg)
-            .medSteg(steg = VurderYrkesskadeÅrsakssammenhengSteg, informasjonskrav = listOf(YrkesskadeService))
-            .medSteg(steg = VurderSykdomSteg)
+            .medSteg(steg = VurderSykdomSteg, informasjonskrav = listOf(YrkesskadeService))
             .medSteg(steg = FastsettArbeidsevneSteg)
             .medSteg(steg = FritakMeldepliktSteg)
             .medSteg(steg = VurderBistandsbehovSteg)
             .medSteg(steg = VurderSykepengeErstatningSteg)
             .medSteg(steg = GeneriskPlaceholderFlytSteg(StegType.VURDER_MEDLEMSKAP))
+            .medSteg(steg = FastsettBeregningstidspunktSteg)
             .medSteg(steg = FastsettGrunnlagSteg, informasjonskrav = listOf(InntektService))
             .medSteg(steg = UnderveisSteg, informasjonskrav = listOf(PliktkortService))
             .medSteg(steg = BarnetilleggSteg, informasjonskrav = listOf(BarnService))

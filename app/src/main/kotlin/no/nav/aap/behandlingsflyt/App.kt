@@ -34,7 +34,6 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.meldeplikt.FritakMeldep
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.student.AvklarStudentLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.AvklarSykepengerErstatningLøsning
-import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.AvklarYrkesskadeLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
@@ -87,7 +86,6 @@ internal fun Application.server(dbConfig: DbConfig) {
             registerSubtypes(
                 // TODO: Dette bør skje via reflection elns så dette ikke blir manuelt vedlikehold
                 AvklarStudentLøsning::class.java,
-                AvklarYrkesskadeLøsning::class.java,
                 AvklarSykdomLøsning::class.java,
                 AvklarSykepengerErstatningLøsning::class.java,
                 AvklarBistandsbehovLøsning::class.java,

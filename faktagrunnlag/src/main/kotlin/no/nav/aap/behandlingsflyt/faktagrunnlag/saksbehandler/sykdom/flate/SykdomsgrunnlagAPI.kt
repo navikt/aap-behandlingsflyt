@@ -26,49 +26,21 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: HikariDataSource) {
                     yrkesskadeGrunnlag to sykdomGrunnlag
                 }
 
+                val innhentedeYrkesskader = yrkesskadeGrunnlag?.yrkesskader?.yrkesskader?.map { yrkesskade ->
+                    RegistrertYrkesskade(
+                        ref = yrkesskade.ref,
+                        periode = yrkesskade.periode,
+                        kilde = "Yrkesskaderegisteret"
+                    )
+                } ?: emptyList()
                 respond(
                     SykdomGrunnlagDto(
                         opplysninger = InnhentetSykdomsOpplysninger(
                             oppgittYrkesskadeISøknad = false,
-                            innhentedeYrkesskader = yrkesskadeGrunnlag?.yrkesskader?.yrkesskader?.map { yrkesskade ->
-                                RegistrertYrkesskade(
-                                    ref = yrkesskade.ref,
-                                    periode = yrkesskade.periode,
-                                    kilde = "Yrkesskaderegisteret"
-                                )
-                            } ?: emptyList(),
+                            innhentedeYrkesskader = innhentedeYrkesskader,
                         ),
-                        sykdomsvurdering = sykdomGrunnlag?.sykdomsvurdering,
-                        erÅrsakssammenheng = sykdomGrunnlag?.yrkesskadevurdering?.erÅrsakssammenheng
-                    )
-                )
-            }
-        }
-        route("/{referanse}/grunnlag/sykdom/yrkesskade") {
-            get<BehandlingReferanse, YrkesskadeGrunnlagDto> { req ->
-                val (yrkesskadeGrunnlag, sykdomGrunnlag) = dataSource.transaction { connection ->
-                    val behandling: Behandling = BehandlingReferanseService(connection).behandling(req)
-
-                    val yrkesskadeGrunnlag =
-                        YrkesskadeRepository(connection).hentHvisEksisterer(behandlingId = behandling.id)
-                    val sykdomGrunnlag = SykdomRepository(connection).hentHvisEksisterer(behandlingId = behandling.id)
-
-                    yrkesskadeGrunnlag to sykdomGrunnlag
-                }
-
-                respond(
-                    YrkesskadeGrunnlagDto(
-                        opplysninger = InnhentetSykdomsOpplysninger(
-                            oppgittYrkesskadeISøknad = false,
-                            innhentedeYrkesskader = yrkesskadeGrunnlag?.yrkesskader?.yrkesskader?.map { yrkesskade ->
-                                RegistrertYrkesskade(
-                                    ref = yrkesskade.ref,
-                                    periode = yrkesskade.periode,
-                                    kilde = "Yrkesskaderegisteret"
-                                )
-                            } ?: emptyList()
-                        ),
-                        yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
+                        sykdomsvurdering = sykdomGrunnlag?.sykdomsvurdering?.toDto(sykdomGrunnlag.yrkesskadevurdering),
+                        skalVurdereYrkesskade = innhentedeYrkesskader.isNotEmpty()
                     )
                 )
             }

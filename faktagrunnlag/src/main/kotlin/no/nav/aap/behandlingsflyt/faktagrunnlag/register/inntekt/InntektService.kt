@@ -6,36 +6,36 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlagkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Input
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektRegisterMock
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.verdityper.flyt.FlytKontekst
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
 class InntektService private constructor(
     private val sakService: SakService,
-    private val sykdomRepository: SykdomRepository,
-    private val repository: InntektGrunnlagRepository
+    private val repository: InntektGrunnlagRepository,
+    private val beregningVurderingRepository: BeregningVurderingRepository
 ) : Grunnlag {
 
     companion object : Grunnlagkonstruktør {
         override fun konstruer(connection: DBConnection): InntektService {
             return InntektService(
                 SakService(connection),
-                SykdomRepository(connection),
-                InntektGrunnlagRepository(connection)
+                InntektGrunnlagRepository(connection),
+                BeregningVurderingRepository(connection)
             )
         }
     }
 
     override fun oppdater(kontekst: FlytKontekst): Boolean {
         val behandlingId = kontekst.behandlingId
-        val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
-        if (sykdomGrunnlag?.sykdomsvurdering?.nedsattArbeidsevneDato == null) {
+        val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
+        if (beregningVurdering?.nedsattArbeidsevneDato == null) {
             return false
         }
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
 
-        val nedsettelsesDato = sykdomGrunnlag.sykdomsvurdering.nedsattArbeidsevneDato
+        val nedsettelsesDato = beregningVurdering.nedsattArbeidsevneDato
         val behov = Inntektsbehov(Input(nedsettelsesDato = nedsettelsesDato))
         val inntektsBehov = behov.utledAlleRelevanteÅr()
         val sak = sakService.hent(kontekst.sakId)
