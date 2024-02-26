@@ -40,7 +40,7 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak.FatteVedtakLøsn
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.dbflyway.Migrering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeRegisterMock
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.FakeYrkesskadeRegisterGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.bistandsgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.medlemskap.medlemskapsgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.meldepliktsgrunnlagApi
@@ -226,7 +226,7 @@ fun NormalOpenAPIRoute.hendelsesApi(dataSource: DataSource) {
                 LocalDate.now().plusYears(3)
             )
             if (dto.yrkesskade) {
-                YrkesskadeRegisterMock.konstruer(
+                FakeYrkesskadeRegisterGateway.konstruer(
                     ident,
                     periode
                 )

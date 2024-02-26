@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlagkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Input
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektRegisterMock
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.FakeInntektRegisterGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.verdityper.flyt.FlytKontekst
@@ -13,8 +13,9 @@ import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
 class InntektService private constructor(
     private val sakService: SakService,
-    private val repository: InntektGrunnlagRepository,
-    private val beregningVurderingRepository: BeregningVurderingRepository
+    private val inntektGrunnlagRepository: InntektGrunnlagRepository,
+    private val beregningVurderingRepository: BeregningVurderingRepository,
+    private val inntektRegisterGateway: InntektRegisterGateway
 ) : Grunnlag {
 
     override fun oppdater(kontekst: FlytKontekst): Boolean {
@@ -23,25 +24,24 @@ class InntektService private constructor(
         if (beregningVurdering?.nedsattArbeidsevneDato == null) {
             return false
         }
+
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
 
         val nedsettelsesDato = beregningVurdering.nedsattArbeidsevneDato
         val behov = Inntektsbehov(Input(nedsettelsesDato = nedsettelsesDato))
         val inntektsBehov = behov.utledAlleRelevanteÅr()
+
         val sak = sakService.hent(kontekst.sakId)
 
-        val register = InntektRegisterMock
-        val inntekter = register.innhent(sak.person.identer(), inntektsBehov)
+        val inntekter = inntektRegisterGateway.innhent(sak.person, inntektsBehov)
 
-        repository.lagre(behandlingId, inntekter)
+        inntektGrunnlagRepository.lagre(behandlingId, inntekter)
 
-        val oppdatertGrunnlag = hentHvisEksisterer(behandlingId)
-
-        return eksisterendeGrunnlag == oppdatertGrunnlag
+        return eksisterendeGrunnlag?.inntekter == inntekter
     }
 
     fun hentHvisEksisterer(behandlingId: BehandlingId): InntektGrunnlag? {
-        return repository.hentHvisEksisterer(behandlingId)
+        return inntektGrunnlagRepository.hentHvisEksisterer(behandlingId)
     }
 
     companion object : Grunnlagkonstruktør {
@@ -49,7 +49,8 @@ class InntektService private constructor(
             return InntektService(
                 SakService(connection),
                 InntektGrunnlagRepository(connection),
-                BeregningVurderingRepository(connection)
+                BeregningVurderingRepository(connection),
+                FakeInntektRegisterGateway
             )
         }
     }

@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.dbtest.InitTestDatabase
 import no.nav.aap.behandlingsflyt.dbtestdata.ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeRegisterMock
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.FakeYrkesskadeRegisterGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakOgBehandlingService
@@ -56,7 +56,7 @@ class FaktagrunnlagTest {
             val (ident, kontekst) = klargjør(connection)
             val faktagrunnlag = Faktagrunnlag(connection)
 
-            YrkesskadeRegisterMock.konstruer(ident = ident, periode = periode)
+            FakeYrkesskadeRegisterGateway.konstruer(ident = ident, periode = periode)
 
             val erOppdatert = faktagrunnlag.oppdaterFaktagrunnlagForKravliste(listOf(YrkesskadeService), kontekst)
 

@@ -3,19 +3,20 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlagkonstruktør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeRegisterMock
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.FakeYrkesskadeRegisterGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.verdityper.flyt.FlytKontekst
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
-class YrkesskadeService private constructor(private val connection: DBConnection) : Grunnlag {
+class YrkesskadeService private constructor(
+    private val sakService: SakService,
+    private val yrkesskadeRepository: YrkesskadeRepository,
+    private val yrkesskadeRegisterGateway: YrkesskadeRegisterGateway
+) : Grunnlag {
 
     override fun oppdater(kontekst: FlytKontekst): Boolean {
-        val sakService = SakService(connection)
-        val yrkesskadeRepository = YrkesskadeRepository(connection)
-
         val sak = sakService.hent(kontekst.sakId)
-        val yrkesskadePeriode = YrkesskadeRegisterMock.innhent(sak.person.identer(), sak.rettighetsperiode)
+        val yrkesskadePeriode = yrkesskadeRegisterGateway.innhent(sak.person.identer(), sak.rettighetsperiode)
 
         val behandlingId = kontekst.behandlingId
         val gamleData = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
@@ -34,12 +35,16 @@ class YrkesskadeService private constructor(private val connection: DBConnection
     }
 
     fun hentHvisEksisterer(behandlingId: BehandlingId): YrkesskadeGrunnlag? {
-        return YrkesskadeRepository(connection).hentHvisEksisterer(behandlingId)
+        return yrkesskadeRepository.hentHvisEksisterer(behandlingId)
     }
 
     companion object : Grunnlagkonstruktør {
         override fun konstruer(connection: DBConnection): YrkesskadeService {
-            return YrkesskadeService(connection)
+            return YrkesskadeService(
+                SakService(connection),
+                YrkesskadeRepository(connection),
+                FakeYrkesskadeRegisterGateway
+            )
         }
     }
 }

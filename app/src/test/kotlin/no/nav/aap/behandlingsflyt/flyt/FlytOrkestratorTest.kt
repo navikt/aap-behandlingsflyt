@@ -22,9 +22,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektRegisterMock
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.FakeInntektRegisterGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeRegisterMock
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.FakeYrkesskadeRegisterGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
@@ -99,8 +99,8 @@ class FlytOrkestratorTest {
         val periode = Periode(fom, fom.plusYears(3))
 
         // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
-        YrkesskadeRegisterMock.konstruer(ident = ident, periode = periode)
-        InntektRegisterMock.konstruer(
+        FakeYrkesskadeRegisterGateway.konstruer(ident = ident, periode = periode)
+        FakeInntektRegisterGateway.konstruer(
             ident = ident, inntekterPerÅr = listOf(
                 InntektPerÅr(
                     Year.now().minusYears(3),
@@ -307,7 +307,7 @@ class FlytOrkestratorTest {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
         // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
-        YrkesskadeRegisterMock.konstruer(ident = ident, periode = periode)
+        FakeYrkesskadeRegisterGateway.konstruer(ident = ident, periode = periode)
 
         // Sender inn en søknad
         hendelsesMottak.håndtere(
@@ -470,8 +470,8 @@ class FlytOrkestratorTest {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
         // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
-        YrkesskadeRegisterMock.konstruer(ident = ident, periode = periode)
-        InntektRegisterMock.konstruer(
+        FakeYrkesskadeRegisterGateway.konstruer(ident = ident, periode = periode)
+        FakeInntektRegisterGateway.konstruer(
             ident = ident, inntekterPerÅr = listOf(
                 InntektPerÅr(
                     Year.now().minusYears(3),

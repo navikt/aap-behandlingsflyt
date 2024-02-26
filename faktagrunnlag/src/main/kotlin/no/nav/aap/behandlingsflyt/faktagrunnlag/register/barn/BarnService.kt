@@ -9,25 +9,22 @@ import no.nav.aap.verdityper.flyt.FlytKontekst
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
 class BarnService private constructor(
-    private val connection: DBConnection,
+    private val sakService: SakService,
+    private val barnRepository: BarnRepository,
     private val barnGateway: BarnGateway
 ) : Grunnlag {
 
     override fun oppdater(kontekst: FlytKontekst): Boolean {
-        val barnRepository = BarnRepository(connection)
-        val sakService = SakService(connection)
-
-        val sak = sakService.hent(kontekst.sakId)
         val behandlingId = kontekst.behandlingId
 
-        val harBehandlingsgrunnlag = vurderBehandlingsgrunnlag(behandlingId)
-        val eksisterendeData = barnRepository.hent(behandlingId)
-        val barn = if (harBehandlingsgrunnlag) {
+        val barn = if (harBehandlingsgrunnlag(behandlingId)) {
+            val sak = sakService.hent(kontekst.sakId)
             barnGateway.hentBarn(sak.person)
         } else {
             emptyList()
         }
 
+        val eksisterendeData = barnRepository.hent(behandlingId)
         if (barn.toSet() != eksisterendeData.barn.toSet()) {
             barnRepository.lagre(behandlingId, barn)
             return true
@@ -35,17 +32,18 @@ class BarnService private constructor(
         return false
     }
 
+    private fun harBehandlingsgrunnlag(behandlingId: BehandlingId): Boolean {
+        // TODO: Avgjøre om man har hjemmel til å innhente (dvs er det innvilget)
+        return true
+    }
+
     companion object : Grunnlagkonstruktør {
         override fun konstruer(connection: DBConnection): BarnService {
             return BarnService(
-                connection,
+                SakService(connection),
+                BarnRepository(connection),
                 PdlBarnGateway
             )
         }
-    }
-
-    private fun vurderBehandlingsgrunnlag(behandlingId: BehandlingId): Boolean {
-        // TODO: Avgjøre om man har hjemmel til å innhente (dvs er det innvilget)
-        return true
     }
 }

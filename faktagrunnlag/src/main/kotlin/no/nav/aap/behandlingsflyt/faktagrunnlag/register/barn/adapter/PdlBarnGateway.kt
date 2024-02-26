@@ -24,11 +24,6 @@ object PdlBarnGateway : BarnGateway {
         tokenProvider = ClientCredentialsTokenProvider
     )
 
-    private fun query(request: PdlRequest): PdlRelasjonDataResponse {
-        val httpRequest = PostRequest(body = request, responseClazz = PdlRelasjonDataResponse::class.java)
-        return requireNotNull(client.post(uri = url, request = httpRequest))
-    }
-
     override fun hentBarn(person: Person): List<Barn> {
         return hentBarn(hentBarnRelasjoner(person))
     }
@@ -71,6 +66,11 @@ object PdlBarnGateway : BarnGateway {
                 }
             }
         }
+    }
+
+    private fun query(request: PdlRequest): PdlRelasjonDataResponse {
+        val httpRequest = PostRequest(body = request, responseClazz = PdlRelasjonDataResponse::class.java)
+        return requireNotNull(client.post(uri = url, request = httpRequest))
     }
 }
 
