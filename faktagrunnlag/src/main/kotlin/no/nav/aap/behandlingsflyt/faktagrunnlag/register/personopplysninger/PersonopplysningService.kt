@@ -12,15 +12,6 @@ class PersonopplysningService private constructor(
     private val personopplysningGateway: PersonopplysningGateway,
 ) : Grunnlag {
 
-    companion object : Grunnlagkonstruktør {
-        override fun konstruer(connection: DBConnection): PersonopplysningService {
-            return PersonopplysningService(
-                connection,
-                PdlPersonopplysningGateway
-            )
-        }
-    }
-
     override fun oppdater(kontekst: FlytKontekst): Boolean {
         val personopplysningRepository = PersonopplysningRepository(connection)
         val sakService = SakService(connection)
@@ -34,5 +25,14 @@ class PersonopplysningService private constructor(
             return true
         }
         return false
+    }
+
+    companion object : Grunnlagkonstruktør {
+        override fun konstruer(connection: DBConnection): PersonopplysningService {
+            return PersonopplysningService(
+                connection,
+                PdlPersonopplysningGateway
+            )
+        }
     }
 }

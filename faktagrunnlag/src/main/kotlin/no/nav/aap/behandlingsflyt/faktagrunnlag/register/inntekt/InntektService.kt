@@ -17,16 +17,6 @@ class InntektService private constructor(
     private val beregningVurderingRepository: BeregningVurderingRepository
 ) : Grunnlag {
 
-    companion object : Grunnlagkonstruktør {
-        override fun konstruer(connection: DBConnection): InntektService {
-            return InntektService(
-                SakService(connection),
-                InntektGrunnlagRepository(connection),
-                BeregningVurderingRepository(connection)
-            )
-        }
-    }
-
     override fun oppdater(kontekst: FlytKontekst): Boolean {
         val behandlingId = kontekst.behandlingId
         val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
@@ -52,5 +42,15 @@ class InntektService private constructor(
 
     fun hentHvisEksisterer(behandlingId: BehandlingId): InntektGrunnlag? {
         return repository.hentHvisEksisterer(behandlingId)
+    }
+
+    companion object : Grunnlagkonstruktør {
+        override fun konstruer(connection: DBConnection): InntektService {
+            return InntektService(
+                SakService(connection),
+                InntektGrunnlagRepository(connection),
+                BeregningVurderingRepository(connection)
+            )
+        }
     }
 }

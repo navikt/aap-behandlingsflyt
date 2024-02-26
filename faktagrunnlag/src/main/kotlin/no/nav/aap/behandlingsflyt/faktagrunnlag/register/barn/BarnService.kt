@@ -12,14 +12,6 @@ class BarnService private constructor(
     private val connection: DBConnection,
     private val barnGateway: BarnGateway
 ) : Grunnlag {
-    companion object : Grunnlagkonstruktør {
-        override fun konstruer(connection: DBConnection): BarnService {
-            return BarnService(
-                connection,
-                PdlBarnGateway
-            )
-        }
-    }
 
     override fun oppdater(kontekst: FlytKontekst): Boolean {
         val barnRepository = BarnRepository(connection)
@@ -41,6 +33,15 @@ class BarnService private constructor(
             return true
         }
         return false
+    }
+
+    companion object : Grunnlagkonstruktør {
+        override fun konstruer(connection: DBConnection): BarnService {
+            return BarnService(
+                connection,
+                PdlBarnGateway
+            )
+        }
     }
 
     private fun vurderBehandlingsgrunnlag(behandlingId: BehandlingId): Boolean {

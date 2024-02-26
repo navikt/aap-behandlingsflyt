@@ -10,12 +10,6 @@ import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
 class YrkesskadeService private constructor(private val connection: DBConnection) : Grunnlag {
 
-    companion object : Grunnlagkonstruktør {
-        override fun konstruer(connection: DBConnection): YrkesskadeService {
-            return YrkesskadeService(connection)
-        }
-    }
-
     override fun oppdater(kontekst: FlytKontekst): Boolean {
         val sakService = SakService(connection)
         val yrkesskadeRepository = YrkesskadeRepository(connection)
@@ -41,5 +35,11 @@ class YrkesskadeService private constructor(private val connection: DBConnection
 
     fun hentHvisEksisterer(behandlingId: BehandlingId): YrkesskadeGrunnlag? {
         return YrkesskadeRepository(connection).hentHvisEksisterer(behandlingId)
+    }
+
+    companion object : Grunnlagkonstruktør {
+        override fun konstruer(connection: DBConnection): YrkesskadeService {
+            return YrkesskadeService(connection)
+        }
     }
 }
