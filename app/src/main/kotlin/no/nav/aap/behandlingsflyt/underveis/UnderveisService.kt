@@ -24,6 +24,8 @@ class UnderveisService(
     private val underveisRepository: UnderveisRepository
 ) {
 
+    private val kvoteService = KvoteService()
+
     private val regelset = listOf(
         RettTilRegel(),
         EtAnnetStedRegel(),
@@ -76,7 +78,15 @@ class UnderveisService(
         val pliktkortGrunnlag = pliktkortRepository.hentHvisEksisterer(behandlingId)
         val pliktkort = pliktkortGrunnlag?.pliktkort() ?: listOf()
         val innsendingsTidspunkt = pliktkortGrunnlag?.innsendingsdatoPerMelding() ?: mapOf()
+        val kvote = kvoteService.beregn(behandlingId)
 
-        return UnderveisInput(sak.rettighetsperiode, relevanteVilkår, listOf(), pliktkort, innsendingsTidspunkt)
+        return UnderveisInput(
+            rettighetsperiode = sak.rettighetsperiode,
+            relevanteVilkår = relevanteVilkår,
+            opptrappingPerioder = listOf(),
+            pliktkort = pliktkort,
+            innsendingsTidspunkt = innsendingsTidspunkt,
+            kvote = kvote
+        )
     }
 }

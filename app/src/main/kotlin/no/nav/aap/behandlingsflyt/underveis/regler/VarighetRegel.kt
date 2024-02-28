@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.underveis.regler
 import no.nav.aap.tidslinje.Tidslinje
 
 /**
- * Håndterer varighetsbestemmelsene (11-12 + unntak fra denne)
+ * Håndterer varighetsbestemmelsene (11-12 + unntak fra denne). Sjekker uttak mot kvoten etablert i saken.
  *
  * - Varigheten på ordinær (3 år)
  * - Unntak
