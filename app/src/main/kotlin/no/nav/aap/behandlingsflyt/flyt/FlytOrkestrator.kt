@@ -2,11 +2,13 @@ package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovRepositoryImpl
+import no.nav.aap.behandlingsflyt.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.flyt.steg.StegOrkestrator
+import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Status.UTREDES
@@ -35,6 +37,7 @@ class FlytOrkestrator(
     private val sakRepository = SakRepositoryImpl(connection)
     private val avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection)
     private val behandlingRepository = BehandlingRepositoryImpl(connection)
+    private val behandlingHendelseService = BehandlingHendelseService()
 
     fun forberedBehandling(kontekst: FlytKontekst) {
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
@@ -64,7 +67,7 @@ class FlytOrkestrator(
                 tilbakeføringsflyt.stegene().last()
             )
         }
-        tilbakefør(kontekst, behandling, tilbakeføringsflyt, avklaringsbehovene.åpne())
+        tilbakefør(kontekst, behandling, tilbakeføringsflyt, avklaringsbehovene)
     }
 
     private fun starterOppBehandling(behandling: Behandling): Boolean {
@@ -101,7 +104,7 @@ class FlytOrkestrator(
                     gjeldendeSteg.type(),
                     tilbakeføringsflyt.stegene().last()
                 )
-                tilbakefør(kontekst, behandling, tilbakeføringsflyt, avklaringsbehov)
+                tilbakefør(kontekst, behandling, tilbakeføringsflyt, avklaringsbehovene)
             }
             validerPlassering(
                 behandlingFlyt,
@@ -115,7 +118,7 @@ class FlytOrkestrator(
                     log.info("Behandlingen har nådd slutten, avslutter behandling")
                 } else {
                     // Prosessen har stoppet opp, slipp ut hendelse om at den har stoppet opp og hvorfor?
-                    loggStopp(behandling, avklaringsbehovene.åpne())
+                    loggStopp(behandling, avklaringsbehovene)
                 }
                 return
             }
@@ -131,7 +134,7 @@ class FlytOrkestrator(
         val behovForLøsninger = avklaringsbehovene.hentBehovForDefinisjon(definisjoner)
         val tilbakeføringsflyt = flyt.tilbakeflyt(behovForLøsninger)
 
-        tilbakefør(kontekst, behandling, tilbakeføringsflyt, avklaringsbehovene.åpne())
+        tilbakefør(kontekst, behandling, tilbakeføringsflyt, avklaringsbehovene)
 
         val skulleVærtISteg = flyt.skalTilStegForBehov(behovForLøsninger)
         if (skulleVærtISteg != null) {
@@ -143,7 +146,7 @@ class FlytOrkestrator(
         kontekst: FlytKontekst,
         behandling: Behandling,
         behandlingFlyt: BehandlingFlyt,
-        åpneAvklaringsbehov: List<Avklaringsbehov>
+        avklaringsbehovene: Avklaringsbehovene
     ) {
         if (behandlingFlyt.erTom()) {
             return
@@ -153,7 +156,7 @@ class FlytOrkestrator(
             val neste = behandlingFlyt.neste()
 
             if (neste == null) {
-                loggStopp(behandling, åpneAvklaringsbehov)
+                loggStopp(behandling, avklaringsbehovene)
                 return
             }
             StegOrkestrator(connection, neste).utførTilbakefør(
@@ -165,13 +168,14 @@ class FlytOrkestrator(
 
     private fun loggStopp(
         behandling: Behandling,
-        åpneAvklaringsbehov: List<Avklaringsbehov>
+        avklaringsbehovene: Avklaringsbehovene
     ) {
         log.info(
             "Stopper opp ved {} med {}",
             behandling.aktivtSteg(),
-            åpneAvklaringsbehov
+            avklaringsbehovene.åpne()
         )
+        behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
     }
 
     private fun validerPlassering(
