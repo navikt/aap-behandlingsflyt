@@ -104,7 +104,7 @@ class BeregnTilkjentYtelseService(
         ){ periode, venstre, høyre ->
             Segment(periode, Barnetillegg(
                 barnetillegg = venstre?.verdi?.multiplisert(høyre?.verdi?.barn()?.size?:0)?:Beløp(0),
-                antallBarn = høyre!!.verdi.barn().size,
+                antallBarn = høyre?.verdi?.barn()?.size?:0,
                 barnetilleggsats = venstre!!.verdi
             ))
         }
@@ -126,6 +126,7 @@ class BeregnTilkjentYtelseService(
                 barnetilleggsats = høyre?.verdi?.barnetilleggsats?:Beløp(0)
             ))
         }
+
 
         //LAGRE ^
     }

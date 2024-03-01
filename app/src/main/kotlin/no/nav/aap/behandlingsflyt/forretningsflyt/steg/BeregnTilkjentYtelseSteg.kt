@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.tilkjentytelse.BeregnTilkjentYtelseService
+import no.nav.aap.behandlingsflyt.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.GUnit
 import no.nav.aap.verdityper.Prosent
@@ -21,7 +22,8 @@ class BeregnTilkjentYtelseSteg private constructor(
     private val underveisRepository: UnderveisRepository,
     private val beregningsgrunnlagRepository: BeregningsgrunnlagRepository,
     private val personopplysningRepository: PersonopplysningRepository,
-    private val barnetilleggRepository: BarnetilleggRepository
+    private val barnetilleggRepository: BarnetilleggRepository,
+    private val tilkjentYtelseRepository: TilkjentYtelseRepository
 ) : BehandlingSteg {
     private val log = LoggerFactory.getLogger(BeregnTilkjentYtelseSteg::class.java)
 
@@ -32,7 +34,7 @@ class BeregnTilkjentYtelseSteg private constructor(
         val barnetilleggGrunnlag = requireNotNull(barnetilleggRepository.hentHvisEksisterer(kontekst.behandlingId))
 
         val beregnetTilkjentYtelse = BeregnTilkjentYtelseService(fødselsdato, beregningsgrunnlag, underveisgrunnlag, barnetilleggGrunnlag).beregnTilkjentYtelse()
-
+        tilkjentYtelseRepository.lagre(behandlingId = kontekst.behandlingId, tilkjent = beregnetTilkjentYtelse)
         log.info("Beregnet tilkjent ytelse: $beregnetTilkjentYtelse")
 
         return StegResultat()
@@ -44,7 +46,8 @@ class BeregnTilkjentYtelseSteg private constructor(
                 UnderveisRepository(connection),
                 BeregningsgrunnlagRepository(connection),
                 PersonopplysningRepository(connection),
-                BarnetilleggRepository(connection)
+                BarnetilleggRepository(connection),
+                TilkjentYtelseRepository(connection)
             )
         }
 
