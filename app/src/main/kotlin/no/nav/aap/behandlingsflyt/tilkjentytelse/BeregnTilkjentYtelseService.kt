@@ -89,24 +89,60 @@ class BeregnTilkjentYtelseService(
                 høyre?.verdi?.multiplisert(requireNotNull(venstre?.verdi?.dagsats)) ?: Beløp(0)
 
             val utbetalingsgrad = venstre?.verdi?.gradering ?: Prosent.`0_PROSENT`
-            Segment(periode, Tilkjent(dagsats, utbetalingsgrad))
+            Segment(periode, TilkjentFørBarn(
+                dagsats = dagsats,
+                gradering = utbetalingsgrad,
+                grunnlag = dagsats,
+                grunnlagsfaktor = venstre?.verdi?.dagsats?:GUnit(0),
+                grunnbeløp = høyre!!.verdi
+            ))
         }
 
         val barnetilleggTidslinje = BARNETILLEGGSATS_TIDSLINJE.kombiner(
             barnetilleggGrunnlagTidslinje,
             JoinStyle.INNER_JOIN
         ){ periode, venstre, høyre ->
-            Segment(periode, venstre?.verdi?.multiplisert(høyre?.verdi?.barn()?.size?:0)?:Beløp(0))
+            Segment(periode, Barnetillegg(
+                barnetillegg = venstre?.verdi?.multiplisert(høyre?.verdi?.barn()?.size?:0)?:Beløp(0),
+                antallBarn = høyre!!.verdi.barn().size,
+                barnetilleggsats = venstre!!.verdi
+            ))
         }
 
         return gradertÅrligTilkjentYtelseBeløp.kombiner(
             barnetilleggTidslinje,
             JoinStyle.INNER_JOIN
         ){ periode, venstre, høyre ->
-            val dagsats = venstre?.verdi?.dagsats?.pluss(høyre!!.verdi)?:Beløp(0)
+            val dagsats = venstre?.verdi?.dagsats?:Beløp(0)
             val gradering = venstre?.verdi?.gradering?:Prosent.`0_PROSENT`
-            Segment(periode, Tilkjent(dagsats,gradering))
+            Segment(periode, Tilkjent(
+                dagsats = dagsats,
+                gradering = gradering,
+                barnetillegg = høyre?.verdi?.barnetillegg?:Beløp(0),
+                grunnlagsfaktor = venstre?.verdi?.grunnlagsfaktor?:GUnit(0),
+                grunnlag = venstre?.verdi?.grunnlag?:Beløp(0),
+                grunnbeløp = venstre?.verdi?.grunnbeløp?:Beløp(0),
+                antallBarn = høyre?.verdi?.antallBarn?:0,
+                barnetilleggsats = høyre?.verdi?.barnetilleggsats?:Beløp(0)
+            ))
         }
+
+        //LAGRE ^
     }
 
+    private class TilkjentFørBarn(
+        val dagsats: Beløp,
+        val gradering: Prosent,
+        val grunnlag: Beløp,
+        val grunnlagsfaktor: GUnit,
+        val grunnbeløp: Beløp,
+    )
+
+    private class Barnetillegg(
+        val antallBarn: Int,
+        val barnetilleggsats: Beløp,
+        val barnetillegg: Beløp
+    )
+
 }
+

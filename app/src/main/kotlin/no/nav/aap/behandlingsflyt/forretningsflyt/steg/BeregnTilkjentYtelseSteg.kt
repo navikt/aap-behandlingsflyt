@@ -54,10 +54,22 @@ class BeregnTilkjentYtelseSteg private constructor(
     }
 }
 
-class Tilkjent(val dagsats: Beløp, val gradering: Prosent) {
+
+
+class Tilkjent(
+    val dagsats: Beløp,
+    val gradering: Prosent,
+    val grunnlag: Beløp,
+    val grunnlagsfaktor: GUnit,
+    val grunnbeløp: Beløp,
+    val antallBarn: Int,
+    val barnetilleggsats: Beløp,
+    val barnetillegg: Beløp
+    ) {
+
 
     fun redusertDagsats(): Beløp {
-        return dagsats.multiplisert(gradering)
+        return dagsats.multiplisert(gradering).pluss(barnetillegg.multiplisert(gradering))
     }
 
     override fun toString(): String {
