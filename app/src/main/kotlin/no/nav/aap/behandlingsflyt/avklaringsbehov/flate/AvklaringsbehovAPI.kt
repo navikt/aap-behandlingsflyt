@@ -25,7 +25,7 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource) {
                             AvklaringsbehovHendelseHåndterer(connection).håndtere(
                                 key = lås.behandlingSkrivelås.id,
                                 hendelse = LøsAvklaringsbehovBehandlingHendelse(
-                                    request.behov,
+                                    request.behov(),
                                     request.ingenEndringIGruppe,
                                     request.behandlingVersjon
                                 )
