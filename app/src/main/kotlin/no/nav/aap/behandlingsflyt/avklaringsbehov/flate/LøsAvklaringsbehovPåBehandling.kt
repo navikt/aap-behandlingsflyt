@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.avklaringsbehov.flate
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.papsign.ktor.openapigen.annotations.Response
+import io.ktor.util.reflect.*
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.AvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.arbeidsevne.FastsettArbeidsevneLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.bistand.AvklarBistandsbehovLøsning
@@ -11,6 +12,11 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.student.AvklarStudentL�
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.AvklarSykepengerErstatningLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak.ForeslåVedtakLøsning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.Arbeidsevne
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
 import java.util.*
 
 @Response(statusCode = 202)
@@ -18,11 +24,11 @@ import java.util.*
 data class LøsAvklaringsbehovPåBehandling(
     @JsonProperty(value = "referanse", required = true) val referanse: UUID,
     @JsonProperty(value = "behandlingVersjon", required = true, defaultValue = "0") val behandlingVersjon: Long,
-    @JsonProperty(value = "avklarStudentLøsning") val avklarStudentLøsning: AvklarStudentLøsning?,
-    @JsonProperty(value = "avklarSykepengerErstatningLøsning") val avklarSykepengerErstatningLøsning: AvklarSykepengerErstatningLøsning?,
-    @JsonProperty(value = "avklarBistandsbehovLøsning") val avklarBistandsbehovLøsning: AvklarBistandsbehovLøsning?,
-    @JsonProperty(value = "fritakMeldepliktLøsning") val fritakMeldepliktLøsning: FritakMeldepliktLøsning?,
-    @JsonProperty(value = "fastsettArbeidsevneLøsning") val fastsettArbeidsevneLøsning: FastsettArbeidsevneLøsning?,
+    @JsonProperty(value = "avklarStudentLøsning") val studentvurdering: StudentVurdering?,
+    @JsonProperty(value = "avklarSykepengerErstatningLøsning") val sykepengerVurdering: SykepengerVurdering?,
+    @JsonProperty(value = "avklarBistandsbehovLøsning") val bistandVurdering: BistandVurdering?,
+    @JsonProperty(value = "fritakMeldepliktLøsning") val fritaksvurdering: Fritaksvurdering?,
+    @JsonProperty(value = "fastsettArbeidsevneLøsning") val arbeidsevne: Arbeidsevne?,
     @JsonProperty(value = "foreslåVedtakLøsning") val foreslåVedtakLøsning: ForeslåVedtakLøsning?,
     @JsonProperty(value = "fatteVedtakLøsning") val fatteVedtakLøsning: FatteVedtakLøsning?,
     @JsonProperty(value = "ingenEndringIGruppe") val ingenEndringIGruppe: Boolean?,
@@ -31,11 +37,11 @@ data class LøsAvklaringsbehovPåBehandling(
         //kun en av løsningene kan og MÅ være satt
         require(
             listOfNotNull(
-                avklarStudentLøsning,
-                avklarSykepengerErstatningLøsning,
-                avklarBistandsbehovLøsning,
-                fritakMeldepliktLøsning,
-                fastsettArbeidsevneLøsning,
+                studentvurdering,
+                sykepengerVurdering,
+                bistandVurdering,
+                fritaksvurdering,
+                arbeidsevne,
                 foreslåVedtakLøsning,
                 fatteVedtakLøsning
             ).size == 1
@@ -43,15 +49,24 @@ data class LøsAvklaringsbehovPåBehandling(
     }
     //hent den aktivt satte løsningen
     fun behov(): AvklaringsbehovLøsning {
-        return listOf(
-            avklarStudentLøsning,
-            avklarSykepengerErstatningLøsning,
-            avklarBistandsbehovLøsning,
-            fritakMeldepliktLøsning,
-            fastsettArbeidsevneLøsning,
+        val behov = listOf(
+            studentvurdering,
+            sykepengerVurdering,
+            bistandVurdering,
+            fritaksvurdering,
+            arbeidsevne,
             foreslåVedtakLøsning,
             fatteVedtakLøsning
         ).filterNotNull().first()
-    }
 
+        return when(behov){
+            is StudentVurdering -> return AvklarStudentLøsning(behov)
+            is SykepengerVurdering -> return AvklarSykepengerErstatningLøsning(behov)
+            is BistandVurdering -> return AvklarBistandsbehovLøsning(behov)
+            is Fritaksvurdering -> return FritakMeldepliktLøsning(behov)
+            is Arbeidsevne -> return FastsettArbeidsevneLøsning(behov)
+            is AvklaringsbehovLøsning -> behov
+            else -> throw IllegalArgumentException("Ukjent løsning")
+        }
+    }
 }
