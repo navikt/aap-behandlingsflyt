@@ -18,7 +18,6 @@ import java.util.*
 data class LøsAvklaringsbehovPåBehandling(
     @JsonProperty(value = "referanse", required = true) val referanse: UUID,
     @JsonProperty(value = "behandlingVersjon", required = true, defaultValue = "0") val behandlingVersjon: Long,
-    @JsonProperty(value = "behov", required = true) val behov: AvklaringsbehovLøsning,
     @JsonProperty(value = "avklarStudentLøsning") val avklarStudentLøsning: AvklarStudentLøsning?,
     @JsonProperty(value = "avklarSykepengerErstatningLøsning") val avklarSykepengerErstatningLøsning: AvklarSykepengerErstatningLøsning?,
     @JsonProperty(value = "avklarBistandsbehovLøsning") val avklarBistandsbehovLøsning: AvklarBistandsbehovLøsning?,
