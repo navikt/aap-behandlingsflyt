@@ -28,13 +28,13 @@ import java.util.*
 data class LøsAvklaringsbehovPåBehandling(
     @JsonProperty(value = "referanse", required = true) val referanse: UUID,
     @JsonProperty(value = "behandlingVersjon", required = true, defaultValue = "0") val behandlingVersjon: Long,
-    @JsonProperty(value = "avklarStudentLøsning") val studentvurdering: StudentVurdering?,
-    @JsonProperty(value = "SykdomsvurderingDto") val sykdomsvurderingDto: SykdomsvurderingDto?,
-    @JsonProperty(value = "avklarSykepengerErstatningLøsning") val sykepengerVurdering: SykepengerVurdering?,
-    @JsonProperty(value = "fastsettBeregningstidspunktLøsning") val fastsettBeregningstidspunktLøsning: BeregningVurdering?,
-    @JsonProperty(value = "avklarBistandsbehovLøsning") val bistandVurdering: BistandVurdering?,
-    @JsonProperty(value = "fritakMeldepliktLøsning") val fritaksvurdering: Fritaksvurdering?,
-    @JsonProperty(value = "fastsettArbeidsevneLøsning") val arbeidsevne: Arbeidsevne?,
+    @JsonProperty(value = "studentvurdering") val studentvurdering: StudentVurdering?,
+    @JsonProperty(value = "sykdomsvurderingDto") val sykdomsvurderingDto: SykdomsvurderingDto?,
+    @JsonProperty(value = "sykepengerVurdering") val sykepengerVurdering: SykepengerVurdering?,
+    @JsonProperty(value = "beregningVurdering") val beregningVurdering: BeregningVurdering?,
+    @JsonProperty(value = "bistandVurdering") val bistandVurdering: BistandVurdering?,
+    @JsonProperty(value = "fritaksvurdering") val fritaksvurdering: Fritaksvurdering?,
+    @JsonProperty(value = "arbeidsevne") val arbeidsevne: Arbeidsevne?,
     @JsonProperty(value = "foreslåVedtakLøsning") val foreslåVedtakLøsning: ForeslåVedtakLøsning?,
     @JsonProperty(value = "fatteVedtakLøsning") val fatteVedtakLøsning: FatteVedtakLøsning?,
     @JsonProperty(value = "ingenEndringIGruppe") val ingenEndringIGruppe: Boolean?,
@@ -46,7 +46,7 @@ data class LøsAvklaringsbehovPåBehandling(
                 studentvurdering,
                 sykdomsvurderingDto,
                 sykepengerVurdering,
-                fastsettBeregningstidspunktLøsning,
+                beregningVurdering,
                 bistandVurdering,
                 fritaksvurdering,
                 arbeidsevne,
@@ -65,7 +65,7 @@ data class LøsAvklaringsbehovPåBehandling(
             fritaksvurdering,
             arbeidsevne,
             foreslåVedtakLøsning,
-            fastsettBeregningstidspunktLøsning,
+            beregningVurdering,
             fatteVedtakLøsning
         ).filterNotNull().first()
 
