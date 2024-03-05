@@ -46,6 +46,7 @@ data class LøsAvklaringsbehovPåBehandling(
                 studentvurdering,
                 sykdomsvurderingDto,
                 sykepengerVurdering,
+                fastsettBeregningstidspunktLøsning,
                 bistandVurdering,
                 fritaksvurdering,
                 arbeidsevne,
@@ -64,6 +65,7 @@ data class LøsAvklaringsbehovPåBehandling(
             fritaksvurdering,
             arbeidsevne,
             foreslåVedtakLøsning,
+            fastsettBeregningstidspunktLøsning,
             fatteVedtakLøsning
         ).filterNotNull().first()
 
