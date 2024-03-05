@@ -25,7 +25,7 @@ data class LøsAvklaringsbehovPåBehandling(
     @JsonProperty(value = "fastsettArbeidsevneLøsning") val fastsettArbeidsevneLøsning: FastsettArbeidsevneLøsning?,
     @JsonProperty(value = "foreslåVedtakLøsning") val foreslåVedtakLøsning: ForeslåVedtakLøsning?,
     @JsonProperty(value = "fatteVedtakLøsning") val fatteVedtakLøsning: FatteVedtakLøsning?,
-    @JsonProperty(value = "ingenEndringIGruppe") val ingenEndringIGruppe: Boolean,
+    @JsonProperty(value = "ingenEndringIGruppe") val ingenEndringIGruppe: Boolean?,
 ) {
     init {
         //kun en av løsningene kan og MÅ være satt
