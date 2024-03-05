@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak.FatteVedtakLøsn
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.Arbeidsevne
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
@@ -31,7 +32,7 @@ data class LøsAvklaringsbehovPåBehandling(
     @JsonProperty(value = "studentvurdering") val studentvurdering: StudentVurdering?,
     @JsonProperty(value = "sykdomsvurderingDto") val sykdomsvurderingDto: SykdomsvurderingDto?,
     @JsonProperty(value = "sykepengerVurdering") val sykepengerVurdering: SykepengerVurdering?,
-    @JsonProperty(value = "beregningVurdering") val beregningVurdering: BeregningVurdering?,
+    @JsonProperty(value = "beregningVurdering") val beregningVurdering: BeregningVurderingDto?,
     @JsonProperty(value = "bistandVurdering") val bistandVurdering: BistandVurdering?,
     @JsonProperty(value = "fritaksvurdering") val fritaksvurdering: Fritaksvurdering?,
     @JsonProperty(value = "arbeidsevne") val arbeidsevne: Arbeidsevne?,
@@ -40,24 +41,35 @@ data class LøsAvklaringsbehovPåBehandling(
     @JsonProperty(value = "ingenEndringIGruppe") val ingenEndringIGruppe: Boolean?,
 ) {
     init {
+        val behov = gjeldendeBehov()
         //kun en av løsningene kan og MÅ være satt
-        require(
-            listOfNotNull(
-                studentvurdering,
-                sykdomsvurderingDto,
-                sykepengerVurdering,
-                beregningVurdering,
-                bistandVurdering,
-                fritaksvurdering,
-                arbeidsevne,
-                foreslåVedtakLøsning,
-                fatteVedtakLøsning
-            ).size == 1
-        ) { "Kun en av løsningene kan være satt" }
+        require(behov.size == 1) {
+            if (behov.size>1)
+                "Kun en av løsningene/vurderingene kan være satt"
+            else
+                "En av løsningene/vurderingene må være satt"
+        }
     }
+
     //hent den aktivt satte løsningen
     fun behov(): AvklaringsbehovLøsning {
-        val behov = listOf(
+        val behov = gjeldendeBehov().first()
+
+        return when(behov){
+            is StudentVurdering -> return AvklarStudentLøsning(behov)
+            is SykepengerVurdering -> return AvklarSykepengerErstatningLøsning(behov)
+            is BistandVurdering -> return AvklarBistandsbehovLøsning(behov)
+            is Fritaksvurdering -> return FritakMeldepliktLøsning(behov)
+            is Arbeidsevne -> return FastsettArbeidsevneLøsning(behov)
+            is SykdomsvurderingDto -> return AvklarSykdomLøsning(behov)
+            is BeregningVurderingDto -> return FastsettBeregningstidspunktLøsning(behov.tilBeregningVurdering())
+            is AvklaringsbehovLøsning -> behov
+            else -> throw IllegalArgumentException("Ukjent løsning")
+        }
+    }
+
+    private fun gjeldendeBehov() : List<Any> {
+        return listOfNotNull(
             studentvurdering,
             sykepengerVurdering,
             bistandVurdering,
@@ -67,18 +79,6 @@ data class LøsAvklaringsbehovPåBehandling(
             foreslåVedtakLøsning,
             beregningVurdering,
             fatteVedtakLøsning
-        ).filterNotNull().first()
-
-        return when(behov){
-            is StudentVurdering -> return AvklarStudentLøsning(behov)
-            is SykepengerVurdering -> return AvklarSykepengerErstatningLøsning(behov)
-            is BistandVurdering -> return AvklarBistandsbehovLøsning(behov)
-            is Fritaksvurdering -> return FritakMeldepliktLøsning(behov)
-            is Arbeidsevne -> return FastsettArbeidsevneLøsning(behov)
-            is SykdomsvurderingDto -> return AvklarSykdomLøsning(behov)
-            is BeregningVurdering -> return FastsettBeregningstidspunktLøsning(behov)
-            is AvklaringsbehovLøsning -> behov
-            else -> throw IllegalArgumentException("Ukjent løsning")
-        }
+        )
     }
 }
