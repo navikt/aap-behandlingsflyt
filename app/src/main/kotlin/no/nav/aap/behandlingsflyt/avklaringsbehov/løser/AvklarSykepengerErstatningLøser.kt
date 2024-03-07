@@ -1,9 +1,7 @@
-package no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom
+package no.nav.aap.behandlingsflyt.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.AvklarSykepengerErstatningLøsning
-import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.AvklaringsbehovsLøser
-import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.LøsningsResultat
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.AvklarSykepengerErstatningLøsning
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl

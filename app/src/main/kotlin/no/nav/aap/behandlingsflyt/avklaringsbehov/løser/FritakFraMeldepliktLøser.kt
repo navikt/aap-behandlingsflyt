@@ -1,9 +1,7 @@
-package no.nav.aap.behandlingsflyt.avklaringsbehov.løser.meldeplikt
+package no.nav.aap.behandlingsflyt.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.AvklaringsbehovsLøser
-import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.FritakMeldepliktLøsning
-import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.LøsningsResultat
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.FritakMeldepliktLøsning
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
@@ -40,6 +38,6 @@ class FritakFraMeldepliktLøser(val connection: DBConnection) : Avklaringsbehovs
     }
 
     override fun forBehov(): Definisjon {
-        return Definisjon.AVKLAR_BISTANDSBEHOV
+        return Definisjon.FRITAK_MELDEPLIKT
     }
 }

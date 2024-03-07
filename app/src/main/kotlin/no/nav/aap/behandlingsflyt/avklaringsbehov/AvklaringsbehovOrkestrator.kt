@@ -1,18 +1,8 @@
 package no.nav.aap.behandlingsflyt.avklaringsbehov
 
-import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.AvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.AvklaringsbehovsLøser
-import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.SattPåVentLøser
-import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.SattPåVentLøsning
-import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.arbeidsevne.FastsettArbeidsevneLøser
-import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.beregning.FastsettBeregningstidspunktLøser
-import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.bistand.AvklarBistandLøser
-import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.meldeplikt.FritakFraMeldepliktLøser
-import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.student.AvklarStudentLøser
-import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.AvklarSykdomLøser
-import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.AvklarSykepengerErstatningLøser
-import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak.FatteVedtakLøser
-import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak.ForeslåVedtakLøser
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.AvklaringsbehovLøsning
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.SattPåVentLøsning
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.utledType
@@ -24,6 +14,7 @@ import no.nav.aap.verdityper.flyt.FlytKontekst
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.Status
 import org.slf4j.LoggerFactory
+import kotlin.reflect.full.primaryConstructor
 
 class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
 
@@ -35,16 +26,11 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
     private val log = LoggerFactory.getLogger(AvklaringsbehovOrkestrator::class.java)
 
     init {
-        avklaringsbehovsLøsere[Definisjon.MANUELT_SATT_PÅ_VENT] = SattPåVentLøser(connection)
-        avklaringsbehovsLøsere[Definisjon.AVKLAR_SYKDOM] = AvklarSykdomLøser(connection)
-        avklaringsbehovsLøsere[Definisjon.FRITAK_MELDEPLIKT] = FritakFraMeldepliktLøser(connection)
-        avklaringsbehovsLøsere[Definisjon.FASTSETT_ARBEIDSEVNE] = FastsettArbeidsevneLøser(connection)
-        avklaringsbehovsLøsere[Definisjon.AVKLAR_SYKEPENGEERSTATNING] = AvklarSykepengerErstatningLøser(connection)
-        avklaringsbehovsLøsere[Definisjon.AVKLAR_BISTANDSBEHOV] = AvklarBistandLøser(connection)
-        avklaringsbehovsLøsere[Definisjon.FORESLÅ_VEDTAK] = ForeslåVedtakLøser(connection)
-        avklaringsbehovsLøsere[Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT] = FastsettBeregningstidspunktLøser(connection)
-        avklaringsbehovsLøsere[Definisjon.AVKLAR_STUDENT] = AvklarStudentLøser(connection)
-        avklaringsbehovsLøsere[Definisjon.FATTE_VEDTAK] = FatteVedtakLøser(connection)
+        AvklaringsbehovsLøser::class.sealedSubclasses.forEach {
+            val løser = it.primaryConstructor?.call(connection)
+            requireNotNull(løser)
+            avklaringsbehovsLøsere[løser.forBehov()] = løser
+        }
     }
 
     fun løsAvklaringsbehovOgFortsettProsessering(behandlingId: BehandlingId) {
