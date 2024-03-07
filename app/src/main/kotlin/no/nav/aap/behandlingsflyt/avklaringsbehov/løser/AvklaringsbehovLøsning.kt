@@ -14,3 +14,7 @@ sealed interface AvklaringsbehovLøsning {
         throw IllegalStateException("Utvikler-feil:" + this.javaClass.getSimpleName() + " er uten JsonTypeName annotation.")
     }
 }
+
+fun utledSubtypes(): List<Class<*>> {
+    return AvklaringsbehovLøsning::class.sealedSubclasses.map { it.java }.toList()
+}
