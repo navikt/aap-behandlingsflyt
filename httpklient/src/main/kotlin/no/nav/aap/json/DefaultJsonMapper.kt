@@ -38,4 +38,8 @@ object DefaultJsonMapper {
             throw DeserializationException(e)
         }
     }
+
+    fun objectMapper(): ObjectMapper {
+        return mapper
+    }
 }

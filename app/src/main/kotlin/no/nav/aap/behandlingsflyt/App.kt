@@ -1,7 +1,5 @@
 package no.nav.aap.behandlingsflyt
 
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.papsign.ktor.openapigen.OpenAPIGen
 import com.papsign.ktor.openapigen.route.apiRouting
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
@@ -31,6 +29,7 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.avklaringsbehov.flate.avklaringsbehovApi
 import no.nav.aap.behandlingsflyt.avklaringsbehov.flate.fatteVedtakGrunnlagApi
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.arbeidsevne.FastsettArbeidsevneLøsning
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.beregning.FastsettBeregningstidspunktLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.bistand.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.meldeplikt.FritakMeldepliktLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.student.AvklarStudentLøsning
@@ -38,7 +37,6 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.AvklarSykdomLøs
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.sykdom.AvklarSykepengerErstatningLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak.ForeslåVedtakLøsning
-import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.beregning.FastsettBeregningstidspunktLøsning
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.dbflyway.Migrering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.FakeYrkesskadeRegisterGateway
@@ -57,6 +55,7 @@ import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsOppgaver
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
+import no.nav.aap.json.DefaultJsonMapper
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.retry.RetryService
 import no.nav.aap.verdityper.Periode
@@ -85,20 +84,19 @@ internal fun Application.server(dbConfig: DbConfig) {
     install(MicrometerMetrics) { registry = prometheus }
     install(ContentNegotiation) {
         jackson {
-            registerModule(JavaTimeModule())
-            disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-            registerSubtypes(
-                // TODO: Dette bør skje via reflection elns så dette ikke blir manuelt vedlikehold
-                AvklarStudentLøsning::class.java,
-                AvklarSykdomLøsning::class.java,
-                AvklarSykepengerErstatningLøsning::class.java,
-                AvklarBistandsbehovLøsning::class.java,
-                FritakMeldepliktLøsning::class.java,
-                FastsettArbeidsevneLøsning::class.java,
-                ForeslåVedtakLøsning::class.java,
-                FatteVedtakLøsning::class.java,
-                FastsettBeregningstidspunktLøsning::class.java
-            )
+            DefaultJsonMapper.objectMapper()
+                .registerSubtypes(
+                    // TODO: Dette bør skje via reflection elns så dette ikke blir manuelt vedlikehold
+                    AvklarStudentLøsning::class.java,
+                    AvklarSykdomLøsning::class.java,
+                    AvklarSykepengerErstatningLøsning::class.java,
+                    AvklarBistandsbehovLøsning::class.java,
+                    FritakMeldepliktLøsning::class.java,
+                    FastsettArbeidsevneLøsning::class.java,
+                    ForeslåVedtakLøsning::class.java,
+                    FatteVedtakLøsning::class.java,
+                    FastsettBeregningstidspunktLøsning::class.java
+                )
         }
     }
     install(CallId) {
