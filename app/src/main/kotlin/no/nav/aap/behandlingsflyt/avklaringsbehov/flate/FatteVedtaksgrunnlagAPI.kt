@@ -18,10 +18,9 @@ fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(dataSource: HikariDataSource) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/fatte-vedtak") {
             get<BehandlingReferanse, FatteVedtakGrunnlagDto> { req ->
-                val behandling: Behandling = dataSource.transaction {
-                    BehandlingReferanseService(it).behandling(req)
-                }
+
                 val dto = dataSource.transaction { connection ->
+                    val behandling: Behandling = BehandlingReferanseService(connection).behandling(req)
                     val avklaringsbehovene = AvklaringsbehovRepositoryImpl(connection).hentAvklaringsbehovene(behandling.id)
 
                     FatteVedtakGrunnlagDto(avklaringsbehovene.alle()

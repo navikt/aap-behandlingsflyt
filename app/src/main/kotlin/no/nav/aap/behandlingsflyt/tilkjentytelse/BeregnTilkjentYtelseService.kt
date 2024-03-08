@@ -126,9 +126,6 @@ class BeregnTilkjentYtelseService(
                 barnetilleggsats = høyre?.verdi?.barnetilleggsats?:Beløp(0)
             ))
         }
-
-
-        //LAGRE ^
     }
 
     private class TilkjentFørBarn(

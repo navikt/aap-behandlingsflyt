@@ -47,6 +47,7 @@ import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsOppgaver
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
+import no.nav.aap.behandlingsflyt.tilkjentytelse.flate.tilkjentYtelseAPI
 import no.nav.aap.json.DefaultJsonMapper
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.retry.RetryService
@@ -127,6 +128,7 @@ internal fun Application.server(dbConfig: DbConfig) {
         studentgrunnlagApi(dataSource)
         sykdomsgrunnlagApi(dataSource)
         avklaringsbehovApi(dataSource)
+        tilkjentYtelseAPI(dataSource)
 
         hendelsesApi(dataSource)
 
