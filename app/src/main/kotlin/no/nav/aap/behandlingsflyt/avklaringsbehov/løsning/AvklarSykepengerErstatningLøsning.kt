@@ -9,6 +9,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerV
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = VURDER_SYKEPENGEERSTATNING_KODE)
 class AvklarSykepengerErstatningLøsning(
-    @JsonProperty("sykepengeerstatningVurdering", required = true) val vurdering: SykepengerVurdering,
+    @JsonProperty("sykepengeerstatningVurdering", required = true) val sykepengeerstatningVurdering: SykepengerVurdering,
     @JsonProperty("behovstype", required = true, defaultValue = VURDER_SYKEPENGEERSTATNING_KODE) val behovstype: String = VURDER_SYKEPENGEERSTATNING_KODE
 ) : AvklaringsbehovLøsning

@@ -18,11 +18,11 @@ class AvklarSykepengerErstatningLøser(val connection: DBConnection) :
 
         sykepengerErstatningRepository.lagre(
             behandlingId = behandling.id,
-            vurdering = løsning.vurdering
+            vurdering = løsning.sykepengeerstatningVurdering
         )
 
         return LøsningsResultat(
-            begrunnelse = løsning.vurdering.begrunnelse
+            begrunnelse = løsning.sykepengeerstatningVurdering.begrunnelse
         )
     }
 
