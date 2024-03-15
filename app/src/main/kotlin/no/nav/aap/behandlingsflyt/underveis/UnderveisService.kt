@@ -66,8 +66,9 @@ class UnderveisService(
         val relevanteVilkår = vilkårsresultat
             .alle()
             .filter { v ->
-                v.type in setOf( // TODO: add medlemskap
+                v.type in setOf(
                     Vilkårtype.ALDERSVILKÅRET,
+                    Vilkårtype.MEDLEMSKAP,
                     Vilkårtype.SYKDOMSVILKÅRET,
                     Vilkårtype.BISTANDSVILKÅRET
                 )
