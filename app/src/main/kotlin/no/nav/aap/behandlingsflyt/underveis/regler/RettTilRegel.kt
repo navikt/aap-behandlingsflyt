@@ -21,15 +21,13 @@ class RettTilRegel : UnderveisRegel {
         require(input.relevanteVilkår.any { it.type == Vilkårtype.BISTANDSVILKÅRET })
         require(input.relevanteVilkår.any { it.type == Vilkårtype.SYKDOMSVILKÅRET })
 
-        var retur = resultat
-        input.relevanteVilkår.forEach { vilkår ->
+        return input.relevanteVilkår.fold(resultat) { retur, vilkår ->
             val segmenter = vilkår.vilkårsperioder()
                 .map { Segment(it.periode, EnkelVurdering(vilkår.type, it.utfall)) }
 
-            retur = retur.kombiner(Tidslinje(segmenter), JoinStyle.CROSS_JOIN { periode, venstre, høyre ->
+            retur.kombiner(Tidslinje(segmenter), JoinStyle.CROSS_JOIN { periode, venstre, høyre ->
                 SlåSammenVurderingerSammenslåer().sammenslå(periode, venstre, høyre)
             })
         }
-        return retur
     }
 }
