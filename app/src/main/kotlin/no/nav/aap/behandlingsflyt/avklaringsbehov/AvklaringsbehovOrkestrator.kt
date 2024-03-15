@@ -126,12 +126,11 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
         avklaringsbehovene: Avklaringsbehovene,
         it: AvklaringsbehovLøsning
     ) {
+        avklaringsbehovene.leggTilFrivilligHvisMangler(it.definisjon())
         // Liker denne casten fryktelig lite godt -_- men må til pga generics *
         val avklaringsbehovsLøser =
             avklaringsbehovsLøsere.getValue(it.definisjon()) as AvklaringsbehovsLøser<AvklaringsbehovLøsning>
         val løsningsResultat = avklaringsbehovsLøser.løs(kontekst = kontekst, løsning = it)
-
-        avklaringsbehovene.leggTilFrivilligHvisMangler(it.definisjon())
 
         avklaringsbehovene.løsAvklaringsbehov(
             it.definisjon(),
