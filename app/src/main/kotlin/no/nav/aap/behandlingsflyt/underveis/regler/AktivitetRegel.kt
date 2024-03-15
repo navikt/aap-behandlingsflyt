@@ -65,7 +65,7 @@ class AktivitetRegel : UnderveisRegel {
 
     private fun utledMeldetidslinje(input: UnderveisInput): Tidslinje<MeldepliktVurdering> {
         val rettighetsperiode = input.rettighetsperiode
-        val dummy = Tidslinje(Segment(rettighetsperiode, true))
+        val dummy = Tidslinje(rettighetsperiode, true)
         return Tidslinje(
             listOf(
                 Segment(

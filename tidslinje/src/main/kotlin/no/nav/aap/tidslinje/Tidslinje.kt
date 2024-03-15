@@ -9,7 +9,7 @@ import java.util.*
 class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>> = TreeSet()) : Iterable<Segment<T>> {
 
     constructor(initSegmenter: List<Segment<T>>) : this(TreeSet(initSegmenter))
-    constructor(verdi: Segment<T>) : this(TreeSet(listOf(verdi)))
+    constructor(periode: Periode, verdi: T) : this(TreeSet(listOf(Segment(periode, verdi))))
 
     private val segmenter: NavigableSet<Segment<T>> = TreeSet()
 
@@ -96,7 +96,7 @@ class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>> = TreeSet()) : Iterab
     }
 
     fun kryss(periode: Periode): Tidslinje<T> {
-        return kombiner(Tidslinje(Segment(periode, null)), StandardSammenslåere.kunVenstre())
+        return kombiner(Tidslinje(periode, null), StandardSammenslåere.kunVenstre())
     }
 
     fun kryss(other: Tidslinje<Any?>): Tidslinje<T> {
