@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.test
 
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.ktor.http.*
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
@@ -14,7 +15,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.BARN_RELAS
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.PERSON_BOLK_QUERY
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PERSON_QUERY
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.IDENT_QUERY
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.pdl.HentPersonBolkResult
@@ -34,6 +34,7 @@ import no.nav.aap.pdl.PdlRequest
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import no.nav.aap.yrkesskade.YrkesskadeModell
 import no.nav.aap.yrkesskade.YrkesskadeRequest
+import no.nav.aap.yrkesskade.Yrkesskader
 import java.time.LocalDate
 import no.nav.aap.pdl.PdlPerson as BarnPdlPerson
 import no.nav.aap.pdl.PdlRelasjonData as BarnPdlData
@@ -42,7 +43,8 @@ class Fakes : AutoCloseable {
     private var azure: NettyApplicationEngine =
         embeddedServer(Netty, port = 0, module = Application::azureFake).apply { start() }
     private val pdl = embeddedServer(Netty, port = 0, module = Application::pdlFake).apply { start() }
-    private val yrkesskade = embeddedServer(Netty, port = 0, module = Application::YrkesskadeFake).apply { start() }
+    private val yrkesskade = embeddedServer(Netty, port = 0, module = Application::yrkesskadeFake).apply { start() }
+
     init {
         // Azure
         System.setProperty("azure.openid.config.token.endpoint", "http://localhost:${azure.port()}/token")
@@ -57,7 +59,7 @@ class Fakes : AutoCloseable {
 
         // Yrkesskade
         System.setProperty("integrasjon.yrkesskade.url", "http://localhost:${yrkesskade.port()}")
-        System.setProperty("integrasjon.yrkesskade.scope", "pdl")
+        System.setProperty("integrasjon.yrkesskade.scope", "yrkesskade")
 
 
         // Legg til alle testpersoner
@@ -65,6 +67,7 @@ class Fakes : AutoCloseable {
     }
 
     override fun close() {
+        yrkesskade.stop(0L, 0L)
         pdl.stop(0L, 0L)
         azure.stop(0L, 0L)
     }
@@ -74,6 +77,9 @@ class Fakes : AutoCloseable {
         fakePersoner[person.aktivIdent()] = person
     }
 
+    fun returnerYrkesskade(ident: String) {
+        returnerYrkesskade.add(ident)
+    }
 }
 
 fun NettyApplicationEngine.port(): Int =
@@ -116,38 +122,45 @@ fun Application.pdlFake() {
     }
 }
 
-fun Application.YrkesskadeFake(){
+
+private val returnerYrkesskade = mutableListOf<String>()
+
+fun Application.yrkesskadeFake() {
     install(ContentNegotiation) {
-        jackson()
+        jackson {
+            registerModule(JavaTimeModule())
+        }
     }
     routing {
         post("/api/v1/saker/") {
             val req = call.receive<YrkesskadeRequest>()
 
-
-            call.respond(
-                no.nav.aap.yrkesskade.Yrkesskader(
-                    skader = listOf(
-                        /*YrkesskadeModell(
-                            kommunenr = "1234",
-                            saksblokk = "A",
-                            saksnr = 1234,
-                            sakstype = "Yrkesskade",
-                            mottattdato = LocalDate.now(),
-                            resultat = "Godkjent",
-                            resultattekst = "Godkjent",
-                            vedtaksdato = LocalDate.now(),
-                            skadeart = "Arbeidsulykke",
-                            diagnose = "Kuttskade",
-                            skadedato = LocalDate.now(),
-                            kildetabell = "Yrkesskade",
-                            kildesystem = "Yrkesskade",
-                            saksreferanse = "1234"
-                        )*/
+            if (req.foedselsnumre.first() in returnerYrkesskade) {
+                call.respond(
+                    Yrkesskader(
+                        skader = listOf(
+                            YrkesskadeModell(
+                                kommunenr = "1234",
+                                saksblokk = "A",
+                                saksnr = 1234,
+                                sakstype = "Yrkesskade",
+                                mottattdato = LocalDate.now(),
+                                resultat = "Godkjent",
+                                resultattekst = "Godkjent",
+                                vedtaksdato = LocalDate.now(),
+                                skadeart = "Arbeidsulykke",
+                                diagnose = "Kuttskade",
+                                skadedato = LocalDate.now(),
+                                kildetabell = "Yrkesskade",
+                                kildesystem = "Yrkesskade",
+                                saksreferanse = "1234"
+                            )
+                        )
                     )
                 )
-            )
-
+            } else {
+                call.respond(Yrkesskader(skader = listOf()))
+            }
         }
     }
 }

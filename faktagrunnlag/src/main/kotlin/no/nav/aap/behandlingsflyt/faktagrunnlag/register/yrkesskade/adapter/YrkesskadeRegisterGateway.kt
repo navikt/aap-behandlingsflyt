@@ -13,7 +13,7 @@ import no.nav.aap.yrkesskade.Yrkesskader
 import java.net.URI
 
 object YrkesskadeRegisterGateway {
-    private val url = URI.create(requiredConfigForKey("integrasjon.yrkesskade.url"))
+    private val url = URI.create(requiredConfigForKey("integrasjon.yrkesskade.url")).resolve("/api/v1/saker/")
     private val client = RestClient(
         config = ClientConfig(scope = requiredConfigForKey("integrasjon.yrkesskade.scope"), additionalHeaders = listOf(Pair("Nav-Consumer-Id", "aap-behandlingsflyt"))), //TODO: bruk env var
         tokenProvider = ClientCredentialsTokenProvider

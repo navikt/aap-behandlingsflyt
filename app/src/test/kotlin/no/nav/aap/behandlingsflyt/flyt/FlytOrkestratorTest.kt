@@ -96,6 +96,8 @@ class FlytOrkestratorTest {
         val fom = LocalDate.now().minusMonths(3)
         val periode = Periode(fom, fom.plusYears(3))
 
+        // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
+        fakes.returnerYrkesskade(ident.identifikator)
         FakeInntektRegisterGateway.konstruer(
             ident = ident, inntekterPerÅr = listOf(
                 InntektPerÅr(
@@ -284,7 +286,8 @@ class FlytOrkestratorTest {
         val ident = ident()
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
-        //TODO: legg til yrkesskade
+        // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
+        fakes.returnerYrkesskade(ident.identifikator)
 
         // Sender inn en søknad
         hendelsesMottak.håndtere(
@@ -446,7 +449,7 @@ class FlytOrkestratorTest {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
         // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
-        // TODO: Legg til yrkesskade
+        fakes.returnerYrkesskade(ident.identifikator)
         FakeInntektRegisterGateway.konstruer(
             ident = ident, inntekterPerÅr = listOf(
                 InntektPerÅr(

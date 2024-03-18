@@ -42,10 +42,17 @@ class FaktagrunnlagTest {
     @Test
     fun `Yrkesskadedata er oppdatert`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val (_, kontekst) = klargjør(connection)
+            val (ident, kontekst) = klargjør(connection)
             val faktagrunnlag = Faktagrunnlag(connection)
 
-            faktagrunnlag.oppdaterFaktagrunnlagForKravliste(listOf(YrkesskadeService), kontekst)
+            fakes.returnerYrkesskade(ident.identifikator)
+
+            val initiell = faktagrunnlag.oppdaterFaktagrunnlagForKravliste(listOf(YrkesskadeService), kontekst)
+
+            assertThat(initiell)
+                .hasSize(1)
+                .allMatch { it === YrkesskadeService }
+
             val erOppdatert = faktagrunnlag.oppdaterFaktagrunnlagForKravliste(listOf(YrkesskadeService), kontekst)
 
             assertThat(erOppdatert).isEmpty()
@@ -58,6 +65,7 @@ class FaktagrunnlagTest {
             val (ident, kontekst) = klargjør(connection)
             val faktagrunnlag = Faktagrunnlag(connection)
 
+            fakes.returnerYrkesskade(ident.identifikator)
 
             val erOppdatert = faktagrunnlag.oppdaterFaktagrunnlagForKravliste(listOf(YrkesskadeService), kontekst)
 
