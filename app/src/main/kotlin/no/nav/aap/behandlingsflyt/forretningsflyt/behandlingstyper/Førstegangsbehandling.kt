@@ -17,7 +17,8 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettGrunnlagSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FatteVedtakSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.ForeslåVedtakSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FritakMeldepliktSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.GeneriskPlaceholderFlytSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.IverksettVedtakSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SimulerUtbetalingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.StartBehandlingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.UnderveisSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderAlderSteg
@@ -27,7 +28,6 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderMedlemskapSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderStudentSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykdomSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykepengeErstatningSteg
-import no.nav.aap.verdityper.flyt.StegType
 
 object Førstegangsbehandling : BehandlingType {
     override fun flyt(): BehandlingFlyt {
@@ -47,11 +47,11 @@ object Førstegangsbehandling : BehandlingType {
             .medSteg(steg = UnderveisSteg, informasjonskrav = listOf(PliktkortService))
             .medSteg(steg = BarnetilleggSteg, informasjonskrav = listOf(BarnService))
             .medSteg(steg = BeregnTilkjentYtelseSteg, informasjonskrav = listOf(PersonopplysningService))
-            .medSteg(steg = GeneriskPlaceholderFlytSteg(StegType.SIMULERING))
+            .medSteg(steg = SimulerUtbetalingSteg)
             .medSteg(steg = ForeslåVedtakSteg) // en-trinn
             .sluttÅOppdatereFaktagrunnlag()
             .medSteg(steg = FatteVedtakSteg) // to-trinn
-            .medSteg(steg = GeneriskPlaceholderFlytSteg(StegType.IVERKSETT_VEDTAK))
+            .medSteg(steg = IverksettVedtakSteg)
             .build()
     }
 }
