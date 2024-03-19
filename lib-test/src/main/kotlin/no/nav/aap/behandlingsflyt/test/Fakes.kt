@@ -75,6 +75,9 @@ class Fakes : AutoCloseable {
     fun leggTil(person: TestPerson) {
         person.barn.forEach { leggTil(it) }
         fakePersoner[person.aktivIdent()] = person
+        if(person.yrkesskade){
+            returnerYrkesskade(person.aktivIdent())
+        }
     }
 
     fun returnerYrkesskade(ident: String) {

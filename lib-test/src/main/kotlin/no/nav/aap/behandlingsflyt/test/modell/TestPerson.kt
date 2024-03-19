@@ -8,7 +8,8 @@ class TestPerson(
     val identer: Set<Ident>,
     val fødselsdato: Fødselsdato,
     val dødsdato: Dødsdato? = null,
-    val barn: List<TestPerson> = emptyList()
+    val barn: List<TestPerson> = emptyList(),
+    val yrkesskade:Boolean = false
 ) {
     init {
         require(identer.isNotEmpty())
