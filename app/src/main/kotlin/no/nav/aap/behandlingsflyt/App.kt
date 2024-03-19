@@ -48,15 +48,22 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.tilkjentytelse.flate.tilkjentYtelseAPI
+import no.nav.aap.httpclient.ClientConfig
+import no.nav.aap.httpclient.RestClient
+import no.nav.aap.httpclient.request.PostRequest
+import no.nav.aap.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.json.DefaultJsonMapper
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.retry.RetryService
+import no.nav.aap.requiredConfigForKey
 import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.feilhåndtering.ElementNotFoundException
 import no.nav.aap.verdityper.sakogbehandling.Ident
+import no.nav.aap.yrkesskade.Yrkesskader
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.net.URI
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -208,6 +215,19 @@ fun NormalOpenAPIRoute.hendelsesApi(dataSource: DataSource) {
                 LocalDate.now().minusYears(3),
                 LocalDate.now().plusYears(3)
             )
+
+            if(dto.yrkesskade){
+                val client = RestClient(
+                    config = ClientConfig(scope = requiredConfigForKey("integrasjon.yrkesskade.scope"), additionalHeaders = listOf(Pair("Nav-Consumer-Id", "aap-behandlingsflyt"))), //TODO: bruk env var
+                    tokenProvider = ClientCredentialsTokenProvider
+                )
+                client.post(
+                    URI.create(requiredConfigForKey("integrasjon.yrkesskade.url")).resolve("/api/v1/saker/oprett"),
+                    PostRequest(body = ident, responseClazz = Ident::class.java)
+                )
+            }
+
+
 
             HendelsesMottak(dataSource).håndtere(
                 ident, DokumentMottattPersonHendelse(
