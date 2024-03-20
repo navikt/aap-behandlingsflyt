@@ -12,6 +12,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.test.Fakes
+import no.nav.aap.behandlingsflyt.test.modell.TestPerson
+import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.flyt.FlytKontekst
 import no.nav.aap.verdityper.sakogbehandling.Ident
@@ -45,7 +47,11 @@ class FaktagrunnlagTest {
             val (ident, kontekst) = klargjør(connection)
             val faktagrunnlag = Faktagrunnlag(connection)
 
-            fakes.returnerYrkesskade(ident.identifikator)
+            fakes.leggTil(TestPerson(
+                identer = setOf(ident),
+                fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
+                yrkesskade = listOf(TestYrkesskade())
+            ))
 
             val initiell = faktagrunnlag.oppdaterFaktagrunnlagForKravliste(listOf(YrkesskadeService), kontekst)
 
@@ -65,7 +71,11 @@ class FaktagrunnlagTest {
             val (ident, kontekst) = klargjør(connection)
             val faktagrunnlag = Faktagrunnlag(connection)
 
-            fakes.returnerYrkesskade(ident.identifikator)
+            fakes.leggTil(TestPerson(
+                identer = setOf(ident),
+                fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
+                yrkesskade = listOf(TestYrkesskade())
+            ))
 
             val erOppdatert = faktagrunnlag.oppdaterFaktagrunnlagForKravliste(listOf(YrkesskadeService), kontekst)
 

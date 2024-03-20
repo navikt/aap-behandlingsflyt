@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fød
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PERSON_QUERY
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.IDENT_QUERY
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
+import no.nav.aap.behandlingsflyt.test.modell.TestSøknad
 import no.nav.aap.pdl.HentPersonBolkResult
 import no.nav.aap.pdl.PDLDødsfall
 import no.nav.aap.pdl.PdlFoedsel
@@ -41,9 +42,10 @@ import no.nav.aap.pdl.PdlRelasjonData as BarnPdlData
 
 class Fakes : AutoCloseable {
     private var azure: NettyApplicationEngine =
-        embeddedServer(Netty, port = 0, module = Application::azureFake).apply { start() }
-    private val pdl = embeddedServer(Netty, port = 0, module = Application::pdlFake).apply { start() }
-    private val yrkesskade = embeddedServer(Netty, port = 0, module = Application::yrkesskadeFake).apply { start() }
+        embeddedServer(Netty, port = 0, module = { azureFake() }).apply { start() }
+    private val pdl = embeddedServer(Netty, port = 0, module = { pdlFake() }).apply { start() }
+    private val yrkesskade = embeddedServer(Netty, port = 0, module = { yrkesskadeFake() }).apply { start() }
+    val fakePersoner: MutableMap<String, TestPerson> = mutableMapOf()
 
     init {
         // Azure
@@ -57,10 +59,26 @@ class Fakes : AutoCloseable {
         System.setProperty("integrasjon.pdl.url", "http://localhost:${pdl.port()}")
         System.setProperty("integrasjon.pdl.scope", "pdl")
 
+
         // Yrkesskade
         System.setProperty("integrasjon.yrkesskade.url", "http://localhost:${yrkesskade.port()}")
         System.setProperty("integrasjon.yrkesskade.scope", "yrkesskade")
 
+
+        // testpersoner
+        val BARNLØS_PERSON_30ÅR =
+            TestPerson(setOf(Ident("12345678910", true)), fødselsdato = Fødselsdato(LocalDate.now().minusYears(30)))
+        val BARNLØS_PERSON_18ÅR =
+            TestPerson(
+                setOf(Ident("42346734567", true)),
+                fødselsdato = Fødselsdato(LocalDate.now().minusYears(18).minusDays(10))
+            )
+        val PERSON_MED_BARN_65ÅR =
+            TestPerson(
+                setOf(Ident("86322434234", true)), fødselsdato = Fødselsdato(LocalDate.now().minusYears(65)), barn = listOf(
+                    BARNLØS_PERSON_18ÅR, BARNLØS_PERSON_30ÅR
+                )
+            )
 
         // Legg til alle testpersoner
         listOf(PERSON_MED_BARN_65ÅR).forEach { leggTil(it) }
@@ -73,221 +91,199 @@ class Fakes : AutoCloseable {
     }
 
     fun leggTil(person: TestPerson) {
+        person.identer.forEach{ fakePersoner[it.identifikator] = person }
         person.barn.forEach { leggTil(it) }
-        fakePersoner[person.aktivIdent()] = person
-        if(person.yrkesskade){
-            returnerYrkesskade(person.aktivIdent())
-        }
     }
 
     fun returnerYrkesskade(ident: String) {
         returnerYrkesskade.add(ident)
     }
-}
 
-fun NettyApplicationEngine.port(): Int =
-    runBlocking { resolvedConnectors() }
-        .first { it.type == ConnectorType.HTTP }
-        .port
 
-val BARNLØS_PERSON_30ÅR =
-    TestPerson(setOf(Ident("12345678910", true)), fødselsdato = Fødselsdato(LocalDate.now().minusYears(30)))
-val BARNLØS_PERSON_18ÅR =
-    TestPerson(
-        setOf(Ident("42346734567", true)),
-        fødselsdato = Fødselsdato(LocalDate.now().minusYears(18).minusDays(10))
-    )
-val PERSON_MED_BARN_65ÅR =
-    TestPerson(
-        setOf(Ident("86322434234", true)), fødselsdato = Fødselsdato(LocalDate.now().minusYears(65)), barn = listOf(
-            BARNLØS_PERSON_18ÅR, BARNLØS_PERSON_30ÅR
-        )
-    )
+    fun NettyApplicationEngine.port(): Int =
+        runBlocking { resolvedConnectors() }
+            .first { it.type == ConnectorType.HTTP }
+            .port
 
-private val fakePersoner: MutableMap<String, TestPerson> = mutableMapOf()
 
-fun Application.pdlFake() {
-    install(ContentNegotiation) {
-        jackson()
-    }
-    routing {
-        post {
-            val req = call.receive<PdlRequest>()
 
-            when (req.query) {
-                IDENT_QUERY -> call.respond(identer(req))
-                PERSON_QUERY -> call.respond(personopplysninger(req))
-                BARN_RELASJON_QUERY -> call.respond(barnRelasjoner(req))
-                PERSON_BOLK_QUERY -> call.respond(barn(req))
-                else -> call.respond(HttpStatusCode.BadRequest)
+
+
+    fun Application.pdlFake() {
+        install(ContentNegotiation) {
+            jackson()
+        }
+        routing {
+            post {
+                val req = call.receive<PdlRequest>()
+
+                when (req.query) {
+                    IDENT_QUERY -> call.respond(identer(req))
+                    PERSON_QUERY -> call.respond(personopplysninger(req))
+                    BARN_RELASJON_QUERY -> call.respond(barnRelasjoner(req))
+                    PERSON_BOLK_QUERY -> call.respond(barn(req))
+                    else -> call.respond(HttpStatusCode.BadRequest)
+                }
             }
         }
     }
-}
 
 
-private val returnerYrkesskade = mutableListOf<String>()
+    private val returnerYrkesskade = mutableListOf<String>()
 
-fun Application.yrkesskadeFake() {
-    install(ContentNegotiation) {
-        jackson {
-            registerModule(JavaTimeModule())
+    fun Application.yrkesskadeFake() {
+        install(ContentNegotiation) {
+            jackson {
+                registerModule(JavaTimeModule())
+            }
         }
-    }
-    routing {
-        post("api/v1/saker/oprett"){
-            val req = call.receive<Ident>()
-            returnerYrkesskade.add(req.identifikator)
-            call.respond(req)
-        }
-        post("/api/v1/saker/") {
-            val req = call.receive<YrkesskadeRequest>()
+        routing {
+            post("/api/v1/saker/") {
+                val req = call.receive<YrkesskadeRequest>()
+                val person = req.foedselsnumre.map { hentEllerGenererTestPerson(it) }
 
-            if (req.foedselsnumre.first() in returnerYrkesskade) {
                 call.respond(
                     Yrkesskader(
-                        skader = listOf(
-                            YrkesskadeModell(
-                                kommunenr = "1234",
-                                saksblokk = "A",
-                                saksnr = 1234,
-                                sakstype = "Yrkesskade",
-                                mottattdato = LocalDate.now(),
-                                resultat = "Godkjent",
-                                resultattekst = "Godkjent",
-                                vedtaksdato = LocalDate.now(),
-                                skadeart = "Arbeidsulykke",
-                                diagnose = "Kuttskade",
-                                skadedato = LocalDate.now(),
-                                kildetabell = "Yrkesskade",
-                                kildesystem = "Yrkesskade",
-                                saksreferanse = "1234"
-                            )
-                        )
+                        skader = person.flatMap { it.yrkesskade }
+                            .map {
+                                YrkesskadeModell(
+                                    kommunenr = "1234",
+                                    saksblokk = "A",
+                                    saksnr = 1234,
+                                    sakstype = "Yrkesskade",
+                                    mottattdato = LocalDate.now(),
+                                    resultat = "Godkjent",
+                                    resultattekst = "Godkjent",
+                                    vedtaksdato = LocalDate.now(),
+                                    skadeart = "Arbeidsulykke",
+                                    diagnose = "Kuttskade",
+                                    skadedato = it.skadedato,
+                                    kildetabell = "Yrkesskade",
+                                    kildesystem = "Yrkesskade",
+                                    saksreferanse = it.saksreferanse
+                                )
+                            }
                     )
                 )
-            } else {
-                call.respond(Yrkesskader(skader = listOf()))
             }
         }
     }
-}
 
-private fun barn(req: PdlRequest): PdlRelasjonDataResponse {
-    val forespurtIdenter = req.variables.identer ?: emptyList()
+    private fun barn(req: PdlRequest): PdlRelasjonDataResponse {
+        val forespurtIdenter = req.variables.identer ?: emptyList()
 
-    val barnIdenter = forespurtIdenter.mapNotNull { mapIdentBolk(it) }.toList()
+        val barnIdenter = forespurtIdenter.mapNotNull { mapIdentBolk(it) }.toList()
 
-    return PdlRelasjonDataResponse(
-        errors = null,
-        extensions = null,
-        data = BarnPdlData(
-            hentPersonBolk = barnIdenter
-        )
-    )
-}
-
-private fun mapIdentBolk(it: String): HentPersonBolkResult? {
-    val person = fakePersoner[it]
-    if (person == null) {
-        return null
-    }
-    return HentPersonBolkResult(
-        ident = person.aktivIdent(),
-        person = BarnPdlPerson(
-            foedsel = listOf(PdlFoedsel(person.fødselsdato.toFormatedString())),
-            doedsfall = mapDødsfall(person)
-        )
-    )
-}
-
-fun mapDødsfall(person: TestPerson): Set<PDLDødsfall>? {
-    if (person.dødsdato == null) {
-        return null
-    }
-    return setOf(PDLDødsfall(person.dødsdato.toFormatedString()))
-}
-
-private fun barnRelasjoner(req: PdlRequest): PdlRelasjonDataResponse {
-    val testPerson = hentEllerGenererTestPerson(req)
-    return PdlRelasjonDataResponse(
-        errors = null,
-        extensions = null,
-        data = BarnPdlData(
-            hentPerson = BarnPdlPerson(
-                forelderBarnRelasjon = testPerson.barn
-                    .map { PdlRelasjon(it.aktivIdent()) }
-                    .toList()
+        return PdlRelasjonDataResponse(
+            errors = null,
+            extensions = null,
+            data = BarnPdlData(
+                hentPersonBolk = barnIdenter
             )
         )
-    )
-}
+    }
 
-private fun identer(req: PdlRequest): PdlIdenterDataResponse {
-    val person = hentEllerGenererTestPerson(req)
-
-    return PdlIdenterDataResponse(
-        errors = null,
-        extensions = null,
-        data = PdlIdenterData(
-            hentIdenter = PdlIdenter(
-                identer = mapIdent(person)
+    private fun mapIdentBolk(it: String): HentPersonBolkResult? {
+        val person = fakePersoner[it]
+        if (person == null) {
+            return null
+        }
+        return HentPersonBolkResult(
+            ident = person.identer.first().toString(),
+            person = BarnPdlPerson(
+                foedsel = listOf(PdlFoedsel(person.fødselsdato.toFormatedString())),
+                doedsfall = mapDødsfall(person)
             )
-        ),
-    )
-}
-
-private fun hentEllerGenererTestPerson(req: PdlRequest): TestPerson {
-    val forespurtIdent = req.variables.ident ?: ""
-    val person = fakePersoner[forespurtIdent]
-    if (person != null) {
-        return person
+        )
     }
 
-    return TestPerson(setOf(Ident(forespurtIdent)), fødselsdato = Fødselsdato(LocalDate.now().minusYears(30)))
-}
-
-fun mapIdent(person: TestPerson?): List<PdlIdent> {
-    if (person == null) {
-        return emptyList()
+    fun mapDødsfall(person: TestPerson): Set<PDLDødsfall>? {
+        if (person.dødsdato == null) {
+            return null
+        }
+        return setOf(PDLDødsfall(person.dødsdato.toFormatedString()))
     }
-    return listOf(PdlIdent(person.aktivIdent(), false, PdlGruppe.FOLKEREGISTERIDENT))
-}
 
-private fun personopplysninger(req: PdlRequest): PdlPersoninfoDataResponse {
-    val testPerson = hentEllerGenererTestPerson(req)
-    return PdlPersoninfoDataResponse(
-        errors = null,
-        extensions = null,
-        data = PdlPersoninfoData(
-            hentPerson = mapPerson(testPerson)
-        ),
-    )
-}
-
-fun mapPerson(person: TestPerson?): PdlPersoninfo? {
-    if (person == null) {
-        return null
+    private fun barnRelasjoner(req: PdlRequest): PdlRelasjonDataResponse {
+        val testPerson = hentEllerGenererTestPerson(req.variables.ident ?: "")
+        return PdlRelasjonDataResponse(
+            errors = null,
+            extensions = null,
+            data = BarnPdlData(
+                hentPerson = BarnPdlPerson(
+                    forelderBarnRelasjon = testPerson.barn
+                        .map { PdlRelasjon(it.identer.first().identifikator) }
+                        .toList()
+                )
+            )
+        )
     }
-    return PdlPersoninfo(person.fødselsdato.toFormatedString())
-}
 
-fun Application.azureFake() {
-    install(ContentNegotiation) {
-        jackson()
+    private fun identer(req: PdlRequest): PdlIdenterDataResponse {
+        val person = hentEllerGenererTestPerson(req.variables.ident ?: "")
+
+        return PdlIdenterDataResponse(
+            errors = null,
+            extensions = null,
+            data = PdlIdenterData(
+                hentIdenter = PdlIdenter(
+                    identer = mapIdent(person)
+                )
+            ),
+        )
     }
-    routing {
-        post("/token") {
-            call.respond(TestToken())
+
+    private fun hentEllerGenererTestPerson(forespurtIdent: String): TestPerson {
+        val person = fakePersoner[forespurtIdent]
+        if (person != null) {
+            return person
+        }
+
+        return TestPerson(setOf(Ident(forespurtIdent)), fødselsdato = Fødselsdato(LocalDate.now().minusYears(30)))
+    }
+
+    fun mapIdent(person: TestPerson?): List<PdlIdent> {
+        if (person == null) {
+            return emptyList()
+        }
+        return listOf(PdlIdent(person.identer.first().identifikator, false, PdlGruppe.FOLKEREGISTERIDENT))
+    }
+
+    private fun personopplysninger(req: PdlRequest): PdlPersoninfoDataResponse {
+        val testPerson = hentEllerGenererTestPerson(req.variables.ident ?: "")
+        return PdlPersoninfoDataResponse(
+            errors = null,
+            extensions = null,
+            data = PdlPersoninfoData(
+                hentPerson = mapPerson(testPerson)
+            ),
+        )
+    }
+
+    fun mapPerson(person: TestPerson?): PdlPersoninfo? {
+        if (person == null) {
+            return null
+        }
+        return PdlPersoninfo(person.fødselsdato.toFormatedString())
+    }
+
+    fun Application.azureFake() {
+        install(ContentNegotiation) {
+            jackson()
+        }
+        routing {
+            post("/token") {
+                call.respond(TestToken())
+            }
         }
     }
-}
 
-internal data class TestToken(
-    val access_token: String = "very.secure.token",
-    val refresh_token: String = "very.secure.token",
-    val id_token: String = "very.secure.token",
-    val token_type: String = "token-type",
-    val scope: String? = null,
-    val expires_in: Int = 3599,
-)
+    internal data class TestToken(
+        val access_token: String = "very.secure.token",
+        val refresh_token: String = "very.secure.token",
+        val id_token: String = "very.secure.token",
+        val token_type: String = "token-type",
+        val scope: String? = null,
+        val expires_in: Int = 3599,
+    )
+}

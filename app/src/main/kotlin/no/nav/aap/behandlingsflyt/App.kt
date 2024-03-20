@@ -51,6 +51,7 @@ import no.nav.aap.behandlingsflyt.tilkjentytelse.flate.tilkjentYtelseAPI
 import no.nav.aap.httpclient.ClientConfig
 import no.nav.aap.httpclient.RestClient
 import no.nav.aap.httpclient.request.PostRequest
+import no.nav.aap.httpclient.tokenprovider.NoTokenTokenProvider
 import no.nav.aap.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.json.DefaultJsonMapper
 import no.nav.aap.motor.Motor
@@ -216,16 +217,16 @@ fun NormalOpenAPIRoute.hendelsesApi(dataSource: DataSource) {
                 LocalDate.now().plusYears(3)
             )
 
-            if(dto.yrkesskade){
-                val client = RestClient(
-                    config = ClientConfig(scope = requiredConfigForKey("integrasjon.yrkesskade.scope"), additionalHeaders = listOf(Pair("Nav-Consumer-Id", "aap-behandlingsflyt"))), //TODO: bruk env var
-                    tokenProvider = ClientCredentialsTokenProvider
-                )
-                client.post(
-                    URI.create(requiredConfigForKey("integrasjon.yrkesskade.url")).resolve("/api/v1/saker/oprett"),
-                    PostRequest(body = ident, responseClazz = Ident::class.java)
-                )
-            }
+
+            val client = RestClient(
+                config = ClientConfig(),
+                tokenProvider = NoTokenTokenProvider()
+            )
+            client.post(
+                URI.create("http://localhost:8080/").resolve("testdataApi/opprettPerson"),
+                PostRequest(body = dto, responseClazz = OpprettTestcaseDTO::class.java)
+            )
+
 
             HendelsesMottak(dataSource).håndtere(
                 ident, DokumentMottattPersonHendelse(

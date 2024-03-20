@@ -28,7 +28,7 @@ object ClientCredentialsTokenProvider : TokenProvider {
     private val cache = HashMap<String, OidcToken>()
 
     override fun getToken(scope: String?): OidcToken? {
-        if (scope == null) {
+        if (scope == null ) {
             throw IllegalArgumentException("Kan ikke be om token uten å be om hvilket scope det skal gjelde for")
         }
         if (cache.contains(scope) && cache.getValue(scope).isNotExpired()) {

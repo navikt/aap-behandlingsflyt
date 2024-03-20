@@ -46,6 +46,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
+import no.nav.aap.behandlingsflyt.test.modell.TestSøknad
+import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.OppgaveRepository
 import no.nav.aap.verdityper.Beløp
@@ -97,7 +99,13 @@ class FlytOrkestratorTest {
         val periode = Periode(fom, fom.plusYears(3))
 
         // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
-        fakes.returnerYrkesskade(ident.identifikator)
+        fakes.leggTil(
+            TestPerson(
+            identer = setOf(ident),
+            fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
+            yrkesskade = listOf(TestYrkesskade())
+        )
+        )
         FakeInntektRegisterGateway.konstruer(
             ident = ident, inntekterPerÅr = listOf(
                 InntektPerÅr(
