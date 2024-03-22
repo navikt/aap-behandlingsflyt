@@ -146,7 +146,7 @@ class FlytOrkestratorTest {
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                             nedreGrense = NedreGrense.FEMTI,
-                            nedsattArbeidsevneDato = Year.now(),
+                            nedsattArbeidsevneDato = Year.now().value,
                             erArbeidsevnenNedsatt = true,
                             yrkesskadevurdering = YrkesskadevurderingDto(
                                 erÅrsakssammenheng = false
@@ -328,7 +328,7 @@ class FlytOrkestratorTest {
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                             nedreGrense = NedreGrense.TRETTI,
-                            nedsattArbeidsevneDato = Year.now(),
+                            nedsattArbeidsevneDato = Year.now().value,
                             erArbeidsevnenNedsatt = true,
                             yrkesskadevurdering = YrkesskadevurderingDto(
                                 erÅrsakssammenheng = true
@@ -498,7 +498,7 @@ class FlytOrkestratorTest {
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                             nedreGrense = NedreGrense.FEMTI,
-                            nedsattArbeidsevneDato = Year.now(),
+                            nedsattArbeidsevneDato = Year.now().value,
                             erArbeidsevnenNedsatt = true,
                             yrkesskadevurdering = YrkesskadevurderingDto(
                                 erÅrsakssammenheng = false
@@ -591,7 +591,7 @@ class FlytOrkestratorTest {
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                             nedreGrense = NedreGrense.FEMTI,
-                            nedsattArbeidsevneDato = Year.now(),
+                            nedsattArbeidsevneDato = Year.now().value,
                             erArbeidsevnenNedsatt = true,
                             yrkesskadevurdering = YrkesskadevurderingDto(
                                 erÅrsakssammenheng = false
