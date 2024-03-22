@@ -46,7 +46,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
-import no.nav.aap.behandlingsflyt.test.modell.TestSøknad
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.OppgaveRepository
@@ -147,7 +146,7 @@ class FlytOrkestratorTest {
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                             nedreGrense = NedreGrense.FEMTI,
-                            nedsattArbeidsevneDato = LocalDate.now(),
+                            nedsattArbeidsevneDato = Year.now(),
                             erArbeidsevnenNedsatt = true,
                             yrkesskadevurdering = YrkesskadevurderingDto(
                                 erÅrsakssammenheng = false
@@ -183,7 +182,6 @@ class FlytOrkestratorTest {
                     løsning = FastsettBeregningstidspunktLøsning(
                         beregningVurdering = BeregningVurdering(
                             begrunnelse = "Trenger hjelp fra nav",
-                            nedsattArbeidsevneDato = LocalDate.now().minusMonths(6),
                             ytterligereNedsattArbeidsevneDato = null,
                             antattÅrligInntekt = null
                         ),
@@ -347,7 +345,7 @@ class FlytOrkestratorTest {
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                             nedreGrense = NedreGrense.TRETTI,
-                            nedsattArbeidsevneDato = LocalDate.now(),
+                            nedsattArbeidsevneDato = Year.now(),
                             erArbeidsevnenNedsatt = true,
                             yrkesskadevurdering = YrkesskadevurderingDto(
                                 erÅrsakssammenheng = true
@@ -383,7 +381,6 @@ class FlytOrkestratorTest {
                     løsning = FastsettBeregningstidspunktLøsning(
                         beregningVurdering = BeregningVurdering(
                             begrunnelse = "Trenger hjelp fra nav",
-                            nedsattArbeidsevneDato = LocalDate.now().minusMonths(6),
                             ytterligereNedsattArbeidsevneDato = null,
                             antattÅrligInntekt = null
                         ),
@@ -518,7 +515,7 @@ class FlytOrkestratorTest {
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                             nedreGrense = NedreGrense.FEMTI,
-                            nedsattArbeidsevneDato = LocalDate.now(),
+                            nedsattArbeidsevneDato = Year.now(),
                             erArbeidsevnenNedsatt = true,
                             yrkesskadevurdering = YrkesskadevurderingDto(
                                 erÅrsakssammenheng = false
@@ -554,7 +551,6 @@ class FlytOrkestratorTest {
                     løsning = FastsettBeregningstidspunktLøsning(
                         beregningVurdering = BeregningVurdering(
                             begrunnelse = "Trenger hjelp fra nav",
-                            nedsattArbeidsevneDato = LocalDate.now().minusMonths(6),
                             ytterligereNedsattArbeidsevneDato = null,
                             antattÅrligInntekt = null
                         ),
@@ -629,7 +625,7 @@ class FlytOrkestratorTest {
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                             nedreGrense = NedreGrense.FEMTI,
-                            nedsattArbeidsevneDato = LocalDate.now(),
+                            nedsattArbeidsevneDato = Year.now(),
                             erArbeidsevnenNedsatt = true,
                             yrkesskadevurdering = YrkesskadevurderingDto(
                                 erÅrsakssammenheng = false
@@ -650,7 +646,6 @@ class FlytOrkestratorTest {
                     løsning = FastsettBeregningstidspunktLøsning(
                         beregningVurdering = BeregningVurdering(
                             begrunnelse = "Trenger hjelp fra nav",
-                            nedsattArbeidsevneDato = LocalDate.now().minusMonths(6),
                             ytterligereNedsattArbeidsevneDato = null,
                             antattÅrligInntekt = null
                         ),

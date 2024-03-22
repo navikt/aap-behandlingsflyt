@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlagkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Input
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.FakeInntektRegisterGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.verdityper.flyt.FlytKontekst
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
@@ -14,20 +14,20 @@ import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 class InntektService private constructor(
     private val sakService: SakService,
     private val inntektGrunnlagRepository: InntektGrunnlagRepository,
-    private val beregningVurderingRepository: BeregningVurderingRepository,
+    private val sykdomRepository: SykdomRepository,
     private val inntektRegisterGateway: InntektRegisterGateway
 ) : Grunnlag {
 
     override fun oppdater(kontekst: FlytKontekst): Boolean {
         val behandlingId = kontekst.behandlingId
-        val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
-        if (beregningVurdering?.nedsattArbeidsevneDato == null) {
+        val beregningVurdering = sykdomRepository.hentHvisEksisterer(behandlingId)
+        if (beregningVurdering?.sykdomsvurdering?.nedsattArbeidsevneDato == null) {
             return false
         }
 
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
 
-        val nedsettelsesDato = beregningVurdering.nedsattArbeidsevneDato
+        val nedsettelsesDato = beregningVurdering.sykdomsvurdering.nedsattArbeidsevneDato.atMonth(1).atDay(1)
         val behov = Inntektsbehov(Input(nedsettelsesDato = nedsettelsesDato))
         val inntektsBehov = behov.utledAlleRelevanteÅr()
 
@@ -49,7 +49,7 @@ class InntektService private constructor(
             return InntektService(
                 SakService(connection),
                 InntektGrunnlagRepository(connection),
-                BeregningVurderingRepository(connection),
+                SykdomRepository(connection),
                 FakeInntektRegisterGateway
             )
         }

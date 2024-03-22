@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurd
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDate
+import java.time.Year
 
 data class SykdomGrunnlagDto(
     val skalVurdereYrkesskade: Boolean,
@@ -26,7 +27,7 @@ data class SykdomsvurderingDto(
     val erSkadeSykdomEllerLyteVesentligdel: Boolean?,
     val erNedsettelseIArbeidsevneHøyereEnnNedreGrense: Boolean?,
     val nedreGrense: NedreGrense?,
-    val nedsattArbeidsevneDato: LocalDate?,
+    val nedsattArbeidsevneDato: Year?,
     val yrkesskadevurdering: YrkesskadevurderingDto?
 ) {
     fun toYrkesskadevurdering(): Yrkesskadevurdering? {

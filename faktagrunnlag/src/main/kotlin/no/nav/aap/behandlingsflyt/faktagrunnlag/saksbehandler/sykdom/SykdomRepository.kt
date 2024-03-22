@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.dbconnect.Row
 import no.nav.aap.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
+import java.time.Year
 
 class SykdomRepository(private val connection: DBConnection) {
 
@@ -17,7 +18,11 @@ class SykdomRepository(private val connection: DBConnection) {
         }
     }
 
-    fun lagre(behandlingId: BehandlingId, sykdomsvurdering: Sykdomsvurdering?, yrkesskadevurdering: Yrkesskadevurdering?) {
+    fun lagre(
+        behandlingId: BehandlingId,
+        sykdomsvurdering: Sykdomsvurdering?,
+        yrkesskadevurdering: Yrkesskadevurdering?
+    ) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         val nyttGrunnlag = SykdomGrunnlag(
             null,
@@ -94,7 +99,7 @@ class SykdomRepository(private val connection: DBConnection) {
                 setBoolean(3, vurdering.erSkadeSykdomEllerLyteVesentligdel)
                 setBoolean(4, vurdering.erNedsettelseIArbeidsevneHøyereEnnNedreGrense)
                 setEnumName(5, vurdering.nedreGrense)
-                setLocalDate(6, vurdering.nedsattArbeidsevneDato)
+                setLocalDate(6, vurdering.nedsattArbeidsevneDato?.atMonth(1)?.atDay(1))
             }
         }
 
@@ -176,7 +181,7 @@ class SykdomRepository(private val connection: DBConnection) {
                     row.getBooleanOrNull("ER_SYKDOM_SKADE_LYTE_VESETLING_DEL"),
                     row.getBooleanOrNull("ER_NEDSETTELSE_HOYERE_ENN_NEDRE_GRENSE"),
                     row.getEnumOrNull("NEDRE_GRENSE"),
-                    row.getLocalDateOrNull("NEDSATT_ARBEIDSEVNE_DATO"),
+                    row.getIntOrNull("NEDSATT_ARBEIDSEVNE_DATO")?.let { Year.of(it) },
                     row.getBoolean("ER_ARBEIDSEVNE_NEDSATT")
                 )
             }

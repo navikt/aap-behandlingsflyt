@@ -8,6 +8,7 @@ import no.nav.aap.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.Year
 
 class SykdomsGrunnlagTest {
 
@@ -22,7 +23,7 @@ class SykdomsGrunnlagTest {
                 erSkadeSykdomEllerLyteVesentligdel = true,
                 erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                 nedreGrense = NedreGrense.FEMTI,
-                nedsattArbeidsevneDato = LocalDate.now(),
+                nedsattArbeidsevneDato = Year.now(),
                 erArbeidsevnenNedsatt = true,
             )
         )
@@ -41,7 +42,7 @@ class SykdomsGrunnlagTest {
                 erSkadeSykdomEllerLyteVesentligdel = true,
                 erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                 nedreGrense = NedreGrense.TRETTI,
-                nedsattArbeidsevneDato = LocalDate.now(),
+                nedsattArbeidsevneDato = Year.now(),
                 erArbeidsevnenNedsatt = true,
             )
         )
@@ -65,7 +66,7 @@ class SykdomsGrunnlagTest {
                 erSkadeSykdomEllerLyteVesentligdel = true,
                 erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                 nedreGrense = NedreGrense.TRETTI,
-                nedsattArbeidsevneDato = LocalDate.now(),
+                nedsattArbeidsevneDato = Year.now(),
                 erArbeidsevnenNedsatt = true,
             )
         )
@@ -89,7 +90,7 @@ class SykdomsGrunnlagTest {
                 erSkadeSykdomEllerLyteVesentligdel = true,
                 erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                 nedreGrense = NedreGrense.FEMTI,
-                nedsattArbeidsevneDato = LocalDate.now(),
+                nedsattArbeidsevneDato = Year.now(),
                 erArbeidsevnenNedsatt = true,
             )
         )
@@ -113,7 +114,7 @@ class SykdomsGrunnlagTest {
                 erSkadeSykdomEllerLyteVesentligdel = true,
                 erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                 nedreGrense = NedreGrense.TRETTI,
-                nedsattArbeidsevneDato = LocalDate.now(),
+                nedsattArbeidsevneDato = Year.now(),
                 erArbeidsevnenNedsatt = true,
             )
         )
@@ -137,7 +138,7 @@ class SykdomsGrunnlagTest {
                 erSkadeSykdomEllerLyteVesentligdel = true,
                 erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                 nedreGrense = NedreGrense.FEMTI,
-                nedsattArbeidsevneDato = LocalDate.now(),
+                nedsattArbeidsevneDato = Year.now(),
                 erArbeidsevnenNedsatt = true,
             )
         )

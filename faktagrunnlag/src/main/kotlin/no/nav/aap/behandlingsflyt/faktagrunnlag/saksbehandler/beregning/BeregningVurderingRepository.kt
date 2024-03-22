@@ -10,7 +10,6 @@ class BeregningVurderingRepository(private val connection: DBConnection) {
     private fun mapVurdering(row: Row): BeregningVurdering {
         return BeregningVurdering(
             row.getString("BEGRUNNELSE"),
-            row.getLocalDate("NEDSATT_ARBEIDSEVNE_DATO"),
             row.getLocalDateOrNull("YTTERLIGERE_NEDSATT_ARBEIDSEVNE_DATO"),
             row.getBigDecimalOrNull("YRKESSKADE_ANTATT_ARLIG_INNTEKT")?.let(::Beløp)
         )
@@ -18,7 +17,7 @@ class BeregningVurderingRepository(private val connection: DBConnection) {
 
     fun hentHvisEksisterer(behandlingId: BehandlingId): BeregningVurdering? {
         val query = """
-            SELECT v.BEGRUNNELSE, v.NEDSATT_ARBEIDSEVNE_DATO, v.YTTERLIGERE_NEDSATT_ARBEIDSEVNE_DATO, v.YRKESSKADE_ANTATT_ARLIG_INNTEKT 
+            SELECT v.BEGRUNNELSE, v.YTTERLIGERE_NEDSATT_ARBEIDSEVNE_DATO, v.YRKESSKADE_ANTATT_ARLIG_INNTEKT 
             FROM BEREGNINGSTIDSPUNKT_GRUNNLAG g 
             INNER JOIN BEREGNINGSTIDSPUNKT_VURDERING v ON g.VURDERING_ID = v.ID 
             WHERE BEHANDLING_ID = ? AND AKTIV = TRUE
@@ -90,17 +89,16 @@ class BeregningVurderingRepository(private val connection: DBConnection) {
 
         val query = """
             INSERT INTO BEREGNINGSTIDSPUNKT_VURDERING 
-            (BEGRUNNELSE, NEDSATT_ARBEIDSEVNE_DATO, YTTERLIGERE_NEDSATT_ARBEIDSEVNE_DATO, YRKESSKADE_ANTATT_ARLIG_INNTEKT)
+            (BEGRUNNELSE, YTTERLIGERE_NEDSATT_ARBEIDSEVNE_DATO, YRKESSKADE_ANTATT_ARLIG_INNTEKT)
             VALUES
-            (?, ?, ?, ?)
+            (?, ?, ?)
         """.trimIndent()
 
         val id = connection.executeReturnKey(query) {
             setParams {
                 setString(1, vurdering.begrunnelse)
-                setLocalDate(2, vurdering.nedsattArbeidsevneDato)
-                setLocalDate(3, vurdering.ytterligereNedsattArbeidsevneDato)
-                setBigDecimal(4, vurdering.antattÅrligInntekt?.verdi())
+                setLocalDate(2, vurdering.ytterligereNedsattArbeidsevneDato)
+                setBigDecimal(3, vurdering.antattÅrligInntekt?.verdi())
             }
         }
 

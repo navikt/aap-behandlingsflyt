@@ -26,7 +26,7 @@ class BeregningService(
         val uføre = uføreRepository.hentHvisEksisterer(behandlingId)
         val beregningVurdering = beregningVurderingRepository.hent(behandlingId)
 
-        val inntekter = beregningVurdering.utledInput()
+        val inntekter = beregningVurdering.utledInput(sykdomGrunnlag.sykdomsvurdering!!)
 
         val beregningMedYrkesskade = beregn(sykdomGrunnlag, beregningVurdering, inntekter.utledForOrdinær(inntektGrunnlag.inntekter))
 
