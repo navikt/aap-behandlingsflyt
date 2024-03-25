@@ -100,10 +100,10 @@ class FlytOrkestratorTest {
         // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
         fakes.leggTil(
             TestPerson(
-            identer = setOf(ident),
-            fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
-            yrkesskade = listOf(TestYrkesskade())
-        )
+                identer = setOf(ident),
+                fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
+                yrkesskade = listOf(TestYrkesskade())
+            )
         )
         FakeInntektRegisterGateway.konstruer(
             ident = ident, inntekterPerÅr = listOf(

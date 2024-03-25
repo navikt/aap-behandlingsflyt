@@ -33,7 +33,6 @@ import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.dbflyway.Migrering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeRegisterGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.bistandsgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.medlemskap.medlemskapsgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.meldepliktsgrunnlagApi
@@ -41,6 +40,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.flate.stud
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.sykdomsgrunnlagApi
 import no.nav.aap.behandlingsflyt.flyt.flate.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flate.flytApi
+import no.nav.aap.behandlingsflyt.flyt.flate.søknadApi
 import no.nav.aap.behandlingsflyt.hendelse.mottak.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HendelsesMottak
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsOppgaver
@@ -52,16 +52,13 @@ import no.nav.aap.httpclient.ClientConfig
 import no.nav.aap.httpclient.RestClient
 import no.nav.aap.httpclient.request.PostRequest
 import no.nav.aap.httpclient.tokenprovider.NoTokenTokenProvider
-import no.nav.aap.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.json.DefaultJsonMapper
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.retry.RetryService
-import no.nav.aap.requiredConfigForKey
 import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.feilhåndtering.ElementNotFoundException
 import no.nav.aap.verdityper.sakogbehandling.Ident
-import no.nav.aap.yrkesskade.Yrkesskader
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.net.URI
@@ -127,6 +124,7 @@ internal fun Application.server(dbConfig: DbConfig) {
     apiRouting {
         configApi()
         saksApi(dataSource)
+        søknadApi(dataSource)
         behandlingApi(dataSource)
         flytApi(dataSource)
         fatteVedtakGrunnlagApi(dataSource)

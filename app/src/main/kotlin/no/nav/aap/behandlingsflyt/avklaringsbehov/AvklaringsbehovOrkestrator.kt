@@ -108,8 +108,6 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
         løsFaktiskAvklaringsbehov(kontekst, avklaringsbehovene, avklaringsbehov)
     }
 
-
-    @Suppress("UNCHECKED_CAST")
     private fun løsFaktiskAvklaringsbehov(
         kontekst: FlytKontekst,
         avklaringsbehovene: Avklaringsbehovene,

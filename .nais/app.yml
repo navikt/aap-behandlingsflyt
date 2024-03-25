@@ -59,6 +59,7 @@ spec:
     inbound:
       rules:
         - application: saksbehandling
+        - application: mottak
     outbound:
       external:
         - host: pdl-api.dev-fss-pub.nais.io
