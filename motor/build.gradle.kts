@@ -2,7 +2,7 @@ dependencies {
     implementation(project(":verdityper"))
     implementation(project(":dbflyway"))
     implementation(project(":dbconnect"))
-    implementation("org.slf4j:slf4j-api:2.0.11")
+    implementation("org.slf4j:slf4j-api:2.0.12")
 
     testImplementation(project(":dbtestdata"))
     testImplementation(project(":dbtest"))
