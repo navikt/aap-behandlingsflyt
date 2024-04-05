@@ -1,8 +1,6 @@
 package no.nav.aap.httpclient.request
 
 import no.nav.aap.json.DefaultJsonMapper
-import java.net.URLEncoder
-import java.nio.charset.Charset
 import java.time.Duration
 
 class PostRequest<T : Any, R>(
@@ -22,7 +20,7 @@ class PostRequest<T : Any, R>(
         }
         if (contentType == ContentType.APPLICATION_FORM_URLENCODED) {
             if (body is String) {
-                return URLEncoder.encode(body, Charset.forName("UTF-8"))
+                return body
             } else {
                 throw IllegalArgumentException("Definert '${contentType()}' men body er ikke av type String")
             }
