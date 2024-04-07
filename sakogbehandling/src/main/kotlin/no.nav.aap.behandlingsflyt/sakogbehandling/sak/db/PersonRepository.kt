@@ -9,6 +9,8 @@ import java.util.*
 class PersonRepository(private val connection: DBConnection) {
 
     fun finnEllerOpprett(identer: List<Ident>): Person {
+        require(identer.isNotEmpty())
+
         val relevantePersoner = connection.queryList(
             """SELECT person.id, person.referanse 
                     FROM person 

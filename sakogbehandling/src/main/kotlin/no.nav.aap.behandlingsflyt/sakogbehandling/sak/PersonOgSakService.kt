@@ -11,8 +11,11 @@ class PersonOgSakService(
     private val pdlGateway: IdentGateway
 ) {
 
-    fun finnEllerOpprett(ident: Ident, periode: Periode) : Sak {
+    fun finnEllerOpprett(ident: Ident, periode: Periode): Sak {
         val identliste = pdlGateway.hentAlleIdenterForPerson(ident)
+        if (identliste.isEmpty()) {
+            throw IllegalStateException("Fikk ingen treff på ident i PDL")
+        }
 
         val personRepository = PersonRepository(connection)
         val person = personRepository.finnEllerOpprett(identliste)
