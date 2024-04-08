@@ -52,8 +52,7 @@ class VurderSykepengeErstatningSteg private constructor(
                 avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
 
             if (sykepengeerstatningsBehov?.erÅpent() == true) {
-                //TODO: Blir/skal denne endringen lagret noe sted?
-                sykepengeerstatningsBehov.avbryt()
+                avklaringsbehovene.avbryt(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
             }
         }
 
