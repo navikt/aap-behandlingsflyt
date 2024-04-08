@@ -4,10 +4,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fød
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlQueryException
 import no.nav.aap.httpclient.ClientConfig
 import no.nav.aap.httpclient.RestClient
 import no.nav.aap.httpclient.request.PostRequest
 import no.nav.aap.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.pdl.GraphQLError
 import no.nav.aap.pdl.IdentVariables
 import no.nav.aap.pdl.PdlPersoninfoDataResponse
 import no.nav.aap.pdl.PdlRequest
@@ -31,6 +33,15 @@ object PdlPersonopplysningGateway : PersonopplysningGateway {
     override fun innhent(person: Person): Personopplysning? {
         val request = PdlRequest(PERSON_QUERY, IdentVariables(person.aktivIdent().identifikator))
         val response: PdlPersoninfoDataResponse = query(request)
+
+        if (response.errors?.isEmpty() == true) {
+            throw PdlQueryException(
+                String.format(
+                    "Feil %s ved GraphQL oppslag mot %s",
+                    response.errors?.map(GraphQLError::message)?.joinToString()
+                )
+            )
+        }
 
         val foedselsdato = response
             .data

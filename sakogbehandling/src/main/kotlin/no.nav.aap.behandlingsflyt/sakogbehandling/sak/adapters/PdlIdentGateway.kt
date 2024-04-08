@@ -5,6 +5,7 @@ import no.nav.aap.httpclient.ClientConfig
 import no.nav.aap.httpclient.RestClient
 import no.nav.aap.httpclient.request.PostRequest
 import no.nav.aap.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.pdl.GraphQLError
 import no.nav.aap.pdl.IdentVariables
 import no.nav.aap.pdl.PdlGruppe
 import no.nav.aap.pdl.PdlIdenterDataResponse
@@ -30,12 +31,21 @@ object PdlIdentGateway : IdentGateway {
         val request = PdlRequest(IDENT_QUERY, IdentVariables(ident.identifikator))
         val response: PdlIdenterDataResponse = query(request)
 
+        if (response.errors?.isEmpty() == true) {
+            throw PdlQueryException(
+                String.format(
+                    "Feil %s ved GraphQL oppslag mot %s",
+                    response.errors?.map(GraphQLError::message)?.joinToString()
+                )
+            )
+        }
+
         return response.data
-                ?.hentIdenter
-                ?.identer
-                ?.filter { it.gruppe == PdlGruppe.FOLKEREGISTERIDENT }
-                ?.map { Ident(identifikator = it.ident, aktivIdent = it.historisk.not()) }
-                ?: emptyList()
+            ?.hentIdenter
+            ?.identer
+            ?.filter { it.gruppe == PdlGruppe.FOLKEREGISTERIDENT }
+            ?.map { Ident(identifikator = it.ident, aktivIdent = it.historisk.not()) }
+            ?: emptyList()
     }
 }
 
@@ -53,3 +63,5 @@ val IDENT_QUERY = """
         }
     }
 """.trimIndent()
+
+class PdlQueryException(msg: String) : RuntimeException(msg)
