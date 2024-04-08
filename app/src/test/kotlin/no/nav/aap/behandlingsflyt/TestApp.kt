@@ -15,7 +15,6 @@ import no.nav.aap.verdityper.sakogbehandling.Ident
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
 import java.time.Duration
-import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
 // Kjøres opp for å få logback i console uten json
@@ -43,7 +42,7 @@ fun main() {
                     fakes.leggTil(
                         TestPerson(
                             identer = setOf(Ident(dto.ident)),
-                            fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
+                            fødselsdato = Fødselsdato(dto.fødselsdato),
                             yrkesskade = if (dto.yrkesskade) listOf(TestYrkesskade()) else emptyList()
                         )
                     )
