@@ -14,7 +14,7 @@ class PdlErrorHandler(config: ClientConfig) : RestErrorHandler {
         val respons = defaultErrorHandler.håndter(request, response, clazz)
 
         if (respons != null && respons is PdlResponse) {
-            if (respons.errors?.isEmpty() == true) {
+            if (respons.errors?.isNotEmpty() == true) {
                 throw PdlQueryException(
                     String.format(
                         "Feil %s ved GraphQL oppslag mot %s",
