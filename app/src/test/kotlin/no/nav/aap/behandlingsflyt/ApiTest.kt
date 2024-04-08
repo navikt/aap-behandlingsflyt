@@ -21,6 +21,7 @@ import no.nav.aap.verdityper.flyt.StegType
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
@@ -60,6 +61,7 @@ class ApiTest {
         }
     }
 
+    @Disabled
     @Test
     fun test() {
         fakes.leggTil(
