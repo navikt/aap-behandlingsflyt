@@ -213,7 +213,7 @@ fun NormalOpenAPIRoute.hendelsesApi(dataSource: DataSource) {
 
             val ident = Ident(dto.ident)
             val periode = Periode(
-                LocalDate.now().minusYears(3),
+                LocalDate.now(),
                 LocalDate.now().plusYears(3)
             )
 
