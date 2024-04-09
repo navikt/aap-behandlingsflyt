@@ -18,7 +18,7 @@ class PdlErrorHandler(config: ClientConfig) : RestErrorHandler {
                 throw PdlQueryException(
                     String.format(
                         "Feil %s ved GraphQL oppslag mot %s",
-                        respons.errors.map(GraphQLError::message).joinToString()
+                        respons.errors.map(GraphQLError::message).joinToString(), request.uri()
                     )
                 )
             }
