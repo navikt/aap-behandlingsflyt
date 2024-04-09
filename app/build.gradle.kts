@@ -56,7 +56,7 @@ dependencies {
     implementation("dev.forst:ktor-openapi-generator:0.6.1")
 
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.0")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.12.4")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.12.5")
     implementation("ch.qos.logback:logback-classic:1.5.3")
     implementation("net.logstash.logback:logstash-logback-encoder:7.4")
 
