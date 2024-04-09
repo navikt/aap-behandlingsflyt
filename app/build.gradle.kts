@@ -52,10 +52,10 @@ dependencies {
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
 
     implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.16.1")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.17.0")
     implementation("dev.forst:ktor-openapi-generator:0.6.1")
 
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.16.1")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.0")
     implementation("io.micrometer:micrometer-registry-prometheus:1.12.4")
     implementation("ch.qos.logback:logback-classic:1.5.3")
     implementation("net.logstash.logback:logstash-logback-encoder:7.4")
@@ -69,9 +69,9 @@ dependencies {
     implementation(project(":dbflyway"))
     implementation(project(":dbconnect"))
     implementation("com.zaxxer:HikariCP:5.1.0")
-    implementation("org.flywaydb:flyway-core:10.10.0")
+    implementation("org.flywaydb:flyway-core:10.11.0")
     implementation("org.flywaydb:flyway-database-postgresql:10.11.0")
-    runtimeOnly("org.postgresql:postgresql:42.7.2")
+    runtimeOnly("org.postgresql:postgresql:42.7.3")
 
     testImplementation(project(":dbtestdata"))
     testImplementation(project(":dbtest"))
