@@ -63,16 +63,16 @@ class GraphQLWarning(
 )
 
 data class PdlRelasjonData(
-    val hentPerson: PdlPerson? = null,
+    val hentPerson: PdlPersoninfo? = null,
     val hentPersonBolk: List<HentPersonBolkResult>? = null
 )
 
 data class HentPersonBolkResult(
     val ident: String,
-    val person: PdlPerson? = null
+    val person: PdlPersoninfo? = null
 )
 
-data class PdlPerson(
+data class PdlPersoninfo(
     val forelderBarnRelasjon: List<PdlRelasjon>? = null,
     val foedsel: List<PdlFoedsel>? = null,
     val doedsfall: Set<PDLDødsfall>? = null
@@ -83,7 +83,7 @@ data class PDLDødsfall(
 )
 
 data class PdlFoedsel(
-    val foedselsdato: String
+    val foedselsdato: String?
 )
 
 data class PdlRelasjon(
@@ -92,10 +92,6 @@ data class PdlRelasjon(
 
 data class PdlPersoninfoData(
     val hentPerson: PdlPersoninfo?,
-)
-
-data class PdlPersoninfo(
-    val foedselsdato: String
 )
 
 data class PdlIdenterData(

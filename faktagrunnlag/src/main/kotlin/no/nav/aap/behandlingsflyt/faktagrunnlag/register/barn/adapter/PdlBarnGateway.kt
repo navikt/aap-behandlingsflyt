@@ -62,7 +62,7 @@ object PdlBarnGateway : BarnGateway {
                     foedsel.singleOrNull()?.let { fdato ->
                         Barn(
                             ident = Ident(res.ident),
-                            fødselsdato = Fødselsdato.parse(fdato.foedselsdato),
+                            fødselsdato = Fødselsdato.parse(fdato.foedselsdato.toString()),
                             dødsdato = person.doedsfall?.first()?.doedsdato?.let { Dødsdato.parse(it) }
                         )
                     }

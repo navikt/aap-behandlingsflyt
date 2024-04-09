@@ -38,6 +38,8 @@ object PdlPersonopplysningGateway : PersonopplysningGateway {
         val foedselsdato = response
             .data
             ?.hentPerson
+            ?.foedsel
+            ?.first()
             ?.foedselsdato
             ?: return null
 
@@ -53,7 +55,9 @@ private const val ident = "\$ident"
 val PERSON_QUERY = """
     query($ident: ID!){
       hentPerson(ident: $ident) {
-    	foedselsdato
+        foedsel {
+    	  foedselsdato
+        }
       }
     }
 """.trimIndent()

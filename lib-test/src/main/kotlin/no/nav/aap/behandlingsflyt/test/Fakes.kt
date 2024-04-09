@@ -17,7 +17,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fød
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PERSON_QUERY
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.IDENT_QUERY
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
-import no.nav.aap.behandlingsflyt.test.modell.TestSøknad
 import no.nav.aap.pdl.HentPersonBolkResult
 import no.nav.aap.pdl.PDLDødsfall
 import no.nav.aap.pdl.PdlFoedsel
@@ -37,7 +36,6 @@ import no.nav.aap.yrkesskade.YrkesskadeModell
 import no.nav.aap.yrkesskade.YrkesskadeRequest
 import no.nav.aap.yrkesskade.Yrkesskader
 import java.time.LocalDate
-import no.nav.aap.pdl.PdlPerson as BarnPdlPerson
 import no.nav.aap.pdl.PdlRelasjonData as BarnPdlData
 
 class Fakes : AutoCloseable {
@@ -190,7 +188,7 @@ class Fakes : AutoCloseable {
         }
         return HentPersonBolkResult(
             ident = person.identer.first().toString(),
-            person = BarnPdlPerson(
+            person = PdlPersoninfo(
                 foedsel = listOf(PdlFoedsel(person.fødselsdato.toFormatedString())),
                 doedsfall = mapDødsfall(person)
             )
@@ -210,7 +208,7 @@ class Fakes : AutoCloseable {
             errors = null,
             extensions = null,
             data = BarnPdlData(
-                hentPerson = BarnPdlPerson(
+                hentPerson = PdlPersoninfo(
                     forelderBarnRelasjon = testPerson.barn
                         .map { PdlRelasjon(it.identer.first().identifikator) }
                         .toList()
@@ -264,7 +262,7 @@ class Fakes : AutoCloseable {
         if (person == null) {
             return null
         }
-        return PdlPersoninfo(person.fødselsdato.toFormatedString())
+        return PdlPersoninfo(foedsel = listOf(PdlFoedsel(person.fødselsdato.toFormatedString())))
     }
 
     fun Application.azureFake() {
