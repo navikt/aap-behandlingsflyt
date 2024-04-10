@@ -88,7 +88,7 @@ class ApiTest {
         requireNotNull(responseSak)
 
         client.post(
-            URI.create("http://localhost:8080/").resolve("api/søknad/send"),
+            URI.create("http://localhost:8080/").resolve("api/soknad/send"),
             PostRequest(
                 body = SøknadSendDto(responseSak.saksnummer, "123", SøknadDto(SøknadStudentDto("NEI"))),
                 responseClazz = Unit::class.java
