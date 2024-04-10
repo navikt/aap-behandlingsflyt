@@ -101,6 +101,7 @@ internal fun Application.server(dbConfig: DbConfig) {
     }
     install(CallLogging) {
         callIdMdc("callId")
+        filter { call -> call.request.path().startsWith("/actuator").not() }
     }
     install(StatusPages) {
         exception<Throwable> { call, cause ->
