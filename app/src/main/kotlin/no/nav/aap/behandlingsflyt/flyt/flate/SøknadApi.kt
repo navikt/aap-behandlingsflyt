@@ -17,7 +17,7 @@ import java.time.LocalDateTime
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.søknadApi(dataSource: DataSource) {
-    route("/api/soknad") {
+    route("/api/søknad") {
         route("/send").post<Unit, String, SøknadSendDto> { _, dto ->
             HendelsesMottak(dataSource).håndtere(
                 key = Saksnummer(dto.saksnummer),
@@ -27,7 +27,7 @@ fun NormalOpenAPIRoute.søknadApi(dataSource: DataSource) {
                     strukturertDokument = StrukturertDokument(
                         data = Søknad(
                             periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3)),
-                            student = dto.søknad.student
+                            student = dto.søknad.student.erStudent()
                         ),
                         brevkode = Brevkode.SØKNAD
                     )

@@ -7,5 +7,38 @@ class SøknadSendDto(
 )
 
 class SøknadDto(
-    val student: Boolean
+    val student: SøknadStudentDto
 )
+
+class SøknadStudentDto(
+    val erStudent: String
+) {
+    fun erStudent() = erStudent == "JA"
+}
+
+
+/*
+
+{ "saksnummer":"4LDRRYo",
+  "journalpostId":"453865487",
+  "søknad":{
+      "barn":[],
+      "sykepenger":"Nei",
+      "medlemskap":{
+        "harBoddINorgeSiste5År":"Ja",
+        "arbeidetUtenforNorgeFørSykdom":"Nei"
+      },
+      "yrkesskade":"Nei",
+      "student":{
+        "erStudent":"Ja"
+      },
+      "andreUtbetalinger":{
+        "lønn":"Nei","stønad":["NEI"],
+        "afp":{}
+      },
+      "søknadBekreft":true,
+      "version":1,
+      "etterspurtDokumentasjon":[]
+  }
+}
+ */

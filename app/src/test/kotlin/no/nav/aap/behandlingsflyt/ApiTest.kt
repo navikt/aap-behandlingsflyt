@@ -6,6 +6,7 @@ import io.ktor.server.netty.*
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.flyt.flate.SøknadDto
 import no.nav.aap.behandlingsflyt.flyt.flate.SøknadSendDto
+import no.nav.aap.behandlingsflyt.flyt.flate.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.flyt.flate.VilkårDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.FinnEllerOpprettSakDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksinfoDTO
@@ -87,9 +88,9 @@ class ApiTest {
         requireNotNull(responseSak)
 
         client.post(
-            URI.create("http://localhost:8080/").resolve("api/soknad/send"),
+            URI.create("http://localhost:8080/").resolve("api/søknad/send"),
             PostRequest(
-                body = SøknadSendDto(responseSak.saksnummer, "123", SøknadDto(false)),
+                body = SøknadSendDto(responseSak.saksnummer, "123", SøknadDto(SøknadStudentDto("NEI"))),
                 responseClazz = Unit::class.java
             )
         )
