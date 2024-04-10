@@ -63,12 +63,15 @@ spec:
     outbound:
       external:
         - host: pdl-api.dev-fss-pub.nais.io
+      rules:
+        - application: yrkesskade-saker
+          namespace: yrkesskade
   env:
     - name: INTEGRASJON_PDL_URL
       value: https://pdl-api.dev-fss-pub.nais.io/graphql
     - name: INTEGRASJON_PDL_SCOPE
       value: api://dev-fss.pdl.pdl-api/.default
     - name: INTEGRASJON_YRKESSKADE_URL
-      value: https://yrkesskade-saker.intern.dev.nav.no/api/v1/saker/
+      value: http://yrkesskade-saker.yrkesskade/api/v1/saker/
     - name: INTEGRASJON_YRKESSKADE_SCOPE
-      value: api://dev-gcp:yrkesskade:yrkesskade-saker/.default
+      value: api://dev-gcp.yrkesskade.yrkesskade-saker/.default
