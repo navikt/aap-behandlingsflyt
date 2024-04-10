@@ -17,7 +17,7 @@ import java.time.LocalDateTime
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.søknadApi(dataSource: DataSource) {
-    route("/api/soknad") {
+    route("/api/søknad") {
         route("/send").post<Unit, String, SøknadSendDto> { _, dto ->
             HendelsesMottak(dataSource).håndtere(
                 key = Saksnummer(dto.saksnummer),
