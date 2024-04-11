@@ -7,15 +7,15 @@ data class TotrinnsVurdering(
     @JsonProperty(required = true, value = "godkjent") val godkjent: Boolean?,
     @JsonProperty(value = "begrunnelse") val begrunnelse: String?
 ) {
-    fun valider():Boolean {
+    fun valider(): Boolean {
         if (godkjent == false) {
             requireNotNull(begrunnelse)
         }
         return true
     }
 
-    fun begrunnelse() : String {
-        if(godkjent == true) {
+    fun begrunnelse(): String {
+        if (godkjent == true) {
             return begrunnelse ?: ""
         }
         return requireNotNull(begrunnelse)
