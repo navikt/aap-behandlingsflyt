@@ -11,7 +11,7 @@ import no.nav.aap.verdityper.flyt.FlytKontekst
 
 @JsonTypeName(value = FATTE_VEDTAK_KODE)
 class FatteVedtakLøsning(
-    @JsonProperty("totrinnsVurderinger", required = true) val vurderinger: List<TotrinnsVurdering>,
+    @JsonProperty("vurderinger", required = true) val vurderinger: List<TotrinnsVurdering>,
     @JsonProperty(
         "behovstype",
         required = true,
