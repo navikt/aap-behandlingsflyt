@@ -5,5 +5,19 @@ import com.fasterxml.jackson.annotation.JsonProperty
 data class TotrinnsVurdering(
     @JsonProperty(required = true, value = "definisjon") val definisjon: String,
     @JsonProperty(required = true, value = "godkjent") val godkjent: Boolean?,
-    @JsonProperty(required = true, value = "begrunnelse") val begrunnelse: String?
-)
+    @JsonProperty(value = "begrunnelse") val begrunnelse: String?
+) {
+    fun valider():Boolean {
+        if (godkjent == false) {
+            requireNotNull(begrunnelse)
+        }
+        return true
+    }
+
+    fun begrunnelse() : String {
+        if(godkjent == true) {
+            return begrunnelse ?: ""
+        }
+        return requireNotNull(begrunnelse)
+    }
+}

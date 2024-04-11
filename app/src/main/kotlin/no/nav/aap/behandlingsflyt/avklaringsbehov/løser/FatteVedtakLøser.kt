@@ -18,7 +18,8 @@ class FatteVedtakLøser(val connection: DBConnection) : AvklaringsbehovsLøser<F
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId = kontekst.behandlingId)
 
-        lateinit var sammenstiltBegrunnelse: String
+        løsning.vurderinger.all { it.valider() }
+
         if (skalSendesTilbake(løsning.vurderinger)) {
             val flyt = utledType(behandling.typeBehandling()).flyt()
             val vurderingerSomErSendtTilbake = løsning.vurderinger
@@ -42,7 +43,7 @@ class FatteVedtakLøser(val connection: DBConnection) : AvklaringsbehovsLøser<F
             vurderingerFørRetur.forEach { vurdering ->
                 avklaringsbehovene.vurderTotrinn(
                     definisjon = Definisjon.forKode(vurdering.definisjon),
-                    begrunnelse = vurdering.begrunnelse!!,
+                    begrunnelse = vurdering.begrunnelse(),
                     godkjent = vurdering.godkjent!!,
                     vurdertAv = "saksbehandler" // TODO: Hente fra context
                 )
@@ -51,7 +52,7 @@ class FatteVedtakLøser(val connection: DBConnection) : AvklaringsbehovsLøser<F
             vurderingerSomErSendtTilbake.forEach { vurdering ->
                 avklaringsbehovene.vurderTotrinn(
                     definisjon = Definisjon.forKode(vurdering.definisjon),
-                    begrunnelse = vurdering.begrunnelse!!,
+                    begrunnelse = vurdering.begrunnelse(),
                     godkjent = vurdering.godkjent!!,
                     vurdertAv = "saksbehandler" // TODO: Hente fra context
                 )
@@ -64,13 +65,13 @@ class FatteVedtakLøser(val connection: DBConnection) : AvklaringsbehovsLøser<F
             løsning.vurderinger.forEach { vurdering ->
                 avklaringsbehovene.vurderTotrinn(
                     definisjon = Definisjon.forKode(vurdering.definisjon),
-                    begrunnelse = vurdering.begrunnelse!!,
+                    begrunnelse = vurdering.begrunnelse(),
                     godkjent = vurdering.godkjent!!,
                     vurdertAv = "saksbehandler" // TODO: Hente fra context
                 )
             }
         }
-        sammenstiltBegrunnelse = sammenstillBegrunnelse(løsning)
+        val sammenstiltBegrunnelse = sammenstillBegrunnelse(løsning)
 
         return LøsningsResultat(sammenstiltBegrunnelse)
     }
@@ -80,7 +81,7 @@ class FatteVedtakLøser(val connection: DBConnection) : AvklaringsbehovsLøser<F
     }
 
     private fun sammenstillBegrunnelse(løsning: FatteVedtakLøsning): String {
-        return løsning.vurderinger.joinToString("\\n") { it.begrunnelse!! }
+        return løsning.vurderinger.joinToString("\\n") { it.begrunnelse() }
     }
 
     override fun forBehov(): Definisjon {
