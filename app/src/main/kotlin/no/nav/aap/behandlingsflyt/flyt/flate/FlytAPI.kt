@@ -72,7 +72,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
                         aktivtSteg = aktivtSteg,
                         aktivGruppe = aktivtSteg.gruppe,
                         behandlingVersjon = behandling.versjon,
-                        visning = utledVisning(aktivtSteg, flyt)
+                        visning = utledVisning(aktivtSteg, flyt, alleAvklaringsbehovInkludertFrivillige)
                     )
                 }
                 respond(dto)
@@ -93,11 +93,22 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
     }
 }
 
-fun utledVisning(aktivtSteg: StegType, flyt: BehandlingFlyt): Visning {
+fun utledVisning(
+    aktivtSteg: StegType,
+    flyt: BehandlingFlyt,
+    alleAvklaringsbehovInkludertFrivillige: FrivilligeAvklaringsbehov
+): Visning {
     val beslutterReadOnly = aktivtSteg != StegType.FATTE_VEDTAK
     val saksbehandlerReadOnly = !flyt.erStegFør(aktivtSteg, StegType.FATTE_VEDTAK)
+    val visBeslutterKort =
+        !beslutterReadOnly || (!saksbehandlerReadOnly && alleAvklaringsbehovInkludertFrivillige.harVærtSendtTilbakeFraBeslutterTidligere())
 
-    return Visning(saksbehandlerReadOnly = saksbehandlerReadOnly, beslutterReadOnly = beslutterReadOnly)
+    return Visning(
+        saksbehandlerReadOnly = saksbehandlerReadOnly,
+        beslutterReadOnly = beslutterReadOnly,
+        visBeslutterKort = visBeslutterKort
+    )
+
 }
 
 fun alleVilkår(vilkårResultat: Vilkårsresultat): List<VilkårDTO> {

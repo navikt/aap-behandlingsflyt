@@ -5,7 +5,7 @@ import no.nav.aap.verdityper.flyt.StegType
 import java.time.LocalDateTime
 
 class FrivilligeAvklaringsbehov(
-    private val avklaringsbehovene: AvklaringsbehoveneDecorator,
+    private val avklaringsbehovene: Avklaringsbehovene,
     private val flyt: BehandlingFlyt,
     private val aktivtSteg: StegType
 ) : AvklaringsbehoveneDecorator by avklaringsbehovene {
@@ -33,5 +33,9 @@ class FrivilligeAvklaringsbehov(
         list.addAll(eksisterendeBehov)
 
         return list.toList()
+    }
+
+    fun harVærtSendtTilbakeFraBeslutterTidligere(): Boolean {
+        return avklaringsbehovene.harVærtSendtTilbakeFraBeslutterTidligere()
     }
 }
