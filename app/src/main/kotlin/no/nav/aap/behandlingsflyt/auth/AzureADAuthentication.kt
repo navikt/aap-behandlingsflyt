@@ -2,22 +2,24 @@ package no.nav.aap.behandlingsflyt.auth
 
 import com.auth0.jwk.JwkProvider
 import com.auth0.jwk.JwkProviderBuilder
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.Application
-import io.ktor.server.auth.authentication
-import io.ktor.server.auth.jwt.JWTPrincipal
-import io.ktor.server.auth.jwt.jwt
-import io.ktor.server.response.respond
+import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
+import io.ktor.server.response.*
 import no.nav.aap.httpclient.tokenprovider.azurecc.AzureConfig
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.util.Date
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 private val SECURE_LOGGER: Logger = LoggerFactory.getLogger("secureLog")
 
 const val AZURE = "azure"
 fun Application.authentication(config: AzureConfig) {
+
+    val log = LoggerFactory.getLogger("no.nav.aap.behandlingsflyt.auth.AzureADAuthentication")
+
     val jwkProvider: JwkProvider = JwkProviderBuilder(config.jwksUri)
         .cached(10, 24, TimeUnit.HOURS)
         .rateLimited(10, 1, TimeUnit.MINUTES)
@@ -49,6 +51,7 @@ fun Application.authentication(config: AzureConfig) {
                     SECURE_LOGGER.warn("AzureAD validering feilet (issued after expiration: ${cred.issuedAt} )")
                     return@validate null
                 }
+                log.info("Bruker innlogget")
 
                 JWTPrincipal(cred.payload)
             }
