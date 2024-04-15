@@ -7,5 +7,6 @@ class BehandlingFlytOgTilstandDto(
     val flyt: List<FlytGruppe>,
     val aktivtSteg: StegType,
     val aktivGruppe: StegGruppe,
-    val behandlingVersjon: Long
+    val behandlingVersjon: Long,
+    val visning: Visning
 )

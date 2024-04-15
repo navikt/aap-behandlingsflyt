@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
@@ -70,7 +71,8 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
                         },
                         aktivtSteg = aktivtSteg,
                         aktivGruppe = aktivtSteg.gruppe,
-                        behandlingVersjon = behandling.versjon
+                        behandlingVersjon = behandling.versjon,
+                        visning = utledVisning(aktivtSteg, flyt)
                     )
                 }
                 respond(dto)
@@ -89,6 +91,13 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
             }
         }
     }
+}
+
+fun utledVisning(aktivtSteg: StegType, flyt: BehandlingFlyt): Visning {
+    val beslutterReadOnly = aktivtSteg != StegType.FATTE_VEDTAK
+    val saksbehandlerReadOnly = !flyt.erStegFør(aktivtSteg, StegType.FATTE_VEDTAK)
+
+    return Visning(saksbehandlerReadOnly = saksbehandlerReadOnly, beslutterReadOnly = beslutterReadOnly)
 }
 
 fun alleVilkår(vilkårResultat: Vilkårsresultat): List<VilkårDTO> {
