@@ -23,8 +23,16 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: HikariDataSource) {
                     BeregningVurderingRepository(it).hentHvisEksisterer(behandlingId = behandling.id)
                 }
 
+                val beregningsVurderingDTO = beregningVurdering?.let {
+                    BeregningsVurderingDTO(
+                        it.begrunnelse,
+                        it.ytterligereNedsattArbeidsevneDato,
+                        it.antattÅrligInntekt?.verdi()
+                    )
+                }
+
                 respond(
-                    BeregningsVurderingDTO(beregningVurdering)
+                    requireNotNull(beregningsVurderingDTO)
                 )
             }
         }
