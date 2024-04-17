@@ -25,9 +25,12 @@ jobs:
         with:
           java-version: 21
           distribution: 'temurin'
-      - uses: gradle/gradle-build-action@v3.3.0
+      - name: Setup Gradle for a non-wrapper project
+        uses: gradle/actions/setup-gradle@v3
         with:
-            arguments: test buildFatJar --continue --no-daemon --configuration-cache --stacktrace --info
+            gradle-version: 8.7
+      - name: Bygg & test
+        run: gradle test buildFatJar --continue --no-daemon --configuration-cache --stacktrace --info
 
       - uses: nais/docker-build-push@v0
         id: docker-push
