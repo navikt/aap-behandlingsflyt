@@ -36,11 +36,13 @@ class TaSkriveLåsRepository(private val connection: DBConnection) {
                 setUUID(1, behandlingUUid)
             }
             setRowMapper {
-                Skrivelås(låsSak(SakId(it.getLong("sak_id"))), BehandlingSkrivelås(
-                    BehandlingId(it.getLong("id")),
-                    it.getLong("versjon"),
-                    TypeBehandling.from(it.getString("type"))
-                )
+                Skrivelås(
+                    låsSak(SakId(it.getLong("sak_id"))),
+                    BehandlingSkrivelås(
+                        BehandlingId(it.getLong("id")),
+                        it.getLong("versjon"),
+                        TypeBehandling.from(it.getString("type"))
+                    )
                 )
             }
         }
