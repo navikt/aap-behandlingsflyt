@@ -9,6 +9,7 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.test.Fakes
+import no.nav.aap.behandlingsflyt.test.genererIdent
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.verdityper.sakogbehandling.Ident
@@ -52,7 +53,7 @@ fun main() {
             }
             route("/testdataApi/genererPerson") {
                 post<Unit, OpprettTestPersonResponsDto, OpprettTestPersonDto> { _, dto ->
-                    val ident = fakes.genererIdent(dto.fødselsdato)
+                    val ident = genererIdent(dto.fødselsdato)
                     fakes.leggTil(
                         TestPerson(
                             identer = setOf(ident),

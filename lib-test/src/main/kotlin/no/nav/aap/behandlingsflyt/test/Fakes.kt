@@ -81,7 +81,8 @@ class Fakes : AutoCloseable {
         // testpersoner
         val BARNLØS_PERSON_30ÅR =
             TestPerson(
-                setOf(Ident("12345678910", true)), fødselsdato = Fødselsdato(
+                identer = setOf(Ident("12345678910", true)),
+                fødselsdato = Fødselsdato(
                     LocalDate.now().minusYears(30),
                 ),
                 inntekter = listOf(
@@ -92,7 +93,7 @@ class Fakes : AutoCloseable {
             )
         val BARNLØS_PERSON_18ÅR =
             TestPerson(
-                setOf(Ident("42346734567", true)),
+                identer = setOf(Ident("42346734567", true)),
                 fødselsdato = Fødselsdato(LocalDate.now().minusYears(18).minusDays(10)),
                 inntekter = listOf(
                     InntektPerÅr(Year.now(), Beløp("1000000.0")),
@@ -102,7 +103,7 @@ class Fakes : AutoCloseable {
             )
         val PERSON_MED_BARN_65ÅR =
             TestPerson(
-                setOf(Ident("86322434234", true)),
+                identer = setOf(Ident("86322434234", true)),
                 fødselsdato = Fødselsdato(LocalDate.now().minusYears(65)),
                 barn = listOf(
                     BARNLØS_PERSON_18ÅR, BARNLØS_PERSON_30ÅR
@@ -155,6 +156,12 @@ class Fakes : AutoCloseable {
             post {
                 val req = call.receive<InntektRequest>()
                 val person = hentEllerGenererTestPerson(req.fnr)
+
+                for (i in req.fomAr..req.tomAr) {
+                    if (person.inntekter.none { it.år == Year.of(i) }) {
+                        person.inntekter = person.inntekter + InntektPerÅr(Year.of(i), Beløp("0"))
+                    }
+                }
 
                 call.respond(
                     InntektResponse(person.inntekter.map { inntekt ->
@@ -368,9 +375,7 @@ class Fakes : AutoCloseable {
         }
     }
 
-    fun genererIdent(fødselsdato: LocalDate): Ident {
-        return Ident(FødselsnummerGenerator.Builder().fodselsdato(fødselsdato).buildAndGenerate())
-    }
+
 
     internal data class TestToken(
         val access_token: String = "very.secure.token",
@@ -380,4 +385,8 @@ class Fakes : AutoCloseable {
         val scope: String? = null,
         val expires_in: Int = 3599,
     )
+}
+
+fun genererIdent(fødselsdato: LocalDate): Ident {
+    return Ident(FødselsnummerGenerator.Builder().fodselsdato(fødselsdato).buildAndGenerate())
 }

@@ -3,13 +3,15 @@ package no.nav.aap.behandlingsflyt.test.modell
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.test.genererIdent
 import no.nav.aap.verdityper.sakogbehandling.Ident
+import java.time.LocalDate
 
 class TestPerson (
-    val identer: Set<Ident>,
-    val fødselsdato: Fødselsdato,
+    val fødselsdato: Fødselsdato = Fødselsdato(LocalDate.now().minusYears(19)),
+    val identer: Set<Ident> = setOf( genererIdent(fødselsdato.toLocalDate())),
     val dødsdato: Dødsdato? = null,
     val barn: List<TestPerson> = emptyList(),
     val yrkesskade:List<TestYrkesskade> = emptyList(),
-    val inntekter: List<InntektPerÅr> = emptyList()
+    var inntekter: List<InntektPerÅr> = emptyList()
 )
