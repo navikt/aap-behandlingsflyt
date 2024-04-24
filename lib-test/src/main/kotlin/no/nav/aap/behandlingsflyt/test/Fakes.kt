@@ -85,21 +85,13 @@ class Fakes : AutoCloseable {
                 fødselsdato = Fødselsdato(
                     LocalDate.now().minusYears(30),
                 ),
-                inntekter = listOf(
-                    InntektPerÅr(Year.now(), Beløp("1000000.0")),
-                    InntektPerÅr(Year.now().minusYears(1), Beløp("1000000.0")),
-                    InntektPerÅr(Year.now().minusYears(2), Beløp("1000000.0")),
-                    )
+                inntekter = (1..10).map { InntektPerÅr(Year.now().minusYears(it.toLong()), Beløp("1000000.0")) }
             )
         val BARNLØS_PERSON_18ÅR =
             TestPerson(
                 identer = setOf(Ident("42346734567", true)),
                 fødselsdato = Fødselsdato(LocalDate.now().minusYears(18).minusDays(10)),
-                inntekter = listOf(
-                    InntektPerÅr(Year.now(), Beløp("1000000.0")),
-                    InntektPerÅr(Year.now().minusYears(1), Beløp("1000000.0")),
-                    InntektPerÅr(Year.now().minusYears(2), Beløp("1000000.0")),
-                    )
+                inntekter = (1..10).map { InntektPerÅr(Year.now().minusYears(it.toLong()), Beløp("1000000.0")) }
             )
         val PERSON_MED_BARN_65ÅR =
             TestPerson(
@@ -108,11 +100,7 @@ class Fakes : AutoCloseable {
                 barn = listOf(
                     BARNLØS_PERSON_18ÅR, BARNLØS_PERSON_30ÅR
                 ),
-                inntekter = listOf(
-                    InntektPerÅr(Year.now(), Beløp("1000000.0")),
-                    InntektPerÅr(Year.now().minusYears(1), Beløp("1000000.0")),
-                    InntektPerÅr(Year.now().minusYears(2), Beløp("1000000.0")),
-                )
+                inntekter = (1..10).map { InntektPerÅr(Year.now().minusYears(it.toLong()), Beløp("1000000.0")) }
             )
 
         // Legg til alle testpersoner
@@ -169,7 +157,8 @@ class Fakes : AutoCloseable {
                             inntektAr = inntekt.år.value,
                             belop = inntekt.beløp.verdi().toLong(),
                             inntektType = "Lønnsinntekt"
-                        )}.toList())
+                        )
+                    }.toList())
                 )
             }
         }
@@ -322,11 +311,7 @@ class Fakes : AutoCloseable {
             fakePersoner[forespurtIdent] = TestPerson(
                 identer = setOf(Ident(forespurtIdent)),
                 fødselsdato = Fødselsdato(LocalDate.now().minusYears(30)),
-                inntekter = listOf(
-                    InntektPerÅr(Year.now().minusYears(1), Beløp("1000000.0")),
-                    InntektPerÅr(Year.now().minusYears(2), Beløp("1000000.0")),
-                    InntektPerÅr(Year.now().minusYears(3), Beløp("1000000.0")),
-                )
+                inntekter = (1..10).map { InntektPerÅr(Year.now().minusYears(it.toLong()), Beløp("1000000.0")) }
             )
         }
 
@@ -374,7 +359,6 @@ class Fakes : AutoCloseable {
             }
         }
     }
-
 
 
     internal data class TestToken(
