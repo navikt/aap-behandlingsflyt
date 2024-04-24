@@ -52,9 +52,6 @@ class InntektGrunnlagRepository(private val connection: DBConnection) {
     }
 
     private fun lagreInntekter(inntekter: Set<InntektPerÅr>): Long? {
-        if (inntekter == null || inntekter.isEmpty()) {
-            return null
-        }
         val query = """
             INSERT INTO INNTEKTER DEFAULT VALUES
         """.trimIndent()
