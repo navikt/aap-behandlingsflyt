@@ -1,19 +1,19 @@
 package no.nav.aap.behandlingsflyt.avklaringsbehov.løser
 
+import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.FritakMeldepliktLøsning
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
-import no.nav.aap.verdityper.flyt.FlytKontekst
 
 class FritakFraMeldepliktLøser(val connection: DBConnection) : AvklaringsbehovsLøser<FritakMeldepliktLøsning> {
 
     private val behandlingRepository = BehandlingRepositoryImpl(connection)
     private val meldepliktRepository = MeldepliktRepository(connection)
 
-    override fun løs(kontekst: FlytKontekst, løsning: FritakMeldepliktLøsning): LøsningsResultat {
-        val behandling = behandlingRepository.hent(kontekst.behandlingId)
+    override fun løs(kontekst: AvklaringsbehovKontekst, løsning: FritakMeldepliktLøsning): LøsningsResultat {
+        val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
 
         val meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling.id)
 

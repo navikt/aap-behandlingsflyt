@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.avklaringsbehov
 
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.verdityper.flyt.StegType
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
@@ -13,15 +14,20 @@ class Avklaringsbehovene(
 ) : AvklaringsbehoveneDecorator {
     private var avklaringsbehovene: MutableList<Avklaringsbehov> = repository.hent(behandlingId).toMutableList()
 
-    fun ingenEndring(avklaringsbehov: Avklaringsbehov) {
+    fun ingenEndring(avklaringsbehov: Avklaringsbehov, bruker: String) {
         løsAvklaringsbehov(
             avklaringsbehov.definisjon,
             "Ingen endring fra forrige vurdering",
-            "saksbehandler"
+            bruker
         ) // TODO: Hente fra sikkerhetcontext
     }
 
-    fun løsAvklaringsbehov(definisjon: Definisjon, begrunnelse: String, endretAv: String, kreverToTrinn: Boolean? = null) {
+    fun løsAvklaringsbehov(
+        definisjon: Definisjon,
+        begrunnelse: String,
+        endretAv: String,
+        kreverToTrinn: Boolean? = null
+    ) {
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
         if (kreverToTrinn == null) {
             avklaringsbehov.løs(begrunnelse, endretAv = endretAv)
@@ -68,9 +74,16 @@ class Avklaringsbehovene(
         }
     }
 
-    fun vurderTotrinn(definisjon: Definisjon, godkjent: Boolean, begrunnelse: String, vurdertAv: String) {
+    fun vurderTotrinn(
+        definisjon: Definisjon,
+        godkjent: Boolean,
+        begrunnelse: String,
+        vurdertAv: String,
+        årsakTilRetur: ÅrsakTilRetur? = null,
+        årsakTilReturFritekst: String? = null
+    ) {
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
-        avklaringsbehov.vurderTotrinn(begrunnelse, godkjent, vurdertAv)
+        avklaringsbehov.vurderTotrinn(begrunnelse, godkjent, vurdertAv, årsakTilRetur, årsakTilReturFritekst)
         repository.endre(avklaringsbehov)
     }
 
@@ -136,6 +149,7 @@ class Avklaringsbehovene(
             behandling = behandling,
             avklaringsbehov = avklaringsbehov,
             eksisterenedeAvklaringsbehov = avklaringsbehovene,
-            versjon)
+            versjon = versjon
+        )
     }
 }

@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.avklaringsbehov
 
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak.ÅrsakTilRetur
 import no.nav.aap.verdityper.flyt.StegType
 
 class Avklaringsbehov(
@@ -11,7 +13,7 @@ class Avklaringsbehov(
 ) {
     init {
         if (historikk.isEmpty()) {
-            historikk += Endring(status = Status.OPPRETTET, begrunnelse = "", endretAv = "system")
+            historikk += Endring(status = Status.OPPRETTET, begrunnelse = "", endretAv = SYSTEMBRUKER.ident)
         }
     }
 
@@ -26,18 +28,30 @@ class Avklaringsbehov(
         return Status.TOTRINNS_VURDERT == historikk.last().status
     }
 
-    fun vurderTotrinn(begrunnelse: String, godkjent: Boolean, vurdertAv: String) {
+    fun vurderTotrinn(
+        begrunnelse: String,
+        godkjent: Boolean,
+        vurdertAv: String,
+        årsakTilRetur: ÅrsakTilRetur?,
+        årsakTilReturFritekst: String?
+    ) {
         require(definisjon.kreverToTrinn)
         val status = if (godkjent) {
             Status.TOTRINNS_VURDERT
         } else {
             Status.SENDT_TILBAKE_FRA_BESLUTTER
         }
-        historikk += Endring(status = status, begrunnelse = begrunnelse, endretAv = vurdertAv)
+        historikk += Endring(
+            status = status,
+            begrunnelse = begrunnelse,
+            endretAv = vurdertAv,
+            årsakTilRetur = årsakTilRetur,
+            årsakTilReturFritekst = årsakTilReturFritekst
+        )
     }
 
     fun reåpne() {
-        historikk += Endring(status = Status.OPPRETTET, begrunnelse = "", endretAv = "system")
+        historikk += Endring(status = Status.OPPRETTET, begrunnelse = "", endretAv = SYSTEMBRUKER.ident)
     }
 
     fun erÅpent(): Boolean {
@@ -60,7 +74,7 @@ class Avklaringsbehov(
     }
 
     fun avbryt() {
-        historikk += Endring(status = Status.AVBRUTT, begrunnelse = "", endretAv = "system")
+        historikk += Endring(status = Status.AVBRUTT, begrunnelse = "", endretAv = SYSTEMBRUKER.ident)
     }
 
     fun erIkkeAvbrutt(): Boolean {
@@ -77,6 +91,8 @@ class Avklaringsbehov(
 
     fun begrunnelse(): String = historikk.last().begrunnelse
     fun endretAv(): String = historikk.last().endretAv
+    fun årsakTilRetur(): ÅrsakTilRetur? = historikk.last().årsakTilRetur
+    fun årsakTilReturFritekst(): String? = historikk.last().årsakTilReturFritekst
 
     fun skalLøsesISteg(type: StegType): Boolean {
         return definisjon.skalLøsesISteg(type, funnetISteg)

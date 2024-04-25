@@ -4,6 +4,7 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.auth.bruker
 import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovHendelseHåndterer
 import no.nav.aap.behandlingsflyt.avklaringsbehov.LøsAvklaringsbehovBehandlingHendelse
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
@@ -26,8 +27,9 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource) {
                                 key = lås.behandlingSkrivelås.id,
                                 hendelse = LøsAvklaringsbehovBehandlingHendelse(
                                     request.behov,
-                                    request.ingenEndringIGruppe?:false,
-                                    request.behandlingVersjon
+                                    request.ingenEndringIGruppe ?: false,
+                                    request.behandlingVersjon,
+                                    pipeline.context.bruker()
                                 )
                             )
                             taSkriveLåsRepository.verifiserSkrivelås(lås)

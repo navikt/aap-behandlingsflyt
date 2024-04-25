@@ -23,7 +23,8 @@ class AvklaringsbehovHendelseHåndterer(connection: DBConnection) {
         avklaringsbehovOrkestrator.løsAvklaringsbehovOgFortsettProsessering(
             kontekst = behandling.flytKontekst(),
             avklaringsbehov = hendelse.behov(),
-            ingenEndringIGruppe = hendelse.ingenEndringIGruppe
+            ingenEndringIGruppe = hendelse.ingenEndringIGruppe,
+            bruker = hendelse.bruker
         )
     }
 }

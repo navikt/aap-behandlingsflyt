@@ -19,12 +19,8 @@ private val SECURE_LOGGER: Logger = LoggerFactory.getLogger("secureLog")
 const val AZURE = "azure"
 fun Application.authentication(config: AzureConfig) {
 
-    val log = LoggerFactory.getLogger("no.nav.aap.behandlingsflyt.auth.AzureADAuthentication")
-
-    val jwkProvider: JwkProvider = JwkProviderBuilder(URI.create(config.jwksUri).toURL())
-        .cached(10, 24, TimeUnit.HOURS)
-        .rateLimited(10, 1, TimeUnit.MINUTES)
-        .build()
+    val jwkProvider: JwkProvider = JwkProviderBuilder(URI.create(config.jwksUri).toURL()).cached(10, 24, TimeUnit.HOURS)
+        .rateLimited(10, 1, TimeUnit.MINUTES).build()
 
     authentication {
         jwt(AZURE) {
@@ -57,4 +53,11 @@ fun Application.authentication(config: AzureConfig) {
             }
         }
     }
+}
+
+fun ApplicationCall.bruker(): Bruker {
+    // TODO: Må kreve denne før produksjonssetting
+    return Bruker(
+        principal<JWTPrincipal>()?.getClaim("NAVident", String::class) ?: error("NAVident mangler i AzureAD claims")
+    )
 }

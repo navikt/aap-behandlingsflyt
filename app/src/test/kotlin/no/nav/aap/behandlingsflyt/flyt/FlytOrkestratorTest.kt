@@ -1,11 +1,13 @@
 package no.nav.aap.behandlingsflyt.flyt
 
+import no.nav.aap.behandlingsflyt.auth.Bruker
 import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovHendelseHåndterer
 import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.avklaringsbehov.LøsAvklaringsbehovBehandlingHendelse
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak.TotrinnsVurdering
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.AvklarStudentLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.AvklarSykdomLøsning
@@ -155,7 +157,8 @@ class FlytOrkestratorTest {
                             )
                         )
                     ),
-                    behandlingVersjon = behandling.versjon
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
                 )
             )
         }
@@ -171,7 +174,8 @@ class FlytOrkestratorTest {
                             erBehovForBistand = true
                         ),
                     ),
-                    behandlingVersjon = behandling.versjon
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
                 )
             )
         }
@@ -189,7 +193,8 @@ class FlytOrkestratorTest {
                 behandling.id,
                 LøsAvklaringsbehovBehandlingHendelse(
                     løsning = ForeslåVedtakLøsning("Begrunnelse"),
-                    behandlingVersjon = behandling.versjon
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
                 )
             )
         }
@@ -202,8 +207,21 @@ class FlytOrkestratorTest {
                 LøsAvklaringsbehovBehandlingHendelse(
                     løsning = FatteVedtakLøsning(avklaringsbehov.alle()
                         .filter { behov -> behov.erTotrinn() }
-                        .map { behov -> TotrinnsVurdering(behov.definisjon.kode, behov.definisjon.kode != Definisjon.AVKLAR_SYKDOM.kode, "begrunnelse") }),
-                    behandlingVersjon = behandling.versjon
+                        .map { behov ->
+                            TotrinnsVurdering(
+                                behov.definisjon.kode,
+                                behov.definisjon.kode != Definisjon.AVKLAR_SYKDOM.kode,
+                                "begrunnelse",
+                                if (behov.definisjon.kode != Definisjon.AVKLAR_SYKDOM.kode) {
+                                    null
+                                } else {
+                                    ÅrsakTilRetur.FEIL_LOVANVENDELSE
+                                },
+                                null
+                            )
+                        }),
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
                 )
             )
         }
@@ -228,7 +246,8 @@ class FlytOrkestratorTest {
                             )
                         )
                     ),
-                    behandlingVersjon = behandling.versjon
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
                 )
             )
         }
@@ -244,7 +263,8 @@ class FlytOrkestratorTest {
                             erBehovForBistand = true
                         ),
                     ),
-                    behandlingVersjon = behandling.versjon
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
                 )
             )
         }
@@ -261,7 +281,8 @@ class FlytOrkestratorTest {
                 behandling.id,
                 LøsAvklaringsbehovBehandlingHendelse(
                     løsning = ForeslåVedtakLøsning("Begrunnelse"),
-                    behandlingVersjon = behandling.versjon
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
                 )
             )
         }
@@ -282,8 +303,9 @@ class FlytOrkestratorTest {
                 LøsAvklaringsbehovBehandlingHendelse(
                     løsning = FatteVedtakLøsning(avklaringsbehov.alle()
                         .filter { behov -> behov.erTotrinn() }
-                        .map { behov -> TotrinnsVurdering(behov.definisjon.kode, true, "begrunnelse") }),
-                    behandlingVersjon = behandling.versjon
+                        .map { behov -> TotrinnsVurdering(behov.definisjon.kode, true, "begrunnelse", null, null) }),
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
                 )
             )
         }
@@ -343,24 +365,6 @@ class FlytOrkestratorTest {
             assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         }
 
-//        dataSource.transaction {
-//            AvklaringsbehovHendelseHåndterer(it).håndtere(
-//                behandling.id,
-//                LøsAvklaringsbehovBehandlingHendelse(
-//                    løsning = AvklarStudentLøsning(
-//                        studentvurdering = StudentVurdering(
-//                            begrunnelse = "Er student",
-//                            dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
-//                            oppfyller11_14 = false,
-//                            avbruttStudieDato = null
-//                        )
-//                    ),
-//                    behandlingVersjon = behandling.versjon
-//                )
-//            )
-//        }
-//        ventPåSvar()
-
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
@@ -379,7 +383,8 @@ class FlytOrkestratorTest {
                             )
                         )
                     ),
-                    behandlingVersjon = behandling.versjon
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
                 )
             )
         }
@@ -395,7 +400,8 @@ class FlytOrkestratorTest {
                             erBehovForBistand = true
                         ),
                     ),
-                    behandlingVersjon = behandling.versjon
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
                 )
             )
         }
@@ -412,7 +418,8 @@ class FlytOrkestratorTest {
                             antattÅrligInntekt = null
                         ),
                     ),
-                    behandlingVersjon = behandling.versjon
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
                 )
             )
         }
@@ -430,7 +437,8 @@ class FlytOrkestratorTest {
                 behandling.id,
                 LøsAvklaringsbehovBehandlingHendelse(
                     løsning = ForeslåVedtakLøsning("Begrunnelse"),
-                    behandlingVersjon = behandling.versjon
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
                 )
             )
         }
@@ -451,8 +459,9 @@ class FlytOrkestratorTest {
                 LøsAvklaringsbehovBehandlingHendelse(
                     løsning = FatteVedtakLøsning(avklaringsbehov.alle()
                         .filter { behov -> behov.erTotrinn() }
-                        .map { behov -> TotrinnsVurdering(behov.definisjon.kode, true, "begrunnelse") }),
-                    behandlingVersjon = behandling.versjon
+                        .map { behov -> TotrinnsVurdering(behov.definisjon.kode, true, "begrunnelse", null, null) }),
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
                 )
             )
         }
@@ -493,7 +502,7 @@ class FlytOrkestratorTest {
                     InntektPerÅr(Year.now().minusYears(1), Beløp("1000000.0")),
                     InntektPerÅr(Year.now().minusYears(2), Beløp("1000000.0")),
                     InntektPerÅr(Year.now().minusYears(3), Beløp("1000000.0")),
-                    )
+                )
             )
         )
 
@@ -529,7 +538,8 @@ class FlytOrkestratorTest {
                             avbruttStudieDato = null
                         )
                     ),
-                    behandlingVersjon = behandling.versjon
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
                 )
             )
         }
@@ -553,7 +563,8 @@ class FlytOrkestratorTest {
                             )
                         )
                     ),
-                    behandlingVersjon = behandling.versjon
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
                 )
             )
         }
@@ -569,7 +580,8 @@ class FlytOrkestratorTest {
                             erBehovForBistand = true
                         ),
                     ),
-                    behandlingVersjon = behandling.versjon
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
                 )
             )
         }
@@ -587,7 +599,8 @@ class FlytOrkestratorTest {
                 behandling.id,
                 LøsAvklaringsbehovBehandlingHendelse(
                     løsning = ForeslåVedtakLøsning("Begrunnelse"),
-                    behandlingVersjon = behandling.versjon
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
                 )
             )
         }
@@ -612,10 +625,13 @@ class FlytOrkestratorTest {
                             TotrinnsVurdering(
                                 behov.definisjon.kode,
                                 behov.definisjon != Definisjon.AVKLAR_SYKDOM,
-                                "begrunnelse"
+                                "begrunnelse",
+                                null,
+                                null
                             )
                         }),
-                    behandlingVersjon = behandling.versjon
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
                 )
             )
         }
@@ -647,7 +663,8 @@ class FlytOrkestratorTest {
                         )
                     ),
                     ingenEndringIGruppe = true,
-                    behandlingVersjon = behandling.versjon
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
                 )
             )
         }
@@ -665,7 +682,8 @@ class FlytOrkestratorTest {
                 behandling.id,
                 LøsAvklaringsbehovBehandlingHendelse(
                     løsning = ForeslåVedtakLøsning("Begrunnelse"),
-                    behandlingVersjon = behandling.versjon
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
                 )
             )
         }
@@ -686,8 +704,9 @@ class FlytOrkestratorTest {
                 LøsAvklaringsbehovBehandlingHendelse(
                     løsning = FatteVedtakLøsning(avklaringsbehov.alle()
                         .filter { behov -> behov.erTotrinn() }
-                        .map { behov -> TotrinnsVurdering(behov.definisjon.kode, true, "begrunnelse") }),
-                    behandlingVersjon = behandling.versjon
+                        .map { behov -> TotrinnsVurdering(behov.definisjon.kode, true, "begrunnelse", null, null) }),
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
                 )
             )
         }

@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.avklaringsbehov.løser
 
+import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak.TotrinnsVurdering
@@ -7,16 +8,15 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
-import no.nav.aap.verdityper.flyt.FlytKontekst
 
 class FatteVedtakLøser(val connection: DBConnection) : AvklaringsbehovsLøser<FatteVedtakLøsning> {
 
     private val avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection)
     private val behandlingRepository = BehandlingRepositoryImpl(connection)
 
-    override fun løs(kontekst: FlytKontekst, løsning: FatteVedtakLøsning): LøsningsResultat {
-        val behandling = behandlingRepository.hent(kontekst.behandlingId)
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId = kontekst.behandlingId)
+    override fun løs(kontekst: AvklaringsbehovKontekst, løsning: FatteVedtakLøsning): LøsningsResultat {
+        val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId = kontekst.kontekst.behandlingId)
 
         løsning.vurderinger.all { it.valider() }
 
@@ -43,9 +43,9 @@ class FatteVedtakLøser(val connection: DBConnection) : AvklaringsbehovsLøser<F
             vurderingerFørRetur.forEach { vurdering ->
                 avklaringsbehovene.vurderTotrinn(
                     definisjon = Definisjon.forKode(vurdering.definisjon),
-                    begrunnelse = vurdering.begrunnelse(),
                     godkjent = vurdering.godkjent!!,
-                    vurdertAv = "saksbehandler" // TODO: Hente fra context
+                    begrunnelse = vurdering.begrunnelse(),
+                    vurdertAv = kontekst.bruker.ident
                 )
             }
 
@@ -54,7 +54,9 @@ class FatteVedtakLøser(val connection: DBConnection) : AvklaringsbehovsLøser<F
                     definisjon = Definisjon.forKode(vurdering.definisjon),
                     begrunnelse = vurdering.begrunnelse(),
                     godkjent = vurdering.godkjent!!,
-                    vurdertAv = "saksbehandler" // TODO: Hente fra context
+                    årsakTilRetur = vurdering.grunn,
+                    årsakTilReturFritekst = vurdering.grunnnFritekst,
+                    vurdertAv = kontekst.bruker.ident // TODO: Hente fra context
                 )
             }
 
@@ -65,9 +67,9 @@ class FatteVedtakLøser(val connection: DBConnection) : AvklaringsbehovsLøser<F
             løsning.vurderinger.forEach { vurdering ->
                 avklaringsbehovene.vurderTotrinn(
                     definisjon = Definisjon.forKode(vurdering.definisjon),
-                    begrunnelse = vurdering.begrunnelse(),
                     godkjent = vurdering.godkjent!!,
-                    vurdertAv = "saksbehandler" // TODO: Hente fra context
+                    begrunnelse = vurdering.begrunnelse(),
+                    vurdertAv = kontekst.bruker.ident // TODO: Hente fra context
                 )
             }
         }

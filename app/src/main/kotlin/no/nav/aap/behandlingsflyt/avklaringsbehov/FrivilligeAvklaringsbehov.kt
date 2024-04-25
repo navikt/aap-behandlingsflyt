@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.avklaringsbehov
 
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.verdityper.flyt.StegType
 import java.time.LocalDateTime
@@ -23,7 +24,7 @@ class FrivilligeAvklaringsbehov(
                             status = Status.OPPRETTET,
                             tidsstempel = LocalDateTime.now(),
                             begrunnelse = "",
-                            endretAv = "system"
+                            endretAv = SYSTEMBRUKER.ident
                         )
                     ),
                     funnetISteg = definisjon.løsesISteg,

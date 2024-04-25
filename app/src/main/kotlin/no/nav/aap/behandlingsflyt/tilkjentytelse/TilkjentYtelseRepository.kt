@@ -29,11 +29,11 @@ class TilkjentYtelseRepository(private val connection: DBConnection) {
                         antallBarn = it.getInt("ANTALL_BARN"),
                         barnetilleggsats = no.nav.aap.verdityper.Beløp(it.getInt("BARNETILLEGGSATS")),
                         grunnbeløp = no.nav.aap.verdityper.Beløp(it.getInt("GRUNNBELOP")),
-                        )
+                    )
                 )
             }
         }
-        if(tilkjent.isEmpty()) {
+        if (tilkjent.isEmpty()) {
             return null
         }
         return Tidslinje(tilkjent)
@@ -41,17 +41,19 @@ class TilkjentYtelseRepository(private val connection: DBConnection) {
 
     fun lagre(behandlingId: BehandlingId, tilkjent: Tidslinje<Tilkjent>) {
         val eksisterendeTilkjent = hentHvisEksiterer(behandlingId)
-        if(eksisterendeTilkjent == tilkjent) {
+        if (eksisterendeTilkjent == tilkjent) {
             return
         }
 
-        if(eksisterendeTilkjent!=null) {
+        if (eksisterendeTilkjent != null) {
             deaktiverEksisterende(behandlingId)
         }
 
-        val tilkjentYtelseKey = connection.executeReturnKey("""
+        val tilkjentYtelseKey = connection.executeReturnKey(
+            """
             INSERT INTO TILKJENT_YTELSE (BEHANDLING_ID, AKTIV) VALUES (?, TRUE)
-        """.trimIndent()) {
+        """.trimIndent()
+        ) {
             setParams {
                 setLong(1, behandlingId.toLong())
             }
@@ -63,9 +65,11 @@ class TilkjentYtelseRepository(private val connection: DBConnection) {
     }
 
     private fun lagrePeriode(tilkjentYtelseId: Long, periode: Periode, tilkjent: Tilkjent) {
-        connection.execute("""
+        connection.execute(
+            """
             INSERT INTO TILKJENT_PERIODE (TILKJENT_YTELSE_ID, PERIODE, DAGSATS, GRADERING, BARNETILLEGG, GRUNNLAGSFAKTOR, GRUNNLAG, ANTALL_BARN, BARNETILLEGGSATS, GRUNNBELOP) VALUES (?, ?::daterange, ?, ?, ?, ?, ?, ?, ?, ?)
-        """.trimIndent()) {
+        """.trimIndent()
+        ) {
             setParams {
                 setLong(1, tilkjentYtelseId)
                 setPeriode(2, periode)

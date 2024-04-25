@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.avklaringsbehov
 
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.auth.Bruker
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.AvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.SattPåVentLøsning
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
@@ -32,7 +34,8 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
             this.løsAvklaringsbehov(
                 kontekst = kontekst,
                 avklaringsbehovene = avklaringsbehovene,
-                avklaringsbehov = SattPåVentLøsning()
+                avklaringsbehov = SattPåVentLøsning(),
+                bruker = SYSTEMBRUKER
             )
         }
         fortsettProsessering(kontekst)
@@ -41,14 +44,16 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
     fun løsAvklaringsbehovOgFortsettProsessering(
         kontekst: FlytKontekst,
         avklaringsbehov: AvklaringsbehovLøsning,
-        ingenEndringIGruppe: Boolean
+        ingenEndringIGruppe: Boolean,
+        bruker: Bruker
     ) {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        løsAvklaringsbehov(kontekst, avklaringsbehovene, avklaringsbehov)
+        løsAvklaringsbehov(kontekst, avklaringsbehovene, avklaringsbehov, bruker)
         markerAvklaringsbehovISammeGruppeForLøst(
             kontekst,
             ingenEndringIGruppe,
-            avklaringsbehovene
+            avklaringsbehovene,
+            bruker
         )
 
         fortsettProsessering(kontekst)
@@ -66,7 +71,8 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
     private fun markerAvklaringsbehovISammeGruppeForLøst(
         kontekst: FlytKontekst,
         ingenEndringIGruppe: Boolean,
-        avklaringsbehovene: Avklaringsbehovene
+        avklaringsbehovene: Avklaringsbehovene,
+        bruker: Bruker
     ) {
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
 
@@ -82,14 +88,15 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
                     .filter { behov -> gjenståendeStegIGruppe.any { stegType -> behov.løsesISteg() == stegType } }
             log.info("Markerer påfølgende avklaringsbehov[${behovSomSkalSettesTilAvsluttet}] på behandling[${behandling.referanse}] som avsluttet")
 
-            behovSomSkalSettesTilAvsluttet.forEach { avklaringsbehovene.ingenEndring(it) }
+            behovSomSkalSettesTilAvsluttet.forEach { avklaringsbehovene.ingenEndring(it, bruker.ident) }
         }
     }
 
     fun løsAvklaringsbehov(
         kontekst: FlytKontekst,
         avklaringsbehovene: Avklaringsbehovene,
-        avklaringsbehov: AvklaringsbehovLøsning
+        avklaringsbehov: AvklaringsbehovLøsning,
+        bruker: Bruker
     ) {
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
         val definisjoner = avklaringsbehov.definisjon()
@@ -105,21 +112,22 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
         flytOrkestrator.forberedLøsingAvBehov(definisjoner, behandling, kontekst)
 
         // Bør ideelt kalle på
-        løsFaktiskAvklaringsbehov(kontekst, avklaringsbehovene, avklaringsbehov)
+        løsFaktiskAvklaringsbehov(kontekst, avklaringsbehovene, avklaringsbehov, bruker)
     }
 
     private fun løsFaktiskAvklaringsbehov(
         kontekst: FlytKontekst,
         avklaringsbehovene: Avklaringsbehovene,
-        it: AvklaringsbehovLøsning
+        it: AvklaringsbehovLøsning,
+        bruker: Bruker
     ) {
         avklaringsbehovene.leggTilFrivilligHvisMangler(it.definisjon())
-        val løsningsResultat = it.løs(connection, kontekst)
+        val løsningsResultat = it.løs(connection, AvklaringsbehovKontekst(bruker, kontekst))
 
         avklaringsbehovene.løsAvklaringsbehov(
             it.definisjon(),
             løsningsResultat.begrunnelse,
-            "Saksbehandler", // TODO: Hente fra context
+            bruker.ident,
             løsningsResultat.kreverToTrinn
         )
     }

@@ -26,6 +26,7 @@ import io.ktor.server.routing.*
 import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
 import no.nav.aap.behandlingsflyt.auth.AZURE
+import no.nav.aap.behandlingsflyt.auth.Bruker
 import no.nav.aap.behandlingsflyt.auth.authentication
 import no.nav.aap.behandlingsflyt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.avklaringsbehov.flate.avklaringsbehovApi
@@ -76,6 +77,8 @@ import javax.sql.DataSource
 private val SECURE_LOGGER: Logger = LoggerFactory.getLogger("secureLog")
 
 class App
+
+val SYSTEMBRUKER = Bruker("Kelvin")
 
 fun main() {
     Thread.currentThread().setUncaughtExceptionHandler { _, e -> SECURE_LOGGER.error("Uhåndtert feil", e) }

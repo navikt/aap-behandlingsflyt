@@ -1,9 +1,11 @@
 package no.nav.aap.behandlingsflyt.avklaringsbehov
 
-import no.nav.aap.verdityper.sakogbehandling.BehandlingId
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.Row
 import no.nav.aap.verdityper.flyt.StegType
+import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import java.time.LocalDateTime
 
 class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : AvklaringsbehovRepository,
@@ -37,7 +39,14 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
             avklaringsbehovId = opprettAvklaringsbehov(behandlingId, definisjon, funnetISteg)
         }
 
-        endreAvklaringsbehov(avklaringsbehovId, Status.OPPRETTET, "", "Kelvin")
+        endreAvklaringsbehov(
+            avklaringsbehovId,
+            Status.OPPRETTET,
+            "",
+            SYSTEMBRUKER.ident,
+            null,
+            null
+        )
     }
 
     private fun hentRelevantAvklaringsbehov(
@@ -85,7 +94,9 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
             avklaringsbehov.id,
             avklaringsbehov.status(),
             avklaringsbehov.begrunnelse(),
-            avklaringsbehov.endretAv()
+            avklaringsbehov.endretAv(),
+            avklaringsbehov.årsakTilRetur(),
+            avklaringsbehov.årsakTilReturFritekst()
         )
     }
 
@@ -93,11 +104,13 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         avklaringsbehovId: Long,
         status: Status,
         begrunnelse: String,
-        opprettetAv: String
+        opprettetAv: String,
+        årsakTilRetur: ÅrsakTilRetur?,
+        årsakTilReturFritekst: String?
     ) {
         val query = """
-            INSERT INTO AVKLARINGSBEHOV_ENDRING (avklaringsbehov_id, status, begrunnelse, opprettet_av, opprettet_tid) 
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO AVKLARINGSBEHOV_ENDRING (avklaringsbehov_id, status, begrunnelse, aarsak_til_retur, aarsak_til_retur_fritekst, opprettet_av, opprettet_tid) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
 
         connection.execute(query) {
@@ -105,8 +118,10 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
                 setLong(1, avklaringsbehovId)
                 setEnumName(2, status)
                 setString(3, begrunnelse)
-                setString(4, opprettetAv)
-                setLocalDateTime(5, LocalDateTime.now())
+                setEnumName(4, årsakTilRetur)
+                setString(5, årsakTilReturFritekst)
+                setString(6, opprettetAv)
+                setLocalDateTime(7, LocalDateTime.now())
             }
         }
     }
@@ -160,7 +175,9 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
             status = row.getEnum("status"),
             tidsstempel = row.getLocalDateTime("opprettet_tid"),
             begrunnelse = row.getString("begrunnelse"),
-            endretAv = row.getString("opprettet_av")
+            endretAv = row.getString("opprettet_av"),
+            årsakTilRetur = row.getEnumOrNull("aarsak_til_retur"),
+            årsakTilReturFritekst = row.getStringOrNull("aarsak_til_retur_fritekst")
         )
     }
 }
