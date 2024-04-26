@@ -54,7 +54,7 @@ class FatteVedtakLøser(val connection: DBConnection) : AvklaringsbehovsLøser<F
                     definisjon = Definisjon.forKode(vurdering.definisjon),
                     begrunnelse = vurdering.begrunnelse(),
                     godkjent = vurdering.godkjent!!,
-                    årsakTilRetur = vurdering.grunn,
+                    årsakTilRetur = vurdering.grunner ?: listOf(),
                     vurdertAv = kontekst.bruker.ident // TODO: Hente fra context
                 )
             }

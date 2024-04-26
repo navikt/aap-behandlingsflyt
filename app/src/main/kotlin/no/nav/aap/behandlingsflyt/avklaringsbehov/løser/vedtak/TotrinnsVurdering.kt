@@ -7,7 +7,7 @@ data class TotrinnsVurdering(
     @JsonProperty(required = true, value = "definisjon") val definisjon: String,
     @JsonProperty(required = true, value = "godkjent") val godkjent: Boolean?,
     @JsonProperty(value = "begrunnelse") val begrunnelse: String?,
-    @JsonProperty(value = "grunn") val grunn: List<ÅrsakTilRetur>
+    @JsonProperty(value = "grunner") val grunner: List<ÅrsakTilRetur>?
 ) {
     fun valider(): Boolean {
         if (godkjent == false) {
