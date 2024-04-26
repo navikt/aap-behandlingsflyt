@@ -5,6 +5,7 @@ dependencies {
     implementation(project(":faktagrunnlag"))
     implementation(project(":verdityper"))
     implementation(project(":httpklient"))
+    implementation(project(":app"))
     implementation("io.ktor:ktor-server-auth:$ktorVersion")
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")

@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.PERSON_BOL
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PERSON_QUERY
+import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.IDENT_QUERY
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.pdl.HentPersonBolkResult
@@ -53,6 +54,7 @@ class Fakes : AutoCloseable {
     private val pdl = embeddedServer(Netty, port = 0, module = { pdlFake() }).apply { start() }
     private val yrkesskade = embeddedServer(Netty, port = 0, module = { yrkesskadeFake() }).apply { start() }
     private val inntekt = embeddedServer(Netty, port = 0, module = { poppFake() }).apply { start() }
+    private val oppgavestyring = embeddedServer(Netty, port = 0, module = { oppgavestyringFake() }).apply { start() }
     val fakePersoner: MutableMap<String, TestPerson> = mutableMapOf()
 
     init {
@@ -77,6 +79,9 @@ class Fakes : AutoCloseable {
         System.setProperty("integrasjon.yrkesskade.url", "http://localhost:${yrkesskade.port()}")
         System.setProperty("integrasjon.yrkesskade.scope", "yrkesskade")
 
+        // Oppgavestyring
+        System.setProperty("integrasjon.oppgavestyring.scope", "oppgavestyring")
+        System.setProperty("integrasjon.oppgavestyring.url", "http://localhost:${oppgavestyring.port()}")
 
         // testpersoner
         val BARNLØS_PERSON_30ÅR =
@@ -129,6 +134,29 @@ class Fakes : AutoCloseable {
             .first { it.type == ConnectorType.HTTP }
             .port
 
+    fun Application.oppgavestyringFake() {
+        install(ContentNegotiation) {
+            jackson() {
+                registerModule(JavaTimeModule())
+            }
+        }
+        install(StatusPages) {
+            exception<Throwable> { call, cause ->
+                this@oppgavestyringFake.log.info(
+                    "Inntekt :: Ukjent feil ved kall til '{}'",
+                    call.request.local.uri,
+                    cause
+                )
+                call.respond(status = HttpStatusCode.InternalServerError, message = ErrorRespons(cause.message))
+            }
+        }
+        routing {
+            post("/behandling") {
+                val req = call.receive<BehandlingFlytStoppetHendelse>()
+                call.respond(HttpStatusCode.NoContent)
+            }
+        }
+    }
 
     fun Application.poppFake() {
         install(ContentNegotiation) {
