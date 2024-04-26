@@ -7,7 +7,7 @@ import java.math.RoundingMode
  * Faktor av antall G for representasjon av størrelsen på det maksnimalet grunnlaget
  */
 class GUnit(verdi: BigDecimal) : Comparable<GUnit> {
-    private val verdi = verdi.setScale(SCALE, RoundingMode.HALF_UP)
+    val verdi = verdi.setScale(SCALE, RoundingMode.HALF_UP)
 
     constructor(intVerdi: Int) : this(BigDecimal(intVerdi))
     constructor(stringVerdi: String) : this(BigDecimal(stringVerdi))
