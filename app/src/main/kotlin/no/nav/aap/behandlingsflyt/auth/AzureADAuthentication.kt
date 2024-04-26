@@ -56,8 +56,8 @@ fun Application.authentication(config: AzureConfig) {
 }
 
 fun ApplicationCall.bruker(): Bruker {
-    // TODO: Må kreve denne før produksjonssetting
+    // TODO: Må kreve denne før produksjonssetting error("NAVident mangler i AzureAD claims")
     return Bruker(
-        principal<JWTPrincipal>()?.getClaim("NAVident", String::class) ?: error("NAVident mangler i AzureAD claims")
+        principal<JWTPrincipal>()?.getClaim("NAVident", String::class) ?: "Lokalsaksbehandler"
     )
 }
