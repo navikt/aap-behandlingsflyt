@@ -48,6 +48,7 @@ import no.nav.aap.behandlingsflyt.flyt.flate.flytApi
 import no.nav.aap.behandlingsflyt.flyt.flate.søknadApi
 import no.nav.aap.behandlingsflyt.hendelse.mottak.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HendelsesMottak
+import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGatewaySingleton
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsOppgaver
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdentGateway
@@ -89,6 +90,8 @@ internal fun Application.server(dbConfig: DbConfig) {
     val prometheus = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
     DefaultJsonMapper.objectMapper()
         .registerSubtypes(utledSubtypes())
+
+    OppgavestyringGatewaySingleton.initialize()
 
     install(MicrometerMetrics) { registry = prometheus }
     install(OpenAPIGen) {
