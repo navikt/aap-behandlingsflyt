@@ -23,9 +23,7 @@ class OppgavestyringGatewayTest {
         }
     }
 
-     //TODO: Fix this test
     @Test
-    @Ignore
     fun `varsleHendelse returnerer 200 når alt er fint`() {
         val gateway = OppgavestyringGateway
         assertDoesNotThrow {
