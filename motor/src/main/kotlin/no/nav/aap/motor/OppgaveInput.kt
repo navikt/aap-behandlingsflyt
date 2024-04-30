@@ -11,9 +11,15 @@ class OppgaveInput(val oppgave: Oppgave) {
     private var behandlingId: BehandlingId? = null
     private var nesteKjøring: LocalDateTime? = null
     private var antallFeil: Long = 0
+    private var status: OppgaveStatus = OppgaveStatus.KLAR
 
     internal fun medId(id: Long): OppgaveInput {
         this.id = id
+        return this
+    }
+
+    internal fun medStatus(status: OppgaveStatus): OppgaveInput {
+        this.status = status
         return this
     }
 
@@ -30,6 +36,10 @@ class OppgaveInput(val oppgave: Oppgave) {
 
     fun sakId(): SakId {
         return sakId!!
+    }
+
+    fun status(): OppgaveStatus {
+        return status
     }
 
     fun behandlingId(): BehandlingId {

@@ -8,5 +8,6 @@ class BehandlingFlytOgTilstandDto(
     val aktivtSteg: StegType,
     val aktivGruppe: StegGruppe,
     val behandlingVersjon: Long,
+    val prosessering: Prosessering,
     val visning: Visning
 )

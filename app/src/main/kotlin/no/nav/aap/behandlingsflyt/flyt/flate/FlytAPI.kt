@@ -19,6 +19,9 @@ import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.motor.OppgaveInput
+import no.nav.aap.motor.OppgaveRepository
+import no.nav.aap.motor.OppgaveStatus
 import no.nav.aap.verdityper.flyt.StegGruppe
 import no.nav.aap.verdityper.flyt.StegType
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
@@ -29,6 +32,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
             get<BehandlingReferanse, BehandlingFlytOgTilstandDto> { req ->
                 val dto = dataSource.transaction { connection ->
                     val behandling = behandling(connection, req)
+                    val oppgaveRepository = OppgaveRepository(connection)
                     val flyt = utledType(behandling.typeBehandling()).flyt()
 
                     val stegGrupper: Map<StegGruppe, List<StegType>> =
@@ -43,6 +47,9 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
                         ),
                         flyt, aktivtSteg
                     )
+                    val oppgaver = oppgaveRepository.hentOppgaveForBehandling(behandling.id)
+                    val prosessering =
+                        Prosessering(utledStatus(oppgaver), oppgaver.map { OppgaveDto(it.type(), it.status()) })
                     BehandlingFlytOgTilstandDto(
                         flyt = stegGrupper.map { (gruppe, steg) ->
                             erFullført = erFullført && gruppe != aktivtSteg.gruppe
@@ -72,7 +79,8 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
                         aktivtSteg = aktivtSteg,
                         aktivGruppe = aktivtSteg.gruppe,
                         behandlingVersjon = behandling.versjon,
-                        visning = utledVisning(aktivtSteg, flyt, alleAvklaringsbehovInkludertFrivillige)
+                        prosessering = prosessering,
+                        visning = utledVisning(aktivtSteg, flyt, alleAvklaringsbehovInkludertFrivillige, prosessering.status)
                     )
                 }
                 respond(dto)
@@ -93,13 +101,25 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
     }
 }
 
-fun utledVisning(
+private fun utledStatus(oppgaver: List<OppgaveInput>): ProsesseringStatus {
+    if (oppgaver.isEmpty()) {
+        return ProsesseringStatus.FERDIG
+    }
+    if (oppgaver.any { it.status() == OppgaveStatus.FEILET }) {
+        return ProsesseringStatus.FEILET
+    }
+    return ProsesseringStatus.JOBBER
+}
+
+private fun utledVisning(
     aktivtSteg: StegType,
     flyt: BehandlingFlyt,
-    alleAvklaringsbehovInkludertFrivillige: FrivilligeAvklaringsbehov
+    alleAvklaringsbehovInkludertFrivillige: FrivilligeAvklaringsbehov,
+    status: ProsesseringStatus
 ): Visning {
-    val beslutterReadOnly = aktivtSteg != StegType.FATTE_VEDTAK
-    val saksbehandlerReadOnly = !flyt.erStegFør(aktivtSteg, StegType.FATTE_VEDTAK)
+    val jobber = status in listOf(ProsesseringStatus.JOBBER, ProsesseringStatus.FEILET)
+    val beslutterReadOnly = !jobber && aktivtSteg != StegType.FATTE_VEDTAK
+    val saksbehandlerReadOnly = !jobber && !flyt.erStegFør(aktivtSteg, StegType.FATTE_VEDTAK)
     val visBeslutterKort =
         !beslutterReadOnly || (!saksbehandlerReadOnly && alleAvklaringsbehovInkludertFrivillige.harVærtSendtTilbakeFraBeslutterTidligere())
 
@@ -111,7 +131,7 @@ fun utledVisning(
 
 }
 
-fun alleVilkår(vilkårResultat: Vilkårsresultat): List<VilkårDTO> {
+private fun alleVilkår(vilkårResultat: Vilkårsresultat): List<VilkårDTO> {
     return vilkårResultat.alle().map { vilkår ->
         VilkårDTO(
             vilkår.type,

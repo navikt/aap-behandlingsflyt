@@ -42,7 +42,7 @@ class OppgaveRepository(private val connection: DBConnection) {
     internal fun plukkOppgave(): OppgaveInput? {
         val plukketOppgave = connection.queryFirstOrNull(
             """
-            SELECT id, type, sak_id, behandling_id, neste_kjoring, 
+            SELECT id, type, status, sak_id, behandling_id, neste_kjoring, 
                 (SELECT count(1) FROM oppgave_historikk h WHERE h.oppgave_id = o.id AND h.status = '${OppgaveStatus.FEILET.name}') as antall_feil
             FROM OPPGAVE o
             WHERE status = '${OppgaveStatus.KLAR.name}'
@@ -92,6 +92,7 @@ class OppgaveRepository(private val connection: DBConnection) {
     private fun mapOppgave(row: Row): OppgaveInput {
         return OppgaveInput(OppgaveType.parse(row.getString("type")))
             .medId(row.getLong("id"))
+            .medStatus(row.getEnum("status"))
             .forBehandling(
                 row.getLongOrNull("sak_id")?.let(::SakId),
                 row.getLongOrNull("behandling_id")?.let(::BehandlingId)
@@ -172,5 +173,23 @@ class OppgaveRepository(private val connection: DBConnection) {
                 }
             }
         return antall
+    }
+
+    fun hentOppgaveForBehandling(id: BehandlingId): List<OppgaveInput> {
+        val query = """
+            SELECT *
+                 FROM OPPGAVE op
+                 WHERE op.status IN ('${OppgaveStatus.FEILET.name}','${OppgaveStatus.FEILET.name}')
+                   AND op.behandling_id = ?
+        """.trimIndent()
+
+        return connection.queryList(query) {
+            setParams {
+                setLong(1, id.toLong())
+            }
+            setRowMapper { row ->
+                mapOppgave(row)
+            }
+        }
     }
 }
