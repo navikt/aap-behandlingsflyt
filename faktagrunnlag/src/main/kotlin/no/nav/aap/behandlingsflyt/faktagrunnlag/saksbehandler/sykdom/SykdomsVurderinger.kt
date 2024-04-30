@@ -24,7 +24,7 @@ data class Sykdomsvurdering(
             erSkadeSykdomEllerLyteVesentligdel,
             erNedsettelseIArbeidsevneHøyereEnnNedreGrense,
             nedreGrense,
-            nedsattArbeidsevneDato,
+            nedsattArbeidsevneDato?.atMonth(1)?.atDay(1),
             mapYrkesskade(yrkesskadevurdering)
         )
     }
