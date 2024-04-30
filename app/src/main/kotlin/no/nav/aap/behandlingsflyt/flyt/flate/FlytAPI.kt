@@ -30,7 +30,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
     route("/api/behandling") {
         route("/{referanse}/flyt") {
             get<BehandlingReferanse, BehandlingFlytOgTilstandDto> { req ->
-                val dto = dataSource.transaction { connection ->
+                val dto = dataSource.transaction(readOnly = true) { connection ->
                     val behandling = behandling(connection, req)
                     val oppgaveRepository = OppgaveRepository(connection)
                     val flyt = utledType(behandling.typeBehandling()).flyt()
@@ -88,7 +88,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
         }
         route("/{referanse}/resultat") {
             get<BehandlingReferanse, BehandlingResultatDto> { req ->
-                val dto = dataSource.transaction { connection ->
+                val dto = dataSource.transaction(readOnly = true) { connection ->
                     val behandling = behandling(connection, req)
 
                     val vilkårResultat = vilkårResultat(connection, behandling.id)
