@@ -151,7 +151,7 @@ class FlytOrkestratorTest {
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                             nedreGrense = NedreGrense.FEMTI,
-                            nedsattArbeidsevneDato = LocalDate.now(),
+                            nedsattArbeidsevneDato = Year.now(),
                             erArbeidsevnenNedsatt = true,
                             yrkesskadevurdering = YrkesskadevurderingDto(
                                 erÅrsakssammenheng = false
@@ -239,7 +239,7 @@ class FlytOrkestratorTest {
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                             nedreGrense = NedreGrense.FEMTI,
-                            nedsattArbeidsevneDato = LocalDate.now(),
+                            nedsattArbeidsevneDato = Year.now(),
                             erArbeidsevnenNedsatt = true,
                             yrkesskadevurdering = YrkesskadevurderingDto(
                                 erÅrsakssammenheng = false
@@ -376,7 +376,7 @@ class FlytOrkestratorTest {
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                             nedreGrense = NedreGrense.TRETTI,
-                            nedsattArbeidsevneDato = LocalDate.now(),
+                            nedsattArbeidsevneDato = Year.now(),
                             erArbeidsevnenNedsatt = true,
                             yrkesskadevurdering = YrkesskadevurderingDto(
                                 erÅrsakssammenheng = true
@@ -556,7 +556,7 @@ class FlytOrkestratorTest {
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                             nedreGrense = NedreGrense.FEMTI,
-                            nedsattArbeidsevneDato = LocalDate.now(),
+                            nedsattArbeidsevneDato = Year.now(),
                             erArbeidsevnenNedsatt = true,
                             yrkesskadevurdering = YrkesskadevurderingDto(
                                 erÅrsakssammenheng = false
@@ -654,7 +654,7 @@ class FlytOrkestratorTest {
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                             nedreGrense = NedreGrense.FEMTI,
-                            nedsattArbeidsevneDato = LocalDate.now(),
+                            nedsattArbeidsevneDato = Year.now(),
                             erArbeidsevnenNedsatt = true,
                             yrkesskadevurdering = YrkesskadevurderingDto(
                                 erÅrsakssammenheng = false
