@@ -17,8 +17,8 @@ import java.net.URI
 import java.time.format.DateTimeFormatter
 
 object UføreGateway : UføreRegisterGateway {
-    private val url = URI.create(requiredConfigForKey("integrasjon.uføre.url"))
-    val config = ClientConfig(scope = requiredConfigForKey("integrasjon.uføre.scope"))
+    private val url = URI.create(requiredConfigForKey("integrasjon.pesys.url"))
+    val config = ClientConfig(scope = requiredConfigForKey("integrasjon.pesys.scope"))
     private val client = RestClient(
         config = InntektGateway.config,
         tokenProvider = ClientCredentialsTokenProvider,
@@ -33,7 +33,7 @@ object UføreGateway : UføreRegisterGateway {
             )
         )
 
-        return client.get(uri = url.resolve("?fom=${uføreRequest.fom}&sakstype=${uføreRequest.sakstype}"), request = httpRequest)
+        return client.get(uri = url.resolve("vedtak/gradalderellerufore?fom=${uføreRequest.fom}&sakstype=${uføreRequest.sakstype}"), request = httpRequest)
     } //TODO: få inn request parameter på en bedre måte
     // /springapi/vedtak/gradalderellerufore
     override fun innhent(person: Person, Fødselsdato: Fødselsdato): Uføre
