@@ -177,7 +177,7 @@ class OppgaveRepository(private val connection: DBConnection) {
 
     fun hentOppgaveForBehandling(id: BehandlingId): List<OppgaveInput> {
         val query = """
-            SELECT *
+            SELECT *, (SELECT count(1) FROM oppgave_historikk h WHERE h.oppgave_id = o.id AND h.status = '${OppgaveStatus.FEILET.name}') as antall_feil
                  FROM OPPGAVE op
                  WHERE op.status IN ('${OppgaveStatus.FEILET.name}','${OppgaveStatus.FEILET.name}')
                    AND op.behandling_id = ?
