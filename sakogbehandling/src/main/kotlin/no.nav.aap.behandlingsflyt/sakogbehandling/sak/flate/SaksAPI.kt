@@ -43,7 +43,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
         route("/finnEllerOpprett").post<Unit, SaksinfoDTO, FinnEllerOpprettSakDTO> { _, dto ->
             val saken: SaksinfoDTO = dataSource.transaction { connection ->
                 val ident = Ident(dto.ident)
-                val periode = Periode(dto.søknadsdato, dto.søknadsdato.plusYears(3))
+                val periode = Periode(dto.søknadsdato, dto.søknadsdato.plusYears(3)) // TODO: Sette til en dag
                 val sak =
                     PersonOgSakService(
                         connection = connection,

@@ -51,13 +51,14 @@ class AktivitetRegel : UnderveisRegel {
                     }
                 })
 
-            nyttresultat = nyttresultat.kombiner(tidslinje,JoinStyle.CROSS_JOIN { periode, venstreSegment, høyreSegment ->
-                var verdi = venstreSegment?.verdi ?: Vurdering()
-                if (høyreSegment != null) {
-                    verdi = verdi.leggTilMeldepliktVurdering(høyreSegment.verdi)
-                }
-                Segment(periode, verdi)
-            })
+            nyttresultat =
+                nyttresultat.kombiner(tidslinje, JoinStyle.CROSS_JOIN { periode, venstreSegment, høyreSegment ->
+                    var verdi = venstreSegment?.verdi ?: Vurdering()
+                    if (høyreSegment != null) {
+                        verdi = verdi.leggTilMeldepliktVurdering(høyreSegment.verdi)
+                    }
+                    Segment(periode, verdi)
+                })
         }
 
         return nyttresultat
@@ -66,7 +67,7 @@ class AktivitetRegel : UnderveisRegel {
     private fun utledMeldetidslinje(input: UnderveisInput): Tidslinje<MeldepliktVurdering> {
         val rettighetsperiode = input.rettighetsperiode
         val dummy = Tidslinje(rettighetsperiode, true)
-        return Tidslinje(
+        var tidslinje = Tidslinje(
             listOf(
                 Segment(
                     Periode(
@@ -79,29 +80,34 @@ class AktivitetRegel : UnderveisRegel {
                     )
                 )
             )
-        ).kombiner(
-            dummy.splittOppOgMapOmEtter(
-                rettighetsperiode.fom.plusDays(13),
-                rettighetsperiode.tom,
-                Period.ofDays(14)
-            ) {
-                TreeSet(
-                    listOf(
-                        Segment(
-                            it.first().periode,
-                            MeldepliktVurdering(
-                                meldeperiode = Periode(
-                                    it.first().periode.fom.plusDays(1),
-                                    it.first().periode.fom.plusDays(14)
-                                ),
-                                utfall = Utfall.IKKE_OPPFYLT,
-                                avslagsårsak = utledÅrsak(it.first().periode.tom)
+        )
+        if (rettighetsperiode.fom.plusDays(13).isBefore(rettighetsperiode.tom)) {
+            tidslinje = tidslinje.kombiner(
+                dummy.splittOppOgMapOmEtter(
+                    rettighetsperiode.fom.plusDays(13),
+                    rettighetsperiode.tom,
+                    Period.ofDays(14)
+                ) {
+                    TreeSet(
+                        listOf(
+                            Segment(
+                                it.first().periode,
+                                MeldepliktVurdering(
+                                    meldeperiode = Periode(
+                                        it.first().periode.fom.plusDays(1),
+                                        it.first().periode.fom.plusDays(14)
+                                    ),
+                                    utfall = Utfall.IKKE_OPPFYLT,
+                                    avslagsårsak = utledÅrsak(it.first().periode.tom)
+                                )
                             )
                         )
                     )
-                )
-            }, StandardSammenslåere.prioriterHøyreSideCrossJoin()
-        )
+                }, StandardSammenslåere.prioriterHøyreSideCrossJoin()
+            )
+        }
+
+        return tidslinje
     }
 
     private fun utledÅrsak(tom: LocalDate): UnderveisAvslagsårsak {
