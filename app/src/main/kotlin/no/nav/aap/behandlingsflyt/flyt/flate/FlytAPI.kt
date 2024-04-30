@@ -118,14 +118,14 @@ private fun utledVisning(
     status: ProsesseringStatus
 ): Visning {
     val jobber = status in listOf(ProsesseringStatus.JOBBER, ProsesseringStatus.FEILET)
-    val beslutterReadOnly = !jobber && aktivtSteg != StegType.FATTE_VEDTAK
-    val saksbehandlerReadOnly = !jobber && !flyt.erStegFør(aktivtSteg, StegType.FATTE_VEDTAK)
+    val beslutterReadOnly = aktivtSteg != StegType.FATTE_VEDTAK
+    val saksbehandlerReadOnly = !flyt.erStegFør(aktivtSteg, StegType.FATTE_VEDTAK)
     val visBeslutterKort =
         !beslutterReadOnly || (!saksbehandlerReadOnly && alleAvklaringsbehovInkludertFrivillige.harVærtSendtTilbakeFraBeslutterTidligere())
 
     return Visning(
-        saksbehandlerReadOnly = saksbehandlerReadOnly,
-        beslutterReadOnly = beslutterReadOnly,
+        saksbehandlerReadOnly = !jobber && saksbehandlerReadOnly,
+        beslutterReadOnly = !jobber && beslutterReadOnly,
         visBeslutterKort = visBeslutterKort
     )
 
