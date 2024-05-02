@@ -63,10 +63,12 @@ spec:
     outbound:
       external:
         - host: pdl-api.dev-fss-pub.nais.io
+        - host: pensjon-popp-q2.dev-fss-pub.nais.io
       rules:
         - application: yrkesskade-saker
           namespace: yrkesskade
         - application: oppgavestyring
+
   env:
     - name: INTEGRASJON_PDL_URL
       value: https://pdl-api.dev-fss-pub.nais.io/graphql
@@ -81,7 +83,7 @@ spec:
     - name: INTEGRASJON_INSTITUSJONSOPPHOLD_SCOPE
       value: api://dev-gcp.team-rocket.institusjon-api/.default
     - name: INTEGRASJON_INNTEKT_URL
-      value: https://pensjon-popp-q2.dev.intern.nav.no/api/v1/inntekt/hentSumPi
+      value: https://pensjon-popp-q2.dev-fss-pub.nais.io/api/v1/inntekt/hentSumPi
     - name: INTEGRASJON_INNTEKT_SCOPE
       value: api://dev-gcp.pensjonopptjening.pensjon-popp-q2/.default
     - name: INTEGRASJON_OPPGAVESTYRING_URL
