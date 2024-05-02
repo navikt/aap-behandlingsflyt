@@ -85,7 +85,7 @@ spec:
     - name: INTEGRASJON_INNTEKT_URL
       value: https://pensjon-popp-q2.dev-fss-pub.nais.io/api/v1/inntekt/hentSumPi
     - name: INTEGRASJON_INNTEKT_SCOPE
-      value: api://dev-gcp.pensjonopptjening.pensjon-popp-q2/.default
+      value: api://dev-fss.pensjonopptjening.pensjon-popp-q2/.default
     - name: INTEGRASJON_OPPGAVESTYRING_URL
       value: http://oppgavestyring
     - name: INTEGRASJON_OPPGAVESTYRING_SCOPE
