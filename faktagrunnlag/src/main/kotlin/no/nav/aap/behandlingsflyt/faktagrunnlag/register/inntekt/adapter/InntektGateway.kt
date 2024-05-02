@@ -34,24 +34,7 @@ object InntektGateway : InntektRegisterGateway {
         return requireNotNull(client.post(uri = url, request = httpRequest))
     }
 
-    // NOTE: Only for short term testing purposes
-    override fun innhent(person: Person, år: Set<Year>):Set<InntektPerÅr> {
-        val request = InntektRequest(
-            person.identer().map { it.identifikator }.first(),
-            tomAr = år.min().value,
-            fomAr = år.max().value
-        )
-
-        val inntektRes:MutableSet<InntektPerÅr> = mutableSetOf()
-
-        for (i in 2000..2024) {
-            inntektRes.add(InntektPerÅr(Year.of(i), Beløp(1000000)))
-        }
-
-        return inntektRes
-    }
-
-    fun innhent2(person: Person, år: Set<Year>): Set<InntektPerÅr> {
+    override fun innhent(person: Person, år: Set<Year>): Set<InntektPerÅr> {
         val request = InntektRequest(
             person.identer().map { it.identifikator }.first(),
             tomAr = år.min().value,
