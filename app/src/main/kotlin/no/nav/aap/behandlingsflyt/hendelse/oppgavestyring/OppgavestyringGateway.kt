@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.hendelse.oppgavestyring
 
-import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingFlytStoppetHendelse
 import no.nav.aap.httpclient.ClientConfig
 import no.nav.aap.httpclient.RestClient
@@ -15,12 +14,10 @@ object OppgavestyringGateway {
 
     private val client = RestClient(
         config = config,
-        tokenProvider = ClientCredentialsTokenProvider,
-        errorHandler = EverythingIsOkResponseHandler // TODO: FJerne når det virker
+        tokenProvider = ClientCredentialsTokenProvider
     )
 
     fun varsleHendelse(hendelse: BehandlingFlytStoppetHendelse) {
         client.post<_, Unit>(url.resolve("/behandling"), PostRequest(body = hendelse))
     }
-
 }
