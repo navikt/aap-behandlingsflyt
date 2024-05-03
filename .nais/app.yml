@@ -83,7 +83,7 @@ spec:
     - name: INTEGRASJON_INSTITUSJONSOPPHOLD_SCOPE
       value: api://dev-gcp.team-rocket.institusjon-api/.default
     - name: INTEGRASJON_INNTEKT_URL
-      value: https://pensjon-popp-q2.dev-fss-pub.nais.io/api/v1/inntekt/hentSumPi
+      value: https://pensjon-popp-q2.dev-fss-pub.nais.io/popp/api/inntekt/hentSumPi
     - name: INTEGRASJON_INNTEKT_SCOPE
       value: api://dev-fss.pensjonopptjening.pensjon-popp-q2/.default
     - name: INTEGRASJON_OPPGAVESTYRING_URL
