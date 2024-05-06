@@ -1,6 +1,6 @@
 dependencies {
     implementation("dev.forst:ktor-openapi-generator:0.6.1")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.17.0")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.17.1")
 
     implementation(project(":verdityper"))
     implementation(project(":dbconnect"))
