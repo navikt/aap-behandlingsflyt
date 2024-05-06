@@ -209,7 +209,7 @@ private fun Routing.actuator(prometheus: PrometheusMeterRegistry) {
 
 @Deprecated("Kun for test lokalt enn så lenge")
 fun NormalOpenAPIRoute.hendelsesApi(dataSource: DataSource) {
-    route("/test") {
+    route("/thomas") {
         route("/opprett") {
             post<Unit, OpprettTestcaseDTO, OpprettTestcaseDTO> { _, dto ->
 
