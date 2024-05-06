@@ -48,7 +48,7 @@ object PdlBarnGateway : BarnGateway {
     }
 
     private fun hentBarn(identer: List<Ident>): List<Barn> {
-        if(identer.isEmpty()) {
+        if (identer.isEmpty()) {
             return emptyList()
         }
 
