@@ -48,6 +48,10 @@ object PdlBarnGateway : BarnGateway {
     }
 
     private fun hentBarn(identer: List<Ident>): List<Barn> {
+        if(identer.isEmpty()) {
+            return emptyList()
+        }
+
         val request = PdlRequest(PERSON_BOLK_QUERY, IdentVariables(identer = identer.map { it.identifikator }))
         val response: PdlRelasjonDataResponse = query(request)
 
