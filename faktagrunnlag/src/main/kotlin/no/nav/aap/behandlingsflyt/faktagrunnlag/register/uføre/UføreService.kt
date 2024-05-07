@@ -1,7 +1,12 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre
 
+import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlagkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PdlPersonopplysningGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.adapter.UføreGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.verdityper.Prosent
 import no.nav.aap.verdityper.flyt.FlytKontekst
@@ -34,4 +39,14 @@ class UføreService (
         return nyeData == gamleData
     }
 
+    companion object : Grunnlagkonstruktør {
+        override fun konstruer(connection: DBConnection): UføreService {
+            return UføreService(
+                SakService(connection),
+                UføreRepository(connection),
+                PersonopplysningRepository(connection),
+                UføreGateway
+            )
+        }
+    }
 }
