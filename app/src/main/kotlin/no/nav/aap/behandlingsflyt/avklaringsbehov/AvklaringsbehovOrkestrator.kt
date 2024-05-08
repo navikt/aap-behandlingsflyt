@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingOppgaveUtfører
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.motor.OppgaveInput
 import no.nav.aap.motor.OppgaveRepository
@@ -24,7 +25,7 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
 
     private val log = LoggerFactory.getLogger(AvklaringsbehovOrkestrator::class.java)
 
-    fun løsAvklaringsbehovOgFortsettProsessering(behandlingId: BehandlingId) {
+    fun taAvVentHvisPåVentOgFortsettProsessering(behandlingId: BehandlingId) {
         val behandling = behandlingRepository.hent(behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         avklaringsbehovene.validateTilstand(behandling = behandling)
@@ -35,7 +36,8 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
                 kontekst = kontekst,
                 avklaringsbehovene = avklaringsbehovene,
                 avklaringsbehov = SattPåVentLøsning(),
-                bruker = SYSTEMBRUKER
+                bruker = SYSTEMBRUKER,
+                behandling = behandling
             )
         }
         fortsettProsessering(kontekst)
@@ -48,7 +50,14 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
         bruker: Bruker
     ) {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        løsAvklaringsbehov(kontekst, avklaringsbehovene, avklaringsbehov, bruker)
+        val behandling = behandlingRepository.hent(kontekst.behandlingId)
+        løsAvklaringsbehov(
+            kontekst,
+            avklaringsbehovene,
+            avklaringsbehov,
+            bruker,
+            behandling
+        )
         markerAvklaringsbehovISammeGruppeForLøst(
             kontekst,
             ingenEndringIGruppe,
@@ -57,6 +66,10 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
         )
 
         fortsettProsessering(kontekst)
+
+        // Avklaringsbehovløst - trigger flyt stoppet event
+        // Legger denne helt sist da denne potensielt er vanskelig å rollbacke
+        FlytOrkestrator(connection).ferdigstiltLøsingAvBehov(behandling, kontekst)
     }
 
     private fun fortsettProsessering(kontekst: FlytKontekst) {
@@ -92,13 +105,13 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
         }
     }
 
-    fun løsAvklaringsbehov(
+    private fun løsAvklaringsbehov(
         kontekst: FlytKontekst,
         avklaringsbehovene: Avklaringsbehovene,
         avklaringsbehov: AvklaringsbehovLøsning,
-        bruker: Bruker
+        bruker: Bruker,
+        behandling: Behandling
     ) {
-        val behandling = behandlingRepository.hent(kontekst.behandlingId)
         val definisjoner = avklaringsbehov.definisjon()
         log.info("Forsøker løse avklaringsbehov[${definisjoner}] på behandling[${behandling.referanse}]")
 
@@ -113,9 +126,6 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
 
         // Bør ideelt kalle på
         løsFaktiskAvklaringsbehov(kontekst, avklaringsbehovene, avklaringsbehov, bruker)
-
-        // Avklaringsbehovløst - trigger flyt stoppet event
-        flytOrkestrator.ferdigstiltLøsingAvBehov(behandling, kontekst)
     }
 
     private fun løsFaktiskAvklaringsbehov(
