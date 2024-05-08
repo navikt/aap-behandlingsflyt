@@ -32,6 +32,7 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.avklaringsbehov.flate.avklaringsbehovApi
 import no.nav.aap.behandlingsflyt.avklaringsbehov.flate.fatteVedtakGrunnlagApi
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.utledSubtypes
+import no.nav.aap.behandlingsflyt.beregning.flate.beregningsGrunnlagApi
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.dbflyway.Migrering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
@@ -153,6 +154,7 @@ internal fun Application.server(dbConfig: DbConfig) {
                 avklaringsbehovApi(dataSource)
                 tilkjentYtelseAPI(dataSource)
                 beregningVurderingAPI(dataSource)
+                beregningsGrunnlagApi(dataSource)
 
                 hendelsesApi(dataSource)
             }
