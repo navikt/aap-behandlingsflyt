@@ -33,8 +33,8 @@ object Førstegangsbehandling : BehandlingType {
     override fun flyt(): BehandlingFlyt {
         return BehandlingFlytBuilder()
             .medSteg(steg = StartBehandlingSteg, informasjonskrav = listOf(SøknadService))
-            .medSteg(steg = VurderAlderSteg, informasjonskrav = listOf(PersonopplysningService))
             .medSteg(steg = VurderLovvalgSteg)
+            .medSteg(steg = VurderAlderSteg, informasjonskrav = listOf(PersonopplysningService))
             .medSteg(steg = VurderStudentSteg)
             .medSteg(steg = VurderSykdomSteg, informasjonskrav = listOf(YrkesskadeService))
             .medSteg(steg = FritakMeldepliktSteg)
