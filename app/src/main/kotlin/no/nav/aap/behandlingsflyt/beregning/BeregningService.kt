@@ -12,7 +12,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
+import no.nav.aap.verdityper.Beløp
+import no.nav.aap.verdityper.Prosent
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
+import java.time.LocalDate
 import java.time.Year
 
 class BeregningService(
@@ -37,15 +40,15 @@ class BeregningService(
 
         val uføregrad = uføre?.vurdering?.uføregrad
 
-        val beregningMedEllerUtenUføre = if (inntekterYtterligereNedsatt != null && uføregrad != null) {
-            val beregningVedYtterligereNedsatt = beregn(inntekterYtterligereNedsatt)
+        val beregningMedEllerUtenUføre = if (skalBeregnemedUføre(inntekterYtterligereNedsatt,uføregrad)) {
+            val beregningVedUføre = beregn(inntekterYtterligereNedsatt!!)
             val uføreberegning = UføreBeregning(
                 grunnlag = grunnlag11_19,
-                ytterligereNedsattGrunnlag = beregningVedYtterligereNedsatt,
+                ytterligereNedsattGrunnlag = beregningVedUføre,
                 //TODO:
                 // Hva hvis bruker har flere uføregrader?
                 // Skal saksbahandler velge den som er knyttet til ytterligere nedsatt-tidspunktet?
-                uføregrad = uføregrad
+                uføregrad = uføregrad!!
             )
             val grunnlagUføre = uføreberegning.beregnUføre()
             grunnlagUføre
@@ -58,17 +61,17 @@ class BeregningService(
         val andelAvNedsettelsenSomSkyldesYrkesskaden = sykdomGrunnlag.yrkesskadevurdering?.andelAvNedsettelse
 
         val beregningMedEllerUtenUføreMedEllerUtenYrkesskade =
-            if (skadetidspunkt != null && antattÅrligInntekt != null && andelAvNedsettelsenSomSkyldesYrkesskaden != null) { //11-22
+            if (skalBeregneMedYrkesskadeFordel(skadetidspunkt,antattÅrligInntekt,andelAvNedsettelsenSomSkyldesYrkesskaden)) { //11-22
                 val inntektPerÅr = InntektPerÅr(
                     Year.from(skadetidspunkt),
-                    antattÅrligInntekt
+                    antattÅrligInntekt!!
                 )
                 val yrkesskaden = YrkesskadeBeregning(
-                    grunnlag11_19 = grunnlag11_19 as Grunnlag11_19,
+                    grunnlag11_19 = beregningMedEllerUtenUføre as Grunnlag11_19,
                     antattÅrligInntekt = inntektPerÅr,
-                    andelAvNedsettelsenSomSkyldesYrkesskaden = andelAvNedsettelsenSomSkyldesYrkesskaden
+                    andelAvNedsettelsenSomSkyldesYrkesskaden = andelAvNedsettelsenSomSkyldesYrkesskaden!!
                 ).beregnYrkesskaden()
-                return yrkesskaden
+                yrkesskaden
             } else {
                 beregningMedEllerUtenUføre
             }
@@ -84,6 +87,18 @@ class BeregningService(
                 ytterligereNedsettelsesDato = vurdering?.ytterligereNedsattArbeidsevneDato
             )
         )
+    }
+
+    private fun skalBeregnemedUføre(inntekterYtterligereNedsatt: Set<InntektPerÅr>?, uføregrad: Prosent?): Boolean {
+        return inntekterYtterligereNedsatt != null && uføregrad != null
+    }
+
+    private fun skalBeregneMedYrkesskadeFordel(
+        skadetidspunkt: LocalDate?,
+        antattÅrligInntekt: Beløp?,
+        andelAvNedsettelsenSomSkyldesYrkesskaden: Prosent?
+    ): Boolean {
+        return skadetidspunkt != null && antattÅrligInntekt != null && andelAvNedsettelsenSomSkyldesYrkesskaden != null
     }
 
     private fun beregn(
