@@ -66,10 +66,6 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
         )
 
         fortsettProsessering(kontekst)
-
-        // Avklaringsbehovløst - trigger flyt stoppet event
-        // Legger denne helt sist da denne potensielt er vanskelig å rollbacke
-        FlytOrkestrator(connection).ferdigstiltLøsingAvBehov(behandling, kontekst)
     }
 
     private fun fortsettProsessering(kontekst: FlytKontekst) {
