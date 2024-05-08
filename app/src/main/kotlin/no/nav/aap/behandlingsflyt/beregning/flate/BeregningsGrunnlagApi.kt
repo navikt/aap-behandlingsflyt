@@ -13,7 +13,7 @@ import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.beregningsGrunnlagApi (dataSource: DataSource) {
     route("/api/beregning"){
-        route("/beregning/{referanse}"){
+        route("/grunnlag/{referanse}"){
             get<BehandlingReferanse, BeregningDTO> { req ->
                 val begregningsgrunnlag = dataSource.transaction { connection ->
                     val behandling: Behandling = BehandlingReferanseService(connection).behandling(req)
