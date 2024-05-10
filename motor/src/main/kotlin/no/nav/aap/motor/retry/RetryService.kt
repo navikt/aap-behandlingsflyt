@@ -9,17 +9,15 @@ class RetryService(connection: DBConnection) {
     private val repository = RetryFeiledeOppgaverRepository(connection)
 
     fun enable() {
-        val planlagteFeilhåndteringOppgaver = repository.planlagteFeilhåndteringOppgaver()
-        if (planlagteFeilhåndteringOppgaver.isEmpty()) {
-            repository.planleggNyKjøring()
-        } else if (!harPlanlagtKjøring(planlagteFeilhåndteringOppgaver)) {
-            planlagteFeilhåndteringOppgaver.filter { it.status == OppgaveStatus.FEILET }
-                .forEach { repository.markerSomKlar(it) }
+        val planlagteFeilhåndteringOppgaver = repository.planlagteCronOppgaver()
+
+        planlagteFeilhåndteringOppgaver.forEach { oppgave ->
+            if (oppgave.status == OppgaveStatus.FERDIG) {
+                repository.planleggNyKjøring(oppgave.type)
+            } else if(oppgave.status == OppgaveStatus.FEILET) {
+                repository.markerSomKlar(oppgave)
+            }
         }
         log.info("Planlagt kjøring av feilhåndteringsOppgave")
-    }
-
-    private fun harPlanlagtKjøring(planlagteFeilhåndteringOppgaver: List<RetryFeiledeOppgaverRepository.FeilhåndteringOppgaveStatus>): Boolean {
-        return planlagteFeilhåndteringOppgaver.any { it.status == OppgaveStatus.KLAR }
     }
 }

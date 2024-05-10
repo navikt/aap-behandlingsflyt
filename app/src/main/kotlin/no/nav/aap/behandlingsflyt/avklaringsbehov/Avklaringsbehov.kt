@@ -118,6 +118,10 @@ class Avklaringsbehov(
         return requireNotNull(historikk.last { it.status == Status.OPPRETTET }.frist)
     }
 
+    fun fristUtløpt(): Boolean {
+        return frist().isBefore(LocalDate.now()) || frist().isEqual(LocalDate.now())
+    }
+
     override fun toString(): String {
         return "Avklaringsbehov(definisjon=$definisjon, status=${status()})"
     }

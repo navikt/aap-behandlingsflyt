@@ -17,4 +17,8 @@ object OppgaveType {
         return oppgaver.getValue(type)
     }
 
+    fun cronTypes(): List<String> {
+        return oppgaver.filter { it.value.cron() != null }.keys.toList()
+    }
+
 }

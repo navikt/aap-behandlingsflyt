@@ -52,7 +52,7 @@ class Avklaringsbehovene(
      *
      * NB! Dersom avklaringsbehovet finnes fra før og er åpent så ignorerer vi det nye behovet, mens dersom det er avsluttet eller avbrutt så reåpner vi det.
      */
-    fun leggTil(definisjoner: List<Definisjon>, stegType: StegType) {
+    fun leggTil(definisjoner: List<Definisjon>, stegType: StegType, fristUtgangspunkt: LocalDate? = null) {
         definisjoner.forEach { definisjon ->
             val avklaringsbehov = hentBehovForDefinisjon(definisjon)
             if (avklaringsbehov != null) {
@@ -67,15 +67,15 @@ class Avklaringsbehovene(
                     behandlingId = behandlingId,
                     definisjon = definisjon,
                     funnetISteg = stegType,
-                    frist = utledFrist(definisjon)
+                    frist = utledFrist(definisjon, fristUtgangspunkt)
                 )
             }
         }
     }
 
-    private fun utledFrist(definisjon: Definisjon): LocalDate? {
+    private fun utledFrist(definisjon: Definisjon, fristUtgangspunkt: LocalDate?): LocalDate? {
         if (definisjon.erVentepunkt()) {
-            return definisjon.utledFrist()
+            return definisjon.utledFrist(fristUtgangspunkt)
         }
         return null
     }
@@ -160,5 +160,9 @@ class Avklaringsbehovene(
 
     fun erSattPåVent(): Boolean {
         return alle().any { avklaringsbehov -> avklaringsbehov.erVentepunkt() && avklaringsbehov.erÅpent() }
+    }
+
+    fun hentVentepunkterMedUtløptFrist(): List<Avklaringsbehov> {
+        return alle().filter { it.erVentepunkt() && it.erÅpent() && it.fristUtløpt() }
     }
 }

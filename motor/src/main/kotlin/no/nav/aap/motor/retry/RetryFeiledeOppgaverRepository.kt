@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.motor.OppgaveInput
 import no.nav.aap.motor.OppgaveRepository
 import no.nav.aap.motor.OppgaveStatus
+import no.nav.aap.motor.OppgaveType
 import java.time.LocalDateTime
 
 internal class RetryFeiledeOppgaverRepository(private val connection: DBConnection) {
@@ -31,19 +32,28 @@ internal class RetryFeiledeOppgaverRepository(private val connection: DBConnecti
         return antallRader
     }
 
-    internal fun planlagteFeilhåndteringOppgaver(): List<FeilhåndteringOppgaveStatus> {
+    internal fun planlagteCronOppgaver(): List<FeilhåndteringOppgaveStatus> {
+        return OppgaveType.cronTypes().flatMap { type -> hentStatusPåOppgave(type) }
+    }
+
+    private fun hentStatusPåOppgave(type: String): List<FeilhåndteringOppgaveStatus> {
         val query = """
                 SELECT * FROM OPPGAVE WHERE type = ? and status != 'FERDIG'
             """.trimIndent()
 
         val queryList = connection.queryList(query) {
             setParams {
-                setString(1, OPPGAVE_TYPE)
+                setString(1, type)
             }
             setRowMapper {
-                FeilhåndteringOppgaveStatus(it.getLong("id"), OppgaveStatus.valueOf(it.getString("status")))
+                FeilhåndteringOppgaveStatus(it.getLong("id"), type, OppgaveStatus.valueOf(it.getString("status")))
             }
         }
+
+        if (queryList.isEmpty()) {
+            return listOf(FeilhåndteringOppgaveStatus(-1L, type, OppgaveStatus.FERDIG))
+        }
+
         return queryList
     }
 
@@ -69,12 +79,13 @@ internal class RetryFeiledeOppgaverRepository(private val connection: DBConnecti
         }
     }
 
-    internal fun planleggNyKjøring() {
+    internal fun planleggNyKjøring(type: String) {
+        val oppgave = OppgaveType.parse(type)
         oppgaverRepository.leggTil(
-            OppgaveInput(RekjørFeiledeOppgaver)
-                .medNesteKjøring(RekjørFeiledeOppgaver.cron().nextLocalDateTimeAfter(LocalDateTime.now()))
+            OppgaveInput(oppgave)
+                .medNesteKjøring(requireNotNull(oppgave.cron()?.nextLocalDateTimeAfter(LocalDateTime.now())))
         )
     }
 
-    inner class FeilhåndteringOppgaveStatus(val id: Long, val status: OppgaveStatus)
+    inner class FeilhåndteringOppgaveStatus(val id: Long, val type: String, val status: OppgaveStatus)
 }

@@ -155,9 +155,12 @@ enum class Definisjon(
         return type == BehovType.VENTEPUNKT
     }
 
-    fun utledFrist(): LocalDate {
-        if(!erVentepunkt()) {
+    fun utledFrist(fristUtgangspunkt: LocalDate?): LocalDate {
+        if (!erVentepunkt()) {
             throw IllegalStateException("Forsøker utlede frist for et behov som ikke er ventepunkt")
+        }
+        if (fristUtgangspunkt != null) {
+            return fristUtgangspunkt.plus(defaultFrist)
         }
         return LocalDate.now().plus(defaultFrist)
     }

@@ -6,6 +6,6 @@ object ProsesseringsOppgaver {
 
     fun alle(): List<Oppgave> {
         // Legger her alle oppgavene som sakl utføres i systemet
-        return listOf(ProsesserBehandlingOppgaveUtfører)
+        return listOf(ProsesserBehandlingOppgaveUtfører, GjenopptaBehandlingOppgaveUtfører)
     }
 }

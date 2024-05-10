@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt
 
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.avklaringsbehov.Avklaringsbehovene
@@ -80,6 +81,17 @@ class FlytOrkestrator(
     fun prosesserBehandling(kontekst: FlytKontekst) {
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+
+        // fjerner av ventepunkt med utløpt frist
+        if (avklaringsbehovene.erSattPåVent()) {
+            val behov = avklaringsbehovene.hentVentepunkterMedUtløptFrist()
+            behov.forEach { avklaringsbehovene.løsAvklaringsbehov(it.definisjon, "", SYSTEMBRUKER.ident) }
+        }
+
+        // Hvis fortsatt på vent
+        if (avklaringsbehovene.erSattPåVent()) {
+            return // Bail out
+        }
 
         avklaringsbehovene.validateTilstand(behandling = behandling)
 
