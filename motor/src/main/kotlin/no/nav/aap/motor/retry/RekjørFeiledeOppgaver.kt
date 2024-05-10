@@ -28,7 +28,7 @@ internal class RekjørFeiledeOppgaver(private val repository: RetryFeiledeOppgav
         }
 
         override fun cron(): CronExpression {
-            return CronExpression.create("0 30 7-17,20 * * *")
+            return CronExpression.create("0 0,15,30,45 7-17,20 * * *")
         }
     }
 }
