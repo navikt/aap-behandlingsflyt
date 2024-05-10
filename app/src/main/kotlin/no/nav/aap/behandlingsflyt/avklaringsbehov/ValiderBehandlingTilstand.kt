@@ -19,14 +19,19 @@ internal object ValiderBehandlingTilstand {
         //}
     }
 
+    fun validerTilstandBehandling(behandling: Behandling) {
+        if (Status.AVSLUTTET == behandling.status()) {
+            throw IllegalArgumentException("Forsøker manipulere på behandling som er avsluttet")
+        }
+    }
+
     fun validerTilstandBehandling(
         behandling: Behandling,
         avklaringsbehov: Definisjon? = null,
         eksisterenedeAvklaringsbehov: List<Avklaringsbehov>
     ) {
-        if (Status.AVSLUTTET == behandling.status()) {
-            throw IllegalArgumentException("Forsøker manipulere på behandling som er avsluttet")
-        }
+        validerTilstandBehandling(behandling)
+
         if (avklaringsbehov != null) {
             if (!eksisterenedeAvklaringsbehov.map { a -> a.definisjon }
                     .contains(avklaringsbehov) && !avklaringsbehov.erFrivillig()) {
@@ -34,7 +39,11 @@ internal object ValiderBehandlingTilstand {
             }
             val flyt = utledType(behandling.typeBehandling()).flyt()
             if (!flyt.erStegFørEllerLik(avklaringsbehov.løsesISteg, behandling.aktivtSteg())) {
-                throw IllegalArgumentException("Forsøker løse avklaringsbehov $avklaringsbehov knyttet til et steg som ikke finnes i behandlingen av type ${behandling.typeBehandling().identifikator()}")
+                throw IllegalArgumentException(
+                    "Forsøker løse avklaringsbehov $avklaringsbehov knyttet til et steg som ikke finnes i behandlingen av type ${
+                        behandling.typeBehandling().identifikator()
+                    }"
+                )
             }
         }
     }
