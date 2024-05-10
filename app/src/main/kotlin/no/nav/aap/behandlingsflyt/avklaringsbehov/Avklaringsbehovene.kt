@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.verdityper.flyt.StegType
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 
 private val log = LoggerFactory.getLogger(Avklaringsbehovene::class.java)
 
@@ -18,7 +19,7 @@ class Avklaringsbehovene(
             avklaringsbehov.definisjon,
             "Ingen endring fra forrige vurdering",
             bruker
-        ) // TODO: Hente fra sikkerhetcontext
+        )
     }
 
     fun løsAvklaringsbehov(
@@ -34,7 +35,7 @@ class Avklaringsbehovene(
             avklaringsbehov.løs(begrunnelse = begrunnelse, endretAv = endretAv, kreverToTrinn = kreverToTrinn)
             repository.kreverToTrinn(avklaringsbehov.id, kreverToTrinn)
         }
-        repository.endre(avklaringsbehov)
+        repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
     fun leggTilFrivilligHvisMangler(definisjon: Definisjon) {
@@ -49,7 +50,7 @@ class Avklaringsbehovene(
     /**
      * Legger til nye avklaringsbehov.
      *
-     * NB! Dersom avklaringsbehovet finnes fra før og er åpent så ignorerer vi det nye behovet, mens dersom det er avsluttet så reåpner vi det.
+     * NB! Dersom avklaringsbehovet finnes fra før og er åpent så ignorerer vi det nye behovet, mens dersom det er avsluttet eller avbrutt så reåpner vi det.
      */
     fun leggTil(definisjoner: List<Definisjon>, stegType: StegType) {
         definisjoner.forEach { definisjon ->
@@ -57,7 +58,7 @@ class Avklaringsbehovene(
             if (avklaringsbehov != null) {
                 if (avklaringsbehov.erAvsluttet() || avklaringsbehov.status() == Status.AVBRUTT) {
                     avklaringsbehov.reåpne()
-                    repository.endre(avklaringsbehov)
+                    repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
                 } else {
                     log.warn("Forsøkte å legge til et avklaringsbehov som allerede eksisterte")
                 }
@@ -65,12 +66,18 @@ class Avklaringsbehovene(
                 repository.opprett(
                     behandlingId = behandlingId,
                     definisjon = definisjon,
-                    funnetISteg = stegType
+                    funnetISteg = stegType,
+                    frist = utledFrist(definisjon)
                 )
-                //TODO: Må legge til avklaringsbehov til listen
-                //avklaringsbehovene.add(avklaringsbehov)
             }
         }
+    }
+
+    private fun utledFrist(definisjon: Definisjon): LocalDate? {
+        if (definisjon.erVentepunkt()) {
+            return definisjon.utledFrist()
+        }
+        return null
     }
 
     fun vurderTotrinn(
@@ -82,19 +89,19 @@ class Avklaringsbehovene(
     ) {
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
         avklaringsbehov.vurderTotrinn(begrunnelse, godkjent, vurdertAv, årsakTilRetur)
-        repository.endre(avklaringsbehov)
+        repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
     fun avbryt(definisjon: Definisjon) {
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
         avklaringsbehov.avbryt()
-        repository.endre(avklaringsbehov)
+        repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
     fun reåpne(definisjon: Definisjon) {
-        val avklaringsbehov = avklaringsbehovene.single { it.definisjon == definisjon }
+        val avklaringsbehov = alle().single { it.definisjon == definisjon }
         avklaringsbehov.reåpne()
-        repository.endre(avklaringsbehov)
+        repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
     override fun alle(): List<Avklaringsbehov> {
@@ -149,5 +156,9 @@ class Avklaringsbehovene(
             eksisterenedeAvklaringsbehov = avklaringsbehovene,
             versjon = versjon
         )
+    }
+
+    fun erSattPåVent(): Boolean {
+        return alle().any { avklaringsbehov -> avklaringsbehov.erVentepunkt() && avklaringsbehov.erÅpent() }
     }
 }

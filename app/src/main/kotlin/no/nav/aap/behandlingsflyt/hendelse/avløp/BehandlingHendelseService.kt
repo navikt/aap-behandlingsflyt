@@ -14,6 +14,8 @@ class BehandlingHendelseService(private val sakService: SakService) {
     fun stoppet(behandling: Behandling, avklaringsbehovene: Avklaringsbehovene) {
         // TODO: Slippe ut event om at behandlingen har stoppet opp
         val sak = sakService.hent(behandling.sakId)
+
+        // TODO: Se på hvordan hendelsen ser ut ved retur fra beslutter på mer enn et behov og adferden der
         val hendelse = BehandlingFlytStoppetHendelse(
             personident = sak.person.aktivIdent().identifikator,
             saksnummer = sak.saksnummer,
@@ -38,13 +40,17 @@ class BehandlingHendelseService(private val sakService: SakService) {
                         EndringDTO(
                             status = endring.status,
                             tidsstempel = endring.tidsstempel,
-                            endretAv = endring.endretAv
+                            endretAv = endring.endretAv,
+                            frist = endring.frist
                         )
                     }
                 )
             },
             opprettetTidspunkt = behandling.opprettetTidspunkt
         )
+
+        // TODO: Utvide med flere parametere for prioritering
+
         oppgavestyringGateway.varsleHendelse(hendelse)
     }
 }

@@ -14,7 +14,6 @@ import no.nav.aap.motor.OppgaveInput
 import no.nav.aap.motor.OppgaveRepository
 import no.nav.aap.verdityper.flyt.FlytKontekst
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
-import no.nav.aap.verdityper.sakogbehandling.Status
 import org.slf4j.LoggerFactory
 
 class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
@@ -31,7 +30,7 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
         avklaringsbehovene.validateTilstand(behandling = behandling)
 
         val kontekst = behandling.flytKontekst()
-        if (behandling.status() == Status.PÅ_VENT) {
+        if (avklaringsbehovene.erSattPåVent()) {
             this.løsAvklaringsbehov(
                 kontekst = kontekst,
                 avklaringsbehovene = avklaringsbehovene,
@@ -146,9 +145,6 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
 
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
         avklaringsbehovene.validateTilstand(behandling = behandling)
-
-        //TODO: Vi må huske å lagre behandling etter at vi har endret status
-        behandling.settPåVent()
 
         avklaringsbehovene.leggTil(listOf(Definisjon.MANUELT_SATT_PÅ_VENT), behandling.aktivtSteg())
     }

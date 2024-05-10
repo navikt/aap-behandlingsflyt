@@ -75,6 +75,7 @@ CREATE TABLE AVKLARINGSBEHOV_ENDRING
     AVKLARINGSBEHOV_ID        BIGINT                                 NOT NULL REFERENCES AVKLARINGSBEHOV (ID),
     STATUS                    VARCHAR(50)                            NOT NULL,
     BEGRUNNELSE               TEXT,
+    FRIST                     DATE,
     AARSAK_TIL_RETUR          VARCHAR(50),
     AARSAK_TIL_RETUR_FRITEKST TEXT,
     OPPRETTET_AV              VARCHAR(100)                           NOT NULL,

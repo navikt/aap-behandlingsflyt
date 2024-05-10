@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.verdityper.flyt.StegType
+import java.time.LocalDate
 
 class Avklaringsbehov(
     val id: Long,
@@ -107,6 +108,14 @@ class Avklaringsbehov(
             return funnetISteg
         }
         return definisjon.løsesISteg
+    }
+
+    fun erVentepunkt(): Boolean {
+        return definisjon.type == Definisjon.BehovType.VENTEPUNKT
+    }
+
+    fun frist(): LocalDate {
+        return requireNotNull(historikk.last { it.status == Status.OPPRETTET }.frist)
     }
 
     override fun toString(): String {

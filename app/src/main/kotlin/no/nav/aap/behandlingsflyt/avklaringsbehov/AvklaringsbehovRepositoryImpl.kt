@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.Row
 import no.nav.aap.verdityper.flyt.StegType
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : AvklaringsbehovRepository,
@@ -30,7 +31,7 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         }
     }
 
-    override fun opprett(behandlingId: BehandlingId, definisjon: Definisjon, funnetISteg: StegType) {
+    override fun opprett(behandlingId: BehandlingId, definisjon: Definisjon, funnetISteg: StegType, frist: LocalDate?) {
         //TODO: Kan vi utelukke denne sjekken? LeggTil burde alltid opprette - finnes den fra før må den evt. endres.
         var avklaringsbehovId = hentRelevantAvklaringsbehov(behandlingId, definisjon)
 
@@ -40,10 +41,7 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
 
         endreAvklaringsbehov(
             avklaringsbehovId,
-            Status.OPPRETTET,
-            "",
-            SYSTEMBRUKER.ident,
-            listOf()
+            Endring(status = Status.OPPRETTET, begrunnelse = "", endretAv = SYSTEMBRUKER.ident, frist = frist)
         )
     }
 
@@ -67,7 +65,6 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         }
     }
 
-    //TODO: Hvorfor setter vi ikke toTrinn som true/false når vi oppretter et Avklaringsbehov? Hvorfor er dette nullable?
     private fun opprettAvklaringsbehov(
         behandlingId: BehandlingId,
         definisjon: Definisjon,
@@ -87,41 +84,38 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         }
     }
 
-    override fun endre(avklaringsbehov: Avklaringsbehov) {
+    override fun endre(avklaringsbehovId: Long, endring: Endring) {
         endreAvklaringsbehov(
-            avklaringsbehov.id,
-            avklaringsbehov.status(),
-            avklaringsbehov.begrunnelse(),
-            avklaringsbehov.endretAv(),
-            avklaringsbehov.årsakTilRetur()
+            avklaringsbehovId,
+            endring
         )
     }
 
     private fun endreAvklaringsbehov(
         avklaringsbehovId: Long,
-        status: Status,
-        begrunnelse: String,
-        opprettetAv: String,
-        årsakTilRetur: List<ÅrsakTilRetur>
+        endring: Endring
     ) {
         val query = """
-            INSERT INTO AVKLARINGSBEHOV_ENDRING (avklaringsbehov_id, status, begrunnelse, opprettet_av, opprettet_tid) 
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO AVKLARINGSBEHOV_ENDRING (avklaringsbehov_id, status, begrunnelse, frist, opprettet_av, opprettet_tid) 
+            VALUES (?, ?, ?, ?, ?, ?)
             """.trimIndent()
+
+        val opprettetAv = endring.endretAv
 
         val key = connection.executeReturnKey(query) {
             setParams {
                 setLong(1, avklaringsbehovId)
-                setEnumName(2, status)
-                setString(3, begrunnelse)
-                setString(4, opprettetAv)
-                setLocalDateTime(5, LocalDateTime.now())
+                setEnumName(2, endring.status)
+                setString(3, endring.begrunnelse)
+                setLocalDate(4, endring.frist)
+                setString(5, opprettetAv)
+                setLocalDateTime(6, LocalDateTime.now())
             }
         }
         val queryPeriode = """
                     INSERT INTO AVKLARINGSBEHOV_ENDRING_AARSAK (endring_id, aarsak_til_retur, aarsak_til_retur_fritekst, OPPRETTET_AV) VALUES (?, ?, ?, ?)
                 """.trimIndent()
-        connection.executeBatch(queryPeriode, årsakTilRetur) {
+        connection.executeBatch(queryPeriode, endring.årsakTilRetur) {
             setParams {
                 setLong(1, key)
                 setEnumName(2, it.årsak)
@@ -181,6 +175,7 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
             tidsstempel = row.getLocalDateTime("opprettet_tid"),
             begrunnelse = row.getString("begrunnelse"),
             endretAv = row.getString("opprettet_av"),
+            frist = row.getLocalDateOrNull("frist"),
             årsakTilRetur = hentÅrsaker(row.getLong("id"))
         )
     }

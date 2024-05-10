@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import no.nav.aap.verdityper.flyt.StegType
+import java.time.LocalDate
 import java.time.Period
 import java.util.*
 import java.util.stream.Collectors
@@ -29,7 +30,7 @@ enum class Definisjon(
 ) {
     MANUELT_SATT_PÅ_VENT(
         kode = MANUELT_SATT_PÅ_VENT_KODE,
-        type = BehovType.AUTOMATISK,
+        type = BehovType.VENTEPUNKT,
         defaultFrist = Period.ofWeeks(3),
     ),
     AVKLAR_STUDENT(
@@ -108,7 +109,7 @@ enum class Definisjon(
     enum class BehovType(val valideringsFunksjon: Definisjon.() -> Unit) {
         MANUELT_PÅKREVD(Definisjon::validerManuelt),
         MANUELT_FRIVILLIG(Definisjon::validerManuelt),
-        AUTOMATISK(Definisjon::validerAutomatisk)
+        VENTEPUNKT(Definisjon::validerVentepunkt)
     }
 
     fun skalLøsesISteg(steg: StegType, funnetISteg: StegType): Boolean {
@@ -126,7 +127,7 @@ enum class Definisjon(
         }
     }
 
-    private fun validerAutomatisk() {
+    private fun validerVentepunkt() {
         if (this == MANUELT_SATT_PÅ_VENT) {
             if (this.løsesISteg != StegType.UDEFINERT) {
                 throw IllegalArgumentException("Manueltsatt på vent er lagt til feil steg")
@@ -148,5 +149,16 @@ enum class Definisjon(
 
     fun erFrivillig(): Boolean {
         return type == BehovType.MANUELT_FRIVILLIG
+    }
+
+    fun erVentepunkt(): Boolean {
+        return type == BehovType.VENTEPUNKT
+    }
+
+    fun utledFrist(): LocalDate {
+        if(!erVentepunkt()) {
+            throw IllegalStateException("Forsøker utlede frist for et behov som ikke er ventepunkt")
+        }
+        return LocalDate.now().plus(defaultFrist)
     }
 }

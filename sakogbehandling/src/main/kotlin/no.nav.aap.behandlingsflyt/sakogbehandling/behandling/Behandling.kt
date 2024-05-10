@@ -58,10 +58,6 @@ class Behandling(
 
     fun status(): Status = status
 
-    fun settPåVent() {
-        status = Status.PÅ_VENT
-    }
-
     fun stegHistorikk(): List<StegTilstand> = stegHistorikk.toList()
 
     fun aktivtSteg(): StegType {

@@ -35,7 +35,7 @@ class OppgavestyringGatewayTest {
                     personident = "124512451245",
                     Saksnummer("24352363"),
                     opprettetTidspunkt = LocalDateTime.now(),
-                    status = Status.PÅ_VENT,
+                    status = Status.OPPRETTET,
                     behandlingType = TypeBehandling.Klage,
                     avklaringsbehov = emptyList(),
                     referanse = BehandlingReferanse("yolo")
