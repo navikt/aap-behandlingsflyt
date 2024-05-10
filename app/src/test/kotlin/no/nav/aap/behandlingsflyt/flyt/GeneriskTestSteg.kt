@@ -4,8 +4,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.verdityper.flyt.FlytKontekst
 
-@Deprecated("Skal bort når alle steg er implementert")
-class GeneriskPlaceholderSteg : BehandlingSteg {
+class GeneriskTestSteg : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekst): StegResultat {
         return StegResultat() // DO NOTHING
     }

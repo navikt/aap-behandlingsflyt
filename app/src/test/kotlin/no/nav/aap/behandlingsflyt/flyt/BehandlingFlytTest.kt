@@ -27,16 +27,16 @@ class BehandlingFlytTest {
     }
 
     private val førstegangsbehandling = BehandlingFlytBuilder()
-        .medSteg(GeneriskPlaceholderFlytSteg(StegType.START_BEHANDLING))
-        .medSteg(GeneriskPlaceholderFlytSteg(StegType.VURDER_MEDLEMSKAP))
-        .medSteg(GeneriskPlaceholderFlytSteg(StegType.FASTSETT_GRUNNLAG))
+        .medSteg(GeneriskTestFlytSteg(StegType.START_BEHANDLING))
+        .medSteg(GeneriskTestFlytSteg(StegType.VURDER_MEDLEMSKAP))
+        .medSteg(GeneriskTestFlytSteg(StegType.FASTSETT_GRUNNLAG))
         .build()
 
     private val sykdomsbehandling = BehandlingFlytBuilder()
-        .medSteg(GeneriskPlaceholderFlytSteg(StegType.AVKLAR_SYKDOM))
-        .medSteg(GeneriskPlaceholderFlytSteg(StegType.VURDER_BISTANDSBEHOV))
-        .medSteg(GeneriskPlaceholderFlytSteg(StegType.FRITAK_MELDEPLIKT))
-        .medSteg(GeneriskPlaceholderFlytSteg(StegType.FASTSETT_GRUNNLAG))
-        .medSteg(GeneriskPlaceholderFlytSteg(StegType.IVERKSETT_VEDTAK))
+        .medSteg(GeneriskTestFlytSteg(StegType.AVKLAR_SYKDOM))
+        .medSteg(GeneriskTestFlytSteg(StegType.VURDER_BISTANDSBEHOV))
+        .medSteg(GeneriskTestFlytSteg(StegType.FRITAK_MELDEPLIKT))
+        .medSteg(GeneriskTestFlytSteg(StegType.FASTSETT_GRUNNLAG))
+        .medSteg(GeneriskTestFlytSteg(StegType.IVERKSETT_VEDTAK))
         .build()
 }
