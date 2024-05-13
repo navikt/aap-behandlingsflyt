@@ -78,8 +78,8 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
                                                 )
                                             },
                                         vilkårDTO = hentUtRelevantVilkårForSteg(
-                                            vilkårResultat(connection, behandling.id),
-                                            stegType
+                                            vilkårsresultat = vilkårResultat(connection, behandling.id),
+                                            stegType = stegType
                                         )
                                     )
                                 }
@@ -90,10 +90,10 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
                         behandlingVersjon = behandling.versjon,
                         prosessering = prosessering,
                         visning = utledVisning(
-                            aktivtSteg,
-                            flyt,
-                            alleAvklaringsbehovInkludertFrivillige,
-                            prosessering.status
+                            aktivtSteg = aktivtSteg,
+                            flyt = flyt,
+                            alleAvklaringsbehovInkludertFrivillige = alleAvklaringsbehovInkludertFrivillige,
+                            status = prosessering.status
                         )
                     )
                 }
@@ -159,15 +159,17 @@ private fun utledVisning(
     status: ProsesseringStatus
 ): Visning {
     val jobber = status in listOf(ProsesseringStatus.JOBBER, ProsesseringStatus.FEILET)
+    val påVent = alleAvklaringsbehovInkludertFrivillige.erSattPåVent()
     val beslutterReadOnly = aktivtSteg != StegType.FATTE_VEDTAK
     val saksbehandlerReadOnly = !flyt.erStegFør(aktivtSteg, StegType.FATTE_VEDTAK)
     val visBeslutterKort =
         !beslutterReadOnly || (!saksbehandlerReadOnly && alleAvklaringsbehovInkludertFrivillige.harVærtSendtTilbakeFraBeslutterTidligere())
 
     return Visning(
-        saksbehandlerReadOnly = !jobber && saksbehandlerReadOnly,
-        beslutterReadOnly = !jobber && beslutterReadOnly,
-        visBeslutterKort = visBeslutterKort
+        saksbehandlerReadOnly = !jobber && !påVent && saksbehandlerReadOnly,
+        beslutterReadOnly = !jobber && !påVent && beslutterReadOnly,
+        visBeslutterKort = visBeslutterKort,
+        visVentekort = påVent
     )
 
 }

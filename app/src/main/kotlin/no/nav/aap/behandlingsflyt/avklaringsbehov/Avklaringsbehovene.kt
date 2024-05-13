@@ -168,7 +168,7 @@ class Avklaringsbehovene(
         )
     }
 
-    fun erSattPåVent(): Boolean {
+    override fun erSattPåVent(): Boolean {
         return alle().any { avklaringsbehov -> avklaringsbehov.erVentepunkt() && avklaringsbehov.erÅpent() }
     }
 
