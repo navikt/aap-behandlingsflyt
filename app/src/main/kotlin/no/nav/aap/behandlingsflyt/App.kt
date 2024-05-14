@@ -37,6 +37,7 @@ import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.dbflyway.Migrering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeRegisterGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.flate.beregningVurderingAPI
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.bistandsgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.medlemskap.medlemskapsgrunnlagApi
@@ -212,6 +213,14 @@ private fun Routing.actuator(prometheus: PrometheusMeterRegistry) {
 @Deprecated("Kun for test lokalt enn så lenge")
 fun NormalOpenAPIRoute.hendelsesApi(dataSource: DataSource) {
     route("/test") {
+        route("/yrkesskadeMock"){
+            post<Unit, String, OpprettYrkesskadeTestCase>{ _, dto ->
+                val ident = Ident(dto.ident)
+                val yrkesskadeDato = dto.yrkesskadeDato
+                YrkesskadeRegisterGateway.puttInnTestPerson(ident, yrkesskadeDato)
+                respond(HttpStatusCode.OK,"opprettet testcase med yrkesskade for ident $ident")
+            }
+        }
         route("/opprett") {
             post<Unit, OpprettTestcaseDTO, OpprettTestcaseDTO> { _, dto ->
 

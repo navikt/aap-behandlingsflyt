@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.papsign.ktor.openapigen.annotations.Response
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.pliktkort.Pliktkort
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
 import org.jetbrains.annotations.NotNull
 import java.time.LocalDate
 
@@ -13,6 +14,12 @@ data class OpprettTestcaseDTO(
     @NotNull @JsonProperty(value = "yrkesskade", defaultValue = "false") val yrkesskade: Boolean,
     @NotNull @JsonProperty(value = "student", defaultValue = "false") val student: Boolean
 )
+
+data class OpprettYrkesskadeTestCase(
+    @JsonProperty(value = "ident", required = true) val ident: String,
+    @JsonProperty(value = "yrkesskade", required = true) val yrkesskadeDato: LocalDate
+)
+
 
 data class OpprettTestPersonDto(
     @JsonProperty(value = "fødselsdato", required = true) val fødselsdato: LocalDate,
