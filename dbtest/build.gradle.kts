@@ -1,6 +1,6 @@
 dependencies {
     implementation("com.zaxxer:HikariCP:5.1.0")
-    implementation("org.flywaydb:flyway-database-postgresql:10.12.0")
+    implementation("org.flywaydb:flyway-database-postgresql:10.13.0")
     runtimeOnly("org.postgresql:postgresql:42.7.3")
 
     implementation("org.testcontainers:postgresql:1.19.8")
