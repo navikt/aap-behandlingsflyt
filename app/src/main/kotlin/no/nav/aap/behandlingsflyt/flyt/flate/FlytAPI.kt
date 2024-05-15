@@ -165,8 +165,8 @@ private fun utledVisning(
         !beslutterReadOnly || (!saksbehandlerReadOnly && alleAvklaringsbehovInkludertFrivillige.harVærtSendtTilbakeFraBeslutterTidligere())
 
     return Visning(
-        saksbehandlerReadOnly = !jobber && !påVent && saksbehandlerReadOnly,
-        beslutterReadOnly = !jobber && !påVent && beslutterReadOnly,
+        saksbehandlerReadOnly = (!jobber || påVent) && saksbehandlerReadOnly,
+        beslutterReadOnly = (!jobber || påVent) && beslutterReadOnly,
         visBeslutterKort = visBeslutterKort,
         visVentekort = påVent
     )
