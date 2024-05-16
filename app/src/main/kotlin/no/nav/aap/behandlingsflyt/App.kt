@@ -29,6 +29,7 @@ import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import no.nav.aap.behandlingsflyt.auth.AZURE
 import no.nav.aap.behandlingsflyt.auth.Bruker
 import no.nav.aap.behandlingsflyt.auth.authentication
+import no.nav.aap.behandlingsflyt.avklaringsbehov.BehandlingUnderProsesseringException
 import no.nav.aap.behandlingsflyt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.avklaringsbehov.OutdatedBehandlingException
 import no.nav.aap.behandlingsflyt.avklaringsbehov.flate.avklaringsbehovApi
@@ -126,6 +127,8 @@ internal fun Application.server(dbConfig: DbConfig) {
                 call.respondText(status = HttpStatusCode.NotFound, text = "")
             } else if (cause is OutdatedBehandlingException) {
                 call.respond(status = HttpStatusCode.BadRequest, message = ErrorRespons(cause.message))
+            } else if (cause is BehandlingUnderProsesseringException) {
+                call.respond(status = HttpStatusCode.Conflict, message = ErrorRespons(cause.message))
             } else {
                 LoggerFactory.getLogger(App::class.java)
                     .info("Ukjent feil ved kall til '{}'", call.request.local.uri, cause)

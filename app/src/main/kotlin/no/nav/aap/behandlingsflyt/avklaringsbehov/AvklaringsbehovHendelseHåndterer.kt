@@ -17,8 +17,8 @@ class AvklaringsbehovHendelseHåndterer(connection: DBConnection) {
 
         avklaringsbehovene.validateTilstand(
             behandling = behandling,
-            avklaringsbehov = hendelse.behov().definisjon(),
-            versjon = hendelse.behandlingVersjon)
+            avklaringsbehov = hendelse.behov().definisjon()
+        )
 
         avklaringsbehovOrkestrator.løsAvklaringsbehovOgFortsettProsessering(
             kontekst = behandling.flytKontekst(),

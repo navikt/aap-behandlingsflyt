@@ -47,7 +47,7 @@ class FlytOrkestrator(
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
-        avklaringsbehovene.validateTilstand(behandling = behandling, versjon = behandling.versjon)
+        avklaringsbehovene.validateTilstand(behandling = behandling)
 
         val behandlingFlyt = utledFlytFra(behandling)
         behandlingFlyt.forberedFlyt(behandling.aktivtSteg())
@@ -93,7 +93,7 @@ class FlytOrkestrator(
             return // Bail out
         }
 
-        avklaringsbehovene.validateTilstand(behandling = behandling, versjon = behandling.versjon)
+        avklaringsbehovene.validateTilstand(behandling = behandling)
 
         val behandlingFlyt = utledFlytFra(behandling)
 

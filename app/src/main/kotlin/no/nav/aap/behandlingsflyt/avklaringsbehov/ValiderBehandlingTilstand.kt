@@ -9,27 +9,9 @@ internal object ValiderBehandlingTilstand {
     fun validerTilstandBehandling(
         behandling: Behandling,
         avklaringsbehov: Definisjon?,
-        eksisterenedeAvklaringsbehov: List<Avklaringsbehov>,
-        versjon: Long? = null
-    ) {
-        validerTilstandBehandling(behandling, versjon)
-        validerTilstandBehandling(behandling, avklaringsbehov, eksisterenedeAvklaringsbehov)
-    }
-
-    fun validerTilstandBehandling(behandling: Behandling, versjon: Long? = null) {
-        if (Status.AVSLUTTET == behandling.status()) {
-            throw IllegalArgumentException("Forsøker manipulere på behandling som er avsluttet")
-        }
-        if (behandling.versjon != versjon) {
-            throw OutdatedBehandlingException("Behandlingen har blitt oppdatert. Versjonsnummer[$versjon] ulikt fra siste[${behandling.versjon}]")
-        }
-    }
-
-    private fun validerTilstandBehandling(
-        behandling: Behandling,
-        avklaringsbehov: Definisjon? = null,
         eksisterenedeAvklaringsbehov: List<Avklaringsbehov>
     ) {
+        validerStatus(behandling.status())
         if (avklaringsbehov != null) {
             if (!eksisterenedeAvklaringsbehov.map { a -> a.definisjon }
                     .contains(avklaringsbehov) && !avklaringsbehov.erFrivillig()) {
@@ -43,6 +25,22 @@ internal object ValiderBehandlingTilstand {
                     }"
                 )
             }
+        }
+    }
+
+    /**
+     * Valider om behandlingen er i en tilstand hvor det er OK å skrive til den
+     */
+    fun validerTilstandBehandling(behandling: Behandling, versjon: Long) {
+        validerStatus(behandling.status())
+        if (behandling.versjon != versjon) {
+            throw OutdatedBehandlingException("Behandlingen har blitt oppdatert. Versjonsnummer[$versjon] ulikt fra siste[${behandling.versjon}]")
+        }
+    }
+
+    private fun validerStatus(behandlingStatus: Status) {
+        if (Status.AVSLUTTET == behandlingStatus) {
+            throw IllegalArgumentException("Forsøker manipulere på behandling som er avsluttet")
         }
     }
 }

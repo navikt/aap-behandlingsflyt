@@ -28,7 +28,7 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
     fun taAvVentHvisPåVentOgFortsettProsessering(behandlingId: BehandlingId) {
         val behandling = behandlingRepository.hent(behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-        avklaringsbehovene.validateTilstand(behandling = behandling, versjon = behandling.versjon)
+        avklaringsbehovene.validateTilstand(behandling = behandling)
 
         val kontekst = behandling.flytKontekst()
         if (avklaringsbehovene.erSattPåVent()) {
@@ -117,8 +117,7 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
 
         avklaringsbehovene.validateTilstand(
             behandling = behandling,
-            avklaringsbehov = definisjoner,
-            versjon = versjon
+            avklaringsbehov = definisjoner
         )
 
         // løses det behov som fremtvinger tilbakehopp?
@@ -150,7 +149,7 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
         val behandling = behandlingRepository.hent(behandlingId)
 
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
-        avklaringsbehovene.validateTilstand(behandling = behandling, versjon = hendelse.behandlingVersjon)
+        avklaringsbehovene.validateTilstand(behandling = behandling)
 
         avklaringsbehovene.leggTil(
             definisjoner = listOf(Definisjon.MANUELT_SATT_PÅ_VENT),
