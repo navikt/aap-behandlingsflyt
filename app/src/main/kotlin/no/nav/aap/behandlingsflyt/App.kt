@@ -47,6 +47,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.m
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.flate.studentgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.sykdomsgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.sykepengerGrunnlagApi
+import no.nav.aap.behandlingsflyt.flyt.flate.DefinisjonDTO
 import no.nav.aap.behandlingsflyt.flyt.flate.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flate.flytApi
 import no.nav.aap.behandlingsflyt.flyt.flate.søknadApi
@@ -193,8 +194,14 @@ fun Application.module(dataSource: DataSource) {
 
 fun NormalOpenAPIRoute.configApi() {
     route("/config/definisjoner") {
-        get<Unit, List<Definisjon>> {
-            respond(Definisjon.entries.toList())
+        get<Unit, List<DefinisjonDTO>> {
+            respond(Definisjon.entries.map {
+                DefinisjonDTO(
+                    navn = it.name, type = it.kode,
+                    behovType = it.type,
+                    løsesISteg = it.løsesISteg
+                )
+            }.toList())
         }
     }
 }
