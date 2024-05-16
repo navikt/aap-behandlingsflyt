@@ -23,12 +23,14 @@ import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.micrometer.core.instrument.binder.logging.LogbackMetrics
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import no.nav.aap.behandlingsflyt.auth.AZURE
 import no.nav.aap.behandlingsflyt.auth.Bruker
 import no.nav.aap.behandlingsflyt.auth.authentication
 import no.nav.aap.behandlingsflyt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.avklaringsbehov.OutdatedBehandlingException
 import no.nav.aap.behandlingsflyt.avklaringsbehov.flate.avklaringsbehovApi
 import no.nav.aap.behandlingsflyt.avklaringsbehov.flate.fatteVedtakGrunnlagApi
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.utledSubtypes
@@ -93,7 +95,10 @@ internal fun Application.server(dbConfig: DbConfig) {
     DefaultJsonMapper.objectMapper()
         .registerSubtypes(utledSubtypes())
 
-    install(MicrometerMetrics) { registry = prometheus }
+    install(MicrometerMetrics) {
+        registry = prometheus
+        meterBinders += LogbackMetrics()
+    }
     install(OpenAPIGen) {
         // this servers OpenAPI definition on /openapi.json
         serveOpenApiJson = true
@@ -118,6 +123,8 @@ internal fun Application.server(dbConfig: DbConfig) {
         exception<Throwable> { call, cause ->
             if (cause is ElementNotFoundException) {
                 call.respondText(status = HttpStatusCode.NotFound, text = "")
+            } else if (cause is OutdatedBehandlingException) {
+                call.respond(status = HttpStatusCode.BadRequest, message = ErrorRespons(cause.message))
             } else {
                 LoggerFactory.getLogger(App::class.java)
                     .info("Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
@@ -213,12 +220,12 @@ private fun Routing.actuator(prometheus: PrometheusMeterRegistry) {
 @Deprecated("Kun for test lokalt enn så lenge")
 fun NormalOpenAPIRoute.hendelsesApi(dataSource: DataSource) {
     route("/test") {
-        route("/yrkesskadeMock"){
-            post<Unit, String, OpprettYrkesskadeTestCase>{ _, dto ->
+        route("/yrkesskadeMock") {
+            post<Unit, String, OpprettYrkesskadeTestCase> { _, dto ->
                 val ident = Ident(dto.ident)
                 val yrkesskadeDato = dto.yrkesskadeDato
                 YrkesskadeRegisterGateway.puttInnTestPerson(ident, yrkesskadeDato)
-                respond(HttpStatusCode.OK,"opprettet testcase med yrkesskade for ident $ident")
+                respond(HttpStatusCode.OK, "opprettet testcase med yrkesskade for ident $ident")
             }
         }
         route("/opprett") {
