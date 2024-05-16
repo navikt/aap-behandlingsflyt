@@ -9,12 +9,16 @@ import no.nav.aap.httpclient.tokenprovider.NoTokenTokenProvider
 import no.nav.aap.httpclient.tokenprovider.OidcToken
 import no.nav.aap.httpclient.tokenprovider.OidcTokenResponse
 import no.nav.aap.httpclient.tokenprovider.TokenProvider
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.net.URLEncoder
 import java.time.Duration
 import java.time.LocalDateTime
 import kotlin.text.Charsets.UTF_8
 
 object ClientCredentialsTokenProvider : TokenProvider {
+
+    private val log: Logger = LoggerFactory.getLogger(ClientCredentialsTokenProvider::class.java)
 
     private val client = RestClient(
         config = ClientConfig(),
@@ -29,7 +33,9 @@ object ClientCredentialsTokenProvider : TokenProvider {
             throw IllegalArgumentException("Kan ikke be om token uten å be om hvilket scope det skal gjelde for")
         }
         if (cache.contains(scope) && cache.getValue(scope).isNotExpired()) {
-            return cache.getValue(scope)
+            val oidcToken = cache.getValue(scope)
+            log.info("Fant token for $scope som ikke har utløpt. Utløper ${oidcToken.expires()}")
+            return oidcToken
         }
         val postRequest = PostRequest(
             body = formPost(scope),
@@ -45,7 +51,7 @@ object ClientCredentialsTokenProvider : TokenProvider {
         }
 
         val oidcToken = OidcToken(response.access_token)
-
+        log.info("Hentet nytt token for $scope. Utløper ${oidcToken.expires()}")
 
         return oidcToken
     }
