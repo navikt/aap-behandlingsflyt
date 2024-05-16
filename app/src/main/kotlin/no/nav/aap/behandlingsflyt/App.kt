@@ -123,16 +123,24 @@ internal fun Application.server(dbConfig: DbConfig) {
     }
     install(StatusPages) {
         exception<Throwable> { call, cause ->
-            if (cause is ElementNotFoundException) {
-                call.respondText(status = HttpStatusCode.NotFound, text = "")
-            } else if (cause is OutdatedBehandlingException) {
-                call.respond(status = HttpStatusCode.BadRequest, message = ErrorRespons(cause.message))
-            } else if (cause is BehandlingUnderProsesseringException) {
-                call.respond(status = HttpStatusCode.Conflict, message = ErrorRespons(cause.message))
-            } else {
-                LoggerFactory.getLogger(App::class.java)
-                    .info("Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
-                call.respond(status = HttpStatusCode.InternalServerError, message = ErrorRespons(cause.message))
+            when (cause) {
+                is ElementNotFoundException -> {
+                    call.respondText(status = HttpStatusCode.NotFound, text = "")
+                }
+
+                is OutdatedBehandlingException -> {
+                    call.respond(status = HttpStatusCode.Conflict, message = ErrorRespons(cause.message))
+                }
+
+                is BehandlingUnderProsesseringException -> {
+                    call.respond(status = HttpStatusCode.Conflict, message = ErrorRespons(cause.message))
+                }
+
+                else -> {
+                    LoggerFactory.getLogger(App::class.java)
+                        .info("Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
+                    call.respond(status = HttpStatusCode.InternalServerError, message = ErrorRespons(cause.message))
+                }
             }
         }
     }
