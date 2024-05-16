@@ -28,16 +28,17 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
     fun taAvVentHvisPåVentOgFortsettProsessering(behandlingId: BehandlingId) {
         val behandling = behandlingRepository.hent(behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-        avklaringsbehovene.validateTilstand(behandling = behandling)
+        avklaringsbehovene.validateTilstand(behandling = behandling, versjon = behandling.versjon)
 
         val kontekst = behandling.flytKontekst()
         if (avklaringsbehovene.erSattPåVent()) {
-            this.løsAvklaringsbehov(
+            løsAvklaringsbehov(
                 kontekst = kontekst,
                 avklaringsbehovene = avklaringsbehovene,
                 avklaringsbehov = SattPåVentLøsning(),
                 bruker = SYSTEMBRUKER,
-                behandling = behandling
+                behandling = behandling,
+                versjon = behandling.versjon
             )
         }
         fortsettProsessering(kontekst)
@@ -47,7 +48,8 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
         kontekst: FlytKontekst,
         avklaringsbehov: AvklaringsbehovLøsning,
         ingenEndringIGruppe: Boolean,
-        bruker: Bruker
+        bruker: Bruker,
+        behanldingVersjon: Long
     ) {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
@@ -56,7 +58,8 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
             avklaringsbehovene,
             avklaringsbehov,
             bruker,
-            behandling
+            behandling,
+            behanldingVersjon
         )
         markerAvklaringsbehovISammeGruppeForLøst(
             kontekst,
@@ -106,7 +109,8 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
         avklaringsbehovene: Avklaringsbehovene,
         avklaringsbehov: AvklaringsbehovLøsning,
         bruker: Bruker,
-        behandling: Behandling
+        behandling: Behandling,
+        versjon: Long
     ) {
         val definisjoner = avklaringsbehov.definisjon()
         log.info("Forsøker løse avklaringsbehov[${definisjoner}] på behandling[${behandling.referanse}]")
@@ -114,6 +118,7 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
         avklaringsbehovene.validateTilstand(
             behandling = behandling,
             avklaringsbehov = definisjoner,
+            versjon = versjon
         )
 
         // løses det behov som fremtvinger tilbakehopp?
@@ -145,7 +150,7 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
         val behandling = behandlingRepository.hent(behandlingId)
 
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
-        avklaringsbehovene.validateTilstand(behandling = behandling)
+        avklaringsbehovene.validateTilstand(behandling = behandling, versjon = hendelse.behandlingVersjon)
 
         avklaringsbehovene.leggTil(
             definisjoner = listOf(Definisjon.MANUELT_SATT_PÅ_VENT),

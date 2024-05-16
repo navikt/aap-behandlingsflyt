@@ -127,6 +127,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
                                 hendelse = BehandlingSattPåVent(
                                     frist = body.frist,
                                     begrunnelse = body.begrunnelse,
+                                    behandlingVersjon = body.behandlingVersjon,
                                     bruker = pipeline.context.bruker()
                                 )
                             )

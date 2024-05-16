@@ -165,6 +165,7 @@ class FlytOrkestratorTest {
             )
         }
         ventPåSvar()
+        behandling = hentBehandling(sak.id)
 
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
@@ -182,6 +183,7 @@ class FlytOrkestratorTest {
             )
         }
         ventPåSvar()
+        behandling = hentBehandling(sak.id)
 
         // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
         dataSource.transaction { dbConnection ->
@@ -201,6 +203,7 @@ class FlytOrkestratorTest {
             )
         }
         ventPåSvar()
+        behandling = hentBehandling(sak.id)
 
         dataSource.transaction { connection ->
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
@@ -226,8 +229,8 @@ class FlytOrkestratorTest {
                 )
             )
         }
-
         ventPåSvar()
+        behandling = hentBehandling(sak.id)
 
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
@@ -253,6 +256,7 @@ class FlytOrkestratorTest {
             )
         }
         ventPåSvar()
+        behandling = hentBehandling(sak.id)
 
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
@@ -270,6 +274,7 @@ class FlytOrkestratorTest {
             )
         }
         ventPåSvar()
+        behandling = hentBehandling(sak.id)
         // Saken er tilbake til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
         dataSource.transaction { dbConnection ->
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, dbConnection)
@@ -390,6 +395,7 @@ class FlytOrkestratorTest {
             )
         }
         ventPåSvar()
+        behandling = hentBehandling(sak.id)
 
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
@@ -407,6 +413,7 @@ class FlytOrkestratorTest {
             )
         }
         ventPåSvar()
+        behandling = hentBehandling(sak.id)
 
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
@@ -425,6 +432,7 @@ class FlytOrkestratorTest {
             )
         }
         ventPåSvar()
+        behandling = hentBehandling(sak.id)
 
         // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
         dataSource.transaction {
@@ -545,6 +553,7 @@ class FlytOrkestratorTest {
             )
         }
         ventPåSvar()
+        behandling = hentBehandling(sak.id)
 
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
@@ -570,6 +579,7 @@ class FlytOrkestratorTest {
             )
         }
         ventPåSvar()
+        behandling = hentBehandling(sak.id)
 
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
@@ -587,6 +597,7 @@ class FlytOrkestratorTest {
             )
         }
         ventPåSvar()
+        behandling = hentBehandling(sak.id)
 
         // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
         dataSource.transaction { connection ->
@@ -669,6 +680,7 @@ class FlytOrkestratorTest {
             )
         }
         ventPåSvar()
+        behandling = hentBehandling(sak.id)
 
         // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
         dataSource.transaction { connection ->
@@ -838,7 +850,7 @@ class FlytOrkestratorTest {
 
         hendelsesMottak.håndtere(
             behandling.id,
-            BehandlingSattPåVent(frist = null, begrunnelse = "Avventer dokumentasjon", SYSTEMBRUKER)
+            BehandlingSattPåVent(frist = null, begrunnelse = "Avventer dokumentasjon", bruker = SYSTEMBRUKER, behandlingVersjon = behandling.versjon)
         )
 
         behandling = hentBehandling(sak.id)

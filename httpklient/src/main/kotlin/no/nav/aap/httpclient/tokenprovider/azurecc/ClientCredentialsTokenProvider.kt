@@ -33,10 +33,10 @@ object ClientCredentialsTokenProvider : TokenProvider {
             throw IllegalArgumentException("Kan ikke be om token uten å be om hvilket scope det skal gjelde for")
         }
 
-        if (cache.contains(scope) && cache.getValue(scope).isNotExpired()) {
-            val oidcToken = cache.getValue(scope)
-            log.info("Fant token for $scope som ikke har utløpt. Utløper ${oidcToken.expires()}")
-            return oidcToken
+        val cachedToken = cache[scope]
+        if (cachedToken != null && cachedToken.isNotExpired()) {
+            log.info("Fant token for $scope som ikke har utløpt. Utløper ${cachedToken.expires()}")
+            return cachedToken
         }
         val postRequest = PostRequest(
             body = formPost(scope),

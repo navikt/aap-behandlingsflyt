@@ -12,26 +12,24 @@ internal object ValiderBehandlingTilstand {
         eksisterenedeAvklaringsbehov: List<Avklaringsbehov>,
         versjon: Long? = null
     ) {
+        validerTilstandBehandling(behandling, versjon)
         validerTilstandBehandling(behandling, avklaringsbehov, eksisterenedeAvklaringsbehov)
-
-        //if (behandling.versjon != versjon) {
-        //    throw OutdatedBehandlingException("Behandlingen har blitt oppdatert. Versjonsnummer ulikt fra siste")
-        //}
     }
 
-    fun validerTilstandBehandling(behandling: Behandling) {
+    fun validerTilstandBehandling(behandling: Behandling, versjon: Long? = null) {
         if (Status.AVSLUTTET == behandling.status()) {
             throw IllegalArgumentException("Forsøker manipulere på behandling som er avsluttet")
         }
+        if (behandling.versjon != versjon) {
+            throw OutdatedBehandlingException("Behandlingen har blitt oppdatert. Versjonsnummer[$versjon] ulikt fra siste[${behandling.versjon}]")
+        }
     }
 
-    fun validerTilstandBehandling(
+    private fun validerTilstandBehandling(
         behandling: Behandling,
         avklaringsbehov: Definisjon? = null,
         eksisterenedeAvklaringsbehov: List<Avklaringsbehov>
     ) {
-        validerTilstandBehandling(behandling)
-
         if (avklaringsbehov != null) {
             if (!eksisterenedeAvklaringsbehov.map { a -> a.definisjon }
                     .contains(avklaringsbehov) && !avklaringsbehov.erFrivillig()) {
