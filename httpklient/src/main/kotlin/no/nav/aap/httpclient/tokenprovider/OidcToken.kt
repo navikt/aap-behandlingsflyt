@@ -22,7 +22,6 @@ class OidcToken(accessToken: String) {
 
     fun isNotExpired(): Boolean {
         val now = LocalDateTime.now().plusSeconds(30)
-        log.info("$now < ${expires()}")
         return now.isBefore(expires())
     }
 }

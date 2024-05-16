@@ -32,6 +32,7 @@ object ClientCredentialsTokenProvider : TokenProvider {
         if (scope == null) {
             throw IllegalArgumentException("Kan ikke be om token uten å be om hvilket scope det skal gjelde for")
         }
+
         if (cache.contains(scope) && cache.getValue(scope).isNotExpired()) {
             val oidcToken = cache.getValue(scope)
             log.info("Fant token for $scope som ikke har utløpt. Utløper ${oidcToken.expires()}")
@@ -52,6 +53,7 @@ object ClientCredentialsTokenProvider : TokenProvider {
 
         val oidcToken = OidcToken(response.access_token)
         log.info("Hentet nytt token for $scope. Utløper ${oidcToken.expires()}")
+        cache[scope] = oidcToken
 
         return oidcToken
     }
