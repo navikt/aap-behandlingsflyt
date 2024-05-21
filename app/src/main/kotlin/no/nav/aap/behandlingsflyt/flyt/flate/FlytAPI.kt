@@ -142,7 +142,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
             }
         }
         route("/{referanse}/vente-informasjon") {
-            post<BehandlingReferanse, Venteinformasjon, Any> { request, _ ->
+            get<BehandlingReferanse, Venteinformasjon> { request ->
                 val dto = dataSource.transaction { connection ->
                     val behandling = behandling(connection, request)
                     val avklaringsbehovene = avklaringsbehov(connection, behandling.id)
@@ -156,7 +156,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
                 }
                 if (dto == null) {
                     pipeline.context.respond(HttpStatusCode.NoContent)
-                    return@post
+                    return@get
                 }
                 respond(dto)
             }
