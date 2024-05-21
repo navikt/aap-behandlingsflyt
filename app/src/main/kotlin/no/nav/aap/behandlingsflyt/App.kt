@@ -29,15 +29,14 @@ import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import no.nav.aap.behandlingsflyt.auth.AZURE
 import no.nav.aap.behandlingsflyt.auth.Bruker
 import no.nav.aap.behandlingsflyt.auth.authentication
-import no.nav.aap.behandlingsflyt.avklaringsbehov.BehandlingUnderProsesseringException
 import no.nav.aap.behandlingsflyt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.avklaringsbehov.OutdatedBehandlingException
 import no.nav.aap.behandlingsflyt.avklaringsbehov.flate.avklaringsbehovApi
 import no.nav.aap.behandlingsflyt.avklaringsbehov.flate.fatteVedtakGrunnlagApi
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.utledSubtypes
 import no.nav.aap.behandlingsflyt.beregning.flate.beregningsGrunnlagApi
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.dbflyway.Migrering
+import no.nav.aap.behandlingsflyt.exception.FlytOperasjonException
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeRegisterGateway
@@ -125,15 +124,11 @@ internal fun Application.server(dbConfig: DbConfig) {
         exception<Throwable> { call, cause ->
             when (cause) {
                 is ElementNotFoundException -> {
-                    call.respondText(status = HttpStatusCode.NotFound, text = "")
+                    call.respondText(status = HttpStatusCode.NotFound, text = cause.message ?: "")
                 }
 
-                is OutdatedBehandlingException -> {
-                    call.respond(status = HttpStatusCode.Conflict, message = ErrorRespons(cause.message))
-                }
-
-                is BehandlingUnderProsesseringException -> {
-                    call.respond(status = HttpStatusCode.Conflict, message = ErrorRespons(cause.message))
+                is FlytOperasjonException -> {
+                    call.respond(status = cause.status(), message = cause.body())
                 }
 
                 else -> {
