@@ -14,7 +14,7 @@ internal class DBTransaction(connection: Connection) {
             dbConnection.commit()
             return result
         } catch (e: Throwable) {
-            log.warn("Kjører rollback etter feil", e)
+            log.warn("Kjører rollback etter feil. '{}'", e.message, e)
             dbConnection.rollback()
             throw e
         } finally {
