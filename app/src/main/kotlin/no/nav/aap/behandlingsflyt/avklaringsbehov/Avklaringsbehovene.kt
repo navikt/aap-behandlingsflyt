@@ -174,4 +174,8 @@ class Avklaringsbehovene(
     fun hentVentepunkterMedUtløptFrist(): List<Avklaringsbehov> {
         return alle().filter { it.erVentepunkt() && it.erÅpent() && it.fristUtløpt() }
     }
+
+    fun hentVentepunkter(): List<Avklaringsbehov> {
+        return alle().filter { it.erVentepunkt() && it.erÅpent() }
+    }
 }
