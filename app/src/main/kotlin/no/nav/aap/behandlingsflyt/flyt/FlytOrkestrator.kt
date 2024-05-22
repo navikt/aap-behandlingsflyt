@@ -93,6 +93,11 @@ class FlytOrkestrator(
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
+        avklaringsbehovene.validateTilstand(behandling = behandling)
+
+        // TODO: Vurdere om det hendelser som trigger prosesserBehandling
+        //  (f.eks ankommet dokument) skal ta behandling av vent
+
         // fjerner av ventepunkt med utløpt frist
         if (avklaringsbehovene.erSattPåVent()) {
             val behov = avklaringsbehovene.hentVentepunkterMedUtløptFrist()
@@ -103,8 +108,6 @@ class FlytOrkestrator(
         if (avklaringsbehovene.erSattPåVent()) {
             return // Bail out
         }
-
-        avklaringsbehovene.validateTilstand(behandling = behandling)
 
         val behandlingFlyt = utledFlytFra(behandling)
 
@@ -184,11 +187,6 @@ class FlytOrkestrator(
         if (skulleVærtISteg != null) {
             flyt.validerPlassering(skulleVærtISteg)
         }
-    }
-
-    internal fun ferdigstiltLøsingAvBehov(behandling: Behandling, kontekst: FlytKontekst) {
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        loggStopp(behandling, avklaringsbehovene, true)
     }
 
     private fun tilbakefør(
