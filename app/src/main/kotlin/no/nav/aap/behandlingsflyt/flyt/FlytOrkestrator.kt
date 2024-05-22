@@ -49,6 +49,17 @@ class FlytOrkestrator(
 
         avklaringsbehovene.validateTilstand(behandling = behandling)
 
+        // fjerner av ventepunkt med utløpt frist
+        if (avklaringsbehovene.erSattPåVent()) {
+            val behov = avklaringsbehovene.hentVentepunkterMedUtløptFrist()
+            behov.forEach { avklaringsbehovene.løsAvklaringsbehov(it.definisjon, "", SYSTEMBRUKER.ident) }
+        }
+
+        // Hvis fortsatt på vent
+        if (avklaringsbehovene.erSattPåVent()) {
+            return // Bail out
+        }
+
         val behandlingFlyt = utledFlytFra(behandling)
         behandlingFlyt.forberedFlyt(behandling.aktivtSteg())
 
