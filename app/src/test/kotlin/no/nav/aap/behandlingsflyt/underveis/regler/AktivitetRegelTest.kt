@@ -38,6 +38,23 @@ class AktivitetRegelTest {
         assertThat(vurdertTidslinje.segmenter()).allMatch { it.verdi.meldeplikUtfall() == Utfall.OPPFYLT }
     }
 
+    @Test
+    fun `Skal starte med full utbetalingsplan`() {
+        val fom = LocalDate.now()
+        val rettighetsperiode = Periode(fom, fom.plusYears(1))
+        val input = UnderveisInput(
+            rettighetsperiode = rettighetsperiode,
+            relevanteVilkår = listOf(),
+            opptrappingPerioder = listOf(),
+            pliktkort = listOf(),
+            innsendingsTidspunkt = mapOf(),
+            kvote = kvote
+        )
+
+        val vurdertTidslinje = regel.vurder(input, Tidslinje())
+
+        assertThat(vurdertTidslinje.segmenter()).allMatch { it.verdi.meldeplikUtfall() == Utfall.OPPFYLT }
+    }
 
     @Test
     fun `Meldeplikt skal være stanset etter at man ikke har meldt seg og fristen utløpt`() {
