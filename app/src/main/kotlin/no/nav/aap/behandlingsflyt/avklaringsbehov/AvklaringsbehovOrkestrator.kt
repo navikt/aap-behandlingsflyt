@@ -11,8 +11,8 @@ import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingOppgaveUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
+import no.nav.aap.motor.FlytOppgaveRepository
 import no.nav.aap.motor.OppgaveInput
-import no.nav.aap.motor.OppgaveRepository
 import no.nav.aap.verdityper.flyt.FlytKontekst
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import org.slf4j.LoggerFactory
@@ -21,7 +21,7 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
 
     private val avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection)
     private val behandlingRepository = BehandlingRepositoryImpl(connection)
-    private val oppgaveRepository = OppgaveRepository(connection)
+    private val oppgaveRepository = FlytOppgaveRepository(connection)
 
     private val log = LoggerFactory.getLogger(AvklaringsbehovOrkestrator::class.java)
 

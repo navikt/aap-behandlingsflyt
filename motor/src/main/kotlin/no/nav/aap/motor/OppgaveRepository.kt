@@ -7,7 +7,7 @@ import no.nav.aap.verdityper.sakogbehandling.SakId
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
-class OppgaveRepository(private val connection: DBConnection) {
+internal class OppgaveRepository(private val connection: DBConnection) {
     private val log = LoggerFactory.getLogger(OppgaveRepository::class.java)
 
     fun leggTil(oppgaveInput: OppgaveInput) {
@@ -157,38 +157,6 @@ class OppgaveRepository(private val connection: DBConnection) {
                 setLong(1, oppgaveInput.id)
                 setEnumName(2, OppgaveStatus.FEILET)
                 setString(3, exception.message.orEmpty())
-            }
-        }
-    }
-
-    fun harOppgaver(): Boolean {
-        val antall =
-            connection.queryFirst(
-                "SELECT count(1) as antall " +
-                        "FROM OPPGAVE " +
-                        "WHERE status not in ('${OppgaveStatus.FERDIG.name}', '${OppgaveStatus.FEILET.name}')"
-            ) {
-                setRowMapper {
-                    it.getLong("antall") > 0
-                }
-            }
-        return antall
-    }
-
-    fun hentOppgaveForBehandling(id: BehandlingId): List<OppgaveInput> {
-        val query = """
-            SELECT *, (SELECT count(1) FROM oppgave_historikk h WHERE h.oppgave_id = op.id AND h.status = '${OppgaveStatus.FEILET.name}') as antall_feil
-                 FROM OPPGAVE op
-                 WHERE op.status IN ('${OppgaveStatus.KLAR.name}','${OppgaveStatus.FEILET.name}')
-                   AND op.behandling_id = ?
-        """.trimIndent()
-
-        return connection.queryList(query) {
-            setParams {
-                setLong(1, id.toLong())
-            }
-            setRowMapper { row ->
-                mapOppgave(row)
             }
         }
     }

@@ -48,8 +48,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
+import no.nav.aap.motor.FlytOppgaveRepository
 import no.nav.aap.motor.Motor
-import no.nav.aap.motor.OppgaveRepository
 import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -769,7 +769,7 @@ class FlytOrkestratorTest {
     private fun ventPåSvar() {
         dataSource.transaction {
             val maxTid = LocalDateTime.now().plusMinutes(1)
-            while ((OppgaveRepository(it).harOppgaver()) && maxTid.isAfter(LocalDateTime.now())) {
+            while ((FlytOppgaveRepository(it).harOppgaver()) && maxTid.isAfter(LocalDateTime.now())) {
                 Thread.sleep(50L)
             }
         }
@@ -850,7 +850,12 @@ class FlytOrkestratorTest {
 
         hendelsesMottak.håndtere(
             behandling.id,
-            BehandlingSattPåVent(frist = null, begrunnelse = "Avventer dokumentasjon", bruker = SYSTEMBRUKER, behandlingVersjon = behandling.versjon)
+            BehandlingSattPåVent(
+                frist = null,
+                begrunnelse = "Avventer dokumentasjon",
+                bruker = SYSTEMBRUKER,
+                behandlingVersjon = behandling.versjon
+            )
         )
 
         behandling = hentBehandling(sak.id)

@@ -3,10 +3,10 @@ package no.nav.aap.behandlingsflyt.avklaringsbehov
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
-import no.nav.aap.motor.OppgaveRepository
+import no.nav.aap.motor.FlytOppgaveRepository
 
 class BehandlingTilstandValidator(connection: DBConnection) {
-    private val oppgaveRepository = OppgaveRepository(connection)
+    private val oppgaveRepository = FlytOppgaveRepository(connection)
     private val behandlingReferanseService = BehandlingReferanseService(connection)
 
     fun validerTilstand(behandlingReferanse: BehandlingReferanse, behandlingVersjon: Long) {

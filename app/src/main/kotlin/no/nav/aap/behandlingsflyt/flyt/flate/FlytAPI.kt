@@ -27,8 +27,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
+import no.nav.aap.motor.FlytOppgaveRepository
 import no.nav.aap.motor.OppgaveInput
-import no.nav.aap.motor.OppgaveRepository
 import no.nav.aap.motor.OppgaveStatus
 import no.nav.aap.verdityper.flyt.StegGruppe
 import no.nav.aap.verdityper.flyt.StegType
@@ -41,7 +41,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
             get<BehandlingReferanse, BehandlingFlytOgTilstandDto> { req ->
                 val dto = dataSource.transaction(readOnly = true) { connection ->
                     val behandling = behandling(connection, req)
-                    val oppgaveRepository = OppgaveRepository(connection)
+                    val oppgaveRepository = FlytOppgaveRepository(connection)
                     val flyt = utledType(behandling.typeBehandling()).flyt()
 
                     val stegGrupper: Map<StegGruppe, List<StegType>> =
@@ -143,7 +143,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
         }
         route("/{referanse}/vente-informasjon") {
             get<BehandlingReferanse, Venteinformasjon> { request ->
-                val dto = dataSource.transaction { connection ->
+                val dto = dataSource.transaction(readOnly = true) { connection ->
                     val behandling = behandling(connection, request)
                     val avklaringsbehovene = avklaringsbehov(connection, behandling.id)
 

@@ -4,6 +4,8 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import io.ktor.http.*
+import io.ktor.server.response.*
 import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.avklaringsbehov.FrivilligeAvklaringsbehov
@@ -12,9 +14,13 @@ import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.flyt.utledType
+import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingOppgaveUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
+import no.nav.aap.motor.FlytOppgaveRepository
+import no.nav.aap.motor.OppgaveInput
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import javax.sql.DataSource
 
@@ -22,7 +28,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
     route("/api/behandling") {
         route("/{referanse}") {
             get<BehandlingReferanse, DetaljertBehandlingDTO> { req ->
-                val dto = dataSource.transaction { connection ->
+                val dto = dataSource.transaction(readOnly = true) { connection ->
                     val behandling = behandling(connection, req)
                     val flyt = utledType(behandling.typeBehandling()).flyt()
                     DetaljertBehandlingDTO(
@@ -72,6 +78,27 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
                     )
                 }
                 respond(dto)
+            }
+        }
+        route("/{referanse}/forbered") {
+            get<BehandlingReferanse, DetaljertBehandlingDTO> { req ->
+                dataSource.transaction { connection ->
+                    val taSkriveLåsRepository = TaSkriveLåsRepository(connection)
+                    val lås = taSkriveLåsRepository.lås(req.ref())
+                    val behandling = behandling(connection, req)
+                    val flytOppgaveRepository = FlytOppgaveRepository(connection)
+                    if (flytOppgaveRepository.hentOppgaveForBehandling(behandling.id).isEmpty()) {
+                        flytOppgaveRepository.leggTil(
+                            OppgaveInput(ProsesserBehandlingOppgaveUtfører).forBehandling(
+                                behandling.sakId,
+                                behandling.id
+                            )
+                        )
+                    }
+                    taSkriveLåsRepository.verifiserSkrivelås(lås)
+                }
+                pipeline.context.respond(HttpStatusCode.Accepted)
+                return@get
             }
         }
     }
