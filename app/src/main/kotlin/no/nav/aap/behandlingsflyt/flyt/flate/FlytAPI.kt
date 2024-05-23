@@ -147,8 +147,9 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
                     val behandling = behandling(connection, request)
                     val avklaringsbehovene = avklaringsbehov(connection, behandling.id)
 
+                    val ventepunkter = avklaringsbehovene.hentVentepunkter()
                     if (avklaringsbehovene.erSattPåVent()) {
-                        val avklaringsbehov = avklaringsbehovene.hentVentepunkter().first()
+                        val avklaringsbehov = ventepunkter.first()
                         Venteinformasjon(avklaringsbehov.frist(), avklaringsbehov.begrunnelse())
                     } else {
                         null
