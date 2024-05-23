@@ -115,7 +115,7 @@ class Avklaringsbehov(
     }
 
     fun frist(): LocalDate {
-        return requireNotNull(historikk.last { it.status == Status.OPPRETTET }.frist)
+        return requireNotNull(historikk.last().frist)
     }
 
     fun fristUtløpt(): Boolean {
