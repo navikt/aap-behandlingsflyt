@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlag
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.steg.Transisjon
@@ -37,7 +37,7 @@ private val log = LoggerFactory.getLogger(FlytOrkestrator::class.java)
 class FlytOrkestrator(
     private val connection: DBConnection
 ) {
-    private val faktagrunnlag = Faktagrunnlag(connection)
+    private val informasjonskravGrunnlag = InformasjonskravGrunnlag(connection)
     private val sakRepository = SakRepositoryImpl(connection)
     private val avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection)
     private val behandlingRepository = BehandlingRepositoryImpl(connection)
@@ -68,7 +68,7 @@ class FlytOrkestrator(
         }
 
         val oppdaterFaktagrunnlagForKravliste =
-            faktagrunnlag.oppdaterFaktagrunnlagForKravliste(
+            informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
                 kravliste = behandlingFlyt.faktagrunnlagFremTilOgMedGjeldendeSteg(),
                 kontekst = kontekst
             )
@@ -116,7 +116,7 @@ class FlytOrkestrator(
         while (true) {
             connection.markerSavepoint()
 
-            faktagrunnlag.oppdaterFaktagrunnlagForKravliste(
+            informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
                 behandlingFlyt.faktagrunnlagForGjeldendeSteg(),
                 kontekst
             )

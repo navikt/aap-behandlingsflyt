@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlagkonstruktør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.PdlBarnGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.verdityper.flyt.FlytKontekst
@@ -12,7 +12,7 @@ class BarnService private constructor(
     private val sakService: SakService,
     private val barnRepository: BarnRepository,
     private val barnGateway: BarnGateway
-) : Grunnlag {
+) : Informasjonskrav {
 
     override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekst): Boolean {
         val behandlingId = kontekst.behandlingId
@@ -37,7 +37,7 @@ class BarnService private constructor(
         return true
     }
 
-    companion object : Grunnlagkonstruktør {
+    companion object : Informasjonskravkonstruktør {
         override fun konstruer(connection: DBConnection): BarnService {
             return BarnService(
                 SakService(connection),

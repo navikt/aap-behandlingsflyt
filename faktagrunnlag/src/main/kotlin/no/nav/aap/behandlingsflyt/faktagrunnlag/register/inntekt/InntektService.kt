@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlagkonstruktør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Input
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektGateway
@@ -19,7 +19,7 @@ class InntektService private constructor(
     private val sykdomRepository: SykdomRepository,
     private val beregningVurderingRepository: BeregningVurderingRepository,
     private val inntektRegisterGateway: InntektRegisterGateway
-) : Grunnlag {
+) : Informasjonskrav {
 
     override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekst): Boolean {
         val behandlingId = kontekst.behandlingId
@@ -54,7 +54,7 @@ class InntektService private constructor(
         return inntektGrunnlagRepository.hentHvisEksisterer(behandlingId)
     }
 
-    companion object : Grunnlagkonstruktør {
+    companion object : Informasjonskravkonstruktør {
         override fun konstruer(connection: DBConnection): InntektService {
             return InntektService(
                 SakService(connection),

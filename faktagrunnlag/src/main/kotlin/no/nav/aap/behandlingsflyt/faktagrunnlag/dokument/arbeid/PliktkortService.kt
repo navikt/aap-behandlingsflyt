@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlagkonstruktør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.verdityper.flyt.FlytKontekst
@@ -10,9 +10,9 @@ import no.nav.aap.verdityper.flyt.FlytKontekst
 class PliktkortService private constructor(
     private val mottaDokumentService: MottaDokumentService,
     private val pliktkortRepository: PliktkortRepository
-) : Grunnlag {
+) : Informasjonskrav {
 
-    companion object : Grunnlagkonstruktør {
+    companion object : Informasjonskravkonstruktør {
         override fun konstruer(connection: DBConnection): PliktkortService {
             return PliktkortService(
                 MottaDokumentService(

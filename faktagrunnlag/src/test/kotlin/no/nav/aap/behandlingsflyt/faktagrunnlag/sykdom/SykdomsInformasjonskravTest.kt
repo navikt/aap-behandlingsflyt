@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.Year
 
-class SykdomsGrunnlagTest {
+class SykdomsInformasjonskravTest {
 
     @Test
     fun `er konsistent hvis ikke yrkesskade og 50 prosent`() {

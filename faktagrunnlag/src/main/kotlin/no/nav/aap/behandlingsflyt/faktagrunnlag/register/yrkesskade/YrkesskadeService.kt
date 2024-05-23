@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlagkonstruktør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeRegisterGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -14,7 +14,7 @@ class YrkesskadeService private constructor(
     private val yrkesskadeRepository: YrkesskadeRepository,
     private val personopplysningRepository: PersonopplysningRepository,
     private val yrkesskadeRegisterGateway: YrkesskadeRegisterGateway
-) : Grunnlag {
+) : Informasjonskrav {
 
     override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekst): Boolean {
         val sak = sakService.hent(kontekst.sakId)
@@ -41,7 +41,7 @@ class YrkesskadeService private constructor(
         return yrkesskadeRepository.hentHvisEksisterer(behandlingId)
     }
 
-    companion object : Grunnlagkonstruktør {
+    companion object : Informasjonskravkonstruktør {
         override fun konstruer(connection: DBConnection): YrkesskadeService {
             return YrkesskadeService(
                 SakService(connection),

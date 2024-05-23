@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlagkonstruktør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PdlPersonopplysningGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.verdityper.flyt.FlytKontekst
@@ -11,7 +11,7 @@ class PersonopplysningService private constructor(
     private val sakService: SakService,
     private val personopplysningRepository: PersonopplysningRepository,
     private val personopplysningGateway: PersonopplysningGateway,
-) : Grunnlag {
+) : Informasjonskrav {
 
     override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekst): Boolean {
         val sak = sakService.hent(kontekst.sakId)
@@ -25,7 +25,7 @@ class PersonopplysningService private constructor(
         return true
     }
 
-    companion object : Grunnlagkonstruktør {
+    companion object : Informasjonskravkonstruktør {
         override fun konstruer(connection: DBConnection): PersonopplysningService {
             return PersonopplysningService(
                 SakService(connection),

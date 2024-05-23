@@ -23,7 +23,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class FaktagrunnlagTest {
+class InformasjonskravGrunnlagTest {
 
     companion object {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
@@ -45,7 +45,7 @@ class FaktagrunnlagTest {
     fun `Yrkesskadedata er oppdatert`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val (ident, kontekst) = klargjør(connection)
-            val faktagrunnlag = Faktagrunnlag(connection)
+            val informasjonskravGrunnlag = InformasjonskravGrunnlag(connection)
 
             fakes.leggTil(TestPerson(
                 identer = setOf(ident),
@@ -53,13 +53,13 @@ class FaktagrunnlagTest {
                 yrkesskade = listOf(TestYrkesskade())
             ))
 
-            val initiell = faktagrunnlag.oppdaterFaktagrunnlagForKravliste(listOf(YrkesskadeService), kontekst)
+            val initiell = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(listOf(YrkesskadeService), kontekst)
 
             assertThat(initiell)
                 .hasSize(1)
                 .allMatch { it === YrkesskadeService }
 
-            val erOppdatert = faktagrunnlag.oppdaterFaktagrunnlagForKravliste(listOf(YrkesskadeService), kontekst)
+            val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(listOf(YrkesskadeService), kontekst)
 
             assertThat(erOppdatert).isEmpty()
         }
@@ -69,7 +69,7 @@ class FaktagrunnlagTest {
     fun `Yrkesskadedata er ikke oppdatert`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val (ident, kontekst) = klargjør(connection)
-            val faktagrunnlag = Faktagrunnlag(connection)
+            val informasjonskravGrunnlag = InformasjonskravGrunnlag(connection)
 
             fakes.leggTil(TestPerson(
                 identer = setOf(ident),
@@ -77,7 +77,7 @@ class FaktagrunnlagTest {
                 yrkesskade = listOf(TestYrkesskade())
             ))
 
-            val erOppdatert = faktagrunnlag.oppdaterFaktagrunnlagForKravliste(listOf(YrkesskadeService), kontekst)
+            val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(listOf(YrkesskadeService), kontekst)
 
             assertThat(erOppdatert)
                 .hasSize(1)
@@ -89,9 +89,9 @@ class FaktagrunnlagTest {
     fun `Yrkesskadedata er utdatert, men har ingen endring fra registeret`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val (_, kontekst) = klargjør(connection)
-            val faktagrunnlag = Faktagrunnlag(connection)
+            val informasjonskravGrunnlag = InformasjonskravGrunnlag(connection)
 
-            val erOppdatert = faktagrunnlag.oppdaterFaktagrunnlagForKravliste(listOf(YrkesskadeService), kontekst)
+            val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(listOf(YrkesskadeService), kontekst)
 
             assertThat(erOppdatert).isEmpty()
         }

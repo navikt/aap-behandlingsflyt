@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Grunnlagkonstruktør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.EndringType
 import no.nav.aap.verdityper.flyt.StegType
@@ -21,7 +21,7 @@ class BehandlingFlyt private constructor(
 
     class Behandlingsflytsteg(
         val steg: FlytSteg,
-        val kravliste: List<Grunnlagkonstruktør>,
+        val kravliste: List<Informasjonskravkonstruktør>,
         val oppdaterFaktagrunnlag: Boolean
     )
 
@@ -34,11 +34,11 @@ class BehandlingFlyt private constructor(
         parent = null
     )
 
-    fun faktagrunnlagForGjeldendeSteg(): List<Grunnlagkonstruktør> {
+    fun faktagrunnlagForGjeldendeSteg(): List<Informasjonskravkonstruktør> {
         return aktivtSteg?.kravliste ?: emptyList()
     }
 
-    fun faktagrunnlagFremTilOgMedGjeldendeSteg(): List<Grunnlagkonstruktør> {
+    fun faktagrunnlagFremTilOgMedGjeldendeSteg(): List<Informasjonskravkonstruktør> {
         if (aktivtSteg?.oppdaterFaktagrunnlag != true) {
             return emptyList()
         }
@@ -179,7 +179,7 @@ class BehandlingFlyt private constructor(
         return skalTilStegForBehov(listOf(avklaringsbehov))
     }
 
-    fun tilbakeflytEtterEndringer(oppdaterteGrunnlagstype: List<Grunnlagkonstruktør>): BehandlingFlyt {
+    fun tilbakeflytEtterEndringer(oppdaterteGrunnlagstype: List<Informasjonskravkonstruktør>): BehandlingFlyt {
         val skalTilSteg =
             flyt.filter { it.kravliste.any { at -> oppdaterteGrunnlagstype.contains(at) } }.map { it.steg.type() }
                 .minWithOrNull(compareable())
@@ -238,7 +238,7 @@ class BehandlingFlytBuilder {
     fun medSteg(
         steg: FlytSteg,
         vararg endringer: EndringType,
-        informasjonskrav: List<Grunnlagkonstruktør> = emptyList()
+        informasjonskrav: List<Informasjonskravkonstruktør> = emptyList()
     ): BehandlingFlytBuilder {
         if (buildt) {
             throw IllegalStateException("[Utvikler feil] Builder er allerede bygget")
