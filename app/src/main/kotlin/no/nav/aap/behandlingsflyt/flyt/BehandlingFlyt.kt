@@ -168,7 +168,7 @@ class BehandlingFlyt private constructor(
         )
     }
 
-    internal fun skalTilStegForBehov(avklaringsbehov: List<Avklaringsbehov>): StegType? {
+    private fun skalTilStegForBehov(avklaringsbehov: List<Avklaringsbehov>): StegType? {
         return avklaringsbehov.map { it.løsesISteg() }.minWithOrNull(compareable())
     }
 
