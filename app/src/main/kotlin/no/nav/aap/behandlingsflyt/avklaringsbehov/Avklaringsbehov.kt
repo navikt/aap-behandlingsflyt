@@ -48,8 +48,13 @@ class Avklaringsbehov(
         )
     }
 
-    fun reåpne() {
-        historikk += Endring(status = Status.OPPRETTET, begrunnelse = "", endretAv = SYSTEMBRUKER.ident)
+    fun reåpne(frist: LocalDate? = null, begrunnelse: String = "") {
+        historikk += Endring(
+            status = Status.OPPRETTET,
+            begrunnelse = begrunnelse,
+            frist = frist,
+            endretAv = SYSTEMBRUKER.ident
+        )
     }
 
     fun erÅpent(): Boolean {
@@ -115,7 +120,7 @@ class Avklaringsbehov(
     }
 
     fun frist(): LocalDate {
-        return requireNotNull(historikk.maxOf { it }.frist)
+        return requireNotNull(historikk.last { it.status == Status.OPPRETTET }.frist)
     }
 
     fun fristUtløpt(): Boolean {

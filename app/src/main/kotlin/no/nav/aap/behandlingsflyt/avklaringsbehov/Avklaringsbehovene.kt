@@ -65,7 +65,7 @@ class Avklaringsbehovene(
             val avklaringsbehov = hentBehovForDefinisjon(definisjon)
             if (avklaringsbehov != null) {
                 if (avklaringsbehov.erAvsluttet() || avklaringsbehov.status() == Status.AVBRUTT) {
-                    avklaringsbehov.reåpne()
+                    avklaringsbehov.reåpne(frist, begrunnelse)
                     repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
                 } else {
                     log.warn("Forsøkte å legge til et avklaringsbehov som allerede eksisterte")

@@ -34,6 +34,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVur
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.NedreGrense
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.YrkesskadevurderingDto
+import no.nav.aap.behandlingsflyt.flyt.flate.Venteinformasjon
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.hendelse.mottak.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HendelsesMottak
@@ -857,7 +858,18 @@ class FlytOrkestratorTest {
                 behandlingVersjon = behandling.versjon
             )
         )
+        val dto = dataSource.transaction(readOnly = true) { connection ->
+            val avklaringsbehovene = hentAvklaringsbehov(behandling.id, connection)
 
+            if (avklaringsbehovene.erSattPåVent()) {
+                val avklaringsbehov = avklaringsbehovene.hentVentepunkter().first()
+                Venteinformasjon(avklaringsbehov.frist(), avklaringsbehov.begrunnelse())
+            } else {
+                null
+            }
+        }
+        assertThat(dto).isNotNull
+        assertThat(dto?.frist).isNotNull
         behandling = hentBehandling(sak.id)
         dataSource.transaction { connection ->
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
