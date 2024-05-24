@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.auth.Bruker
+import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.verdityper.flyt.StegType
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
@@ -169,6 +170,22 @@ class Avklaringsbehovene(
             avklaringsbehov = avklaringsbehov,
             eksisterenedeAvklaringsbehov = avklaringsbehovene
         )
+    }
+
+    fun validerPlassering(behandling: Behandling) {
+        val nesteSteg = behandling.aktivtSteg()
+        val behandlingFlyt = utledType(behandling.typeBehandling()).flyt()
+        behandlingFlyt.forberedFlyt(nesteSteg)
+        val uhåndterteBehov = alle().filter { it.erÅpent() }
+            .filter { definisjon ->
+                behandlingFlyt.erStegFør(
+                    definisjon.løsesISteg(),
+                    nesteSteg
+                )
+            }
+        if (uhåndterteBehov.isNotEmpty()) {
+            throw IllegalStateException("Har uhåndterte behov som skulle vært håndtert før nåværende steg = '$nesteSteg'")
+        }
     }
 
     override fun erSattPåVent(): Boolean {

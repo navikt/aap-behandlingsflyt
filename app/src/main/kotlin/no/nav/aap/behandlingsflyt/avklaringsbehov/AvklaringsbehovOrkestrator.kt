@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingOppgaveUtfører
+import no.nav.aap.behandlingsflyt.prosessering.StoppetHendelseOppgaveUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.motor.FlytOppgaveRepository
@@ -160,5 +161,12 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
         )
 
         avklaringsbehovene.validateTilstand(behandling = behandling)
+        avklaringsbehovene.validerPlassering(behandling = behandling)
+        oppgaveRepository.leggTil(
+            OppgaveInput(oppgave = StoppetHendelseOppgaveUtfører).forBehandling(
+                behandling.sakId,
+                behandling.id
+            )
+        )
     }
 }
