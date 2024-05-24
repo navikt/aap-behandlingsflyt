@@ -66,7 +66,12 @@ class Avklaringsbehovene(
             if (avklaringsbehov != null) {
                 if (avklaringsbehov.erAvsluttet() || avklaringsbehov.status() == Status.AVBRUTT) {
                     avklaringsbehov.reåpne(frist, begrunnelse)
-                    repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
+                    if (avklaringsbehov.erVentepunkt()) {
+                        // TODO: Vurdere om funnet steg bør ligge på endringen...
+                        repository.endreVentepunkt(avklaringsbehov.id, avklaringsbehov.historikk.last(), stegType)
+                    } else {
+                        repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
+                    }
                 } else {
                     log.warn("Forsøkte å legge til et avklaringsbehov som allerede eksisterte")
                 }
@@ -111,7 +116,6 @@ class Avklaringsbehovene(
     fun reåpne(definisjon: Definisjon) {
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
         avklaringsbehov.reåpne()
-        repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
     override fun alle(): List<Avklaringsbehov> {

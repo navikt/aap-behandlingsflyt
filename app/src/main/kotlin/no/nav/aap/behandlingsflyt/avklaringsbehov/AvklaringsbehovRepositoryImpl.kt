@@ -97,6 +97,29 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         )
     }
 
+    override fun endreVentepunkt(avklaringsbehovId: Long, endring: Endring, funnetISteg: StegType) {
+        oppdaterFunnetISteg(avklaringsbehovId, funnetISteg)
+        endreAvklaringsbehov(
+            avklaringsbehovId,
+            endring
+        )
+    }
+
+    private fun oppdaterFunnetISteg(avklaringsbehovId: Long, funnetISteg: StegType) {
+        val query = """
+                    UPDATE AVKLARINGSBEHOV 
+                    SET funnet_i_steg = ? 
+                    WHERE id = ?
+                    """.trimIndent()
+
+        connection.execute(query) {
+            setParams {
+                setEnumName(1, funnetISteg)
+                setLong(2, avklaringsbehovId)
+            }
+        }
+    }
+
     private fun endreAvklaringsbehov(
         avklaringsbehovId: Long,
         endring: Endring

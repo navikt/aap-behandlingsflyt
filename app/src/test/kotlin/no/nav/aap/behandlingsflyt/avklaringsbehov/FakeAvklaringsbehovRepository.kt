@@ -43,4 +43,7 @@ class FakeAvklaringsbehovRepository : AvklaringsbehovRepository, Avklaringsbehov
 
     override fun endre(avklaringsbehovId: Long, endring: Endring) {
     }
+
+    override fun endreVentepunkt(avklaringsbehovId: Long, endring: Endring, funnetISteg: StegType) {
+    }
 }

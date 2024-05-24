@@ -158,5 +158,7 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
             begrunnelse = hendelse.begrunnelse,
             bruker = hendelse.bruker
         )
+
+        avklaringsbehovene.validateTilstand(behandling = behandling)
     }
 }
