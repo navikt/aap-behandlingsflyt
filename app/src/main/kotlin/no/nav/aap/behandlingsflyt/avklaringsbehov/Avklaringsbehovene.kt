@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.avklaringsbehov
 
+import no.nav.aap.auth.Bruker
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
-import no.nav.aap.behandlingsflyt.auth.Bruker
 import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.verdityper.flyt.StegType

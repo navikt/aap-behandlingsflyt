@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.avklaringsbehov
 
-import no.nav.aap.behandlingsflyt.auth.Bruker
+import no.nav.aap.auth.Bruker
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.AvklaringsbehovLøsning
 
 class LøsAvklaringsbehovBehandlingHendelse(

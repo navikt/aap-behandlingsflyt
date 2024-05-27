@@ -5,7 +5,6 @@ import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
-import io.ktor.server.response.*
 import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.avklaringsbehov.FrivilligeAvklaringsbehov
@@ -19,6 +18,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
+import no.nav.aap.behandlingsflyt.server.respondWithStatus
 import no.nav.aap.motor.FlytOppgaveRepository
 import no.nav.aap.motor.OppgaveInput
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
@@ -97,8 +97,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
                     }
                     taSkriveLåsRepository.verifiserSkrivelås(lås)
                 }
-                pipeline.context.respond(HttpStatusCode.Accepted)
-                return@get
+                respondWithStatus(HttpStatusCode.Accepted)
             }
         }
     }

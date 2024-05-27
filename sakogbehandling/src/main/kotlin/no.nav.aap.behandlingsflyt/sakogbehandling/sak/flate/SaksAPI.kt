@@ -5,11 +5,13 @@ import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.auth.token
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdentGateway
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.verdityper.Periode
@@ -103,6 +105,29 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                         status = sak.status()
                     )
                 )
+            }
+            route("/{saksnummer}/personinformasjon") {
+                get<HentSakDTO, SakPersoninfoDTO> { req ->
+                    val saksnummer = req.saksnummer
+
+                    val ident = dataSource.transaction(readOnly = true) { connection ->
+                        val sak = SakRepositoryImpl(connection).hent(saksnummer = Saksnummer(saksnummer))
+                        sak.person.aktivIdent()
+                    }
+
+                    val personinfo = PdlPersoninfoGateway.hentPersoninfoForIdent(ident, pipeline.context.token())
+
+                    respond(
+                        SakPersoninfoDTO(
+                            fnr = personinfo.ident.identifikator,
+                            navn = listOfNotNull(
+                                personinfo.fornavn,
+                                personinfo.mellomnavn,
+                                personinfo.etternavn
+                            ).filter { it.isNotBlank() }.joinToString(" "),
+                        )
+                    )
+                }
             }
         }
     }

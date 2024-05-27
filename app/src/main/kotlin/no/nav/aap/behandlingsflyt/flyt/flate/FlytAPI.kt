@@ -7,8 +7,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import com.zaxxer.hikari.HikariDataSource
 import io.ktor.http.*
-import io.ktor.server.response.*
-import no.nav.aap.behandlingsflyt.auth.bruker
+import no.nav.aap.auth.bruker
 import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.avklaringsbehov.BehandlingTilstandValidator
@@ -27,6 +26,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
+import no.nav.aap.behandlingsflyt.server.respondWithStatus
 import no.nav.aap.motor.FlytOppgaveRepository
 import no.nav.aap.motor.OppgaveInput
 import no.nav.aap.motor.OppgaveStatus
@@ -137,8 +137,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
                         }
                     }
                 }
-                pipeline.context.respond(HttpStatusCode.NoContent)
-                return@post
+                respondWithStatus(HttpStatusCode.NoContent)
             }
         }
         route("/{referanse}/vente-informasjon") {
@@ -156,10 +155,10 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
                     }
                 }
                 if (dto == null) {
-                    pipeline.context.respond(HttpStatusCode.NoContent)
-                    return@get
+                    respondWithStatus(HttpStatusCode.NoContent)
+                } else {
+                    respond(dto)
                 }
-                respond(dto)
             }
         }
     }

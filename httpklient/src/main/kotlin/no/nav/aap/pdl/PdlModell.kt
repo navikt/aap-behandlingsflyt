@@ -33,6 +33,22 @@ class PdlIdenterDataResponse(
     extensions: GraphQLExtensions?
 ) : PdlResponse(errors, extensions)
 
+class PdlPersonNavnDataResponse(
+    val data: PdlNavnData?,
+    errors: List<GraphQLError>?,
+    extensions: GraphQLExtensions?
+) : PdlResponse(errors, extensions)
+
+data class PdlNavnData(
+    val navn: List<PdlNavn>
+)
+
+data class PdlNavn(
+    val fornavn: String?,
+    val mellomnavn: String?,
+    val etternavn: String?
+)
+
 data class GraphQLError(
     val message: String,
     val locations: List<GraphQLErrorLocation>,

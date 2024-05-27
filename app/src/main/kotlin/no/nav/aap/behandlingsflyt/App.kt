@@ -26,8 +26,8 @@ import io.ktor.server.routing.*
 import io.micrometer.core.instrument.binder.logging.LogbackMetrics
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import no.nav.aap.auth.Bruker
 import no.nav.aap.behandlingsflyt.auth.AZURE
-import no.nav.aap.behandlingsflyt.auth.Bruker
 import no.nav.aap.behandlingsflyt.auth.authentication
 import no.nav.aap.behandlingsflyt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.avklaringsbehov.flate.avklaringsbehovApi
@@ -57,7 +57,7 @@ import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsOppgaver
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.server.apiRoute
-import no.nav.aap.behandlingsflyt.server.respond
+import no.nav.aap.behandlingsflyt.server.respondWithStatus
 import no.nav.aap.behandlingsflyt.tilkjentytelse.flate.tilkjentYtelseAPI
 import no.nav.aap.httpclient.ClientConfig
 import no.nav.aap.httpclient.RestClient
@@ -238,7 +238,7 @@ fun NormalOpenAPIRoute.hendelsesApi(dataSource: DataSource) {
                 val ident = Ident(dto.ident)
                 val yrkesskadeDato = dto.yrkesskadeDato
                 YrkesskadeRegisterGateway.puttInnTestPerson(ident, yrkesskadeDato)
-                respond(HttpStatusCode.OK, "opprettet testcase med yrkesskade for ident $ident")
+                respondWithStatus(HttpStatusCode.OK, "opprettet testcase med yrkesskade for ident $ident")
             }
         }
         route("/opprett") {
@@ -291,7 +291,7 @@ fun NormalOpenAPIRoute.hendelsesApi(dataSource: DataSource) {
                 dataSource.transaction { connection ->
                     RetryFeiledeOppgaverRepositoryExposed(connection).markerAlleFeiledeForKlare()
                 }
-                respond(HttpStatusCode.OK, "Rekjøring av feilede startet")
+                respondWithStatus(HttpStatusCode.OK, "Rekjøring av feilede startet")
             }
         }
     }

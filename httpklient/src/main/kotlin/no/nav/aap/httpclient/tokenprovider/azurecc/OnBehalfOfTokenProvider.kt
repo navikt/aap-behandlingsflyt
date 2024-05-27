@@ -9,16 +9,11 @@ import no.nav.aap.httpclient.tokenprovider.NoTokenTokenProvider
 import no.nav.aap.httpclient.tokenprovider.OidcToken
 import no.nav.aap.httpclient.tokenprovider.OidcTokenResponse
 import no.nav.aap.httpclient.tokenprovider.TokenProvider
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.net.URLEncoder
 import java.time.Duration
-import java.time.LocalDateTime
 import kotlin.text.Charsets.UTF_8
 
-object ClientCredentialsTokenProvider : TokenProvider {
-
-    private val log: Logger = LoggerFactory.getLogger(ClientCredentialsTokenProvider::class.java)
+object OnBehalfOfTokenProvider : TokenProvider {
 
     private val client = RestClient(
         config = ClientConfig(),
@@ -26,20 +21,16 @@ object ClientCredentialsTokenProvider : TokenProvider {
     )
     private val config = AzureConfig() // Laster config on-demand
 
-    private val cache = HashMap<String, OidcToken>()
-
     override fun getToken(scope: String?, currentToken: OidcToken?): OidcToken? {
         if (scope == null) {
             throw IllegalArgumentException("Kan ikke be om token uten å be om hvilket scope det skal gjelde for")
         }
-
-        val cachedToken = cache[scope]
-        if (cachedToken != null && cachedToken.isNotExpired()) {
-            log.info("Fant token for $scope som ikke har utløpt. Utløper ${cachedToken.expires()}")
-            return cachedToken
+        if (currentToken == null) {
+            throw IllegalArgumentException("Kan ikke be om OBO-token uten å ha et token å be om det for")
         }
+
         val postRequest = PostRequest(
-            body = formPost(scope),
+            body = formPost(scope, currentToken),
             contentType = ContentType.APPLICATION_FORM_URLENCODED,
             timeout = Duration.ofSeconds(10),
             additionalHeaders = listOf(Header("Cache-Control", "no-cache"))
@@ -52,21 +43,17 @@ object ClientCredentialsTokenProvider : TokenProvider {
         }
 
         val oidcToken = OidcToken(response.access_token)
-        log.info("Hentet nytt token for $scope. Utløper ${oidcToken.expires()}")
-        cache[scope] = oidcToken
 
         return oidcToken
     }
 
-    private fun formPost(scope: String): String {
+    private fun formPost(scope: String, oidcToken: OidcToken): String {
         val encodedScope = URLEncoder.encode(scope, UTF_8)
-        return "client_id=" + config.clientId + "&client_secret=" + config.clientSecret + "&scope=" + encodedScope + "&grant_type=client_credentials"
+        return "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer" +
+                "&client_id=" + config.clientId +
+                "&client_secret=" + config.clientSecret +
+                "&assertion=" + oidcToken.token() +
+                "&scope=" + encodedScope +
+                "&requested_token_use=on_behalf_of";
     }
-}
-
-internal fun calculateExpiresTime(expiresInSec: Int): LocalDateTime {
-    val expiresIn =
-        Duration.ofSeconds(expiresInSec.toLong()).minus(Duration.ofSeconds(30))
-
-    return LocalDateTime.now().plus(expiresIn);
 }

@@ -5,6 +5,7 @@ import no.nav.aap.httpclient.error.RestResponseHandler
 import no.nav.aap.httpclient.request.GetRequest
 import no.nav.aap.httpclient.request.PostRequest
 import no.nav.aap.httpclient.request.Request
+import no.nav.aap.httpclient.tokenprovider.OidcToken
 import no.nav.aap.httpclient.tokenprovider.TokenProvider
 import no.nav.aap.json.DefaultJsonMapper
 import org.slf4j.MDC
@@ -35,7 +36,7 @@ class RestClient(
             .timeout(request.timeout())
             .header("Content-Type", request.contentType())
             .addHeaders(request)
-            .addHeaders(config, tokenProvider, config.scope)
+            .addHeaders(config, tokenProvider, config.scope, request.currentToken())
             .POST(HttpRequest.BodyPublishers.ofString(request.convertBodyToString()))
             .build()
 
@@ -49,7 +50,7 @@ class RestClient(
     fun <R> get(uri: URI, request: GetRequest, mapper: (String) -> R): R? {
         val httpRequest = HttpRequest.newBuilder(uri)
             .addHeaders(request)
-            .addHeaders(config, tokenProvider, config.scope)
+            .addHeaders(config, tokenProvider, config.scope, request.currentToken())
             .timeout(request.timeout())
             .GET()
             .build()
@@ -72,12 +73,13 @@ private fun HttpRequest.Builder.addHeaders(restRequest: Request): HttpRequest.Bu
 private fun HttpRequest.Builder.addHeaders(
     clientConfig: ClientConfig,
     tokenProvider: TokenProvider,
-    scope: String?
+    scope: String?,
+    currentToken: OidcToken?
 ): HttpRequest.Builder {
     clientConfig.additionalHeaders.forEach(this::addHeader)
     clientConfig.additionalFunctionalHeaders.forEach(this::addHeader)
 
-    val token = tokenProvider.getToken(scope)
+    val token = tokenProvider.getToken(scope, currentToken)
     if (token != null) {
         this.header("Authorization", "Bearer ${token.token()}")
     }

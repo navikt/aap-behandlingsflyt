@@ -20,14 +20,14 @@ fun Route.apiRoute(config: NormalOpenAPIRoute.() -> Unit) {
     ).apply(config)
 }
 
-suspend inline fun <reified TResponse : Any> OpenAPIPipelineResponseContext<TResponse>.respond(
+suspend inline fun <reified TResponse : Any> OpenAPIPipelineResponseContext<TResponse>.respondWithStatus(
     statusCode: HttpStatusCode = HttpStatusCode.OK,
     response: TResponse
 ) {
     responder.respond(statusCode, response, pipeline)
 }
 
-suspend inline fun <reified TResponse : Any> OpenAPIPipelineResponseContext<TResponse>.respond(
+suspend inline fun <reified TResponse : Any> OpenAPIPipelineResponseContext<TResponse>.respondWithStatus(
     statusCode: HttpStatusCode
 ) {
     responder.respond(statusCode, Unit, pipeline)

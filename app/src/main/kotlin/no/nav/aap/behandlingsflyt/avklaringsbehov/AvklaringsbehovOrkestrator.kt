@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.avklaringsbehov
 
+import no.nav.aap.auth.Bruker
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
-import no.nav.aap.behandlingsflyt.auth.Bruker
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.AvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.SattPåVentLøsning
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection

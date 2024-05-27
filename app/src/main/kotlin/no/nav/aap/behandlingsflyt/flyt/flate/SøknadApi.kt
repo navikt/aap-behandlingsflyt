@@ -10,7 +10,7 @@ import no.nav.aap.behandlingsflyt.hendelse.mottak.DokumentMottattSakHendelse
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HendelsesMottak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Saksnummer
-import no.nav.aap.behandlingsflyt.server.respond
+import no.nav.aap.behandlingsflyt.server.respondWithStatus
 import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDate
@@ -34,8 +34,8 @@ fun NormalOpenAPIRoute.søknadApi(dataSource: DataSource) {
                     )
                 )
             )
-            //TODO: Må ha String-respons på grunn av Accept-header. Denne må returnere json
-            respond(HttpStatusCode.Accepted, "{}")
+            // Må ha String-respons på grunn av Accept-header. Denne må returnere json
+            respondWithStatus(HttpStatusCode.Accepted, "{}")
         }
     }
 }
