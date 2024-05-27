@@ -16,5 +16,7 @@ interface BehandlingRepository {
     fun hent(behandlingId: BehandlingId): Behandling
 
     fun hent(referanse: UUID): Behandling
+
+    fun oppdaterÅrsaker(behandling: Behandling, årsaker: List<Årsak>)
 }
 

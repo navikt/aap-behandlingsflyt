@@ -2,9 +2,9 @@ package no.nav.aap.behandlingsflyt.sakogbehandling.behandling
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.Row
-import no.nav.aap.verdityper.sakogbehandling.Status
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.SakId
+import no.nav.aap.verdityper.sakogbehandling.Status
 import no.nav.aap.verdityper.sakogbehandling.TypeBehandling
 import java.time.LocalDateTime
 import java.util.*
@@ -24,6 +24,19 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                 setUUID(2, referanse)
                 setEnumName(3, Status.OPPRETTET)
                 setString(4, typeBehandling.identifikator())
+            }
+        }
+
+        val årsakQuery = """
+            INSERT INTO AARSAK_TIL_BEHANDLING (behandling_id, aarsak, periode)
+            VALUES (?, ?, ?::daterange)
+        """.trimIndent()
+
+        connection.executeBatch(årsakQuery, årsaker) {
+            setParams {
+                setLong(1, behandlingId)
+                setEnumName(2, it.type)
+                setPeriode(3, it.periode)
             }
         }
 
@@ -57,12 +70,26 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             id = behandlingId,
             referanse = row.getUUID("referanse"),
             sakId = SakId(row.getLong("sak_id")),
-            //type = utledType(row.getString("type")),
             typeBehandling = TypeBehandling.from(row.getString("type")),
             status = row.getEnum("status"),
             stegHistorikk = hentStegHistorikk(behandlingId),
-            versjon = row.getLong("versjon")
+            versjon = row.getLong("versjon"),
+            årsaker = hentÅrsaker(behandlingId)
         )
+    }
+
+    private fun hentÅrsaker(behandlingId: BehandlingId): List<Årsak> {
+        val query = """
+            SELECT * FROM AARSAK_TIL_BEHANDLING WHERE behandling_id = ? ORDER BY opprettet_tid DESC
+        """.trimIndent()
+        return connection.queryList(query) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+            setRowMapper {
+                Årsak(it.getEnum("aarsak"), it.getPeriodeOrNull("periode"))
+            }
+        }
     }
 
     override fun oppdaterBehandlingStatus(
@@ -169,6 +196,21 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             }
             setRowMapper {
                 mapBehandling(it)
+            }
+        }
+    }
+
+    override fun oppdaterÅrsaker(behandling: Behandling, årsaker: List<Årsak>) {
+        val årsakQuery = """
+            INSERT INTO AARSAK_TIL_BEHANDLING (behandling_id, aarsak, periode)
+            VALUES (?, ?, ?::daterange)
+        """.trimIndent()
+
+        connection.executeBatch(årsakQuery, årsaker.filter { !behandling.årsaker().contains(it) }) {
+            setParams {
+                setLong(1, behandling.id.toLong())
+                setEnumName(2, it.type)
+                setPeriode(3, it.periode)
             }
         }
     }

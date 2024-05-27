@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.sakogbehandling.sak
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.EndringType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
@@ -13,7 +12,7 @@ class SakOgBehandlingService(connection: DBConnection) {
     private val sakRepository = SakRepositoryImpl(connection)
     private val behandlingRepository = BehandlingRepositoryImpl(connection)
 
-    fun finnEllerOpprettBehandling(key: Saksnummer): BeriketBehandling {
+    fun finnEllerOpprettBehandling(key: Saksnummer, årsaker: List<Årsak>): BeriketBehandling {
         val sak = sakRepository.hent(key)
 
         val sisteBehandlingForSak = behandlingRepository.finnSisteBehandlingFor(sak.id)
@@ -22,7 +21,7 @@ class SakOgBehandlingService(connection: DBConnection) {
             return BeriketBehandling(
                 behandling = behandlingRepository.opprettBehandling(
                     sak.id,
-                    listOf(Årsak(EndringType.MOTTATT_SØKNAD)),
+                    årsaker,
                     TypeBehandling.Førstegangsbehandling
                 ), tilstand = BehandlingTilstand.NY, sisteAvsluttedeBehandling = null
             )
@@ -31,7 +30,7 @@ class SakOgBehandlingService(connection: DBConnection) {
             if (sisteBehandlingForSak.status().erAvsluttet()) {
                 val nyBehandling = behandlingRepository.opprettBehandling(
                     sak.id,
-                    listOf(Årsak(EndringType.MOTTATT_SØKNAD)),
+                    årsaker,
                     TypeBehandling.Revurdering
                 )
 
@@ -42,6 +41,8 @@ class SakOgBehandlingService(connection: DBConnection) {
                 )
 
             } else {
+                // Oppdater årsaker hvis nødvendig
+                behandlingRepository.oppdaterÅrsaker(sisteBehandlingForSak, årsaker)
                 return BeriketBehandling(
                     behandling = sisteBehandlingForSak,
                     tilstand = BehandlingTilstand.EKSISTERENDE,

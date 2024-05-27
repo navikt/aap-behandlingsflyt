@@ -6,6 +6,8 @@ import no.nav.aap.behandlingsflyt.dbtest.InitTestDatabase
 import no.nav.aap.behandlingsflyt.dbtestdata.ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.arbeidsevne.FakePdlGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.EndringType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakOgBehandlingService
@@ -92,6 +94,9 @@ class InstitusjonsoppholdRepositoryTest {
     }
 
     private fun behandling(connection: DBConnection, sak: Sak): Behandling {
-        return SakOgBehandlingService(connection).finnEllerOpprettBehandling(sak.saksnummer).behandling
+        return SakOgBehandlingService(connection).finnEllerOpprettBehandling(
+            sak.saksnummer,
+            listOf(Årsak(EndringType.MOTTATT_SØKNAD))
+        ).behandling
     }
 }

@@ -5,6 +5,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.EndringType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.SakSkrivelås
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakOgBehandlingService
@@ -25,7 +28,10 @@ class SakHendelsesHåndterer(connection: DBConnection) {
 
     fun håndtere(key: Saksnummer, hendelse: SakHendelse): BehandlingId? {
         val sakSkrivelås = låsRepository.låsSak(key)
-        val beriketBehandling = sakOgBehandlingService.finnEllerOpprettBehandling(key)
+        val beriketBehandling = sakOgBehandlingService.finnEllerOpprettBehandling(
+            key,
+            utledÅrsaker(hendelse)
+        )
         val relevantBehandling = beriketBehandling.behandling
 
         if (beriketBehandling.skalKopierFraSisteBehandling()) {
@@ -37,6 +43,26 @@ class SakHendelsesHåndterer(connection: DBConnection) {
         }
         låsRepository.verifiserSkrivelås(sakSkrivelås)
         return relevantBehandling.id
+    }
+
+    private fun utledÅrsaker(hendelse: SakHendelse): List<Årsak> {
+        return when (hendelse) {
+            is DokumentMottattSakHendelse -> when (hendelse.strukturertDokument.brevkode) {
+                Brevkode.SØKNAD -> listOf(Årsak(EndringType.MOTTATT_SØKNAD))
+                Brevkode.PLIKTKORT -> listOf(
+                    Årsak(
+                        EndringType.MOTTATT_MELDEKORT,
+                        hendelse.strukturertDokument.periode()
+                    )
+                )
+
+                Brevkode.UKJENT -> TODO()
+            }
+
+            else -> {
+                listOf()
+            }
+        }
     }
 
     fun håndtere(

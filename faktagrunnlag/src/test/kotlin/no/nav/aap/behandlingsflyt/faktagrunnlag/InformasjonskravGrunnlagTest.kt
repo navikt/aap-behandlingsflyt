@@ -8,6 +8,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fød
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.EndringType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakOgBehandlingService
@@ -100,7 +102,10 @@ class InformasjonskravGrunnlagTest {
     private fun klargjør(connection: DBConnection): Pair<Ident, FlytKontekst> {
         val ident = ident()
         val sak = PersonOgSakService(connection, FakePdlGateway).finnEllerOpprett(ident, periode)
-        val behandling = SakOgBehandlingService(connection).finnEllerOpprettBehandling(sak.saksnummer).behandling
+        val behandling = SakOgBehandlingService(connection).finnEllerOpprettBehandling(
+            sak.saksnummer,
+            listOf(Årsak(EndringType.MOTTATT_SØKNAD))
+        ).behandling
         val personopplysningRepository = PersonopplysningRepository(connection)
         personopplysningRepository.lagre(behandling.id, Personopplysning(Fødselsdato(LocalDate.now().minusYears(20))))
 

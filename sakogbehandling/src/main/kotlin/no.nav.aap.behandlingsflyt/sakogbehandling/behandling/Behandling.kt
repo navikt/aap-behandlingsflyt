@@ -43,6 +43,10 @@ class Behandling(
         oppdaterStatus(stegTilstand)
     }
 
+    fun årsaker(): List<Årsak> {
+        return årsaker.toList()
+    }
+
     private fun validerStegTilstand() {
         if (stegHistorikk.isNotEmpty() && stegHistorikk.stream().noneMatch { tilstand -> tilstand.aktiv }) {
             throw IllegalStateException("Utvikler feil, mangler aktivt steg når steghistorikk ikke er tom.")
