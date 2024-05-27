@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlag
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -146,10 +145,8 @@ class FlytOrkestrator(
                 )
                 tilbakefør(kontekst, behandling, tilbakeføringsflyt, avklaringsbehovene, false)
             }
-            validerPlassering(
-                behandlingFlyt,
-                avklaringsbehov.filter { it.status() != Status.SENDT_TILBAKE_FRA_BESLUTTER }
-            )
+            validerPlassering(behandlingFlyt, avklaringsbehov)
+
             val neste = utledNesteSteg(result, behandlingFlyt)
 
             if (!result.kanFortsette() || neste == null) {
