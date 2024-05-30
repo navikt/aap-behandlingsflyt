@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.lås.SakSkrivelås
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Saksnummer
+import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import org.slf4j.LoggerFactory
 
@@ -41,6 +42,9 @@ class SakHendelsesHåndterer(connection: DBConnection) {
         if (hendelse is DokumentMottattSakHendelse) {
             håndtere(key, hendelse, sakSkrivelås, relevantBehandling)
         }
+        if (hendelse is AktivitetsmeldingMottattSakHendelse) {
+            log.info("Mottatt melding fra TorsHammer, ignorer for nå")
+        }
         låsRepository.verifiserSkrivelås(sakSkrivelås)
         return relevantBehandling.id
     }
@@ -57,6 +61,15 @@ class SakHendelsesHåndterer(connection: DBConnection) {
                 )
 
                 Brevkode.UKJENT -> TODO()
+            }
+
+            is AktivitetsmeldingMottattSakHendelse -> {
+                listOf(
+                    Årsak(
+                        EndringType.MOTTATT_AKTIVITETSMELDING,
+                        Periode(hendelse.hammer.dato, hendelse.hammer.dato)
+                    )
+                )
             }
 
             else -> {

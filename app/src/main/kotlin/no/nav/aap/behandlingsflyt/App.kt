@@ -51,6 +51,7 @@ import no.nav.aap.behandlingsflyt.flyt.flate.DefinisjonDTO
 import no.nav.aap.behandlingsflyt.flyt.flate.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flate.flytApi
 import no.nav.aap.behandlingsflyt.flyt.flate.søknadApi
+import no.nav.aap.behandlingsflyt.flyt.flate.torsHammerApi
 import no.nav.aap.behandlingsflyt.hendelse.mottak.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HendelsesMottak
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsOppgaver
@@ -85,6 +86,8 @@ private val SECURE_LOGGER: Logger = LoggerFactory.getLogger("secureLog")
 class App
 
 val SYSTEMBRUKER = Bruker("Kelvin")
+
+private const val ANTALL_WORKERS = 5
 
 fun main() {
     Thread.currentThread().setUncaughtExceptionHandler { _, e -> SECURE_LOGGER.error("Uhåndtert feil", e) }
@@ -157,6 +160,7 @@ internal fun Application.server(dbConfig: DbConfig) {
                 configApi()
                 saksApi(dataSource)
                 søknadApi(dataSource)
+                torsHammerApi(dataSource)
                 behandlingApi(dataSource)
                 flytApi(dataSource)
                 fatteVedtakGrunnlagApi(dataSource)
@@ -179,8 +183,9 @@ internal fun Application.server(dbConfig: DbConfig) {
     module(dataSource)
 }
 
+
 fun Application.module(dataSource: DataSource) {
-    val motor = Motor(dataSource = dataSource, antallKammer = 5, oppgaver = ProsesseringsOppgaver.alle())
+    val motor = Motor(dataSource = dataSource, antallKammer = ANTALL_WORKERS, oppgaver = ProsesseringsOppgaver.alle())
 
     dataSource.transaction { dbConnection ->
         RetryService(dbConnection).enable()
@@ -310,7 +315,7 @@ fun initDatasource(dbConfig: DbConfig) = HikariDataSource(HikariConfig().apply {
     jdbcUrl = dbConfig.url
     username = dbConfig.username
     password = dbConfig.password
-    maximumPoolSize = 10
+    maximumPoolSize = 10 + ANTALL_WORKERS
     minimumIdle = 1
     driverClassName = "org.postgresql.Driver"
 })
