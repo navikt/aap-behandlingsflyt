@@ -1,0 +1,45 @@
+package no.nav.aap.motor
+
+import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
+import no.nav.aap.verdityper.sakogbehandling.BehandlingId
+import no.nav.aap.verdityper.sakogbehandling.SakId
+
+class LogInfoRepository(private val connection: DBConnection) {
+
+    fun hentInfor(sakId: SakId?, behandlingId: BehandlingId?): LogInformasjon? {
+
+        if (behandlingId != null) {
+            val query = """
+            SELECT s.saksnummer, b.referanse
+            FROM SAK s
+                INNER JOIN BEHANDLING b on s.id = b.sak_id
+            WHERE b.id = ?
+        """.trimIndent()
+
+            return connection.queryFirst(query) {
+                setParams {
+                    setLong(1, behandlingId.toLong())
+                }
+                setRowMapper {
+                    LogInformasjon(it.getString("saksnummer"), it.getString("referanse"))
+                }
+            }
+        } else if (sakId != null) {
+            val query = """
+            SELECT s.saksnummer
+            FROM SAK s
+            WHERE s.id = ?
+        """.trimIndent()
+
+            return connection.queryFirst(query) {
+                setParams {
+                    setLong(1, sakId.toLong())
+                }
+                setRowMapper {
+                    LogInformasjon(it.getString("saksnummer"), null)
+                }
+            }
+        }
+        return null
+    }
+}

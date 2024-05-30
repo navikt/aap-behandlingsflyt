@@ -36,6 +36,7 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.utledSubtypes
 import no.nav.aap.behandlingsflyt.beregning.flate.beregningsGrunnlagApi
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.dbflyway.Migrering
+import no.nav.aap.behandlingsflyt.drift.driftApi
 import no.nav.aap.behandlingsflyt.exception.FlytOperasjonException
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
@@ -67,7 +68,7 @@ import no.nav.aap.httpclient.tokenprovider.NoTokenTokenProvider
 import no.nav.aap.httpclient.tokenprovider.azurecc.AzureConfig
 import no.nav.aap.json.DefaultJsonMapper
 import no.nav.aap.motor.Motor
-import no.nav.aap.motor.retry.RetryFeiledeOppgaverRepositoryExposed
+import no.nav.aap.motor.retry.DriftOppgaverRepositoryExposed
 import no.nav.aap.motor.retry.RetryService
 import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -174,6 +175,7 @@ internal fun Application.server(dbConfig: DbConfig) {
                 tilkjentYtelseAPI(dataSource)
                 beregningVurderingAPI(dataSource)
                 beregningsGrunnlagApi(dataSource)
+                driftApi(dataSource)
 
                 hendelsesApi(dataSource)
             }
@@ -294,7 +296,7 @@ fun NormalOpenAPIRoute.hendelsesApi(dataSource: DataSource) {
         route("/rekjorFeilede") {
             get<Unit, String> {
                 dataSource.transaction { connection ->
-                    RetryFeiledeOppgaverRepositoryExposed(connection).markerAlleFeiledeForKlare()
+                    DriftOppgaverRepositoryExposed(connection).markerAlleFeiledeForKlare()
                 }
                 respondWithStatus(HttpStatusCode.OK, "Rekjøring av feilede startet")
             }

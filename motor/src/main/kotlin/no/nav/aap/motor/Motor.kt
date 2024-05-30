@@ -91,11 +91,7 @@ class Motor(
         private fun utførOppgave(oppgaveInput: OppgaveInput, connection: DBConnection) {
             try {
                 dataSource.transaction { nyConnection ->
-                    MDC.put("oppgaveid", "" + oppgaveInput.id)
-                    MDC.put("oppgavetype", oppgaveInput.type())
-                    MDC.put("sakId", oppgaveInput.sakIdOrNull().toString())
-                    MDC.put("behandlingId", oppgaveInput.behandlingIdOrNull().toString())
-                    MDC.put("callId", UUID.randomUUID().toString())
+                    setteLogginformasjonForOppgave(connection, oppgaveInput)
 
                     log.info("Starter på oppgave :: {}", oppgaveInput.toString())
 
@@ -123,6 +119,28 @@ class Motor(
                 OppgaveRepository(connection).markerFeilet(oppgaveInput, exception)
             } finally {
                 MDC.clear()
+            }
+        }
+
+        private fun setteLogginformasjonForOppgave(
+            connection: DBConnection,
+            oppgaveInput: OppgaveInput
+        ) {
+            MDC.put("oppgaveid", "" + oppgaveInput.id)
+            MDC.put("oppgavetype", oppgaveInput.type())
+            MDC.put("sakId", oppgaveInput.sakIdOrNull().toString())
+            MDC.put("behandlingId", oppgaveInput.behandlingIdOrNull().toString())
+            MDC.put("callId", UUID.randomUUID().toString())
+
+            val logInformasjon = LogInfoRepository(connection).hentInfor(
+                oppgaveInput.sakIdOrNull(),
+                oppgaveInput.behandlingIdOrNull()
+            )
+            if (logInformasjon != null) {
+                MDC.put("saksnummer", logInformasjon.saksnummer)
+                if (logInformasjon.referanse != null) {
+                    MDC.put("behandlingReferanse", logInformasjon.referanse)
+                }
             }
         }
     }

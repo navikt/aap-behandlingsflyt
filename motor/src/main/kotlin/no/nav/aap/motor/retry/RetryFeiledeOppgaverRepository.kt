@@ -5,6 +5,7 @@ import no.nav.aap.motor.OppgaveInput
 import no.nav.aap.motor.OppgaveRepository
 import no.nav.aap.motor.OppgaveStatus
 import no.nav.aap.motor.OppgaveType
+import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import java.time.LocalDateTime
 
 internal class RetryFeiledeOppgaverRepository(private val connection: DBConnection) {
@@ -24,6 +25,34 @@ internal class RetryFeiledeOppgaverRepository(private val connection: DBConnecti
             """.trimIndent()
         var antallRader = 0
         connection.execute(query) {
+            setResultValidator {
+                antallRader = it
+            }
+        }
+
+        return antallRader
+    }
+
+    internal fun markerFeiledeForKlare(behandlingId: BehandlingId): Int {
+        val historikk = """
+            INSERT INTO OPPGAVE_HISTORIKK (oppgave_id, status)
+            SELECT id, 'KLAR' FROM OPPGAVE WHERE status = 'FEILET' AND behandling_id = ?
+        """.trimIndent()
+
+        connection.execute(historikk) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+        }
+
+        val query = """
+                UPDATE OPPGAVE SET status = 'KLAR' WHERE status = 'FEILET' AND behandling_id = ?
+            """.trimIndent()
+        var antallRader = 0
+        connection.execute(query) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
             setResultValidator {
                 antallRader = it
             }
