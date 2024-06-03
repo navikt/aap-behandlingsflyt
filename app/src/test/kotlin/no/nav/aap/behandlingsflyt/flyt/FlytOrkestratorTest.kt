@@ -878,7 +878,7 @@ class FlytOrkestratorTest {
                 .anySatisfy { it.erÅpent() && it.definisjon == Definisjon.MANUELT_SATT_PÅ_VENT }
                 .anySatisfy { it.erÅpent() && it.definisjon == Definisjon.AVKLAR_SYKDOM }
         }
-
+        ventPåSvar()
         hendelsesMottak.håndtere(
             ident, DokumentMottattPersonHendelse(
                 journalpost = JournalpostId("3"),
