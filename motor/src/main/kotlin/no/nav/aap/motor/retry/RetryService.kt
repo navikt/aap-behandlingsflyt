@@ -1,20 +1,20 @@
 package no.nav.aap.motor.retry
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
-import no.nav.aap.motor.OppgaveStatus
+import no.nav.aap.motor.JobbStatus
 import org.slf4j.LoggerFactory
 
 class RetryService(connection: DBConnection) {
     private val log = LoggerFactory.getLogger(RetryService::class.java)
-    private val repository = RetryFeiledeOppgaverRepository(connection)
+    private val repository = RetryFeiledeJobberRepository(connection)
 
     fun enable() {
         val planlagteFeilhåndteringOppgaver = repository.planlagteCronOppgaver()
 
         planlagteFeilhåndteringOppgaver.forEach { oppgave ->
-            if (oppgave.status == OppgaveStatus.FERDIG) {
+            if (oppgave.status == JobbStatus.FERDIG) {
                 repository.planleggNyKjøring(oppgave.type)
-            } else if(oppgave.status == OppgaveStatus.FEILET) {
+            } else if(oppgave.status == JobbStatus.FEILET) {
                 repository.markerSomKlar(oppgave)
             }
         }

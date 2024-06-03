@@ -55,7 +55,7 @@ import no.nav.aap.behandlingsflyt.flyt.flate.søknadApi
 import no.nav.aap.behandlingsflyt.flyt.flate.torsHammerApi
 import no.nav.aap.behandlingsflyt.hendelse.mottak.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HendelsesMottak
-import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsOppgaver
+import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.server.apiRoute
@@ -68,7 +68,7 @@ import no.nav.aap.httpclient.tokenprovider.NoTokenTokenProvider
 import no.nav.aap.httpclient.tokenprovider.azurecc.AzureConfig
 import no.nav.aap.json.DefaultJsonMapper
 import no.nav.aap.motor.Motor
-import no.nav.aap.motor.retry.DriftOppgaverRepositoryExposed
+import no.nav.aap.motor.retry.DriftJobbRepositoryExposed
 import no.nav.aap.motor.retry.RetryService
 import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -187,7 +187,7 @@ internal fun Application.server(dbConfig: DbConfig) {
 
 
 fun Application.module(dataSource: DataSource) {
-    val motor = Motor(dataSource = dataSource, antallKammer = ANTALL_WORKERS, oppgaver = ProsesseringsOppgaver.alle())
+    val motor = Motor(dataSource = dataSource, antallKammer = ANTALL_WORKERS, jobber = ProsesseringsJobber.alle())
 
     dataSource.transaction { dbConnection ->
         RetryService(dbConnection).enable()
@@ -296,7 +296,7 @@ fun NormalOpenAPIRoute.hendelsesApi(dataSource: DataSource) {
         route("/rekjorFeilede") {
             get<Unit, String> {
                 dataSource.transaction { connection ->
-                    DriftOppgaverRepositoryExposed(connection).markerAlleFeiledeForKlare()
+                    DriftJobbRepositoryExposed(connection).markerAlleFeiledeForKlare()
                 }
                 respondWithStatus(HttpStatusCode.OK, "Rekjøring av feilede startet")
             }

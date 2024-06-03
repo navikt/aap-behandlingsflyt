@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.ErrorRespons
 import no.nav.aap.behandlingsflyt.exception.FlytOperasjonException
 
 class BehandlingUnderProsesseringException() : FlytOperasjonException,
-    RuntimeException("Behandlingen har prosesseringsoppgaver som venter eller har feilet. Vent til disse er ferdig prosesserte") {
+    RuntimeException("Behandlingen har prosesseringsjobber som venter eller har feilet. Vent til disse er ferdig prosesserte") {
     override fun status(): HttpStatusCode {
         return HttpStatusCode.Conflict
     }

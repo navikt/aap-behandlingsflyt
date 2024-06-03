@@ -15,12 +15,12 @@ import javax.sql.DataSource
 class Motor(
     private val dataSource: DataSource,
     private val antallKammer: Int = 8,
-    oppgaver: List<Oppgave>
+    jobber: List<Jobb>
 ) {
 
     init {
-        for (oppgave in oppgaver) {
-            OppgaveType.leggTil(oppgave)
+        for (oppgave in jobber) {
+            JobbType.leggTil(oppgave)
         }
     }
 
@@ -39,7 +39,7 @@ class Motor(
     private var lastWatchdogLog = LocalDateTime.now()
 
     fun start() {
-        log.info("Starter prosessering av oppgaver")
+        log.info("Starter prosessering av jobber")
         IntRange(1, antallKammer).forEach { i ->
             val kammer = Forbrenningskammer(dataSource)
             workers[i] = executor.submit(kammer) // Legger inn en liten spread så det ikke pumpes på tabellen likt
@@ -47,12 +47,12 @@ class Motor(
                 Thread.sleep(100)
             }
         }
-        log.info("Startet prosessering av oppgaver")
+        log.info("Startet prosessering av jobber")
         watchdogExecutor.schedule(Watchdog(), 1, TimeUnit.MINUTES)
     }
 
     fun stop() {
-        log.info("Avslutter prosessering av oppgaver")
+        log.info("Avslutter prosessering av jobber")
         stopped = true
         watchdogExecutor.shutdownNow()
         executor.awaitTermination(10L, TimeUnit.SECONDS)
@@ -64,12 +64,12 @@ class Motor(
         private var plukker = true
         override fun run() {
             while (!stopped) {
-                log.debug("Starter plukking av oppgaver")
+                log.debug("Starter plukking av jobber")
                 try {
                     while (plukker) {
                         dataSource.transaction { connection ->
-                            val repository = OppgaveRepository(connection)
-                            val plukketOppgave = repository.plukkOppgave()
+                            val repository = JobbRepository(connection)
+                            val plukketOppgave = repository.plukkJobb()
                             if (plukketOppgave != null) {
                                 utførOppgave(plukketOppgave, connection)
                             }
@@ -80,43 +80,43 @@ class Motor(
                         }
                     }
                 } catch (excetion: Throwable) {
-                    log.warn("Feil under plukking av oppgaver", excetion)
+                    log.warn("Feil under plukking av jobber", excetion)
                 }
-                log.debug("Ingen flere oppgaver å plukke, hviler litt")
+                log.debug("Ingen flere jobber å plukke, hviler litt")
                 Thread.sleep(500)
                 plukker = true
             }
         }
 
-        private fun utførOppgave(oppgaveInput: OppgaveInput, connection: DBConnection) {
+        private fun utførOppgave(jobbInput: JobbInput, connection: DBConnection) {
             try {
                 dataSource.transaction { nyConnection ->
-                    setteLogginformasjonForOppgave(connection, oppgaveInput)
+                    setteLogginformasjonForOppgave(connection, jobbInput)
 
-                    log.info("Starter på oppgave :: {}", oppgaveInput.toString())
+                    log.info("Starter på jobb :: {}", jobbInput.toString())
 
-                    oppgaveInput.oppgave.konstruer(nyConnection).utfør(oppgaveInput)
+                    jobbInput.jobb.konstruer(nyConnection).utfør(jobbInput)
 
-                    log.info("Fullført oppgave :: {}", oppgaveInput.toString())
-                    if (oppgaveInput.erScheduledOppgave()) {
-                        OppgaveRepository(nyConnection).leggTil(
-                            oppgaveInput.medNesteKjøring(
-                                oppgaveInput.cron()!!.nextLocalDateTimeAfter(
+                    log.info("Fullført jobb :: {}", jobbInput.toString())
+                    if (jobbInput.erScheduledOppgave()) {
+                        JobbRepository(nyConnection).leggTil(
+                            jobbInput.medNesteKjøring(
+                                jobbInput.cron()!!.nextLocalDateTimeAfter(
                                     LocalDateTime.now()
                                 )
                             )
                         )
                     }
                 }
-                OppgaveRepository(connection).markerKjørt(oppgaveInput)
+                JobbRepository(connection).markerKjørt(jobbInput)
             } catch (exception: Throwable) {
                 // Kjører feil
                 log.warn(
-                    "Feil under prosessering av oppgave {}",
-                    oppgaveInput,
+                    "Feil under prosessering av jobb {}",
+                    jobbInput,
                     exception
                 )
-                OppgaveRepository(connection).markerFeilet(oppgaveInput, exception)
+                JobbRepository(connection).markerFeilet(jobbInput, exception)
             } finally {
                 MDC.clear()
             }
@@ -124,17 +124,17 @@ class Motor(
 
         private fun setteLogginformasjonForOppgave(
             connection: DBConnection,
-            oppgaveInput: OppgaveInput
+            jobbInput: JobbInput
         ) {
-            MDC.put("oppgaveid", "" + oppgaveInput.id)
-            MDC.put("oppgavetype", oppgaveInput.type())
-            MDC.put("sakId", oppgaveInput.sakIdOrNull().toString())
-            MDC.put("behandlingId", oppgaveInput.behandlingIdOrNull().toString())
+            MDC.put("jobbid", "" + jobbInput.id)
+            MDC.put("jobbType", jobbInput.type())
+            MDC.put("sakId", jobbInput.sakIdOrNull().toString())
+            MDC.put("behandlingId", jobbInput.behandlingIdOrNull().toString())
             MDC.put("callId", UUID.randomUUID().toString())
 
             val logInformasjon = LogInfoRepository(connection).hentInfor(
-                oppgaveInput.sakIdOrNull(),
-                oppgaveInput.behandlingIdOrNull()
+                jobbInput.sakIdOrNull(),
+                jobbInput.behandlingIdOrNull()
             )
             if (logInformasjon != null) {
                 MDC.put("saksnummer", logInformasjon.saksnummer)

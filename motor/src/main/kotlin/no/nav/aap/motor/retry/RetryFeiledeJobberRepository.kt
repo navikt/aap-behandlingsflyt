@@ -1,20 +1,20 @@
 package no.nav.aap.motor.retry
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
-import no.nav.aap.motor.OppgaveInput
-import no.nav.aap.motor.OppgaveRepository
-import no.nav.aap.motor.OppgaveStatus
-import no.nav.aap.motor.OppgaveType
+import no.nav.aap.motor.JobbInput
+import no.nav.aap.motor.JobbRepository
+import no.nav.aap.motor.JobbStatus
+import no.nav.aap.motor.JobbType
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import java.time.LocalDateTime
 
-internal class RetryFeiledeOppgaverRepository(private val connection: DBConnection) {
+internal class RetryFeiledeJobberRepository(private val connection: DBConnection) {
 
-    private val oppgaverRepository: OppgaveRepository = OppgaveRepository(connection)
+    private val oppgaverRepository: JobbRepository = JobbRepository(connection)
 
     internal fun markerAlleFeiledeForKlare(): Int {
         val historikk = """
-            INSERT INTO OPPGAVE_HISTORIKK (oppgave_id, status)
+            INSERT INTO JOBB_HISTORIKK (jobb_id, status)
             SELECT id, 'KLAR' FROM OPPGAVE WHERE status = 'FEILET'
         """.trimIndent()
 
@@ -35,7 +35,7 @@ internal class RetryFeiledeOppgaverRepository(private val connection: DBConnecti
 
     internal fun markerFeiledeForKlare(behandlingId: BehandlingId): Int {
         val historikk = """
-            INSERT INTO OPPGAVE_HISTORIKK (oppgave_id, status)
+            INSERT INTO JOBB_HISTORIKK (jobb_id, status)
             SELECT id, 'KLAR' FROM OPPGAVE WHERE status = 'FEILET' AND behandling_id = ?
         """.trimIndent()
 
@@ -62,7 +62,7 @@ internal class RetryFeiledeOppgaverRepository(private val connection: DBConnecti
     }
 
     internal fun planlagteCronOppgaver(): List<FeilhåndteringOppgaveStatus> {
-        return OppgaveType.cronTypes().flatMap { type -> hentStatusPåOppgave(type) }
+        return JobbType.cronTypes().flatMap { type -> hentStatusPåOppgave(type) }
     }
 
     private fun hentStatusPåOppgave(type: String): List<FeilhåndteringOppgaveStatus> {
@@ -75,12 +75,12 @@ internal class RetryFeiledeOppgaverRepository(private val connection: DBConnecti
                 setString(1, type)
             }
             setRowMapper {
-                FeilhåndteringOppgaveStatus(it.getLong("id"), type, OppgaveStatus.valueOf(it.getString("status")))
+                FeilhåndteringOppgaveStatus(it.getLong("id"), type, JobbStatus.valueOf(it.getString("status")))
             }
         }
 
         if (queryList.isEmpty()) {
-            return listOf(FeilhåndteringOppgaveStatus(-1L, type, OppgaveStatus.FERDIG))
+            return listOf(FeilhåndteringOppgaveStatus(-1L, type, JobbStatus.FERDIG))
         }
 
         return queryList
@@ -88,7 +88,7 @@ internal class RetryFeiledeOppgaverRepository(private val connection: DBConnecti
 
     internal fun markerSomKlar(oppgave: FeilhåndteringOppgaveStatus) {
         val historikk = """
-            INSERT INTO OPPGAVE_HISTORIKK (oppgave_id, status)
+            INSERT INTO JOBB_HISTORIKK (jobb_id, status)
             SELECT id, 'KLAR' FROM OPPGAVE WHERE status = 'FEILET' and id = ?
         """.trimIndent()
 
@@ -109,12 +109,12 @@ internal class RetryFeiledeOppgaverRepository(private val connection: DBConnecti
     }
 
     internal fun planleggNyKjøring(type: String) {
-        val oppgave = OppgaveType.parse(type)
+        val oppgave = JobbType.parse(type)
         oppgaverRepository.leggTil(
-            OppgaveInput(oppgave)
+            JobbInput(oppgave)
                 .medNesteKjøring(requireNotNull(oppgave.cron()?.nextLocalDateTimeAfter(LocalDateTime.now())))
         )
     }
 
-    inner class FeilhåndteringOppgaveStatus(val id: Long, val type: String, val status: OppgaveStatus)
+    inner class FeilhåndteringOppgaveStatus(val id: Long, val type: String, val status: JobbStatus)
 }

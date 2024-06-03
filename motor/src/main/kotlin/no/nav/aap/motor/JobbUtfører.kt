@@ -1,8 +1,8 @@
 package no.nav.aap.motor
 
-interface OppgaveUtfører {
+interface JobbUtfører {
 
-    fun utfør(input: OppgaveInput)
+    fun utfør(input: JobbInput)
 
     /**
      * Antall ganger oppgaven prøves før den settes til feilet

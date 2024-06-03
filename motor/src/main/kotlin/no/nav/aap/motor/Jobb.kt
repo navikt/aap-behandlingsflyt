@@ -2,9 +2,9 @@ package no.nav.aap.motor
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 
-interface Oppgave {
+interface Jobb {
 
-    fun konstruer(connection: DBConnection): OppgaveUtfører
+    fun konstruer(connection: DBConnection): JobbUtfører
 
     fun type(): String
 

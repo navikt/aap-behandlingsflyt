@@ -7,51 +7,51 @@ import no.nav.aap.verdityper.sakogbehandling.SakId
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
-internal class OppgaveRepository(private val connection: DBConnection) {
-    private val log = LoggerFactory.getLogger(OppgaveRepository::class.java)
+internal class JobbRepository(private val connection: DBConnection) {
+    private val log = LoggerFactory.getLogger(JobbRepository::class.java)
 
-    fun leggTil(oppgaveInput: OppgaveInput) {
+    fun leggTil(jobbInput: JobbInput) {
         val oppgaveId = connection.executeReturnKey(
             """
-            INSERT INTO OPPGAVE 
+            INSERT INTO JOBB 
             (sak_id, behandling_id, type, neste_kjoring) VALUES (?, ?, ?, ?)
             """.trimIndent()
         ) {
             setParams {
-                setLong(1, oppgaveInput.sakIdOrNull()?.toLong())
-                setLong(2, oppgaveInput.behandlingIdOrNull()?.toLong())
-                setString(3, oppgaveInput.type())
-                setLocalDateTime(4, oppgaveInput.nesteKjøringTidspunkt())
+                setLong(1, jobbInput.sakIdOrNull()?.toLong())
+                setLong(2, jobbInput.behandlingIdOrNull()?.toLong())
+                setString(3, jobbInput.type())
+                setLocalDateTime(4, jobbInput.nesteKjøringTidspunkt())
             }
         }
 
         connection.execute(
             """
-            INSERT INTO OPPGAVE_HISTORIKK 
-            (oppgave_id, status) VALUES (?, ?)
+            INSERT INTO JOBB_HISTORIKK 
+            (jobb_id, status) VALUES (?, ?)
             """.trimIndent()
         ) {
             setParams {
                 setLong(1, oppgaveId)
-                setEnumName(2, OppgaveStatus.KLAR)
+                setEnumName(2, JobbStatus.KLAR)
             }
         }
-        log.info("Planlagt kjøring av oppgave[${oppgaveInput.type()}] med kjøring etter ${oppgaveInput.nesteKjøringTidspunkt()}")
+        log.info("Planlagt kjøring av jobb[${jobbInput.type()}] med kjøring etter ${jobbInput.nesteKjøringTidspunkt()}")
     }
 
-    internal fun plukkOppgave(): OppgaveInput? {
-        val plukketOppgave = connection.queryFirstOrNull(
+    internal fun plukkJobb(): JobbInput? {
+        val plukketJobb = connection.queryFirstOrNull(
             """
             SELECT id, type, status, sak_id, behandling_id, neste_kjoring, 
-                (SELECT count(1) FROM oppgave_historikk h WHERE h.oppgave_id = o.id AND h.status = '${OppgaveStatus.FEILET.name}') as antall_feil
-            FROM OPPGAVE o
-            WHERE status = '${OppgaveStatus.KLAR.name}'
+                (SELECT count(1) FROM JOBB_HISTORIKK h WHERE h.jobb_id = o.id AND h.status = '${JobbStatus.FEILET.name}') as antall_feil
+            FROM JOBB o
+            WHERE status = '${JobbStatus.KLAR.name}'
               AND neste_kjoring < ?
               AND NOT EXISTS
                 (
                 SELECT 1
-                 FROM OPPGAVE op
-                 WHERE op.status = '${OppgaveStatus.FEILET.name}'
+                 FROM JOBB op
+                 WHERE op.status = '${JobbStatus.FEILET.name}'
                    AND op.sak_id is not null
                    AND o.sak_id is not null
                    AND o.sak_id = op.sak_id
@@ -66,31 +66,31 @@ internal class OppgaveRepository(private val connection: DBConnection) {
                 setLocalDateTime(1, LocalDateTime.now())
             }
             setRowMapper { row ->
-                mapOppgave(row)
+                mapJobb(row)
             }
         }
 
-        if (plukketOppgave == null) {
+        if (plukketJobb == null) {
             return null
         }
 
         connection.execute(
             """
-            INSERT INTO OPPGAVE_HISTORIKK 
-            (oppgave_id, status) VALUES (?, ?)
+            INSERT INTO JOBB_HISTORIKK 
+            (jobb_id, status) VALUES (?, ?)
             """.trimIndent()
         ) {
             setParams {
-                setLong(1, plukketOppgave.id)
-                setEnumName(2, OppgaveStatus.PLUKKET)
+                setLong(1, plukketJobb.id)
+                setEnumName(2, JobbStatus.PLUKKET)
             }
         }
 
-        return plukketOppgave
+        return plukketJobb
     }
 
-    private fun mapOppgave(row: Row): OppgaveInput {
-        return OppgaveInput(OppgaveType.parse(row.getString("type")))
+    private fun mapJobb(row: Row): JobbInput {
+        return JobbInput(JobbType.parse(row.getString("type")))
             .medId(row.getLong("id"))
             .medStatus(row.getEnum("status"))
             .forBehandling(
@@ -100,11 +100,11 @@ internal class OppgaveRepository(private val connection: DBConnection) {
             .medAntallFeil(row.getLong("antall_feil"))
     }
 
-    internal fun markerKjørt(oppgaveInput: OppgaveInput) {
-        connection.execute("UPDATE OPPGAVE SET status = ? WHERE id = ? AND status = 'KLAR'") {
+    internal fun markerKjørt(jobbInput: JobbInput) {
+        connection.execute("UPDATE JOBB SET status = ? WHERE id = ? AND status = 'KLAR'") {
             setParams {
-                setEnumName(1, OppgaveStatus.FERDIG)
-                setLong(2, oppgaveInput.id)
+                setEnumName(1, JobbStatus.FERDIG)
+                setLong(2, jobbInput.id)
             }
             setResultValidator {
                 require(it == 1)
@@ -113,33 +113,33 @@ internal class OppgaveRepository(private val connection: DBConnection) {
 
         connection.execute(
             """
-            INSERT INTO OPPGAVE_HISTORIKK 
-            (oppgave_id, status) VALUES (?, ?)
+            INSERT INTO JOBB_HISTORIKK 
+            (jobb_id, status) VALUES (?, ?)
             """.trimIndent()
         ) {
             setParams {
-                setLong(1, oppgaveInput.id)
-                setEnumName(2, OppgaveStatus.FERDIG)
+                setLong(1, jobbInput.id)
+                setEnumName(2, JobbStatus.FERDIG)
             }
         }
     }
 
-    internal fun markerFeilet(oppgaveInput: OppgaveInput, exception: Throwable) {
+    internal fun markerFeilet(jobbInput: JobbInput, exception: Throwable) {
         // Da denne kjører i en ny transaksjon bør oppgaven låses slik at den ikke plukkes på nytt mens det logges
-        connection.queryFirst("SELECT id FROM OPPGAVE WHERE id = ? FOR UPDATE") {
+        connection.queryFirst("SELECT id FROM JOBB WHERE id = ? FOR UPDATE") {
             setParams {
-                setLong(1, oppgaveInput.id)
+                setLong(1, jobbInput.id)
             }
             setRowMapper {
                 it.getLong("id")
             }
         }
 
-        if (oppgaveInput.skalMarkeresSomFeilet()) {
-            connection.execute("UPDATE OPPGAVE SET status = ? WHERE id = ? AND status = 'KLAR'") {
+        if (jobbInput.skalMarkeresSomFeilet()) {
+            connection.execute("UPDATE JOBB SET status = ? WHERE id = ? AND status = 'KLAR'") {
                 setParams {
-                    setEnumName(1, OppgaveStatus.FEILET)
-                    setLong(2, oppgaveInput.id)
+                    setEnumName(1, JobbStatus.FEILET)
+                    setLong(2, jobbInput.id)
                 }
                 setResultValidator {
                     require(it == 1)
@@ -149,13 +149,13 @@ internal class OppgaveRepository(private val connection: DBConnection) {
 
         connection.execute(
             """
-            INSERT INTO OPPGAVE_HISTORIKK 
-            (oppgave_id, status, feilmelding) VALUES (?, ?, ?)
+            INSERT INTO JOBB_HISTORIKK 
+            (jobb_id, status, feilmelding) VALUES (?, ?, ?)
             """.trimIndent()
         ) {
             setParams {
-                setLong(1, oppgaveInput.id)
-                setEnumName(2, OppgaveStatus.FEILET)
+                setLong(1, jobbInput.id)
+                setEnumName(2, JobbStatus.FEILET)
                 setString(3, exception.message.orEmpty())
             }
         }

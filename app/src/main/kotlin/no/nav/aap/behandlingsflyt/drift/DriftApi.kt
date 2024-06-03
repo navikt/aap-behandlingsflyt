@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.server.respondWithStatus
-import no.nav.aap.motor.retry.DriftOppgaverRepositoryExposed
+import no.nav.aap.motor.retry.DriftJobbRepositoryExposed
 import javax.sql.DataSource
 
 
@@ -18,7 +18,7 @@ fun NormalOpenAPIRoute.driftApi(dataSource: DataSource) {
             get<BehandlingReferanse, String> {
                 val antallSchedulert = dataSource.transaction { connection ->
                     val behandling = BehandlingReferanseService(connection).behandling(it)
-                    DriftOppgaverRepositoryExposed(connection).markerFeilendeForKlar(behandling.id)
+                    DriftJobbRepositoryExposed(connection).markerFeilendeForKlar(behandling.id)
                 }
                 respondWithStatus(
                     HttpStatusCode.OK,
@@ -29,7 +29,7 @@ fun NormalOpenAPIRoute.driftApi(dataSource: DataSource) {
         route("/rekjorAlleFeilede") {
             get<Unit, String> {
                 val antallSchedulert = dataSource.transaction { connection ->
-                    DriftOppgaverRepositoryExposed(connection).markerAlleFeiledeForKlare()
+                    DriftJobbRepositoryExposed(connection).markerAlleFeiledeForKlare()
                 }
                 respondWithStatus(
                     HttpStatusCode.OK,

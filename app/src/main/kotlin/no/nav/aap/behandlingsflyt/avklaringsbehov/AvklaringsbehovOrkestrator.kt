@@ -8,12 +8,12 @@ import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
-import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingOppgaveUtfører
-import no.nav.aap.behandlingsflyt.prosessering.StoppetHendelseOppgaveUtfører
+import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingJobbUtfører
+import no.nav.aap.behandlingsflyt.prosessering.StoppetHendelseJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
-import no.nav.aap.motor.FlytOppgaveRepository
-import no.nav.aap.motor.OppgaveInput
+import no.nav.aap.motor.FlytJobbRepository
+import no.nav.aap.motor.JobbInput
 import no.nav.aap.verdityper.flyt.FlytKontekst
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import org.slf4j.LoggerFactory
@@ -22,7 +22,7 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
 
     private val avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection)
     private val behandlingRepository = BehandlingRepositoryImpl(connection)
-    private val oppgaveRepository = FlytOppgaveRepository(connection)
+    private val flytJobbRepository = FlytJobbRepository(connection)
 
     private val log = LoggerFactory.getLogger(AvklaringsbehovOrkestrator::class.java)
 
@@ -73,8 +73,8 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
     }
 
     private fun fortsettProsessering(kontekst: FlytKontekst) {
-        oppgaveRepository.leggTil(
-            OppgaveInput(oppgave = ProsesserBehandlingOppgaveUtfører).forBehandling(
+        flytJobbRepository.leggTil(
+            JobbInput(jobb = ProsesserBehandlingJobbUtfører).forBehandling(
                 kontekst.sakId,
                 kontekst.behandlingId
             )
@@ -162,8 +162,8 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
 
         avklaringsbehovene.validateTilstand(behandling = behandling)
         avklaringsbehovene.validerPlassering(behandling = behandling)
-        oppgaveRepository.leggTil(
-            OppgaveInput(oppgave = StoppetHendelseOppgaveUtfører).forBehandling(
+        flytJobbRepository.leggTil(
+            JobbInput(jobb = StoppetHendelseJobbUtfører).forBehandling(
                 behandling.sakId,
                 behandling.id
             )

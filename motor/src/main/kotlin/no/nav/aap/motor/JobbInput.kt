@@ -4,26 +4,26 @@ import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.SakId
 import java.time.LocalDateTime
 
-class OppgaveInput(val oppgave: Oppgave) {
+class JobbInput(val jobb: Jobb) {
 
     internal var id: Long? = null
     private var sakId: SakId? = null
     private var behandlingId: BehandlingId? = null
     private var nesteKjøring: LocalDateTime? = null
     private var antallFeil: Long = 0
-    private var status: OppgaveStatus = OppgaveStatus.KLAR
+    private var status: JobbStatus = JobbStatus.KLAR
 
-    internal fun medId(id: Long): OppgaveInput {
+    internal fun medId(id: Long): JobbInput {
         this.id = id
         return this
     }
 
-    internal fun medStatus(status: OppgaveStatus): OppgaveInput {
+    internal fun medStatus(status: JobbStatus): JobbInput {
         this.status = status
         return this
     }
 
-    fun forBehandling(sakId: SakId?, behandlingId: BehandlingId?): OppgaveInput {
+    fun forBehandling(sakId: SakId?, behandlingId: BehandlingId?): JobbInput {
         this.sakId = sakId
         this.behandlingId = behandlingId
 
@@ -38,7 +38,7 @@ class OppgaveInput(val oppgave: Oppgave) {
         return sakId!!
     }
 
-    fun status(): OppgaveStatus {
+    fun status(): JobbStatus {
         return status
     }
 
@@ -50,7 +50,7 @@ class OppgaveInput(val oppgave: Oppgave) {
         return behandlingId
     }
 
-    fun medAntallFeil(antallFeil: Long): OppgaveInput {
+    fun medAntallFeil(antallFeil: Long): JobbInput {
         this.antallFeil = antallFeil
         return this
     }
@@ -64,24 +64,24 @@ class OppgaveInput(val oppgave: Oppgave) {
     }
 
     fun type(): String {
-        return oppgave.type()
+        return jobb.type()
     }
 
     override fun toString(): String {
-        return "[${oppgave.type()}] - id = $id, sakId = $sakId, behandlingId = $behandlingId"
+        return "[${jobb.type()}] - id = $id, sakId = $sakId, behandlingId = $behandlingId"
     }
 
-    fun medNesteKjøring(nesteKjøring: LocalDateTime): OppgaveInput {
+    fun medNesteKjøring(nesteKjøring: LocalDateTime): JobbInput {
         this.nesteKjøring = nesteKjøring
         return this
     }
 
     fun skalMarkeresSomFeilet(): Boolean {
-        return oppgave.retries() <= antallFeil + 1
+        return jobb.retries() <= antallFeil + 1
     }
 
     fun cron(): CronExpression? {
-        return oppgave.cron()
+        return jobb.cron()
     }
 
     fun erScheduledOppgave(): Boolean {

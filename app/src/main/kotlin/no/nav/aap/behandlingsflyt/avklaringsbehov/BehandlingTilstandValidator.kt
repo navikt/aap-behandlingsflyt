@@ -3,18 +3,18 @@ package no.nav.aap.behandlingsflyt.avklaringsbehov
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
-import no.nav.aap.motor.FlytOppgaveRepository
+import no.nav.aap.motor.FlytJobbRepository
 
 class BehandlingTilstandValidator(connection: DBConnection) {
-    private val oppgaveRepository = FlytOppgaveRepository(connection)
+    private val flytJobbRepository = FlytJobbRepository(connection)
     private val behandlingReferanseService = BehandlingReferanseService(connection)
 
     fun validerTilstand(behandlingReferanse: BehandlingReferanse, behandlingVersjon: Long) {
         val behandling = behandlingReferanseService.behandling(behandlingReferanse)
         ValiderBehandlingTilstand.validerTilstandBehandling(behandling, behandlingVersjon)
 
-        val oppgaveForBehandling = oppgaveRepository.hentOppgaveForBehandling(behandling.id)
-        if (oppgaveForBehandling.isNotEmpty()) {
+        val jobberForBehandling = flytJobbRepository.hentOppgaveForBehandling(behandling.id)
+        if (jobberForBehandling.isNotEmpty()) {
             throw BehandlingUnderProsesseringException()
         }
     }

@@ -13,14 +13,14 @@ import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.flyt.utledType
-import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingOppgaveUtfører
+import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.server.respondWithStatus
-import no.nav.aap.motor.FlytOppgaveRepository
-import no.nav.aap.motor.OppgaveInput
+import no.nav.aap.motor.FlytJobbRepository
+import no.nav.aap.motor.JobbInput
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import javax.sql.DataSource
 
@@ -86,10 +86,10 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
                     val taSkriveLåsRepository = TaSkriveLåsRepository(connection)
                     val lås = taSkriveLåsRepository.lås(req.ref())
                     val behandling = behandling(connection, req)
-                    val flytOppgaveRepository = FlytOppgaveRepository(connection)
-                    if (flytOppgaveRepository.hentOppgaveForBehandling(behandling.id).isEmpty()) {
-                        flytOppgaveRepository.leggTil(
-                            OppgaveInput(ProsesserBehandlingOppgaveUtfører).forBehandling(
+                    val flytJobbRepository = FlytJobbRepository(connection)
+                    if (flytJobbRepository.hentOppgaveForBehandling(behandling.id).isEmpty()) {
+                        flytJobbRepository.leggTil(
+                            JobbInput(ProsesserBehandlingJobbUtfører).forBehandling(
                                 behandling.sakId,
                                 behandling.id
                             )

@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.flyt.flate
 
-import no.nav.aap.motor.OppgaveStatus
+import no.nav.aap.motor.JobbStatus
 
 class OppgaveDto(
     val oppgaveType: String,
-    val status: OppgaveStatus
+    val status: JobbStatus
 )

@@ -6,41 +6,41 @@ import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.SakId
 import org.slf4j.LoggerFactory
 
-class FlytOppgaveRepository(private val connection: DBConnection) {
-    private val log = LoggerFactory.getLogger(FlytOppgaveRepository::class.java)
+class FlytJobbRepository(private val connection: DBConnection) {
+    private val log = LoggerFactory.getLogger(FlytJobbRepository::class.java)
 
-    fun leggTil(oppgaveInput: OppgaveInput) {
+    fun leggTil(jobbInput: JobbInput) {
         val oppgaveId = connection.executeReturnKey(
             """
-            INSERT INTO OPPGAVE 
+            INSERT INTO JOBB 
             (sak_id, behandling_id, type, neste_kjoring) VALUES (?, ?, ?, ?)
             """.trimIndent()
         ) {
             setParams {
-                setLong(1, oppgaveInput.sakIdOrNull()?.toLong())
-                setLong(2, oppgaveInput.behandlingIdOrNull()?.toLong())
-                setString(3, oppgaveInput.type())
-                setLocalDateTime(4, oppgaveInput.nesteKjøringTidspunkt())
+                setLong(1, jobbInput.sakIdOrNull()?.toLong())
+                setLong(2, jobbInput.behandlingIdOrNull()?.toLong())
+                setString(3, jobbInput.type())
+                setLocalDateTime(4, jobbInput.nesteKjøringTidspunkt())
             }
         }
 
         connection.execute(
             """
-            INSERT INTO OPPGAVE_HISTORIKK 
-            (oppgave_id, status) VALUES (?, ?)
+            INSERT INTO JOBB_HISTORIKK 
+            (jobb_id, status) VALUES (?, ?)
             """.trimIndent()
         ) {
             setParams {
                 setLong(1, oppgaveId)
-                setEnumName(2, OppgaveStatus.KLAR)
+                setEnumName(2, JobbStatus.KLAR)
             }
         }
-        log.info("Planlagt kjøring av oppgave[${oppgaveInput.type()}] med kjøring etter ${oppgaveInput.nesteKjøringTidspunkt()}")
+        log.info("Planlagt kjøring av oppgave[${jobbInput.type()}] med kjøring etter ${jobbInput.nesteKjøringTidspunkt()}")
     }
 
 
-    private fun mapOppgave(row: Row): OppgaveInput {
-        return OppgaveInput(OppgaveType.parse(row.getString("type")))
+    private fun mapOppgave(row: Row): JobbInput {
+        return JobbInput(JobbType.parse(row.getString("type")))
             .medId(row.getLong("id"))
             .medStatus(row.getEnum("status"))
             .forBehandling(
@@ -50,11 +50,11 @@ class FlytOppgaveRepository(private val connection: DBConnection) {
             .medAntallFeil(row.getLong("antall_feil"))
     }
 
-    fun hentOppgaveForBehandling(id: BehandlingId): List<OppgaveInput> {
+    fun hentOppgaveForBehandling(id: BehandlingId): List<JobbInput> {
         val query = """
-            SELECT *, (SELECT count(1) FROM oppgave_historikk h WHERE h.oppgave_id = op.id AND h.status = '${OppgaveStatus.FEILET.name}') as antall_feil
-                 FROM OPPGAVE op
-                 WHERE op.status IN ('${OppgaveStatus.KLAR.name}','${OppgaveStatus.FEILET.name}')
+            SELECT *, (SELECT count(1) FROM JOBB_HISTORIKK h WHERE h.jobb_id = op.id AND h.status = '${JobbStatus.FEILET.name}') as antall_feil
+                 FROM JOBB op
+                 WHERE op.status IN ('${JobbStatus.KLAR.name}','${JobbStatus.FEILET.name}')
                    AND op.behandling_id = ?
         """.trimIndent()
 
@@ -72,8 +72,8 @@ class FlytOppgaveRepository(private val connection: DBConnection) {
         val antall =
             connection.queryFirst(
                 "SELECT count(1) as antall " +
-                        "FROM OPPGAVE " +
-                        "WHERE status not in ('${OppgaveStatus.FERDIG.name}', '${OppgaveStatus.FEILET.name}')"
+                        "FROM JOBB " +
+                        "WHERE status not in ('${JobbStatus.FERDIG.name}', '${JobbStatus.FEILET.name}')"
             ) {
                 setRowMapper {
                     it.getLong("antall") > 0

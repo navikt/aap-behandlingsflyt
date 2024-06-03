@@ -7,17 +7,17 @@ import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.motor.Oppgave
-import no.nav.aap.motor.OppgaveInput
-import no.nav.aap.motor.OppgaveUtfører
+import no.nav.aap.motor.Jobb
+import no.nav.aap.motor.JobbInput
+import no.nav.aap.motor.JobbUtfører
 
-class StoppetHendelseOppgaveUtfører(
+class StoppetHendelseJobbUtfører(
     private val behandlingHendelseService: BehandlingHendelseService,
     private val behandlingRepository: BehandlingRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository
-) : OppgaveUtfører {
+) : JobbUtfører {
 
-    override fun utfør(input: OppgaveInput) {
+    override fun utfør(input: JobbInput) {
         val behandlingId = input.behandlingId()
         val behandling = behandlingRepository.hent(behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
@@ -25,9 +25,9 @@ class StoppetHendelseOppgaveUtfører(
         behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
     }
 
-    companion object : Oppgave {
-        override fun konstruer(connection: DBConnection): OppgaveUtfører {
-            return StoppetHendelseOppgaveUtfører(
+    companion object : Jobb {
+        override fun konstruer(connection: DBConnection): JobbUtfører {
+            return StoppetHendelseJobbUtfører(
                 BehandlingHendelseService(SakService(connection)),
                 BehandlingRepositoryImpl(connection),
                 AvklaringsbehovRepositoryImpl(connection)

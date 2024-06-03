@@ -2,25 +2,25 @@ package no.nav.aap.motor.retry
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.motor.CronExpression
-import no.nav.aap.motor.Oppgave
-import no.nav.aap.motor.OppgaveInput
-import no.nav.aap.motor.OppgaveUtfører
+import no.nav.aap.motor.Jobb
+import no.nav.aap.motor.JobbInput
+import no.nav.aap.motor.JobbUtfører
 import org.slf4j.LoggerFactory
 
 internal const val OPPGAVE_TYPE = "oppgave.retryFeilede"
 
-internal class RekjørFeiledeOppgaver(private val repository: RetryFeiledeOppgaverRepository) : OppgaveUtfører {
-    private val log = LoggerFactory.getLogger(RekjørFeiledeOppgaver::class.java)
+internal class RekjørFeiledeJobb(private val repository: RetryFeiledeJobberRepository) : JobbUtfører {
+    private val log = LoggerFactory.getLogger(RekjørFeiledeJobb::class.java)
 
-    override fun utfør(input: OppgaveInput) {
+    override fun utfør(input: JobbInput) {
 
         val feilendeOppgaverMarkertForRekjøring = repository.markerAlleFeiledeForKlare()
         log.info("Markert {} oppgaver for rekjøring", feilendeOppgaverMarkertForRekjøring)
     }
 
-    companion object : Oppgave {
-        override fun konstruer(connection: DBConnection): OppgaveUtfører {
-            return RekjørFeiledeOppgaver(RetryFeiledeOppgaverRepository(connection))
+    companion object : Jobb {
+        override fun konstruer(connection: DBConnection): JobbUtfører {
+            return RekjørFeiledeJobb(RetryFeiledeJobberRepository(connection))
         }
 
         override fun type(): String {

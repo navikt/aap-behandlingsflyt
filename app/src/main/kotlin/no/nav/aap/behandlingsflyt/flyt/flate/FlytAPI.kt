@@ -27,9 +27,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.server.respondWithStatus
-import no.nav.aap.motor.FlytOppgaveRepository
-import no.nav.aap.motor.OppgaveInput
-import no.nav.aap.motor.OppgaveStatus
+import no.nav.aap.motor.FlytJobbRepository
+import no.nav.aap.motor.JobbInput
+import no.nav.aap.motor.JobbStatus
 import no.nav.aap.verdityper.flyt.StegGruppe
 import no.nav.aap.verdityper.flyt.StegType
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
@@ -41,7 +41,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
             get<BehandlingReferanse, BehandlingFlytOgTilstandDto> { req ->
                 val dto = dataSource.transaction(readOnly = true) { connection ->
                     val behandling = behandling(connection, req)
-                    val oppgaveRepository = FlytOppgaveRepository(connection)
+                    val flytJobbRepository = FlytJobbRepository(connection)
                     val flyt = utledType(behandling.typeBehandling()).flyt()
 
                     val stegGrupper: Map<StegGruppe, List<StegType>> =
@@ -56,7 +56,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
                         ),
                         flyt, aktivtSteg
                     )
-                    val oppgaver = oppgaveRepository.hentOppgaveForBehandling(behandling.id)
+                    val oppgaver = flytJobbRepository.hentOppgaveForBehandling(behandling.id)
                     val prosessering =
                         Prosessering(utledStatus(oppgaver), oppgaver.map { OppgaveDto(it.type(), it.status()) })
                     BehandlingFlytOgTilstandDto(
@@ -164,11 +164,11 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
     }
 }
 
-private fun utledStatus(oppgaver: List<OppgaveInput>): ProsesseringStatus {
+private fun utledStatus(oppgaver: List<JobbInput>): ProsesseringStatus {
     if (oppgaver.isEmpty()) {
         return ProsesseringStatus.FERDIG
     }
-    if (oppgaver.any { it.status() == OppgaveStatus.FEILET }) {
+    if (oppgaver.any { it.status() == JobbStatus.FEILET }) {
         return ProsesseringStatus.FEILET
     }
     return ProsesseringStatus.JOBBER

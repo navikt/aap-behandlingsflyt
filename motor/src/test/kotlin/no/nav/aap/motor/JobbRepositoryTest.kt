@@ -1,5 +1,5 @@
 package no.nav.aap.motor
 
-class OppgaveRepositoryTest {
+class JobbRepositoryTest {
     // TODO: Skrive en god test ...
 }

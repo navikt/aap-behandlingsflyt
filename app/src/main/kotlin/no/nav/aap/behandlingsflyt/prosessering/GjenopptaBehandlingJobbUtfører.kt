@@ -3,25 +3,25 @@ package no.nav.aap.behandlingsflyt.prosessering
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.forretningsflyt.gjenopptak.GjenopptakRepository
 import no.nav.aap.motor.CronExpression
-import no.nav.aap.motor.FlytOppgaveRepository
-import no.nav.aap.motor.Oppgave
-import no.nav.aap.motor.OppgaveInput
-import no.nav.aap.motor.OppgaveUtfører
+import no.nav.aap.motor.FlytJobbRepository
+import no.nav.aap.motor.Jobb
+import no.nav.aap.motor.JobbInput
+import no.nav.aap.motor.JobbUtfører
 
-class GjenopptaBehandlingOppgaveUtfører(
+class GjenopptaBehandlingJobbUtfører(
     private val gjenopptakRepository: GjenopptakRepository,
-    private val oppgaveRepository: FlytOppgaveRepository
-) : OppgaveUtfører {
+    private val flytJobbRepository: FlytJobbRepository
+) : JobbUtfører {
 
-    override fun utfør(input: OppgaveInput) {
+    override fun utfør(input: JobbInput) {
         val behandlingerForGjennopptak = gjenopptakRepository.finnBehandlingerForGjennopptak()
 
         behandlingerForGjennopptak.forEach { sakOgBehandling ->
-            val oppgaverPåBehandling = oppgaveRepository.hentOppgaveForBehandling(sakOgBehandling.behandlingId)
+            val jobberPåBehandling = flytJobbRepository.hentOppgaveForBehandling(sakOgBehandling.behandlingId)
 
-            if (oppgaverPåBehandling.none { it.oppgave.type() == ProsesserBehandlingOppgaveUtfører.type() }) {
-                oppgaveRepository.leggTil(
-                    OppgaveInput(ProsesserBehandlingOppgaveUtfører).forBehandling(
+            if (jobberPåBehandling.none { it.jobb.type() == ProsesserBehandlingJobbUtfører.type() }) {
+                flytJobbRepository.leggTil(
+                    JobbInput(ProsesserBehandlingJobbUtfører).forBehandling(
                         sakId = sakOgBehandling.sakId,
                         behandlingId = sakOgBehandling.behandlingId
                     )
@@ -30,11 +30,11 @@ class GjenopptaBehandlingOppgaveUtfører(
         }
     }
 
-    companion object : Oppgave {
-        override fun konstruer(connection: DBConnection): OppgaveUtfører {
-            return GjenopptaBehandlingOppgaveUtfører(
+    companion object : Jobb {
+        override fun konstruer(connection: DBConnection): JobbUtfører {
+            return GjenopptaBehandlingJobbUtfører(
                 GjenopptakRepository(connection),
-                FlytOppgaveRepository(connection)
+                FlytJobbRepository(connection)
             )
         }
 

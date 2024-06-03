@@ -3,8 +3,8 @@ package no.nav.aap.motor.retry
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
-class DriftOppgaverRepositoryExposed(connection: DBConnection) {
-    private val retryFeiledeOppgaverRepository = RetryFeiledeOppgaverRepository(connection)
+class DriftJobbRepositoryExposed(connection: DBConnection) {
+    private val retryFeiledeOppgaverRepository = RetryFeiledeJobberRepository(connection)
 
     fun markerAlleFeiledeForKlare(): Int {
         return retryFeiledeOppgaverRepository.markerAlleFeiledeForKlare()

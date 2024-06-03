@@ -38,7 +38,7 @@ import no.nav.aap.behandlingsflyt.flyt.flate.Venteinformasjon
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.hendelse.mottak.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HendelsesMottak
-import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsOppgaver
+import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
@@ -49,7 +49,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
-import no.nav.aap.motor.FlytOppgaveRepository
+import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.Motor
 import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.Periode
@@ -73,7 +73,7 @@ class FlytOrkestratorTest {
 
     companion object {
         val dataSource = InitTestDatabase.dataSource
-        val motor = Motor(dataSource, 1, ProsesseringsOppgaver.alle())
+        val motor = Motor(dataSource, 1, ProsesseringsJobber.alle())
         val hendelsesMottak = HendelsesMottak(dataSource)
         val fakes = Fakes()
 
@@ -770,7 +770,7 @@ class FlytOrkestratorTest {
     private fun ventPåSvar() {
         dataSource.transaction {
             val maxTid = LocalDateTime.now().plusMinutes(1)
-            while ((FlytOppgaveRepository(it).harOppgaver()) && maxTid.isAfter(LocalDateTime.now())) {
+            while ((FlytJobbRepository(it).harOppgaver()) && maxTid.isAfter(LocalDateTime.now())) {
                 Thread.sleep(50L)
             }
         }
