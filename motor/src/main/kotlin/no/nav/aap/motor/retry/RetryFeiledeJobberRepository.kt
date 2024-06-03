@@ -15,13 +15,13 @@ internal class RetryFeiledeJobberRepository(private val connection: DBConnection
     internal fun markerAlleFeiledeForKlare(): Int {
         val historikk = """
             INSERT INTO JOBB_HISTORIKK (jobb_id, status)
-            SELECT id, 'KLAR' FROM OPPGAVE WHERE status = 'FEILET'
+            SELECT id, 'KLAR' FROM JOBB WHERE status = 'FEILET'
         """.trimIndent()
 
         connection.execute(historikk)
 
         val query = """
-                UPDATE OPPGAVE SET status = 'KLAR' WHERE status = 'FEILET'
+                UPDATE JOBB SET status = 'KLAR' WHERE status = 'FEILET'
             """.trimIndent()
         var antallRader = 0
         connection.execute(query) {
@@ -36,7 +36,7 @@ internal class RetryFeiledeJobberRepository(private val connection: DBConnection
     internal fun markerFeiledeForKlare(behandlingId: BehandlingId): Int {
         val historikk = """
             INSERT INTO JOBB_HISTORIKK (jobb_id, status)
-            SELECT id, 'KLAR' FROM OPPGAVE WHERE status = 'FEILET' AND behandling_id = ?
+            SELECT id, 'KLAR' FROM JOBB WHERE status = 'FEILET' AND behandling_id = ?
         """.trimIndent()
 
         connection.execute(historikk) {
@@ -46,7 +46,7 @@ internal class RetryFeiledeJobberRepository(private val connection: DBConnection
         }
 
         val query = """
-                UPDATE OPPGAVE SET status = 'KLAR' WHERE status = 'FEILET' AND behandling_id = ?
+                UPDATE JOBB SET status = 'KLAR' WHERE status = 'FEILET' AND behandling_id = ?
             """.trimIndent()
         var antallRader = 0
         connection.execute(query) {
@@ -67,7 +67,7 @@ internal class RetryFeiledeJobberRepository(private val connection: DBConnection
 
     private fun hentStatusPåOppgave(type: String): List<FeilhåndteringOppgaveStatus> {
         val query = """
-                SELECT * FROM OPPGAVE WHERE type = ? and status != 'FERDIG'
+                SELECT * FROM JOBB WHERE type = ? and status != 'FERDIG'
             """.trimIndent()
 
         val queryList = connection.queryList(query) {
@@ -89,7 +89,7 @@ internal class RetryFeiledeJobberRepository(private val connection: DBConnection
     internal fun markerSomKlar(oppgave: FeilhåndteringOppgaveStatus) {
         val historikk = """
             INSERT INTO JOBB_HISTORIKK (jobb_id, status)
-            SELECT id, 'KLAR' FROM OPPGAVE WHERE status = 'FEILET' and id = ?
+            SELECT id, 'KLAR' FROM JOBB WHERE status = 'FEILET' and id = ?
         """.trimIndent()
 
         connection.execute(historikk) {
@@ -99,7 +99,7 @@ internal class RetryFeiledeJobberRepository(private val connection: DBConnection
         }
 
         val query = """
-                UPDATE OPPGAVE SET status = 'KLAR' WHERE status = 'FEILET' and id = ?
+                UPDATE JOBB SET status = 'KLAR' WHERE status = 'FEILET' and id = ?
             """.trimIndent()
         connection.execute(query) {
             setParams {
