@@ -12,7 +12,6 @@ import java.util.*
 class BehandlingRepositoryImpl(private val connection: DBConnection) : BehandlingRepository, BehandlingFlytRepository {
 
     override fun opprettBehandling(sakId: SakId, årsaker: List<Årsak>, typeBehandling: TypeBehandling): Behandling {
-        val referanse = UUID.randomUUID() //TODO: Hva gjør vi her med refaranse?
 
         val query = """
             INSERT INTO BEHANDLING (sak_id, referanse, status, type)
@@ -21,7 +20,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         val behandlingId = connection.executeReturnKey(query) {
             setParams {
                 setLong(1, sakId.toLong())
-                setUUID(2, referanse)
+                setUUID(2, UUID.randomUUID())
                 setEnumName(3, Status.OPPRETTET)
                 setString(4, typeBehandling.identifikator())
             }
