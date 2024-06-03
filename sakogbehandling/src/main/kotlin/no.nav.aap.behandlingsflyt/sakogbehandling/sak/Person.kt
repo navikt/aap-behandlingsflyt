@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.sakogbehandling.sak
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import java.util.*
 
-// TODO: Hvorfor trippel identifikator? PDL prøver å gå bort ifra aktør-id, så da bør ikke vi innføre det igjen.
 class Person(val id: Long, val identifikator: UUID, private var identer: List<Ident>) {
 
     fun er(ident: Ident): Boolean {
