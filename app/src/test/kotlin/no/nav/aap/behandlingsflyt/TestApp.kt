@@ -21,7 +21,7 @@ import java.time.temporal.ChronoUnit
 // Kjøres opp for å få logback i console uten json
 fun main() {
     val postgres = postgreSQLContainer()
-    val fakes = Fakes()
+    val fakes = Fakes(azurePort = 8081)
 
     // Starter server
     embeddedServer(Netty, port = 8080) {

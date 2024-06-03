@@ -51,24 +51,23 @@ import java.time.LocalDate
 import java.time.Year
 import no.nav.aap.pdl.PdlRelasjonData as BarnPdlData
 
-class Fakes : AutoCloseable {
+class Fakes(azurePort: Int = 0) : AutoCloseable {
     val log = LoggerFactory.getLogger(Fakes::class.java)
-    private var azure: NettyApplicationEngine =
-        embeddedServer(Netty, port = 0, module = { azureFake() }).apply { start() }
-    private val pdl = embeddedServer(Netty, port = 0, module = { pdlFake() }).apply { start() }
-    private val yrkesskade = embeddedServer(Netty, port = 0, module = { yrkesskadeFake() }).apply { start() }
-    private val inntekt = embeddedServer(Netty, port = 0, module = { poppFake() }).apply { start() }
-    private val oppgavestyring = embeddedServer(Netty, port = 0, module = { oppgavestyringFake() }).apply { start() }
+    private val azure = embeddedServer(Netty, port = azurePort, module = { azureFake() }).start()
+    private val pdl = embeddedServer(Netty, port = 0, module = { pdlFake() }).start()
+    private val yrkesskade = embeddedServer(Netty, port = 0, module = { yrkesskadeFake() }).start()
+    private val inntekt = embeddedServer(Netty, port = 0, module = { poppFake() }).start()
+    private val oppgavestyring = embeddedServer(Netty, port = 0, module = { oppgavestyringFake() }).start()
     val fakePersoner: MutableMap<String, TestPerson> = mutableMapOf()
 
     init {
         Thread.currentThread().setUncaughtExceptionHandler { _, e -> log.error("Uhåndtert feil", e) }
         // Azure
         System.setProperty("azure.openid.config.token.endpoint", "http://localhost:${azure.port()}/token")
-        System.setProperty("azure.app.client.id", "")
+        System.setProperty("azure.app.client.id", "behandlingsflyt")
         System.setProperty("azure.app.client.secret", "")
-        System.setProperty("azure.openid.config.jwks.uri", "http://localhost:${azure.port()}")
-        System.setProperty("azure.openid.config.issuer", "")
+        System.setProperty("azure.openid.config.jwks.uri", "http://localhost:${azure.port()}/jwks")
+        System.setProperty("azure.openid.config.issuer", "behandlingsflyt")
 
         // Pdl
         System.setProperty("integrasjon.pdl.url", "http://localhost:${pdl.port()}")
@@ -398,14 +397,18 @@ class Fakes : AutoCloseable {
         }
         routing {
             post("/token") {
-                call.respond(TestToken())
+                val token = AzureTokenGen("behandlingsflyt", "behandlingsflyt").generate()
+                call.respond(TestToken(access_token = token))
+            }
+            get("/jwks") {
+                call.respond(AZURE_JWKS)
             }
         }
     }
 
 
     internal data class TestToken(
-        val access_token: String = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjE4OTE2MjM5MDIyfQ.BIR7ZqtdKxxIVxcDt-yShbff1MnHaKbEcuFHwuPuTh0",
+        val access_token: String,
         val refresh_token: String = "very.secure.token",
         val id_token: String = "very.secure.token",
         val token_type: String = "token-type",
