@@ -3,6 +3,9 @@ name: Deploy saksbehandling
 on:
   push:
     branches: [ main ]
+    paths-ignore:
+        - '.github/**'
+        - '*.md'
 
 jobs:
   build:
