@@ -19,7 +19,7 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-databind:2.17.1")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.1")
 
-    implementation("com.nimbusds:nimbus-jose-jwt:9.37.3")
+    implementation("com.nimbusds:nimbus-jose-jwt:9.39.3")
 
     api(project(":dbtestdata"))
     api(project(":dbtest"))
