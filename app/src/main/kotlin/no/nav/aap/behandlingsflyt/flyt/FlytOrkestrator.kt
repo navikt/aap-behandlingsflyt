@@ -131,8 +131,6 @@ class FlytOrkestrator(
                 kontekst
             )
 
-            connection.markerSavepoint()
-
             val result = StegOrkestrator(connection, gjeldendeSteg).utfør(kontekst, behandling)
 
             val avklaringsbehov = avklaringsbehovene.åpne()

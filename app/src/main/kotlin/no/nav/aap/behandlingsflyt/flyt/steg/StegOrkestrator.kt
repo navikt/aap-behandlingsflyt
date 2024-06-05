@@ -29,7 +29,7 @@ private val log = LoggerFactory.getLogger(StegOrkestrator::class.java)
  *
  * @see no.nav.aap.verdityper.flyt.StegStatus.AVSLUTTER:        Teknisk markør for avslutting av steget
  */
-class StegOrkestrator(connection: DBConnection, private val aktivtSteg: FlytSteg) {
+class StegOrkestrator(private val connection: DBConnection, private val aktivtSteg: FlytSteg) {
 
     private val behandlingRepository = BehandlingFlytRepository(connection)
     private val avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection)
@@ -50,6 +50,10 @@ class StegOrkestrator(connection: DBConnection, private val aktivtSteg: FlytSteg
                 gjeldendeStegStatus,
                 behandling
             )
+            if (gjeldendeStegStatus == StegStatus.START) {
+                // Legger denne her slik at vi får savepoint på at vi har byttet steg, slik at vi starter opp igjen på rett sted når prosessen dras i gang igjen
+                connection.markerSavepoint()
+            }
 
             if (gjeldendeStegStatus == StegStatus.AVSLUTTER) {
                 return resultat
