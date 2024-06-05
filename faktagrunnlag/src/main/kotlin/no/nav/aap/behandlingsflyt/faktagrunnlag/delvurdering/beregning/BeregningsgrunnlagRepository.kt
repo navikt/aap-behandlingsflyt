@@ -135,7 +135,6 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
                 setLong(2, beregningId)
             }
         }
-
         if (beregningsgrunnlag is GrunnlagUføre) {
             lagreBeregningsgrunnlag(
                 beregningId,

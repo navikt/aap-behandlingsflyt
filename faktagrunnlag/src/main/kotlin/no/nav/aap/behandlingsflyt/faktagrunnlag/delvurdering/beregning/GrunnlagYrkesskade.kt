@@ -1,13 +1,27 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Faktagrunnlag
+import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.GUnit
+import no.nav.aap.verdityper.Prosent
 import java.math.BigDecimal
+import java.time.LocalDate
+import java.time.Year
 
 class GrunnlagYrkesskade(
     private val grunnlaget: GUnit,
-    private val beregningsgrunnlag: Beregningsgrunnlag
-) : Beregningsgrunnlag {
+    private val beregningsgrunnlag: Beregningsgrunnlag,
+    private val terskelverdiForYrkesskade: Prosent,
+    private val andelYrkesskade: Prosent,
+    private val benyttetAndelForYrkesskade: Prosent,
+    private val antattÅrligInntektYrkesskadeTidspunktet: Beløp,
+    private val yrkesskadeTidspunkt: Year,
+    private val grunnlagForBeregningAvYrkesskadeandel: GUnit,
+    private val yrkesskadeinntektIG: GUnit,
+    private val andelSomSkyldesYrkesskade: GUnit,
+    private val andelSomIkkeSkyldesYrkesskade: GUnit,
+    private val grunnlagEtterYrkesskadeFordel: GUnit,
+    ) : Beregningsgrunnlag {
 
     override fun grunnlaget(): GUnit {
         return grunnlaget

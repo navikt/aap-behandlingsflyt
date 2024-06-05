@@ -30,7 +30,17 @@ class YrkesskadeBeregning(
 
         return GrunnlagYrkesskade(
             grunnlaget = grunnlag,
-            beregningsgrunnlag = grunnlag11_19
+            beregningsgrunnlag = grunnlag11_19,
+            terskelverdiForYrkesskade = TERSKELVERDI_FOR_YRKESSKADE,
+            andelYrkesskade = andelForBeregning,
+            benyttetAndelForYrkesskade = andelAvNedsettelsenSomSkyldesYrkesskaden,
+            antattÅrligInntektYrkesskadeTidspunktet = antattÅrligInntekt.beløp,
+            yrkesskadeTidspunkt = antattÅrligInntekt.år,
+            yrkesskadeinntektIG = antattÅrligInntektGUnits,
+            andelSomSkyldesYrkesskade = andelSomSkyldesYrkesskade,
+            andelSomIkkeSkyldesYrkesskade = andelSomIkkeSkyldesYrkesskade,
+            grunnlagEtterYrkesskadeFordel = grunnlag,
+            grunnlagForBeregningAvYrkesskadeandel = grunnlagForBeregningAvYrkesskadeandel
         )
     }
 }

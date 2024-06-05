@@ -7,6 +7,9 @@ import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
@@ -18,12 +21,21 @@ fun NormalOpenAPIRoute.beregningsGrunnlagApi(dataSource: DataSource) {
         route("/grunnlag/{referanse}") {
             get<BehandlingReferanse, BeregningDTO> { req ->
                 val begregningsgrunnlag = dataSource.transaction { connection ->
+                    /*
+                    *
+                    *
+                    */
                     val behandling: Behandling = BehandlingReferanseService(connection).behandling(req)
                     val beregning = BeregningsgrunnlagRepository(connection).hentHvisEksisterer(behandling.id)
-
+                    val inntekt = InntektGrunnlagRepository(connection).hentHvisEksisterer(behandling.id)
+                    val uføre = UføreRepository(connection).hentHvisEksisterer(behandling.id)
+                    val yrkesskadeRepository = YrkesskadeRepository(connection).hentHvisEksisterer(behandling.id)
                     if (beregning == null) return@transaction null
 
-                    BeregningDTO(beregning.grunnlaget(), beregning.faktagrunnlag())
+                    BeregningDTO(
+                        beregningsGrunnlag = beregning.grunnlaget(),
+                        faktagrunnlag = beregning.faktagrunnlag(),
+                    )
                 }
 
                 if (begregningsgrunnlag == null) {
