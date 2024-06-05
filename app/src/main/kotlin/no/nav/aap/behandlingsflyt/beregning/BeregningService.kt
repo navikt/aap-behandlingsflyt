@@ -46,10 +46,10 @@ class BeregningService(
     }
 
     private fun beregneMedInput(input: Inntektsbehov): Beregningsgrunnlag {
-        val grunnlag11_19 = beregn(input.utledForOrdinær())
+        val grunnlag11_19 = beregn(input.utledForOrdinær())//6G begrensning ligger her samt gjennomsnitt
 
         val beregningMedEllerUtenUføre = if (input.skalBeregneMedUføre()) {
-            val beregningVedUføre = beregn(input.utledForYtterligereNedsatt())
+            val beregningVedUføre = beregn(input.utledForYtterligereNedsatt())// år kommer herfra //6G begrensning ligger her samt gjennomsnitt
             val uføreberegning = UføreBeregning(
                 grunnlag = grunnlag11_19,
                 ytterligereNedsattGrunnlag = beregningVedUføre,
@@ -59,6 +59,7 @@ class BeregningService(
                 uføregrad = input.uføregrad()
             )
             val grunnlagUføre = uføreberegning.beregnUføre()
+            //lagre her
             grunnlagUføre
         } else {
             grunnlag11_19

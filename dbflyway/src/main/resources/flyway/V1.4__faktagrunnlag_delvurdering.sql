@@ -69,10 +69,19 @@ CREATE TABLE BEREGNING_HOVED
 
 CREATE TABLE BEREGNING_YRKESSKADE
 (
-    ID                 BIGSERIAL                              NOT NULL PRIMARY KEY,
-    BEREGNING_HOVED_ID BIGINT                                 NOT NULL REFERENCES BEREGNING_HOVED (ID),
-    G_UNIT             NUMERIC(21, 10)                        NOT NULL,
-    OPPRETTET_TID      TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
+    ID                                        BIGSERIAL                              NOT NULL PRIMARY KEY,
+    BEREGNING_HOVED_ID                        BIGINT                                 NOT NULL REFERENCES BEREGNING_HOVED (ID),
+    G_UNIT                                    NUMERIC(21, 10)                        NOT NULL,
+    OPPRETTET_TID                             TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    TERSKELVERDI_FOR_YRKESSKADE               SMALLINT                               NOT NULL,
+    ANDEL_YRKESSKADE                          SMALLINT                               NOT NULL,
+    BENYTTET_ANDEL_YRKESSKADE                 SMALLINT                               NOT NULL,
+    ANTATT_ARLIG_INNTEKT_YRKESSKADE_TIDSPUNKT NUMERIC(21, 10)                        NOT NULL,
+    ANDEL_SOM_SKYLDES_YRKESSKADE              SMALLINT                               NOT NULL,
+    ANDEL_SOM_IKKE_SKYLDES_YRKESSKADE         SMALLINT                               NOT NULL,
+    GRUNNLAG_ETTER_YRKESSKADE_FORDELING       NUMERIC(21, 10)                        NOT NULL,
+    GRUNNLAG_FOR_BEREGNING_AV_YRKESSKADEANDEL NUMERIC(21, 10)                        NOT NULL,
+
 );
 
 CREATE TABLE BEREGNINGSGRUNNLAG
@@ -181,7 +190,7 @@ CREATE TABLE TILKJENT_PERIODE
     GRUNNLAG           NUMERIC(21, 0)  NOT NULL,
     GRADERING          SMALLINT        NOT NULL,
     GRUNNBELOP         NUMERIC(21)     NOT NULL,
-    ANTALL_BARN         SMALLINT        NOT NULL,
+    ANTALL_BARN        SMALLINT        NOT NULL,
     BARNETILLEGG       NUMERIC(21)     NOT NULL,
     GRUNNLAGSFAKTOR    NUMERIC(21, 10) NOT NULL,
     BARNETILLEGGSATS   NUMERIC         NOT NULL,

@@ -24,7 +24,8 @@ class GrunnlagUføre(
             grunnlaget = grunnlaget.verdi(),
             gjeldende = gjeldende,
             grunnlag = grunnlag.faktagrunnlag(),
-            grunnlagYtterligereNedsatt = grunnlagYtterligereNedsatt.faktagrunnlag()
+            grunnlagYtterligereNedsatt = grunnlagYtterligereNedsatt.faktagrunnlag(),
+
         )
     }
 

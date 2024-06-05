@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.verdityper.Prosent
+import java.time.Year
 
 class UføreBeregning(
     private val grunnlag: Beregningsgrunnlag,
@@ -15,7 +16,7 @@ class UføreBeregning(
     }
 
     fun beregnUføre(): GrunnlagUføre {
-        val oppjustertGrunnlagVedUføre = ytterligereNedsattGrunnlag.grunnlaget().dividert(uføregrad.kompliment())
+        val oppjustertGrunnlagVedUføre = ytterligereNedsattGrunnlag.grunnlaget().dividert(uføregrad.kompliment()) //uføreOppjusterteInntekter men feil
 
         if (grunnlag.grunnlaget() >= oppjustertGrunnlagVedUføre) {
             return GrunnlagUføre(

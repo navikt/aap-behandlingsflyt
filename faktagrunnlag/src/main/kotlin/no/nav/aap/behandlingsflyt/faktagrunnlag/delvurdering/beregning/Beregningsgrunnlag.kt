@@ -7,3 +7,4 @@ interface Beregningsgrunnlag {
     fun grunnlaget(): GUnit
     fun faktagrunnlag(): Faktagrunnlag
 }
+

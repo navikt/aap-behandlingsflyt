@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade
 
-import no.nav.aap.verdityper.Periode
 import java.time.LocalDate
 
 class Yrkesskade(val ref: String, val skadedato: LocalDate) {
