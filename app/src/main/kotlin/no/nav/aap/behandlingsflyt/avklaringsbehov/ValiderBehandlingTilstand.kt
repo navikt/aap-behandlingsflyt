@@ -20,7 +20,7 @@ internal object ValiderBehandlingTilstand {
             val flyt = utledType(behandling.typeBehandling()).flyt()
             if (!flyt.erStegFørEllerLik(avklaringsbehov.løsesISteg, behandling.aktivtSteg())) {
                 throw IllegalArgumentException(
-                    "Forsøker løse avklaringsbehov $avklaringsbehov knyttet til et steg som ikke finnes i behandlingen av type ${
+                    "Forsøker løse avklaringsbehov $avklaringsbehov som er definert i et steg etter nåværende steg[${behandling.aktivtSteg()}] ${
                         behandling.typeBehandling().identifikator()
                     }"
                 )
