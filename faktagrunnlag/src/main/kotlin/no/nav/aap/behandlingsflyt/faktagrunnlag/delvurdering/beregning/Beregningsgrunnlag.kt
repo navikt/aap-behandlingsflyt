@@ -6,5 +6,7 @@ import no.nav.aap.verdityper.GUnit
 interface Beregningsgrunnlag {
     fun grunnlaget(): GUnit
     fun faktagrunnlag(): Faktagrunnlag
+    fun er6GBegrenset(): Boolean
+    fun erGjennomsnitt(): Boolean
 }
 

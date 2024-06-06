@@ -21,6 +21,8 @@ class GrunnlagYrkesskade(
     private val andelSomSkyldesYrkesskade: GUnit,
     private val andelSomIkkeSkyldesYrkesskade: GUnit,
     private val grunnlagEtterYrkesskadeFordel: GUnit,
+    private val er6GBegrenset: Boolean,
+    private val erGjennomsnitt: Boolean
     ) : Beregningsgrunnlag {
 
     override fun grunnlaget(): GUnit {
@@ -32,6 +34,14 @@ class GrunnlagYrkesskade(
             grunnlaget = grunnlaget.verdi(),
             beregningsgrunnlag = beregningsgrunnlag.faktagrunnlag()
         )
+    }
+
+    override fun er6GBegrenset(): Boolean {
+        return er6GBegrenset
+    }
+
+    override fun erGjennomsnitt(): Boolean {
+        return erGjennomsnitt
     }
 
     internal class Fakta(

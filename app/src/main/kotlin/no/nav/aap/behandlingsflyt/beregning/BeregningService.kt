@@ -58,8 +58,7 @@ class BeregningService(
                 // Skal saksbahandler velge den som er knyttet til ytterligere nedsatt-tidspunktet?
                 uføregrad = input.uføregrad()
             )
-            val grunnlagUføre = uføreberegning.beregnUføre()
-            //lagre her
+            val grunnlagUføre = uføreberegning.beregnUføre(Year.from(input.hentYtterligereNedsattArbeidsevneDato()))
             grunnlagUføre
         } else {
             grunnlag11_19

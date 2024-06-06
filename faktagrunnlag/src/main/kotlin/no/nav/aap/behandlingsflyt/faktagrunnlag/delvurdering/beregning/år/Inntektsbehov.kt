@@ -14,6 +14,10 @@ class Inntektsbehov(private val input: Input) {
             .toSortedSet()
     }
 
+    fun hentYtterligereNedsattArbeidsevneDato(): LocalDate? {
+        return input.beregningVurdering?.ytterligereNedsattArbeidsevneDato
+    }
+
     private fun treÅrForutFor(nedsettelsesdato: LocalDate): Set<Year> {
         val nedsettelsesår = Year.from(nedsettelsesdato)
         return 3.downTo(1L).map(nedsettelsesår::minusYears).toSortedSet()

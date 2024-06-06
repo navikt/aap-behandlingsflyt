@@ -18,21 +18,28 @@ class GrunnlagetForBeregningen(
     }
 
     fun beregnGrunnlaget(): Grunnlag11_19 {
+        var er6Gbegrenset = false
+        var erGjennomsnitt = false
         val gUnits = inntekter.map { inntekt ->
             Grunnbeløp.finnGUnit(inntekt.år, inntekt.beløp)
         }
 
         val gUnitsBegrensetTil6GUnits = gUnits.map(GUnit::begrensTil6GUnits)
-
+        er6Gbegrenset = gUnitsBegrensetTil6GUnits == gUnits
         val gUnitFørsteÅr = gUnitsBegrensetTil6GUnits.first()
 
         val gUnitGjennomsnitt = GUnit.gjennomsnittlig(gUnitsBegrensetTil6GUnits)
+        val gjeldende = maxOf(
+            gUnitFørsteÅr,
+            gUnitGjennomsnitt
+        )
+
+        erGjennomsnitt = gjeldende == gUnitGjennomsnitt
 
         return Grunnlag11_19(
-            maxOf(
-                gUnitFørsteÅr,
-                gUnitGjennomsnitt
-            )
+            gjeldende,
+            er6GBegrenset= er6Gbegrenset,
+            erGjennomsnitt = erGjennomsnitt
         )
     }
 }

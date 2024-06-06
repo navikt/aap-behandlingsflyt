@@ -15,7 +15,7 @@ class UføreBeregning(
         require(uføregrad < Prosent.`100_PROSENT`) { "Uføregraden må være mindre enn 100 prosent" }
     }
 
-    fun beregnUføre(): GrunnlagUføre {
+    fun beregnUføre(ytterligereNedsattÅr: Year): GrunnlagUføre {
         val oppjustertGrunnlagVedUføre = ytterligereNedsattGrunnlag.grunnlaget().dividert(uføregrad.kompliment()) //uføreOppjusterteInntekter men feil
 
         if (grunnlag.grunnlaget() >= oppjustertGrunnlagVedUføre) {
@@ -23,7 +23,11 @@ class UføreBeregning(
                 grunnlaget = grunnlag.grunnlaget(),
                 gjeldende = GrunnlagUføre.Type.STANDARD,
                 grunnlag = grunnlag,
-                grunnlagYtterligereNedsatt = ytterligereNedsattGrunnlag
+                grunnlagYtterligereNedsatt = ytterligereNedsattGrunnlag,
+                uføregrad= uføregrad,
+                uføreOppjusterteInntekter = oppjustertGrunnlagVedUføre,
+                er6GBegrenset = grunnlag.er6GBegrenset(),
+                erGjennomsnitt = grunnlag.erGjennomsnitt()
             )
 
         } else {
@@ -31,7 +35,12 @@ class UføreBeregning(
                 grunnlaget = oppjustertGrunnlagVedUføre,
                 gjeldende = GrunnlagUføre.Type.YTTERLIGERE_NEDSATT,
                 grunnlag = grunnlag,
-                grunnlagYtterligereNedsatt = ytterligereNedsattGrunnlag
+                grunnlagYtterligereNedsatt = ytterligereNedsattGrunnlag,
+                uføregrad = uføregrad,
+                uføreOppjusterteInntekter = oppjustertGrunnlagVedUføre,
+                uføreYtterligereNedsattArbeidsevneÅr = ytterligereNedsattÅr,
+                er6GBegrenset = grunnlag.er6GBegrenset(),
+                erGjennomsnitt = grunnlag.erGjennomsnitt()
             )
 
         }

@@ -3,9 +3,12 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Faktagrunnlag
 import no.nav.aap.verdityper.GUnit
 import java.math.BigDecimal
+import java.time.Year
 
 class Grunnlag11_19(
-    private val grunnlaget: GUnit
+    private val grunnlaget: GUnit,
+    private val er6GBegrenset: Boolean,
+    private val erGjennomsnitt: Boolean
 ) : Beregningsgrunnlag {
 
     override fun grunnlaget(): GUnit {
@@ -16,6 +19,14 @@ class Grunnlag11_19(
         return Fakta(
             grunnlaget = grunnlaget.verdi()
         )
+    }
+
+    override fun er6GBegrenset(): Boolean {
+        return er6GBegrenset
+    }
+
+    override fun erGjennomsnitt(): Boolean {
+        return erGjennomsnitt
     }
 
     internal class Fakta(

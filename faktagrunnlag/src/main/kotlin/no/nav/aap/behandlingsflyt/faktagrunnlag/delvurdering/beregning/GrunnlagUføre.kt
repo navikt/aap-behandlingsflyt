@@ -2,13 +2,22 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Faktagrunnlag
 import no.nav.aap.verdityper.GUnit
+import no.nav.aap.verdityper.Prosent
 import java.math.BigDecimal
+import java.time.Year
 
 class GrunnlagUføre(
     private val grunnlaget: GUnit,
     private val gjeldende: Type,
     private val grunnlag: Beregningsgrunnlag,
-    private val grunnlagYtterligereNedsatt: Beregningsgrunnlag
+    private val grunnlagYtterligereNedsatt: Beregningsgrunnlag,
+    private val uføregrad: Prosent,
+    private val uføreOppjusterteInntekter: GUnit,
+    private val uføreYtterligereNedsattArbeidsevneÅr: Year? = null,
+    private val er6GBegrenset: Boolean,
+    private val erGjennomsnitt: Boolean
+
+
 ) : Beregningsgrunnlag {
 
     enum class Type {
@@ -27,6 +36,14 @@ class GrunnlagUføre(
             grunnlagYtterligereNedsatt = grunnlagYtterligereNedsatt.faktagrunnlag(),
 
         )
+    }
+
+    override fun er6GBegrenset(): Boolean {
+        return er6GBegrenset
+    }
+
+    override fun erGjennomsnitt(): Boolean {
+        return erGjennomsnitt
     }
 
     internal class Fakta(
