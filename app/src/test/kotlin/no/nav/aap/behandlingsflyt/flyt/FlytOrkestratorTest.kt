@@ -314,28 +314,6 @@ class FlytOrkestratorTest {
         }
 
         dataSource.transaction {
-            val avklaringsbehov = hentAvklaringsbehov(behandling.id, it)
-            AvklaringsbehovHendelseHåndterer(it).håndtere(
-                behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
-                    løsning = KvalitetssikringLøsning(avklaringsbehov.alle()
-                        .filter { behov -> behov.erTotrinn() }
-                        .map { behov ->
-                            TotrinnsVurdering(
-                                behov.definisjon.kode,
-                                true,
-                                "begrunnelse",
-                                emptyList()
-                            )
-                        }),
-                    behandlingVersjon = behandling.versjon,
-                    bruker = Bruker("SAKSBEHANDLER")
-                )
-            )
-        }
-        ventPåSvar(sak.id, behandling.id)
-        behandling = hentBehandling(sak.id)
-        dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
                 LøsAvklaringsbehovBehandlingHendelse(
@@ -688,7 +666,7 @@ class FlytOrkestratorTest {
                 behandling.id,
                 LøsAvklaringsbehovBehandlingHendelse(
                     løsning = KvalitetssikringLøsning(avklaringsbehov.alle()
-                        .filter { behov -> behov.erTotrinn() }
+                        .filter { behov -> behov.kreverKvalitetssikring() }
                         .map { behov ->
                             TotrinnsVurdering(
                                 behov.definisjon.kode,
@@ -787,29 +765,6 @@ class FlytOrkestratorTest {
             assertThat(avklaringsbehov.alle()).anySatisfy { behov -> behov.erÅpent() && behov.definisjon == Definisjon.FORESLÅ_VEDTAK }
             assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         }
-
-        dataSource.transaction {
-            val avklaringsbehov = hentAvklaringsbehov(behandling.id, it)
-            AvklaringsbehovHendelseHåndterer(it).håndtere(
-                behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
-                    løsning = KvalitetssikringLøsning(avklaringsbehov.alle()
-                        .filter { behov -> behov.erTotrinn() }
-                        .map { behov ->
-                            TotrinnsVurdering(
-                                behov.definisjon.kode,
-                                true,
-                                "begrunnelse",
-                                emptyList()
-                            )
-                        }),
-                    behandlingVersjon = behandling.versjon,
-                    bruker = Bruker("SAKSBEHANDLER")
-                )
-            )
-        }
-        ventPåSvar(sak.id, behandling.id)
-        behandling = hentBehandling(sak.id)
 
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(it).håndtere(

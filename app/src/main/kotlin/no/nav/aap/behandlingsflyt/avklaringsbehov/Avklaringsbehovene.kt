@@ -181,7 +181,7 @@ class Avklaringsbehovene(
         return alle()
             .filter { avklaringsbehov -> avklaringsbehov.kreverKvalitetssikring() }
             .filter { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
-            .any { avklaringsbehov -> avklaringsbehov.erTotrinn() && !avklaringsbehov.erKvalitetssikret() }
+            .any { avklaringsbehov -> !avklaringsbehov.erKvalitetssikretTidligere() }
     }
 
     fun harIkkeForeslåttVedtak(): Boolean {

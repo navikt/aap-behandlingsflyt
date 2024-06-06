@@ -29,11 +29,12 @@ class Avklaringsbehov(
         return Status.TOTRINNS_VURDERT == historikk.maxOf { it }.status
     }
 
-    fun erKvalitetssikret(): Boolean {
-        return Status.KVALITETSSIKRET == historikk.filterNot {
+    fun erKvalitetssikretTidligere(): Boolean {
+        return Status.KVALITETSSIKRET == historikk.filter {
             it.status in setOf(
-                Status.SENDT_TILBAKE_FRA_BESLUTTER,
-                Status.TOTRINNS_VURDERT
+                Status.OPPRETTET,
+                Status.KVALITETSSIKRET,
+                Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER
             )
         }.maxOf { it }.status
     }
@@ -89,7 +90,11 @@ class Avklaringsbehov(
     }
 
     fun erÅpent(): Boolean {
-        return status() in setOf(Status.OPPRETTET, Status.SENDT_TILBAKE_FRA_BESLUTTER, Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER)
+        return status() in setOf(
+            Status.OPPRETTET,
+            Status.SENDT_TILBAKE_FRA_BESLUTTER,
+            Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER
+        )
     }
 
     fun skalStoppeHer(stegType: StegType): Boolean {

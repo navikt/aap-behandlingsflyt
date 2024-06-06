@@ -92,7 +92,7 @@ private fun kvalitetssikringsVurdering(avklaringsbehovene: Avklaringsbehovene): 
 }
 
 private fun tilKvalitetssikring(it: Avklaringsbehov): TotrinnsVurdering {
-    return if (it.erKvalitetssikret() || it.harVærtSendtTilbakeFraKvalitetssikrerTidligere()) {
+    return if (it.erKvalitetssikretTidligere() || it.harVærtSendtTilbakeFraKvalitetssikrerTidligere()) {
         val sisteVurdering =
             it.historikk.lastOrNull { it.status in setOf(Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER, Status.KVALITETSSIKRET) }
         val godkjent = it.status() == Status.KVALITETSSIKRET
