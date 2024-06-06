@@ -8,10 +8,12 @@ import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.TOGGLE_KVALITETSSIKRING
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.genererIdent
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
+import no.nav.aap.behandlingsflyt.toggles.FeatureToggle
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
@@ -36,6 +38,7 @@ fun main() {
             )
         )
         module(fakes)
+        aktiverToggles()
 
         apiRouting {
             route("/testdataApi/opprettPerson") {
@@ -68,6 +71,10 @@ fun main() {
         }
 
     }.start(wait = true)
+}
+
+private fun aktiverToggles() {
+    FeatureToggle.aktiver(TOGGLE_KVALITETSSIKRING, true)
 }
 
 private fun postgreSQLContainer(): PostgreSQLContainer<Nothing> {
