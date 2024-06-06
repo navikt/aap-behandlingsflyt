@@ -318,4 +318,5 @@ fun initDatasource(dbConfig: DbConfig) = HikariDataSource(HikariConfig().apply {
     maximumPoolSize = 10 + ANTALL_WORKERS
     minimumIdle = 1
     driverClassName = "org.postgresql.Driver"
+    connectionTestQuery = "SELECT 1"
 })
