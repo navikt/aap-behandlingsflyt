@@ -130,11 +130,9 @@ internal fun Application.server(dbConfig: DbConfig) {
                 is ElementNotFoundException -> {
                     call.respondText(status = HttpStatusCode.NotFound, text = cause.message ?: "")
                 }
-
                 is FlytOperasjonException -> {
                     call.respond(status = cause.status(), message = cause.body())
                 }
-
                 else -> {
                     LoggerFactory.getLogger(App::class.java)
                         .info("Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
