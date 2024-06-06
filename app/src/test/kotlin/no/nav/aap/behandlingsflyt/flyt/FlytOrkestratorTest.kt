@@ -66,9 +66,14 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.slf4j.LoggerFactory
+import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Year
+import kotlin.system.measureTimeMillis
+
+private val log = LoggerFactory.getLogger(FlytOrkestratorTest::class.java)
 
 class FlytOrkestratorTest {
 
@@ -769,13 +774,16 @@ class FlytOrkestratorTest {
     }
 
     private fun ventPåSvar(sakId: SakId? = null, behandlingId: BehandlingId? = null) {
-        dataSource.transaction(readOnly = true) {
-            val maxTid = LocalDateTime.now().plusMinutes(1)
-            val testJobbRepository = TestJobbRepository(it)
-            while ((testJobbRepository.harOppgaver(sakId, behandlingId)) && maxTid.isAfter(LocalDateTime.now())) {
-                Thread.sleep(50L)
+        val timeInMillis = measureTimeMillis {
+            dataSource.transaction(readOnly = true) {
+                val maxTid = LocalDateTime.now().plusMinutes(1)
+                val testJobbRepository = TestJobbRepository(it)
+                while ((testJobbRepository.harOppgaver(sakId, behandlingId)) && maxTid.isAfter(LocalDateTime.now())) {
+                    Thread.sleep(50L)
+                }
             }
         }
+        log.info("Ventet på at prosessering skulle fullføre, det tok {}", Duration.ofMillis(timeInMillis))
     }
 
     @Test
