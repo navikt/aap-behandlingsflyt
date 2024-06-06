@@ -11,6 +11,7 @@ import no.nav.aap.auth.bruker
 import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.avklaringsbehov.BehandlingTilstandValidator
+import no.nav.aap.behandlingsflyt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.avklaringsbehov.FrivilligeAvklaringsbehov
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
@@ -150,7 +151,11 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
                     val ventepunkter = avklaringsbehovene.hentVentepunkter()
                     if (avklaringsbehovene.erSattPåVent()) {
                         val avklaringsbehov = ventepunkter.first()
-                        Venteinformasjon(avklaringsbehov.frist(), avklaringsbehov.begrunnelse(), avklaringsbehov.grunn())
+                        Venteinformasjon(
+                            avklaringsbehov.frist(),
+                            avklaringsbehov.begrunnelse(),
+                            avklaringsbehov.grunn()
+                        )
                     } else {
                         null
                     }
@@ -187,14 +192,29 @@ private fun utledVisning(
     val saksbehandlerReadOnly = !flyt.erStegFør(aktivtSteg, StegType.FATTE_VEDTAK)
     val visBeslutterKort =
         !beslutterReadOnly || (!saksbehandlerReadOnly && alleAvklaringsbehovInkludertFrivillige.harVærtSendtTilbakeFraBeslutterTidligere())
+    val visKvalitetssikringKort = utledVisningAvKvalitetsikrerKort(alleAvklaringsbehovInkludertFrivillige)
+    val kvalitetssikringReadOnly = visKvalitetssikringKort && flyt.erStegFør(aktivtSteg, StegType.KVALITETSSIKRING)
 
     return Visning(
         saksbehandlerReadOnly = påVent || (!jobber && saksbehandlerReadOnly),
         beslutterReadOnly = påVent || (!jobber && beslutterReadOnly),
+        kvalitetssikringReadOnly = kvalitetssikringReadOnly,
         visBeslutterKort = visBeslutterKort,
+        visKvalitetssikringKort = visKvalitetssikringKort,
         visVentekort = påVent
     )
+}
 
+private fun utledVisningAvKvalitetsikrerKort(
+    avklaringsbehovene: FrivilligeAvklaringsbehov
+): Boolean {
+    if (avklaringsbehovene.skalTilbakeføresEtterKvalitetssikring()) {
+        return true
+    }
+    if (avklaringsbehovene.hentBehovForDefinisjon(Definisjon.KVALITETSSIKRING)?.erÅpent() == true) {
+        return true
+    }
+    return false
 }
 
 private fun alleVilkår(vilkårResultat: Vilkårsresultat): List<VilkårDTO> {

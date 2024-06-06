@@ -147,7 +147,7 @@ class Avklaringsbehovene(
         return tilbakeførtFraBeslutter().isNotEmpty()
     }
 
-    fun skalTilbakeføresEtterKvalitetssikring(): Boolean {
+    override fun skalTilbakeføresEtterKvalitetssikring(): Boolean {
         return tilbakeførtFraKvalitetssikrer().isNotEmpty()
     }
 
@@ -159,7 +159,7 @@ class Avklaringsbehovene(
         return alle().filter { it.status() == Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER }.toList()
     }
 
-    fun hentBehovForDefinisjon(definisjon: Definisjon): Avklaringsbehov? {
+    override fun hentBehovForDefinisjon(definisjon: Definisjon): Avklaringsbehov? {
         return alle().filter { it.definisjon == definisjon }.singleOrNull()
     }
 
@@ -192,6 +192,10 @@ class Avklaringsbehovene(
 
     fun harVærtSendtTilbakeFraBeslutterTidligere(): Boolean {
         return alle().any { avklaringsbehov -> avklaringsbehov.harVærtSendtTilbakeFraBeslutterTidligere() }
+    }
+
+    fun harVærtSendtTilbakeFraKvalitetssikringTidligere(): Boolean {
+        return alle().any { avklaringsbehov -> avklaringsbehov.harVærtSendtTilbakeFraKvalitetssikrerTidligere() }
     }
 
     fun validateTilstand(behandling: Behandling, avklaringsbehov: Definisjon? = null) {
