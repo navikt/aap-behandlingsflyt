@@ -26,6 +26,7 @@ internal class AzureTokenGen(private val issuer: String, private val audience: S
             .issuer(issuer)
             .audience(audience)
             .expirationTime(Date(Date().time + 60 * 60 * 3600))
+            .claim("NAVIdent", "Lokalsaksbehandler")
             .build()
     }
 

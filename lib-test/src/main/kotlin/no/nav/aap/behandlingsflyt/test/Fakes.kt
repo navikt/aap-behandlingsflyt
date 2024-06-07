@@ -46,19 +46,20 @@ import no.nav.aap.verdityper.sakogbehandling.Ident
 import no.nav.aap.yrkesskade.YrkesskadeModell
 import no.nav.aap.yrkesskade.YrkesskadeRequest
 import no.nav.aap.yrkesskade.Yrkesskader
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.Year
 import no.nav.aap.pdl.PdlRelasjonData as BarnPdlData
 
 class Fakes(azurePort: Int = 0) : AutoCloseable {
-    val log = LoggerFactory.getLogger(Fakes::class.java)
+    private val log: Logger = LoggerFactory.getLogger(Fakes::class.java)
     private val azure = embeddedServer(Netty, port = azurePort, module = { azureFake() }).start()
     private val pdl = embeddedServer(Netty, port = 0, module = { pdlFake() }).start()
     private val yrkesskade = embeddedServer(Netty, port = 0, module = { yrkesskadeFake() }).start()
     private val inntekt = embeddedServer(Netty, port = 0, module = { poppFake() }).start()
     private val oppgavestyring = embeddedServer(Netty, port = 0, module = { oppgavestyringFake() }).start()
-    val fakePersoner: MutableMap<String, TestPerson> = mutableMapOf()
+    private val fakePersoner: MutableMap<String, TestPerson> = mutableMapOf()
 
     init {
         Thread.currentThread().setUncaughtExceptionHandler { _, e -> log.error("Uhåndtert feil", e) }
