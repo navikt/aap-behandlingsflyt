@@ -9,15 +9,19 @@ import com.nimbusds.jose.jwk.RSAKey
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.SignedJWT
 import org.intellij.lang.annotations.Language
+import java.time.LocalDateTime
+import java.time.ZoneId
 import java.util.*
 
 internal class AzureTokenGen(private val issuer: String, private val audience: String) {
-    private val rsaKey: RSAKey get() = JWKSet.parse(AZURE_JWKS).getKeyByKeyId("localhost-signer") as RSAKey
+    private val rsaKey: RSAKey = JWKSet.parse(AZURE_JWKS).getKeyByKeyId("localhost-signer") as RSAKey
 
     private fun signed(claims: JWTClaimsSet): SignedJWT {
         val header = JWSHeader.Builder(JWSAlgorithm.RS256).keyID(rsaKey.keyID).type(JOSEObjectType.JWT).build()
         val signer = RSASSASigner(rsaKey.toPrivateKey())
-        return SignedJWT(header, claims).apply { sign(signer) }
+        val signedJWT = SignedJWT(header, claims)
+        signedJWT.sign(signer)
+        return signedJWT
     }
 
     private fun claims(): JWTClaimsSet {
@@ -25,12 +29,18 @@ internal class AzureTokenGen(private val issuer: String, private val audience: S
             .Builder()
             .issuer(issuer)
             .audience(audience)
-            .expirationTime(Date(Date().time + 60 * 60 * 3600))
+            .expirationTime(LocalDateTime.now().plusHours(4).toDate())
             .claim("NAVident", "Lokalsaksbehandler")
             .build()
     }
 
-    fun generate(): String = signed(claims()).serialize()
+    private fun LocalDateTime.toDate(): Date {
+        return Date.from(this.atZone(ZoneId.systemDefault()).toInstant())
+    }
+
+    fun generate(): String {
+        return signed(claims()).serialize()
+    }
 }
 
 @Language("JSON")

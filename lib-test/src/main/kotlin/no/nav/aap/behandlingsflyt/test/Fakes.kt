@@ -20,7 +20,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.PERSON_BOL
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PERSON_QUERY
-import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.IDENT_QUERY
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoGateway.PERSONINFO_QUERY
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
@@ -133,14 +132,14 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
     }
 
 
-    fun NettyApplicationEngine.port(): Int =
+    private fun NettyApplicationEngine.port(): Int =
         runBlocking { resolvedConnectors() }
             .first { it.type == ConnectorType.HTTP }
             .port
 
-    fun Application.oppgavestyringFake() {
+    private fun Application.oppgavestyringFake() {
         install(ContentNegotiation) {
-            jackson() {
+            jackson {
                 registerModule(JavaTimeModule())
             }
         }
@@ -156,13 +155,12 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         }
         routing {
             post("/behandling") {
-                val req = call.receive<BehandlingFlytStoppetHendelse>()
                 call.respond(HttpStatusCode.NoContent)
             }
         }
     }
 
-    fun Application.poppFake() {
+    private fun Application.poppFake() {
         install(ContentNegotiation) {
             jackson()
         }
@@ -177,14 +175,12 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
                 val req = call.receive<InntektRequest>()
                 val person = hentEllerGenererTestPerson(req.fnr)
 
-                for (i in req.fomAr..req.tomAr) {
-                    if (person.inntekter.none { it.år == Year.of(i) }) {
-                        person.inntekter = person.inntekter + InntektPerÅr(Year.of(i), Beløp("0"))
-                    }
+                for (år in req.fomAr..req.tomAr) {
+                    person.leggTilInntektHvisÅrMangler(Year.of(år), Beløp("0"))
                 }
 
                 call.respond(
-                    InntektResponse(person.inntekter.map { inntekt ->
+                    InntektResponse(person.inntekter().map { inntekt ->
                         SumPi(
                             inntektAr = inntekt.år.value,
                             belop = inntekt.beløp.verdi().toLong(),
@@ -196,7 +192,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         }
     }
 
-    fun Application.pdlFake() {
+    private fun Application.pdlFake() {
         install(ContentNegotiation) {
             jackson()
         }
@@ -213,7 +209,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
                 when (req.query) {
                     IDENT_QUERY -> call.respond(identer(req))
                     PERSON_QUERY -> call.respond(personopplysninger(req))
-                    PERSONINFO_QUERY -> call.respond(navn(req))
+                    PERSONINFO_QUERY -> call.respond(navn())
                     BARN_RELASJON_QUERY -> call.respond(barnRelasjoner(req))
                     PERSON_BOLK_QUERY -> call.respond(barn(req))
                     else -> call.respond(HttpStatusCode.BadRequest)
@@ -225,7 +221,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
 
     private val returnerYrkesskade = mutableListOf<String>()
 
-    fun Application.yrkesskadeFake() {
+    private fun Application.yrkesskadeFake() {
         install(ContentNegotiation) {
             jackson {
                 registerModule(JavaTimeModule())
@@ -302,7 +298,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         )
     }
 
-    fun mapDødsfall(person: TestPerson): Set<PDLDødsfall>? {
+    private fun mapDødsfall(person: TestPerson): Set<PDLDødsfall>? {
         if (person.dødsdato == null) {
             return null
         }
@@ -351,7 +347,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         return fakePersoner[forespurtIdent]!!
     }
 
-    fun mapIdent(person: TestPerson?): List<PdlIdent> {
+    private fun mapIdent(person: TestPerson?): List<PdlIdent> {
         if (person == null) {
             return emptyList()
         }
@@ -369,7 +365,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         )
     }
 
-    private fun navn(req: PdlRequest): PdlPersonNavnDataResponse {
+    private fun navn(): PdlPersonNavnDataResponse {
         return PdlPersonNavnDataResponse(
             errors = null,
             extensions = null,
@@ -379,14 +375,14 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         )
     }
 
-    fun mapPerson(person: TestPerson?): PdlPersoninfo? {
+    private fun mapPerson(person: TestPerson?): PdlPersoninfo? {
         if (person == null) {
             return null
         }
         return PdlPersoninfo(foedsel = listOf(PdlFoedsel(person.fødselsdato.toFormatedString())))
     }
 
-    fun Application.azureFake() {
+    private fun Application.azureFake() {
         install(ContentNegotiation) {
             jackson()
         }
