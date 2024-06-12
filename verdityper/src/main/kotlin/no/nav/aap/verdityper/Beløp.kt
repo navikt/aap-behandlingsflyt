@@ -38,6 +38,10 @@ class Beløp(verdi: BigDecimal) {
         return this.verdi.divide(nevner.verdi, scale, RoundingMode.HALF_UP)
     }
 
+    fun dividert(nevner: Prosent): Beløp {
+        return Beløp(Prosent.dividert(this.verdi, nevner))
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

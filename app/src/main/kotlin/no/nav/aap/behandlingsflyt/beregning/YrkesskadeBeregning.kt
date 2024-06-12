@@ -40,7 +40,9 @@ class YrkesskadeBeregning(
             andelSomSkyldesYrkesskade = andelSomSkyldesYrkesskade,
             andelSomIkkeSkyldesYrkesskade = andelSomIkkeSkyldesYrkesskade,
             grunnlagEtterYrkesskadeFordel = grunnlag,
-            grunnlagForBeregningAvYrkesskadeandel = grunnlagForBeregningAvYrkesskadeandel
+            grunnlagForBeregningAvYrkesskadeandel = grunnlagForBeregningAvYrkesskadeandel,
+            er6GBegrenset = grunnlag11_19.er6GBegrenset(),
+            erGjennomsnitt = grunnlag11_19.erGjennomsnitt()
         )
     }
 }

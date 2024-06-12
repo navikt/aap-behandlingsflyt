@@ -48,13 +48,25 @@ CREATE TABLE BEREGNING
 
 CREATE TABLE BEREGNING_UFORE
 (
-    ID            BIGSERIAL                              NOT NULL PRIMARY KEY,
-    BEREGNING_ID  BIGINT                                 NOT NULL REFERENCES BEREGNING (ID),
-    TYPE          TEXT                                   NOT NULL,
-    GJELDENDE     BOOLEAN                                NOT NULL,
-    G_UNIT        NUMERIC(21, 10)                        NOT NULL,
-    OPPRETTET_TID TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
+    ID                                       BIGSERIAL                              NOT NULL PRIMARY KEY,
+    BEREGNING_ID                             BIGINT                                 NOT NULL REFERENCES BEREGNING (ID),
+    TYPE                                     TEXT                                   NOT NULL,
+    GJELDENDE                                BOOLEAN                                NOT NULL,
+    G_UNIT                                   NUMERIC(21, 10)                        NOT NULL,
+    OPPRETTET_TID                            TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    GRUNNLAG_YTTERLIGERE_NEDSATT             NUMERIC(21, 10)                        NOT NULL,
+    UFOREGRAD                                SMALLINT                               NOT NULL,
+    UFORE_YTTERLIGERE_NEDSATT_ARBEIDSEVNE_AR SMALLINT                               NOT NULL
 );
+
+CREATE TABLE INNTEKTER
+(
+    ID                 BIGSERIAL                              NOT NULL PRIMARY KEY,
+    BEREGNING_UFORE_ID BIGINT                                 NOT NULL REFERENCES BEREGNING_UFORE (ID),
+    INNTEKT_BELØP      NUMERIC(21, 10)                        NOT NULL,
+    OPPRETTET_TID      TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
 
 CREATE UNIQUE INDEX UIDX_BEREGNING_UFORE_BEHANDLING_ID ON BEREGNING_UFORE (BEREGNING_ID) WHERE (GJELDENDE = TRUE);
 CREATE UNIQUE INDEX UIDX_BEREGNING_UFORE_TYPE ON BEREGNING_UFORE (BEREGNING_ID, TYPE);
@@ -76,11 +88,15 @@ CREATE TABLE BEREGNING_YRKESSKADE
     TERSKELVERDI_FOR_YRKESSKADE               SMALLINT                               NOT NULL,
     ANDEL_YRKESSKADE                          SMALLINT                               NOT NULL,
     BENYTTET_ANDEL_YRKESSKADE                 SMALLINT                               NOT NULL,
+    YRKESSKADE_TIDSPUNKT                      SMALLINT                               NOT NULL,
+    YRKESSKADE_INNTEKT_I_G                    NUMERIC(21, 10)                        NOT NULL,
     ANTATT_ARLIG_INNTEKT_YRKESSKADE_TIDSPUNKT NUMERIC(21, 10)                        NOT NULL,
     ANDEL_SOM_SKYLDES_YRKESSKADE              SMALLINT                               NOT NULL,
     ANDEL_SOM_IKKE_SKYLDES_YRKESSKADE         SMALLINT                               NOT NULL,
-    GRUNNLAG_ETTER_YRKESSKADE_FORDELING       NUMERIC(21, 10)                        NOT NULL,
-    GRUNNLAG_FOR_BEREGNING_AV_YRKESSKADEANDEL NUMERIC(21, 10)                        NOT NULL
+    GRUNNLAG_ETTER_YRKESSKADE_FORDEL          NUMERIC(21, 10)                        NOT NULL,
+    GRUNNLAG_FOR_BEREGNING_AV_YRKESSKADEANDEL NUMERIC(21, 10)                        NOT NULL,
+    ER_6G_BEGRENSET                           BOOLEAN                                NOT NULL,
+    ER_GJENNOMSNITT                           BOOLEAN                                NOT NULL
 );
 
 CREATE TABLE BEREGNINGSGRUNNLAG

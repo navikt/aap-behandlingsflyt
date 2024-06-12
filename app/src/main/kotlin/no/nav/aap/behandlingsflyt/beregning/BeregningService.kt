@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.beregning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Input
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
@@ -49,14 +50,19 @@ class BeregningService(
         val grunnlag11_19 = beregn(input.utledForOrdinær())//6G begrensning ligger her samt gjennomsnitt
 
         val beregningMedEllerUtenUføre = if (input.skalBeregneMedUføre()) {
-            val beregningVedUføre = beregn(input.utledForYtterligereNedsatt())// år kommer herfra //6G begrensning ligger her samt gjennomsnitt
+            val ikkeOppjusterteInntekter = input.utledForYtterligereNedsatt()
+            val oppjusterteInntekter = ikkeOppjusterteInntekter.map {
+                InntektPerÅr(it.år, it.beløp.dividert(input.uføregrad().kompliment()))
+            }
+            val beregningVedUføre = beregn(oppjusterteInntekter.toSet())// år kommer herfra //6G begrensning ligger her samt gjennomsnitt
             val uføreberegning = UføreBeregning(
                 grunnlag = grunnlag11_19,
                 ytterligereNedsattGrunnlag = beregningVedUføre,
                 //TODO:
                 // Hva hvis bruker har flere uføregrader?
                 // Skal saksbahandler velge den som er knyttet til ytterligere nedsatt-tidspunktet?
-                uføregrad = input.uføregrad()
+                uføregrad = input.uføregrad(),
+                inntekterForegåendeÅr = ikkeOppjusterteInntekter
             )
             val grunnlagUføre = uføreberegning.beregnUføre(Year.from(input.hentYtterligereNedsattArbeidsevneDato()))
             grunnlagUføre
@@ -102,7 +108,7 @@ class BeregningService(
 
     private fun beregn(
         inntekterPerÅr: Set<InntektPerÅr>
-    ): Beregningsgrunnlag {
+    ): Grunnlag11_19 {
         val grunnlag11_19 =
             GrunnlagetForBeregningen(inntekterPerÅr).beregnGrunnlaget()
 

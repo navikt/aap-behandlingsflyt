@@ -71,7 +71,6 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
                     grunnlag = grunnlag,
                     grunnlagYtterligereNedsatt = grunnlagYtterligereNedsatt,
                     uføregrad = Prosent(0),
-                    uføreOppjusterteInntekter = emptyList(),
                     uføreInntekterFraForegåendeÅr = emptyList(),
                     uføreInntektIKroner = Beløp(0),
                     uføreYtterligereNedsattArbeidsevneÅr = Year.of(0),

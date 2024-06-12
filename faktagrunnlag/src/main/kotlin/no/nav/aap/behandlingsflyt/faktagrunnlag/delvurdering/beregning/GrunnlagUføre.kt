@@ -14,7 +14,6 @@ class GrunnlagUføre(
     private val grunnlag: Beregningsgrunnlag,
     private val grunnlagYtterligereNedsatt: Beregningsgrunnlag,
     private val uføregrad: Prosent,
-    private val uføreOppjusterteInntekter: List<InntektPerÅr>, //uføreOppjustert
     private val uføreInntekterFraForegåendeÅr: List<InntektPerÅr>, //uføre ikke oppjustert
     private val uføreInntektIKroner: Beløp, //grunnlaget
     private val uføreYtterligereNedsattArbeidsevneÅr: Year? = null,

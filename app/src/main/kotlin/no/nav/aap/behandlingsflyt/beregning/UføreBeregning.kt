@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.beregning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.verdityper.Beløp
@@ -9,9 +10,10 @@ import no.nav.aap.verdityper.Prosent
 import java.time.Year
 
 class UføreBeregning(
-    private val grunnlag: Beregningsgrunnlag,
-    private val ytterligereNedsattGrunnlag: Beregningsgrunnlag,
-    private val uføregrad: Prosent
+    private val grunnlag: Grunnlag11_19,
+    private val ytterligereNedsattGrunnlag: Grunnlag11_19,
+    private val uføregrad: Prosent,
+    private val inntekterForegåendeÅr: Set<InntektPerÅr>,
 ) {
 
     init {
@@ -19,17 +21,14 @@ class UføreBeregning(
     }
 
     fun beregnUføre(ytterligereNedsattÅr: Year): GrunnlagUføre {
-        val oppjustertGrunnlagVedUføre = ytterligereNedsattGrunnlag.grunnlaget().dividert(uføregrad.kompliment()) //uføreOppjusterteInntekter men feil
-
-        if (grunnlag.grunnlaget() >= oppjustertGrunnlagVedUføre) {
+        if (grunnlag.grunnlaget() >= ytterligereNedsattGrunnlag.grunnlaget()) {
             return GrunnlagUføre(
                 grunnlaget = grunnlag.grunnlaget(),
                 gjeldende = GrunnlagUføre.Type.STANDARD,
                 grunnlag = grunnlag,
                 grunnlagYtterligereNedsatt = ytterligereNedsattGrunnlag,
                 uføregrad= uføregrad,
-                uføreInntekterFraForegåendeÅr = grunnlag.faktagrunnlag().hent() as List<InntektPerÅr>, //TODO: wat?
-                uføreOppjusterteInntekter = oppjustertGrunnlagVedUføre as List<InntektPerÅr>, //TODO: dette er feil
+                uføreInntekterFraForegåendeÅr = inntekterForegåendeÅr.toList(), //TODO: wat?
                 uføreInntektIKroner = grunnlag.grunnlaget() as Beløp, //TODO: Gang med årets g
                 uføreYtterligereNedsattArbeidsevneÅr = ytterligereNedsattÅr,
                 er6GBegrenset = grunnlag.er6GBegrenset(),
@@ -38,13 +37,12 @@ class UføreBeregning(
 
         } else {
             return GrunnlagUføre(
-                grunnlaget = oppjustertGrunnlagVedUføre,
+                grunnlaget = grunnlag.grunnlaget(),
                 gjeldende = GrunnlagUføre.Type.YTTERLIGERE_NEDSATT,
                 grunnlag = grunnlag,
                 grunnlagYtterligereNedsatt = ytterligereNedsattGrunnlag,
                 uføregrad = uføregrad,
-                uføreInntekterFraForegåendeÅr = grunnlag.faktagrunnlag().hent() as List<InntektPerÅr>, //TODO: wat?
-                uføreOppjusterteInntekter = oppjustertGrunnlagVedUføre as List<InntektPerÅr>, //TODO: dette er feil
+                uføreInntekterFraForegåendeÅr = inntekterForegåendeÅr.toList(), //TODO: wat?
                 uføreInntektIKroner = grunnlag.grunnlaget() as Beløp, //TODO: Gang med årets g
                 uføreYtterligereNedsattArbeidsevneÅr = ytterligereNedsattÅr,er6GBegrenset = grunnlag.er6GBegrenset(),
                 erGjennomsnitt = grunnlag.erGjennomsnitt()
