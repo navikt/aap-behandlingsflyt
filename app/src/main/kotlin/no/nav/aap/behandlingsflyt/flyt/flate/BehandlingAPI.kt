@@ -33,7 +33,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
                     val flyt = utledType(behandling.typeBehandling()).flyt()
                     DetaljertBehandlingDTO(
                         referanse = behandling.referanse,
-                        type = behandling.typeBehandling().identifikator(),
+                        type = behandling.typeBehandling().name,
                         status = behandling.status(),
                         opprettet = behandling.opprettetTidspunkt,
 
