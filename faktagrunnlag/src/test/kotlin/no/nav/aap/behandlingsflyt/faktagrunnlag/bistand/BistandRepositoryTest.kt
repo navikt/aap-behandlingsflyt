@@ -92,7 +92,6 @@ class BistandRepositoryTest {
             }
 
             val behandling2 = behandling(connection, sak)
-            bistandRepository.kopier(behandling1.id, behandling2.id)
 
             val bistandGrunnlag = bistandRepository.hentHvisEksisterer(behandling2.id)
             assertThat(bistandGrunnlag?.vurdering).isEqualTo(BistandVurdering("begrunnelse", false))
@@ -124,7 +123,6 @@ class BistandRepositoryTest {
             }
 
             val behandling2 = behandling(connection, sak)
-            bistandRepository.kopier(behandling1.id, behandling2.id)
 
             val bistandGrunnlag = bistandRepository.hentHvisEksisterer(behandling2.id)
             assertThat(bistandGrunnlag?.vurdering).isEqualTo(BistandVurdering("annen begrunnelse", false))
@@ -196,7 +194,6 @@ class BistandRepositoryTest {
                 }
             }
             val behandling2 = behandling(connection, sak)
-            bistandRepository.kopier(behandling1.id, behandling2.id)
 
             data class Opplysning(
                 val behandlingId: Long,

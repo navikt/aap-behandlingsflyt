@@ -114,7 +114,6 @@ class BarnetilleggRepositoryTest {
                 }
             }
             val behandling2 = behandling(connection, sak)
-            barnetilleggRepository.kopier(behandling1.id, behandling2.id)
 
             val barnetilleggGrunnlag = barnetilleggRepository.hentHvisEksisterer(behandling2.id)
             assertThat(barnetilleggGrunnlag?.perioder)

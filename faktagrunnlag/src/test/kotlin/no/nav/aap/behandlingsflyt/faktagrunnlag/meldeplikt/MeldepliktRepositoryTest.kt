@@ -132,7 +132,6 @@ class MeldepliktRepositoryTest {
                 }
             }
             val behandling2 = behandling(connection, sak)
-            meldepliktRepository.kopier(behandling1.id, behandling2.id)
 
             val meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling2.id)
             assertThat(meldepliktGrunnlag?.vurderinger)
@@ -170,7 +169,6 @@ class MeldepliktRepositoryTest {
                 }
             }
             val behandling2 = behandling(connection, sak)
-            meldepliktRepository.kopier(behandling1.id, behandling2.id)
 
             val meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling2.id)
             assertThat(meldepliktGrunnlag?.vurderinger)
@@ -274,7 +272,6 @@ class MeldepliktRepositoryTest {
                 }
             }
             val behandling2 = behandling(connection, sak)
-            meldepliktRepository.kopier(behandling1.id, behandling2.id)
 
             data class Opplysning(
                 val behandlingId: Long,

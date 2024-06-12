@@ -95,7 +95,6 @@ class PersonopplysningRepositoryTest {
                 }
             }
             val behandling2 = behandling(connection, sak)
-            personopplysningRepository.kopier(behandling1.id, behandling2.id)
 
             val personopplysningGrunnlag = personopplysningRepository.hentHvisEksisterer(behandling2.id)
             assertThat(personopplysningGrunnlag?.personopplysning).isEqualTo(Personopplysning(Fødselsdato(17 mars 1992)))
@@ -127,7 +126,6 @@ class PersonopplysningRepositoryTest {
             }
 
             val behandling2 = behandling(connection, sak)
-            personopplysningRepository.kopier(behandling1.id, behandling2.id)
 
             val personopplysningGrunnlag = personopplysningRepository.hentHvisEksisterer(behandling2.id)
             assertThat(personopplysningGrunnlag?.personopplysning).isEqualTo(Personopplysning(Fødselsdato(17 mars 1992)))
@@ -195,7 +193,6 @@ class PersonopplysningRepositoryTest {
                 }
             }
             val behandling2 = behandling(connection, sak)
-            personopplysningRepository.kopier(behandling1.id, behandling2.id)
 
             data class Opplysning(val behandlingId: Long, val fødselsdato: LocalDate, val aktiv: Boolean)
             data class Grunnlag(val personopplysningId: Long, val opplysning: Opplysning)
