@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Faktagrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
+import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.GUnit
 import no.nav.aap.verdityper.Prosent
 import java.math.BigDecimal
@@ -12,9 +14,11 @@ class GrunnlagUføre(
     private val grunnlag: Beregningsgrunnlag,
     private val grunnlagYtterligereNedsatt: Beregningsgrunnlag,
     private val uføregrad: Prosent,
-    private val uføreOppjusterteInntekter: GUnit,
+    private val uføreOppjusterteInntekter: List<InntektPerÅr>, //uføreOppjustert
+    private val uføreInntekterFraForegåendeÅr: List<InntektPerÅr>, //uføre ikke oppjustert
+    private val uføreInntektIKroner: Beløp, //grunnlaget
     private val uføreYtterligereNedsattArbeidsevneÅr: Year? = null,
-    private val er6GBegrenset: Boolean,
+    private val er6GBegrenset: Boolean, //skal være individuelt på hver inntekt
     private val erGjennomsnitt: Boolean
 
 
