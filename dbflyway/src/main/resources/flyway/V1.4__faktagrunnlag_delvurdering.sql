@@ -42,14 +42,18 @@ CREATE UNIQUE INDEX UIDX_BARNETILLEGG_GRUNNLAG_BEHANDLING_ID ON BARNETILLEGG_GRU
 
 CREATE TABLE BEREGNING
 (
-    ID            BIGSERIAL                              NOT NULL PRIMARY KEY,
-    OPPRETTET_TID TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
+    ID              BIGSERIAL                              NOT NULL PRIMARY KEY,
+    OPPRETTET_TID   TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    BEREGNINGSTYPE VARCHAR(50)                            NOT NULL
 );
+
 
 CREATE TABLE BEREGNING_UFORE
 (
     ID                                       BIGSERIAL                              NOT NULL PRIMARY KEY,
     BEREGNING_ID                             BIGINT                                 NOT NULL REFERENCES BEREGNING (ID),
+    BEREGNING_HOVED_ID                       BIGINT                                 NOT NULL REFERENCES BEREGNING_HOVED (ID),
+    BEREGNING_HOVED_YTTERLIGERE_ID           BIGINT                                 NOT NULL REFERENCES BEREGNING_HOVED (ID),
     TYPE                                     TEXT                                   NOT NULL,
     GJELDENDE                                BOOLEAN                                NOT NULL,
     G_UNIT                                   NUMERIC(21, 10)                        NOT NULL,
@@ -73,16 +77,16 @@ CREATE UNIQUE INDEX UIDX_BEREGNING_UFORE_TYPE ON BEREGNING_UFORE (BEREGNING_ID, 
 
 CREATE TABLE BEREGNING_HOVED
 (
-    ID                 BIGSERIAL                              NOT NULL PRIMARY KEY,
-    BEREGNING_UFORE_ID BIGINT                                 NOT NULL REFERENCES BEREGNING_UFORE (ID),
-    G_UNIT             NUMERIC(21, 10)                        NOT NULL,
-    OPPRETTET_TID      TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
+    ID            BIGSERIAL                              NOT NULL PRIMARY KEY,
+    BEREGNING_ID  BIGINT                                 NOT NULL REFERENCES BEREGNING (ID),
+    G_UNIT        NUMERIC(21, 10)                        NOT NULL,
+    OPPRETTET_TID TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL,
 );
 
 CREATE TABLE BEREGNING_YRKESSKADE
 (
     ID                                        BIGSERIAL                              NOT NULL PRIMARY KEY,
-    BEREGNING_HOVED_ID                        BIGINT                                 NOT NULL REFERENCES BEREGNING_HOVED (ID),
+    BEREGNING_ID                              BIGINT                                 NOT NULL REFERENCES BEREGNING (ID),
     G_UNIT                                    NUMERIC(21, 10)                        NOT NULL,
     OPPRETTET_TID                             TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL,
     TERSKELVERDI_FOR_YRKESSKADE               SMALLINT                               NOT NULL,

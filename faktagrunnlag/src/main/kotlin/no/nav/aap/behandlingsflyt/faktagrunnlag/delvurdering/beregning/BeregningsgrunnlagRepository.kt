@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository.Beregningsdata.Companion.toBeregningsgrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreGrunnlag
 import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.GUnit
 import no.nav.aap.verdityper.Prosent
@@ -81,25 +82,135 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
         }
     }
 
+    enum class Beregningstype{
+        STANDARD,
+        UFØRE,
+        YRKESSKADE,
+        YRKESSKADE_UFØRE
+    }
+    fun hentStandardBeregning(beregningsId:Long):Grunnlag11_19{
+        return connection.queryFirst<Grunnlag11_19>(
+            """
+            SELECT  bh.G_UNIT AS G_UNIT_HOVED
+                    FROM BEREGNING_HOVED bh 
+                    WHERE bh.BEREGNING_ID = ?
+            """.trimIndent()
+        ) {
+            setParams { setLong(1, beregningsId) }
+            setRowMapper { row ->
+                Grunnlag11_19(GUnit(row.getBigDecimal("G_UNIT_HOVED")),false, false) //TODO:tulledata
+            }
+        }
+    }
+    fun hentUføreBeregning(beregningsId:Long): GrunnlagUføre{
+        val beregningsHoved = connection.queryList(
+            """
+            SELECT  bh.G_UNIT AS G_UNIT_HOVED,
+                    bh.ID
+                    FROM BEREGNING_HOVED bh 
+                    WHERE bh.BEREGNING_ID = ?
+            """.trimIndent()
+        ) {
+            setParams { setLong(1, beregningsId) }
+            setRowMapper { row ->
+                Pair(row.getLong("ID"),Grunnlag11_19(GUnit(row.getBigDecimal("G_UNIT_HOVED")),false, false)) //TODO:tulledata
+            }
+        }
+
+        return connection.queryFirst(
+            """
+            SELECT  bu.TYPE, 
+                bu.GJELDENDE, 
+                bu.G_UNIT AS G_UNIT_UFORE,
+                bu.GRUNNLAG_YTTERLIGERE_NEDSATT,
+                bu.BEREGNING_HOVED_ID,
+                bu.BEREGNING_HOVED_YTTERLIGERE_ID,
+                bu.UFOREGRAD,
+                UFORE_YTTERLIG_NEDSATT_ARBEIDSEVNE_AR
+                FROM BEREGNING_UFORE bu 
+                    WHERE bu.BEREGNING_ID = ?
+            """.trimIndent()
+        ) {
+            setParams { setLong(1, beregningsId) }
+            setRowMapper { row ->
+                GrunnlagUføre(
+                    grunnlaget = GUnit(row.getBigDecimal("G_UNIT")),
+                    gjeldende = row.getEnum<GrunnlagUføre.Type>("GJELDENDE"),
+                    grunnlag = beregningsHoved.first { it.first == row.getLong("BEREGNING_HOVED_ID") }.second,
+                    grunnlagYtterligereNedsatt = beregningsHoved.first { it.first == row.getLong("BEREGNING_HOVED_YTTERLIGERE_ID") }.second,
+                    uføregrad = Prosent(row.getInt("UFOREGRAD")),
+                    uføreInntekterFraForegåendeÅr = emptyList(), //TODO: egen henting for inntekt
+                    uføreInntektIKroner = Beløp(0), //TODO: egen henting for inntekt
+                    uføreYtterligereNedsattArbeidsevneÅr = Year.of(row.getInt("UFORE_YTTERLIG_NEDSATT_ARBEIDSEVNE_AR")),
+                    er6GBegrenset = false, //TODO: egen henting for inntekt
+                    erGjennomsnitt = false //TODO: egen henting for inntekt
+                    )
+            }
+        }
+
+    }
+    fun hentYrkesskadeBeregning(beregningsId:Long): GrunnlagYrkesskade {
+        val beregningsHoved = hentStandardBeregning(beregningsId)
+
+        return hentYrkesskadeBeregning(beregningsId, beregningsHoved)
+    }
+    private fun hentYrkesskadeBeregning(beregningsId:Long, beregningsGrunnlag:Beregningsgrunnlag): GrunnlagYrkesskade{
+
+        return connection.queryFirst(
+            """
+                SELECT by.G_UNIT,
+                    by.TERSKELVERDI_FOR_YRKESKADE,
+                    by.ANDEL_YRKESKADE,
+                    by.BENYTTET_ANDEL_FOR_YRKESKADE,
+                    by.YRKESSKADE_TIDSPUNKT,
+                    by.YRKESSKADE_INNTEKT_I_G,  
+                    by.ANTATT_ARLIG_INNTEKT_YRKESKADE_TIDSPUNKTET,
+                    by.ANDEL_SOM_SKYLDES_YRKESKADE,
+                    by.ANDEL_SOM_IKKE_SKYLDES_YRKESKADE,
+                    by.GRUNNLAG_ETTER_YRKESKADE_FORDEL,
+                    by.GRUNNLAG_FOR_BEREGNING_AV_YRKESKADEANDEL,
+                    by.ER_6G_BEGRENSET,
+                    by.ER_GJENNOMSNITT
+                FROM BEREGNING_YRKESSKADE by
+                WHERE by.BEREGNING_ID = ?
+            """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, beregningsId)
+            }
+            setRowMapper { row ->
+                GrunnlagYrkesskade(
+                    grunnlaget = GUnit(row.getBigDecimal("G_UNIT")),
+                    beregningsgrunnlag = beregningsGrunnlag,
+                    terskelverdiForYrkesskade = Prosent(row.getInt("TERSKEVERDI_FOR_YRKESKADE")),
+                    andelYrkesskade = Prosent(row.getInt("ANDEL_YRKESKADE")),
+                    benyttetAndelForYrkesskade = Prosent(row.getInt("BENYTTET_ANDEL_FOR_YRKESKADE")),
+                    yrkesskadeTidspunkt = Year.of(row.getInt("YRKESSKADE_TIDSPUNKT")),
+                    yrkesskadeinntektIG = GUnit(row.getBigDecimal("YRKESSKADE_INNTEKT_I_G")),
+                    antattÅrligInntektYrkesskadeTidspunktet = Beløp(row.getInt("ANTATT_ARLIG_INNTEKT_YRKESKADE_TIDSPUNKTET")),
+                    andelSomSkyldesYrkesskade = GUnit(row.getBigDecimal("ANDEL_SOM_SKYLDES_YRKESKADE")),
+                    andelSomIkkeSkyldesYrkesskade = GUnit(row.getBigDecimal("ANDEL_SOM_IKKE_SKYLDES_YRKESKADE")),
+                    grunnlagEtterYrkesskadeFordel = GUnit(row.getBigDecimal("GRUNNLAG_ETTER_YRKESKADE_FORDEL")),
+                    grunnlagForBeregningAvYrkesskadeandel = GUnit(row.getBigDecimal("GRUNNLAG_FOR_BEREGNING_AV_YRKESKADEANDEL")),
+                    er6GBegrenset = row.getBoolean("ER_6G_BEGRENSET"),
+                    erGjennomsnitt = row.getBoolean("ER_GJENNOMSNITT")
+                    )
+            }
+        }
+    }
+    fun hentYrkesskadeUføreBeregning(beregningsId:Long): GrunnlagYrkesskade{
+        val beregningsHoved = hentUføreBeregning(beregningsId)
+
+        return hentYrkesskadeBeregning(beregningsId, beregningsHoved)
+    }
+
     fun hentHvisEksisterer(behandlingId: BehandlingId): Beregningsgrunnlag? {
 
-        val beregningsdata: List<Beregningsdata> = connection.queryList(
+        val beregningsType = connection.queryFirstOrNull(
             """
-            SELECT  bg.ID AS BEREGNINGSGRUNNLAG_ID,
-                    b.ID AS BEREGNING_ID,
-                    bu.ID AS BEREGNING_UFORE_ID,
-                    bh.ID AS BEREGNING_HOVED_ID,
-                    by.ID AS BEREGNING_YRKESSKADE_ID,
-                    bu.TYPE,
-                    bu.GJELDENDE,
-                    bu.G_UNIT AS G_UNIT_UFORE,
-                    bh.G_UNIT AS G_UNIT_HOVED,
-                    by.G_UNIT AS G_UNIT_YRKESSKADE
+            SELECT  b.BEREGNINGSTYPE, b.ID
             FROM BEREGNINGSGRUNNLAG bg
             INNER JOIN BEREGNING b ON bg.BEREGNING_ID = b.ID
-            INNER JOIN BEREGNING_UFORE bu ON b.ID = bu.BEREGNING_ID
-            INNER JOIN BEREGNING_HOVED bh ON bu.ID = bh.BEREGNING_UFORE_ID
-            LEFT JOIN BEREGNING_YRKESSKADE by ON bh.ID = by.BEREGNING_HOVED_ID
             WHERE bg.AKTIV AND bg.BEHANDLING_ID = ?
             """.trimIndent()
         ) {
@@ -107,38 +218,21 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
                 setLong(1, behandlingId.toLong())
             }
             setRowMapper { row ->
-                val beregningsgrunnlagId = row.getLong("BEREGNINGSGRUNNLAG_ID")
-                val beregningId = row.getLong("BEREGNING_ID")
-                val beregningUføreId = row.getLong("BEREGNING_UFORE_ID")
-                val beregningHovedId = row.getLong("BEREGNING_HOVED_ID")
-                val beregningYrkesskadeId = row.getLongOrNull("BEREGNING_YRKESSKADE_ID")
-                val type = row.getEnum<GrunnlagUføre.Type>("TYPE")
-                val gjeldende = row.getBoolean("GJELDENDE")
-                val gUnitUføre = row.getBigDecimal("G_UNIT_UFORE")
-                val gUnitHoved = row.getBigDecimal("G_UNIT_HOVED")
-                val gUnitYrkesskade = row.getBigDecimalOrNull("G_UNIT_YRKESSKADE")
-                Beregningsdata(
-                    beregningsgrunnlagId = beregningsgrunnlagId,
-                    beregningId = beregningId,
-                    beregningUføreId = beregningUføreId,
-                    beregningHovedId = beregningHovedId,
-                    beregningYrkesskadeId = beregningYrkesskadeId,
-                    type = type,
-                    gjeldende = gjeldende,
-                    gUnitUføre = gUnitUføre.let(::GUnit),
-                    gUnitHoved = gUnitHoved.let(::GUnit),
-                    gUnitYrkesskade = gUnitYrkesskade?.let(::GUnit)
-                )
+                row.getLong("ID") to
+                        row.getEnum<Beregningstype>("BEREGNINGSTYPE")
             }
         }
 
-        val beregningsgrunnlag = beregningsdata
-            .groupBy(Beregningsdata::beregningId)
-            .mapValues { (_, beregninger) ->
-                beregninger.toBeregningsgrunnlag()
-            }
+        if (beregningsType == null) return null
 
-        return beregningsgrunnlag.values.firstOrNull()
+
+        return when(beregningsType.second){
+            Beregningstype.STANDARD -> hentStandardBeregning(beregningsType.first)
+            Beregningstype.UFØRE -> hentUføreBeregning(beregningsType.first)
+            Beregningstype.YRKESSKADE -> hentYrkesskadeBeregning(beregningsType.first)
+            Beregningstype.YRKESSKADE_UFØRE -> hentYrkesskadeUføreBeregning(beregningsType.first)
+        }
+
     }
 
     fun lagre(behandlingId: BehandlingId, beregningsgrunnlag: Beregningsgrunnlag) {
