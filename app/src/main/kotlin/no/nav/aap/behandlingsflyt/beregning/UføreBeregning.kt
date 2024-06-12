@@ -2,6 +2,9 @@ package no.nav.aap.behandlingsflyt.beregning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
+import no.nav.aap.verdityper.Beløp
+import no.nav.aap.verdityper.GUnit
 import no.nav.aap.verdityper.Prosent
 import java.time.Year
 
@@ -25,7 +28,10 @@ class UføreBeregning(
                 grunnlag = grunnlag,
                 grunnlagYtterligereNedsatt = ytterligereNedsattGrunnlag,
                 uføregrad= uføregrad,
-                uføreOppjusterteInntekter = oppjustertGrunnlagVedUføre,
+                uføreInntekterFraForegåendeÅr = grunnlag.faktagrunnlag().hent() as List<InntektPerÅr>, //TODO: wat?
+                uføreOppjusterteInntekter = oppjustertGrunnlagVedUføre as List<InntektPerÅr>, //TODO: dette er feil
+                uføreInntektIKroner = grunnlag.grunnlaget() as Beløp, //TODO: Gang med årets g
+                uføreYtterligereNedsattArbeidsevneÅr = ytterligereNedsattÅr,
                 er6GBegrenset = grunnlag.er6GBegrenset(),
                 erGjennomsnitt = grunnlag.erGjennomsnitt()
             )
@@ -37,9 +43,10 @@ class UføreBeregning(
                 grunnlag = grunnlag,
                 grunnlagYtterligereNedsatt = ytterligereNedsattGrunnlag,
                 uføregrad = uføregrad,
-                uføreOppjusterteInntekter = oppjustertGrunnlagVedUføre,
-                uføreYtterligereNedsattArbeidsevneÅr = ytterligereNedsattÅr,
-                er6GBegrenset = grunnlag.er6GBegrenset(),
+                uføreInntekterFraForegåendeÅr = grunnlag.faktagrunnlag().hent() as List<InntektPerÅr>, //TODO: wat?
+                uføreOppjusterteInntekter = oppjustertGrunnlagVedUføre as List<InntektPerÅr>, //TODO: dette er feil
+                uføreInntektIKroner = grunnlag.grunnlaget() as Beløp, //TODO: Gang med årets g
+                uføreYtterligereNedsattArbeidsevneÅr = ytterligereNedsattÅr,er6GBegrenset = grunnlag.er6GBegrenset(),
                 erGjennomsnitt = grunnlag.erGjennomsnitt()
             )
 

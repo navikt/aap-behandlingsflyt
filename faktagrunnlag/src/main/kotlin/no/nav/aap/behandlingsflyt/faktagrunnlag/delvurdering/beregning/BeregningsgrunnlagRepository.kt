@@ -2,8 +2,11 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository.Beregningsdata.Companion.toBeregningsgrunnlag
+import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.GUnit
+import no.nav.aap.verdityper.Prosent
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
+import java.time.Year
 
 class BeregningsgrunnlagRepository(private val connection: DBConnection) {
 
@@ -21,13 +24,27 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
     ) {
         fun parseBeregning(): Beregningsgrunnlag {
             val beregningsgrunnlag = Grunnlag11_19(
-                gUnitHoved
+                gUnitHoved,
+                er6GBegrenset = false,
+                erGjennomsnitt = false
             )
 
             if (beregningYrkesskadeId != null && gUnitYrkesskade != null) {
                 return GrunnlagYrkesskade(
                     gUnitYrkesskade,
-                    beregningsgrunnlag
+                    beregningsgrunnlag,
+                    terskelverdiForYrkesskade = Prosent(0),
+                    andelYrkesskade = Prosent(0),
+                    benyttetAndelForYrkesskade = Prosent(0),
+                    antattÅrligInntektYrkesskadeTidspunktet = Beløp(0),
+                    yrkesskadeTidspunkt = Year.of(0),
+                    grunnlagForBeregningAvYrkesskadeandel = GUnit(0),
+                    yrkesskadeinntektIG = GUnit(0),
+                    andelSomSkyldesYrkesskade = GUnit(0),
+                    andelSomIkkeSkyldesYrkesskade = GUnit(0),
+                    grunnlagEtterYrkesskadeFordel = GUnit(0),
+                    er6GBegrenset = false,
+                    erGjennomsnitt = false
                 )
             }
 
@@ -52,7 +69,14 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
                     grunnlaget = gjeldendeGrunnlag.gUnitUføre,
                     gjeldende = gjeldendeGrunnlag.type,
                     grunnlag = grunnlag,
-                    grunnlagYtterligereNedsatt = grunnlagYtterligereNedsatt
+                    grunnlagYtterligereNedsatt = grunnlagYtterligereNedsatt,
+                    uføregrad = Prosent(0),
+                    uføreOppjusterteInntekter = emptyList(),
+                    uføreInntekterFraForegåendeÅr = emptyList(),
+                    uføreInntektIKroner = Beløp(0),
+                    uføreYtterligereNedsattArbeidsevneÅr = Year.of(0),
+                    er6GBegrenset = false,
+                    erGjennomsnitt = false
                 )
             }
         }
