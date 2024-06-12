@@ -1,8 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository.Beregningsdata.Companion.toBeregningsgrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreGrunnlag
 import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.GUnit
 import no.nav.aap.verdityper.Prosent
@@ -11,76 +9,7 @@ import java.time.Year
 
 class BeregningsgrunnlagRepository(private val connection: DBConnection) {
 
-    private class Beregningsdata(
-        val beregningsgrunnlagId: Long,
-        val beregningId: Long,
-        val beregningUføreId: Long,
-        val beregningHovedId: Long,
-        val beregningYrkesskadeId: Long?,
-        val type: GrunnlagUføre.Type,
-        val gjeldende: Boolean,
-        val gUnitUføre: GUnit,
-        val gUnitHoved: GUnit,
-        val gUnitYrkesskade: GUnit?
-    ) {
-        fun parseBeregning(): Beregningsgrunnlag {
-            val beregningsgrunnlag = Grunnlag11_19(
-                gUnitHoved,
-                er6GBegrenset = false,
-                erGjennomsnitt = false
-            )
 
-            if (beregningYrkesskadeId != null && gUnitYrkesskade != null) {
-                return GrunnlagYrkesskade(
-                    gUnitYrkesskade,
-                    beregningsgrunnlag,
-                    terskelverdiForYrkesskade = Prosent(0),
-                    andelYrkesskade = Prosent(0),
-                    benyttetAndelForYrkesskade = Prosent(0),
-                    antattÅrligInntektYrkesskadeTidspunktet = Beløp(0),
-                    yrkesskadeTidspunkt = Year.of(0),
-                    grunnlagForBeregningAvYrkesskadeandel = GUnit(0),
-                    yrkesskadeinntektIG = GUnit(0),
-                    andelSomSkyldesYrkesskade = GUnit(0),
-                    andelSomIkkeSkyldesYrkesskade = GUnit(0),
-                    grunnlagEtterYrkesskadeFordel = GUnit(0),
-                    er6GBegrenset = false,
-                    erGjennomsnitt = false
-                )
-            }
-
-            return beregningsgrunnlag
-        }
-
-        companion object {
-            fun List<Beregningsdata>.toBeregningsgrunnlag(): Beregningsgrunnlag {
-                require(this.size in (1..2)) { "Feil antall rader ved henting av beregningsdata: Er ${this.size}" }
-
-                if (this.size == 1) {
-                    //Ikke uføre
-                    return this.first().parseBeregning()
-                }
-
-                val gjeldendeGrunnlag = this.single(Beregningsdata::gjeldende)
-                val grunnlag = this.single { it.type == GrunnlagUføre.Type.STANDARD }.parseBeregning()
-                val grunnlagYtterligereNedsatt =
-                    this.single { it.type == GrunnlagUføre.Type.YTTERLIGERE_NEDSATT }.parseBeregning()
-
-                return GrunnlagUføre(
-                    grunnlaget = gjeldendeGrunnlag.gUnitUføre,
-                    gjeldende = gjeldendeGrunnlag.type,
-                    grunnlag = grunnlag,
-                    grunnlagYtterligereNedsatt = grunnlagYtterligereNedsatt,
-                    uføregrad = Prosent(0),
-                    uføreInntekterFraForegåendeÅr = emptyList(),
-                    uføreInntektIKroner = Beløp(0),
-                    uføreYtterligereNedsattArbeidsevneÅr = Year.of(0),
-                    er6GBegrenset = false,
-                    erGjennomsnitt = false
-                )
-            }
-        }
-    }
 
     enum class Beregningstype{
         STANDARD,
