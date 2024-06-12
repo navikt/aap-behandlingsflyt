@@ -43,10 +43,12 @@ class SøknadService private constructor(
                 behandlingId = behandlingId,
                 OppgittStudent(harAvbruttStudie = ubehandletSøknad.student)
             )
-            YrkesskadeRegisterGateway.puttInnTestPerson(
-                sak.person.aktivIdent(),
-                sak.rettighetsperiode.fom.minusDays(60)
-            )
+            if (ubehandletSøknad.harYrkesskade) {
+                YrkesskadeRegisterGateway.puttInnTestPerson(
+                    sak.person.aktivIdent(),
+                    sak.rettighetsperiode.fom.minusDays(60)
+                )
+            }
 
             mottaDokumentService.knyttTilBehandling(
                 sakId = kontekst.sakId,

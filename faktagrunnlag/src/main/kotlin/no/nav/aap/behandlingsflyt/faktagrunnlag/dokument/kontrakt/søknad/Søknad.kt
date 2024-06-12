@@ -5,12 +5,12 @@ class Søknad(
     val yrkesskade: String
 ) {
     fun harYrkesskade(): Boolean {
-        return yrkesskade == "JA"
+        return yrkesskade.uppercase() == "JA"
     }
 }
 
 class SøknadStudentDto(
     val erStudent: String
 ) {
-    fun erStudent() = erStudent == "JA"
+    fun erStudent() = erStudent.uppercase() == "JA"
 }

@@ -7,6 +7,6 @@ class UbehandletSøknad(
     val journalpostId: JournalpostId,
     val periode: Periode,
     val student: Boolean,
-    harYrkesskade: Boolean
+    val harYrkesskade: Boolean
 ) {
 }
