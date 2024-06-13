@@ -1,5 +1,6 @@
 package no.nav.aap.motor
 
+import no.nav.aap.motor.cron.CronExpression
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.SakId
 import java.time.LocalDateTime

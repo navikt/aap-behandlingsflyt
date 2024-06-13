@@ -1,12 +1,16 @@
-package no.nav.aap.motor
+package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
-import no.nav.aap.verdityper.sakogbehandling.BehandlingId
-import no.nav.aap.verdityper.sakogbehandling.SakId
+import no.nav.aap.motor.JobbInput
+import no.nav.aap.motor.mdc.JobbLogInfoProvider
+import no.nav.aap.motor.mdc.LogInformasjon
 
-class LogInfoRepository(private val connection: DBConnection) {
+object BehandlingsflytLogInfoProvider : JobbLogInfoProvider {
 
-    fun hentInfor(sakId: SakId?, behandlingId: BehandlingId?): LogInformasjon? {
+    override fun hentInformasjon(connection: DBConnection, jobbInput: JobbInput): LogInformasjon? {
+
+        val behandlingId = jobbInput.behandlingIdOrNull()
+        val sakId = jobbInput.sakIdOrNull()
 
         if (behandlingId != null) {
             val query = """
@@ -20,8 +24,8 @@ class LogInfoRepository(private val connection: DBConnection) {
                 setParams {
                     setLong(1, behandlingId.toLong())
                 }
-                setRowMapper {
-                    LogInformasjon(it.getString("saksnummer"), it.getString("referanse"))
+                setRowMapper { row ->
+                    LogInformasjon(mapOf("saksnummer" to row.getString("saksnummer"), "behandlingReferanse" to row.getString("referanse")))
                 }
             }
         } else if (sakId != null) {
@@ -36,7 +40,7 @@ class LogInfoRepository(private val connection: DBConnection) {
                     setLong(1, sakId.toLong())
                 }
                 setRowMapper {
-                    LogInformasjon(it.getString("saksnummer"), null)
+                    LogInformasjon(mapOf())
                 }
             }
         }

@@ -2,6 +2,8 @@ package no.nav.aap.motor
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
+import no.nav.aap.motor.mdc.JobbLogInfoProvider
+import no.nav.aap.motor.mdc.NoExtraLogInfoProvider
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import java.time.LocalDateTime
@@ -15,6 +17,7 @@ import javax.sql.DataSource
 class Motor(
     private val dataSource: DataSource,
     private val antallKammer: Int = 8,
+    private val logInfoProvider: JobbLogInfoProvider = NoExtraLogInfoProvider,
     jobber: List<Jobb>
 ) {
 
@@ -132,14 +135,10 @@ class Motor(
             MDC.put("behandlingId", jobbInput.behandlingIdOrNull().toString())
             MDC.put("callId", UUID.randomUUID().toString())
 
-            val logInformasjon = LogInfoRepository(connection).hentInfor(
-                jobbInput.sakIdOrNull(),
-                jobbInput.behandlingIdOrNull()
-            )
+            val logInformasjon = logInfoProvider.hentInformasjon(connection, jobbInput)
             if (logInformasjon != null) {
-                MDC.put("saksnummer", logInformasjon.saksnummer)
-                if (logInformasjon.referanse != null) {
-                    MDC.put("behandlingReferanse", logInformasjon.referanse)
+                for (feltMedVerdi in logInformasjon.felterMedVerdi) {
+                    MDC.put(feltMedVerdi.key, feltMedVerdi.value)
                 }
             }
         }

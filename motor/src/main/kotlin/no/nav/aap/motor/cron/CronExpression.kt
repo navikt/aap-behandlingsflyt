@@ -1,4 +1,4 @@
-package no.nav.aap.motor
+package no.nav.aap.motor.cron
 
 import java.time.DayOfWeek
 import java.time.Duration
@@ -165,7 +165,7 @@ class CronExpression private constructor(private val expr: String, withSeconds: 
         val nextDateTime = arrayOf(afterTime.plusSeconds(1).withNano(0))
 
         while (true) {
-            CronExpression.Companion.checkIfDateTimeBarrierIsReached(nextDateTime[0], dateTimeBarrier)
+            checkIfDateTimeBarrierIsReached(nextDateTime[0], dateTimeBarrier)
             if (!monthField.nextMatch(nextDateTime)) {
                 continue
             }
@@ -182,7 +182,7 @@ class CronExpression private constructor(private val expr: String, withSeconds: 
                 continue
             }
 
-            CronExpression.Companion.checkIfDateTimeBarrierIsReached(nextDateTime[0], dateTimeBarrier)
+            checkIfDateTimeBarrierIsReached(nextDateTime[0], dateTimeBarrier)
             return nextDateTime[0]
         }
     }

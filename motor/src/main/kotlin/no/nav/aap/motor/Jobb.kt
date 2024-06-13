@@ -1,6 +1,7 @@
 package no.nav.aap.motor
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
+import no.nav.aap.motor.cron.CronExpression
 
 interface Jobb {
 

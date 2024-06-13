@@ -1,10 +1,10 @@
 package no.nav.aap.motor.retry
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
-import no.nav.aap.motor.CronExpression
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
+import no.nav.aap.motor.cron.CronExpression
 import org.slf4j.LoggerFactory
 
 internal const val OPPGAVE_TYPE = "oppgave.retryFeilede"

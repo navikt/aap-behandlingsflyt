@@ -2,11 +2,11 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.forretningsflyt.gjenopptak.GjenopptakRepository
-import no.nav.aap.motor.CronExpression
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
+import no.nav.aap.motor.cron.CronExpression
 
 class GjenopptaBehandlingJobbUtfører(
     private val gjenopptakRepository: GjenopptakRepository,

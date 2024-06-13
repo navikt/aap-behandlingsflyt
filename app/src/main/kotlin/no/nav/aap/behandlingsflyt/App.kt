@@ -52,6 +52,7 @@ import no.nav.aap.behandlingsflyt.flyt.flate.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flate.flytApi
 import no.nav.aap.behandlingsflyt.flyt.flate.søknadApi
 import no.nav.aap.behandlingsflyt.flyt.flate.torsHammerApi
+import no.nav.aap.behandlingsflyt.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.server.apiRoute
@@ -176,7 +177,7 @@ internal fun Application.server(dbConfig: DbConfig) {
 
 
 fun Application.module(dataSource: DataSource) {
-    val motor = Motor(dataSource = dataSource, antallKammer = ANTALL_WORKERS, jobber = ProsesseringsJobber.alle())
+    val motor = Motor(dataSource = dataSource, antallKammer = ANTALL_WORKERS, logInfoProvider = BehandlingsflytLogInfoProvider, jobber = ProsesseringsJobber.alle())
 
     dataSource.transaction { dbConnection ->
         RetryService(dbConnection).enable()
