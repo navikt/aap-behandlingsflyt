@@ -44,7 +44,7 @@ CREATE TABLE BEREGNING
 (
     ID              BIGSERIAL                              NOT NULL PRIMARY KEY,
     OPPRETTET_TID   TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    BEREGNINGSTYPE VARCHAR(50)                            NOT NULL
+    BEREGNINGSTYPE  VARCHAR(50)                             NOT NULL
 );
 
 
@@ -55,10 +55,8 @@ CREATE TABLE BEREGNING_UFORE
     BEREGNING_HOVED_ID                       BIGINT                                 NOT NULL REFERENCES BEREGNING_HOVED (ID),
     BEREGNING_HOVED_YTTERLIGERE_ID           BIGINT                                 NOT NULL REFERENCES BEREGNING_HOVED (ID),
     TYPE                                     TEXT                                   NOT NULL,
-    GJELDENDE                                BOOLEAN                                NOT NULL,
     G_UNIT                                   NUMERIC(21, 10)                        NOT NULL,
     OPPRETTET_TID                            TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    GRUNNLAG_YTTERLIGERE_NEDSATT             NUMERIC(21, 10)                        NOT NULL,
     UFOREGRAD                                SMALLINT                               NOT NULL,
     UFORE_YTTERLIGERE_NEDSATT_ARBEIDSEVNE_AR SMALLINT                               NOT NULL
 );

@@ -10,13 +10,13 @@ import java.time.Year
 
 class GrunnlagUføre(
     private val grunnlaget: GUnit,
-    private val gjeldende: Type,
-    private val grunnlag: Beregningsgrunnlag,
-    private val grunnlagYtterligereNedsatt: Beregningsgrunnlag,
+    private val type: Type,
+    private val grunnlag: Grunnlag11_19,
+    private val grunnlagYtterligereNedsatt: Grunnlag11_19,
     private val uføregrad: Prosent,
     private val uføreInntekterFraForegåendeÅr: List<InntektPerÅr>, //uføre ikke oppjustert
     private val uføreInntektIKroner: Beløp, //grunnlaget
-    private val uføreYtterligereNedsattArbeidsevneÅr: Year? = null,
+    private val uføreYtterligereNedsattArbeidsevneÅr: Year,
     private val er6GBegrenset: Boolean, //skal være individuelt på hver inntekt
     private val erGjennomsnitt: Boolean
 
@@ -34,11 +34,18 @@ class GrunnlagUføre(
     override fun faktagrunnlag(): Faktagrunnlag {
         return Fakta(
             grunnlaget = grunnlaget.verdi(),
-            gjeldende = gjeldende,
             grunnlag = grunnlag.faktagrunnlag(),
             grunnlagYtterligereNedsatt = grunnlagYtterligereNedsatt.faktagrunnlag(),
 
         )
+    }
+
+    fun uføregrad(): Prosent {
+        return uføregrad
+    }
+
+    fun uføreYtterligereNedsattArbeidsevneÅr(): Year {
+        return uføreYtterligereNedsattArbeidsevneÅr
     }
 
     override fun er6GBegrenset(): Boolean {
@@ -52,25 +59,24 @@ class GrunnlagUføre(
     internal class Fakta(
         // FIXME: BigDecimal serialiseres til JSON på standardform
         val grunnlaget: BigDecimal,
-        val gjeldende: Type,
         val grunnlag: Faktagrunnlag,
         val grunnlagYtterligereNedsatt: Faktagrunnlag
     ) : Faktagrunnlag
 
-    fun gjeldende(): Type {
-        return gjeldende
+    fun type(): Type {
+        return type
     }
 
-    fun underliggende(): Beregningsgrunnlag {
+    fun underliggende(): Grunnlag11_19 {
         return grunnlag
     }
 
-    fun underliggendeYtterligereNedsatt(): Beregningsgrunnlag {
+    fun underliggendeYtterligereNedsatt(): Grunnlag11_19 {
         return grunnlagYtterligereNedsatt
     }
 
     override fun toString(): String {
-        return "GrunnlagUføre(grunnlaget=$grunnlaget, gjeldende=$gjeldende, grunnlag=$grunnlag, grunnlagYtterligereNedsatt=$grunnlagYtterligereNedsatt)"
+        return "GrunnlagUføre(grunnlaget=$grunnlaget, gjeldende=$type, grunnlag=$grunnlag, grunnlagYtterligereNedsatt=$grunnlagYtterligereNedsatt)"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -80,7 +86,7 @@ class GrunnlagUføre(
         other as GrunnlagUføre
 
         if (grunnlaget != other.grunnlaget) return false
-        if (gjeldende != other.gjeldende) return false
+        if (type != other.type) return false
         if (grunnlag != other.grunnlag) return false
         if (grunnlagYtterligereNedsatt != other.grunnlagYtterligereNedsatt) return false
 
@@ -89,7 +95,7 @@ class GrunnlagUføre(
 
     override fun hashCode(): Int {
         var result = grunnlaget.hashCode()
-        result = 31 * result + gjeldende.hashCode()
+        result = 31 * result + type.hashCode()
         result = 31 * result + grunnlag.hashCode()
         result = 31 * result + grunnlagYtterligereNedsatt.hashCode()
         return result

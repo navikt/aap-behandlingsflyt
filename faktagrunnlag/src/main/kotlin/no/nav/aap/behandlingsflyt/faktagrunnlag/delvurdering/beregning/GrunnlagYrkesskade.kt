@@ -29,6 +29,46 @@ class GrunnlagYrkesskade(
         return grunnlaget
     }
 
+    fun terskelverdiForYrkesskade(): Prosent{
+        return terskelverdiForYrkesskade
+    }
+
+    fun andelYrkesskade():Prosent{
+        return andelYrkesskade
+    }
+
+    fun andelSomSkyldesYrkesskade(): GUnit{
+        return andelSomSkyldesYrkesskade
+    }
+
+    fun andelSomIkkeSkyldesYrkesskade(): GUnit{
+        return andelSomIkkeSkyldesYrkesskade
+    }
+
+    fun benyttetAndelForYrkesskade(): Prosent{
+        return benyttetAndelForYrkesskade
+    }
+
+    fun yrkesskadeTidspunkt(): Year{
+        return yrkesskadeTidspunkt
+    }
+
+    fun yrkesskadeinntektIG(): GUnit{
+        return yrkesskadeinntektIG
+    }
+
+    fun antattÅrligInntektYrkesskadeTidspunktet(): Beløp{
+        return antattÅrligInntektYrkesskadeTidspunktet
+    }
+
+    fun grunnlagForBeregningAvYrkesskadeandel(): GUnit{
+        return grunnlagForBeregningAvYrkesskadeandel
+    }
+
+    fun grunnlagEtterYrkesskadeFordel(): GUnit{
+        return grunnlagEtterYrkesskadeFordel
+    }
+
     override fun faktagrunnlag(): Faktagrunnlag {
         return Fakta(
             grunnlaget = grunnlaget.verdi(),

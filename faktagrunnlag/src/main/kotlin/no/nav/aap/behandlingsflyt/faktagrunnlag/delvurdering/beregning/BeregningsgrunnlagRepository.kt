@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreGrunnlag
 import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.GUnit
 import no.nav.aap.verdityper.Prosent
@@ -49,9 +50,7 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
         return connection.queryFirst(
             """
             SELECT  bu.TYPE, 
-                bu.GJELDENDE, 
                 bu.G_UNIT AS G_UNIT_UFORE,
-                bu.GRUNNLAG_YTTERLIGERE_NEDSATT,
                 bu.BEREGNING_HOVED_ID,
                 bu.BEREGNING_HOVED_YTTERLIGERE_ID,
                 bu.UFOREGRAD,
@@ -64,7 +63,7 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
             setRowMapper { row ->
                 GrunnlagUføre(
                     grunnlaget = GUnit(row.getBigDecimal("G_UNIT")),
-                    gjeldende = row.getEnum<GrunnlagUføre.Type>("GJELDENDE"),
+                    type = row.getEnum<GrunnlagUføre.Type>("TYPE"),
                     grunnlag = beregningsHoved.first { it.first == row.getLong("BEREGNING_HOVED_ID") }.second,
                     grunnlagYtterligereNedsatt = beregningsHoved.first { it.first == row.getLong("BEREGNING_HOVED_YTTERLIGERE_ID") }.second,
                     uføregrad = Prosent(row.getInt("UFOREGRAD")),
@@ -164,6 +163,155 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
 
     }
 
+    fun opprettBeregningId(behandlingId: BehandlingId, beregningstype: Beregningstype):Long{
+        val beregningId = connection.executeReturnKey("INSERT INTO BEREGNING (BEREGNINGSTYPE) VALUES (?)"){
+            setParams {
+                setEnumName(1, beregningstype)
+            }
+        }
+
+        connection.execute("INSERT INTO BEREGNINGSGRUNNLAG (BEHANDLING_ID, BEREGNING_ID) VALUES (?, ?)") {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setLong(2, beregningId)
+            }
+        }
+        
+        return beregningId
+    }
+    
+    private fun lagre(behandlingId: BehandlingId, beregningsgrunnlag: Grunnlag11_19){
+        val beregningstype = Beregningstype.STANDARD
+        val beregningsId = opprettBeregningId(behandlingId, beregningstype)
+
+        lagre(beregningsId, beregningsgrunnlag)
+    }
+
+    private fun lagre(beregningsId: Long, beregningsgrunnlag: Grunnlag11_19): Long{
+        return connection.executeReturnKey("INSERT INTO BEREGNING_HOVED (BEREGNING_ID, G_UNIT) VALUES (?, ?)") {
+            setParams {
+                setLong(1, beregningsId)
+                setBigDecimal(2, beregningsgrunnlag.grunnlaget().verdi())
+            }
+        }
+    }
+
+    private fun lagre(behandlingId: BehandlingId, beregningsgrunnlag: GrunnlagUføre, beregningsIdparam: Long?):Long{
+        val beregningstype = Beregningstype.UFØRE
+        val beregningsId = beregningsIdparam?: opprettBeregningId(behandlingId, beregningstype)
+
+        val grunnlagId = lagre(beregningsId, beregningsgrunnlag.underliggende())
+        val ytterligereNedsattId = lagre(beregningsId, beregningsgrunnlag.underliggendeYtterligereNedsatt())
+
+        connection.executeReturnKey(
+            """
+                INSERT INTO BEREGNING_UFORE (
+                BEREGNING_ID, 
+                BEREGNING_HOVED_ID,
+                BEREGNING_HOVED_YTTERLIGERE_ID,
+                G_UNIT,
+                UFOREGRAD,
+                UFORE_YTTERLIG_NEDSATT_ARBEIDSEVNE_AR
+                )VALUES (?, ?, ?, ?, ?, ?)""".trimIndent()
+        ) {
+            setParams {
+                setLong(1, beregningsId)
+                setLong(2, grunnlagId)
+                setLong(3, ytterligereNedsattId)
+                setBigDecimal(4, beregningsgrunnlag.grunnlaget().verdi())
+                setInt(5, beregningsgrunnlag.uføregrad().prosentverdi())
+                setInt(6, beregningsgrunnlag.uføreYtterligereNedsattArbeidsevneÅr().value)
+            }
+        }
+        return beregningsId
+    }
+
+    private fun lagre(behandlingId: BehandlingId, beregningsgrunnlag: GrunnlagYrkesskade){
+        val beregningstype = Beregningstype.YRKESSKADE
+        val beregningsId = opprettBeregningId(behandlingId, beregningstype)
+
+        val grunnlagId = lagre(beregningsId, beregningsgrunnlag.underliggende() as Grunnlag11_19)
+
+        connection.execute("""
+            INSERT INTO BEREGNING_YRKESSKADE (
+            BEREGNING_ID, 
+            G_UNIT,
+            TERSKELVERDI_FOR_YRKESKADE,
+            ANDEL_YRKESKADE,
+            BENYTTET_ANDEL_FOR_YRKESKADE,
+            YRKESSKADE_TIDSPUNKT,
+            YRKESSKADE_INNTEKT_I_G,
+            ANTATT_ARLIG_INNTEKT_YRKESKADE_TIDSPUNKTET,
+            ANDEL_SOM_SKYLDES_YRKESKADE,
+            ANDEL_SOM_IKKE_SKYLDES_YRKESKADE,
+            GRUNNLAG_ETTER_YRKESKADE_FORDEL,
+            GRUNNLAG_FOR_BEREGNING_AV_YRKESKADEANDEL,
+            ER_6G_BEGRENSET,
+            ER_GJENNOMSNITT
+            )VALUES (?, ?, ?,?,?,?,?,?,?,?,?,?,?,?)""".trimIndent()) {
+            setParams {
+                setLong(1, grunnlagId)
+                setBigDecimal(2, beregningsgrunnlag.grunnlaget().verdi())
+                setInt(3, beregningsgrunnlag.terskelverdiForYrkesskade().prosentverdi())
+                setInt(4, beregningsgrunnlag.andelYrkesskade().prosentverdi())
+                setInt(5, beregningsgrunnlag.benyttetAndelForYrkesskade().prosentverdi())
+                setInt(6, beregningsgrunnlag.yrkesskadeTidspunkt().value)
+                setBigDecimal(7, beregningsgrunnlag.yrkesskadeinntektIG().verdi())
+                setBigDecimal(8, beregningsgrunnlag.antattÅrligInntektYrkesskadeTidspunktet().verdi())
+                setBigDecimal(9, beregningsgrunnlag.andelSomSkyldesYrkesskade().verdi())
+                setBigDecimal(10, beregningsgrunnlag.andelSomIkkeSkyldesYrkesskade().verdi())
+                setBigDecimal(11, beregningsgrunnlag.grunnlagEtterYrkesskadeFordel().verdi())
+                setBigDecimal(12, beregningsgrunnlag.grunnlagForBeregningAvYrkesskadeandel().verdi())
+                setBoolean(13, beregningsgrunnlag.er6GBegrenset())
+                setBoolean(14, beregningsgrunnlag.erGjennomsnitt())
+
+            }
+
+        }
+
+    }
+    private fun lagreMedUføre(behandlingId: BehandlingId, beregningsgrunnlag: GrunnlagYrkesskade){
+        val beregningstype = Beregningstype.YRKESSKADE_UFØRE
+        val beregningId = opprettBeregningId(behandlingId, beregningstype)
+        val beregningUføreId = lagre(behandlingId, beregningsgrunnlag.underliggende() as GrunnlagUføre, beregningId)
+
+
+        connection.execute("""
+            INSERT INTO BEREGNING_YRKESSKADE (
+            BEREGNING_ID,
+            G_UNIT,
+            TERSKELVERDI_FOR_YRKESKADE,
+            ANDEL_YRKESKADE,
+            BENYTTET_ANDEL_FOR_YRKESKADE,
+            YRKESSKADE_TIDSPUNKT,
+            YRKESSKADE_INNTEKT_I_G,
+            ANTATT_ARLIG_INNTEKT_YRKESKADE_TIDSPUNKTET,
+            ANDEL_SOM_SKYLDES_YRKESKADE,
+            ANDEL_SOM_IKKE_SKYLDES_YRKESKADE,
+            GRUNNLAG_ETTER_YRKESKADE_FORDEL,
+            GRUNNLAG_FOR_BEREGNING_AV_YRKESKADEANDEL,
+            ER_6G_BEGRENSET,
+            ER_GJENNOMSNITT
+            )VALUES (?, ?, ?,?,?,?,?,?,?,?,?,?,?,?)""".trimIndent()) {
+            setParams {
+                setLong(1, beregningUføreId)
+                setBigDecimal(2, beregningsgrunnlag.grunnlaget().verdi())
+                setInt(3, beregningsgrunnlag.terskelverdiForYrkesskade().prosentverdi())
+                setInt(4, beregningsgrunnlag.andelYrkesskade().prosentverdi())
+                setInt(5, beregningsgrunnlag.benyttetAndelForYrkesskade().prosentverdi())
+                setInt(6, beregningsgrunnlag.yrkesskadeTidspunkt().value)
+                setBigDecimal(7, beregningsgrunnlag.yrkesskadeinntektIG().verdi())
+                setBigDecimal(8, beregningsgrunnlag.antattÅrligInntektYrkesskadeTidspunktet().verdi())
+                setBigDecimal(9, beregningsgrunnlag.andelSomSkyldesYrkesskade().verdi())
+                setBigDecimal(10, beregningsgrunnlag.andelSomIkkeSkyldesYrkesskade().verdi())
+                setBigDecimal(11, beregningsgrunnlag.grunnlagEtterYrkesskadeFordel().verdi())
+                setBigDecimal(12, beregningsgrunnlag.grunnlagForBeregningAvYrkesskadeandel().verdi())
+                setBoolean(13, beregningsgrunnlag.er6GBegrenset())
+                setBoolean(14, beregningsgrunnlag.erGjennomsnitt())
+            }
+        }
+    }
+
     fun lagre(behandlingId: BehandlingId, beregningsgrunnlag: Beregningsgrunnlag) {
         val eksisterendeBeregningsgrunnlag = hentHvisEksisterer(behandlingId)
 
@@ -173,90 +321,18 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
             deaktiverEksisterende(behandlingId)
         }
 
-        val beregningId = connection.executeReturnKey("INSERT INTO BEREGNING DEFAULT VALUES")
-
-        connection.execute("INSERT INTO BEREGNINGSGRUNNLAG (BEHANDLING_ID, BEREGNING_ID) VALUES (?, ?)") {
-            setParams {
-                setLong(1, behandlingId.toLong())
-                setLong(2, beregningId)
-            }
-        }
-        if (beregningsgrunnlag is GrunnlagUføre) {
-            lagreBeregningsgrunnlag(
-                beregningId,
-                beregningsgrunnlag.underliggende(),
-                GrunnlagUføre.Type.STANDARD,
-                beregningsgrunnlag.gjeldende() == GrunnlagUføre.Type.STANDARD,
-                beregningsgrunnlag.grunnlaget()
-            )
-            lagreBeregningsgrunnlag(
-                beregningId,
-                beregningsgrunnlag.underliggendeYtterligereNedsatt(),
-                GrunnlagUføre.Type.YTTERLIGERE_NEDSATT,
-                beregningsgrunnlag.gjeldende() == GrunnlagUføre.Type.YTTERLIGERE_NEDSATT,
-                beregningsgrunnlag.grunnlaget()
-            )
-            return
-        }
-
-        lagreBeregningsgrunnlag(
-            beregningId,
-            beregningsgrunnlag,
-            GrunnlagUføre.Type.STANDARD,
-            true,
-            beregningsgrunnlag.grunnlaget()
-        )
-    }
-
-    private fun lagreBeregningsgrunnlag(
-        beregningId: Long,
-        beregningsgrunnlag: Beregningsgrunnlag,
-        type: GrunnlagUføre.Type,
-        gjeldende: Boolean,
-        grunnlaget: GUnit
-    ) {
-        val beregningUføreId =
-            connection.executeReturnKey("INSERT INTO BEREGNING_UFORE (BEREGNING_ID, TYPE, GJELDENDE, G_UNIT) VALUES (?, ?, ?, ?)") {
-                setParams {
-                    setLong(1, beregningId)
-                    setEnumName(2, type)
-                    setBoolean(3, gjeldende)
-                    setBigDecimal(4, grunnlaget.verdi())
-                }
-            }
-
-        when (beregningsgrunnlag) {
+        when(beregningsgrunnlag){
+            is Grunnlag11_19 -> lagre(behandlingId, beregningsgrunnlag)
+            is GrunnlagUføre -> lagre(behandlingId, beregningsgrunnlag, null)
             is GrunnlagYrkesskade -> {
-                val beregningHovedId = lagreGrunnlag(beregningUføreId, beregningsgrunnlag.underliggende())
-                lagreGrunnlagYrkesskade(beregningHovedId, beregningsgrunnlag)
-            }
-
-            is Grunnlag11_19 -> {
-                lagreGrunnlag(beregningUføreId, beregningsgrunnlag)
+                if(beregningsgrunnlag.underliggende() is GrunnlagUføre){
+                    lagreMedUføre(behandlingId, beregningsgrunnlag)
+                }
+                else lagre(behandlingId, beregningsgrunnlag)
             }
         }
     }
 
-    private fun lagreGrunnlag(
-        beregningUføreId: Long,
-        grunnlag: Beregningsgrunnlag
-    ): Long {
-        return connection.executeReturnKey("INSERT INTO BEREGNING_HOVED (BEREGNING_UFORE_ID, G_UNIT) VALUES (?, ?)") {
-            setParams {
-                setLong(1, beregningUføreId)
-                setBigDecimal(2, grunnlag.grunnlaget().verdi())
-            }
-        }
-    }
-
-    private fun lagreGrunnlagYrkesskade(beregningHovedId: Long, beregningsgrunnlag: GrunnlagYrkesskade) {
-        connection.execute("INSERT INTO BEREGNING_YRKESSKADE (BEREGNING_HOVED_ID, G_UNIT) VALUES (?, ?)") {
-            setParams {
-                setLong(1, beregningHovedId)
-                setBigDecimal(2, beregningsgrunnlag.grunnlaget().verdi())
-            }
-        }
-    }
 
     private fun deaktiverEksisterende(behandlingId: BehandlingId) {
         connection.execute("UPDATE BEREGNINGSGRUNNLAG SET AKTIV = FALSE WHERE AKTIV AND BEHANDLING_ID = ?") {

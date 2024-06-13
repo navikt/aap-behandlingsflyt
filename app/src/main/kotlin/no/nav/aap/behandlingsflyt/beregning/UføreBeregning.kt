@@ -24,7 +24,7 @@ class UføreBeregning(
         if (grunnlag.grunnlaget() >= ytterligereNedsattGrunnlag.grunnlaget()) {
             return GrunnlagUføre(
                 grunnlaget = grunnlag.grunnlaget(),
-                gjeldende = GrunnlagUføre.Type.STANDARD,
+                type = GrunnlagUføre.Type.STANDARD,
                 grunnlag = grunnlag,
                 grunnlagYtterligereNedsatt = ytterligereNedsattGrunnlag,
                 uføregrad= uføregrad,
@@ -38,7 +38,7 @@ class UføreBeregning(
         } else {
             return GrunnlagUføre(
                 grunnlaget = grunnlag.grunnlaget(),
-                gjeldende = GrunnlagUføre.Type.YTTERLIGERE_NEDSATT,
+                type = GrunnlagUføre.Type.YTTERLIGERE_NEDSATT,
                 grunnlag = grunnlag,
                 grunnlagYtterligereNedsatt = ytterligereNedsattGrunnlag,
                 uføregrad = uføregrad,
