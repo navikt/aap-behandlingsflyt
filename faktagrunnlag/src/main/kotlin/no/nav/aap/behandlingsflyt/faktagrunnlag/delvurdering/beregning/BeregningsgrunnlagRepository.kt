@@ -54,7 +54,7 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
                 bu.BEREGNING_HOVED_ID,
                 bu.BEREGNING_HOVED_YTTERLIGERE_ID,
                 bu.UFOREGRAD,
-                UFORE_YTTERLIG_NEDSATT_ARBEIDSEVNE_AR
+                UFORE_YTTERLIGERE_NEDSATT_ARBEIDSEVNE_AR
                 FROM BEREGNING_UFORE bu 
                     WHERE bu.BEREGNING_ID = ?
             """.trimIndent()
@@ -62,14 +62,14 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
             setParams { setLong(1, beregningsId) }
             setRowMapper { row ->
                 GrunnlagUføre(
-                    grunnlaget = GUnit(row.getBigDecimal("G_UNIT")),
+                    grunnlaget = GUnit(row.getBigDecimal("G_UNIT_UFORE")),
                     type = row.getEnum<GrunnlagUføre.Type>("TYPE"),
                     grunnlag = beregningsHoved.first { it.first == row.getLong("BEREGNING_HOVED_ID") }.second,
                     grunnlagYtterligereNedsatt = beregningsHoved.first { it.first == row.getLong("BEREGNING_HOVED_YTTERLIGERE_ID") }.second,
                     uføregrad = Prosent(row.getInt("UFOREGRAD")),
                     uføreInntekterFraForegåendeÅr = emptyList(), //TODO: egen henting for inntekt
                     uføreInntektIKroner = Beløp(0), //TODO: egen henting for inntekt
-                    uføreYtterligereNedsattArbeidsevneÅr = Year.of(row.getInt("UFORE_YTTERLIG_NEDSATT_ARBEIDSEVNE_AR")),
+                    uføreYtterligereNedsattArbeidsevneÅr = Year.of(row.getInt("UFORE_YTTERLIGERE_NEDSATT_ARBEIDSEVNE_AR")),
                     er6GBegrenset = false, //TODO: egen henting for inntekt
                     erGjennomsnitt = false //TODO: egen henting for inntekt
                     )
@@ -209,18 +209,20 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
                 BEREGNING_ID, 
                 BEREGNING_HOVED_ID,
                 BEREGNING_HOVED_YTTERLIGERE_ID,
+                TYPE,
                 G_UNIT,
                 UFOREGRAD,
-                UFORE_YTTERLIG_NEDSATT_ARBEIDSEVNE_AR
-                )VALUES (?, ?, ?, ?, ?, ?)""".trimIndent()
+                UFORE_YTTERLIGERE_NEDSATT_ARBEIDSEVNE_AR
+                )VALUES (?, ?, ?, ?, ?, ?, ?)""".trimIndent()
         ) {
             setParams {
                 setLong(1, beregningsId)
                 setLong(2, grunnlagId)
                 setLong(3, ytterligereNedsattId)
-                setBigDecimal(4, beregningsgrunnlag.grunnlaget().verdi())
-                setInt(5, beregningsgrunnlag.uføregrad().prosentverdi())
-                setInt(6, beregningsgrunnlag.uføreYtterligereNedsattArbeidsevneÅr().value)
+                setEnumName(4, beregningsgrunnlag.type())
+                setBigDecimal(5, beregningsgrunnlag.grunnlaget().verdi())
+                setInt(6, beregningsgrunnlag.uføregrad().prosentverdi())
+                setInt(7, beregningsgrunnlag.uføreYtterligereNedsattArbeidsevneÅr().value)
             }
         }
         return beregningsId

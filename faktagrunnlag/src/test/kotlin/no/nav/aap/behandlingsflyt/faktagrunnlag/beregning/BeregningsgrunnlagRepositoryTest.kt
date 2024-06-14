@@ -15,11 +15,14 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.EndringType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.GUnit
 import no.nav.aap.verdityper.Periode
+import no.nav.aap.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.Year
 
 class BeregningsgrunnlagRepositoryTest {
 
@@ -30,16 +33,20 @@ class BeregningsgrunnlagRepositoryTest {
             val behandling = behandling(connection, sak)
 
             val grunnlag11_19Standard =
-                Grunnlag11_19(GUnit(1))
-            val grunnlagYrkesskadeStandard = GrunnlagYrkesskade(GUnit(2), grunnlag11_19Standard)
+                Grunnlag11_19(GUnit(1),false,false)
             val grunnlag11_19Ytterligere =
-                Grunnlag11_19(GUnit(3))
-            val grunnlagYrkesskadeYtterligere = GrunnlagYrkesskade(GUnit(4), grunnlag11_19Ytterligere)
+                Grunnlag11_19(GUnit(3),false,false)
             val grunnlagUføre = GrunnlagUføre(
                 GUnit(4),
                 GrunnlagUføre.Type.YTTERLIGERE_NEDSATT,
-                grunnlagYrkesskadeStandard,
-                grunnlagYrkesskadeYtterligere
+                grunnlag11_19Standard,
+                grunnlag11_19Ytterligere,
+                Prosent(50),
+                emptyList(),
+                Beløp(0),
+                Year.of(2022),
+                false,
+                false,
             )
 
             val beregningsgrunnlagRepository = BeregningsgrunnlagRepository(connection)
@@ -59,11 +66,22 @@ class BeregningsgrunnlagRepositoryTest {
             val behandling = behandling(connection, sak)
 
             val grunnlag11_19Standard =
-                Grunnlag11_19(GUnit(1))
+                Grunnlag11_19(GUnit(1),false,false)
             val grunnlag11_19Ytterligere =
-                Grunnlag11_19(GUnit(3))
+                Grunnlag11_19(GUnit(3),false,false)
             val grunnlagUføre =
-                GrunnlagUføre(GUnit(4), GrunnlagUføre.Type.STANDARD, grunnlag11_19Standard, grunnlag11_19Ytterligere)
+                GrunnlagUføre(
+                    GUnit(4),
+                    GrunnlagUføre.Type.STANDARD,
+                    grunnlag11_19Standard,
+                    grunnlag11_19Ytterligere,
+                    Prosent(50),
+                    emptyList(),
+                    Beløp(0),
+                    Year.of(2022),
+                    false,
+                    false,
+                )
 
             val beregningsgrunnlagRepository = BeregningsgrunnlagRepository(connection)
 
@@ -82,7 +100,7 @@ class BeregningsgrunnlagRepositoryTest {
             val behandling = behandling(connection, sak)
 
             val grunnlag11_19Standard =
-                Grunnlag11_19(GUnit(1))
+                Grunnlag11_19(GUnit(1),false,false)
 
             val beregningsgrunnlagRepository = BeregningsgrunnlagRepository(connection)
 
