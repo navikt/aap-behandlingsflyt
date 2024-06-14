@@ -39,6 +39,7 @@ enum class Definisjon(
         kode = AVKLAR_STUDENT_KODE,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.AVKLAR_STUDENT,
+        kreverToTrinn = true
     ),
     AVKLAR_SYKDOM(
         kode = AVKLAR_SYKDOM_KODE,
