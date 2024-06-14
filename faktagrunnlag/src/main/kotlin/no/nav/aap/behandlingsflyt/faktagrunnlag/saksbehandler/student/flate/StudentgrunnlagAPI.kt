@@ -23,11 +23,17 @@ fun NormalOpenAPIRoute.studentgrunnlagApi(dataSource: HikariDataSource) {
                     StudentRepository(it).hentHvisEksisterer(behandlingId = behandling.id)
                 }
 
-                respond(
-                    StudentGrunnlagDto(
-                        studentvurdering = studentGrunnlag?.studentvurdering
+                if (studentGrunnlag != null) {
+                    respond(
+                        StudentGrunnlagDto(
+                            studentvurdering = studentGrunnlag.studentvurdering,
+                            oppgittStudent = studentGrunnlag.oppgittStudent
+                        )
                     )
-                )
+                } else {
+                    respond(NoneStudentGrunnlagDto())
+                }
+
             }
         }
     }
