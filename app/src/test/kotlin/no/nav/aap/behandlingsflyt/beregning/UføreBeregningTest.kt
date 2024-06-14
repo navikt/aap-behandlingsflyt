@@ -27,7 +27,7 @@ class UføreBeregningTest {
 
         val grunnlagUføre = uføreBeregning.beregnUføre(Year.of(2021))
 
-        assertThat(grunnlagUføre.underliggendeYtterligereNedsatt().grunnlaget()).isEqualTo(GUnit(5))
+        assertThat(grunnlagUføre.grunnlaget()).isEqualTo(GUnit(5))
     }
 
     @Test
@@ -73,7 +73,7 @@ class UføreBeregningTest {
                 false,
                 false),
             ytterligereNedsattGrunnlag = Grunnlag11_19(
-                GUnit("5"),false,false
+                GUnit("3.5"),false,false
             ),
             uføregrad = Prosent.`30_PROSENT`,
             inntekterForegåendeÅr = setOf(
@@ -83,6 +83,6 @@ class UføreBeregningTest {
 
         val grunnlagUføre = uføreBeregning.beregnUføre(Year.now())
 
-        assertThat(grunnlagUføre.underliggendeYtterligereNedsatt().grunnlaget()).isEqualTo(GUnit(5)) //TODO: er denne testen riktig
+        assertThat(grunnlagUføre.grunnlaget()).isEqualTo(GUnit(4)) //TODO: er denne testen riktig
     }
 }

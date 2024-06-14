@@ -37,7 +37,7 @@ class UføreBeregning(
 
         } else {
             return GrunnlagUføre(
-                grunnlaget = grunnlag.grunnlaget(),
+                grunnlaget = ytterligereNedsattGrunnlag.grunnlaget(),
                 type = GrunnlagUføre.Type.YTTERLIGERE_NEDSATT,
                 grunnlag = grunnlag,
                 grunnlagYtterligereNedsatt = ytterligereNedsattGrunnlag,
