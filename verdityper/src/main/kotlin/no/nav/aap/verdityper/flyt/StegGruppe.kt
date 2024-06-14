@@ -6,6 +6,7 @@ enum class StegGruppe {
     LOVVALG,
     MEDLEMSKAP,
     BARNETILLEGG,
+    STUDENT,
     SYKDOM,
     GRUNNLAG,
     UTTAK,

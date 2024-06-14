@@ -17,7 +17,7 @@ enum class StegType(val gruppe: StegGruppe, val status: Status, val tekniskSteg:
         status = Status.UTREDES
     ),
     AVKLAR_STUDENT(
-        gruppe = StegGruppe.SYKDOM,
+        gruppe = StegGruppe.STUDENT,
         status = Status.UTREDES
     ),
     VURDER_BISTANDSBEHOV(
