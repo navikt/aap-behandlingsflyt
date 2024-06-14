@@ -27,14 +27,12 @@ fun NormalOpenAPIRoute.beregningsGrunnlagApi(dataSource: DataSource) {
                     */
                     val behandling: Behandling = BehandlingReferanseService(connection).behandling(req)
                     val beregning = BeregningsgrunnlagRepository(connection).hentHvisEksisterer(behandling.id)
-                    val inntekt = InntektGrunnlagRepository(connection).hentHvisEksisterer(behandling.id)
-                    val uføre = UføreRepository(connection).hentHvisEksisterer(behandling.id)
-                    val yrkesskadeRepository = YrkesskadeRepository(connection).hentHvisEksisterer(behandling.id)
                     if (beregning == null) return@transaction null
 
                     BeregningDTO(
-                        beregningsGrunnlag = beregning.grunnlaget(),
+                        grunnlag = beregning.grunnlaget(),
                         faktagrunnlag = beregning.faktagrunnlag(),
+                        beregningsgrunnlag = beregning,
                     )
                 }
 
