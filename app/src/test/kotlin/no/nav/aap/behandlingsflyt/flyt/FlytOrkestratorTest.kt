@@ -951,7 +951,7 @@ class FlytOrkestratorTest {
                 begrunnelse = "Avventer dokumentasjon",
                 bruker = SYSTEMBRUKER,
                 behandlingVersjon = behandling.versjon,
-                grunn = ÅrsakTilSettPåVent.ET_ELLER_ANNET
+                grunn = ÅrsakTilSettPåVent.VENTER_PÅ_OPPLYSNINGER
             )
         )
         val dto = dataSource.transaction(readOnly = true) { connection ->
