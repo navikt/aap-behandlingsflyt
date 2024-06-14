@@ -83,7 +83,7 @@ class FlytOrkestratorTest {
 
     companion object {
         val dataSource = InitTestDatabase.dataSource
-        val motor = Motor(dataSource, 2, ProsesseringsJobber.alle())
+        val motor = Motor(dataSource, 2, jobber = ProsesseringsJobber.alle())
         val hendelsesMottak = TestHendelsesMottak(dataSource)
         val fakes = Fakes()
 
