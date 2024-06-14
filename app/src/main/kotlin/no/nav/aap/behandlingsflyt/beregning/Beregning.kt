@@ -1,21 +1,9 @@
 package no.nav.aap.behandlingsflyt.beregning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Input
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
-import no.nav.aap.verdityper.Prosent
-import no.nav.aap.verdityper.sakogbehandling.BehandlingId
-import java.time.LocalDate
 import java.time.Year
 
 class Beregning(
@@ -29,7 +17,8 @@ class Beregning(
             val oppjusterteInntekter = ikkeOppjusterteInntekter.map {
                 InntektPerÅr(it.år, it.beløp.dividert(input.uføregrad().kompliment()))
             }
-            val beregningVedUføre = beregn(oppjusterteInntekter.toSet())// år kommer herfra //6G begrensning ligger her samt gjennomsnitt
+            // år kommer herfra //6G begrensning ligger her samt gjennomsnitt
+            val beregningVedUføre = beregn(oppjusterteInntekter.toSet())
             val uføreberegning = UføreBeregning(
                 grunnlag = grunnlag11_19,
                 ytterligereNedsattGrunnlag = beregningVedUføre,

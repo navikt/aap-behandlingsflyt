@@ -57,6 +57,5 @@ class BeregningTest {
         val beregning = Beregning(input).beregneMedInput()
 
         assertThat(beregning.grunnlaget()).isEqualTo(GUnit("6"))
-
     }
 }

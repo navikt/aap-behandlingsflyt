@@ -19,8 +19,6 @@ class GrunnlagUføre(
     private val uføreYtterligereNedsattArbeidsevneÅr: Year,
     private val er6GBegrenset: Boolean, //skal være individuelt på hver inntekt
     private val erGjennomsnitt: Boolean
-
-
 ) : Beregningsgrunnlag {
 
     enum class Type {
@@ -35,9 +33,8 @@ class GrunnlagUføre(
         return Fakta(
             grunnlaget = grunnlaget.verdi(),
             grunnlag = grunnlag.faktagrunnlag(),
-            grunnlagYtterligereNedsatt = grunnlagYtterligereNedsatt.faktagrunnlag(),
-
-        )
+            grunnlagYtterligereNedsatt = grunnlagYtterligereNedsatt.faktagrunnlag()
+            )
     }
 
     fun uføregrad(): Prosent {

@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Faktagrunnlag
 import no.nav.aap.verdityper.GUnit
 import java.math.BigDecimal
-import java.time.Year
 
 class Grunnlag11_19(
     private val grunnlaget: GUnit,

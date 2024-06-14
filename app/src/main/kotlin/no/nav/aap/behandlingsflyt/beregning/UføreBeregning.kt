@@ -1,11 +1,9 @@
 package no.nav.aap.behandlingsflyt.beregning
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.verdityper.Beløp
-import no.nav.aap.verdityper.GUnit
 import no.nav.aap.verdityper.Prosent
 import java.time.Year
 
@@ -27,14 +25,13 @@ class UføreBeregning(
                 type = GrunnlagUføre.Type.STANDARD,
                 grunnlag = grunnlag,
                 grunnlagYtterligereNedsatt = ytterligereNedsattGrunnlag,
-                uføregrad= uføregrad,
+                uføregrad = uføregrad,
                 uføreInntekterFraForegåendeÅr = inntekterForegåendeÅr.toList(), //TODO: wat?
                 uføreInntektIKroner = grunnlag.grunnlaget().multiplisert(Beløp(10)), //TODO: Gang med årets g
                 uføreYtterligereNedsattArbeidsevneÅr = ytterligereNedsattÅr,
                 er6GBegrenset = grunnlag.er6GBegrenset(),
                 erGjennomsnitt = grunnlag.erGjennomsnitt()
             )
-
         } else {
             return GrunnlagUføre(
                 grunnlaget = ytterligereNedsattGrunnlag.grunnlaget(),
@@ -44,10 +41,9 @@ class UføreBeregning(
                 uføregrad = uføregrad,
                 uføreInntekterFraForegåendeÅr = inntekterForegåendeÅr.toList(), //TODO: wat?
                 uføreInntektIKroner = grunnlag.grunnlaget().multiplisert(Beløp(10)), //TODO: Gang med årets g
-                uføreYtterligereNedsattArbeidsevneÅr = ytterligereNedsattÅr,er6GBegrenset = grunnlag.er6GBegrenset(),
+                uføreYtterligereNedsattArbeidsevneÅr = ytterligereNedsattÅr, er6GBegrenset = grunnlag.er6GBegrenset(),
                 erGjennomsnitt = grunnlag.erGjennomsnitt()
             )
-
         }
     }
 }

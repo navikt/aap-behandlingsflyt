@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Faktagrunnlag
 import no.nav.aap.verdityper.GUnit
 
-class BeregningDTO (
+class BeregningDTO(
     val grunnlag: GUnit,
     val faktagrunnlag: Faktagrunnlag,
     val beregningsgrunnlag: Beregningsgrunnlag

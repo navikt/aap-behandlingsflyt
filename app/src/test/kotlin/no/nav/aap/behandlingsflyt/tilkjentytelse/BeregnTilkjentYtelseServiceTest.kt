@@ -25,9 +25,9 @@ class BeregnTilkjentYtelseServiceTest {
     fun `årlig ytelse beregnes til 66 prosent av grunnlaget og dagsatsen er lik årlig ytelse delt på 260, og sjekker split av periode ved endring i Grunnbeløp`() {
         val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
         val beregningsgrunnlag = Grunnlag11_19(
-            GUnit(BigDecimal(4)),
-            false,
-            false
+            grunnlaget = GUnit(BigDecimal(4)),
+            er6GBegrenset = false,
+            erGjennomsnitt = false
         )
         val underveisgrunnlag = UnderveisGrunnlag(
             id = 1L, listOf(
@@ -84,9 +84,9 @@ class BeregnTilkjentYtelseServiceTest {
     fun `bruker får barnetillegg dersom bruker har barn`() {
         val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
         val beregningsgrunnlag = Grunnlag11_19(
-            GUnit(BigDecimal(4)),
-            false,
-            false
+            grunnlaget = GUnit(BigDecimal(4)),
+            er6GBegrenset = false,
+            erGjennomsnitt = false
         )
         val underveisgrunnlag = UnderveisGrunnlag(
             id = 1L, listOf(
@@ -138,9 +138,9 @@ class BeregnTilkjentYtelseServiceTest {
     fun `Hva skjed med etterpåklatt`() {
         val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
         val beregningsgrunnlag = Grunnlag11_19(
-            GUnit(BigDecimal(4)),
-            false,
-            false
+            grunnlaget = GUnit(BigDecimal(4)),
+            er6GBegrenset = false,
+            erGjennomsnitt = false
         )
         val underveisgrunnlag = UnderveisGrunnlag(
             id = 1L, listOf(
@@ -209,9 +209,9 @@ class BeregnTilkjentYtelseServiceTest {
     fun `minste årlige ytelse er lik 2G før 1 juli 2024 og lik 2,041G fom 1 juli 2024`() { //Denne må oppdateres når grunnbeløper endres 1. mai 2024
         val fødeselsdato = Fødselsdato(LocalDate.of(1985, 4, 1))
         val beregningsgrunnlag = Grunnlag11_19(
-            GUnit(BigDecimal(0)),
-            false,
-            false
+            grunnlaget = GUnit(BigDecimal(0)),
+            er6GBegrenset = false,
+            erGjennomsnitt = false
         )
         val underveisgrunnlag = UnderveisGrunnlag(
             id = 1L, listOf(
@@ -268,9 +268,9 @@ class BeregnTilkjentYtelseServiceTest {
     fun `Minste Årlig Ytelse justeres ift alder`() {
         val fødselsdato = Fødselsdato(LocalDate.of(1995, 4, 1))
         val beregningsgrunnlag = Grunnlag11_19(
-            GUnit(BigDecimal(0)),
-            false,
-            false
+            grunnlaget = GUnit(BigDecimal(0)),
+            er6GBegrenset = false,
+            erGjennomsnitt = false
         )
         val underveisgrunnlag = UnderveisGrunnlag(
             id = 1L, listOf(

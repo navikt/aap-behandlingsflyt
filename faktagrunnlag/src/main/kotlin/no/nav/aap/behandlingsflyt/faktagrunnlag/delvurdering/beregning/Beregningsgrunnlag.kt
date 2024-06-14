@@ -9,4 +9,3 @@ interface Beregningsgrunnlag {
     fun er6GBegrenset(): Boolean
     fun erGjennomsnitt(): Boolean
 }
-

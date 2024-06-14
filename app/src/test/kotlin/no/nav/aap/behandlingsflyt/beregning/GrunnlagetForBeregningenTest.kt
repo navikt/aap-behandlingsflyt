@@ -62,7 +62,9 @@ class GrunnlagetForBeregningenTest {
 
         assertThat(grunnlaget).isEqualTo(
             Grunnlag11_19(
-                GUnit(BigDecimal(0)),false,false
+                grunnlaget = GUnit(BigDecimal(0)),
+                er6GBegrenset = false,
+                erGjennomsnitt = false
             )
         )
     }
@@ -86,7 +88,9 @@ class GrunnlagetForBeregningenTest {
 
         assertThat(grunnlaget).isEqualTo(
             Grunnlag11_19(
-                GUnit(BigDecimal(5)),false,false
+                grunnlaget = GUnit(BigDecimal(5)),
+                er6GBegrenset = false,
+                erGjennomsnitt = false
             )
         )
     }
@@ -113,7 +117,9 @@ class GrunnlagetForBeregningenTest {
 
         assertThat(grunnlaget).isEqualTo(
             Grunnlag11_19(
-                GUnit(BigDecimal(5)),false,false
+                grunnlaget = GUnit(BigDecimal(5)),
+                er6GBegrenset = false,
+                erGjennomsnitt = false
             )
         )
     }
@@ -140,7 +146,9 @@ class GrunnlagetForBeregningenTest {
 
         assertThat(grunnlaget).isEqualTo(
             Grunnlag11_19(
-                GUnit(BigDecimal(5)),false,false
+                grunnlaget = GUnit(BigDecimal(5)),
+                er6GBegrenset = false,
+                erGjennomsnitt = false
             )
         )
     }
@@ -165,7 +173,13 @@ class GrunnlagetForBeregningenTest {
 
         val grunnlaget = grunnlagetForBeregningen.beregnGrunnlaget()
 
-        assertThat(grunnlaget).isEqualTo(Grunnlag11_19(GUnit(6),false,false))
+        assertThat(grunnlaget).isEqualTo(
+            Grunnlag11_19(
+                grunnlaget = GUnit(6),
+                er6GBegrenset = false,
+                erGjennomsnitt = false
+            )
+        )
     }
 
     @Test
@@ -179,7 +193,13 @@ class GrunnlagetForBeregningenTest {
 
         val grunnlaget = grunnlagetForBeregningen.beregnGrunnlaget()
 
-        assertThat(grunnlaget).isEqualTo(Grunnlag11_19(GUnit(6),false,false))
+        assertThat(grunnlaget).isEqualTo(
+            Grunnlag11_19(
+                grunnlaget = GUnit(6),
+                er6GBegrenset = false,
+                erGjennomsnitt = false
+            )
+        )
     }
 
     @Test
@@ -193,6 +213,12 @@ class GrunnlagetForBeregningenTest {
 
         val grunnlaget = grunnlagetForBeregningen.beregnGrunnlaget()
 
-        assertThat(grunnlaget).isEqualTo(Grunnlag11_19(GUnit(4),false,false))
+        assertThat(grunnlaget).isEqualTo(
+            Grunnlag11_19(
+                grunnlaget = GUnit(4),
+                er6GBegrenset = false,
+                erGjennomsnitt = false
+            )
+        )
     }
 }

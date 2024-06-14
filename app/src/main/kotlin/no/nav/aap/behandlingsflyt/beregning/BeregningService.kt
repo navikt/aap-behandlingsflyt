@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.beregning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Input
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
@@ -16,7 +15,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadev
 import no.nav.aap.verdityper.Prosent
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import java.time.LocalDate
-import java.time.Year
 
 class BeregningService(
     private val inntektGrunnlagRepository: InntektGrunnlagRepository,
@@ -56,7 +54,8 @@ class BeregningService(
     ): Inntektsbehov {
         return Inntektsbehov(
             Input(
-                nedsettelsesDato = requireNotNull(sykdomsvurdering.nedsattArbeidsevneDato?.let { LocalDate.of(it, 1, 1) }),
+                nedsettelsesDato = requireNotNull(
+                    sykdomsvurdering.nedsattArbeidsevneDato?.let { LocalDate.of(it, 1, 1) }),
                 inntekter = inntekter,
                 uføregrad = uføregrad,
                 yrkesskadevurdering = yrkesskadevurdering,

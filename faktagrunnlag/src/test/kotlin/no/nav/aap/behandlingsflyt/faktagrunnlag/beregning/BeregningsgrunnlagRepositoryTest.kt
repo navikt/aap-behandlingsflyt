@@ -9,7 +9,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.arbeidsevne.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.EndringType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
@@ -32,21 +31,27 @@ class BeregningsgrunnlagRepositoryTest {
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val grunnlag11_19Standard =
-                Grunnlag11_19(GUnit(1),false,false)
-            val grunnlag11_19Ytterligere =
-                Grunnlag11_19(GUnit(3),false,false)
+            val grunnlag11_19Standard = Grunnlag11_19(
+                grunnlaget = GUnit(1),
+                er6GBegrenset = false,
+                erGjennomsnitt = false
+            )
+            val grunnlag11_19Ytterligere = Grunnlag11_19(
+                grunnlaget = GUnit(3),
+                er6GBegrenset = false,
+                erGjennomsnitt = false
+            )
             val grunnlagUføre = GrunnlagUføre(
-                GUnit(4),
-                GrunnlagUføre.Type.YTTERLIGERE_NEDSATT,
-                grunnlag11_19Standard,
-                grunnlag11_19Ytterligere,
-                Prosent(50),
-                emptyList(),
-                Beløp(0),
-                Year.of(2022),
-                false,
-                false,
+                grunnlaget = GUnit(4),
+                type = GrunnlagUføre.Type.YTTERLIGERE_NEDSATT,
+                grunnlag = grunnlag11_19Standard,
+                grunnlagYtterligereNedsatt = grunnlag11_19Ytterligere,
+                uføregrad = Prosent(50),
+                uføreInntekterFraForegåendeÅr = emptyList(),
+                uføreInntektIKroner = Beløp(0),
+                uføreYtterligereNedsattArbeidsevneÅr = Year.of(2022),
+                er6GBegrenset = false,
+                erGjennomsnitt = false,
             )
 
             val beregningsgrunnlagRepository = BeregningsgrunnlagRepository(connection)
@@ -65,23 +70,28 @@ class BeregningsgrunnlagRepositoryTest {
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val grunnlag11_19Standard =
-                Grunnlag11_19(GUnit(1),false,false)
-            val grunnlag11_19Ytterligere =
-                Grunnlag11_19(GUnit(3),false,false)
-            val grunnlagUføre =
-                GrunnlagUføre(
-                    GUnit(4),
-                    GrunnlagUføre.Type.STANDARD,
-                    grunnlag11_19Standard,
-                    grunnlag11_19Ytterligere,
-                    Prosent(50),
-                    emptyList(),
-                    Beløp(0),
-                    Year.of(2022),
-                    false,
-                    false,
-                )
+            val grunnlag11_19Standard = Grunnlag11_19(
+                grunnlaget = GUnit(1),
+                er6GBegrenset = false,
+                erGjennomsnitt = false
+            )
+            val grunnlag11_19Ytterligere = Grunnlag11_19(
+                grunnlaget = GUnit(3),
+                er6GBegrenset = false,
+                erGjennomsnitt = false
+            )
+            val grunnlagUføre = GrunnlagUføre(
+                grunnlaget = GUnit(4),
+                type = GrunnlagUføre.Type.STANDARD,
+                grunnlag = grunnlag11_19Standard,
+                grunnlagYtterligereNedsatt = grunnlag11_19Ytterligere,
+                uføregrad = Prosent(50),
+                uføreInntekterFraForegåendeÅr = emptyList(),
+                uføreInntektIKroner = Beløp(0),
+                uføreYtterligereNedsattArbeidsevneÅr = Year.of(2022),
+                er6GBegrenset = false,
+                erGjennomsnitt = false,
+            )
 
             val beregningsgrunnlagRepository = BeregningsgrunnlagRepository(connection)
 
@@ -99,8 +109,11 @@ class BeregningsgrunnlagRepositoryTest {
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val grunnlag11_19Standard =
-                Grunnlag11_19(GUnit(1),false,false)
+            val grunnlag11_19Standard = Grunnlag11_19(
+                grunnlaget = GUnit(1),
+                er6GBegrenset = false,
+                erGjennomsnitt = false
+            )
 
             val beregningsgrunnlagRepository = BeregningsgrunnlagRepository(connection)
 

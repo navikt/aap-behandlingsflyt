@@ -15,9 +15,9 @@ class UføreBeregningTest {
     @Test
     fun `Hvis uføregraden er 0 prosent, endres ikke grunnlaget`() {
         val uføreBeregning = UføreBeregning(
-            grunnlag = Grunnlag11_19(GUnit(4),false,false),
+            grunnlag = Grunnlag11_19(grunnlaget = GUnit(4), er6GBegrenset = false, erGjennomsnitt = false),
             ytterligereNedsattGrunnlag = Grunnlag11_19(
-                GUnit(5),false,false
+                grunnlaget = GUnit(5), er6GBegrenset = false, erGjennomsnitt = false
             ),
             uføregrad = Prosent.`0_PROSENT`,
             inntekterForegåendeÅr = setOf(
@@ -34,9 +34,9 @@ class UføreBeregningTest {
     fun `Hvis bruker har en uføregrad på 100 prosent, skal ikke uføreberegningen gjøres`() {
         assertThrows<IllegalArgumentException> {
             UføreBeregning(
-                grunnlag = Grunnlag11_19(GUnit(4),false,false),
+                grunnlag = Grunnlag11_19(grunnlaget = GUnit(4), er6GBegrenset = false, erGjennomsnitt = false),
                 ytterligereNedsattGrunnlag = Grunnlag11_19(
-                    GUnit(4),false,false
+                    grunnlaget = GUnit(4), er6GBegrenset = false, erGjennomsnitt = false
                 ),
                 uføregrad = Prosent.`100_PROSENT`,
                 inntekterForegåendeÅr = setOf(
@@ -49,9 +49,9 @@ class UføreBeregningTest {
     @Test
     fun `Hvis bruker hadde høyere inntekt ved ytterligere nedsatt, justert for uføregrad, brukes inntekter fra ytteligere nedsatt`() {
         val uføreBeregning = UføreBeregning(
-            grunnlag = Grunnlag11_19(GUnit(4),false,false),
+            grunnlag = Grunnlag11_19(grunnlaget = GUnit(4), er6GBegrenset = false, erGjennomsnitt = false),
             ytterligereNedsattGrunnlag = Grunnlag11_19(
-                GUnit("5"),false,false
+                grunnlaget = GUnit("5"), er6GBegrenset = false, erGjennomsnitt = false
             ),
             uføregrad = Prosent.`30_PROSENT`,
             inntekterForegåendeÅr = setOf(
@@ -69,11 +69,15 @@ class UføreBeregningTest {
     @Test
     fun `Hvis bruker hadde lavere inntekt ved ytterligere nedsatt, justert for uføregrad, brukes inntekter fra nedsatt med halvparten`() {
         val uføreBeregning = UføreBeregning(
-            grunnlag = Grunnlag11_19(GUnit(4),
-                false,
-                false),
+            grunnlag = Grunnlag11_19(
+                grunnlaget = GUnit(4),
+                er6GBegrenset = false,
+                erGjennomsnitt = false
+            ),
             ytterligereNedsattGrunnlag = Grunnlag11_19(
-                GUnit("5"),false,false
+                grunnlaget = GUnit("5"),
+                er6GBegrenset = false,
+                erGjennomsnitt = false
             ),
             uføregrad = Prosent.`30_PROSENT`,
             inntekterForegåendeÅr = setOf(

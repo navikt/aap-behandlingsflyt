@@ -5,7 +5,6 @@ import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.GUnit
 import no.nav.aap.verdityper.Prosent
 import java.math.BigDecimal
-import java.time.LocalDate
 import java.time.Year
 
 class GrunnlagYrkesskade(
@@ -23,49 +22,49 @@ class GrunnlagYrkesskade(
     private val grunnlagEtterYrkesskadeFordel: GUnit,
     private val er6GBegrenset: Boolean,
     private val erGjennomsnitt: Boolean
-    ) : Beregningsgrunnlag {
+) : Beregningsgrunnlag {
 
     override fun grunnlaget(): GUnit {
         return grunnlaget
     }
 
-    fun terskelverdiForYrkesskade(): Prosent{
+    fun terskelverdiForYrkesskade(): Prosent {
         return terskelverdiForYrkesskade
     }
 
-    fun andelYrkesskade():Prosent{
+    fun andelYrkesskade(): Prosent {
         return andelYrkesskade
     }
 
-    fun andelSomSkyldesYrkesskade(): GUnit{
+    fun andelSomSkyldesYrkesskade(): GUnit {
         return andelSomSkyldesYrkesskade
     }
 
-    fun andelSomIkkeSkyldesYrkesskade(): GUnit{
+    fun andelSomIkkeSkyldesYrkesskade(): GUnit {
         return andelSomIkkeSkyldesYrkesskade
     }
 
-    fun benyttetAndelForYrkesskade(): Prosent{
+    fun benyttetAndelForYrkesskade(): Prosent {
         return benyttetAndelForYrkesskade
     }
 
-    fun yrkesskadeTidspunkt(): Year{
+    fun yrkesskadeTidspunkt(): Year {
         return yrkesskadeTidspunkt
     }
 
-    fun yrkesskadeinntektIG(): GUnit{
+    fun yrkesskadeinntektIG(): GUnit {
         return yrkesskadeinntektIG
     }
 
-    fun antattÅrligInntektYrkesskadeTidspunktet(): Beløp{
+    fun antattÅrligInntektYrkesskadeTidspunktet(): Beløp {
         return antattÅrligInntektYrkesskadeTidspunktet
     }
 
-    fun grunnlagForBeregningAvYrkesskadeandel(): GUnit{
+    fun grunnlagForBeregningAvYrkesskadeandel(): GUnit {
         return grunnlagForBeregningAvYrkesskadeandel
     }
 
-    fun grunnlagEtterYrkesskadeFordel(): GUnit{
+    fun grunnlagEtterYrkesskadeFordel(): GUnit {
         return grunnlagEtterYrkesskadeFordel
     }
 
