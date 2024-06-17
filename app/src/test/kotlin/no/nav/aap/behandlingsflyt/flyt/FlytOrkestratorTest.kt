@@ -41,7 +41,6 @@ import no.nav.aap.behandlingsflyt.flyt.flate.Venteinformasjon
 import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.TestHendelsesMottak
 import no.nav.aap.behandlingsflyt.flyt.internals.TestJobbRepository
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.TOGGLE_KVALITETSSIKRING
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -54,7 +53,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
-import no.nav.aap.behandlingsflyt.toggles.FeatureToggle
 import no.nav.aap.motor.Motor
 import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.Periode
@@ -99,10 +97,6 @@ class FlytOrkestratorTest {
             motor.stop()
             fakes.close()
         }
-    }
-
-    init {
-        FeatureToggle.aktiver(TOGGLE_KVALITETSSIKRING, true)
     }
 
     @Test

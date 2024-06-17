@@ -13,13 +13,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søkna
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.TestHendelsesMottak
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.TOGGLE_KVALITETSSIKRING
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.genererIdent
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
-import no.nav.aap.behandlingsflyt.toggles.FeatureToggle
 import no.nav.aap.httpclient.ClientConfig
 import no.nav.aap.httpclient.RestClient
 import no.nav.aap.httpclient.request.PostRequest
@@ -54,7 +52,6 @@ fun main() {
             dbConfig
         )
         module(fakes)
-        aktiverToggles()
 
         val datasource = initDatasource(dbConfig)
 
@@ -155,10 +152,6 @@ fun mapTilSøknad(dto: OpprettTestcaseDTO): Søknad {
         "NEI"
     }
     return Søknad(student = SøknadStudentDto(erStudent), harYrkesskade)
-}
-
-private fun aktiverToggles() {
-    FeatureToggle.aktiver(TOGGLE_KVALITETSSIKRING, true)
 }
 
 private fun postgreSQLContainer(): PostgreSQLContainer<Nothing> {
