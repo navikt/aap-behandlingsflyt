@@ -160,7 +160,7 @@ internal class JobbRepository(private val connection: DBConnection) {
             setParams {
                 setLong(1, jobbInput.id)
                 setEnumName(2, JobbStatus.FEILET)
-                setString(3, exception.message.orEmpty())
+                setString(3, exception.stackTraceToString())
             }
         }
     }
