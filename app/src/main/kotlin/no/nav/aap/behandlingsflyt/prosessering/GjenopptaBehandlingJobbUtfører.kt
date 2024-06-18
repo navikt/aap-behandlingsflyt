@@ -17,7 +17,7 @@ class GjenopptaBehandlingJobbUtfører(
         val behandlingerForGjennopptak = gjenopptakRepository.finnBehandlingerForGjennopptak()
 
         behandlingerForGjennopptak.forEach { sakOgBehandling ->
-            val jobberPåBehandling = flytJobbRepository.hentOppgaveForBehandling(sakOgBehandling.behandlingId)
+            val jobberPåBehandling = flytJobbRepository.hentJobberForBehandling(sakOgBehandling.behandlingId)
 
             if (jobberPåBehandling.none { it.jobb.type() == ProsesserBehandlingJobbUtfører.type() }) {
                 flytJobbRepository.leggTil(

@@ -24,7 +24,7 @@ class FlytJobbRepository(private val connection: DBConnection) {
             .medAntallFeil(row.getLong("antall_feil"))
     }
 
-    fun hentOppgaveForBehandling(id: BehandlingId): List<JobbInput> {
+    fun hentJobberForBehandling(id: BehandlingId): List<JobbInput> {
         val query = """
             SELECT *, (SELECT count(1) FROM JOBB_HISTORIKK h WHERE h.jobb_id = op.id AND h.status = '${JobbStatus.FEILET.name}') as antall_feil
                  FROM JOBB op
@@ -38,6 +38,25 @@ class FlytJobbRepository(private val connection: DBConnection) {
             }
             setRowMapper { row ->
                 mapOppgave(row)
+            }
+        }
+    }
+
+    fun hentFeilmeldingForOppgave(id: Long): String {
+        val query = """
+            SELECT * 
+            FROM JOBB_HISTORIKK 
+            WHERE jobb_id = ? and status = '${JobbStatus.FEILET.name}'
+            ORDER BY OPPRETTET_TID DESC
+            LIMIT 1
+        """.trimIndent()
+
+        return connection.queryFirst(query) {
+            setParams {
+                setLong(1, id)
+            }
+            setRowMapper { row ->
+                row.getString("feilmelding")
             }
         }
     }

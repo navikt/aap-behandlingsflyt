@@ -87,7 +87,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
                     val lås = taSkriveLåsRepository.lås(req.ref())
                     val behandling = behandling(connection, req)
                     val flytJobbRepository = FlytJobbRepository(connection)
-                    if (flytJobbRepository.hentOppgaveForBehandling(behandling.id).isEmpty()) {
+                    if (flytJobbRepository.hentJobberForBehandling(behandling.id).isEmpty()) {
                         flytJobbRepository.leggTil(
                             JobbInput(ProsesserBehandlingJobbUtfører).forBehandling(
                                 behandling.sakId,

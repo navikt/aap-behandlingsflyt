@@ -5,8 +5,9 @@ import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.SakId
 import java.time.LocalDateTime
 import java.util.*
+import kotlin.math.max
 
-class JobbInput(val jobb: Jobb) {
+class JobbInput(private val jobb: Jobb) {
 
     internal var id: Long? = null
     private var sakId: SakId? = null
@@ -122,6 +123,14 @@ class JobbInput(val jobb: Jobb) {
             this.properties = properties
         }
         return this
+    }
+
+    fun antallRetriesForsøkt(): Int {
+        return max(antallFeil - jobb.retries(), 1).toInt()
+    }
+
+    fun jobbId(): Long {
+        return requireNotNull(id)
     }
 
 }

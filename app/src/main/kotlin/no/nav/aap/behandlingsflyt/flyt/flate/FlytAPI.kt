@@ -57,9 +57,18 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
                         ),
                         flyt, aktivtSteg
                     )
-                    val oppgaver = flytJobbRepository.hentOppgaveForBehandling(behandling.id)
+                    val jobber = flytJobbRepository.hentJobberForBehandling(behandling.id)
                     val prosessering =
-                        Prosessering(utledStatus(oppgaver), oppgaver.map { OppgaveDto(it.type(), it.status()) })
+                        Prosessering(
+                            utledStatus(jobber),
+                            jobber.map {
+                                JobbDto(
+                                    oppgaveType = it.type(),
+                                    status = it.status(),
+                                    antallFeilendeForsøk = it.antallRetriesForsøkt(),
+                                    feilmelding = hentFeilmeldingHvisBehov(it.status(), it.jobbId(), flytJobbRepository)
+                                )
+                            })
                     BehandlingFlytOgTilstandDto(
                         flyt = stegGrupper.map { (gruppe, steg) ->
                             erFullført = erFullført && gruppe != aktivtSteg.gruppe
@@ -168,6 +177,13 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
             }
         }
     }
+}
+
+private fun hentFeilmeldingHvisBehov(status: JobbStatus, jobbId: Long, flytJobbRepository: FlytJobbRepository): String? {
+    if (status == JobbStatus.FEILET) {
+        return flytJobbRepository.hentFeilmeldingForOppgave(jobbId)
+    }
+    return null
 }
 
 private fun utledStatus(oppgaver: List<JobbInput>): ProsesseringStatus {
