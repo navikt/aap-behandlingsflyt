@@ -48,6 +48,9 @@ fun main() {
             username = postgres.username,
             password = postgres.password
         )
+        // Useful for connecting to the test database locally
+        // jdbc URL contains the host and port and database name.
+        println("jdbcUrl: ${postgres.jdbcUrl}. Password: ${postgres.password}. Username: ${postgres.username}.")
         server(
             dbConfig
         )
