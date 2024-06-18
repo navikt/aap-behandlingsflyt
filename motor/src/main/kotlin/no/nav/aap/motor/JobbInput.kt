@@ -7,7 +7,7 @@ import java.time.LocalDateTime
 import java.util.*
 import kotlin.math.max
 
-class JobbInput(private val jobb: Jobb) {
+class JobbInput(internal val jobb: Jobb) {
 
     internal var id: Long? = null
     private var sakId: SakId? = null
