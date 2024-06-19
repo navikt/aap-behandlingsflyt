@@ -73,4 +73,8 @@ class Vilkår(
     fun førsteDatoTilVurdering(): LocalDate {
         return vilkårTidslinje.minDato()
     }
+
+    fun harPerioderSomErOppfylt(): Boolean {
+        return vilkårTidslinje.segmenter().any { it.verdi.erOppfylt() }
+    }
 }

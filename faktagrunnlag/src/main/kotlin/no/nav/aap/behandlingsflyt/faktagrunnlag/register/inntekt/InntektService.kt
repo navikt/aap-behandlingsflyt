@@ -5,6 +5,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Input
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentGrunnlag
@@ -20,6 +23,7 @@ import java.time.LocalDate
 class InntektService private constructor(
     private val sakService: SakService,
     private val inntektGrunnlagRepository: InntektGrunnlagRepository,
+    private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val sykdomRepository: SykdomRepository,
     private val studentRepository: StudentRepository,
     private val beregningVurderingRepository: BeregningVurderingRepository,
@@ -28,11 +32,12 @@ class InntektService private constructor(
 
     override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekst): Boolean {
         val behandlingId = kontekst.behandlingId
-        val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
-        val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId)
-        if (sykdomGrunnlag?.sykdomsvurdering?.nedsattArbeidsevneDato == null && studentGrunnlag?.studentvurdering?.avbruttStudieDato == null) {
+        val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
+        if (skalIkkeInnhenteOpplysninger(vilkårsresultat)) {
             return false
         }
+        val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
+        val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId)
         val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
 
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
@@ -58,6 +63,13 @@ class InntektService private constructor(
         return eksisterendeGrunnlag?.inntekter == inntekter
     }
 
+    private fun skalIkkeInnhenteOpplysninger(vilkårsresultat: Vilkårsresultat): Boolean {
+        val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
+        val bistandsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
+
+        return !(sykdomsvilkåret.harPerioderSomErOppfylt() && bistandsvilkåret.harPerioderSomErOppfylt())
+    }
+
     private fun utledNedsettelsesdato(sykdomGrunnlag: SykdomGrunnlag?, studentGrunnlag: StudentGrunnlag?): LocalDate {
         val nedsettelsesdatoer = setOf(
             sykdomGrunnlag?.sykdomsvurdering?.nedsattArbeidsevneDato?.let { LocalDate.of(it, 1, 1) },
@@ -76,6 +88,7 @@ class InntektService private constructor(
             return InntektService(
                 SakService(connection),
                 InntektGrunnlagRepository(connection),
+                VilkårsresultatRepository(connection),
                 SykdomRepository(connection),
                 StudentRepository(connection),
                 BeregningVurderingRepository(connection),
