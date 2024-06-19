@@ -37,13 +37,13 @@ class InntektService private constructor(
 
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
 
-        val nedsettelsesDato = utledNedsettelsesdato(requireNotNull(sykdomGrunnlag), studentGrunnlag);
+        val nedsettelsesDato = utledNedsettelsesdato(sykdomGrunnlag, studentGrunnlag);
         val behov = Inntektsbehov(
             Input(
                 nedsettelsesDato = nedsettelsesDato,
                 inntekter = setOf(),
                 uføregrad = Prosent.`0_PROSENT`,
-                yrkesskadevurdering = sykdomGrunnlag.yrkesskadevurdering,
+                yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
                 beregningVurdering = beregningVurdering
             )
         )
@@ -58,9 +58,9 @@ class InntektService private constructor(
         return eksisterendeGrunnlag?.inntekter == inntekter
     }
 
-    private fun utledNedsettelsesdato(sykdomGrunnlag: SykdomGrunnlag, studentGrunnlag: StudentGrunnlag?): LocalDate {
+    private fun utledNedsettelsesdato(sykdomGrunnlag: SykdomGrunnlag?, studentGrunnlag: StudentGrunnlag?): LocalDate {
         val nedsettelsesdatoer = setOf(
-            sykdomGrunnlag.sykdomsvurdering?.nedsattArbeidsevneDato?.let { LocalDate.of(it, 1, 1) },
+            sykdomGrunnlag?.sykdomsvurdering?.nedsattArbeidsevneDato?.let { LocalDate.of(it, 1, 1) },
             studentGrunnlag?.studentvurdering?.avbruttStudieDato
         ).filterNotNull()
 

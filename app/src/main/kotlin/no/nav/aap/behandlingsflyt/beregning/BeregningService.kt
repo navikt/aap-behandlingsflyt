@@ -29,15 +29,15 @@ class BeregningService(
 
     fun beregnGrunnlag(behandlingId: BehandlingId): Beregningsgrunnlag {
         val inntektGrunnlag = inntektGrunnlagRepository.hent(behandlingId)
-        val sykdomGrunnlag = sykdomRepository.hent(behandlingId)
+        val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
         val uføre = uføreRepository.hentHvisEksisterer(behandlingId)
         val student = studentRepository.hentHvisEksisterer(behandlingId)
         val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
 
         val input = utledInput(
-            sykdomGrunnlag.sykdomsvurdering!!,
+            sykdomGrunnlag?.sykdomsvurdering,
             student?.studentvurdering,
-            sykdomGrunnlag.yrkesskadevurdering,
+            sykdomGrunnlag?.yrkesskadevurdering,
             beregningVurdering,
             inntektGrunnlag.inntekter,
             uføre?.vurdering?.uføregrad
@@ -51,7 +51,7 @@ class BeregningService(
     }
 
     private fun utledInput(
-        sykdomsvurdering: Sykdomsvurdering,
+        sykdomsvurdering: Sykdomsvurdering?,
         studentVurdering: StudentVurdering?,
         yrkesskadevurdering: Yrkesskadevurdering?,
         vurdering: BeregningVurdering?,
@@ -70,11 +70,11 @@ class BeregningService(
     }
 
     private fun utledNedsettelsesdato(
-        sykdomsvurdering: Sykdomsvurdering,
+        sykdomsvurdering: Sykdomsvurdering?,
         studentVurdering: StudentVurdering?
     ): LocalDate {
         val nedsettelsesdatoer = setOf(
-            sykdomsvurdering.nedsattArbeidsevneDato?.let { LocalDate.of(it, 1, 1) },
+            sykdomsvurdering?.nedsattArbeidsevneDato?.let { LocalDate.of(it, 1, 1) },
             studentVurdering?.avbruttStudieDato
         ).filterNotNull()
 
