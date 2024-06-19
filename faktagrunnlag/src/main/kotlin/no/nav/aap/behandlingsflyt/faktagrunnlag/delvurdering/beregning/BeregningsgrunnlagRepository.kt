@@ -422,6 +422,8 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
     }
 
     fun deaktiver(behandlingId: BehandlingId) {
-        deaktiverEksisterende(behandlingId)
+        if (hentHvisEksisterer(behandlingId) != null) {
+            deaktiverEksisterende(behandlingId)
+        }
     }
 }
