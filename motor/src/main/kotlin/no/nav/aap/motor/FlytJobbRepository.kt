@@ -5,23 +5,26 @@ import no.nav.aap.behandlingsflyt.dbconnect.Row
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.SakId
 
+fun mapOppgave(row: Row): JobbInput {
+    return JobbInput(JobbType.parse(row.getString("type")))
+        .medId(row.getLong("id"))
+        .medStatus(row.getEnum("status"))
+        .forBehandling(
+            row.getLongOrNull("sak_id")?.let(::SakId),
+            row.getLongOrNull("behandling_id")?.let(::BehandlingId)
+        )
+        .medAntallFeil(row.getLong("antall_feil"))
+}
+
+fun mapOppgaveInklusivFeilmelding(row: Row): Pair<JobbInput, String> {
+    return mapOppgave(row) to row.getString("feilmelding")
+}
+
 class FlytJobbRepository(private val connection: DBConnection) {
     private val jobbRepository = JobbRepository(connection)
 
     fun leggTil(jobbInput: JobbInput) {
         jobbRepository.leggTil(jobbInput)
-    }
-
-
-    private fun mapOppgave(row: Row): JobbInput {
-        return JobbInput(JobbType.parse(row.getString("type")))
-            .medId(row.getLong("id"))
-            .medStatus(row.getEnum("status"))
-            .forBehandling(
-                row.getLongOrNull("sak_id")?.let(::SakId),
-                row.getLongOrNull("behandling_id")?.let(::BehandlingId)
-            )
-            .medAntallFeil(row.getLong("antall_feil"))
     }
 
     fun hentJobberForBehandling(id: BehandlingId): List<JobbInput> {

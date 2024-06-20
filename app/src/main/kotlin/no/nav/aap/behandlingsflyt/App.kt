@@ -62,6 +62,7 @@ import no.nav.aap.behandlingsflyt.vilkår.alder.flate.aldersGrunnlagApi
 import no.nav.aap.httpclient.tokenprovider.azurecc.AzureConfig
 import no.nav.aap.json.DefaultJsonMapper
 import no.nav.aap.motor.Motor
+import no.nav.aap.motor.api.motorApi
 import no.nav.aap.motor.retry.DriftJobbRepositoryExposed
 import no.nav.aap.motor.retry.RetryService
 import no.nav.aap.verdityper.feilhåndtering.ElementNotFoundException
@@ -166,6 +167,7 @@ internal fun Application.server(dbConfig: DbConfig) {
                 beregningsGrunnlagApi(dataSource)
                 aldersGrunnlagApi(dataSource)
                 driftApi(dataSource)
+                motorApi(dataSource)
 
                 hendelsesApi(dataSource)
             }

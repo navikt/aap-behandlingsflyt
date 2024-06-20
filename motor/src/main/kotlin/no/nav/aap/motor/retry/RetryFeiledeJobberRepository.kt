@@ -5,6 +5,7 @@ import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbRepository
 import no.nav.aap.motor.JobbStatus
 import no.nav.aap.motor.JobbType
+import no.nav.aap.motor.mapOppgaveInklusivFeilmelding
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import java.time.LocalDateTime
 
@@ -114,6 +115,18 @@ internal class RetryFeiledeJobberRepository(private val connection: DBConnection
             JobbInput(oppgave)
                 .medNesteKjøring(requireNotNull(oppgave.cron()?.nextLocalDateTimeAfter(LocalDateTime.now())))
         )
+    }
+
+    fun hentAlleFeilede(): List<Pair<JobbInput, String>> {
+        val query  = """
+            SELECT * FROM JOBB WHERE status = 'FEILET'
+        """.trimIndent()
+        return connection.queryList(query) {
+            setParams { }
+            setRowMapper { row ->
+                mapOppgaveInklusivFeilmelding(row)
+            }
+        }
     }
 
     inner class FeilhåndteringOppgaveStatus(val id: Long, val type: String, val status: JobbStatus)
