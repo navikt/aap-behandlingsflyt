@@ -75,7 +75,7 @@ spec:
     - name: INTEGRASJON_PDL_SCOPE
       value: api://dev-fss.pdl.pdl-api/.default
     - name: INTEGRASJON_SAF_URL
-      value: https://saf-q2.dev-fss-pub.nais.io/
+      value: https://saf-q2.dev-fss-pub.nais.io/graphql
     - name: INTEGRASJON_SAF_SCOPE
       value: api://dev-fss.teamdokumenthandtering.saf/.default
     - name: INTEGRASJON_YRKESSKADE_URL
