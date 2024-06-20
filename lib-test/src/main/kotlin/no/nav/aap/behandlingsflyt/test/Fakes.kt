@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.test
 
+import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.ktor.http.*
 import io.ktor.serialization.jackson.*
@@ -59,6 +60,8 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
     private val inntekt = embeddedServer(Netty, port = 0, module = { poppFake() }).start()
     private val oppgavestyring = embeddedServer(Netty, port = 0, module = { oppgavestyringFake() }).start()
     private val fakePersoner: MutableMap<String, TestPerson> = mutableMapOf()
+    private val saf = embeddedServer(Netty, port = 0, module = { safFake() }).apply { start() }
+
 
     init {
         Thread.currentThread().setUncaughtExceptionHandler { _, e -> log.error("Uhåndtert feil", e) }
@@ -85,6 +88,11 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         // Oppgavestyring
         System.setProperty("integrasjon.oppgavestyring.scope", "oppgavestyring")
         System.setProperty("integrasjon.oppgavestyring.url", "http://localhost:${oppgavestyring.port()}")
+
+        // Saf
+        System.setProperty("integrasjon.saf.url", "http://localhost:${saf.port()}")
+        System.setProperty("integrasjon.saf.scope", "saf")
+
 
         // testpersoner
         val BARNLØS_PERSON_30ÅR =
@@ -213,6 +221,66 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
                     BARN_RELASJON_QUERY -> call.respond(barnRelasjoner(req))
                     PERSON_BOLK_QUERY -> call.respond(barn(req))
                     else -> call.respond(HttpStatusCode.BadRequest)
+                }
+            }
+        }
+    }
+
+    private fun Application.safFake() {
+
+        install(ContentNegotiation) {
+            jackson {
+                registerModule(JavaTimeModule())
+                disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+            }
+        }
+
+        routing {
+            post("/graphql"){
+                val body = call.receive<String>()
+
+                // TODO: Oppdater med korrekt respons
+                if("journalpostById" in body) {
+                    call.respondText("""
+                    {
+                      "data": {
+                        "journalpostById": {
+                          "journalpostId": "400000000",
+                          "tittel": "Søknad om arbeidsavklaringspenger",
+                          "journalposttype": "I",
+                          "eksternReferanseId": "639af3ed-b557-4829-a057-14f8e9d48052",
+                          "relevanteDatoer": [
+                            {
+                                "dato": "2020-02-02T12:00:00.000000",
+                                "datotype": "DATO_OPPRETTET"
+                            }
+                          ],
+                          "dokumenter": [
+                            {
+                                "dokumentInfoId": "23423535",
+                                "tittel": "Søknad",
+                                "dokumentvarianter": [
+                                    {
+                                        "variantformat": "ARKIV",
+                                        "brukerHarTilgang": true,
+                                        "filtype": "PDF"
+                                    },
+                                    {
+                                        "variantformat": "ORIGINAL",
+                                        "brukerHarTilgang": true,
+                                        "filtype": "JSON"
+                                    }
+                                ]
+                            }
+                          ]
+                        }
+                      }
+                    }
+                """.trimIndent(),
+                        contentType = ContentType.Application.Json)
+                } else {
+                    print("FEIL KALL")
+                    call.respond(HttpStatusCode.BadRequest)
                 }
             }
         }

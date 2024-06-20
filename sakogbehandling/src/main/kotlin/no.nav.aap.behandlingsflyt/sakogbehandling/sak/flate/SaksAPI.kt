@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoGateway
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.SafGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.verdityper.Periode
@@ -105,6 +106,18 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                         status = sak.status()
                     )
                 )
+            }
+            route("/{saksnummer}/dokumenter") {
+                get<HentSakDTO, String> { req ->
+                    val token = pipeline.context.token()
+                    // 1. gjør api-kall graphql med token over
+                    // 2. returner som streng
+                    // TODO gjør pent
+
+                    respond(
+                        SafGateway.hentDokumenterForSak(Saksnummer(req.saksnummer), token)
+                    )
+                }
             }
             route("/{saksnummer}/personinformasjon") {
                 get<HentSakDTO, SakPersoninfoDTO> { req ->
