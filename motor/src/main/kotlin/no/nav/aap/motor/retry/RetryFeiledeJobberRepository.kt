@@ -119,7 +119,7 @@ internal class RetryFeiledeJobberRepository(private val connection: DBConnection
 
     fun hentAlleFeilede(): List<Pair<JobbInput, String>> {
         val query  = """
-            SELECT * FROM JOBB WHERE status = 'FEILET'
+            SELECT *, (SELECT count(1) FROM JOBB_HISTORIKK h WHERE h.jobb_id = op.id AND h.status = '${JobbStatus.FEILET.name}') as antall_feil FROM JOBB WHERE status = 'FEILET'
         """.trimIndent()
         return connection.queryList(query) {
             setParams { }
