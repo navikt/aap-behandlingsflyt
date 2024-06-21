@@ -17,6 +17,7 @@ fun NormalOpenAPIRoute.motorApi(dataSource: DataSource) {
                         .map { pair ->
                             val info = pair.first
                             JobbInfoDto(
+                                id = info.jobbId(),
                                 type = info.type(),
                                 status = info.status(),
                                 antallFeilendeForsøk = info.antallRetriesForsøkt(),
@@ -33,6 +34,7 @@ fun NormalOpenAPIRoute.motorApi(dataSource: DataSource) {
                 val saker: List<JobbInfoDto> = dataSource.transaction(readOnly = true) { connection ->
                     DriftJobbRepositoryExposed(connection).hentInfoOmGjentagendeJobber().map { info ->
                         JobbInfoDto(
+                            id = info.jobbId(),
                             type = info.type(),
                             status = info.status(),
                             antallFeilendeForsøk = info.antallRetriesForsøkt()
