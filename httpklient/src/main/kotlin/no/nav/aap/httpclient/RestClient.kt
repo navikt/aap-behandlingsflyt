@@ -61,6 +61,7 @@ class RestClient(
     private fun <R> executeRequestAndHandleResponse(request: HttpRequest, mapper: (String) -> R): R? {
         val response = client.send(request, HttpResponse.BodyHandlers.ofString())
 
+        log.info("Request: ${request.uri()}. Respons: ${response.body()}")
         return errorHandler.håndter(request, response, mapper)
     }
 }
