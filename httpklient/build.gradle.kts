@@ -1,4 +1,4 @@
-val ktorVersion = "2.3.11"
+val ktorVersion = "2.3.12"
 
 dependencies {
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
