@@ -53,6 +53,7 @@ query ($fagsakId: String!)
   dokumentoversiktFagsak(
     fagsak: { fagsakId: $fagsakId, fagsaksystem: "KELVIN" }
    fraDato: null
+   foerste: 100
     tema: []
     journalposttyper: []
     journalstatuser: []
