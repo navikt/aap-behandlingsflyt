@@ -31,6 +31,7 @@ import no.nav.aap.behandlingsflyt.server.respondWithStatus
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbStatus
+import no.nav.aap.motor.api.JobbInfoDto
 import no.nav.aap.verdityper.flyt.StegGruppe
 import no.nav.aap.verdityper.flyt.StegType
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
@@ -62,7 +63,8 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
                         Prosessering(
                             utledStatus(jobber),
                             jobber.map {
-                                JobbDto(
+                                JobbInfoDto(
+                                    id = it.jobbId(),
                                     type = it.type(),
                                     status = it.status(),
                                     antallFeilendeForsøk = it.antallRetriesForsøkt(),
