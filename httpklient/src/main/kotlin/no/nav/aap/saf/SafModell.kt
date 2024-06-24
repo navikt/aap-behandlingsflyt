@@ -14,7 +14,7 @@ class SafDokumentoversiktFagsakDataResponse(
     extensions: GraphQLExtensions?
 ) : SafResponse(errors, extensions)
 
-data class Dokumentvariant(val variantformat: String /* TODO: enum */)
+data class Dokumentvariant(val variantformat: Variantformat)
 data class Dokument(
     val dokumentInfoId: String,
     val tittel: String,
@@ -25,3 +25,6 @@ data class Dokument(
 data class Journalpost(val journalpostId: String, val dokumenter: List<Dokument>)
 data class DokumentoversiktFagsak(val journalposter: List<Journalpost>)
 data class SafDokumentversiktFagsakData(val dokumentoversiktFagsak: DokumentoversiktFagsak?)
+enum class Variantformat {
+    ARKIV, SLADDET, ORIGINAL
+}

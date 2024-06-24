@@ -8,11 +8,12 @@ import no.nav.aap.httpclient.request.PostRequest
 import no.nav.aap.httpclient.tokenprovider.OidcToken
 import no.nav.aap.httpclient.tokenprovider.azurecc.OnBehalfOfTokenProvider
 import no.nav.aap.requiredConfigForKey
+import no.nav.aap.saf.Journalpost
 import no.nav.aap.verdityper.dokument.DokumentInfoId
 import no.nav.aap.verdityper.dokument.JournalpostId
-import no.nav.aap.saf.Dokument
 import no.nav.aap.saf.SafDokumentoversiktFagsakDataResponse
 import no.nav.aap.saf.SafResponseHandler
+import no.nav.aap.saf.Variantformat
 import java.net.URI
 import java.net.http.HttpHeaders
 import java.util.*
@@ -42,8 +43,7 @@ object SafGateway {
 
         val dokumentoversiktFagsak = response.data?.dokumentoversiktFagsak ?: return emptyList()
 
-        // TODO: Sammenstill resultat
-        return dokumentoversiktFagsak.journalposter.flatMap { it.dokumenter }
+        return dokumentoversiktFagsak.journalposter.tilArkivDokumenter()
     }
 
     fun hentDokument(
@@ -86,6 +86,33 @@ fun extractFileNameFromHeaders(headers: HttpHeaders): String? {
     val matchResult = regex.find(value)
     return matchResult?.groupValues?.get(1)
 }
+
+fun List<Journalpost>.tilArkivDokumenter(): List<Dokument> {
+    return this.flatMap { journalpost ->
+        journalpost.dokumenter.flatMap { dok ->
+            dok.dokumentvarianter
+                .filter { it.variantformat === Variantformat.ARKIV }
+                .map {
+                    Dokument(
+                        journalpostId = journalpost.journalpostId,
+                        dokumentInfoId = dok.dokumentInfoId,
+                        tittel = dok.tittel,
+                        brevkode = dok.brevkode,
+                        variantformat = it.variantformat
+                    )
+                }
+        }
+    }
+}
+
+data class Dokument(
+    val dokumentInfoId: String,
+    val journalpostId: String,
+    val brevkode: String,
+    val tittel: String,
+    val variantformat: Variantformat
+)
+
 
 data class SafDocumentResponse(val dokument: ByteArray, val contentType: String, val filnavn: String) {
     // equals, hashCode må implementeres fordi dokument ikke er en immutable klasse
