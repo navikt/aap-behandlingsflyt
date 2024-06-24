@@ -37,10 +37,6 @@ class GrunnlagUføre(
             )
     }
 
-    fun uføreInntektIKroner(): Beløp {
-        return uføreInntektIKroner
-    }
-
     fun uføregrad(): Prosent {
         return uføregrad
     }
