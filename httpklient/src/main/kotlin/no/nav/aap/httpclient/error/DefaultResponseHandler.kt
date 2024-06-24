@@ -11,9 +11,13 @@ import java.net.http.HttpResponse
 class DefaultResponseHandler(private val config: ClientConfig) : RestResponseHandler {
 
     private val SECURE_LOGGER = LoggerFactory.getLogger("secureLog")
-    private val logger = LoggerFactory.getLogger(DefaultResponseHandler::class.java)
+    private val log = LoggerFactory.getLogger(DefaultResponseHandler::class.java)
 
-    override fun <R> håndter(request: HttpRequest, response: HttpResponse<String>, mapper: (String, HttpHeaders) -> R): R? {
+    override fun <R> håndter(
+        request: HttpRequest,
+        response: HttpResponse<String>,
+        mapper: (String, HttpHeaders) -> R
+    ): R? {
         val status: Int = response.statusCode()
         if (status == HttpURLConnection.HTTP_NO_CONTENT) {
             return null
@@ -26,9 +30,7 @@ class DefaultResponseHandler(private val config: ClientConfig) : RestResponseHan
                 return null
             }
 
-            // TODO: logg til sikker log før PRODUKSJON
-            // SECURE_LOGGER.info(value)
-            logger.info(value)
+            loggRespons(value)
             return mapper(value, response.headers())
         }
         if (status == HttpURLConnection.HTTP_BAD_REQUEST) {
@@ -39,5 +41,14 @@ class DefaultResponseHandler(private val config: ClientConfig) : RestResponseHan
         }
 
         throw UhåndtertHttpResponsException("Uventet httprespons kode $response")
+    }
+
+    private fun loggRespons(value: String?) {
+        // TODO: Temp
+        val cluster = System.getenv("NAIS_CLUSTER_NAME")
+        if (cluster?.substring(0, cluster.indexOf("-"))?.equals("DEV", ignoreCase = true) == true) {
+            log.info(value)
+        }
+        SECURE_LOGGER.info(value)
     }
 }
