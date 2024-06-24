@@ -5,6 +5,7 @@ import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
+import no.nav.aap.motor.mdc.JobbLogInfoProviderHolder
 import no.nav.aap.motor.retry.DriftJobbRepositoryExposed
 import javax.sql.DataSource
 
@@ -21,7 +22,9 @@ fun NormalOpenAPIRoute.motorApi(dataSource: DataSource) {
                                 type = info.type(),
                                 status = info.status(),
                                 antallFeilendeForsøk = info.antallRetriesForsøkt(),
-                                feilmelding = pair.second
+                                feilmelding = pair.second,
+                                metadata = JobbLogInfoProviderHolder.get().hentInformasjon(connection, info)?.felterMedVerdi
+                                    ?: mapOf()
                             )
                         }
 
@@ -37,7 +40,8 @@ fun NormalOpenAPIRoute.motorApi(dataSource: DataSource) {
                             id = info.jobbId(),
                             type = info.type(),
                             status = info.status(),
-                            antallFeilendeForsøk = info.antallRetriesForsøkt()
+                            antallFeilendeForsøk = info.antallRetriesForsøkt(),
+                            metadata = mapOf()
                         )
                     }
                 }

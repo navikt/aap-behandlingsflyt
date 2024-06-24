@@ -68,7 +68,8 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
                                     type = it.type(),
                                     status = it.status(),
                                     antallFeilendeForsøk = it.antallRetriesForsøkt(),
-                                    feilmelding = hentFeilmeldingHvisBehov(it.status(), it.jobbId(), flytJobbRepository)
+                                    feilmelding = hentFeilmeldingHvisBehov(it.status(), it.jobbId(), flytJobbRepository),
+                                    metadata = mapOf()
                                 )
                             })
                     BehandlingFlytOgTilstandDto(

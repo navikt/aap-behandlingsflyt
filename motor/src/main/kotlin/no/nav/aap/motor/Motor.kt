@@ -3,6 +3,7 @@ package no.nav.aap.motor
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.motor.mdc.JobbLogInfoProvider
+import no.nav.aap.motor.mdc.JobbLogInfoProviderHolder
 import no.nav.aap.motor.mdc.NoExtraLogInfoProvider
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
@@ -17,11 +18,12 @@ import javax.sql.DataSource
 class Motor(
     private val dataSource: DataSource,
     private val antallKammer: Int = 8,
-    private val logInfoProvider: JobbLogInfoProvider = NoExtraLogInfoProvider,
+    logInfoProvider: JobbLogInfoProvider = NoExtraLogInfoProvider,
     jobber: List<Jobb>
 ) {
 
     init {
+        JobbLogInfoProviderHolder.set(logInfoProvider)
         for (oppgave in jobber) {
             JobbType.leggTil(oppgave)
         }
@@ -135,7 +137,7 @@ class Motor(
             MDC.put("behandlingId", jobbInput.behandlingIdOrNull().toString())
             MDC.put("callId", UUID.randomUUID().toString())
 
-            val logInformasjon = logInfoProvider.hentInformasjon(connection, jobbInput)
+            val logInformasjon = JobbLogInfoProviderHolder.get().hentInformasjon(connection, jobbInput)
             if (logInformasjon != null) {
                 for (feltMedVerdi in logInformasjon.felterMedVerdi) {
                     MDC.put(feltMedVerdi.key, feltMedVerdi.value)
