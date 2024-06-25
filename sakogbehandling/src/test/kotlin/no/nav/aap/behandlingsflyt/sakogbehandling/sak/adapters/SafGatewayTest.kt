@@ -7,6 +7,7 @@ import no.nav.aap.verdityper.dokument.DokumentInfoId
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.net.URI
 import java.net.http.HttpHeaders
