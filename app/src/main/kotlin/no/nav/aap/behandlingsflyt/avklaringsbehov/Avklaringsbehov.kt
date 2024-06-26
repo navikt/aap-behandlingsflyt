@@ -112,7 +112,7 @@ class Avklaringsbehov(
         historikk.add(Endring(status = Status.AVSLUTTET, begrunnelse = begrunnelse, endretAv = endretAv))
     }
 
-    fun avbryt() {
+    internal fun avbryt() {
         historikk += Endring(status = Status.AVBRUTT, begrunnelse = "", endretAv = SYSTEMBRUKER.ident)
     }
 

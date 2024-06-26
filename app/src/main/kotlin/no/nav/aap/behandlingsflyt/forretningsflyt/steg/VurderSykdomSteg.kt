@@ -54,7 +54,7 @@ class VurderSykdomSteg private constructor(
             } else {
                 val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)
                 if (avklaringsbehov != null && avklaringsbehov.erÅpent()) {
-                    avklaringsbehov.avbryt()
+                    avklaringsbehovene.avbryt(Definisjon.AVKLAR_SYKDOM)
                 }
             }
         }
