@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.Row
+import no.nav.aap.behandlingsflyt.faktasaksbehandler.student.StudentVurdering
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
@@ -88,15 +89,20 @@ class StudentRepository(private val connection: DBConnection) {
             return null
         }
         val query = """
-                INSERT INTO STUDENT_VURDERING (begrunnelse, oppfylt, avbrutt_dato)
-                VALUES (?, ?, ?)
+                INSERT INTO STUDENT_VURDERING (begrunnelse, avbrutt_studie, godkjent_studie_av_laanekassen, avbrutt_pga_sykdom_eller_skade, har_behov_for_behandling, skal_gjenoppta_studie, avbrutt_dato, avbrudd_mer_enn_6_maaneder)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
 
         val vurderingId = connection.executeReturnKey(query) {
             setParams {
                 setString(1, studentvurdering.begrunnelse)
-                setBoolean(2, studentvurdering.oppfyller11_14)
-                setLocalDate(3, studentvurdering.avbruttStudieDato)
+                setBoolean(2, studentvurdering.harAvbruttStudie)
+                setBoolean(3, studentvurdering.godkjentStudieAvLånekassen)
+                setBoolean(4, studentvurdering.avbruttPgaSykdomEllerSkade)
+                setBoolean(5, studentvurdering.harBehovForBehandling)
+                setBoolean(6, studentvurdering.skalGjenopptaStudie)
+                setLocalDate(7, studentvurdering.avbruttStudieDato)
+                setBoolean(8, studentvurdering.avbruddMerEnn6Måneder)
             }
         }
 
@@ -200,9 +206,14 @@ class StudentRepository(private val connection: DBConnection) {
                 StudentVurdering(
                     it.getLong("id"),
                     it.getString("begrunnelse"),
+                    it.getBoolean("avbrutt_studie"),
+                    it.getBoolean("godkjent_studie_av_laanekassen"),
+                    it.getBoolean("avbrutt_pga_sykdom_eller_skade"),
+                    it.getBoolean("har_behov_for_behandling"),
+                    it.getBoolean("skal_gjenoppta_studie"),
+                    it.getLocalDate("avbrutt_dato"),
+                    it.getBoolean("avbrudd_mer_enn_6_maaneder"),
                     hentDokumenterTilVurdering(studentId),
-                    it.getBooleanOrNull("oppfylt"),
-                    it.getLocalDateOrNull("avbrutt_dato")
                 )
             }
         }

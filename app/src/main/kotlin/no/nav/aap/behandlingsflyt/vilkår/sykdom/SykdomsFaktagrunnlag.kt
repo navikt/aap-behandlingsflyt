@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.vilkår.sykdom
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Faktagrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
+import no.nav.aap.behandlingsflyt.faktasaksbehandler.student.StudentVurdering
 import java.time.LocalDate
 
 class SykdomsFaktagrunnlag(

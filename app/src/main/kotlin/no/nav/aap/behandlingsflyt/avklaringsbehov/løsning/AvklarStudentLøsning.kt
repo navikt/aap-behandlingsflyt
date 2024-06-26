@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.AvklarStudentLøser
 import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.LøsningsResultat
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
+import no.nav.aap.behandlingsflyt.faktasaksbehandler.student.StudentVurdering
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = AVKLAR_STUDENT_KODE)

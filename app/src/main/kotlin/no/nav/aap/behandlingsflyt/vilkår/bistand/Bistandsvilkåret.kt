@@ -18,8 +18,9 @@ class Bistandsvilkåret(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<B
         val utfall: Utfall
         var avslagsårsak: Avslagsårsak? = null
         var innvilgelsesårsak: Innvilgelsesårsak? = null
+        val studentVurdering = grunnlag.studentvurdering
 
-        if (grunnlag.studentvurdering?.oppfyller11_14 == true) {
+        if (studentVurdering?.erOppfylt() == true) {
             utfall = Utfall.OPPFYLT
             innvilgelsesårsak = Innvilgelsesårsak.STUDENT
         } else if (grunnlag.vurdering?.erBehovForBistand == true) {

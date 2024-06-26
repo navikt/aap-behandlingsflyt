@@ -33,10 +33,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.NedreGrense
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.YrkesskadevurderingDto
+import no.nav.aap.behandlingsflyt.faktasaksbehandler.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.flyt.flate.Venteinformasjon
 import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.TestHendelsesMottak
@@ -604,8 +604,13 @@ class FlytOrkestratorTest {
                         studentvurdering = StudentVurdering(
                             begrunnelse = "Er student",
                             dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
-                            oppfyller11_14 = false,
-                            avbruttStudieDato = null
+                            avbruttStudieDato = LocalDate.now(),
+                            avbruddMerEnn6Måneder = true,
+                            harBehovForBehandling = true,
+                            harAvbruttStudie = true,
+                            skalGjenopptaStudie = true,
+                            avbruttPgaSykdomEllerSkade = true,
+                            godkjentStudieAvLånekassen = false,
                         )
                     ),
                     behandlingVersjon = behandling.versjon,

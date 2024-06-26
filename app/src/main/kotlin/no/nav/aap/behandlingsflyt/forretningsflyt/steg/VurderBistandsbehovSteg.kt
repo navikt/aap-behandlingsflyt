@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentGrunnlag
+
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -31,7 +31,11 @@ class VurderBistandsbehovSteg private constructor(
             val studentGrunnlag = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
 
             val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-            if (studentGrunnlag?.studentvurdering?.oppfyller11_14 == true || bistandsGrunnlag != null) {
+
+
+            val studentVurdering = studentGrunnlag?.studentvurdering
+
+            if (studentVurdering?.erOppfylt() == true || bistandsGrunnlag != null) {
                 for (periode in kontekst.perioderTilVurdering) {
                     val grunnlag = BistandFaktagrunnlag(
                         periode.fom,
@@ -46,7 +50,7 @@ class VurderBistandsbehovSteg private constructor(
 
             val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
 
-            if (harBehovForAvklaring(vilkår, kontekst.perioderTilVurdering, studentGrunnlag)) {
+            if (harBehovForAvklaring(vilkår, kontekst.perioderTilVurdering, studentVurdering?.erOppfylt() == true)) {
                 return StegResultat(listOf(Definisjon.AVKLAR_BISTANDSBEHOV))
             }
         }
@@ -57,15 +61,15 @@ class VurderBistandsbehovSteg private constructor(
     private fun harBehovForAvklaring(
         vilkår: Vilkår,
         periodeTilVurdering: Set<Periode>,
-        studentGrunnlag: StudentGrunnlag?
+        erStudentStegOppfylt: Boolean
     ): Boolean {
         return (vilkår.harPerioderSomIkkeErVurdert(periodeTilVurdering)
-                || harInnvilgetForStudentUtenÅVæreStudent(vilkår, studentGrunnlag))
+                || harInnvilgetForStudentUtenÅVæreStudent(vilkår, erStudentStegOppfylt))
     }
 
-    private fun harInnvilgetForStudentUtenÅVæreStudent(vilkår: Vilkår, studentGrunnlag: StudentGrunnlag?): Boolean {
-        return studentGrunnlag?.studentvurdering?.oppfyller11_14 == false &&
-                vilkår.vilkårsperioder().any { it.innvilgelsesårsak == Innvilgelsesårsak.STUDENT }
+    private fun harInnvilgetForStudentUtenÅVæreStudent(vilkår: Vilkår, erStudentStegOppfylt: Boolean): Boolean {
+
+        return !erStudentStegOppfylt && vilkår.vilkårsperioder().any { it.innvilgelsesårsak == Innvilgelsesårsak.STUDENT }
     }
 
     companion object : FlytSteg {

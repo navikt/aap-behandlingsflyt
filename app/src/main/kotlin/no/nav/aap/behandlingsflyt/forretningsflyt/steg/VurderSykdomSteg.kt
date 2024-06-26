@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
@@ -26,7 +27,9 @@ class VurderSykdomSteg private constructor(
             val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId = kontekst.behandlingId)
 
             val vilkårResultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-            if (sykdomsGrunnlag != null && sykdomsGrunnlag.erKonsistent() || studentGrunnlag?.studentvurdering?.oppfyller11_14 == true) {
+            val studentVurdering = studentGrunnlag?.studentvurdering
+
+            if (sykdomsGrunnlag != null && sykdomsGrunnlag.erKonsistent() || studentVurdering?.erOppfylt() == true) {
                 for (periode in kontekst.perioderTilVurdering) {
                     val faktagrunnlag = no.nav.aap.behandlingsflyt.vilkår.sykdom.SykdomsFaktagrunnlag(
                         periode.fom,
@@ -41,8 +44,7 @@ class VurderSykdomSteg private constructor(
             vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårResultat)
             val sykdomsvilkåret = vilkårResultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
 
-            if (sykdomsvilkåret.harPerioderSomIkkeErVurdert(kontekst.perioderTilVurdering)
-                || (studentGrunnlag?.studentvurdering?.oppfyller11_14 == false && sykdomsGrunnlag?.erKonsistent() != true)
+            if (sykdomsvilkåret.harPerioderSomIkkeErVurdert(kontekst.perioderTilVurdering) || (studentVurdering?.erOppfylt() == false && sykdomsGrunnlag?.erKonsistent() != true)
             ) {
                 return StegResultat(listOf(Definisjon.AVKLAR_SYKDOM))
             }

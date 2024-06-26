@@ -20,8 +20,10 @@ class Sykdomsvilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<Sykd
         var innvilgelsesårsak: Innvilgelsesårsak? = null
 
         val sykdomsvurdering = grunnlag.sykdomsvurdering
+        val studentVurdering = grunnlag.studentvurdering
 
-        if (grunnlag.studentvurdering?.oppfyller11_14 == true) {
+
+        if (studentVurdering?.erOppfylt() == true) {
             utfall = Utfall.OPPFYLT
             innvilgelsesårsak = Innvilgelsesårsak.STUDENT
         } else if (sykdomsvurdering?.erSkadeSykdomEllerLyteVesentligdel == true && sykdomsvurdering.erNedsettelseIArbeidsevneHøyereEnnNedreGrense == true) {
