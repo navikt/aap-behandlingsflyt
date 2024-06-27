@@ -41,7 +41,7 @@ class SøknadService private constructor(
         for (ubehandletSøknad in ubehandletSøknader) {
             studentRepository.lagre(
                 behandlingId = behandlingId,
-                OppgittStudent(harAvbruttStudie = ubehandletSøknad.student)
+                OppgittStudent(harAvbruttStudie = ubehandletSøknad.erStudent == "JA", erStudent = ubehandletSøknad.erStudent, skalGjenopptaStudie = ubehandletSøknad.skalGjenopptaStudie)
             )
             if (ubehandletSøknad.harYrkesskade) {
                 YrkesskadeRegisterGateway.puttInnTestPerson(

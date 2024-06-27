@@ -580,7 +580,7 @@ class FlytOrkestratorTest {
             ident, DokumentMottattPersonHendelse(
                 journalpost = JournalpostId("11"),
                 mottattTidspunkt = LocalDateTime.now(),
-                strukturertDokument = StrukturertDokument(Søknad(student = SøknadStudentDto("JA"), yrkesskade = "JA"), Brevkode.SØKNAD),
+                strukturertDokument = StrukturertDokument(Søknad(student = SøknadStudentDto("JA", "JA"), yrkesskade = "JA"), Brevkode.SØKNAD),
                 periode = periode
             )
         )

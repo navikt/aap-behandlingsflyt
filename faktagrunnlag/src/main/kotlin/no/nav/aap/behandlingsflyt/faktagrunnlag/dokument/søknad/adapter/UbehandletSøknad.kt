@@ -6,7 +6,8 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 class UbehandletSøknad(
     val journalpostId: JournalpostId,
     val periode: Periode,
-    val student: Boolean,
+    val erStudent: String,
+    val skalGjenopptaStudie: String?,
     val harYrkesskade: Boolean
 ) {
 }

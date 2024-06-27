@@ -10,7 +10,28 @@ class Søknad(
 }
 
 class SøknadStudentDto(
-    val erStudent: String
+    val erStudent: String,
+    val kommeTilbake: String? = null
 ) {
-    fun erStudent() = erStudent.uppercase() == "JA"
+    fun erStudent(): String {
+      if (erStudent.uppercase() == "JA"){
+          return "JA"
+      } else if (erStudent.uppercase() === "AVBRUTT"){
+          return "AVBRUTT"
+      } else {
+          return "NEI"
+      }
+    }
+
+    fun skalGjennopptaStudie(): String{
+        if (kommeTilbake?.uppercase() == "JA"){
+            return "JA"
+        } else if (kommeTilbake?.uppercase() == "NEI"){
+            return "NEI"
+        } else if (kommeTilbake?.uppercase() == "VET IKKE"){
+            return "VET_IKKE"
+        } else{
+            return "IKKE_SPESIFISERT"
+        }
+    }
 }

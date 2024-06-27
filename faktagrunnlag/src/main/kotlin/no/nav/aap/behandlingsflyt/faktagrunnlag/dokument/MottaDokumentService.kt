@@ -77,11 +77,13 @@ class MottaDokumentService(
 
     private fun mapSøknad(mottattDokument: MottattDokument): UbehandletSøknad {
         val søknad = requireNotNull(mottattDokument.strukturerteData<Søknad>()).data
+
         val mottattDato = mottattDokument.mottattTidspunkt.toLocalDate()
         return UbehandletSøknad(
             mottattDokument.journalpostId,
             Periode(mottattDato, mottattDato),
             søknad.student.erStudent(),
+            søknad.student.skalGjennopptaStudie(),
             søknad.harYrkesskade()
         )
     }
