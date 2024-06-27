@@ -8,7 +8,7 @@ class StudentGrunnlag(
     val oppgittStudent: OppgittStudent?
 ) {
     fun erKonsistent(): Boolean {
-        if (oppgittStudent == null || !oppgittStudent.harAvbruttStudie) {
+        if (oppgittStudent == null || !oppgittStudent.erStudent()) {
             return true
         }
         return studentvurdering != null

@@ -31,16 +31,15 @@ class StudentRepository(private val connection: DBConnection) {
             return null
         }
         val query = """
-                INSERT INTO OPPGITT_STUDENT (har_avbrutt, avbrutt_dato, er_student, skal_gjenoppta_studie)
-                VALUES (?, ?, ?, ?)
+                INSERT INTO OPPGITT_STUDENT (avbrutt_dato, er_student, skal_gjenoppta_studie)
+                VALUES ( ?, ?, ?)
             """.trimIndent()
 
         return connection.executeReturnKey(query) {
             setParams {
-                setBoolean(1, oppgittStudent.harAvbruttStudie)
-                setLocalDate(2, oppgittStudent.avbruttDato) // TODO: Få inn strukturert
-                setString(3, oppgittStudent.erStudent)
-                setString(4, oppgittStudent.skalGjenopptaStudie)
+                setLocalDate(1, oppgittStudent.avbruttDato) // TODO: Få inn strukturert
+                setEnumName(2, oppgittStudent.erStudentStatus)
+                setEnumName(3, oppgittStudent.skalGjenopptaStudieStatus)
             }
         }
     }
@@ -185,10 +184,9 @@ class StudentRepository(private val connection: DBConnection) {
             setRowMapper {
                 OppgittStudent(
                     it.getLong("id"),
-                    it.getBoolean("HAR_AVBRUTT"),
                     it.getLocalDateOrNull("avbrutt_dato"),
-                    it.getString("er_student"),
-                    it.getStringOrNull("skal_gjenoppta_studie")
+                    it.getEnum("er_student"),
+                    it.getEnumOrNull("skal_gjenoppta_studie")
                 )
             }
         }
