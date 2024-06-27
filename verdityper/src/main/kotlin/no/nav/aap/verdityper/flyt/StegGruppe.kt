@@ -9,7 +9,7 @@ enum class StegGruppe {
     STUDENT,
     SYKDOM,
     GRUNNLAG,
-    UTTAK,
+    UNDERVEIS,
     TILKJENT_YTELSE,
     SIMULERING,
     VEDTAK,
