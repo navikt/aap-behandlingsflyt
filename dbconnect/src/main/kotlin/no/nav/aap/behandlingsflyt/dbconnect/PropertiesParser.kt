@@ -16,7 +16,7 @@ internal object PropertiesParser {
 
         // custom istdf Properties.store slik at vi ikke får med default timestamp
         properties.forEach { k, v ->
-            sw.append(k as String).append('=').append(v as String).append('\n')
+            sw.append(k as String).append('=').append((v as String).lines().joinToString("")).append('\n')
         }
         return sw.toString()
     }
