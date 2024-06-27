@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.Row
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.DokumentRekkefølge
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.DokumentType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -76,7 +75,7 @@ class MottattDokumentRepository(private val connection: DBConnection) {
         )
     }
 
-    fun hentDokumentRekkefølge(sakId: SakId, type: DokumentType): Set<DokumentRekkefølge> {
+    fun hentDokumentRekkefølge(sakId: SakId, type: Brevkode): Set<DokumentRekkefølge> {
         val query = """
             SELECT journalpost, MOTTATT_TID FROM MOTTATT_DOKUMENT WHERE sak_id = ? AND status = ? AND type = ?
         """.trimIndent()
@@ -96,15 +95,15 @@ class MottattDokumentRepository(private val connection: DBConnection) {
         }.toSet()
     }
 
-    fun hentUbehandledeDokumenter(sakId: SakId): Set<MottattDokument> {
+    fun hentDokumenterAvType(sakId: SakId, type: Brevkode): Set<MottattDokument> {
         val query = """
-            SELECT * FROM MOTTATT_DOKUMENT WHERE sak_id = ? AND status = ?
+            SELECT * FROM MOTTATT_DOKUMENT WHERE sak_id = ? AND type = ?
         """.trimIndent()
 
         return connection.queryList(query) {
             setParams {
                 setLong(1, sakId.toLong())
-                setEnumName(2, Status.MOTTATT)
+                setEnumName(2, type)
             }
             setRowMapper { row ->
                 mapMottattDokument(row)
