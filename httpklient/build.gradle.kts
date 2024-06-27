@@ -8,6 +8,6 @@ dependencies {
     implementation("dev.forst:ktor-openapi-generator:0.6.1")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.2")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.3")
     testImplementation("org.assertj:assertj-core:3.26.0")
 }
