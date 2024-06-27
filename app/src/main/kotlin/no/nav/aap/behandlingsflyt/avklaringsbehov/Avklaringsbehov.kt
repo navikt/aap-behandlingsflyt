@@ -39,7 +39,7 @@ class Avklaringsbehov(
         }.maxOf { it }.status
     }
 
-    fun vurderTotrinn(
+    internal fun vurderTotrinn(
         begrunnelse: String,
         godkjent: Boolean,
         vurdertAv: String,
@@ -59,7 +59,7 @@ class Avklaringsbehov(
         )
     }
 
-    fun vurderKvalitet(
+    internal fun vurderKvalitet(
         begrunnelse: String,
         godkjent: Boolean,
         vurdertAv: String,
@@ -79,7 +79,7 @@ class Avklaringsbehov(
         )
     }
 
-    fun reåpne(frist: LocalDate? = null, begrunnelse: String = "", grunn: ÅrsakTilSettPåVent? = null) {
+    internal fun reåpne(frist: LocalDate? = null, begrunnelse: String = "", grunn: ÅrsakTilSettPåVent? = null) {
         historikk += Endring(
             status = Status.OPPRETTET,
             begrunnelse = begrunnelse,
@@ -101,11 +101,11 @@ class Avklaringsbehov(
         return definisjon.skalLøsesISteg(stegType, funnetISteg) && erÅpent()
     }
 
-    fun løs(begrunnelse: String, endretAv: String) {
+    internal fun løs(begrunnelse: String, endretAv: String) {
         løs(begrunnelse, endretAv, definisjon.kreverToTrinn)
     }
 
-    fun løs(begrunnelse: String, endretAv: String, kreverToTrinn: Boolean) {
+    internal fun løs(begrunnelse: String, endretAv: String, kreverToTrinn: Boolean) {
         if (this.kreverToTrinn != true) {
             this.kreverToTrinn = kreverToTrinn
         }
@@ -173,8 +173,6 @@ class Avklaringsbehov(
     }
 
     override fun toString(): String {
-        return "Avklaringsbehov(definisjon=$definisjon, status=${status()})"
+        return "Avklaringsbehov(definisjon=$definisjon, status=${status()}, løsesISteg=${løsesISteg()})"
     }
-
-
 }
