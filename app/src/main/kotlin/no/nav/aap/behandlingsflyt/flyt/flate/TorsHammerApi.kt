@@ -8,7 +8,6 @@ import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.aktivitet.HammerDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.aktivitet.TorsHammerDto
 import no.nav.aap.behandlingsflyt.prosessering.BREVKODE
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringOppgaveUtfører
@@ -62,7 +61,7 @@ fun NormalOpenAPIRoute.torsHammerApi(dataSource: DataSource) {
                     mottattDokumentRepository.hentDokumenterAvType(sak.id, Brevkode.AKTIVITETSKORT)
 
 
-                AlleHammereDto(hentDokumenterAvType.mapNotNull { it.strukturerteData<HammerDto>()?.data })
+                AlleHammereDto(hentDokumenterAvType.mapNotNull { it.strukturerteData<TorsHammerDto>()?.data?.hammer })
             }
             respond(response)
 

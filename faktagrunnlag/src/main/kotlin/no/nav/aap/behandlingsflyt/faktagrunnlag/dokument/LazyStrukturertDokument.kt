@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Pliktkort
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.aktivitet.TorsHammerDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.json.DefaultJsonMapper
@@ -34,7 +35,7 @@ class LazyStrukturertDokument(
             Brevkode.SØKNAD -> DefaultJsonMapper.fromJson(strukturerteData, Søknad::class.java) as T
             Brevkode.PLIKTKORT -> DefaultJsonMapper.fromJson(strukturerteData, Pliktkort::class.java) as T
             Brevkode.UKJENT -> throw IllegalArgumentException("Ukjent brevkode")
-            Brevkode.AKTIVITETSKORT -> throw IllegalArgumentException("Ukjent brevkode")
+            Brevkode.AKTIVITETSKORT -> DefaultJsonMapper.fromJson(strukturerteData, TorsHammerDto::class.java) as T
         }
     }
 
