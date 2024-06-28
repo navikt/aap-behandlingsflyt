@@ -4,6 +4,7 @@ import no.nav.aap.httpclient.ClientConfig
 import no.nav.aap.httpclient.RestClient
 import no.nav.aap.httpclient.post
 import no.nav.aap.httpclient.request.PostRequest
+import no.nav.aap.httpclient.tokenprovider.OidcToken
 import no.nav.aap.httpclient.tokenprovider.azurecc.OnBehalfOfTokenProvider
 import no.nav.aap.requiredConfigForKey
 import no.nav.aap.verdityper.sakogbehandling.Ident
@@ -18,17 +19,19 @@ object TilgangGateway {
         tokenProvider = OnBehalfOfTokenProvider,
     )
 
-    fun kanLeseSak(identer: List<Ident>): Boolean {
+    fun kanLeseSak(identer: List<Ident>, currentToken: OidcToken): Boolean {
         val respons = query(
             "lese",
-            TilgangRequest(identer.map { it.identifikator })
+            TilgangRequest(identer.map { it.identifikator }),
+            currentToken = currentToken
         )
         return respons.tilgang
     }
 
-    private fun query(endepunkt: String, request: TilgangRequest): TilgangResponse {
+    private fun query(endepunkt: String, request: TilgangRequest, currentToken: OidcToken): TilgangResponse {
         val httpRequest = PostRequest(
             body = request,
+            currentToken = currentToken
         )
         return requireNotNull(
             client.post<_, TilgangResponse>(

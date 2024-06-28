@@ -89,11 +89,12 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
             }
             route("/{saksnummer}").get<HentSakDTO, UtvidetSaksinfoDTO> { req ->
                 val saksnummer = req.saksnummer
+                val token = token()
 
                 val (sak, behandlinger) = dataSource.transaction { connection ->
                     val sak = SakRepositoryImpl(connection).hent(saksnummer = Saksnummer(saksnummer))
 
-                    val leseTilgang = TilgangGateway.kanLeseSak(sak.person.identer())
+                    val leseTilgang = TilgangGateway.kanLeseSak(sak.person.identer(), token)
                     logger.info("Har lesetilgang: $leseTilgang")
 
                     val behandlinger = BehandlingRepositoryImpl(connection).hentAlleFor(sak.id).map { behandling ->
