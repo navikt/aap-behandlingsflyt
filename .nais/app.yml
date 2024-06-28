@@ -101,4 +101,8 @@ spec:
       value: http://pensjon-pen-q2.pensjon-q2/pen/springapi/
     - name: INTEGRASJON_PESYS_SCOPE
       value: api://dev-fss.pensjon-q2.pensjon-pen-q2/.default
+    - name: INTEGRASJON_TILGANG_URL
+      value: http://tilgang
+    - name: INTEGRASJON_TILGANG_SCOPE
+      value: api://dev-gcp.aap.tilgang/.default
 
