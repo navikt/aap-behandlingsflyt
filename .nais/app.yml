@@ -69,6 +69,7 @@ spec:
         - application: yrkesskade-saker
           namespace: yrkesskade
         - application: oppgavestyring
+        - application: statistikk
 
   env:
     - name: INTEGRASJON_PDL_URL
