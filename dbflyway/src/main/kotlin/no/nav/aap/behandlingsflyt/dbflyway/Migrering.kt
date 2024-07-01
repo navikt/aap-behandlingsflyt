@@ -5,10 +5,11 @@ import javax.sql.DataSource
 
 object Migrering {
     fun migrate(dataSource: DataSource) {
+        val miljø = Miljø.er()
         val flyway = Flyway
             .configure()
-            .cleanDisabled(false) // TODO: husk å skru av denne før prod
-            .cleanOnValidationError(true) // TODO: husk å skru av denne før prod
+            .cleanDisabled(miljø != MiljøKode.LOKALT)
+            .cleanOnValidationError(miljø == MiljøKode.LOKALT)
             .dataSource(dataSource)
             .locations("flyway")
             .validateMigrationNaming(true)

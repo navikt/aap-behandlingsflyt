@@ -1,5 +1,7 @@
 package no.nav.aap.httpclient.error
 
+import no.nav.aap.behandlingsflyt.dbflyway.Miljø
+import no.nav.aap.behandlingsflyt.dbflyway.MiljøKode
 import no.nav.aap.httpclient.håndterStatus
 import org.slf4j.LoggerFactory
 import java.net.http.HttpHeaders
@@ -29,8 +31,8 @@ class DefaultResponseHandler() : RestResponseHandler<String> {
 
     private fun loggRespons(value: String?) {
         // TODO: Temp
-        val cluster = System.getenv("NAIS_CLUSTER_NAME")
-        if (cluster?.substring(0, cluster.indexOf("-"))?.equals("DEV", ignoreCase = true) == true) {
+        val miljø = Miljø.er()
+        if (miljø in listOf(MiljøKode.LOKALT, MiljøKode.DEV)) {
             log.info(value)
         }
         SECURE_LOGGER.info(value)
