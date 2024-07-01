@@ -11,7 +11,7 @@ dependencies {
     implementation(project(":httpklient"))
 
     implementation("com.zaxxer:HikariCP:5.1.0")
-    implementation("org.flywaydb:flyway-database-postgresql:10.15.0")
+    implementation("org.flywaydb:flyway-database-postgresql:10.15.2")
     runtimeOnly("org.postgresql:postgresql:42.7.3")
 
     testImplementation(project(":dbtestdata"))
