@@ -90,8 +90,8 @@ class StudentRepository(private val connection: DBConnection) {
             return null
         }
         val query = """
-                INSERT INTO STUDENT_VURDERING (begrunnelse, avbrutt_studie, godkjent_studie_av_laanekassen, avbrutt_pga_sykdom_eller_skade, har_behov_for_behandling, skal_gjenoppta_studie, avbrutt_dato, avbrudd_mer_enn_6_maaneder)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO STUDENT_VURDERING (begrunnelse, avbrutt_studie, godkjent_studie_av_laanekassen, avbrutt_pga_sykdom_eller_skade, har_behov_for_behandling, avbrutt_dato, avbrudd_mer_enn_6_maaneder)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
 
         val vurderingId = connection.executeReturnKey(query) {
@@ -101,8 +101,8 @@ class StudentRepository(private val connection: DBConnection) {
                 setBoolean(3, studentvurdering.godkjentStudieAvLånekassen)
                 setBoolean(4, studentvurdering.avbruttPgaSykdomEllerSkade)
                 setBoolean(5, studentvurdering.harBehovForBehandling)
-                setLocalDate(7, studentvurdering.avbruttStudieDato)
-                setBoolean(8, studentvurdering.avbruddMerEnn6Måneder)
+                setLocalDate(6, studentvurdering.avbruttStudieDato)
+                setBoolean(7, studentvurdering.avbruddMerEnn6Måneder)
             }
         }
 
