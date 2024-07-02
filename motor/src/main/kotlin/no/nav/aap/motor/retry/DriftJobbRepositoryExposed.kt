@@ -15,11 +15,15 @@ class DriftJobbRepositoryExposed(connection: DBConnection) {
         return retryFeiledeOppgaverRepository.markerFeiledeForKlare(jobbId)
     }
 
-    fun hentAlleFeilende(): List<Pair<JobbInput, String>> {
+    fun hentAlleFeilende(): List<Pair<JobbInput, String?>> {
         return retryFeiledeOppgaverRepository.hentAlleFeilede()
     }
 
     fun hentInfoOmGjentagendeJobber(): List<JobbInput> {
         return JobbType.cronTypes().map { retryFeiledeOppgaverRepository.hentInfoOmSisteAvType(it) }
+    }
+
+    fun hentSisteJobber(antall: Int): List<Pair<JobbInput, String?>> {
+        return retryFeiledeOppgaverRepository.hentInfoOmSiste(antall)
     }
 }

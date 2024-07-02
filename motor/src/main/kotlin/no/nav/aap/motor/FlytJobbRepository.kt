@@ -17,8 +17,8 @@ fun mapJobb(row: Row): JobbInput {
         .medAntallFeil(row.getLong("antall_feil"))
 }
 
-fun mapJobbInklusivFeilmelding(row: Row): Pair<JobbInput, String> {
-    return mapJobb(row) to row.getString("feilmelding")
+fun mapJobbInklusivFeilmelding(row: Row): Pair<JobbInput, String?> {
+    return mapJobb(row) to row.getStringOrNull("feilmelding")
 }
 
 class FlytJobbRepository(private val connection: DBConnection) {

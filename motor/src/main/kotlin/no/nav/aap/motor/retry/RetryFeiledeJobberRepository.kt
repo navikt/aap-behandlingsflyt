@@ -117,7 +117,7 @@ internal class RetryFeiledeJobberRepository(private val connection: DBConnection
         )
     }
 
-    fun hentAlleFeilede(): List<Pair<JobbInput, String>> {
+    fun hentAlleFeilede(): List<Pair<JobbInput, String?>> {
         val query  = """
             SELECT *, 
             (SELECT count(1) FROM JOBB_HISTORIKK h WHERE h.jobb_id = j.id AND h.status = '${JobbStatus.FEILET.name}') as antall_feil,
@@ -143,6 +143,24 @@ internal class RetryFeiledeJobberRepository(private val connection: DBConnection
             }
             setRowMapper {
                 mapJobb(it)
+            }
+        }
+    }
+
+    fun hentInfoOmSiste(antall: Int): List<Pair<JobbInput, String?>> {
+        val query  = """
+            SELECT *, 
+            (SELECT count(1) FROM JOBB_HISTORIKK h WHERE h.jobb_id = j.id AND h.status = '${JobbStatus.FEILET.name}') as antall_feil,
+             (SELECT feilmelding FROM JOBB_HISTORIKK WHERE jobb_id = j.id and status = '${JobbStatus.FEILET.name}' ORDER BY OPPRETTET_TID DESC LIMIT 1) as feilmelding
+            FROM JOBB j LIMIT ?
+        """.trimIndent()
+
+        return connection.queryList(query) {
+            setParams {
+                setInt(1, antall)
+            }
+            setRowMapper { row ->
+                mapJobbInklusivFeilmelding(row)
             }
         }
     }

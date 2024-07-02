@@ -26,7 +26,8 @@ fun NormalOpenAPIRoute.motorApi(dataSource: DataSource) {
                                 antallFeilendeForsøk = info.antallRetriesForsøkt(),
                                 feilmelding = pair.second,
                                 planlagtKjøretidspunkt = info.nesteKjøring(),
-                                metadata = JobbLogInfoProviderHolder.get().hentInformasjon(connection, info)?.felterMedVerdi
+                                metadata = JobbLogInfoProviderHolder.get()
+                                    .hentInformasjon(connection, info)?.felterMedVerdi
                                     ?: mapOf()
                             )
                         }
@@ -68,6 +69,31 @@ fun NormalOpenAPIRoute.motorApi(dataSource: DataSource) {
                     DriftJobbRepositoryExposed(connection).markerAlleFeiledeForKlare()
                 }
                 respond("Rekjøring av feilede startet, startet " + antallSchedulert + " jobber.")
+            }
+        }
+        route("/sisteKjørte") {
+            get<Unit, List<JobbInfoDto>> { _ ->
+                val saker: List<JobbInfoDto> = dataSource.transaction(readOnly = true) { connection ->
+                    DriftJobbRepositoryExposed(connection).hentSisteJobber(150)
+                        .map { pair ->
+                            val info = pair.first
+                            JobbInfoDto(
+                                id = info.jobbId(),
+                                type = info.type(),
+                                navn = info.navn(),
+                                beskrivelse = info.beskrivelse(),
+                                status = info.status(),
+                                antallFeilendeForsøk = info.antallRetriesForsøkt(),
+                                feilmelding = pair.second,
+                                planlagtKjøretidspunkt = info.nesteKjøring(),
+                                metadata = JobbLogInfoProviderHolder.get()
+                                    .hentInformasjon(connection, info)?.felterMedVerdi
+                                    ?: mapOf()
+                            )
+                        }
+
+                }
+                respond(saker)
             }
         }
     }
