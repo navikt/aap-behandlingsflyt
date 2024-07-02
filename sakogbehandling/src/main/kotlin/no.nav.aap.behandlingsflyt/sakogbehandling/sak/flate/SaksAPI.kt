@@ -28,7 +28,7 @@ import javax.sql.DataSource
 fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
     route("/api/sak") {
         route("/finn").post<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO> { _, dto ->
-            val saker: List<SaksinfoDTO> = dataSource.transaction { connection ->
+            val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
                 val ident = Ident(dto.ident)
                 val person = PersonRepository(connection).finn(ident)
 
@@ -73,7 +73,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
         }
         route("") {
             route("/alle").get<Unit, List<SaksinfoDTO>> {
-                val saker: List<SaksinfoDTO> = dataSource.transaction { connection ->
+                val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
                     SakRepositoryImpl(connection).finnAlle()
                         .map { sak ->
                             SaksinfoDTO(
@@ -90,7 +90,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
             route("/{saksnummer}").get<HentSakDTO, UtvidetSaksinfoDTO> { req ->
                 val saksnummer = req.saksnummer
 
-                val (sak, behandlinger) = dataSource.transaction { connection ->
+                val (sak, behandlinger) = dataSource.transaction(readOnly = true) { connection ->
                     val sak = SakRepositoryImpl(connection).hent(saksnummer = Saksnummer(saksnummer))
 
                     val behandlinger = BehandlingRepositoryImpl(connection).hentAlleFor(sak.id).map { behandling ->
@@ -150,7 +150,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
             route("/{saksnummer}/lesetilgang") {
                 get<HentSakDTO, LesetilgangDTO> { req ->
                     val saksnummer = req.saksnummer
-                    val sak = dataSource.transaction { connection ->
+                    val sak = dataSource.transaction(readOnly = true) { connection ->
                         SakRepositoryImpl(connection).hent(saksnummer = Saksnummer(saksnummer))
                     }
                     val harLesetilgang =
@@ -162,7 +162,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
             route("/{saksnummer}/identer") {
                 get<HentSakDTO, IdenterDto> { req ->
                     val saksnummer = req.saksnummer
-                    val sak = dataSource.transaction { connection ->
+                    val sak = dataSource.transaction(readOnly = true) { connection ->
                         SakRepositoryImpl(connection).hent(saksnummer = Saksnummer(saksnummer))
                     }
                     respond(IdenterDto(sak.person.identer().map { it.identifikator }))
@@ -183,11 +183,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                     respond(
                         SakPersoninfoDTO(
                             fnr = personinfo.ident.identifikator,
-                            navn = listOfNotNull(
-                                personinfo.fornavn,
-                                personinfo.mellomnavn,
-                                personinfo.etternavn
-                            ).filter { it.isNotBlank() }.joinToString(" "),
+                            navn = personinfo.fultNavn(),
                         )
                     )
                 }
