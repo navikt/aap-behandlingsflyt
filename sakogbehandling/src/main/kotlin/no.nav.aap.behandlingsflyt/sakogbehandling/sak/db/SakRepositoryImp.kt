@@ -2,7 +2,12 @@ package no.nav.aap.behandlingsflyt.sakogbehandling.sak.db
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.Row
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.*
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakFlytRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Status
 import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.sakogbehandling.SakId
 
@@ -61,7 +66,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository, S
 
     override fun finnAlle(): List<Sak> {
         return connection.queryList(
-            "SELECT id, saksnummer, person_id, rettighetsperiode, status " +
+            "SELECT * " +
                     "FROM SAK"
         ) {
             setRowMapper { row ->
@@ -72,7 +77,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository, S
 
     override fun finnSakerFor(person: Person): List<Sak> {
         return connection.queryList(
-            "SELECT id, saksnummer, person_id, rettighetsperiode, status " +
+            "SELECT * " +
                     "FROM SAK " +
                     "WHERE person_id = ?"
         ) {
@@ -87,7 +92,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository, S
 
     private fun finnSakerFor(person: Person, periode: Periode): List<Sak> {
         return connection.queryList(
-            "SELECT id, saksnummer, person_id, rettighetsperiode, status " +
+            "SELECT * " +
                     "FROM SAK " +
                     "WHERE person_id = ? AND rettighetsperiode && ?::daterange"
         ) {
@@ -103,7 +108,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository, S
 
     override fun hent(sakId: SakId): Sak {
         return connection.queryFirst(
-            "SELECT id, saksnummer, person_id, rettighetsperiode, status " +
+            "SELECT * " +
                     "FROM SAK " +
                     "WHERE id = ?"
         ) {
@@ -132,6 +137,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository, S
         person = personRepository.hent(row.getLong("person_id")),
         rettighetsperiode = row.getPeriode("rettighetsperiode"),
         saksnummer = Saksnummer(row.getString("saksnummer")),
-        status = row.getEnum("status")
+        status = row.getEnum("status"),
+        opprettetTidspunkt = row.getLocalDateTime("opprettet_tid")
     )
 }

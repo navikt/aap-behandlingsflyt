@@ -2,13 +2,15 @@ package no.nav.aap.behandlingsflyt.sakogbehandling.sak
 
 import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.sakogbehandling.SakId
+import java.time.LocalDateTime
 
 class Sak(
     val id: SakId,
     val saksnummer: Saksnummer,
     val person: Person,
     val rettighetsperiode: Periode,
-    private val status: Status = Status.OPPRETTET
+    private val status: Status = Status.OPPRETTET,
+    val opprettetTidspunkt: LocalDateTime = LocalDateTime.now(),
 ) {
 
     fun status(): Status {

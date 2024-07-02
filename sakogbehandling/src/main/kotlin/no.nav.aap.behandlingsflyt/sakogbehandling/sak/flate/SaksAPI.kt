@@ -39,6 +39,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                         .map { sak ->
                             SaksinfoDTO(
                                 saksnummer = sak.saksnummer.toString(),
+                                opprettetTidspunkt = sak.opprettetTidspunkt,
                                 periode = sak.rettighetsperiode,
                                 ident = sak.person.aktivIdent().identifikator
                             )
@@ -63,6 +64,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
 
                 SaksinfoDTO(
                     saksnummer = sak.saksnummer.toString(),
+                    opprettetTidspunkt = sak.opprettetTidspunkt,
                     periode = periode,
                     ident = sak.person.aktivIdent().identifikator
                 )
@@ -76,6 +78,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                         .map { sak ->
                             SaksinfoDTO(
                                 saksnummer = sak.saksnummer.toString(),
+                                opprettetTidspunkt = sak.opprettetTidspunkt,
                                 periode = sak.rettighetsperiode,
                                 ident = sak.person.aktivIdent().identifikator
                             )
@@ -105,6 +108,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 respond(
                     UtvidetSaksinfoDTO(
                         saksnummer = sak.saksnummer.toString(),
+                        opprettetTidspunkt = sak.opprettetTidspunkt,
                         periode = sak.rettighetsperiode,
                         ident = sak.person.identer().first().identifikator,
                         behandlinger = behandlinger,
