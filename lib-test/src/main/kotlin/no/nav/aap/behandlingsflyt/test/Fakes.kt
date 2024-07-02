@@ -477,7 +477,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
             return null
         }
         return HentPersonBolkResult(
-            ident = person.identer.first().toString(),
+            ident = person.identer.first().identifikator,
             person = PdlPersoninfo(
                 foedsel = listOf(PdlFoedsel(person.fødselsdato.toFormatedString())),
                 doedsfall = mapDødsfall(person)
