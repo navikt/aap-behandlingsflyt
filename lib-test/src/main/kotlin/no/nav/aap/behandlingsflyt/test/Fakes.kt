@@ -24,6 +24,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adap
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.IDENT_QUERY
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoGateway.PERSONINFO_QUERY
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
+import no.nav.aap.pdl.HentPerson
 import no.nav.aap.pdl.HentPersonBolkResult
 import no.nav.aap.pdl.PDLDødsfall
 import no.nav.aap.pdl.PdlFoedsel
@@ -557,12 +558,14 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         return PdlPersonNavnDataResponse(
             errors = null,
             extensions = null,
-            data = PdlNavnData(
-                navn = listOf(
-                    PdlNavn(
-                        fornavn = testPerson.navn.fornavn,
-                        mellomnavn = null,
-                        etternavn = testPerson.navn.etternavn
+            data = HentPerson(
+                hentPerson = PdlNavnData(
+                    navn = listOf(
+                        PdlNavn(
+                            fornavn = testPerson.navn.fornavn,
+                            mellomnavn = null,
+                            etternavn = testPerson.navn.etternavn
+                        )
                     )
                 )
             ),

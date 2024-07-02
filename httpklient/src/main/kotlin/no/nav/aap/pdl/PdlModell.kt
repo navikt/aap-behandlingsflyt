@@ -34,11 +34,14 @@ class PdlIdenterDataResponse(
 ) : PdlResponse(errors, extensions)
 
 class PdlPersonNavnDataResponse(
-    val data: PdlNavnData?,
+    val data: HentPerson?,
     errors: List<GraphQLError>?,
     extensions: GraphQLExtensions?
 ) : PdlResponse(errors, extensions)
 
+data class HentPerson(
+    val hentPerson: PdlNavnData
+)
 data class PdlNavnData(
     val navn: List<PdlNavn>
 )
