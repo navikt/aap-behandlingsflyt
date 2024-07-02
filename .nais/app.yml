@@ -107,4 +107,8 @@ spec:
       value: http://tilgang
     - name: INTEGRASJON_TILGANG_SCOPE
       value: api://dev-gcp.aap.tilgang/.default
+    - name: INTEGRASJON_MEDL_URL
+      value: https://medlemskap-medl-api.dev.intern.nav.no/api/v1/medlemskapsunntak
+    - name: INTEGRASJON_MEDL_SCOPE
+      value: api://dev-fss.team-rocket.medlemskap-medl-api/.default
 
