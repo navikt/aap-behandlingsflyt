@@ -40,6 +40,7 @@ class Motor(
     private val watchdogExecutor = Executors.newScheduledThreadPool(1) as ScheduledThreadPoolExecutor
 
     private var stopped = false
+    private var started = false
     private val workers = HashMap<Int, Future<*>>()
     private var lastWatchdogLog = LocalDateTime.now()
 
@@ -54,6 +55,7 @@ class Motor(
         }
         log.info("Startet prosessering av jobber")
         watchdogExecutor.schedule(Watchdog(), 1, TimeUnit.MINUTES)
+        started = true
     }
 
     fun stop() {
@@ -61,6 +63,10 @@ class Motor(
         stopped = true
         watchdogExecutor.shutdownNow()
         executor.awaitTermination(10L, TimeUnit.SECONDS)
+    }
+
+    fun kjører(): Boolean {
+        return started && !stopped
     }
 
     inner class Forbrenningskammer(private val dataSource: DataSource) : Runnable {

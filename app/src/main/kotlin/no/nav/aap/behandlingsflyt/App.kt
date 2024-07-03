@@ -138,6 +138,7 @@ internal fun Application.server(dbConfig: DbConfig) {
 
     val dataSource = initDatasource(dbConfig)
     Migrering.migrate(dataSource)
+    val motor = module(dataSource)
 
     routing {
         authenticate(AZURE) {
@@ -165,13 +166,13 @@ internal fun Application.server(dbConfig: DbConfig) {
                 motorApi(dataSource)
             }
         }
-        actuator(prometheus)
+        actuator(prometheus, motor)
     }
-    module(dataSource)
+
 }
 
 
-fun Application.module(dataSource: DataSource) {
+fun Application.module(dataSource: DataSource): Motor {
     val motor = Motor(
         dataSource = dataSource,
         antallKammer = ANTALL_WORKERS,
@@ -193,6 +194,8 @@ fun Application.module(dataSource: DataSource) {
         application.environment.monitor.unsubscribe(ApplicationStarted) {}
         application.environment.monitor.unsubscribe(ApplicationStopped) {}
     }
+
+    return motor
 }
 
 fun NormalOpenAPIRoute.configApi() {
@@ -209,7 +212,7 @@ fun NormalOpenAPIRoute.configApi() {
     }
 }
 
-private fun Routing.actuator(prometheus: PrometheusMeterRegistry) {
+private fun Routing.actuator(prometheus: PrometheusMeterRegistry, motor: Motor) {
     route("/actuator") {
         get("/metrics") {
             call.respond(prometheus.scrape())
@@ -221,8 +224,12 @@ private fun Routing.actuator(prometheus: PrometheusMeterRegistry) {
         }
 
         get("/ready") {
-            val status = HttpStatusCode.OK
-            call.respond(status, "Oppe!")
+            if (motor.kjører()) {
+                val status = HttpStatusCode.OK
+                call.respond(status, "Oppe!")
+            } else {
+                call.respond(HttpStatusCode.ServiceUnavailable, "Kjører ikke")
+            }
         }
     }
 }
