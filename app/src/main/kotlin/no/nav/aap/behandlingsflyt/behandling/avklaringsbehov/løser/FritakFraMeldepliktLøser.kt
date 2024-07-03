@@ -19,22 +19,17 @@ class FritakFraMeldepliktLøser(val connection: DBConnection) : Avklaringsbehovs
 
         val eksisterendeFritaksvurderinger = meldepliktGrunnlag?.vurderinger.orEmpty()
 
-        if (løsning.vurdering != null) {
-            val vurderinger = mutableListOf(løsning.vurdering) + eksisterendeFritaksvurderinger
+        val vurderinger = mutableListOf(løsning.vurdering) + eksisterendeFritaksvurderinger
 
-            meldepliktRepository.lagre(
-                behandlingId = behandling.id,
-                vurderinger = vurderinger
-            )
+        meldepliktRepository.lagre(
+            behandlingId = behandling.id,
+            vurderinger = vurderinger
+        )
 
-            return LøsningsResultat(
-                begrunnelse = løsning.vurdering.begrunnelse,
-                kreverToTrinn = løsning.vurdering.harFritak
-            )
-
-        } else {
-            return LøsningsResultat("N/A")
-        }
+        return LøsningsResultat(
+            begrunnelse = løsning.vurdering.begrunnelse,
+            kreverToTrinn = løsning.vurdering.harFritak
+        )
     }
 
     override fun forBehov(): Definisjon {
