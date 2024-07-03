@@ -5,7 +5,6 @@ import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.SakId
 import java.time.LocalDateTime
 import java.util.*
-import kotlin.math.min
 
 class JobbInput(internal val jobb: Jobb) {
 
@@ -126,9 +125,6 @@ class JobbInput(internal val jobb: Jobb) {
     }
 
     fun antallRetriesForsøkt(): Int {
-        if (antallFeil < jobb.retries()) {
-            return min(antallFeil, jobb.retries().toLong()).toInt()
-        }
         return antallFeil.toInt()
     }
 
