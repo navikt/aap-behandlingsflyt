@@ -3,6 +3,8 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.PdlBarnGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.verdityper.flyt.FlytKontekst
@@ -11,7 +13,8 @@ import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 class BarnService private constructor(
     private val sakService: SakService,
     private val barnRepository: BarnRepository,
-    private val barnGateway: BarnGateway
+    private val barnGateway: BarnGateway,
+    private val vilkårsresultatRepository: VilkårsresultatRepository
 ) : Informasjonskrav {
 
     override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekst): Boolean {
@@ -33,8 +36,11 @@ class BarnService private constructor(
     }
 
     private fun harBehandlingsgrunnlag(behandlingId: BehandlingId): Boolean {
-        // TODO: Avgjøre om man har hjemmel til å innhente (dvs er det innvilget)
-        return true
+        val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
+        val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
+        val bistandsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
+
+        return sykdomsvilkåret.harPerioderSomErOppfylt() && bistandsvilkåret.harPerioderSomErOppfylt()
     }
 
     companion object : Informasjonskravkonstruktør {
@@ -42,7 +48,8 @@ class BarnService private constructor(
             return BarnService(
                 SakService(connection),
                 BarnRepository(connection),
-                PdlBarnGateway
+                PdlBarnGateway,
+                VilkårsresultatRepository(connection)
             )
         }
     }
