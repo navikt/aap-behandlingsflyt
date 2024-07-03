@@ -58,7 +58,7 @@ fun NormalOpenAPIRoute.motorApi(dataSource: DataSource) {
         route("/rekjor/{jobbId}") {
             get<JobbIdDTO, String> { jobbId ->
                 val antallSchedulert = dataSource.transaction { connection ->
-                    DriftJobbRepositoryExposed(connection).markerFeilendeForKlar(jobbId.id)
+                    DriftJobbRepositoryExposed(connection).markerFeilendeForKlar(jobbId.jobbId)
                 }
                 respond("Rekjøring av feilede startet, startet " + antallSchedulert + " jobber.")
             }
