@@ -152,7 +152,7 @@ internal class RetryFeiledeJobberRepository(private val connection: DBConnection
             SELECT *, 
             (SELECT count(1) FROM JOBB_HISTORIKK h WHERE h.jobb_id = j.id AND h.status = '${JobbStatus.FEILET.name}') as antall_feil,
              (SELECT feilmelding FROM JOBB_HISTORIKK WHERE jobb_id = j.id and status = '${JobbStatus.FEILET.name}' ORDER BY OPPRETTET_TID DESC LIMIT 1) as feilmelding
-            FROM JOBB j LIMIT ?
+            FROM JOBB j ORDER BY neste_kjoring DESC LIMIT ?
         """.trimIndent()
 
         return connection.queryList(query) {
