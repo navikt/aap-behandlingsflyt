@@ -17,7 +17,10 @@ class DynamiskStegGruppeVisningService(private val connection: DBConnection) {
     }
 
     fun skalVises(gruppe: StegGruppe, behandlingId: BehandlingId): Boolean {
-        if (gruppe.måVises) {
+        if (!gruppe.skalVises) {
+            return false
+        }
+        if (gruppe.obligatoriskVisning) {
             return true
         }
 

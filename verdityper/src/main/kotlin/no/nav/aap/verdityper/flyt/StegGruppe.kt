@@ -1,21 +1,21 @@
 package no.nav.aap.verdityper.flyt
 
-enum class StegGruppe(val måVises: Boolean) {
-    START_BEHANDLING(false),
-    ALDER(true),
-    LOVVALG(true),
-    MEDLEMSKAP(true),
-    BARNETILLEGG(true),
-    STUDENT(false),
-    SYKDOM(true),
-    GRUNNLAG(true),
-    ET_ANNET_STED(false),
-    UNDERVEIS(true),
-    TILKJENT_YTELSE(true),
-    SIMULERING(true),
-    VEDTAK(true),
-    FATTE_VEDTAK(true),
-    KVALITETSSIKRING(true),
-    IVERKSETT_VEDTAK(false),
-    UDEFINERT(false)
+enum class StegGruppe(val skalVises: Boolean, val obligatoriskVisning: Boolean) {
+    START_BEHANDLING(false, true),
+    ALDER(true, true),
+    LOVVALG(true, true),
+    MEDLEMSKAP(true, true),
+    BARNETILLEGG(true, true),
+    STUDENT(true, false),
+    SYKDOM(true, true),
+    GRUNNLAG(true, true),
+    ET_ANNET_STED(true, false),
+    UNDERVEIS(true, true),
+    TILKJENT_YTELSE(true, true),
+    SIMULERING(true, true),
+    VEDTAK(true, true),
+    FATTE_VEDTAK(true, true),
+    KVALITETSSIKRING(true, true),
+    IVERKSETT_VEDTAK(false, true),
+    UDEFINERT(false, true)
 }
