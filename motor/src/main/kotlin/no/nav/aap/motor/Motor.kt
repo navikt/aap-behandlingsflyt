@@ -80,12 +80,12 @@ class Motor(
                     while (plukker) {
                         dataSource.transaction { connection ->
                             val repository = JobbRepository(connection)
-                            val plukketOppgave = repository.plukkJobb()
-                            if (plukketOppgave != null) {
-                                utførOppgave(plukketOppgave, connection)
+                            val plukketJobb = repository.plukkJobb()
+                            if (plukketJobb != null) {
+                                utfør(plukketJobb, connection)
                             }
 
-                            if (plukker && plukketOppgave == null) {
+                            if (plukker && plukketJobb == null) {
                                 plukker = false
                             }
                         }
@@ -99,7 +99,7 @@ class Motor(
             }
         }
 
-        private fun utførOppgave(jobbInput: JobbInput, connection: DBConnection) {
+        private fun utfør(jobbInput: JobbInput, connection: DBConnection) {
             try {
                 dataSource.transaction { nyConnection ->
                     setteLogginformasjonForOppgave(connection, jobbInput)
