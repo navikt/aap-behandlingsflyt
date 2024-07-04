@@ -1,7 +1,7 @@
 package no.nav.aap.verdityper.flyt
 
 enum class StegGruppe(val måVises: Boolean) {
-    START_BEHANDLING(true),
+    START_BEHANDLING(false),
     ALDER(true),
     LOVVALG(true),
     MEDLEMSKAP(true),
