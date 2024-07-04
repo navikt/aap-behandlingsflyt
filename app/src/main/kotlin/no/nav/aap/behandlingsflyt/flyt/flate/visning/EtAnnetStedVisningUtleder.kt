@@ -14,7 +14,7 @@ class EtAnnetStedVisningUtleder(connection: DBConnection) : StegGruppeVisningUtl
     }
 
     override fun gruppe(): StegGruppe {
-        return StegGruppe.STUDENT
+        return StegGruppe.ET_ANNET_STED
     }
 
 }
