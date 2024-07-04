@@ -33,7 +33,7 @@ class HåndterMottattDokumentService(connection: DBConnection) {
             JobbInput(jobb = ProsesserBehandlingJobbUtfører).forBehandling(
                 sakId,
                 beriketBehandling.behandling.id
-            )
+            ).medCallId()
         )
 
         låsRepository.verifiserSkrivelås(behandlingSkrivelås)

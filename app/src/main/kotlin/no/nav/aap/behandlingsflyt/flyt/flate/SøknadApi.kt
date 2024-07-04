@@ -32,6 +32,7 @@ fun NormalOpenAPIRoute.søknadApi(dataSource: DataSource) {
                 flytJobbRepository.leggTil(
                     JobbInput(HendelseMottattHåndteringOppgaveUtfører)
                         .forSak(sak.id)
+                        .medCallId()
                         .medParameter(JOURNALPOST_ID, dto.journalpostId)
                         .medParameter(BREVKODE, Brevkode.SØKNAD.name)
                         .medParameter(PERIODE, "")

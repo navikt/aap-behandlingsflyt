@@ -38,6 +38,7 @@ fun NormalOpenAPIRoute.torsHammerApi(dataSource: DataSource) {
                 flytJobbRepository.leggTil(
                     JobbInput(HendelseMottattHåndteringOppgaveUtfører)
                         .forSak(sak.id)
+                        .medCallId()
                         .medParameter(
                             JOURNALPOST_ID,
                             System.currentTimeMillis().toString()
