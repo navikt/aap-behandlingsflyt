@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Status
 import no.nav.aap.verdityper.Periode
+import no.nav.aap.verdityper.sakogbehandling.Ident
 import no.nav.aap.verdityper.sakogbehandling.SakId
 
 class SakRepositoryImpl(private val connection: DBConnection) : SakRepository, SakFlytRepository {
@@ -130,6 +131,27 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository, S
                 mapSak(row)
             }
         }
+    }
+
+    override fun finnBarn(saksnummer: Saksnummer): List<Ident> {
+        val barn = connection.queryList(
+            """
+                SELECT DISTINCT p.IDENT
+                FROM BARNOPPLYSNING_GRUNNLAG g
+                INNER JOIN BARNOPPLYSNING p ON g.BGB_ID = p.BGB_ID
+                INNER JOIN BEHANDLING b ON g.BEHANDLING_ID = b.ID
+                INNER JOIN SAK s ON b.SAK_ID = s.ID
+                WHERE g.AKTIV AND s.SAKSNUMMER = ?
+            """.trimIndent()
+        ) {
+            setParams {
+                setString(1, saksnummer.toString())
+            }
+            setRowMapper { row ->
+                Ident(row.getString("IDENT"))
+            }
+        }
+        return barn
     }
 
     private fun mapSak(row: Row) = Sak(

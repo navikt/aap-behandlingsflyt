@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak
 
 import no.nav.aap.verdityper.Periode
+import no.nav.aap.verdityper.sakogbehandling.Ident
 import no.nav.aap.verdityper.sakogbehandling.SakId
 
 interface SakRepository {
@@ -14,5 +15,7 @@ interface SakRepository {
     fun hent(sakId: SakId): Sak
 
     fun hent(saksnummer: Saksnummer): Sak
+
+    fun finnBarn(saksnummer: Saksnummer): List<Ident>
 
 }
