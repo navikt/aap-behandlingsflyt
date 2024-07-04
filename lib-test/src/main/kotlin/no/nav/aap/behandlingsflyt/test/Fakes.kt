@@ -69,7 +69,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
     private val inst2 = embeddedServer(Netty, port = 0, module = { inst2Fake() }).apply { start() }
 
     private val statistikk = embeddedServer(Netty, port = 0, module = { statistikkFake() }).apply { start() }
-    //private val statistikkHendelser = mutableListOf<StatistikkHendelseDTO>()
+    val statistikkHendelser = mutableListOf<StatistikkHendelseDTO>()
 
 
     init {
@@ -255,14 +255,18 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         }
         install(StatusPages) {
             exception<Throwable> { call, cause ->
-                this@statistikkFake.log.info("STATISTIKK :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
+                this@statistikkFake.log.info(
+                    "STATISTIKK :: Ukjent feil ved kall til '{}'",
+                    call.request.local.uri,
+                    cause
+                )
                 call.respond(status = HttpStatusCode.InternalServerError, message = ErrorRespons(cause.message))
             }
         }
         routing {
             post("/motta") {
-                //val receive = call.receive<StatistikkHendelseDTO>()
-                //statistikkHendelser.add(receive)
+                val receive = call.receive<StatistikkHendelseDTO>()
+                statistikkHendelser.add(receive)
                 call.respond(HttpStatusCode.OK)
             }
         }
