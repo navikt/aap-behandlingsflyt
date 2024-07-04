@@ -141,7 +141,7 @@ class Motor(
             MDC.put("jobbType", jobbInput.type())
             MDC.put("sakId", jobbInput.sakIdOrNull().toString())
             MDC.put("behandlingId", jobbInput.behandlingIdOrNull().toString())
-            MDC.put("callId", UUID.randomUUID().toString())
+            MDC.put("callId", jobbInput.callId() ?: UUID.randomUUID().toString())
 
             val logInformasjon = JobbLogInfoProviderHolder.get().hentInformasjon(connection, jobbInput)
             if (logInformasjon != null) {

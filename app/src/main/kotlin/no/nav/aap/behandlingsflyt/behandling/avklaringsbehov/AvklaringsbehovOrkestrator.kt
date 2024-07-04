@@ -68,7 +68,7 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
         flytJobbRepository.leggTil(
             JobbInput(jobb = ProsesserBehandlingJobbUtfører).forBehandling(
                 kontekst.sakId, kontekst.behandlingId
-            )
+            ).medCallId()
         )
     }
 

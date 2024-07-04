@@ -3,8 +3,11 @@ package no.nav.aap.motor
 import no.nav.aap.motor.cron.CronExpression
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.SakId
+import org.slf4j.MDC
 import java.time.LocalDateTime
 import java.util.*
+
+private const val CALL_ID_KEY = "CallId"
 
 class JobbInput(internal val jobb: Jobb) {
 
@@ -142,6 +145,21 @@ class JobbInput(internal val jobb: Jobb) {
 
     fun beskrivelse(): String {
         return jobb.beskrivelse()
+    }
+
+    fun callId(): String? {
+        return properties.getProperty(CALL_ID_KEY)
+    }
+
+    /**
+     * Henter CallId fra MDC og vidrefører denne i planlagt jobb
+     */
+    fun medCallId(): JobbInput {
+        val value = MDC.get(CALL_ID_KEY)
+        if (value != null) {
+            medParameter(CALL_ID_KEY, value)
+        }
+        return this
     }
 
 }
