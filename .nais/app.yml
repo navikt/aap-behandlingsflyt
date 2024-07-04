@@ -99,6 +99,8 @@ spec:
       value: http://oppgavestyring
     - name: INTEGRASJON_OPPGAVESTYRING_SCOPE
       value: api://dev-gcp.aap.oppgavestyring/.default
+    - name: INTEGRASJON_STATISTIKK_URL
+      value: http://statistikk
     - name: INTEGRASJON_PESYS_URL
       value: http://pensjon-pen-q2.pensjon-q2/pen/springapi/
     - name: INTEGRASJON_PESYS_SCOPE

@@ -90,7 +90,7 @@ internal fun Application.server(dbConfig: DbConfig) {
         meterBinders += LogbackMetrics()
     }
     install(OpenAPIGen) {
-        // this servers OpenAPI definition on /openapi.json
+        // this serves OpenAPI definition on /openapi.json
         serveOpenApiJson = true
         // this servers Swagger UI on /swagger-ui/index.html
         serveSwaggerUi = true

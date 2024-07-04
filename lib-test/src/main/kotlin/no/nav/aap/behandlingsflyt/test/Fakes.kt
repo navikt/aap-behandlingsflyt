@@ -21,6 +21,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.PERSON_BOL
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PERSON_QUERY
+import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkHendelseDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.IDENT_QUERY
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoGateway.PERSONINFO_QUERY
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
@@ -65,6 +66,9 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
     private val fakePersoner: MutableMap<String, TestPerson> = mutableMapOf()
     private val saf = embeddedServer(Netty, port = 0, module = { safFake() }).apply { start() }
 
+    private val statikk = embeddedServer(Netty, port = 0, module = { statistikkFake() }).apply { start() }
+    val statistikkHendelser = mutableListOf<StatistikkHendelseDTO>()
+
 
     init {
         Thread.currentThread().setUncaughtExceptionHandler { _, e -> log.error("Uhåndtert feil", e) }
@@ -100,6 +104,9 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         // MEDL
         System.setProperty("integrasjon.medl.url", "https://medlemskap-medl-api.dev-fss-pub.nais.io/api/v1/medlemskapsunntak")
         System.setProperty("integrasjon.medl.scope", "medl")
+
+        // Statistikk-app
+        System.setProperty("integrasjon.statistikk.url", "http://localhost:${statikk.port()}")
 
         // testpersoner
         val BARNLØS_PERSON_30ÅR =
@@ -229,6 +236,19 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
                     PERSON_BOLK_QUERY -> call.respond(barn(req))
                     else -> call.respond(HttpStatusCode.BadRequest)
                 }
+            }
+        }
+    }
+
+    private fun Application.statistikkFake() {
+        install(ContentNegotiation) {
+            jackson()
+        }
+        routing {
+            post("/motta") {
+                val receive = call.receive<StatistikkHendelseDTO>()
+                statistikkHendelser.add(receive)
+                call.respond(HttpStatusCode.OK)
             }
         }
     }

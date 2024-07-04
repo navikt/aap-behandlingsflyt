@@ -17,6 +17,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Status.UTREDES
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
+import no.nav.aap.behandlingsflyt.server.prosessering.StatistikkJobbUtfører
+import no.nav.aap.motor.FlytJobbRepository
+import no.nav.aap.motor.JobbInput
 import no.nav.aap.verdityper.flyt.FlytKontekst
 import org.slf4j.LoggerFactory
 
@@ -27,7 +30,7 @@ private val log = LoggerFactory.getLogger(FlytOrkestrator::class.java)
  *
  * ## Forbered Behandling
  * Har ansvar for å sette behandlingen i en oppdatert tilstand i form av å innhente opplysninger for stegene man allerede
- * prosessert og vurdere om man er nødt til å behandle steget på nytt hvis det er oppdaterte opplysninger.
+ * har prosessert og vurdere om man er nødt til å behandle steget på nytt hvis det er oppdaterte opplysninger.
  *
  * ## Prosesser Behandling
  * Har ansvar for å drive prosessen fremover, stoppe opp ved behov for besluttningsstøtte av et menneske og sørge for at
@@ -42,6 +45,7 @@ class FlytOrkestrator(
     private val avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection)
     private val behandlingRepository = BehandlingRepositoryImpl(connection)
     private val behandlingHendelseService = BehandlingHendelseService(SakService(connection))
+    private val flytJobbRepository = FlytJobbRepository(connection)
 
     fun forberedBehandling(kontekst: FlytKontekst) {
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
@@ -140,11 +144,11 @@ class FlytOrkestrator(
                     is TilbakeførtFraBeslutter -> behandlingFlyt.tilbakeflyt(avklaringsbehovene.tilbakeførtFraBeslutter())
                     is TilbakeførtFraKvalitetssikrer -> behandlingFlyt.tilbakeflyt(avklaringsbehovene.tilbakeførtFraKvalitetssikrer())
                     else -> {
-                        throw IllegalStateException("Uhåndter transisjon ved tilbakeføring")
+                        throw IllegalStateException("Uhåndter transisjon ved tilbakeføring. Faktisk type: ${result.javaClass}.")
                     }
                 }
                 log.info(
-                    "Tilakeført fra '{}' til '{}'",
+                    "Tilbakeført fra '{}' til '{}'",
                     gjeldendeSteg.type(),
                     tilbakeføringsflyt.stegene().last()
                 )
@@ -163,6 +167,10 @@ class FlytOrkestrator(
                     // Prosessen har stoppet opp, slipp ut hendelse om at den har stoppet opp og hvorfor?
                     loggStopp(behandling, avklaringsbehovene)
                 }
+
+                flytJobbRepository.leggTil(
+                    JobbInput(jobb = StatistikkJobbUtfører)
+                        .forSak(behandling.sakId))
                 return
             }
             gjeldendeSteg = neste

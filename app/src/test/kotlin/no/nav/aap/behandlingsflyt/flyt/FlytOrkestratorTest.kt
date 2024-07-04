@@ -380,6 +380,54 @@ class FlytOrkestratorTest {
     }
 
     @Test
+    fun `starter statistikk-jobb etter endt steg`() {
+        val ident = ident()
+        val fom = LocalDate.now().minusMonths(3)
+        val periode = Periode(fom, fom.plusYears(3))
+
+        // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
+        fakes.leggTil(
+            TestPerson(
+                identer = setOf(ident),
+                fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
+                yrkesskade = listOf(TestYrkesskade()),
+                inntekter = listOf(
+                    InntektPerÅr(
+                        Year.now().minusYears(1),
+                        Beløp(1000000)
+                    ),
+                    InntektPerÅr(
+                        Year.now().minusYears(2),
+                        Beløp(1000000)
+                    ),
+                    InntektPerÅr(
+                        Year.now().minusYears(3),
+                        Beløp(1000000)
+                    )
+                )
+            )
+        )
+
+
+        // Sender inn en søknad
+        hendelsesMottak.håndtere(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("20"),
+                mottattTidspunkt = LocalDateTime.now().minusMonths(3),
+                strukturertDokument = StrukturertDokument(
+                    Søknad(student = SøknadStudentDto("NEI"), yrkesskade = "NEI"),
+                    Brevkode.SØKNAD
+                ),
+                periode = periode
+            )
+        )
+        ventPåSvar()
+
+        assertThat(fakes.statistikkHendelser.size).isEqualTo(1)
+        assertThat(fakes.statistikkHendelser.first().sakId).isEqualTo("1")
+    }
+
+    @Test
     fun `skal avklare yrkesskade hvis det finnes spor av yrkesskade - yrkesskade har årsakssammenheng`() {
         val ident = ident()
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
