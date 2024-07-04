@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.Institusjonsopphold.adapter.InstitusjonsoppholdGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.tidslinje.Segment
 import no.nav.aap.verdityper.flyt.FlytKontekst
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
@@ -25,11 +24,11 @@ class InstitusjonsoppholdService private constructor(
 
         institusjonsoppholdRepository.lagreOpphold(behandlingId, institusjonsopphold)
 
-        return eksisterendeGrunnlag == institusjonsopphold
+        return eksisterendeGrunnlag?.opphold == institusjonsopphold
     }
 
-    fun hentHvisEksisterer(behandlingId: BehandlingId): List<Segment<Institusjon>> {
-        return institusjonsoppholdRepository.hent(behandlingId)
+    fun hentHvisEksisterer(behandlingId: BehandlingId): InstitusjonsoppholdGrunnlag? {
+        return institusjonsoppholdRepository.hentHvisEksisterer(behandlingId)
     }
 
     companion object : Informasjonskravkonstruktør {

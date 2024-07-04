@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.flyt.flate
+package no.nav.aap.behandlingsflyt.flyt.flate.visning
 
 enum class ProsesseringStatus {
     JOBBER,

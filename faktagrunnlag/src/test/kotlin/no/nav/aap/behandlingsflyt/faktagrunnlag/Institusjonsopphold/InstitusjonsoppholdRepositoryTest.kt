@@ -24,8 +24,8 @@ class InstitusjonsoppholdRepositoryTest {
             val behandling = behandling(connection, sak)
 
             val institusjonsoppholdRepository = InstitusjonsoppholdRepository(connection)
-            val institusjonsoppholdTidslinje = institusjonsoppholdRepository.hent(behandling.id)
-            assertThat(institusjonsoppholdTidslinje).isEmpty()
+            val institusjonsoppholdTidslinje = institusjonsoppholdRepository.hentHvisEksisterer(behandling.id)
+            assertThat(institusjonsoppholdTidslinje).isNull()
         }
     }
 

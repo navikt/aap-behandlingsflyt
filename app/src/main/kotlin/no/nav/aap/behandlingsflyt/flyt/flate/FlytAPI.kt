@@ -20,6 +20,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
+import no.nav.aap.behandlingsflyt.flyt.flate.visning.DynamiskStegGruppeVisningService
+import no.nav.aap.behandlingsflyt.flyt.flate.visning.Prosessering
+import no.nav.aap.behandlingsflyt.flyt.flate.visning.ProsesseringStatus
+import no.nav.aap.behandlingsflyt.flyt.flate.visning.Visning
 import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingHendelseHåndterer
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
@@ -44,6 +48,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
                 val dto = dataSource.transaction(readOnly = true) { connection ->
                     val behandling = behandling(connection, req)
                     val flytJobbRepository = FlytJobbRepository(connection)
+                    val gruppeVisningService = DynamiskStegGruppeVisningService(connection)
                     val flyt = utledType(behandling.typeBehandling()).flyt()
 
                     val stegGrupper: Map<StegGruppe, List<StegType>> =
@@ -84,6 +89,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
                             erFullført = erFullført && gruppe != aktivtSteg.gruppe
                             FlytGruppe(
                                 stegGruppe = gruppe,
+                                skalVises = gruppeVisningService.skalVises(gruppe, behandling.id),
                                 erFullført = erFullført,
                                 steg = steg.map { stegType ->
                                     FlytSteg(

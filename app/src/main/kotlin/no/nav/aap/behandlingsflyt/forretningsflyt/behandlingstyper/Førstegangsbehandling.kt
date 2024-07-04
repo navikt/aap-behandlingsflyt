@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.flyt.BehandlingFlytBuilder
 import no.nav.aap.behandlingsflyt.flyt.BehandlingType
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BarnetilleggSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BeregnTilkjentYtelseSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.EtAnnetStedSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettArbeidsevneSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettBeregningstidspunktSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettGrunnlagSteg
@@ -46,6 +47,7 @@ object Førstegangsbehandling : BehandlingType {
             .medSteg(steg = VurderMedlemskapSteg)
             .medSteg(steg = FastsettBeregningstidspunktSteg)
             .medSteg(steg = FastsettGrunnlagSteg, informasjonskrav = listOf(InntektService))
+            .medSteg(steg = EtAnnetStedSteg) //, informasjonskrav = listOf(InstitusjonsoppholdService))
             .medSteg(steg = UnderveisSteg, informasjonskrav = listOf(PliktkortService))
             .medSteg(steg = BarnetilleggSteg, informasjonskrav = listOf(BarnService))
             .medSteg(steg = BeregnTilkjentYtelseSteg, informasjonskrav = listOf(PersonopplysningService))

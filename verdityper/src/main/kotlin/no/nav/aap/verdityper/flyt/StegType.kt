@@ -51,6 +51,10 @@ enum class StegType(val gruppe: StegGruppe, val status: Status, val tekniskSteg:
         gruppe = StegGruppe.UNDERVEIS,
         status = Status.UTREDES
     ),
+    DU_ER_ET_ANNET_STED(
+        gruppe = StegGruppe.ET_ANNET_STED,
+        status = Status.UTREDES
+    ),
     BEREGN_TILKJENT_YTELSE(
         gruppe = StegGruppe.TILKJENT_YTELSE,
         status = Status.UTREDES

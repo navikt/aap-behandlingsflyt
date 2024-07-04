@@ -8,7 +8,7 @@ import java.time.LocalDate
 
 class InstitusjonsoppholdRepository(private val connection: DBConnection) {
 
-    private fun hentOpphold(opphold_grunnlag_id: Long?): List<Segment<Institusjon>> {
+    private fun hentOpphold(opphold_grunnlag_id: Long): List<Segment<Institusjon>> {
         return connection.queryList(
             """
                 SELECT * FROM OPPHOLD WHERE OPPHOLD_PERSON_ID =?
@@ -31,6 +31,23 @@ class InstitusjonsoppholdRepository(private val connection: DBConnection) {
         }.toList()
     }
 
+    fun hentHvisEksisterer(behandlingId: BehandlingId): InstitusjonsoppholdGrunnlag? {
+        val behandlings_opphold = connection.queryFirstOrNull(
+            "SELECT OPPHOLD_PERSON_ID FROM OPPHOLD_GRUNNLAG WHERE BEHANDLING_ID=? AND AKTIV=TRUE"
+        ) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+            setRowMapper {
+                it.getLong("OPPHOLD_PERSON_ID")
+            }
+        }
+        if (behandlings_opphold == null) {
+            return null
+        }
+        return InstitusjonsoppholdGrunnlag(hentOpphold(behandlings_opphold))
+    }
+
     fun hent(behandlingId: BehandlingId): List<Segment<Institusjon>> {
         val behandlings_opphold = connection.queryFirstOrNull(
             "SELECT OPPHOLD_PERSON_ID FROM OPPHOLD_GRUNNLAG WHERE BEHANDLING_ID=? AND AKTIV=TRUE"
@@ -42,7 +59,7 @@ class InstitusjonsoppholdRepository(private val connection: DBConnection) {
                 it.getLong("OPPHOLD_PERSON_ID")
             }
         }
-        return hentOpphold(behandlings_opphold)
+        return hentOpphold(requireNotNull(behandlings_opphold))
     }
 
     fun lagreOpphold(behandlingId: BehandlingId, institusjonsopphold: List<Institusjonsopphold>) {

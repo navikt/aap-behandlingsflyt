@@ -1,12 +1,10 @@
-package no.nav.aap.behandlingsflyt.flyt.flate
+package no.nav.aap.behandlingsflyt.flyt.flate.visning
 
-class Visning(
+data class Visning(
     val saksbehandlerReadOnly: Boolean,
     val beslutterReadOnly: Boolean,
     val visBeslutterKort: Boolean,
     val visVentekort: Boolean,
     val kvalitetssikringReadOnly: Boolean,
     val visKvalitetssikringKort: Boolean
-) {
-
-}
+)

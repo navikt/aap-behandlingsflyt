@@ -14,7 +14,6 @@ import java.util.*
  */
 class BehandlingFlyt private constructor(
     private val flyt: List<Behandlingsflytsteg>,
-    private val endringTilSteg: Map<EndringType, StegType>,
     private val parent: BehandlingFlyt?
 ) {
     private var aktivtSteg: Behandlingsflytsteg? = flyt.firstOrNull()
@@ -25,12 +24,8 @@ class BehandlingFlyt private constructor(
         val oppdaterFaktagrunnlag: Boolean
     )
 
-    constructor(
-        flyt: List<Behandlingsflytsteg>,
-        endringTilSteg: Map<EndringType, StegType>,
-    ) : this(
+    constructor(flyt: List<Behandlingsflytsteg>) : this(
         flyt = flyt,
-        endringTilSteg = endringTilSteg,
         parent = null
     )
 
@@ -82,26 +77,6 @@ class BehandlingFlyt private constructor(
     internal fun validerPlassering(skulleVærtIStegType: StegType) {
         val aktivtStegType = requireNotNull(aktivtSteg).steg.type()
         require(skulleVærtIStegType == aktivtStegType)
-    }
-
-    /**
-     * Avgjør hvilket steg prosessen skal fortsette fra. Hvis ingen endring så står pekeren stille
-     */
-    fun nesteEtterEndringer(nåværendeSteg: StegType, vararg endringer: EndringType): FlytSteg {
-        if (endringer.isNotEmpty()) {
-            val nåværendeIndex = flyt.indexOfFirst { it.steg.type() == nåværendeSteg }
-            if (nåværendeIndex == -1) {
-                throw IllegalStateException("[Utvikler feil] Nåværende steg '$nåværendeSteg' er ikke en del av den definerte prosessen")
-            }
-
-            val endringsIndex =
-                endringer.map { endring -> flyt.indexOfFirst { it.steg.type() == endringTilSteg[endring] } }.min()
-
-            if (endringsIndex < nåværendeIndex) {
-                return flyt[endringsIndex].steg
-            }
-        }
-        return flyt[flyt.indexOfFirst { it.steg.type() == nåværendeSteg }].steg
     }
 
     private fun steg(nåværendeSteg: StegType): Behandlingsflytsteg {
@@ -177,18 +152,17 @@ class BehandlingFlyt private constructor(
 
     private fun utletTilbakeflytTilSteg(skalTilSteg: StegType?): BehandlingFlyt {
         if (skalTilSteg == null) {
-            return BehandlingFlyt(emptyList(), emptyMap())
+            return BehandlingFlyt(emptyList())
         }
 
         val returflyt = flyt.slice(flyt.indexOfFirst { it.steg.type() == skalTilSteg }..flyt.indexOf(this.aktivtSteg))
 
         if (returflyt.size <= 1) {
-            return BehandlingFlyt(emptyList(), emptyMap())
+            return BehandlingFlyt(emptyList())
         }
 
         return BehandlingFlyt(
             flyt = returflyt.reversed(),
-            endringTilSteg = emptyMap(),
             parent = this
         )
     }
@@ -257,8 +231,7 @@ class BehandlingFlytBuilder {
         buildt = true
 
         return BehandlingFlyt(
-            Collections.unmodifiableList(flyt),
-            Collections.unmodifiableMap(endringTilSteg)
+            Collections.unmodifiableList(flyt)
         )
     }
 }
