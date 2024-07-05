@@ -455,7 +455,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         }
         install(StatusPages) {
             exception<Throwable> { call, cause ->
-                this@inst2Fake.log.info("Inntekt :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
+                this@inst2Fake.log.info("INST2 :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
                 call.respond(status = HttpStatusCode.InternalServerError, message = ErrorRespons(cause.message))
             }
         }
