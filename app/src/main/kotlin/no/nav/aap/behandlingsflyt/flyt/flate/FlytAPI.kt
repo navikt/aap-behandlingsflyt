@@ -56,11 +56,12 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
 
                     val aktivtSteg = behandling.aktivtSteg()
                     var erFullført = true
+                    val avklaringsbehovene = avklaringsbehov(
+                        connection,
+                        behandling.id
+                    )
                     val alleAvklaringsbehovInkludertFrivillige = FrivilligeAvklaringsbehov(
-                        avklaringsbehov(
-                            connection,
-                            behandling.id
-                        ),
+                        avklaringsbehovene,
                         flyt, aktivtSteg
                     )
                     val jobber = flytJobbRepository.hentJobberForBehandling(behandling.id)
@@ -84,7 +85,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
                                     navn = it.navn()
                                 )
                             })
-                    val vurdertStegPair = utledVurdertGruppe(aktivtSteg, flyt, alleAvklaringsbehovInkludertFrivillige)
+                    val vurdertStegPair = utledVurdertGruppe(aktivtSteg, flyt, avklaringsbehovene)
                     BehandlingFlytOgTilstandDto(
                         flyt = stegGrupper.map { (gruppe, steg) ->
                             erFullført = erFullført && gruppe != aktivtSteg.gruppe
@@ -202,10 +203,10 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
 private fun utledVurdertGruppe(
     aktivtSteg: StegType,
     flyt: BehandlingFlyt,
-    alleAvklaringsbehovInkludertFrivillige: FrivilligeAvklaringsbehov
+    avklaringsbehovene: Avklaringsbehovene
 ): Pair<StegGruppe, StegType>? {
     if (aktivtSteg == StegType.KVALITETSSIKRING) {
-        val relevanteBehov = alleAvklaringsbehovInkludertFrivillige.alle().filter { it.kreverKvalitetssikring() }
+        val relevanteBehov = avklaringsbehovene.alle().filter { it.kreverKvalitetssikring() }
             .filter { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
             .filter { avklaringsbehov -> !avklaringsbehov.erKvalitetssikretTidligere() }
 
@@ -214,7 +215,7 @@ private fun utledVurdertGruppe(
 
         return stegType.gruppe to stegType
     } else if (aktivtSteg == StegType.FATTE_VEDTAK) {
-        val relevanteBehov = alleAvklaringsbehovInkludertFrivillige.alle().filter { it.erTotrinn() }
+        val relevanteBehov = avklaringsbehovene.alle().filter { it.erTotrinn() }
             .filter { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
             .filter { avklaringsbehov -> !avklaringsbehov.erTotrinnsVurdert() }
 
