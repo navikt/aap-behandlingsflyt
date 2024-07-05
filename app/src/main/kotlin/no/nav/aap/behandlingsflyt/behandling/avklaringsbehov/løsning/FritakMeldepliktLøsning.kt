@@ -13,7 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaks
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = FRITAK_MELDEPLIKT_KODE)
 class FritakMeldepliktLøsning(
-    @JsonProperty("fritakmeldepliktVurdering", required = true) val vurdering: Fritaksvurdering,
+    @JsonProperty("vurdering", required = true) val vurdering: Fritaksvurdering,
     @JsonProperty("behovstype", required = true, defaultValue = FRITAK_MELDEPLIKT_KODE) val behovstype: String = FRITAK_MELDEPLIKT_KODE
 ) : AvklaringsbehovLøsning {
     override fun løs(connection: DBConnection, kontekst: AvklaringsbehovKontekst): LøsningsResultat {

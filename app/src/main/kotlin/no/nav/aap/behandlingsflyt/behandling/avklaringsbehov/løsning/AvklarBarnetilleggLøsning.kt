@@ -8,12 +8,12 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarBarnetilleggLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvBarn
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = AVKLAR_BARNETILLEGG_KODE)
 class AvklarBarnetilleggLøsning(
-    @JsonProperty("fritakmeldepliktVurdering", required = true) val vurdering: Fritaksvurdering,
+    @JsonProperty("vurdering", required = true) val vurdering: VurderingAvBarn,
     @JsonProperty("behovstype", required = true, defaultValue = AVKLAR_BARNETILLEGG_KODE) val behovstype: String = AVKLAR_BARNETILLEGG_KODE
 ) : AvklaringsbehovLøsning {
     override fun løs(connection: DBConnection, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
