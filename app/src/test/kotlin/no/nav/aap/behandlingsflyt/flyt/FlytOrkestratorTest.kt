@@ -424,8 +424,8 @@ class FlytOrkestratorTest {
         ventPåSvar()
         val sak = hentSak(ident, periode)
 
-        assertThat(fakes.statistikkHendelser.first { it.sakId.toLong() == sak.id.toLong() }.sakId.toLong()).isEqualTo(
-            sak.id.toLong()
+        assertThat(fakes.statistikkHendelser.first { it.sakId == sak.saksnummer.toString() }.sakId).isEqualTo(
+            sak.saksnummer.toString()
         )
     }
 

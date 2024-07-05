@@ -1,8 +1,10 @@
 package no.nav.aap.behandlingsflyt.server.prosessering
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
+import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkHendelseDTO
+import no.nav.aap.json.DefaultJsonMapper
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
@@ -16,10 +18,11 @@ class StatistikkJobbUtfører(private val statistikkGateway: StatistikkGateway) :
         // for nå i poc, send til statistikk
 
         logger.info("Utfører jobbinput statistikk: $input")
+        val payload = input.payload()
 
-        val sakId = input.sakId()
+        val hendelse = DefaultJsonMapper.fromJson<BehandlingFlytStoppetHendelse>(payload)
 
-        statistikkGateway.avgiStatistikk(StatistikkHendelseDTO(sakId = sakId.toString()))
+        statistikkGateway.avgiStatistikk(StatistikkHendelseDTO(sakId = hendelse.saksnummer.toString()))
     }
 
 

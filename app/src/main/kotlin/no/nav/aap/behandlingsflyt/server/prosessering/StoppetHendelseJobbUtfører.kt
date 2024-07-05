@@ -1,37 +1,26 @@
 package no.nav.aap.behandlingsflyt.server.prosessering
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
-import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingFlytStoppetHendelse
+import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
+import no.nav.aap.json.DefaultJsonMapper
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 
-class StoppetHendelseJobbUtfører(
-    private val behandlingHendelseService: BehandlingHendelseService,
-    private val behandlingRepository: BehandlingRepository,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository
-) : JobbUtfører {
+class StoppetHendelseJobbUtfører : JobbUtfører {
 
     override fun utfør(input: JobbInput) {
-        val behandlingId = input.behandlingId()
-        val behandling = behandlingRepository.hent(behandlingId)
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
+        val payload = input.payload()
 
-        behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
+        val hendelse = DefaultJsonMapper.fromJson<BehandlingFlytStoppetHendelse>(payload)
+
+        OppgavestyringGateway.varsleHendelse(hendelse)
     }
 
     companion object : Jobb {
         override fun konstruer(connection: DBConnection): JobbUtfører {
-            return StoppetHendelseJobbUtfører(
-                BehandlingHendelseService(SakService(connection)),
-                BehandlingRepositoryImpl(connection),
-                AvklaringsbehovRepositoryImpl(connection)
-            )
+            return StoppetHendelseJobbUtfører()
         }
 
         override fun type(): String {

@@ -112,6 +112,10 @@ class JobbInput(internal val jobb: Jobb) {
         return properties.getProperty(key)
     }
 
+    fun harPayload(): Boolean {
+        return payload != null
+    }
+
     fun payload(): String {
         return requireNotNull(payload)
     }

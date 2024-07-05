@@ -17,9 +17,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Status.UTREDES
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
-import no.nav.aap.behandlingsflyt.server.prosessering.StatistikkJobbUtfører
 import no.nav.aap.motor.FlytJobbRepository
-import no.nav.aap.motor.JobbInput
 import no.nav.aap.verdityper.flyt.FlytKontekst
 import org.slf4j.LoggerFactory
 
@@ -44,8 +42,7 @@ class FlytOrkestrator(
     private val sakRepository = SakRepositoryImpl(connection)
     private val avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection)
     private val behandlingRepository = BehandlingRepositoryImpl(connection)
-    private val behandlingHendelseService = BehandlingHendelseService(SakService(connection))
-    private val flytJobbRepository = FlytJobbRepository(connection)
+    private val behandlingHendelseService = BehandlingHendelseService(SakService(connection), FlytJobbRepository(connection))
 
     fun forberedBehandling(kontekst: FlytKontekst) {
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
@@ -162,15 +159,11 @@ class FlytOrkestrator(
                 if (neste == null) {
                     // Avslutter behandling
                     log.info("Behandlingen har nådd slutten, avslutter behandling")
-                    behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
                 } else {
                     // Prosessen har stoppet opp, slipp ut hendelse om at den har stoppet opp og hvorfor?
                     loggStopp(behandling, avklaringsbehovene)
                 }
-
-                flytJobbRepository.leggTil(
-                    JobbInput(jobb = StatistikkJobbUtfører)
-                        .forSak(behandling.sakId))
+                behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
                 return
             }
             gjeldendeSteg = neste
@@ -226,7 +219,10 @@ class FlytOrkestrator(
             val neste = behandlingFlyt.neste()
 
             if (neste == null) {
-                loggStopp(behandling, avklaringsbehovene, harHeltStoppet)
+                loggStopp(behandling, avklaringsbehovene)
+                if (harHeltStoppet) {
+                    behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
+                }
                 return
             }
             StegOrkestrator(connection, neste).utførTilbakefør(
@@ -238,17 +234,13 @@ class FlytOrkestrator(
 
     private fun loggStopp(
         behandling: Behandling,
-        avklaringsbehovene: Avklaringsbehovene,
-        harHeltStoppet: Boolean = true
+        avklaringsbehovene: Avklaringsbehovene
     ) {
         log.info(
             "Stopper opp ved {} med {}",
             behandling.aktivtSteg(),
             avklaringsbehovene.åpne()
         )
-        if (harHeltStoppet) {
-            behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
-        }
     }
 
     private fun validerPlassering(
