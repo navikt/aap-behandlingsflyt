@@ -25,6 +25,8 @@ import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkHendelseDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.IDENT_QUERY
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoGateway.PERSONINFO_QUERY
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
+import no.nav.aap.medlemskap.MedlemskapResponse
+import no.nav.aap.medlemskap.Unntak
 import no.nav.aap.pdl.HentPerson
 import no.nav.aap.pdl.HentPersonBolkResult
 import no.nav.aap.pdl.PDLDødsfall
@@ -66,6 +68,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
     private val fakePersoner: MutableMap<String, TestPerson> = mutableMapOf()
     private val saf = embeddedServer(Netty, port = 0, module = { safFake() }).apply { start() }
     private val inst2 = embeddedServer(Netty, port = 0, module = { inst2Fake() }).apply { start() }
+    private val medl = embeddedServer(Netty, port = 0, module = { medlFake() }).apply { start() }
 
     private val statistikk = embeddedServer(Netty, port = 0, module = { statistikkFake() }).apply { start() }
     val statistikkHendelser = mutableListOf<StatistikkHendelseDTO>()
@@ -103,10 +106,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         System.setProperty("integrasjon.saf.url.rest", "http://localhost:${saf.port()}/rest")
 
         // MEDL
-        System.setProperty(
-            "integrasjon.medl.url",
-            "https://medlemskap-medl-api.dev-fss-pub.nais.io/api/v1/medlemskapsunntak"
-        )
+        System.setProperty("integrasjon.medl.url", "http://localhost:${medl.port()}")
         System.setProperty("integrasjon.medl.scope", "medl")
 
         // Inst
@@ -471,6 +471,32 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         }
     }
 
+
+    private fun Application.medlFake() {
+        install(ContentNegotiation) {
+            jackson()
+        }
+        install(StatusPages)  {
+            exception<Throwable> { call, cause ->
+                this@medlFake.log.info("MEDL :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
+                call.respond(status = HttpStatusCode.InternalServerError, message = ErrorRespons(cause.message))
+            }
+        }
+
+        routing {
+            get {
+                call.response.header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+
+                call.respond(
+                    MedlemskapResponse(
+                        unntak = listOf(
+                            Unntak(unntakId = 123, ident = "X123")
+                        )
+                    )
+                )
+            }
+        }
+    }
 
     private val returnerYrkesskade = mutableListOf<String>()
 
