@@ -10,7 +10,7 @@ class EtAnnetStedVisningUtleder(connection: DBConnection) : StegGruppeVisningUtl
     private val institusjonsoppholdRepository = InstitusjonsoppholdRepository(connection)
 
     override fun skalVises(behandlingId: BehandlingId): Boolean {
-        return institusjonsoppholdRepository.hentHvisEksisterer(behandlingId) != null
+        return institusjonsoppholdRepository.hentHvisEksisterer(behandlingId)?.opphold != null
     }
 
     override fun gruppe(): StegGruppe {
