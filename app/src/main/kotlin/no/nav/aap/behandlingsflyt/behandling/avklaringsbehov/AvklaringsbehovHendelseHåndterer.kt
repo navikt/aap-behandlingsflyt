@@ -24,8 +24,7 @@ class AvklaringsbehovHendelseHåndterer(connection: DBConnection) {
             kontekst = behandling.flytKontekst(),
             avklaringsbehov = hendelse.behov(),
             ingenEndringIGruppe = hendelse.ingenEndringIGruppe,
-            bruker = hendelse.bruker,
-            behanldingVersjon = hendelse.behandlingVersjon
+            bruker = hendelse.bruker
         )
     }
 }

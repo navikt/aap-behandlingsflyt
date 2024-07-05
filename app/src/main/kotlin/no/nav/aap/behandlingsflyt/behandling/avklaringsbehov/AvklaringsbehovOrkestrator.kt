@@ -38,8 +38,7 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
                 avklaringsbehovene = avklaringsbehovene,
                 avklaringsbehov = SattPåVentLøsning(),
                 bruker = SYSTEMBRUKER,
-                behandling = behandling,
-                versjon = behandling.versjon
+                behandling = behandling
             )
         }
         fortsettProsessering(kontekst)
@@ -49,13 +48,12 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
         kontekst: FlytKontekst,
         avklaringsbehov: AvklaringsbehovLøsning,
         ingenEndringIGruppe: Boolean,
-        bruker: Bruker,
-        behanldingVersjon: Long
+        bruker: Bruker
     ) {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
         løsAvklaringsbehov(
-            kontekst, avklaringsbehovene, avklaringsbehov, bruker, behandling, behanldingVersjon
+            kontekst, avklaringsbehovene, avklaringsbehov, bruker, behandling
         )
         markerAvklaringsbehovISammeGruppeForLøst(
             kontekst, ingenEndringIGruppe, avklaringsbehovene, bruker
@@ -97,8 +95,7 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
         avklaringsbehovene: Avklaringsbehovene,
         avklaringsbehov: AvklaringsbehovLøsning,
         bruker: Bruker,
-        behandling: Behandling,
-        versjon: Long
+        behandling: Behandling
     ) {
         val definisjoner = avklaringsbehov.definisjon()
         log.info("Forsøker løse avklaringsbehov[${definisjoner}] på behandling[${behandling.referanse}]")

@@ -113,6 +113,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
                         },
                         aktivtSteg = aktivtSteg,
                         aktivGruppe = aktivtSteg.gruppe,
+                        vurdertGruppe = utledVurdertGruppe(aktivtSteg, flyt, alleAvklaringsbehovInkludertFrivillige),
                         behandlingVersjon = behandling.versjon,
                         prosessering = prosessering,
                         visning = utledVisning(
@@ -193,6 +194,29 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
             }
         }
     }
+}
+
+private fun utledVurdertGruppe(
+    aktivtSteg: StegType,
+    flyt: BehandlingFlyt,
+    alleAvklaringsbehovInkludertFrivillige: FrivilligeAvklaringsbehov
+): StegGruppe? {
+    if (aktivtSteg == StegType.KVALITETSSIKRING) {
+        val relevanteBehov = alleAvklaringsbehovInkludertFrivillige.alle().filter { it.kreverKvalitetssikring() }
+            .filter { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
+            .filter { avklaringsbehov -> !avklaringsbehov.erKvalitetssikretTidligere() }
+
+        val skalTilStegForBehov = flyt.skalTilStegForBehov(relevanteBehov)
+        return requireNotNull(skalTilStegForBehov).gruppe
+    } else if (aktivtSteg == StegType.FATTE_VEDTAK) {
+        val relevanteBehov = alleAvklaringsbehovInkludertFrivillige.alle().filter { it.erTotrinn() }
+            .filter { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
+            .filter { avklaringsbehov -> !avklaringsbehov.erTotrinnsVurdert() }
+
+        val skalTilStegForBehov = flyt.skalTilStegForBehov(relevanteBehov)
+        return requireNotNull(skalTilStegForBehov).gruppe
+    }
+    return null
 }
 
 private fun hentFeilmeldingHvisBehov(

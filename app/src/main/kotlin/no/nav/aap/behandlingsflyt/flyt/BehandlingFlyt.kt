@@ -131,7 +131,7 @@ class BehandlingFlyt private constructor(
         return utletTilbakeflytTilSteg(skalTilSteg)
     }
 
-    private fun skalTilStegForBehov(avklaringsbehov: List<Avklaringsbehov>): StegType? {
+    fun skalTilStegForBehov(avklaringsbehov: List<Avklaringsbehov>): StegType? {
         return avklaringsbehov.map { it.løsesISteg() }.minWithOrNull(compareable())
     }
 
