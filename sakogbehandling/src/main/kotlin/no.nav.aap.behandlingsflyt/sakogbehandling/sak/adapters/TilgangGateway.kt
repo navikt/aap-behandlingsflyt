@@ -7,7 +7,6 @@ import no.nav.aap.httpclient.request.PostRequest
 import no.nav.aap.httpclient.tokenprovider.OidcToken
 import no.nav.aap.httpclient.tokenprovider.azurecc.OnBehalfOfTokenProvider
 import no.nav.aap.requiredConfigForKey
-import no.nav.aap.verdityper.sakogbehandling.Ident
 import java.net.URI
 
 object TilgangGateway {
@@ -19,32 +18,22 @@ object TilgangGateway {
         tokenProvider = OnBehalfOfTokenProvider,
     )
 
-    fun kanLeseSak(identer: List<Ident>, currentToken: OidcToken): Boolean {
+    fun harTilgang(body: TilgangRequest, currentToken: OidcToken): Boolean {
         val respons = query(
-            "lese",
-            TilgangRequest(identer.map { it.identifikator }),
+            body,
             currentToken = currentToken
         )
         return respons.tilgang
     }
 
-    fun kanSkriveSak(identer: List<Ident>, currentToken: OidcToken): Boolean {
-        val respons = query(
-            "skrive",
-            TilgangRequest(identer.map { it.identifikator }),
-            currentToken = currentToken
-        )
-        return respons.tilgang
-    }
-
-    private fun query(endepunkt: String, request: TilgangRequest, currentToken: OidcToken): TilgangResponse {
+    private fun query(body: TilgangRequest, currentToken: OidcToken): TilgangResponse {
         val httpRequest = PostRequest(
-            body = request,
+            body = body,
             currentToken = currentToken
         )
         return requireNotNull(
             client.post<_, TilgangResponse>(
-                uri = baseUrl.resolve("/tilgang/$endepunkt"),
+                uri = baseUrl,
                 request = httpRequest
             )
         )
@@ -52,7 +41,17 @@ object TilgangGateway {
 }
 
 data class TilgangRequest(
-    val identer: List<String>
+    val saksnummer: String,
+    val behandlingsreferanse: String?,
+    val avklaringsbehovKode: String?,
+    val operasjon: Operasjon
 )
+
+enum class Operasjon {
+    SE,
+    SAKSBEHANDLE,
+    DRIFTE,
+    DELEGERE
+}
 
 data class TilgangResponse(val tilgang: Boolean)

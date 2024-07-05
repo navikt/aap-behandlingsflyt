@@ -11,11 +11,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.Dokument
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.Operasjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.SafHentDokumentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.SafListDokumentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.TilgangGateway
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.TilgangRequest
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.verdityper.Periode
@@ -154,7 +156,10 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                         SakRepositoryImpl(connection).hent(saksnummer = Saksnummer(saksnummer))
                     }
                     val harLesetilgang =
-                        TilgangGateway.kanLeseSak(identer = sak.person.identer(), currentToken = token())
+                        TilgangGateway.harTilgang(
+                            TilgangRequest(sak.saksnummer.toString(), null, null, Operasjon.SE),
+                            currentToken = token()
+                        )
                     respond(LesetilgangDTO(harLesetilgang))
                 }
             }
@@ -167,7 +172,11 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                         val barn = SakRepositoryImpl(connection).finnBarn(saksnummer = Saksnummer(saksnummer))
                         sak to barn
                     }
-                    respond(IdenterDto(søker = sak.person.identer().map { it.identifikator }, barn = barn.map { it.identifikator }))
+                    respond(
+                        IdenterDto(
+                            søker = sak.person.identer().map { it.identifikator },
+                            barn = barn.map { it.identifikator })
+                    )
                 }
             }
 
