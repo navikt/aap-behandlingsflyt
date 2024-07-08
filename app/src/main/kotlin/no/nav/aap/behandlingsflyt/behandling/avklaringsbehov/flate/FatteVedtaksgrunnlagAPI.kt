@@ -45,11 +45,10 @@ fun utledHistorikk(avklaringsbehovene: Avklaringsbehovene): List<Historikk> {
 
     return relevanteBehov
         .asSequence()
-        .map { behov ->
+        .flatMap { behov ->
             behov.historikk.filter { e -> e.status in listOf(Status.AVSLUTTET) }
                 .map { endring -> DefinisjonEndring(behov.definisjon, endring) }
         }
-        .flatten()
         .sorted()
         .map { behov ->
             val aksjon = if (behov.definisjon == Definisjon.FORESLÅ_VEDTAK) {

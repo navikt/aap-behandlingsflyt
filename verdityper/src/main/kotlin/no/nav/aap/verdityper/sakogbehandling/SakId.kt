@@ -3,25 +3,7 @@ package no.nav.aap.verdityper.sakogbehandling
 /**
  * Representerer databaseId for en sak - er ikke ment å dele utenfor domenet.
  */
-class SakId(private val id: Long) {
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as SakId
-
-        return id == other.id
-    }
-
-    override fun hashCode(): Int {
-        return id.hashCode()
-    }
-
-    override fun toString(): String {
-        return id.toString()
-    }
-
+data class SakId(private val id: Long) {
     fun toLong(): Long {
         return id
     }

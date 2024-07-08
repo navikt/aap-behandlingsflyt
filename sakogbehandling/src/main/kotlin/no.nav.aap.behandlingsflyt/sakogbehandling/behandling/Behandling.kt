@@ -14,7 +14,6 @@ class Behandling(
     val id: BehandlingId,
     val referanse: UUID = UUID.randomUUID(),
     val sakId: SakId,
-    //private val type: BehandlingType,
     private val typeBehandling: TypeBehandling,
     private var status: Status = Status.OPPRETTET,
     private var årsaker: List<Årsak> = mutableListOf(),

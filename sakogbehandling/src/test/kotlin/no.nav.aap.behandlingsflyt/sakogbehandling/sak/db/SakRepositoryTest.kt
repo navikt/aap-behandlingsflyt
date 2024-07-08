@@ -32,4 +32,25 @@ internal class SakRepositoryTest {
             Assertions.assertThat(alleSaker).contains(sak)
         }
     }
+
+    @Test
+    fun `legge til sak og hente ut igjen`() {
+        InitTestDatabase.dataSource.transaction { connection ->
+            val personRepository = PersonRepository(connection)
+            val sakRepository = SakRepositoryImpl(connection)
+            val person = personRepository.finnEllerOpprett(listOf(Ident("23067823253")))
+
+            val sak = sakRepository.finnEllerOpprett(
+                person,
+                Periode(
+                    LocalDate.now().minusMonths(3),
+                    LocalDate.now().plusYears(1)
+                )
+            )
+
+            val hentetSak = sakRepository.hent(sak.id)
+
+            Assertions.assertThat(hentetSak.id).isEqualTo(sak.id)
+        }
+    }
 }

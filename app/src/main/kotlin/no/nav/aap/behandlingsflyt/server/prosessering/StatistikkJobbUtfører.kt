@@ -22,7 +22,13 @@ class StatistikkJobbUtfører(private val statistikkGateway: StatistikkGateway) :
 
         val hendelse = DefaultJsonMapper.fromJson<BehandlingFlytStoppetHendelse>(payload)
 
-        statistikkGateway.avgiStatistikk(StatistikkHendelseDTO(sakId = hendelse.saksnummer.toString()))
+        statistikkGateway.avgiStatistikk(
+            StatistikkHendelseDTO(
+                saksnummer = hendelse.saksnummer.toString(),
+                behandlingType = hendelse.behandlingType,
+                status = hendelse.status
+            )
+        )
     }
 
 
