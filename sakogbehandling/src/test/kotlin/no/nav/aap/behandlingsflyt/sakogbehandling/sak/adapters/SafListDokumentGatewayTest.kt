@@ -1,18 +1,27 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.httpclient.tokenprovider.OidcToken
 import no.nav.aap.verdityper.dokument.DokumentInfoId
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import java.net.URI
 import java.net.http.HttpHeaders
 
 class SafListDokumentGatewayTest {
+    companion object {
+        val fakes = Fakes()
+
+        @AfterAll
+        @JvmStatic
+        internal fun afterAll() {
+            fakes.close()
+        }
+    }
     @Test
-    @Disabled
     fun `hente dokumentoversikt fra saf`() {
         val gateway = SafListDokumentGateway
 
