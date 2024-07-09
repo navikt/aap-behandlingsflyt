@@ -2,7 +2,7 @@ val ktorVersion = "2.3.12"
 
 dependencies {
     implementation("dev.forst:ktor-openapi-generator:0.6.1")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.17.1")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.17.2")
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
 
     implementation(project(":verdityper"))
