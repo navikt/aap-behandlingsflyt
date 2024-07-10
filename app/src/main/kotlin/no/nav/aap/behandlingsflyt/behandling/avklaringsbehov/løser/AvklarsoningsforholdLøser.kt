@@ -4,11 +4,15 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSoningsforholdLøsning
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.SoningRepository
 
 class AvklarsoningsforholdLøser(connection: DBConnection) : AvklaringsbehovsLøser<AvklarSoningsforholdLøsning> {
+
+    private val soningRepository = SoningRepository(connection)
+
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarSoningsforholdLøsning): LøsningsResultat {
-        // TODO midlertidig implementasjon
-        return LøsningsResultat(løsning.soningsvurdering.begrunnelseForSoningUtenforAnstalt)
+        soningRepository.lagre(kontekst.kontekst.behandlingId, løsning.soningsvurdering.tilDomeneobjekt())
+        return LøsningsResultat("YOLO")
     }
 
     override fun forBehov(): Definisjon {
