@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soningsvurdering
 import no.nav.aap.verdityper.dokument.JournalpostId
 
 data class SoningsvurderingDto(

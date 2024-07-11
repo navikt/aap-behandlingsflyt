@@ -3,7 +3,12 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.Institusjonsopphold
 import no.nav.aap.verdityper.Periode
 import java.time.LocalDate
 
-class Institusjonsopphold(val institusjonstype: Institusjonstype, val kategori: Oppholdstype, val startdato: LocalDate, val sluttdato: LocalDate?, val orgnr: String? = null) {
+class Institusjonsopphold(
+    val institusjonstype: Institusjonstype,
+    val kategori: Oppholdstype,
+    val startdato: LocalDate,
+    val sluttdato: LocalDate?,
+    val orgnr: String? = null) {
     fun periode(): Periode {
         return Periode(startdato, sluttdato ?: LocalDate.MAX)
     }

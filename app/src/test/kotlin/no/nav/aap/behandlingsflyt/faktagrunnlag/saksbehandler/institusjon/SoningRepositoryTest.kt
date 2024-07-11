@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.dbtest.InitTestDatabase
 import no.nav.aap.behandlingsflyt.dbtestdata.ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.Soningsvurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.EndringType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak

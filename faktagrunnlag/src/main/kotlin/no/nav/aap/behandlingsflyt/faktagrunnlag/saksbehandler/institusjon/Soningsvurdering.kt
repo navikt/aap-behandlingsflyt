@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate
+package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon
 
 import no.nav.aap.verdityper.dokument.JournalpostId
 
