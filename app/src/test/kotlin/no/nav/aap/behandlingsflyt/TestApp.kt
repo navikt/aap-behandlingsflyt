@@ -10,6 +10,8 @@ import io.ktor.server.netty.*
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.SøknadStudentDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.Institusjonsopphold.Institusjonstype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.Institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.TestHendelsesMottak
@@ -18,6 +20,7 @@ import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.genererIdent
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
+import no.nav.aap.institusjon.Institusjonsopphold
 import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.sakogbehandling.Ident
@@ -65,7 +68,11 @@ fun main() {
                                 identer = setOf(ident),
                                 fødselsdato = Fødselsdato(dto.fødselsdato),
                                 yrkesskade = if (dto.yrkesskade) listOf(TestYrkesskade()) else emptyList(),
-                                barn = barn
+                                barn = barn,
+                                institusjonsopphold = listOf(
+                                    if (dto.institusjoner.fengsel == true) genererFengselsopphold() else null,
+                                    if (dto.institusjoner.sykehus == true) genererSykehusopphold() else null,
+                                    ).filterNotNull()
                             )
                         )
                         val periode = Periode(
@@ -108,6 +115,22 @@ fun main() {
 
     }.start(wait = true)
 }
+
+private fun genererFengselsopphold() = Institusjonsopphold(
+    organisasjonsnummer = "12345",
+    kategori = Oppholdstype.P.name,
+    institusjonstype = Institusjonstype.FO.name,
+    forventetSluttdato = LocalDate.of(2024, 12, 31),
+    startdato = LocalDate.of(2021, 1, 1)
+)
+
+private fun genererSykehusopphold() = Institusjonsopphold(
+    organisasjonsnummer = "12345",
+    kategori = Oppholdstype.S.name,
+    institusjonstype = Institusjonstype.HS.name,
+    forventetSluttdato = LocalDate.of(2022, 12, 31),
+    startdato = LocalDate.of(2021, 1, 1)
+)
 
 private fun genererBarn(dto: TestBarn): TestPerson {
     val ident = genererIdent(dto.fodselsdato)

@@ -459,7 +459,9 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
 
     private fun Application.inst2Fake() {
         install(ContentNegotiation) {
-            jackson()
+            jackson{
+                    registerModule(JavaTimeModule())
+            }
         }
         install(StatusPages) {
             exception<Throwable> { call, cause ->
@@ -474,7 +476,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
 
                 val opphold = person.institusjonsopphold
 
-                call.respond(opphold.toList())
+                call.respond(opphold)
             }
         }
     }
