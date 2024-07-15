@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.verdityper.Interval
@@ -23,7 +24,8 @@ fun NormalOpenAPIRoute.kvalitetssikringApi(dataSource: HikariDataSource) {
             get<BehandlingReferanse, KvalitetssikringGrunnlagDto> { req ->
 
                 val dto = dataSource.transaction { connection ->
-                    val behandling: Behandling = BehandlingReferanseService(connection).behandling(req)
+                    val behandling: Behandling =
+                        BehandlingReferanseService(BehandlingRepositoryImpl(connection)).behandling(req)
                     val avklaringsbehovene =
                         AvklaringsbehovRepositoryImpl(connection).hentAvklaringsbehovene(behandling.id)
 

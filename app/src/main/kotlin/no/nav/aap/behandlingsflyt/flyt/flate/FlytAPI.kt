@@ -28,6 +28,7 @@ import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingHendelseHåndterer
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
@@ -316,7 +317,7 @@ private fun alleVilkår(vilkårResultat: Vilkårsresultat): List<VilkårDTO> {
 }
 
 private fun behandling(connection: DBConnection, req: BehandlingReferanse): Behandling {
-    return BehandlingReferanseService(connection).behandling(req)
+    return BehandlingReferanseService(BehandlingRepositoryImpl(connection)).behandling(req)
 }
 
 private fun avklaringsbehov(connection: DBConnection, behandlingId: BehandlingId): Avklaringsbehovene {

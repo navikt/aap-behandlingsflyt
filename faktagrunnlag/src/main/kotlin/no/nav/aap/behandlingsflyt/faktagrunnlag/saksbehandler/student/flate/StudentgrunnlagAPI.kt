@@ -8,6 +8,7 @@ import com.zaxxer.hikari.HikariDataSource
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 
@@ -16,7 +17,7 @@ fun NormalOpenAPIRoute.studentgrunnlagApi(dataSource: HikariDataSource) {
         route("/{referanse}/grunnlag/student") {
             get<BehandlingReferanse, StudentGrunnlagDto> { req ->
                 val studentGrunnlag: StudentGrunnlag? = dataSource.transaction { connection ->
-                    val behandling = BehandlingReferanseService(connection).behandling(req)
+                    val behandling = BehandlingReferanseService(BehandlingRepositoryImpl(connection)).behandling(req)
 
                     StudentRepository(connection).hentHvisEksisterer(behandlingId = behandling.id)
                 }

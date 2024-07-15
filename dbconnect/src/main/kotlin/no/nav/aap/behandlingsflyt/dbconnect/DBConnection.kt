@@ -76,6 +76,14 @@ class DBConnection internal constructor(private val connection: Connection) {
         return querySeq(query, block, Sequence<T>::firstOrNull)
     }
 
+    /**
+     * Executes a query and retrieves the first result.
+     *
+     * @param query The SQL query to execute
+     * @param block The block of code to customize the query
+     * @return The first result of the query.
+     * @throws java.util.NoSuchElementException If there are zero results.
+     */
     fun <T : Any> queryFirst(
         @Language("PostgreSQL")
         query: String,

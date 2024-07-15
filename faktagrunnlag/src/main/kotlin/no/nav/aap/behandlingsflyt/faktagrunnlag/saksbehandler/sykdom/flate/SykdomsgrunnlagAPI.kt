@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 
@@ -17,7 +18,8 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: HikariDataSource) {
         route("/{referanse}/grunnlag/sykdom/sykdom") {
             get<BehandlingReferanse, SykdomGrunnlagDto> { req ->
                 val (yrkesskadeGrunnlag, sykdomGrunnlag) = dataSource.transaction { connection ->
-                    val behandling: Behandling = BehandlingReferanseService(connection).behandling(req)
+                    val behandling: Behandling =
+                        BehandlingReferanseService(BehandlingRepositoryImpl(connection)).behandling(req)
 
                     val yrkesskadeGrunnlag =
                         YrkesskadeRepository(connection).hentHvisEksisterer(behandlingId = behandling.id)

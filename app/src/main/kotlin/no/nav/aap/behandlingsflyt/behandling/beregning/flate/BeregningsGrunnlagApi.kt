@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag1
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.server.respondWithStatus
@@ -21,13 +22,14 @@ fun NormalOpenAPIRoute.beregningsGrunnlagApi(dataSource: DataSource) {
         route("/grunnlag/{referanse}") {
             get<BehandlingReferanse, BeregningDTO> { req ->
                 val begregningsgrunnlag = dataSource.transaction { connection ->
-                    val behandling: Behandling = BehandlingReferanseService(connection).behandling(req)
+                    val behandling: Behandling =
+                        BehandlingReferanseService(BehandlingRepositoryImpl(connection)).behandling(req)
                     val beregning = BeregningsgrunnlagRepository(connection).hentHvisEksisterer(behandling.id)
                     if (beregning == null) {
                         return@transaction null
                     }
 
-                    when(beregning) {
+                    when (beregning) {
                         is GrunnlagYrkesskade -> {
                             BeregningDTO(
                                 grunnlag = beregning.grunnlaget(),
@@ -36,7 +38,8 @@ fun NormalOpenAPIRoute.beregningsGrunnlagApi(dataSource: DataSource) {
                                     grunnlaget = beregning.grunnlaget().verdi(),
                                     er6GBegrenset = beregning.er6GBegrenset(),
                                     erGjennomsnitt = beregning.erGjennomsnitt(),
-                                    inntekter = (beregning.underliggende() as Grunnlag11_19).inntekter().map { it.år.value.toString() to it.beløp.verdi() }.toMap()
+                                    inntekter = (beregning.underliggende() as Grunnlag11_19).inntekter()
+                                        .map { it.år.value.toString() to it.beløp.verdi() }.toMap()
                                 ),
                                 grunnlagYrkesskade = GrunnlagYrkesskadeDTO(
                                     grunnlaget = beregning.grunnlaget().verdi(),
@@ -46,9 +49,11 @@ fun NormalOpenAPIRoute.beregningsGrunnlagApi(dataSource: DataSource) {
                                     andelYrkesskade = beregning.andelYrkesskade().prosentverdi(),
                                     benyttetAndelForYrkesskade = beregning.benyttetAndelForYrkesskade().prosentverdi(),
                                     andelSomIkkeSkyldesYrkesskade = beregning.andelSomIkkeSkyldesYrkesskade().verdi(),
-                                    antattÅrligInntektYrkesskadeTidspunktet = beregning.antattÅrligInntektYrkesskadeTidspunktet().verdi(),
+                                    antattÅrligInntektYrkesskadeTidspunktet = beregning.antattÅrligInntektYrkesskadeTidspunktet()
+                                        .verdi(),
                                     yrkesskadeTidspunkt = beregning.yrkesskadeTidspunkt().value,
-                                    grunnlagForBeregningAvYrkesskadeandel = beregning.grunnlagForBeregningAvYrkesskadeandel().verdi(),
+                                    grunnlagForBeregningAvYrkesskadeandel = beregning.grunnlagForBeregningAvYrkesskadeandel()
+                                        .verdi(),
                                     yrkesskadeinntektIG = beregning.yrkesskadeinntektIG().verdi(),
                                     grunnlagEtterYrkesskadeFordel = beregning.grunnlagEtterYrkesskadeFordel().verdi(),
                                     er6GBegrenset = beregning.er6GBegrenset(),
@@ -56,6 +61,7 @@ fun NormalOpenAPIRoute.beregningsGrunnlagApi(dataSource: DataSource) {
                                 )
                             )
                         }
+
                         is GrunnlagUføre -> {
                             BeregningDTO(
                                 grunnlag = beregning.grunnlaget(),
@@ -67,7 +73,8 @@ fun NormalOpenAPIRoute.beregningsGrunnlagApi(dataSource: DataSource) {
                                     grunnlag = grunnlag11_19_to_DTO(beregning.underliggende()),
                                     grunnlagYtterligereNedsatt = grunnlag11_19_to_DTO(beregning.underliggendeYtterligereNedsatt()),
                                     uføregrad = beregning.uføregrad().prosentverdi(),
-                                    uføreInntekterFraForegåendeÅr = beregning.underliggendeYtterligereNedsatt().inntekter().map { it.år.value.toString() to it.beløp.verdi() }.toMap(),
+                                    uføreInntekterFraForegåendeÅr = beregning.underliggendeYtterligereNedsatt()
+                                        .inntekter().map { it.år.value.toString() to it.beløp.verdi() }.toMap(),
                                     uføreInntektIKroner = beregning.uføreInntektIKroner().verdi(),
                                     uføreYtterligereNedsattArbeidsevneÅr = beregning.uføreYtterligereNedsattArbeidsevneÅr().value,
                                     er6GBegrenset = beregning.er6GBegrenset(),
@@ -75,6 +82,7 @@ fun NormalOpenAPIRoute.beregningsGrunnlagApi(dataSource: DataSource) {
                                 )
                             )
                         }
+
                         is Grunnlag11_19 -> {
                             BeregningDTO(
                                 grunnlag = beregning.grunnlaget(),
@@ -104,7 +112,7 @@ fun NormalOpenAPIRoute.beregningsGrunnlagApi(dataSource: DataSource) {
     }
 }
 
-fun grunnlag11_19_to_DTO(grunnlag:Grunnlag11_19):Grunnlag11_19DTO{
+fun grunnlag11_19_to_DTO(grunnlag: Grunnlag11_19): Grunnlag11_19DTO {
     return Grunnlag11_19DTO(
         grunnlaget = grunnlag.grunnlaget().verdi(),
         er6GBegrenset = grunnlag.er6GBegrenset(),

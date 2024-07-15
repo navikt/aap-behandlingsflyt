@@ -151,6 +151,10 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         pdl.stop(0L, 0L)
         azure.stop(0L, 0L)
         inntekt.stop(0L, 0L)
+        oppgavestyring.stop(0L, 0L)
+        saf.stop(0L, 0L)
+        inst2.stop(0L, 0L)
+        medl.stop(0L, 0L)
     }
 
     fun leggTil(person: TestPerson) {

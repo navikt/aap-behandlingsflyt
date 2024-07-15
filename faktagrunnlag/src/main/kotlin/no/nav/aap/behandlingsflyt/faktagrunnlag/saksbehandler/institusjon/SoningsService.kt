@@ -7,17 +7,19 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.SoningsoppholdDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.SoningsvurderingDto
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
 class SoningsService(
-    private val connection: DBConnection,
+    connection: DBConnection,
     private val soningRepository: SoningRepository = SoningRepository(connection),
     private val institusjonRepository: InstitusjonsoppholdService = InstitusjonsoppholdService.konstruer(connection),
-    private val behandlingReferanseService: BehandlingReferanseService = BehandlingReferanseService(connection)
+    private val behandlingReferanseService: BehandlingReferanseService = BehandlingReferanseService(
+        BehandlingRepositoryImpl(connection)
+    )
 ) {
-
     fun samleSoningsGrunnlag(behandlingsReferanse: BehandlingReferanse): SoningsgrunnlagResponse {
         val behandling: Behandling = behandlingReferanseService.behandling(behandlingsReferanse)
         val soningsvurdering = getSoningsvurderingDto(behandling.id)

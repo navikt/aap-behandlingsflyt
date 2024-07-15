@@ -8,6 +8,7 @@ import com.zaxxer.hikari.HikariDataSource
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 
@@ -16,7 +17,7 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: HikariDataSource) {
         route("/{referanse}/grunnlag/beregningsvurdering") {
             get<BehandlingReferanse, BeregningsVurderingDTO> { req ->
                 val behandling: Behandling = dataSource.transaction {
-                    BehandlingReferanseService(it).behandling(req)
+                    BehandlingReferanseService(BehandlingRepositoryImpl(it)).behandling(req)
                 }
 
                 val beregningVurdering = dataSource.transaction {

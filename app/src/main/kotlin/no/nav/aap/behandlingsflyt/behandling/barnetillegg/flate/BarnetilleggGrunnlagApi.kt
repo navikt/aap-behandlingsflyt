@@ -8,6 +8,7 @@ import no.nav.aap.auth.token
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoGateway
@@ -19,7 +20,8 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource) {
             get<BehandlingReferanse, BarnetilleggDto> { req ->
                 val token = token()
                 val dto = dataSource.transaction { connection ->
-                    val behandling: Behandling = BehandlingReferanseService(connection).behandling(req)
+                    val behandling: Behandling =
+                        BehandlingReferanseService(BehandlingRepositoryImpl(connection)).behandling(req)
                     val folkeregisterBarn = BarnRepository(connection).hent(behandling.id)
 
                     val barnDto = folkeregisterBarn.barn.map { barn ->

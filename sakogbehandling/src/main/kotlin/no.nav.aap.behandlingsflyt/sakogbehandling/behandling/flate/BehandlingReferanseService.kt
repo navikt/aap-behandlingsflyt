@@ -1,13 +1,11 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate
 
-import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.verdityper.feilhåndtering.ElementNotFoundException
 import java.util.*
 
-class BehandlingReferanseService(val connection: DBConnection) {
-
+class BehandlingReferanseService(private val behandlingRepositoryImpl: BehandlingRepository) {
     fun behandling(behandlingReferanse: BehandlingReferanse): Behandling {
         val eksternReferanse: UUID
         try {
@@ -16,6 +14,10 @@ class BehandlingReferanseService(val connection: DBConnection) {
             throw ElementNotFoundException()
         }
 
-        return BehandlingRepositoryImpl(connection).hent(eksternReferanse)
+        try {
+            return behandlingRepositoryImpl.hent(eksternReferanse)
+        } catch (e: NoSuchElementException) {
+            throw ElementNotFoundException()
+        }
     }
 }
