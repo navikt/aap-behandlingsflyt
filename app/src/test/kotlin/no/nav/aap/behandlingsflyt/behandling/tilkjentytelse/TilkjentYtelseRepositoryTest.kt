@@ -7,7 +7,6 @@ import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.dbtest.InitTestDatabase
 import no.nav.aap.behandlingsflyt.dbtestdata.ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.Tilkjent
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.EndringType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
@@ -70,7 +69,7 @@ class TilkjentYtelseRepositoryTest{
                 )
             )
             tilkjentYtelseRepository.lagre(behandling.id,tilkjentYtelse)
-            val tilkjentYtelseHentet = tilkjentYtelseRepository.hentHvisEksiterer(behandling.id)
+            val tilkjentYtelseHentet = tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)
             assertNotNull(tilkjentYtelseHentet)
             assertEquals(tilkjentYtelse, tilkjentYtelseHentet)
 
@@ -85,7 +84,7 @@ class TilkjentYtelseRepositoryTest{
             val behandling = behandling(connection, sak)
 
             val tilkjentYtelseRepository = TilkjentYtelseRepository(connection)
-            val tilkjentYtelseHentet = tilkjentYtelseRepository.hentHvisEksiterer(behandling.id)
+            val tilkjentYtelseHentet = tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)
             assertNull(tilkjentYtelseHentet)
         }
     }

@@ -20,7 +20,7 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource) {
                 val tilkjentYtelseDto = dataSource.transaction { connection ->
                     val behandling: Behandling =
                         BehandlingReferanseService(BehandlingRepositoryImpl(connection)).behandling(req)
-                    val tilkjentYtelse = TilkjentYtelseRepository(connection).hentHvisEksiterer(behandling.id)
+                    val tilkjentYtelse = TilkjentYtelseRepository(connection).hentHvisEksisterer(behandling.id)
 
                     if (tilkjentYtelse == null) return@transaction TilkjentYtelseDto(emptyList())
 

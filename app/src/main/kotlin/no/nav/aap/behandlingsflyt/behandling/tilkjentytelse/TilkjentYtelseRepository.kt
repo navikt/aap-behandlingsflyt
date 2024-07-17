@@ -1,14 +1,16 @@
 package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.Tilkjent
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.Tidslinje
+import no.nav.aap.verdityper.Beløp
+import no.nav.aap.verdityper.GUnit
 import no.nav.aap.verdityper.Periode
+import no.nav.aap.verdityper.Prosent
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
 class TilkjentYtelseRepository(private val connection: DBConnection) {
-    fun hentHvisEksiterer(behandlingId: BehandlingId): Tidslinje<Tilkjent>? {
+    fun hentHvisEksisterer(behandlingId: BehandlingId): Tidslinje<Tilkjent>? {
         val tilkjent = connection.queryList(
             """
             SELECT * FROM TILKJENT_PERIODE WHERE TILKJENT_YTELSE_ID IN (SELECT ID FROM TILKJENT_YTELSE WHERE BEHANDLING_ID=? AND AKTIV=TRUE)
@@ -21,14 +23,14 @@ class TilkjentYtelseRepository(private val connection: DBConnection) {
                 Segment(
                     periode = it.getPeriode("PERIODE"),
                     Tilkjent(
-                        dagsats = no.nav.aap.verdityper.Beløp(it.getInt("DAGSATS")),
-                        gradering = no.nav.aap.verdityper.Prosent(it.getInt("GRADERING")),
-                        barnetillegg = no.nav.aap.verdityper.Beløp(it.getInt("BARNETILLEGG")),
-                        grunnlagsfaktor = no.nav.aap.verdityper.GUnit(it.getBigDecimal("GRUNNLAGSFAKTOR")),
-                        grunnlag = no.nav.aap.verdityper.Beløp(it.getInt("GRUNNLAG")),
+                        dagsats = Beløp(it.getInt("DAGSATS")),
+                        gradering = Prosent(it.getInt("GRADERING")),
+                        barnetillegg = Beløp(it.getInt("BARNETILLEGG")),
+                        grunnlagsfaktor = GUnit(it.getBigDecimal("GRUNNLAGSFAKTOR")),
+                        grunnlag = Beløp(it.getInt("GRUNNLAG")),
                         antallBarn = it.getInt("ANTALL_BARN"),
-                        barnetilleggsats = no.nav.aap.verdityper.Beløp(it.getInt("BARNETILLEGGSATS")),
-                        grunnbeløp = no.nav.aap.verdityper.Beløp(it.getInt("GRUNNBELOP")),
+                        barnetilleggsats = Beløp(it.getInt("BARNETILLEGGSATS")),
+                        grunnbeløp = Beløp(it.getInt("GRUNNBELOP")),
                     )
                 )
             }
@@ -40,7 +42,7 @@ class TilkjentYtelseRepository(private val connection: DBConnection) {
     }
 
     fun lagre(behandlingId: BehandlingId, tilkjent: Tidslinje<Tilkjent>) {
-        val eksisterendeTilkjent = hentHvisEksiterer(behandlingId)
+        val eksisterendeTilkjent = hentHvisEksisterer(behandlingId)
         if (eksisterendeTilkjent == tilkjent) {
             return
         }

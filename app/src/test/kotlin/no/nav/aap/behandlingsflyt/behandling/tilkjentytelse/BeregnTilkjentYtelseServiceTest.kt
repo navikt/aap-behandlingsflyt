@@ -7,7 +7,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.Tilkjent
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.GUnit
