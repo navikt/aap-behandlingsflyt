@@ -33,7 +33,7 @@ class BehandlingHendelseServiceTest {
         every { flytJobbRepository.leggTil(any()) } returns Unit
         val vilkårsresultatRepository = mockk<VilkårsresultatRepository>()
         val behandlingHendelseService =
-            BehandlingHendelseService(sakService, flytJobbRepository, vilkårsresultatRepository)
+            BehandlingHendelseService(sakService, flytJobbRepository)
 
         val behandling = Behandling(
             BehandlingId(0), sakId = SakId(1), typeBehandling = TypeBehandling.Førstegangsbehandling, versjon = 1

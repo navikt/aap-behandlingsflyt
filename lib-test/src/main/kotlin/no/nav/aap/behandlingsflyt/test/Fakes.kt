@@ -73,6 +73,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
 
     private val statistikk = embeddedServer(Netty, port = 0, module = { statistikkFake() }).apply { start() }
     val statistikkHendelser = mutableListOf<StatistikkHendelseDTO>()
+    val mottatteVilkårsResult = mutableListOf<VilkårsResultatDTO>()
 
 
     init {
@@ -278,6 +279,9 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
             post("/vilkarsresultat") {
                 val receive = call.receive<VilkårsResultatDTO>()
                 this@statistikkFake.log.info("Statistikk mottok: {}", receive)
+                synchronized(mottatteVilkårsResult) {
+                    mottatteVilkårsResult.add(receive)
+                }
                 call.respond(HttpStatusCode.OK)
             }
         }

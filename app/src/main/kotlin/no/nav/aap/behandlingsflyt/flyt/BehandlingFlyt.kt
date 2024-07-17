@@ -212,7 +212,7 @@ class BehandlingFlytBuilder {
         if (StegType.UDEFINERT == steg.type()) {
             throw IllegalStateException("[Utvikler feil] StegType UDEFINERT er ugyldig å legge til i flyten")
         }
-        this.flyt.add(BehandlingFlyt.Behandlingsflytsteg(steg, informasjonskrav.toList(), oppdaterFaktagrunnlag))
+        this.flyt.add(BehandlingFlyt.Behandlingsflytsteg(steg, informasjonskrav, oppdaterFaktagrunnlag))
         endringer.forEach { endring ->
             this.endringTilSteg[endring] = steg.type()
         }

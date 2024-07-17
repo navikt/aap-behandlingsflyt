@@ -24,10 +24,10 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class TilkjentYtelseRepositoryTest{
+class TilkjentYtelseRepositoryTest {
     @Test
-    fun `kan lagre og hente tilkjentYtelse`(){
-        InitTestDatabase.dataSource.transaction {connection->
+    fun `kan lagre og hente tilkjentYtelse`() {
+        InitTestDatabase.dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
@@ -68,7 +68,7 @@ class TilkjentYtelseRepositoryTest{
                     ),
                 )
             )
-            tilkjentYtelseRepository.lagre(behandling.id,tilkjentYtelse)
+            tilkjentYtelseRepository.lagre(behandling.id, tilkjentYtelse)
             val tilkjentYtelseHentet = tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)
             assertNotNull(tilkjentYtelseHentet)
             assertEquals(tilkjentYtelse, tilkjentYtelseHentet)
@@ -78,8 +78,8 @@ class TilkjentYtelseRepositoryTest{
     }
 
     @Test
-    fun `finner ingen tilkjentYtelse hvis den ikke eksisterer`(){
-        InitTestDatabase.dataSource.transaction {connection->
+    fun `finner ingen tilkjentYtelse hvis den ikke eksisterer`() {
+        InitTestDatabase.dataSource.transaction { connection ->
             val sak = runBlocking { sak(connection) }
             val behandling = behandling(connection, sak)
 

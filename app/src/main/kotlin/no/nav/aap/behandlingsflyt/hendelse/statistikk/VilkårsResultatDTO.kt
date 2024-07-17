@@ -11,12 +11,16 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Saksnummer
 import no.nav.aap.verdityper.sakogbehandling.TypeBehandling
 import java.time.LocalDate
 
-data class VilkårsResultatDTO(val saksnummer: Saksnummer, val typeBehandling: TypeBehandling, val vilkår: List<VilkårDTO>) {
+data class VilkårsResultatDTO(
+    val saksnummer: Saksnummer,
+    val typeBehandling: TypeBehandling,
+    val vilkår: List<VilkårDTO>,
+) {
     companion object {
         fun fraDomeneObjekt(
             saksnummer: Saksnummer,
             typeBehandling: TypeBehandling,
-            vilkårsresultat: Vilkårsresultat
+            vilkårsresultat: Vilkårsresultat,
         ): VilkårsResultatDTO {
             return VilkårsResultatDTO(
                 saksnummer,

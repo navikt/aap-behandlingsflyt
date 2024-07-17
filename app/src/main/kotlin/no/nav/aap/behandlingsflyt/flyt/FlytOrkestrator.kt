@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.steg.TilbakeførtFraBeslutter
@@ -45,8 +44,7 @@ class FlytOrkestrator(
     private val behandlingRepository = BehandlingRepositoryImpl(connection)
     private val behandlingHendelseService = BehandlingHendelseService(
         SakService(connection),
-        FlytJobbRepository(connection),
-        VilkårsresultatRepository(connection)
+        FlytJobbRepository(connection)
     )
 
     fun forberedBehandling(kontekst: FlytKontekst) {

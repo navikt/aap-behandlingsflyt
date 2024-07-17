@@ -2,8 +2,6 @@ package no.nav.aap.behandlingsflyt.hendelse.avløp
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Status
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.hendelse.statistikk.VilkårsResultatDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -17,24 +15,20 @@ import no.nav.aap.motor.JobbInput
 class BehandlingHendelseService(
     private val sakService: SakService,
     private val flytJobbRepository: FlytJobbRepository,
-    private val vilkårsresultatRepository: VilkårsresultatRepository,
 ) {
 
     /**
      * Kjøres når en behandling er avsluttet. For statistikkformål.
      */
     fun avsluttet(behandling: Behandling) {
-        val vilkår = vilkårsresultatRepository.hent(behandling.id)
-        val sak = sakService.hent(behandling.sakId)
-
         val vilkårsResultatDTO =
-            VilkårsResultatDTO.fraDomeneObjekt(sak.saksnummer, behandling.typeBehandling(), vilkår)
+            VilkårsResultatHendelseDTO(behandling.id)
 
         val payload = DefaultJsonMapper.toJson(vilkårsResultatDTO)
 
         flytJobbRepository.leggTil(
             JobbInput(jobb = StatistikkJobbUtfører).medPayload(payload)
-                .medParameter("statistikk-type", StatistikkType.VilkårsResultat.toString())
+                .medParameter("statistikk-type", StatistikkType.AvsluttetBehandling.toString())
         )
     }
 
