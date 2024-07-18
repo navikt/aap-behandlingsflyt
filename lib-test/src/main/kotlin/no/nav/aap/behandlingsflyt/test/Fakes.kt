@@ -27,7 +27,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.IDENT_QUERY
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoGateway.PERSONINFO_QUERY
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.medlemskap.MedlemskapResponse
-import no.nav.aap.medlemskap.Unntak
 import no.nav.aap.pdl.HentPerson
 import no.nav.aap.pdl.HentPersonBolkResult
 import no.nav.aap.pdl.PDLDødsfall
@@ -467,8 +466,8 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
 
     private fun Application.inst2Fake() {
         install(ContentNegotiation) {
-            jackson{
-                    registerModule(JavaTimeModule())
+            jackson {
+                registerModule(JavaTimeModule())
             }
         }
         install(StatusPages) {
@@ -506,11 +505,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
                 call.response.header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
 
                 call.respond(
-                    MedlemskapResponse(
-                        unntak = listOf(
-                            Unntak(unntakId = 123, ident = "X123")
-                        )
-                    )
+                    listOf<MedlemskapResponse>()
                 )
             }
         }
