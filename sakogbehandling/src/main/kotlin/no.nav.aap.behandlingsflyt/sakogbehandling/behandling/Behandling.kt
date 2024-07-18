@@ -82,4 +82,8 @@ class Behandling(
     override fun compareTo(other: Behandling): Int {
         return this.opprettetTidspunkt.compareTo(other.opprettetTidspunkt)
     }
+
+    override fun toString(): String {
+        return "Behandling(id=$id, referanse=$referanse, sakId=$sakId, typeBehandling=$typeBehandling, status=$status, opprettetTidspunkt=$opprettetTidspunkt, versjon=$versjon)"
+    }
 }

@@ -17,10 +17,11 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             INSERT INTO BEHANDLING (sak_id, referanse, status, type)
                  VALUES (?, ?, ?, ?)
             """.trimIndent()
+        val uuid = UUID.randomUUID()
         val behandlingId = connection.executeReturnKey(query) {
             setParams {
                 setLong(1, sakId.toLong())
-                setUUID(2, UUID.randomUUID())
+                setUUID(2, uuid)
                 setEnumName(3, Status.OPPRETTET)
                 setString(4, typeBehandling.identifikator())
             }
@@ -41,6 +42,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
 
         val behandling = Behandling(
             id = BehandlingId(behandlingId),
+            referanse = uuid,
             sakId = sakId,
             typeBehandling = typeBehandling,
             årsaker = årsaker,

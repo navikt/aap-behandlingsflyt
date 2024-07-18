@@ -21,7 +21,7 @@ class MedlemskapService private constructor(
     companion object : Informasjonskravkonstruktør {
         override fun konstruer(connection: DBConnection): MedlemskapService {
             return MedlemskapService(
-                MedlemskapGateway,
+                MedlemskapGateway(),
                 SakService(connection)
             )
         }

@@ -3,11 +3,19 @@ package no.nav.aap.behandlingsflyt
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FakePdlGateway
+import no.nav.aap.behandlingsflyt.dbconnect.transaction
+import no.nav.aap.behandlingsflyt.dbtestdata.ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.medlemskap.flate.MedlemskapGrunnlagDto
 import no.nav.aap.behandlingsflyt.flyt.flate.SøknadSendDto
 import no.nav.aap.behandlingsflyt.flyt.flate.VilkårDTO
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.EndringType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.FinnEllerOpprettSakDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksinfoDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.UtvidetSaksinfoDTO
@@ -20,9 +28,11 @@ import no.nav.aap.httpclient.get
 import no.nav.aap.httpclient.post
 import no.nav.aap.httpclient.request.GetRequest
 import no.nav.aap.httpclient.request.PostRequest
-import no.nav.aap.httpclient.tokenprovider.NoTokenTokenProvider
+import no.nav.aap.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.flyt.StegType
 import no.nav.aap.verdityper.sakogbehandling.Ident
+import no.nav.aap.verdityper.sakogbehandling.TypeBehandling
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Disabled
@@ -36,24 +46,29 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.*
 
-@Disabled
 class ApiTest {
     companion object {
         private val postgres = postgreSQLContainer()
-        private val fakes = Fakes()
+        private val fakes = Fakes(azurePort = 8081)
+
+        private val dbConfig = DbConfig(
+            host = "sdg",
+            port = "sdf",
+            database = "sdf",
+            url = postgres.jdbcUrl,
+            username = postgres.username,
+            password = postgres.password
+        )
+
+        private val client = RestClient(
+            config = ClientConfig(scope = "behandlingsflyt"),
+            tokenProvider = ClientCredentialsTokenProvider,
+            errorHandler = DefaultResponseHandler()
+        )
 
         // Starter server
         private val server = embeddedServer(Netty, port = 8080) {
-            server(
-                DbConfig(
-                    host = "sdg",
-                    port = "sdf",
-                    database = "sdf",
-                    url = postgres.jdbcUrl,
-                    username = postgres.username,
-                    password = postgres.password
-                )
-            )
+            server(dbConfig = dbConfig)
             module(fakes)
         }.start()
 
@@ -64,6 +79,33 @@ class ApiTest {
             fakes.close()
             postgres.close()
         }
+    }
+
+    @Test
+    fun `kalle medlemsskaps-api`() {
+        val ds = initDatasource(dbConfig)
+
+        val opprettetBehandling = ds.transaction { connection ->
+            val personOgSakService = PersonOgSakService(connection, FakePdlGateway)
+            val behandlingRepo = BehandlingRepositoryImpl(connection)
+
+            val sak =
+                personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
+            val behandling = behandlingRepo.opprettBehandling(
+                sak.id,
+                listOf(Årsak(type = EndringType.MOTTATT_SØKNAD)),
+                TypeBehandling.Førstegangsbehandling
+            )
+            return@transaction behandling
+        }
+
+        val behandling: MedlemskapGrunnlagDto? = client.get(
+            URI.create("http://localhost:8080/")
+                .resolve("api/behandling/${opprettetBehandling.referanse}/grunnlag/medlemskap"),
+            GetRequest()
+        )
+
+        assertThat(behandling).isNotNull
     }
 
     @Disabled
@@ -77,11 +119,6 @@ class ApiTest {
             )
         )
 
-        val client = RestClient(
-            config = ClientConfig(),
-            tokenProvider = NoTokenTokenProvider(),
-            errorHandler = DefaultResponseHandler()
-        )
         val responseSak: SaksinfoDTO? = client.post(
             URI.create("http://localhost:8080/").resolve("api/sak/finnEllerOpprett"),
             PostRequest(

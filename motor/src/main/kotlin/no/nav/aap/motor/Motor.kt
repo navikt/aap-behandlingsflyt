@@ -156,7 +156,7 @@ class Motor(
      * Watchdog som sjekker om alle workers kjører
      */
     inner class Watchdog : Runnable {
-        val logger = LoggerFactory.getLogger(Watchdog::class.java)
+        private val logger = LoggerFactory.getLogger(Watchdog::class.java)
         override fun run() {
             logger.debug("Sjekker status på workers")
             try {

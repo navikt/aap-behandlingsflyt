@@ -1,11 +1,13 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.medlemskap
+package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.medlemskap.flate
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import com.zaxxer.hikari.HikariDataSource
+import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.Medlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
@@ -16,15 +18,17 @@ fun NormalOpenAPIRoute.medlemskapsgrunnlagApi(dataSource: HikariDataSource) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/medlemskap") {
             get<BehandlingReferanse, MedlemskapGrunnlagDto> { req ->
-                val medlemskap = dataSource.transaction {
-                    val behandling = BehandlingReferanseService(BehandlingRepositoryImpl(it)).behandling(req)
-                    val sakRepository = SakRepositoryImpl(it)
-                    val person = sakRepository.hent(behandling.sakId).person
-                    MedlemskapGateway.innhent(person)
-                }
-
+                val medlemskap = dataSource.transaction(block = hentMedlemsskap(req))
                 respond(MedlemskapGrunnlagDto(medlemskap = medlemskap))
             }
         }
     }
 }
+
+private fun hentMedlemsskap(req: BehandlingReferanse): (DBConnection) -> Medlemskap =
+    {
+        val behandling = BehandlingReferanseService(BehandlingRepositoryImpl(it)).behandling(req)
+        val sakRepository = SakRepositoryImpl(it)
+        val person = sakRepository.hent(behandling.sakId).person
+        MedlemskapGateway().innhent(person)
+    }

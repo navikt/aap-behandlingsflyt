@@ -1,0 +1,19 @@
+package no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter
+
+data class MedlemskapRequest(
+    val ident: String,
+)
+
+// Swagger-doc her: https://medlemskap-medl-api.dev.intern.nav.no/swagger-ui/index.html
+data class MedlemskapResponse(
+    val unntakId: Number,
+    val ident: String,
+    val fraOgMed: String,
+    val tilOgMed: String,
+    val status: String,
+    val statusaarsak: String?,
+    val medlem: Boolean,
+    val grunnlag: String,
+    val lovvalg: String,
+    val helsedel: Boolean
+)

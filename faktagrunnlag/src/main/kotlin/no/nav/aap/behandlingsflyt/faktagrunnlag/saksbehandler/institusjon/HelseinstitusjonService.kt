@@ -22,12 +22,12 @@ class HelseinstitusjonService (
 ) {
     fun samleHelseinstitusjonGrunnlag(behandlingReferanse: BehandlingReferanse): HelseinstitusjonGrunnlagResponse {
         val behandling: Behandling = behandlingReferanseService.behandling(behandlingReferanse)
-        val institusjonsopphold = getHelseinstitusjonOpphold(behandling.id)
+        val institusjonsopphold = hentHelseinstitusjonOpphold(behandling.id)
         val vurdering = getHelseinstitusjonVurdering(behandling.id)
         return HelseinstitusjonGrunnlagResponse(institusjonsopphold, vurdering)
     }
 
-    fun getHelseinstitusjonOpphold(behandlingId: BehandlingId): List<InstitusjonsoppholdDto> {
+    private fun hentHelseinstitusjonOpphold(behandlingId: BehandlingId): List<InstitusjonsoppholdDto> {
         val helseinstitusjonOpphold = institusjonRepository.hentHvisEksisterer(behandlingId)
         return helseinstitusjonOpphold?.opphold?.filter { it.verdi.type == Institusjonstype.HS }
             ?.map { InstitusjonsoppholdDto.institusjonToDto(it) } ?: emptyList()

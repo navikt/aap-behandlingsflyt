@@ -26,7 +26,7 @@ import no.nav.aap.behandlingsflyt.hendelse.statistikk.VilkårsResultatDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.IDENT_QUERY
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoGateway.PERSONINFO_QUERY
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
-import no.nav.aap.medlemskap.MedlemskapResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapResponse
 import no.nav.aap.pdl.HentPerson
 import no.nav.aap.pdl.HentPersonBolkResult
 import no.nav.aap.pdl.PDLDødsfall
@@ -50,6 +50,7 @@ import no.nav.aap.verdityper.sakogbehandling.Ident
 import no.nav.aap.yrkesskade.YrkesskadeModell
 import no.nav.aap.yrkesskade.YrkesskadeRequest
 import no.nav.aap.yrkesskade.Yrkesskader
+import org.intellij.lang.annotations.Language
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
@@ -504,8 +505,34 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
             get {
                 call.response.header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
 
+                @Language("JSON") val respons =
+                    """[
+  {
+    "unntakId": 100087727,
+    "ident": "02429118789",
+    "fraOgMed": "2021-07-08",
+    "tilOgMed": "2022-07-07",
+    "status": "GYLD",
+    "statusaarsak": null,
+    "medlem": true,
+    "grunnlag": "grunnlag",
+    "lovvalg": "lovvalg"
+  },
+  {
+    "unntakId": 100087729,
+    "ident": "02429118789",
+    "fraOgMed": "2014-07-10",
+    "tilOgMed": "2016-07-14",
+    "status": "GYLD",
+    "statusaarsak": null,
+    "medlem": false,
+    "grunnlag": "grunnlag",
+    "lovvalg": "lovvalg"
+  }
+]"""
+
                 call.respond(
-                    listOf<MedlemskapResponse>()
+                    respons
                 )
             }
         }

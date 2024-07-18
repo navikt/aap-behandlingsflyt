@@ -7,7 +7,7 @@ import java.time.LocalDate
 
 class FakeAvklaringsbehovRepository : AvklaringsbehovRepository, AvklaringsbehovOperasjonerRepository {
 
-    private val behovPerBehandling = HashMap<BehandlingId, MutableList<no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov>>()
+    private val behovPerBehandling = HashMap<BehandlingId, MutableList<Avklaringsbehov>>()
 
     override fun opprett(
         behandlingId: BehandlingId,
@@ -21,7 +21,7 @@ class FakeAvklaringsbehovRepository : AvklaringsbehovRepository, Avklaringsbehov
         val avklaringsbehov = behovPerBehandling.getOrDefault(behandlingId, mutableListOf())
 
         avklaringsbehov.add(
-            no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov(
+            Avklaringsbehov(
                 id = avklaringsbehov.size.toLong() + 1,
                 definisjon = definisjon,
                 funnetISteg = funnetISteg,
@@ -36,7 +36,7 @@ class FakeAvklaringsbehovRepository : AvklaringsbehovRepository, Avklaringsbehov
         return Avklaringsbehovene(this, behandlingId)
     }
 
-    override fun hent(behandlingId: BehandlingId): List<no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov> {
+    override fun hent(behandlingId: BehandlingId): List<Avklaringsbehov> {
         return behovPerBehandling.getOrDefault(behandlingId, listOf())
     }
 

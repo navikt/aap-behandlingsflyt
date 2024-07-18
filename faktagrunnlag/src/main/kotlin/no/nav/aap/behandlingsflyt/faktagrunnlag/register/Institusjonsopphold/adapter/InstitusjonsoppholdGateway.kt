@@ -15,7 +15,7 @@ import java.net.URI
 
 object InstitusjonsoppholdGateway : InstitusjonsoppholdGateway {
     private val url = URI.create(requiredConfigForKey("integrasjon.institusjonsopphold.url") + "?Med-Institusjonsinformasjon=true")
-    val config = ClientConfig(scope = requiredConfigForKey("integrasjon.institusjonsopphold.scope"))
+    private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.institusjonsopphold.scope"))
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
         tokenProvider = ClientCredentialsTokenProvider,

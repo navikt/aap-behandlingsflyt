@@ -8,5 +8,4 @@ class ClientConfig(
     val connectionTimeout: Duration = Duration.ofSeconds(15),
     val additionalHeaders: List<Header> = emptyList(),
     val additionalFunctionalHeaders: List<FunctionalHeader> = emptyList()
-) {
-}
+)
