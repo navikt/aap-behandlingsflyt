@@ -8,25 +8,30 @@ class PeriodeIterator(
     rightPerioder: NavigableSet<Periode>
 ) : Iterator<Periode> {
 
-    private val unikePerioder: NavigableSet<Periode> = TreeSet()
+    private var unikePerioder: NavigableSet<Periode> = TreeSet()
     private var dateIterator: Iterator<Periode>
 
     init {
         val temp = TreeSet(leftPerioder + rightPerioder)
-        temp.forEach { periode ->
-            val overlappendePerioder = unikePerioder.filter { it.overlapper(periode) }
-            if (overlappendePerioder.isNotEmpty()) {
-                unikePerioder.removeAll(overlappendePerioder.toSet())
-                for (p in overlappendePerioder) {
-                    unikePerioder.addAll(periode.minus(p))
-                    val overlapp = periode.overlapp(p)
-                    if (overlapp != null) {
-                        unikePerioder.add(overlapp)
-                    }
-                    unikePerioder.addAll(p.minus(periode))
-                }
+        // Kan traverse lineær, siden TreeSet allerede har sortert.
+        // Se https://stackoverflow.com/a/9775727/1013553
+        // for algoritmen.
+        unikePerioder = temp.fold(unikePerioder) { acc, curr ->
+            // At beginning
+            if (acc.size < 1) {
+                acc.add(curr)
+                acc
             } else {
-                unikePerioder.add(periode)
+                val last = acc.last
+                if (acc.last.overlapper(curr)) {
+                    acc.remove(last)
+                    acc.addAll(last.minus(curr))
+                    acc.add(curr.overlapp(last))
+                    acc.addAll(curr.minus(last))
+                } else {
+                    acc.add(curr)
+                }
+                acc
             }
         }
 
