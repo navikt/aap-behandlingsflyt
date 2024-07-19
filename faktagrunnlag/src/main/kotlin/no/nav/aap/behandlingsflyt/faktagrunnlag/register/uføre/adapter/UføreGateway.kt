@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.adapter
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRegisterGateway
@@ -19,9 +18,9 @@ import java.time.format.DateTimeFormatter
 
 object UføreGateway : UføreRegisterGateway {
     private val url = URI.create(requiredConfigForKey("integrasjon.pesys.url"))
-    val config = ClientConfig(scope = requiredConfigForKey("integrasjon.pesys.scope"))
+    private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.pesys.scope"))
     private val client = RestClient.withDefaultResponseHandler(
-        config = InntektGateway.config,
+        config = config,
         tokenProvider = ClientCredentialsTokenProvider,
     )
 
