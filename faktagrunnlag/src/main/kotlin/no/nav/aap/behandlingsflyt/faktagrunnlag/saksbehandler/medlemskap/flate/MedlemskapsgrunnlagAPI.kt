@@ -8,6 +8,8 @@ import com.zaxxer.hikari.HikariDataSource
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.Medlemskap
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
@@ -25,10 +27,8 @@ fun NormalOpenAPIRoute.medlemskapsgrunnlagApi(dataSource: HikariDataSource) {
     }
 }
 
-private fun hentMedlemsskap(req: BehandlingReferanse): (DBConnection) -> Medlemskap =
+private fun hentMedlemsskap(req: BehandlingReferanse): (DBConnection) -> MedlemskapUnntakGrunnlag? =
     {
         val behandling = BehandlingReferanseService(BehandlingRepositoryImpl(it)).behandling(req)
-        val sakRepository = SakRepositoryImpl(it)
-        val person = sakRepository.hent(behandling.sakId).person
-        MedlemskapGateway().innhent(person)
+        MedlemskapService.konstruer(it).hentHvisEksisterer(behandling.id)
     }

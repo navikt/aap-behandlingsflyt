@@ -1,0 +1,96 @@
+package no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap
+
+import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapResponse
+import no.nav.aap.tidslinje.Segment
+import no.nav.aap.verdityper.Periode
+import no.nav.aap.verdityper.sakogbehandling.BehandlingId
+import java.time.LocalDate
+
+class MedlemskapRepository(private val connection: DBConnection) {
+
+    fun lagreUnntakMedlemskap(behandlingId: BehandlingId, unntak: List<MedlemskapResponse>) {
+        if(hentHvisEksisterer(behandlingId) != null ) {
+            deaktiverEksisterendeGrunnlag(behandlingId)
+        }
+        val medlemskapUnntakPersonId = connection.executeReturnKey("""
+            INSERT INTO MEDLEMSKAP_UNNTAK_PERSON DEFAULT VALUES
+        """.trimIndent())
+
+        connection.execute("""
+            INSERT INTO MEDLEMSKAP_UNNTAK_GRUNNLAG (BEHANDLING_ID, MEDLEMSKAP_UNNTAK_PERSON_ID) VALUES (?, ?)
+        """.trimIndent()) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setLong(2, medlemskapUnntakPersonId)
+            }
+        }
+
+        unntak.forEach { it ->
+            connection.execute("""
+                INSERT INTO MEDLEMSKAP_UNNTAK (STATUS, STATUS_ARSAK, MEDLEM, PERIODE, GRUNNLAG, LOVVALG, HELSEDEL, MEDLEMSKAP_UNNTAK_PERSON_ID) VALUES (?, ?, ?, ?::daterange ,?, ?, ?, ?)
+            """.trimIndent()) {
+                setParams {
+                    setString(1, it.status)
+                    setString(2, it.statusaarsak)
+                    setBoolean(3, it.medlem)
+                    setPeriode(4, Periode(LocalDate.parse(it.fraOgMed), LocalDate.parse(it.tilOgMed)))
+                    setString(5, it.grunnlag)
+                    setString(6, it.lovvalg)
+                    setBoolean(7, it.helsedel)
+                    setLong(8, medlemskapUnntakPersonId)
+                }
+            }
+        }
+    }
+
+    fun hentMedlemskapUnntak(behandlings_medlemskap_unntak: Long): List<Segment<Unntak>> {
+        return connection.queryList(
+            """SELECT * FROM MEDLEMSKAP_UNNTAK WHERE MEDLEMSKAP_UNNTAK_PERSON_ID = ?""".trimIndent()
+        ) {
+            setParams {
+                setLong(1, behandlings_medlemskap_unntak)
+            }
+            setRowMapper {
+                val unntak = Unntak(
+                    status = it.getString("STATUS"),
+                    statusaarsak = it.getStringOrNull("STATUS_ARSAK"),
+                    medlem = it.getBoolean("MEDLEM"),
+                    grunnlag = it.getString("GRUNNLAG"),
+                    lovvalg = it.getString("LOVVALG"),
+                    helsedel = it.getBoolean("HELSEDEL")
+                )
+                Segment(
+                    it.getPeriode("PERIODE"),
+                    unntak
+                )
+            }
+        }.toList()
+    }
+
+    fun hentHvisEksisterer(behandlingId: BehandlingId): MedlemskapUnntakGrunnlag? {
+        val behandlings_medlemskap_unntak = connection.queryFirstOrNull(
+            "SELECT MEDLEMSKAP_UNNTAK_PERSON_ID FROM MEDLEMSKAP_UNNTAK_GRUNNLAG WHERE BEHANDLING_ID=? AND AKTIV=TRUE"
+        ) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+            setRowMapper { it.getLong("MEDLEMSKAP_UNNTAK_PERSON_ID") }
+        }
+        if (behandlings_medlemskap_unntak == null) {
+            return null
+        }
+        return MedlemskapUnntakGrunnlag(hentMedlemskapUnntak(behandlings_medlemskap_unntak))
+    }
+
+    private fun deaktiverEksisterendeGrunnlag(behandlingId: BehandlingId) {
+        connection.execute("UPDATE MEDLEMSKAP_UNNTAK_GRUNNLAG SET AKTIV = FALSE WHERE AKTIV AND BEHANDLING_ID = ?") {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+            setResultValidator { rowsUpdated ->
+                require(rowsUpdated == 1)
+            }
+        }
+    }
+}

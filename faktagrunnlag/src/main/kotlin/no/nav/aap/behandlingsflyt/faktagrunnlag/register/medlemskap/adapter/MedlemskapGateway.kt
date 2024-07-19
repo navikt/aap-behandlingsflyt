@@ -43,24 +43,25 @@ class MedlemskapGateway : MedlemskapGateway {
         )
     }
 
-    override fun innhent(person: Person): Medlemskap {
+    override fun innhent(person: Person): List<MedlemskapResponse> {
         val request = MedlemskapRequest(
             ident = person.aktivIdent().identifikator
         )
         val medlemskapResultat = query(request)
 
-        return Medlemskap(unntak = medlemskapResultat.map {
-            Unntak(
+        return medlemskapResultat.map {
+            MedlemskapResponse(
                 unntakId = it.unntakId,
                 ident = it.ident,
-                fraOgMed = LocalDate.parse(it.fraOgMed),
-                tilOgMed = LocalDate.parse(it.tilOgMed),
+                fraOgMed = it.fraOgMed,
+                tilOgMed = it.tilOgMed,
                 status = it.status,
                 statusaarsak = it.statusaarsak,
                 medlem = it.medlem,
                 grunnlag = it.grunnlag,
-                lovvalg = it.lovvalg
+                lovvalg = it.lovvalg,
+                helsedel = it.helsedel
             )
-        })
+        }
     }
 }
