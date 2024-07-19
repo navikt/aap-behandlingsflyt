@@ -33,7 +33,7 @@ object TilgangGateway {
         )
         return requireNotNull(
             client.post<_, TilgangResponse>(
-                uri = baseUrl,
+                uri = baseUrl.resolve("/tilgang"),
                 request = httpRequest
             )
         )
