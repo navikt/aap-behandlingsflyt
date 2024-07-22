@@ -120,16 +120,16 @@ private fun genererFengselsopphold() = Institusjonsopphold(
     organisasjonsnummer = "12345",
     kategori = Oppholdstype.S.name,
     institusjonstype = Institusjonstype.FO.name,
-    forventetSluttdato = LocalDate.of(2024, 12, 31),
-    startdato = LocalDate.of(2021, 1, 1)
+    forventetSluttdato =  LocalDate.now().plusYears(1),
+    startdato = LocalDate.now().minusYears(2)
 )
 
 private fun genererSykehusopphold() = Institusjonsopphold(
     organisasjonsnummer = "12345",
     kategori = Oppholdstype.H.name,
     institusjonstype = Institusjonstype.HS.name,
-    forventetSluttdato = LocalDate.of(2022, 12, 31),
-    startdato = LocalDate.of(2021, 1, 1)
+    forventetSluttdato =  LocalDate.now().plusYears(1),
+    startdato = LocalDate.now().minusYears(2)
 )
 
 private fun genererBarn(dto: TestBarn): TestPerson {
