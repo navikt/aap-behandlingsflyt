@@ -7,14 +7,11 @@ import com.papsign.ktor.openapigen.route.route
 import com.zaxxer.hikari.HikariDataSource
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.Medlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 
 fun NormalOpenAPIRoute.medlemskapsgrunnlagApi(dataSource: HikariDataSource) {
     route("/api/behandling") {
@@ -27,8 +24,8 @@ fun NormalOpenAPIRoute.medlemskapsgrunnlagApi(dataSource: HikariDataSource) {
     }
 }
 
-private fun hentMedlemsskap(req: BehandlingReferanse): (DBConnection) -> MedlemskapUnntakGrunnlag? =
+private fun hentMedlemsskap(req: BehandlingReferanse): (DBConnection) -> MedlemskapUnntakGrunnlag =
     {
         val behandling = BehandlingReferanseService(BehandlingRepositoryImpl(it)).behandling(req)
-        MedlemskapService.konstruer(it).hentHvisEksisterer(behandling.id)
+        MedlemskapService.konstruer(it).hentHvisEksisterer(behandling.id) ?: MedlemskapUnntakGrunnlag(unntak = listOf())
     }

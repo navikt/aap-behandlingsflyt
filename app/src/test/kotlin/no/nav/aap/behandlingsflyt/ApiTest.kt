@@ -8,6 +8,8 @@ import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.dbtestdata.ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.SøknadStudentDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.medlemskap.flate.MedlemskapGrunnlagDto
 import no.nav.aap.behandlingsflyt.flyt.flate.SøknadSendDto
@@ -96,16 +98,35 @@ class ApiTest {
                 listOf(Årsak(type = EndringType.MOTTATT_SØKNAD)),
                 TypeBehandling.Førstegangsbehandling
             )
+            val medlRepo = MedlemskapRepository(connection)
+            medlRepo.lagreUnntakMedlemskap(
+                behandlingId = behandling.id,
+                listOf(
+                    MedlemskapResponse(
+                        unntakId = 123,
+                        fraOgMed = "2017-02-13",
+                        tilOgMed = "2018-02-13",
+                        grunnlag = "grunnlag",
+                        helsedel = true,
+                        ident = "02429118789",
+                        lovvalg = "lovvalg",
+                        medlem = true,
+                        status = "GYLD",
+                        statusaarsak = null
+                    )
+                )
+            )
             return@transaction behandling
         }
 
-        val behandling: MedlemskapGrunnlagDto? = client.get(
+        val medlemskapGrunnlag: MedlemskapGrunnlagDto? = client.get(
             URI.create("http://localhost:8080/")
                 .resolve("api/behandling/${opprettetBehandling.referanse}/grunnlag/medlemskap"),
             GetRequest()
         )
 
-        assertThat(behandling).isNotNull
+        assertThat(medlemskapGrunnlag).isNotNull
+        assertThat(medlemskapGrunnlag?.medlemskap?.unntak).isNotEmpty
     }
 
     @Disabled

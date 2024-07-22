@@ -1,8 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap
 
-import java.time.LocalDate
-
 data class Medlemskap(val unntak: List<Unntak>)
+
 data class Unntak(
     val status: String,
     val statusaarsak: String?,

@@ -1,8 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.Medlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.Unntak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.httpclient.ClientConfig
 import no.nav.aap.httpclient.Header
@@ -12,7 +10,6 @@ import no.nav.aap.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvide
 import no.nav.aap.json.DefaultJsonMapper
 import no.nav.aap.requiredConfigForKey
 import java.net.URI
-import java.time.LocalDate
 
 class MedlemskapGateway : MedlemskapGateway {
     private val url = URI.create(requiredConfigForKey("integrasjon.medl.url"))

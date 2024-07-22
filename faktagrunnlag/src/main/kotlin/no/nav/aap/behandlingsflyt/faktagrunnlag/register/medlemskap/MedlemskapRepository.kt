@@ -5,21 +5,30 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.Medl
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
+
+private val logger = LoggerFactory.getLogger(MedlemskapRepository::class.java)
 
 class MedlemskapRepository(private val connection: DBConnection) {
 
     fun lagreUnntakMedlemskap(behandlingId: BehandlingId, unntak: List<MedlemskapResponse>) {
-        if(hentHvisEksisterer(behandlingId) != null ) {
+        if (hentHvisEksisterer(behandlingId) != null) {
+            logger.info("Medlemsskapsgrunnlag for behandling $behandlingId eksisterer allerede. Deaktiverer forrige lagrede.")
             deaktiverEksisterendeGrunnlag(behandlingId)
         }
-        val medlemskapUnntakPersonId = connection.executeReturnKey("""
-            INSERT INTO MEDLEMSKAP_UNNTAK_PERSON DEFAULT VALUES
-        """.trimIndent())
 
-        connection.execute("""
+        val medlemskapUnntakPersonId = connection.executeReturnKey(
+            """
+            INSERT INTO MEDLEMSKAP_UNNTAK_PERSON DEFAULT VALUES
+        """.trimIndent()
+        )
+
+        connection.execute(
+            """
             INSERT INTO MEDLEMSKAP_UNNTAK_GRUNNLAG (BEHANDLING_ID, MEDLEMSKAP_UNNTAK_PERSON_ID) VALUES (?, ?)
-        """.trimIndent()) {
+        """.trimIndent()
+        ) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, medlemskapUnntakPersonId)
@@ -27,9 +36,11 @@ class MedlemskapRepository(private val connection: DBConnection) {
         }
 
         unntak.forEach { it ->
-            connection.execute("""
+            connection.execute(
+                """
                 INSERT INTO MEDLEMSKAP_UNNTAK (STATUS, STATUS_ARSAK, MEDLEM, PERIODE, GRUNNLAG, LOVVALG, HELSEDEL, MEDLEMSKAP_UNNTAK_PERSON_ID) VALUES (?, ?, ?, ?::daterange ,?, ?, ?, ?)
-            """.trimIndent()) {
+            """.trimIndent()
+            ) {
                 setParams {
                     setString(1, it.status)
                     setString(2, it.statusaarsak)
@@ -44,12 +55,12 @@ class MedlemskapRepository(private val connection: DBConnection) {
         }
     }
 
-    fun hentMedlemskapUnntak(behandlings_medlemskap_unntak: Long): List<Segment<Unntak>> {
+    private fun hentMedlemskapUnntak(behandlingsMedlemskapUnntak: Long): List<Segment<Unntak>> {
         return connection.queryList(
             """SELECT * FROM MEDLEMSKAP_UNNTAK WHERE MEDLEMSKAP_UNNTAK_PERSON_ID = ?""".trimIndent()
         ) {
             setParams {
-                setLong(1, behandlings_medlemskap_unntak)
+                setLong(1, behandlingsMedlemskapUnntak)
             }
             setRowMapper {
                 val unntak = Unntak(
@@ -69,7 +80,7 @@ class MedlemskapRepository(private val connection: DBConnection) {
     }
 
     fun hentHvisEksisterer(behandlingId: BehandlingId): MedlemskapUnntakGrunnlag? {
-        val behandlings_medlemskap_unntak = connection.queryFirstOrNull(
+        val behandlingsMedlemskapUnntak = connection.queryFirstOrNull(
             "SELECT MEDLEMSKAP_UNNTAK_PERSON_ID FROM MEDLEMSKAP_UNNTAK_GRUNNLAG WHERE BEHANDLING_ID=? AND AKTIV=TRUE"
         ) {
             setParams {
@@ -77,10 +88,11 @@ class MedlemskapRepository(private val connection: DBConnection) {
             }
             setRowMapper { it.getLong("MEDLEMSKAP_UNNTAK_PERSON_ID") }
         }
-        if (behandlings_medlemskap_unntak == null) {
+        if (behandlingsMedlemskapUnntak == null) {
+            logger.info("Fant ingen aktive unntak for behandling med ID $behandlingId.")
             return null
         }
-        return MedlemskapUnntakGrunnlag(hentMedlemskapUnntak(behandlings_medlemskap_unntak))
+        return MedlemskapUnntakGrunnlag(hentMedlemskapUnntak(behandlingsMedlemskapUnntak))
     }
 
     private fun deaktiverEksisterendeGrunnlag(behandlingId: BehandlingId) {
