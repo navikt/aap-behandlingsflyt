@@ -10,20 +10,18 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Saksnummer
 import no.nav.aap.verdityper.sakogbehandling.TypeBehandling
 import java.time.LocalDate
+import java.util.*
 
 data class VilkårsResultatDTO(
-    val saksnummer: Saksnummer,
     val typeBehandling: TypeBehandling,
     val vilkår: List<VilkårDTO>,
 ) {
     companion object {
         fun fraDomeneObjekt(
-            saksnummer: Saksnummer,
             typeBehandling: TypeBehandling,
             vilkårsresultat: Vilkårsresultat,
         ): VilkårsResultatDTO {
             return VilkårsResultatDTO(
-                saksnummer,
                 typeBehandling,
                 vilkårsresultat.alle().map { VilkårDTO.fraDomeneObjekt(it) }
             )
@@ -62,3 +60,19 @@ data class VilkårsPeriodeDTO(
         }
     }
 }
+
+data class TilkjentYtelseDTO(val perioder: List<TilkjentYtelsePeriodeDTO>)
+
+data class TilkjentYtelsePeriodeDTO(
+    val dagsats: Number,
+    val fraDato: LocalDate,
+    val tilDato: LocalDate,
+    val gradering: Number
+)
+
+data class AvsluttetBehandlingDTO(
+    val behandlingsReferanse: UUID,
+    val saksnummer: Saksnummer,
+    val vilkårsResultat: VilkårsResultatDTO,
+    val tilkjentYtelse: TilkjentYtelseDTO
+)

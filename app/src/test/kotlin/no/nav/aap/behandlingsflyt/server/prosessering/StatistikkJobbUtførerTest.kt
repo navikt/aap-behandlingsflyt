@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.server.prosessering
 
 import io.mockk.every
 import io.mockk.mockk
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.dbtest.InitTestDatabase
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
@@ -12,8 +13,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.hendelse.avløp.VilkårsResultatHendelseDTO
+import no.nav.aap.behandlingsflyt.hendelse.statistikk.AvsluttetBehandlingDTO
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkHendelseDTO
+import no.nav.aap.behandlingsflyt.hendelse.statistikk.TilkjentYtelseDTO
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.VilkårDTO
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.VilkårsPeriodeDTO
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.VilkårsResultatDTO
@@ -53,13 +56,19 @@ class StatistikkJobbUtførerTest {
     }
 
     @Test
-    fun `statistikk-jobb avgir vilkårs-resultat korrekt`() {
+    fun `statistikk-jobb avgir avsluttet behandling-data korrekt`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val vilkårsResultatRepository = VilkårsresultatRepository(connection = connection)
             val behandlingRepository = BehandlingRepositoryImpl(connection)
             val sakService = SakService(connection)
             val utfører =
-                StatistikkJobbUtfører(StatistikkGateway(), vilkårsResultatRepository, behandlingRepository, sakService)
+                StatistikkJobbUtfører(
+                    StatistikkGateway(),
+                    vilkårsResultatRepository,
+                    behandlingRepository,
+                    sakService,
+                    TilkjentYtelseRepository(connection)
+                )
 
             val ident = Ident(
                 identifikator = "123",
@@ -75,11 +84,12 @@ class StatistikkJobbUtførerTest {
                 ident, periode = Periode(LocalDate.now().minusDays(10), LocalDate.now().plusDays(1))
             )
 
-            val id = behandlingRepository.opprettBehandling(
+            val opprettetBehandling = behandlingRepository.opprettBehandling(
                 sak.id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 årsaker = listOf()
-            ).id
+            )
+            val id = opprettetBehandling.id
 
             val vilkårsresultat = Vilkårsresultat(
                 vilkår = listOf(
@@ -120,26 +130,32 @@ class StatistikkJobbUtførerTest {
 
             assertThat(fakes.mottatteVilkårsResult).isNotEmpty()
             assertThat(fakes.mottatteVilkårsResult.first()).isEqualTo(
-                VilkårsResultatDTO(
+                AvsluttetBehandlingDTO(
+                    behandlingsReferanse = opprettetBehandling.referanse,
                     saksnummer = sak.saksnummer,
-                    typeBehandling = TypeBehandling.Førstegangsbehandling,
-                    vilkår = listOf(
-                        VilkårDTO(
-                            vilkårType = Vilkårtype.MEDLEMSKAP,
-                            perioder = listOf(
-                                VilkårsPeriodeDTO(
-                                    fraDato = LocalDate.now().minusDays(1),
-                                    tilDato = LocalDate.now().plusDays(1),
-                                    utfall = Utfall.OPPFYLT,
-                                    manuellVurdering = false,
-                                    avslagsårsak = null,
-                                    innvilgelsesårsak = null,
+                    tilkjentYtelse = TilkjentYtelseDTO(perioder = listOf()),
+                    vilkårsResultat =
+                    VilkårsResultatDTO(
+                        typeBehandling = TypeBehandling.Førstegangsbehandling,
+                        vilkår = listOf(
+                            VilkårDTO(
+                                vilkårType = Vilkårtype.MEDLEMSKAP,
+                                perioder = listOf(
+                                    VilkårsPeriodeDTO(
+                                        fraDato = LocalDate.now().minusDays(1),
+                                        tilDato = LocalDate.now().plusDays(1),
+                                        utfall = Utfall.OPPFYLT,
+                                        manuellVurdering = false,
+                                        avslagsårsak = null,
+                                        innvilgelsesårsak = null,
+                                    )
                                 )
                             )
                         )
                     )
                 )
             )
+
         }
     }
 
@@ -148,6 +164,7 @@ class StatistikkJobbUtførerTest {
         // Blir ikke kalt i denne metoden, så derfor bare mock
         val vilkårsResultatRepository = mockk<VilkårsresultatRepository>()
         val behandlingRepository = mockk<BehandlingRepository>()
+        val tilkjentYtelseRepository = mockk<TilkjentYtelseRepository>()
 
         // Mock her siden dette er eneste eksterne kall
         val sakService = mockk<SakService>()
@@ -159,7 +176,13 @@ class StatistikkJobbUtførerTest {
         )
 
         val utfører =
-            StatistikkJobbUtfører(StatistikkGateway(), vilkårsResultatRepository, behandlingRepository, sakService)
+            StatistikkJobbUtfører(
+                StatistikkGateway(),
+                vilkårsResultatRepository,
+                behandlingRepository,
+                sakService,
+                tilkjentYtelseRepository
+            )
 
         val payload = BehandlingFlytStoppetHendelse(
             saksnummer = Saksnummer("456"),

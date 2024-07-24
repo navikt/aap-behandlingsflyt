@@ -21,7 +21,7 @@ class StatistikkGateway(restClient: RestClient<String>? = null) {
         restClient.post<_, Unit>(uri = uri.resolve("/motta"), request = PostRequest(body = hendelse))
     }
 
-    fun vilkårsResultat(hendelse: VilkårsResultatDTO) {
-        restClient.post<_, Unit>(uri = uri.resolve("/vilkarsresultat"), request = PostRequest(body = hendelse))
+    fun avsluttetBehandling(hendelse: AvsluttetBehandlingDTO) {
+        restClient.post<_, Unit>(uri = uri.resolve("/avsluttetBehandling"), request = PostRequest(body = hendelse))
     }
 }

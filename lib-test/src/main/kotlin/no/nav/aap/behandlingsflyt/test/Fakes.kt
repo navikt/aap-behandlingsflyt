@@ -21,6 +21,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.PERSON_BOL
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PERSON_QUERY
+import no.nav.aap.behandlingsflyt.hendelse.statistikk.AvsluttetBehandlingDTO
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkHendelseDTO
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.VilkårsResultatDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.IDENT_QUERY
@@ -73,7 +74,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
 
     private val statistikk = embeddedServer(Netty, port = 0, module = { statistikkFake() }).apply { start() }
     val statistikkHendelser = mutableListOf<StatistikkHendelseDTO>()
-    val mottatteVilkårsResult = mutableListOf<VilkårsResultatDTO>()
+    val mottatteVilkårsResult = mutableListOf<AvsluttetBehandlingDTO>()
 
 
     init {
@@ -298,8 +299,8 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
                 statistikkHendelser.add(receive)
                 call.respond(HttpStatusCode.OK)
             }
-            post("/vilkarsresultat") {
-                val receive = call.receive<VilkårsResultatDTO>()
+            post("/avsluttetBehandling") {
+                val receive = call.receive<AvsluttetBehandlingDTO>()
                 this@statistikkFake.log.info("Statistikk mottok: {}", receive)
                 synchronized(mottatteVilkårsResult) {
                     mottatteVilkårsResult.add(receive)

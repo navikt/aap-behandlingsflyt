@@ -5,8 +5,11 @@ import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.hendelse.avløp.VilkårsResultatHendelseDTO
+import no.nav.aap.behandlingsflyt.hendelse.statistikk.AvsluttetBehandlingDTO
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkHendelseDTO
+import no.nav.aap.behandlingsflyt.hendelse.statistikk.TilkjentYtelseDTO
+import no.nav.aap.behandlingsflyt.hendelse.statistikk.TilkjentYtelsePeriodeDTO
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.VilkårsResultatDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
@@ -27,7 +30,8 @@ class StatistikkJobbUtfører(
     private val statistikkGateway: StatistikkGateway,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val behandlingRepository: BehandlingRepository,
-    private val sakService: SakService
+    private val sakService: SakService,
+    private val tilkjentYtelseRepository: TilkjentYtelseRepository
 ) : JobbUtfører {
     override fun utfør(input: JobbInput) {
         log.info("Utfører jobbinput statistikk: $input")
@@ -37,7 +41,7 @@ class StatistikkJobbUtfører(
 
         when (type) {
             StatistikkType.BehandlingStoppet -> håndterBehandlingStoppet(payload)
-            StatistikkType.AvsluttetBehandling -> håndterVilkårsResultat(payload)
+            StatistikkType.AvsluttetBehandling -> håndterAvsluttetBehandling(payload)
         }
 
     }
@@ -54,7 +58,7 @@ class StatistikkJobbUtfører(
         )
     }
 
-    private fun håndterVilkårsResultat(payload: String) {
+    private fun håndterAvsluttetBehandling(payload: String) {
         val hendelse = DefaultJsonMapper.fromJson<VilkårsResultatHendelseDTO>(payload)
 
         val behandling = behandlingRepository.hent(hendelse.behandlingId)
@@ -62,11 +66,29 @@ class StatistikkJobbUtfører(
         val sak = sakService.hent(behandling.sakId)
 
         val fraDomeneObjekt = VilkårsResultatDTO.fraDomeneObjekt(
-            saksnummer = sak.saksnummer,
             typeBehandling = behandling.typeBehandling(),
             vilkårsresultat = vilkårsresultat
         )
-        statistikkGateway.vilkårsResultat(fraDomeneObjekt)
+
+        val tilkjentYtelse = tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)
+
+        val tilkjentYtelseDTO = TilkjentYtelseDTO(perioder = tilkjentYtelse?.map {
+            TilkjentYtelsePeriodeDTO(
+                fraDato = it.periode.fom,
+                tilDato = it.periode.tom,
+                dagsats = it.verdi.dagsats.verdi(),
+                gradering = it.verdi.gradering.prosentverdi()
+            )
+        } ?: listOf())
+
+        statistikkGateway.avsluttetBehandling(
+            AvsluttetBehandlingDTO(
+                behandlingsReferanse = behandling.referanse,
+                saksnummer = sak.saksnummer,
+                vilkårsResultat = fraDomeneObjekt,
+                tilkjentYtelse = tilkjentYtelseDTO
+            )
+        )
     }
 
 
@@ -80,7 +102,8 @@ class StatistikkJobbUtfører(
                 StatistikkGateway(),
                 vilkårsresultatRepository,
                 behandlingRepository,
-                sakService
+                sakService,
+                TilkjentYtelseRepository(connection)
             )
         }
 
