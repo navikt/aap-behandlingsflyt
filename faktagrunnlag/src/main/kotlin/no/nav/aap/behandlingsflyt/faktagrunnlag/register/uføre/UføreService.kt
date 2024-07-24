@@ -19,7 +19,8 @@ class UføreService(
         val sak = sakService.hent(kontekst.sakId)
         val fødselsdato =
             requireNotNull(personopplysningRepository.hentHvisEksisterer(kontekst.behandlingId)?.personopplysning?.fødselsdato)
-        val uføregrad = uføreRegisterGateway.innhent(sak.person, fødselsdato)
+        //val uføregrad = uføreRegisterGateway.innhent(sak.person, fødselsdato)
+        val uføregrad = Uføre(Prosent(100))
 
         val behandlingId = kontekst.behandlingId
         val gamleData = uføreRepository.hentHvisEksisterer(behandlingId)
