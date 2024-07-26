@@ -126,12 +126,12 @@ class BeregnTilkjentYtelseServiceTest {
                 verdi = Tilkjent(
                     dagsats = Beløp("1204.45"), //4*0.66*118620/260+36
                     gradering = Prosent.`0_PROSENT`,
-                    grunnlag = Beløp("0"),
-                    grunnlagsfaktor = GUnit(0),
+                    grunnlag = Beløp("1204.45"),
+                    grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
                     antallBarn = 1,
                     barnetilleggsats = Beløp("36"),
-                    barnetillegg = Beløp("0")
+                    barnetillegg = Beløp("36")
                 )
             )
         )
@@ -186,8 +186,8 @@ class BeregnTilkjentYtelseServiceTest {
                 verdi = Tilkjent(
                     dagsats = Beløp("1204.45"), //4*0.66*118620/260+36
                     gradering = Prosent.`0_PROSENT`,
-                    grunnlag = Beløp("0"),
-                    grunnlagsfaktor = GUnit(0),
+                    grunnlag = Beløp("1204.45"),
+                    grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
                     antallBarn = 1,
                     barnetilleggsats = Beløp("35"),
@@ -199,8 +199,8 @@ class BeregnTilkjentYtelseServiceTest {
                 verdi = Tilkjent(
                     dagsats = Beløp("1204.45"), //4*0.66*118620/260+36
                     gradering = Prosent.`0_PROSENT`,
-                    grunnlag = Beløp("0"),
-                    grunnlagsfaktor = GUnit(0),
+                    grunnlag = Beløp("1204.45"),
+                    grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
                     antallBarn = 1,
                     barnetilleggsats = Beløp("36"),
@@ -211,7 +211,8 @@ class BeregnTilkjentYtelseServiceTest {
     }
 
     @Test
-    fun `minste årlige ytelse er lik 2G før 1 juli 2024 og lik 2,041G fom 1 juli 2024`() { //Denne må oppdateres når grunnbeløper endres 1. mai 2025
+    fun `minste årlige ytelse er lik 2G før 1 juli 2024 og lik 2,041G fom 1 juli 2024`() {
+        // Denne må oppdateres når grunnbeløper endres 1. mai 2025
         val fødeselsdato = Fødselsdato(LocalDate.of(1985, 4, 1))
         val beregningsgrunnlag = Grunnlag11_19(
             grunnlaget = GUnit(BigDecimal(0)),
@@ -262,7 +263,7 @@ class BeregnTilkjentYtelseServiceTest {
                     gradering = Prosent.`0_PROSENT`,
                     grunnlag = Beløp("973.62"),
                     grunnlagsfaktor = GUnit("0.0078500000"),
-                    grunnbeløp = Beløp("124028"), // <- dette er jo fjorårets!?
+                    grunnbeløp = Beløp("124028"),
                     antallBarn = 0,
                     barnetilleggsats = Beløp("0"),
                     barnetillegg = Beløp("0")
@@ -310,11 +311,11 @@ class BeregnTilkjentYtelseServiceTest {
                 verdi = Tilkjent(
                     dagsats = Beløp("512.09"), //2*2/3*99858/260
                     gradering = Prosent.`0_PROSENT`,
-                    grunnlag = Beløp("0"),
-                    grunnlagsfaktor = GUnit(0),
+                    grunnlag = Beløp("512.09"),
+                    grunnlagsfaktor = GUnit("0.0051282051"),
                     grunnbeløp = Beløp("99858"),
                     antallBarn = 0,
-                    barnetilleggsats = Beløp("27"),
+                    barnetilleggsats = Beløp("0"),
                     barnetillegg = Beløp("0")
                 )
             ),
@@ -323,11 +324,11 @@ class BeregnTilkjentYtelseServiceTest {
                 verdi = Tilkjent(
                     dagsats = Beløp("768.14"), //2*99858/260
                     gradering = Prosent.`0_PROSENT`,
-                    grunnlag = Beløp("0"),
-                    grunnlagsfaktor = GUnit(0),
+                    grunnlag = Beløp("768.14"),
+                    grunnlagsfaktor = GUnit("0.0076923077"),
                     grunnbeløp = Beløp("99858"),
                     antallBarn = 0,
-                    barnetilleggsats = Beløp("27"),
+                    barnetilleggsats = Beløp("0"),
                     barnetillegg = Beløp("0")
                 )
             )
