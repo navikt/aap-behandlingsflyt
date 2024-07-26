@@ -42,12 +42,13 @@ jobs:
           channel-id: "C02PPNUT6CD"
           payload: |
             {
-              "text": "Tester feilet for Behandlingsflyt!",
               "attachments": [
                 {
-                  "pretext": "Deployment started",
+                  "pretext": "Tester feilet for Behandlingsflyt! ⚠️",
                   "color": "danger",
                   "fields": [
+                  {"title": "Commit",
+                   "value": "<https://github.com/navikt/aap-behandlingsflyt/commit/$GITHUB_SHA|$GITHUB_SHA>", short: false}
                   ]
                 }
               ]
