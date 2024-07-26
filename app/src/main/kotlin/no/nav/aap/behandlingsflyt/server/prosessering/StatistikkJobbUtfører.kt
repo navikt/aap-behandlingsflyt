@@ -2,10 +2,18 @@ package no.nav.aap.behandlingsflyt.server.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingFlytStoppetHendelse
-import no.nav.aap.behandlingsflyt.hendelse.avløp.VilkårsResultatHendelseDTO
+import no.nav.aap.behandlingsflyt.hendelse.avløp.AvsluttetBehandlingHendelseDTO
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.AvsluttetBehandlingDTO
+import no.nav.aap.behandlingsflyt.hendelse.statistikk.BeregningsgrunnlagDTO
+import no.nav.aap.behandlingsflyt.hendelse.statistikk.Grunnlag11_19DTO
+import no.nav.aap.behandlingsflyt.hendelse.statistikk.GrunnlagUføreDTO
+import no.nav.aap.behandlingsflyt.hendelse.statistikk.GrunnlagYrkesskadeDTO
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkHendelseDTO
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.TilkjentYtelseDTO
@@ -31,7 +39,8 @@ class StatistikkJobbUtfører(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val behandlingRepository: BehandlingRepository,
     private val sakService: SakService,
-    private val tilkjentYtelseRepository: TilkjentYtelseRepository
+    private val tilkjentYtelseRepository: TilkjentYtelseRepository,
+    private val beregningsgrunnlagRepository: BeregningsgrunnlagRepository
 ) : JobbUtfører {
     override fun utfør(input: JobbInput) {
         log.info("Utfører jobbinput statistikk: $input")
@@ -58,8 +67,12 @@ class StatistikkJobbUtfører(
         )
     }
 
+    /**
+     * Skal kalles når en behandling er avsluttet for å levere statistikk til statistikk-appen.
+     * Payload er JSON siden dette kommer fra en jobb.
+     */
     private fun håndterAvsluttetBehandling(payload: String) {
-        val hendelse = DefaultJsonMapper.fromJson<VilkårsResultatHendelseDTO>(payload)
+        val hendelse = DefaultJsonMapper.fromJson<AvsluttetBehandlingHendelseDTO>(payload)
 
         val behandling = behandlingRepository.hent(hendelse.behandlingId)
         val vilkårsresultat = vilkårsresultatRepository.hent(hendelse.behandlingId)
@@ -81,15 +94,73 @@ class StatistikkJobbUtfører(
             )
         } ?: listOf())
 
+        if (tilkjentYtelseDTO.perioder.isEmpty()) {
+            log.info("Ingen tilkjente ytelser knyttet til avsluttet behandling ${behandling.id}.")
+        }
+
+        val grunnlag = beregningsgrunnlagRepository.hentHvisEksisterer(hendelse.behandlingId)
+
+        val beregningsGrunnlagDTO: BeregningsgrunnlagDTO = when (grunnlag) {
+            is Grunnlag11_19 -> BeregningsgrunnlagDTO(
+                grunnlag = grunnlag.grunnlaget().verdi.toDouble(),
+                er6GBegrenset = grunnlag.er6GBegrenset(),
+                grunnlag11_19dto = grunnlag1119dto(grunnlag),
+            )
+
+            is GrunnlagUføre -> BeregningsgrunnlagDTO(
+                grunnlag = grunnlag.grunnlaget().verdi.toDouble(),
+                er6GBegrenset = grunnlag.er6GBegrenset(),
+                grunnlagUføre = GrunnlagUføreDTO(
+                    type = grunnlag.type().toString(),
+                    grunnlag = grunnlag1119dto(grunnlag.underliggende()),
+                    grunnlagYtterligereNedsatt = grunnlag1119dto(grunnlag.underliggendeYtterligereNedsatt()),
+                    uføreInntektIKroner = grunnlag.uføreInntektIKroner().verdi(),
+                    uføreYtterligereNedsattArbeidsevneÅr = grunnlag.uføreYtterligereNedsattArbeidsevneÅr().value,
+                    uføregrad = grunnlag.uføregrad().prosentverdi(),
+                    uføreInntekterFraForegåendeÅr = grunnlag.underliggendeYtterligereNedsatt().inntekter()
+                        .associate { it.år.value.toString() to it.beløp.verdi() }
+                )
+            )
+
+            is GrunnlagYrkesskade -> BeregningsgrunnlagDTO(
+                grunnlag = grunnlag.grunnlaget().verdi.toDouble(),
+                er6GBegrenset = grunnlag.er6GBegrenset(),
+                grunnlagYrkesskade = GrunnlagYrkesskadeDTO(
+                    beregningsgrunnlag = grunnlag1119dto(grunnlag.underliggende() as Grunnlag11_19),
+                    andelYrkesskade = grunnlag.andelYrkesskade().prosentverdi(),
+                    andelSomSkyldesYrkesskade = grunnlag.andelSomSkyldesYrkesskade().verdi,
+                    andelSomIkkeSkyldesYrkesskade = grunnlag.andelSomIkkeSkyldesYrkesskade().verdi,
+                    antattÅrligInntektYrkesskadeTidspunktet = grunnlag.antattÅrligInntektYrkesskadeTidspunktet()
+                        .verdi(),
+                    benyttetAndelForYrkesskade = grunnlag.benyttetAndelForYrkesskade().prosentverdi(),
+                    grunnlagForBeregningAvYrkesskadeandel = grunnlag.grunnlagForBeregningAvYrkesskadeandel().verdi,
+                    grunnlagEtterYrkesskadeFordel = grunnlag.grunnlagEtterYrkesskadeFordel().verdi,
+                    terskelverdiForYrkesskade = grunnlag.terskelverdiForYrkesskade().prosentverdi(),
+                    yrkesskadeTidspunkt = grunnlag.yrkesskadeTidspunkt().value,
+                    yrkesskadeinntektIG = grunnlag.yrkesskadeinntektIG().verdi
+                )
+            )
+
+            null -> throw RuntimeException("Fant ikke grunnlag for behandling med ID: ${behandling.id}.")
+        }
+
+        log.info("Kaller aap-statistikk for sak ${sak.saksnummer}.")
+
         statistikkGateway.avsluttetBehandling(
             AvsluttetBehandlingDTO(
                 behandlingsReferanse = behandling.referanse,
                 saksnummer = sak.saksnummer,
                 vilkårsResultat = fraDomeneObjekt,
-                tilkjentYtelse = tilkjentYtelseDTO
+                tilkjentYtelse = tilkjentYtelseDTO,
+                beregningsGrunnlag = beregningsGrunnlagDTO
             )
         )
     }
+
+    private fun grunnlag1119dto(beregningsgrunnlag: Grunnlag11_19) =
+        Grunnlag11_19DTO(
+            inntekter = beregningsgrunnlag.inntekter().associate { it.år.value.toString() to it.beløp.verdi() }
+        )
 
 
     companion object : Jobb {
@@ -103,7 +174,8 @@ class StatistikkJobbUtfører(
                 vilkårsresultatRepository,
                 behandlingRepository,
                 sakService,
-                TilkjentYtelseRepository(connection)
+                TilkjentYtelseRepository(connection),
+                BeregningsgrunnlagRepository(connection)
             )
         }
 

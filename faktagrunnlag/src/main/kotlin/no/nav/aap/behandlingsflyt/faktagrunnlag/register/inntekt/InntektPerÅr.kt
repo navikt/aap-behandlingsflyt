@@ -33,4 +33,8 @@ class InntektPerÅr(val år: Year, val beløp: Beløp) :
         result = 31 * result + beløp.hashCode()
         return result
     }
+
+    override fun toString(): String {
+        return "InntektPerÅr(år=$år, beløp=$beløp)"
+    }
 }

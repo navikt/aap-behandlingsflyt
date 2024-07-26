@@ -5,15 +5,19 @@ import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.dbtest.InitTestDatabase
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.hendelse.avløp.AvsluttetBehandlingHendelseDTO
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingFlytStoppetHendelse
-import no.nav.aap.behandlingsflyt.hendelse.avløp.VilkårsResultatHendelseDTO
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.AvsluttetBehandlingDTO
+import no.nav.aap.behandlingsflyt.hendelse.statistikk.BeregningsgrunnlagDTO
+import no.nav.aap.behandlingsflyt.hendelse.statistikk.Grunnlag11_19DTO
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkHendelseDTO
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.TilkjentYtelseDTO
@@ -32,6 +36,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.json.DefaultJsonMapper
 import no.nav.aap.motor.JobbInput
+import no.nav.aap.verdityper.GUnit
 import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import no.nav.aap.verdityper.sakogbehandling.SakId
@@ -57,18 +62,11 @@ class StatistikkJobbUtførerTest {
 
     @Test
     fun `statistikk-jobb avgir avsluttet behandling-data korrekt`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        val (behandling, sak) = InitTestDatabase.dataSource.transaction { connection ->
             val vilkårsResultatRepository = VilkårsresultatRepository(connection = connection)
             val behandlingRepository = BehandlingRepositoryImpl(connection)
-            val sakService = SakService(connection)
-            val utfører =
-                StatistikkJobbUtfører(
-                    StatistikkGateway(),
-                    vilkårsResultatRepository,
-                    behandlingRepository,
-                    sakService,
-                    TilkjentYtelseRepository(connection)
-                )
+
+            val beregningsgrunnlagRepository = BeregningsgrunnlagRepository(connection)
 
             val ident = Ident(
                 identifikator = "123",
@@ -89,7 +87,14 @@ class StatistikkJobbUtførerTest {
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 årsaker = listOf()
             )
-            val id = opprettetBehandling.id
+            beregningsgrunnlagRepository.lagre(
+                behandlingId = opprettetBehandling.id,
+                Grunnlag11_19(
+                    grunnlaget = GUnit(7),
+                    er6GBegrenset = true, erGjennomsnitt = false,
+                    inntekter = listOf()
+                )
+            )
 
             val vilkårsresultat = Vilkårsresultat(
                 vilkår = listOf(
@@ -113,50 +118,70 @@ class StatistikkJobbUtførerTest {
                 )
             )
             vilkårsResultatRepository.lagre(
-                id, vilkårsresultat
+                opprettetBehandling.id, vilkårsresultat
             )
 
-            val payload = VilkårsResultatHendelseDTO(behandlingId = id)
-            val hendelse2 = DefaultJsonMapper.toJson(payload)
+            Pair(opprettetBehandling, sak)
+        }
 
-            // Act
+        val payload = AvsluttetBehandlingHendelseDTO(behandlingId = behandling.id)
+        val hendelse2 = DefaultJsonMapper.toJson(payload)
 
-            utfører.utfør(
+        // Act
+
+        InitTestDatabase.dataSource.transaction { connection ->
+            val sakService = SakService(connection)
+            val vilkårsResultatRepository = VilkårsresultatRepository(connection = connection)
+            val behandlingRepository = BehandlingRepositoryImpl(connection)
+            val beregningsgrunnlagRepository = BeregningsgrunnlagRepository(connection)
+
+            StatistikkJobbUtfører(
+                StatistikkGateway(),
+                vilkårsResultatRepository,
+                behandlingRepository,
+                sakService,
+                TilkjentYtelseRepository(connection),
+                beregningsgrunnlagRepository
+            ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
                     .medParameter("statistikk-type", StatistikkType.AvsluttetBehandling.toString())
             )
+        }
 
-            // Assert
+        // Assert
 
-            assertThat(fakes.mottatteVilkårsResult).isNotEmpty()
-            assertThat(fakes.mottatteVilkårsResult.first()).isEqualTo(
-                AvsluttetBehandlingDTO(
-                    behandlingsReferanse = opprettetBehandling.referanse,
-                    saksnummer = sak.saksnummer,
-                    tilkjentYtelse = TilkjentYtelseDTO(perioder = listOf()),
-                    vilkårsResultat =
-                    VilkårsResultatDTO(
-                        typeBehandling = TypeBehandling.Førstegangsbehandling,
-                        vilkår = listOf(
-                            VilkårDTO(
-                                vilkårType = Vilkårtype.MEDLEMSKAP,
-                                perioder = listOf(
-                                    VilkårsPeriodeDTO(
-                                        fraDato = LocalDate.now().minusDays(1),
-                                        tilDato = LocalDate.now().plusDays(1),
-                                        utfall = Utfall.OPPFYLT,
-                                        manuellVurdering = false,
-                                        avslagsårsak = null,
-                                        innvilgelsesårsak = null,
-                                    )
+        assertThat(fakes.mottatteVilkårsResult).isNotEmpty()
+        assertThat(fakes.mottatteVilkårsResult.first()).isEqualTo(
+            AvsluttetBehandlingDTO(
+                behandlingsReferanse = behandling.referanse,
+                saksnummer = sak.saksnummer,
+                tilkjentYtelse = TilkjentYtelseDTO(perioder = listOf()),
+                beregningsGrunnlag = BeregningsgrunnlagDTO(
+                    grunnlag = 7.0,
+                    er6GBegrenset = false,
+                    grunnlag11_19dto = Grunnlag11_19DTO(inntekter = mapOf())
+                ),
+                vilkårsResultat =
+                VilkårsResultatDTO(
+                    typeBehandling = TypeBehandling.Førstegangsbehandling,
+                    vilkår = listOf(
+                        VilkårDTO(
+                            vilkårType = Vilkårtype.MEDLEMSKAP,
+                            perioder = listOf(
+                                VilkårsPeriodeDTO(
+                                    fraDato = LocalDate.now().minusDays(1),
+                                    tilDato = LocalDate.now().plusDays(1),
+                                    utfall = Utfall.OPPFYLT,
+                                    manuellVurdering = false,
+                                    avslagsårsak = null,
+                                    innvilgelsesårsak = null,
                                 )
                             )
                         )
                     )
                 )
             )
-
-        }
+        )
     }
 
     @Test
@@ -165,6 +190,7 @@ class StatistikkJobbUtførerTest {
         val vilkårsResultatRepository = mockk<VilkårsresultatRepository>()
         val behandlingRepository = mockk<BehandlingRepository>()
         val tilkjentYtelseRepository = mockk<TilkjentYtelseRepository>()
+        val beregningsgrunnlagRepository = mockk<BeregningsgrunnlagRepository>()
 
         // Mock her siden dette er eneste eksterne kall
         val sakService = mockk<SakService>()
@@ -181,7 +207,8 @@ class StatistikkJobbUtførerTest {
                 vilkårsResultatRepository,
                 behandlingRepository,
                 sakService,
-                tilkjentYtelseRepository
+                tilkjentYtelseRepository,
+                beregningsgrunnlagRepository,
             )
 
         val payload = BehandlingFlytStoppetHendelse(

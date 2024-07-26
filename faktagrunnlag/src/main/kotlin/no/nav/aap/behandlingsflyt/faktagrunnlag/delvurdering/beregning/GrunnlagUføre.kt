@@ -14,10 +14,10 @@ class GrunnlagUføre(
     private val grunnlag: Grunnlag11_19,
     private val grunnlagYtterligereNedsatt: Grunnlag11_19,
     private val uføregrad: Prosent,
-    private val uføreInntekterFraForegåendeÅr: List<InntektPerÅr>, //uføre ikke oppjustert
-    private val uføreInntektIKroner: Beløp, //grunnlaget
+    private val uføreInntekterFraForegåendeÅr: List<InntektPerÅr>, // uføre ikke oppjustert
+    private val uføreInntektIKroner: Beløp, // grunnlaget
     private val uføreYtterligereNedsattArbeidsevneÅr: Year,
-    private val er6GBegrenset: Boolean, //skal være individuelt på hver inntekt
+    private val er6GBegrenset: Boolean, // skal være individuelt på hver inntekt
     private val erGjennomsnitt: Boolean,
 ) : Beregningsgrunnlag {
 
@@ -34,7 +34,7 @@ class GrunnlagUføre(
             grunnlaget = grunnlaget.verdi(),
             grunnlag = grunnlag.faktagrunnlag(),
             grunnlagYtterligereNedsatt = grunnlagYtterligereNedsatt.faktagrunnlag()
-            )
+        )
     }
 
     fun uføreInntektIKroner(): Beløp {

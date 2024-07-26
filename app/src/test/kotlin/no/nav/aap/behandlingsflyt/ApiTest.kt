@@ -1,11 +1,17 @@
 package no.nav.aap.behandlingsflyt
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FakePdlGateway
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.dbtestdata.ident
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapRepository
@@ -31,13 +37,14 @@ import no.nav.aap.httpclient.post
 import no.nav.aap.httpclient.request.GetRequest
 import no.nav.aap.httpclient.request.PostRequest
 import no.nav.aap.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.verdityper.GUnit
 import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.flyt.StegType
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import no.nav.aap.verdityper.sakogbehandling.TypeBehandling
 import org.assertj.core.api.Assertions.assertThat
+import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
@@ -129,7 +136,56 @@ class ApiTest {
         assertThat(medlemskapGrunnlag?.medlemskap?.unntak).isNotEmpty
     }
 
-    @Disabled
+    @Test
+    fun `kalle beregningsgrunnlag-api`() {
+        val ds = initDatasource(dbConfig)
+        val referanse = ds.transaction { connection ->
+            val personOgSakService = PersonOgSakService(connection, FakePdlGateway)
+            val behandlingRepo = BehandlingRepositoryImpl(connection)
+            val sak =
+                personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
+            val behandling = behandlingRepo.opprettBehandling(
+                sak.id,
+                listOf(Årsak(type = EndringType.MOTTATT_SØKNAD)),
+                TypeBehandling.Førstegangsbehandling
+            )
+            val beregningsgrunnlagRepository = BeregningsgrunnlagRepository(connection)
+            beregningsgrunnlagRepository.lagre(
+                behandlingId = behandling.id,
+                Grunnlag11_19(
+                    grunnlaget = GUnit(7),
+                    er6GBegrenset = true, erGjennomsnitt = false,
+                    inntekter = listOf()
+                )
+            )
+            behandling.referanse
+        }
+
+        val asJSON: JsonNode? = client.get(
+            URI.create("http://localhost:8080/api/beregning/grunnlag/").resolve(referanse.toString()),
+            GetRequest()
+        ) { x, _ -> ObjectMapper().readTree(x) }
+
+        @Language("JSON") val expectedJSON =
+            """{
+  "grunnlag": {
+    "verdi": 7.0000000000
+  },
+  "faktagrunnlag": {
+    "grunnlaget": 7.0000000000
+  },
+  "grunnlag11_19": {
+    "grunnlaget": 7.0000000000,
+    "er6GBegrenset": false,
+    "erGjennomsnitt": false,
+    "inntekter": {}
+  },
+  "grunnlagUføre": null,
+  "grunnlagYrkesskade": null
+}"""
+        assertThat(asJSON).isEqualTo(ObjectMapper().readTree(expectedJSON))
+    }
+
     @Test
     fun test() {
         fakes.leggTil(
@@ -156,14 +212,10 @@ class ApiTest {
             )
         )
 
-        val utvidetSak: UtvidetSaksinfoDTO? = client.get(
-            URI.create("http://localhost:8080/").resolve("api/sak/").resolve(responseSak.saksnummer),
-            GetRequest()
-        )
+
+        val utvidetSak = kallInntilKlar { hentUtivdedSaksInfo(responseSak) }
 
         requireNotNull(utvidetSak)
-
-        Thread.sleep(Duration.ofSeconds(10))
 
         data class EndringDTO(
             val status: no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Status,
@@ -189,16 +241,51 @@ class ApiTest {
             val versjon: Long
         )
 
-        val behandling: DetaljertBehandlingDTO? = client.get(
-            URI.create("http://localhost:8080/")
-                .resolve("api/behandling/")
-                .resolve(utvidetSak.behandlinger.first().referanse.toString()),
-            GetRequest()
-        )
+        val behandling = kallInntilKlar {
+            client.get<DetaljertBehandlingDTO>(
+                URI.create("http://localhost:8080/")
+                    .resolve("api/behandling/")
+                    .resolve(utvidetSak.behandlinger.first().referanse.toString()),
+                GetRequest()
+            )
+        }
 
         println(behandling)
+    }
 
-        assertThat(true).isTrue
+    private fun <E> kallInntilKlar(block: () -> E): E? {
+        return runBlocking {
+            suspend {
+                var utvidedSak: E? = null
+                val maxTries = 10
+                var tries = 0
+                while (tries < maxTries) {
+                    try {
+                        utvidedSak = block()
+                        delay(100)
+                        tries++
+
+                    } catch (e: Exception) {
+                        println("Exception: $e")
+                    }
+                }
+                utvidedSak
+            }.invoke()
+        }
+    }
+
+    private fun hentUtivdedSaksInfo(
+        responseSak: SaksinfoDTO,
+    ): UtvidetSaksinfoDTO? {
+        val utvidetSak3: UtvidetSaksinfoDTO? = client.get(
+            URI.create("http://localhost:8080/").resolve("api/sak/").resolve(responseSak.saksnummer),
+            GetRequest()
+        )
+        if (utvidetSak3?.behandlinger?.isNotEmpty() == true) {
+            println("GOT HERE: $utvidetSak3")
+            return utvidetSak3
+        }
+        return null
     }
 }
 

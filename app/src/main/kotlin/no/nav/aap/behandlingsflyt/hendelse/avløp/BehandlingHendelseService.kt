@@ -22,7 +22,7 @@ class BehandlingHendelseService(
      */
     fun avsluttet(behandling: Behandling) {
         val vilkårsResultatDTO =
-            VilkårsResultatHendelseDTO(behandling.id)
+            AvsluttetBehandlingHendelseDTO(behandling.id)
 
         val payload = DefaultJsonMapper.toJson(vilkårsResultatDTO)
 

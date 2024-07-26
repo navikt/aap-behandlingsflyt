@@ -39,6 +39,10 @@ class Fødselsdato(private val dato: LocalDate) {
         return dato.hashCode()
     }
 
+    override fun toString(): String {
+        return "Fødselsdato(dato=$dato)"
+    }
+
     companion object {
         fun parse(fødselsdato: CharSequence): Fødselsdato {
             return Fødselsdato(LocalDate.parse(fødselsdato))
