@@ -48,7 +48,7 @@ jobs:
                   "color": "danger",
                   "fields": [
                   {"title": "Commit",
-                   "value": "<https://github.com/navikt/aap-behandlingsflyt/commit/${GITHUB_SHA|$GITHUB_SHA}>",
+                   "value": "<https://github.com/navikt/aap-behandlingsflyt/commit/${{ github.sha }}>",
                    "short": false}
                   ]
                 }
