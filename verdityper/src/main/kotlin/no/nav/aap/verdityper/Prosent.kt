@@ -39,7 +39,7 @@ class Prosent private constructor(verdi: BigDecimal) : Comparable<Prosent> {
         return this
     }
 
-    fun kompliment(): Prosent {
+    fun komplement(): Prosent {
         return `100_PROSENT`.minus(this)
     }
 

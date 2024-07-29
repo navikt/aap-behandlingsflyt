@@ -15,7 +15,7 @@ class Beregning(
         val beregningMedEllerUtenUføre = if (input.skalBeregneMedUføre()) {
             val ikkeOppjusterteInntekter = input.utledForYtterligereNedsatt()
             val oppjusterteInntekter = ikkeOppjusterteInntekter.map {
-                InntektPerÅr(it.år, it.beløp.dividert(input.uføregrad().kompliment()))
+                InntektPerÅr(it.år, it.beløp.dividert(input.uføregrad().komplement()))
             }
             // år kommer herfra //6G begrensning ligger her samt gjennomsnitt
             val beregningVedUføre = beregn(oppjusterteInntekter.toSet())
