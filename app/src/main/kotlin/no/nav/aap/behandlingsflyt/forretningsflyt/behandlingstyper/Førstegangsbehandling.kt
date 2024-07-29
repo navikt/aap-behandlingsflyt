@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.SøknadService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.Institusjonsopphold.InstitusjonsoppholdService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapService

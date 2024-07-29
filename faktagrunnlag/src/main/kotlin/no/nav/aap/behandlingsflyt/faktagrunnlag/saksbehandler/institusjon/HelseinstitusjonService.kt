@@ -2,8 +2,8 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon
 
 import HelseinstitusjonVurderingDto
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.Institusjonsopphold.InstitusjonsoppholdService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.Institusjonsopphold.Institusjonstype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.HelseinstitusjonGrunnlagResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.InstitusjonsoppholdDto
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling

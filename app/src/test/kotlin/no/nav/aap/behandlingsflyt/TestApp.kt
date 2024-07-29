@@ -10,8 +10,8 @@ import io.ktor.server.netty.*
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.SøknadStudentDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.Institusjonsopphold.Institusjonstype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.Institusjonsopphold.Oppholdstype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.TestHendelsesMottak

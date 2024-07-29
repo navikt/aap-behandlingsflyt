@@ -1,7 +1,7 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.register.Institusjonsopphold.adapter
+package no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.adapter
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.Institusjonsopphold.Institusjonsopphold
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.Institusjonsopphold.InstitusjonsoppholdGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonsopphold
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.httpclient.ClientConfig
 import no.nav.aap.httpclient.Header

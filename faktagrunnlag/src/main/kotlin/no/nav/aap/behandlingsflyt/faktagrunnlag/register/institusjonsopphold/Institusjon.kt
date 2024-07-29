@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.register.Institusjonsopphold
+package no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold
 
 
 class Institusjon(

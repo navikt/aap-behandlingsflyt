@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.Institusjonsopphold.Institusjon
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
 import no.nav.aap.tidslinje.Segment
 import java.time.LocalDate
 

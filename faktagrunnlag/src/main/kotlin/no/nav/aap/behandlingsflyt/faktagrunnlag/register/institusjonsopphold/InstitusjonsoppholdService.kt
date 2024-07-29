@@ -1,9 +1,9 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.register.Institusjonsopphold
+package no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.Institusjonsopphold.adapter.InstitusjonsoppholdGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.adapter.InstitusjonsoppholdGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.verdityper.flyt.FlytKontekst
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
@@ -11,7 +11,7 @@ import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 class InstitusjonsoppholdService private constructor(
     private val sakService: SakService,
     private val institusjonsoppholdRepository: InstitusjonsoppholdRepository,
-    private val InstitusjonsoppholdRegisterGateway: InstitusjonsoppholdGateway
+    private val institusjonsoppholdRegisterGateway: InstitusjonsoppholdGateway
 ) : Informasjonskrav {
 
     override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekst): Boolean {
@@ -22,7 +22,7 @@ class InstitusjonsoppholdService private constructor(
 
         val rettighetsperiode = sak.rettighetsperiode
 
-        val institusjonsopphold = InstitusjonsoppholdRegisterGateway.innhent(sak.person)
+        val institusjonsopphold = institusjonsoppholdRegisterGateway.innhent(sak.person)
             .filter { it.periode().overlapper(rettighetsperiode) }
 
         institusjonsoppholdRepository.lagreOpphold(behandlingId, institusjonsopphold)
