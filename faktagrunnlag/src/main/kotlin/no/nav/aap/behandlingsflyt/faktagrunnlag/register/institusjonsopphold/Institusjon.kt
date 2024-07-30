@@ -5,6 +5,7 @@ class Institusjon(
     val type: Institusjonstype,
     val kategori: Oppholdstype,
     val orgnr:String,
+    val navn: String
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

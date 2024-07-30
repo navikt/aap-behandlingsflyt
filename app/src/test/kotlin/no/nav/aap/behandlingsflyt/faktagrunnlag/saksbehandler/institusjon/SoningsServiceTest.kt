@@ -46,7 +46,8 @@ class SoningsServiceTest {
                     Institusjon(
                         type = Institusjonstype.FO,
                         kategori = Oppholdstype.S,
-                        orgnr = "12345"
+                        orgnr = "12345",
+                        navn = "Anstalten"
                     )
                 )
             )
@@ -63,7 +64,7 @@ class SoningsServiceTest {
                 status = "Ukjent",
                 institusjonstype = Institusjonstype.FO.beskrivelse,
                 oppholdstype = Oppholdstype.S.beskrivelse,
-                kildeinstitusjon = "12345",
+                kildeinstitusjon = "Anstalten",
                 avsluttetDato = toDate,
                 oppholdFra = fromDate
             )

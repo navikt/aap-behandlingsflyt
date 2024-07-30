@@ -45,7 +45,7 @@ data class Institusjonsopphold(
 
     private val endringstidspunkt: LocalDateTime? = null,
 
-    private val institusjonsnavn: String? = null,
+    val institusjonsnavn: String? = null,
 
     private val avdelingsnavn: String? = null,
 )

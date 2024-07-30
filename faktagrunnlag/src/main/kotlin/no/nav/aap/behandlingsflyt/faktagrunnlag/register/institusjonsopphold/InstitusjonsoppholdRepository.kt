@@ -21,7 +21,8 @@ class InstitusjonsoppholdRepository(private val connection: DBConnection) {
                 val institusjonsopphold = Institusjon(
                     Institusjonstype.valueOf(it.getString("INSTITUSJONSTYPE")),
                     Oppholdstype.valueOf(it.getString("KATEGORI")),
-                    it.getString("ORGNR")
+                    it.getString("ORGNR"),
+                    it.getString("INSTITUSJONSNAVN")
                 )
                 Segment(
                     it.getPeriode("PERIODE"),
@@ -86,7 +87,7 @@ class InstitusjonsoppholdRepository(private val connection: DBConnection) {
         institusjonsopphold.forEach { opphold ->
             connection.execute(
                 """
-                INSERT INTO OPPHOLD (INSTITUSJONSTYPE, KATEGORI, ORGNR, PERIODE, OPPHOLD_PERSON_ID) VALUES (?, ?, ?, ?::daterange, ?)
+                INSERT INTO OPPHOLD (INSTITUSJONSTYPE, KATEGORI, ORGNR, PERIODE, OPPHOLD_PERSON_ID, INSTITUSJONSNAVN) VALUES (?, ?, ?, ?::daterange, ?, ?)
             """.trimIndent()
             ) {
                 setParams {
@@ -95,6 +96,7 @@ class InstitusjonsoppholdRepository(private val connection: DBConnection) {
                     setString(3, opphold.orgnr)
                     setPeriode(4, Periode(opphold.startdato, opphold.sluttdato ?: LocalDate.MAX))
                     setLong(5, oppholdPersonId)
+                    setString(6, opphold.institusjonsnavn)
                 }
             }
         }

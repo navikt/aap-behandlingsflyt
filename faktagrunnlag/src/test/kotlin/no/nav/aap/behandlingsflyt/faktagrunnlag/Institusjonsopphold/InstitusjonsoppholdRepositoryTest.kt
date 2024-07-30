@@ -37,7 +37,14 @@ class InstitusjonsoppholdRepositoryTest {
 
             val institusjonsoppholdRepository = InstitusjonsoppholdRepository(connection)
             val institusjonsopphold = listOf(
-                Institusjonsopphold.nyttOpphold("AS", "A", LocalDate.now(), LocalDate.now().plusDays(1), "123456789")
+                Institusjonsopphold.nyttOpphold(
+                    "AS",
+                    "A",
+                    LocalDate.now(),
+                    LocalDate.now().plusDays(1),
+                    "123456789",
+                    "Azkaban"
+                )
             )
             institusjonsoppholdRepository.lagreOpphold(behandling.id, institusjonsopphold)
 
@@ -48,7 +55,8 @@ class InstitusjonsoppholdRepositoryTest {
                 Institusjon(
                     Institusjonstype.AS,
                     Oppholdstype.A,
-                    "123456789"
+                    "123456789",
+                    "Azkaban"
                 )
             )
         }
@@ -63,7 +71,7 @@ class InstitusjonsoppholdRepositoryTest {
 
             val institusjonsoppholdRepository = InstitusjonsoppholdRepository(connection)
             val institusjonsopphold = listOf(
-                Institusjonsopphold.nyttOpphold("AS", "A", LocalDate.now(), LocalDate.now().plusDays(1), "123456789")
+                Institusjonsopphold.nyttOpphold("AS", "A", LocalDate.now(), LocalDate.now().plusDays(1), "123456789", "Azkaban")
             )
             institusjonsoppholdRepository.lagreOpphold(behandling.id, institusjonsopphold)
             val sak2 = sak(connection)
@@ -77,7 +85,8 @@ class InstitusjonsoppholdRepositoryTest {
                 Institusjon(
                     Institusjonstype.AS,
                     Oppholdstype.A,
-                    "123456789"
+                    "123456789",
+                    "Azkaban"
                 )
             )
 

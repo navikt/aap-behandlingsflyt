@@ -133,7 +133,8 @@ private fun genererFengselsopphold() = Institusjonsopphold(
     kategori = Oppholdstype.S.name,
     institusjonstype = Institusjonstype.FO.name,
     forventetSluttdato = LocalDate.now().plusYears(1),
-    startdato = LocalDate.now().minusYears(2)
+    startdato = LocalDate.now().minusYears(2),
+    institusjonsnavn = "Azkaban"
 )
 
 private fun genererSykehusopphold() = Institusjonsopphold(
@@ -141,7 +142,8 @@ private fun genererSykehusopphold() = Institusjonsopphold(
     kategori = Oppholdstype.H.name,
     institusjonstype = Institusjonstype.HS.name,
     forventetSluttdato = LocalDate.now().plusYears(1),
-    startdato = LocalDate.now().minusYears(2)
+    startdato = LocalDate.now().minusYears(2),
+    institusjonsnavn = "St. Mungos Hospital"
 )
 
 private fun genererBarn(dto: TestBarn): TestPerson {

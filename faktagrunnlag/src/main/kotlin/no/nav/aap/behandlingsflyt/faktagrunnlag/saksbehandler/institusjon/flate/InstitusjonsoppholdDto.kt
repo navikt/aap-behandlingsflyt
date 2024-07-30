@@ -18,7 +18,7 @@ data class InstitusjonsoppholdDto(
                 institusjonstype = institusjonsopphold.verdi.type.beskrivelse,
                 oppholdstype = institusjonsopphold.verdi.kategori.beskrivelse,
                 status = "Ukjent",  // TODO finn ut hva som skal være her
-                kildeinstitusjon = institusjonsopphold.verdi.orgnr,
+                kildeinstitusjon = institusjonsopphold.verdi.navn,
                 oppholdFra = institusjonsopphold.periode.fom,
                 avsluttetDato = institusjonsopphold.periode.tom
             )
