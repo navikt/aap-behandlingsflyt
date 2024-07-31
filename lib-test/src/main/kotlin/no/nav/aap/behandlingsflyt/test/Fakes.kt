@@ -346,39 +346,47 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
                                 "dokumentoversiktFagsak": {
                                   "journalposter": [
                                     {
-                                      "journalpostId": "453876204",
+                                      "journalpostId": "453877977",
                                       "behandlingstema": null,
                                       "antallRetur": null,
                                       "kanal": "NAV_NO",
                                       "innsynsregelBeskrivelse": "Standardreglene avgjør om dokumentet vises",
-                                      "sak": {
-                                        "datoOpprettet": "2024-06-20T11:01:14",
-                                        "fagsakId": "4LE7Uo0",
-                                        "fagsaksystem": "KELVIN",
-                                        "sakstype": "FAGSAK",
-                                        "tema": "AAP"
-                                      },
                                       "dokumenter": [
                                         {
-                                          "dokumentInfoId": "454271758",
+                                          "dokumentInfoId": "454273798",
                                           "tittel": "Søknad om Arbeidsavklaringspenger",
                                           "brevkode": "NAV 11-13.05",
-                                          "Dokumentstatus": null,
+                                          "dokumentstatus": null,
                                           "datoFerdigstilt": null,
-                                          "originalJournalpostId": "453876204",
+                                          "originalJournalpostId": "453877977",
                                           "skjerming": null,
                                           "logiskeVedlegg": [],
                                           "dokumentvarianter": [
                                             {
                                               "variantformat": "ARKIV",
-                                              "filnavn": null,
-                                              "saksbehandlerHarTilgang": false,
+                                              "saksbehandlerHarTilgang": true,
                                               "skjerming": null
                                             },
                                             {
                                               "variantformat": "ORIGINAL",
-                                              "filnavn": null,
-                                              "saksbehandlerHarTilgang": false,
+                                              "saksbehandlerHarTilgang": true,
+                                              "skjerming": null
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "dokumentInfoId": "454273829",
+                                          "tittel": "Annen dokumentasjon",
+                                          "brevkode": null,
+                                          "dokumentstatus": null,
+                                          "datoFerdigstilt": null,
+                                          "originalJournalpostId": "453877977",
+                                          "skjerming": null,
+                                          "logiskeVedlegg": [],
+                                          "dokumentvarianter": [
+                                            {
+                                              "variantformat": "ARKIV",
+                                              "saksbehandlerHarTilgang": true,
                                               "skjerming": null
                                             }
                                           ]
@@ -386,79 +394,30 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
                                       ]
                                     },
                                     {
-                                      "journalpostId": "453871794",
+                                      "journalpostId": "453873496",
                                       "behandlingstema": null,
                                       "antallRetur": null,
                                       "kanal": "NAV_NO",
                                       "innsynsregelBeskrivelse": "Standardreglene avgjør om dokumentet vises",
-                                      "sak": {
-                                        "datoOpprettet": "2024-05-16T14:46:27",
-                                        "fagsakId": "4LE7Uo0",
-                                        "fagsaksystem": "KELVIN",
-                                        "sakstype": "FAGSAK",
-                                        "tema": "AAP"
-                                      },
                                       "dokumenter": [
                                         {
-                                          "dokumentInfoId": "454266758",
+                                          "dokumentInfoId": "454268545",
                                           "tittel": "Søknad om Arbeidsavklaringspenger",
                                           "brevkode": "NAV 11-13.05",
                                           "dokumentstatus": null,
                                           "datoFerdigstilt": null,
-                                          "originalJournalpostId": "453871794",
+                                          "originalJournalpostId": "453873496",
                                           "skjerming": null,
                                           "logiskeVedlegg": [],
                                           "dokumentvarianter": [
                                             {
                                               "variantformat": "ARKIV",
-                                              "filnavn": null,
-                                              "saksbehandlerHarTilgang": false,
+                                              "saksbehandlerHarTilgang": true,
                                               "skjerming": null
                                             },
                                             {
                                               "variantformat": "ORIGINAL",
-                                              "filnavn": null,
-                                              "saksbehandlerHarTilgang": false,
-                                              "skjerming": null
-                                            }
-                                          ]
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "journalpostId": "453870298",
-                                      "behandlingstema": null,
-                                      "antallRetur": null,
-                                      "kanal": "NAV_NO",
-                                      "innsynsregelBeskrivelse": "Standardreglene avgjør om dokumentet vises",
-                                      "sak": {
-                                        "datoOpprettet": "2024-05-03T14:45:57",
-                                        "fagsakId": "4LE7Uo0",
-                                        "fagsaksystem": "KELVIN",
-                                        "sakstype": "FAGSAK",
-                                        "tema": "AAP"
-                                      },
-                                      "dokumenter": [
-                                        {
-                                          "dokumentInfoId": "454265122",
-                                          "tittel": "Søknad om Arbeidsavklaringspenger",
-                                          "brevkode": "NAV 11-13.05",
-                                          "dokumentstatus": null,
-                                          "datoFerdigstilt": null,
-                                          "originalJournalpostId": "453870298",
-                                          "skjerming": null,
-                                          "logiskeVedlegg": [],
-                                          "dokumentvarianter": [
-                                            {
-                                              "variantformat": "ARKIV",
-                                              "filnavn": null,
-                                              "saksbehandlerHarTilgang": false,
-                                              "skjerming": null
-                                            },
-                                            {
-                                              "variantformat": "ORIGINAL",
-                                              "filnavn": null,
-                                              "saksbehandlerHarTilgang": false,
+                                              "saksbehandlerHarTilgang": true,
                                               "skjerming": null
                                             }
                                           ]
@@ -467,10 +426,10 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
                                     }
                                   ],
                                   "sideInfo": {
-                                    "sluttpeker": "NDUzODcwMjk4",
+                                    "sluttpeker": "NDUzODczNDk2",
                                     "finnesNesteSide": false,
-                                    "antall": 3,
-                                    "totaltAntall": 3
+                                    "antall": 2,
+                                    "totaltAntall": 2
                                   }
                                 }
                               }

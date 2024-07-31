@@ -91,7 +91,7 @@ fun List<Journalpost>.tilArkivDokumenter(): List<Dokument> {
 data class Dokument(
     val dokumentInfoId: String,
     val journalpostId: String,
-    val brevkode: String,
+    val brevkode: String?,
     val tittel: String,
     val variantformat: Variantformat
 )
@@ -106,6 +106,7 @@ internal data class SafRequest(val query: String, val variables: Variables) {
 }
 
 private const val fagsakId = "\$fagsakId"
+// Skjema her: https://github.com/navikt/saf/blob/master/app/src/main/resources/schemas/saf.graphqls
 private val dokumentOversiktQuery = """
 query ($fagsakId: String!)
 {

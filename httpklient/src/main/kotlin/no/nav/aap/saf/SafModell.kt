@@ -18,7 +18,7 @@ data class Dokumentvariant(val variantformat: Variantformat)
 data class Dokument(
     val dokumentInfoId: String,
     val tittel: String,
-    val brevkode: String /* TODO: enum */,
+    val brevkode: String? /* TODO: enum */,
     val dokumentvarianter: List<Dokumentvariant>
 )
 
