@@ -31,6 +31,9 @@ class Prosent private constructor(verdi: BigDecimal) : Comparable<Prosent> {
         return verdi.multiply(BigDecimal(100)).intValueExact()
     }
 
+    /**
+     * Om this-verdien er større enn [terskelverdi], rund opp til 100%.
+     */
     fun justertFor(terskelverdi: Prosent): Prosent {
         if (this > terskelverdi) {
             return `100_PROSENT`
