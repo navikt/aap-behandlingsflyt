@@ -78,7 +78,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.3")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.3")
     testImplementation("org.assertj:assertj-core:3.26.3")
-    testImplementation("org.testcontainers:postgresql:1.20.0")
+    testImplementation("org.testcontainers:postgresql:1.20.1")
     testImplementation("io.mockk:mockk:1.13.12")
     testImplementation(kotlin("test"))
 }
