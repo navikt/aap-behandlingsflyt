@@ -3,7 +3,7 @@ dependencies {
     implementation("org.flywaydb:flyway-database-postgresql:10.17.0")
     runtimeOnly("org.postgresql:postgresql:42.7.3")
 
-    implementation("org.testcontainers:postgresql:1.20.0")
+    implementation("org.testcontainers:postgresql:1.20.1")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.3")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.3")
