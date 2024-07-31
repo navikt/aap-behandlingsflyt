@@ -115,7 +115,7 @@ internal fun Application.server(dbConfig: DbConfig) {
 
                 else -> {
                     LoggerFactory.getLogger(App::class.java)
-                        .info("Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
+                        .warn("Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
                     call.respond(status = HttpStatusCode.InternalServerError, message = ErrorRespons(cause.message))
                 }
             }
