@@ -7,18 +7,20 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SattPåVen
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.utledType
+import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.server.prosessering.ProsesserBehandlingJobbUtfører
-import no.nav.aap.behandlingsflyt.server.prosessering.StoppetHendelseJobbUtfører
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.verdityper.flyt.FlytKontekst
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import org.slf4j.LoggerFactory
 
-class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
+class AvklaringsbehovOrkestrator(
+    private val connection: DBConnection, private val behandlingHendelseService: BehandlingHendelseService
+) {
 
     private val avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection)
     private val behandlingRepository = BehandlingRepositoryImpl(connection)
@@ -140,10 +142,6 @@ class AvklaringsbehovOrkestrator(private val connection: DBConnection) {
 
         avklaringsbehovene.validateTilstand(behandling = behandling)
         avklaringsbehovene.validerPlassering(behandling = behandling)
-        flytJobbRepository.leggTil(
-            JobbInput(jobb = StoppetHendelseJobbUtfører).forBehandling(
-                behandling.sakId, behandling.id
-            )
-        )
+        behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
     }
 }

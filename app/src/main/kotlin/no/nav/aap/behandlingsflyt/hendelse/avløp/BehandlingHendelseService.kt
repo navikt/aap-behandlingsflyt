@@ -11,6 +11,9 @@ import no.nav.aap.behandlingsflyt.server.prosessering.StoppetHendelseJobbUtføre
 import no.nav.aap.json.DefaultJsonMapper
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
+import org.slf4j.LoggerFactory
+
+private val log = LoggerFactory.getLogger(BehandlingHendelseService::class.java)
 
 class BehandlingHendelseService(
     private val flytJobbRepository: FlytJobbRepository,
@@ -64,6 +67,8 @@ class BehandlingHendelseService(
         )
 
         val payload = DefaultJsonMapper.toJson(hendelse)
+
+        log.info("Legger til flytjobber til statistikk og stoppethendels for behandling: ${behandling.id}")
         flytJobbRepository.leggTil(
             JobbInput(jobb = StoppetHendelseJobbUtfører).medPayload(payload)
         )

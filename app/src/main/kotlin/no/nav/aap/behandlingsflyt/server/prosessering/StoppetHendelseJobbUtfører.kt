@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.BehandlingsFlytStoppetHendelseDTO
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.json.DefaultJsonMapper
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
@@ -25,14 +24,13 @@ class StoppetHendelseJobbUtfører private constructor() : JobbUtfører {
             personident = hendelse.personIdent,
             saksnummer = hendelse.saksnummer,
             status = hendelse.status,
-            )
+        )
 
         OppgavestyringGateway.varsleHendelse(hendelseTilOppgaveStyring)
     }
 
     companion object : Jobb {
         override fun konstruer(connection: DBConnection): JobbUtfører {
-            val sakService = SakService(connection)
             return StoppetHendelseJobbUtfører()
         }
 
