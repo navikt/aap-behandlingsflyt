@@ -8,10 +8,17 @@ import no.nav.aap.json.DefaultJsonMapper
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
+import org.slf4j.LoggerFactory
+
+private val log = LoggerFactory.getLogger(StoppetHendelseJobbUtfører::class.java)
 
 class StoppetHendelseJobbUtfører private constructor() : JobbUtfører {
 
     override fun utfør(input: JobbInput) {
+        if (!input.harPayload()) {
+            log.warn("Tom input payload! Hopper over. Midlertidig løsning.")
+            return
+        }
         val payload = input.payload()
 
         val hendelse = DefaultJsonMapper.fromJson<BehandlingFlytStoppetHendelse>(payload)
