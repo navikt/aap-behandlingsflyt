@@ -63,6 +63,31 @@ class AvklaringsbehovRepositoryTest {
             listOf(Årsak(EndringType.MOTTATT_SØKNAD))
         ).behandling
     }
+
+    @Test
+    fun hentAvklaringsbehovene() {
+        // TODO implementer
+    }
+
+    @Test
+    fun kreverToTrinn() {
+        // TODO implementer
+    }
+
+    @Test
+    fun opprett() {
+        // TODO implementer
+    }
+
+    @Test
+    fun endre() {
+        // TODO implementer
+    }
+
+    @Test
+    fun endreVentepunkt() {
+        // TODO implementer
+    }
 }
 
 object FakePdlGateway : IdentGateway {
