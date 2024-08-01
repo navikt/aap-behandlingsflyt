@@ -15,10 +15,6 @@ private val log = LoggerFactory.getLogger(StoppetHendelseJobbUtfører::class.jav
 class StoppetHendelseJobbUtfører private constructor() : JobbUtfører {
 
     override fun utfør(input: JobbInput) {
-        if (!input.harPayload()) {
-            log.warn("Tom input payload! Hopper over. Midlertidig løsning.")
-            return
-        }
         val payload = input.payload()
 
         val hendelse = DefaultJsonMapper.fromJson<BehandlingFlytStoppetHendelse>(payload)
@@ -33,6 +29,7 @@ class StoppetHendelseJobbUtfører private constructor() : JobbUtfører {
             status = hendelse.status,
         )
 
+        log.info("Varsler hendelse til OppgaveStyring. Saksnummer: ${hendelseTilOppgaveStyring.saksnummer}")
         OppgavestyringGateway.varsleHendelse(hendelseTilOppgaveStyring)
     }
 
