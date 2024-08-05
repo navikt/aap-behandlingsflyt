@@ -105,6 +105,18 @@ class GrunnlagYrkesskade(
 
         if (grunnlaget != other.grunnlaget) return false
         if (beregningsgrunnlag != other.beregningsgrunnlag) return false
+        if (terskelverdiForYrkesskade != other.terskelverdiForYrkesskade) return false
+        if (andelSomSkyldesYrkesskade != other.andelSomSkyldesYrkesskade) return false
+        if (andelYrkesskade != other.andelYrkesskade) return false
+        if (benyttetAndelForYrkesskade != other.benyttetAndelForYrkesskade) return false
+        if (andelSomIkkeSkyldesYrkesskade != other.andelSomIkkeSkyldesYrkesskade) return false
+        if (antattÅrligInntektYrkesskadeTidspunktet != other.antattÅrligInntektYrkesskadeTidspunktet) return false
+        if (yrkesskadeTidspunkt != other.yrkesskadeTidspunkt) return false
+        if (grunnlagForBeregningAvYrkesskadeandel != other.grunnlagForBeregningAvYrkesskadeandel) return false
+        if (yrkesskadeinntektIG != other.yrkesskadeinntektIG) return false
+        if (grunnlagEtterYrkesskadeFordel != other.grunnlagEtterYrkesskadeFordel) return false
+        if (er6GBegrenset != other.er6GBegrenset) return false
+        if (erGjennomsnitt != other.erGjennomsnitt) return false
 
         return true
     }
@@ -112,6 +124,20 @@ class GrunnlagYrkesskade(
     override fun hashCode(): Int {
         var result = grunnlaget.hashCode()
         result = 31 * result + beregningsgrunnlag.hashCode()
+        result = 31 * result + terskelverdiForYrkesskade.hashCode()
+        result = 31 * result + andelSomSkyldesYrkesskade.hashCode()
+        result = 31 * result + andelYrkesskade.hashCode()
+        result = 31 * result + benyttetAndelForYrkesskade.hashCode()
+        result = 31 * result + andelSomIkkeSkyldesYrkesskade.hashCode()
+        result = 31 * result + antattÅrligInntektYrkesskadeTidspunktet.hashCode()
+        result = 31 * result + yrkesskadeTidspunkt.hashCode()
+        result = 31 * result + grunnlagForBeregningAvYrkesskadeandel.hashCode()
+        result = 31 * result + yrkesskadeinntektIG.hashCode()
+        result = 31 * result + grunnlagEtterYrkesskadeFordel.hashCode()
+        result = 31 * result + er6GBegrenset.hashCode()
+        result = 31 * result + erGjennomsnitt.hashCode()
         return result
     }
+
+
 }
