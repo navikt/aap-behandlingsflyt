@@ -42,9 +42,9 @@ jobs:
           channel-id: "C02PPNUT6CD"
           payload: |
             {
+              "text": "Tester feilet for Behandlingsflyt! ⚠️ <@S055U2VSTT8>",
               "attachments": [
                 {
-                  "pretext": "Tester feilet for Behandlingsflyt! ⚠️ <@S055U2VSTT8>",
                   "color": "danger",
                   "fields": [
                   {"title": "Commit",
