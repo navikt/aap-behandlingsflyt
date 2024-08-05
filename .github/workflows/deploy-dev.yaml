@@ -44,7 +44,7 @@ jobs:
             {
               "attachments": [
                 {
-                  "pretext": "Tester feilet for Behandlingsflyt! ⚠️ @po-aap-teknisk",
+                  "pretext": "Tester feilet for Behandlingsflyt! ⚠️ <@S055U2VSTT8>",
                   "color": "danger",
                   "fields": [
                   {"title": "Commit",
