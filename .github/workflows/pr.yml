@@ -18,7 +18,7 @@ jobs:
                     distribution: 'temurin'
 
             - name: Setup Gradle for a non-wrapper project
-              uses: gradle/actions/setup-gradle@v3
+              uses: gradle/actions/setup-gradle@v4
               with:
                   gradle-version: 8.7
             - name: Bygg & test
