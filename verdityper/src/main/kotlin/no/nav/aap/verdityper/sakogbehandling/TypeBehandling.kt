@@ -11,7 +11,7 @@ enum class TypeBehandling(private var identifikator: String) {
 
     companion object {
         fun from(identifikator: String): TypeBehandling {
-            return entries.first { it.identifikator.equals(identifikator) }
+            return entries.first { it.identifikator == identifikator }
         }
     }
 }

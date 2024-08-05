@@ -19,6 +19,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Status.UTREDES
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.verdityper.flyt.FlytKontekst
+import no.nav.aap.verdityper.sakogbehandling.BehandlingId
+import no.nav.aap.verdityper.sakogbehandling.SakId
 import org.slf4j.LoggerFactory
 
 private val log = LoggerFactory.getLogger(FlytOrkestrator::class.java)
@@ -45,6 +47,12 @@ class FlytOrkestrator(
     private val behandlingHendelseService = BehandlingHendelseService(
         FlytJobbRepository(connection), SakService(connection)
     )
+
+    fun opprettKontekst(sakId: SakId, behandlingId: BehandlingId): FlytKontekst {
+        val typeBehandling = behandlingRepository.hentBehandlingType(behandlingId)
+
+        return FlytKontekst(sakId = sakId, behandlingId = behandlingId, behandlingType = typeBehandling)
+    }
 
     fun forberedBehandling(kontekst: FlytKontekst) {
         val behandling = behandlingRepository.hent(kontekst.behandlingId)

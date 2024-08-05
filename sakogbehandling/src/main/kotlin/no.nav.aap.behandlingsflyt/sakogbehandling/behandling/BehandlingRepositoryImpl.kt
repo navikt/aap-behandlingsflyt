@@ -186,6 +186,21 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         }
     }
 
+    fun hentBehandlingType(behandlingId: BehandlingId): TypeBehandling {
+        val query = """
+            SELECT type FROM BEHANDLING WHERE id = ?
+            """.trimIndent()
+
+        return connection.queryFirst(query) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+            setRowMapper { row ->
+                TypeBehandling.from(row.getString("type"))
+            }
+        }
+    }
+
     override fun hent(referanse: BehandlingReferanse): Behandling {
         val query = """
             SELECT * FROM BEHANDLING WHERE referanse = ?
