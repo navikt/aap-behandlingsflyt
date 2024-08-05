@@ -56,8 +56,8 @@ object Førstegangsbehandling : BehandlingType {
             // Relevant issue: https://github.com/navikt/pensjon-pen/pull/13138
             .medSteg(steg = FastsettGrunnlagSteg, informasjonskrav = listOf(InntektService))
             .medSteg(steg = EtAnnetStedSteg, informasjonskrav = listOf(InstitusjonsoppholdService))
-            .medSteg(steg = VurderHelseinstitusjonSteg)
-            .medSteg(steg = VurderSoningSteg)
+            .medSteg(steg = VurderHelseinstitusjonSteg)  // TODO: Trengs dette?
+            .medSteg(steg = VurderSoningSteg) // TODO: Trengs dette?
             .medSteg(steg = UnderveisSteg, informasjonskrav = listOf(PliktkortService))
             .medSteg(steg = BarnetilleggSteg, informasjonskrav = listOf(BarnService))
             .medSteg(steg = BeregnTilkjentYtelseSteg, informasjonskrav = listOf(PersonopplysningService))
