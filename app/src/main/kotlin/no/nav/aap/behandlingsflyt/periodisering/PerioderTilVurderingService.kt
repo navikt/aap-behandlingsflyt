@@ -70,7 +70,11 @@ class PerioderTilVurderingService(connection: DBConnection) {
 
     private fun utledVurdering(årsak: Årsak, rettighetsperiode: Periode): Vurdering {
         return when (årsak.type) {
-            EndringType.MOTTATT_SØKNAD -> Vurdering(VurderingType.FØRSTEGANGSBEHANDLING, requireNotNull(årsak.periode))
+            EndringType.MOTTATT_SØKNAD -> Vurdering(
+                VurderingType.FØRSTEGANGSBEHANDLING,
+                årsak.periode ?: rettighetsperiode
+            )
+
             EndringType.MOTTATT_AKTIVITETSMELDING -> Vurdering(VurderingType.REVURDERING, requireNotNull(årsak.periode))
             EndringType.MOTTATT_MELDEKORT -> Vurdering(
                 VurderingType.FORLENGELSE,

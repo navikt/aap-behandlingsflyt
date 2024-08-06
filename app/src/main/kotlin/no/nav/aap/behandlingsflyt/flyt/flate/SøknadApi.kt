@@ -17,6 +17,8 @@ import no.nav.aap.behandlingsflyt.server.respondWithStatus
 import no.nav.aap.json.DefaultJsonMapper
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
+import no.nav.aap.verdityper.Periode
+import java.time.LocalDate
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
@@ -35,7 +37,10 @@ fun NormalOpenAPIRoute.søknadApi(dataSource: DataSource) {
                         .medCallId()
                         .medParameter(JOURNALPOST_ID, dto.journalpostId)
                         .medParameter(BREVKODE, Brevkode.SØKNAD.name)
-                        .medParameter(PERIODE, "")
+                        .medParameter(
+                            PERIODE,
+                            DefaultJsonMapper.toJson(Periode(LocalDate.now(), LocalDate.now().plusYears(3))) // TODO: Sette innsendingsdato
+                        )
                         .medParameter(MOTTATT_TIDSPUNKT, DefaultJsonMapper.toJson(LocalDateTime.now()))
                         .medPayload(DefaultJsonMapper.toJson(dto.søknad))
                 )
