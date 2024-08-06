@@ -11,32 +11,36 @@ class Beregning(
 ) {
     internal fun beregneMedInput(): Beregningsgrunnlag {
         //6G begrensning ligger her samt gjennomsnitt
-        val grunnlag11_19 = beregn(input.utledForOrdinær())
+        val grunnlag11_19 = beregn11_19Grunnlag(input.utledForOrdinær())
 
-        val beregningMedEllerUtenUføre = if (input.skalBeregneMedUføre()) {
+        val beregningMedEllerUtenUføre = if (input.finnesUføreData()) {
             val ikkeOppjusterteInntekter = input.utledForYtterligereNedsatt()
-            val oppjusterteInntekter = ikkeOppjusterteInntekter.map {
-                InntektPerÅr(it.år, it.beløp.dividert(input.uføregrad().komplement()))
-            }
-            // år kommer herfra //6G begrensning ligger her samt gjennomsnitt
-            val beregningVedUføre = beregn(oppjusterteInntekter.toSet())
+            val oppjusterteInntekter = oppjusterMhpUføregrad(ikkeOppjusterteInntekter)
+
+            // 6G-begrensning ligger her samt gjennomsnitt
+            val beregningVedUføre = beregn11_19Grunnlag(oppjusterteInntekter.toSet())
+
             val uføreberegning = UføreBeregning(
                 grunnlag = grunnlag11_19,
                 ytterligereNedsattGrunnlag = beregningVedUføre,
-                //TODO:
+                // TODO:
                 // Hva hvis bruker har flere uføregrader?
                 // Skal saksbahandler velge den som er knyttet til ytterligere nedsatt-tidspunktet?
                 uføregrad = input.uføregrad(),
                 inntekterForegåendeÅr = ikkeOppjusterteInntekter
             )
-            val grunnlagUføre = uføreberegning.beregnUføre(Year.from(input.hentYtterligereNedsattArbeidsevneDato()))
+            val ytterligereNedsattArbeidsevneDato = input.hentYtterligereNedsattArbeidsevneDato()
+            requireNotNull(ytterligereNedsattArbeidsevneDato)
+
+            val grunnlagUføre = uføreberegning.beregnUføre(Year.from(ytterligereNedsattArbeidsevneDato))
             grunnlagUføre
         } else {
             grunnlag11_19
         }
 
+        // §11-22
         val beregningMedEllerUtenUføreMedEllerUtenYrkesskade =
-            if (input.skalBeregneMedYrkesskadeFordel()) { //11-22
+            if (input.yrkesskadeVurderingEksisterer()) {
                 val inntektPerÅr = InntektPerÅr(
                     Year.from(input.skadetidspunkt()),
                     input.antattÅrligInntekt()
@@ -53,8 +57,13 @@ class Beregning(
         return beregningMedEllerUtenUføreMedEllerUtenYrkesskade
     }
 
+    private fun oppjusterMhpUføregrad(ikkeOppjusterteInntekter: Set<InntektPerÅr>) =
+        ikkeOppjusterteInntekter.map {
+            InntektPerÅr(it.år, it.beløp.dividert(input.uføregrad().komplement()))
+        }
 
-    private fun beregn(
+
+    private fun beregn11_19Grunnlag(
         inntekterPerÅr: Set<InntektPerÅr>
     ): Grunnlag11_19 {
         val grunnlag11_19 =

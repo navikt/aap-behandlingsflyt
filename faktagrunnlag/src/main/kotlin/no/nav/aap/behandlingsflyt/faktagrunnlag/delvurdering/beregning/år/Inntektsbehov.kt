@@ -5,6 +5,7 @@ import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.Prosent
 import java.time.LocalDate
 import java.time.Year
+import java.util.SortedSet
 
 class Inntektsbehov(private val input: Input) {
 
@@ -18,7 +19,7 @@ class Inntektsbehov(private val input: Input) {
         return input.beregningVurdering?.ytterligereNedsattArbeidsevneDato
     }
 
-    private fun treÅrForutFor(nedsettelsesdato: LocalDate): Set<Year> {
+    private fun treÅrForutFor(nedsettelsesdato: LocalDate): SortedSet<Year> {
         val nedsettelsesår = Year.from(nedsettelsesdato)
         return 3.downTo(1L).map(nedsettelsesår::minusYears).toSortedSet()
     }
@@ -33,14 +34,26 @@ class Inntektsbehov(private val input: Input) {
         return filtrerInntekter(ytterligereNedsettelsesDato, input.inntekter)
     }
 
-    fun skalBeregneMedUføre(): Boolean {
+    /**
+     * Skal beregne med uføre om det finnes data på uføregrad.
+     */
+    fun finnesUføreData(): Boolean {
         return input.beregningVurdering?.ytterligereNedsattArbeidsevneDato != null && input.uføregrad != null
     }
 
-    fun skalBeregneMedYrkesskadeFordel(): Boolean {
+    /**
+     * Om det eksisterer informasjon om yrkesskade (tidspunkt og andel nedsettelse) og det finnes en antatt årlig
+     * inntekt, så skal beregningen skje med yrkesskadefordel (§11-22)
+     */
+    fun yrkesskadeVurderingEksisterer(): Boolean {
         return input.yrkesskadevurdering?.skadetidspunkt != null && input.beregningVurdering?.antattÅrligInntekt != null && input.yrkesskadevurdering.andelAvNedsettelse != null
     }
 
+    /**
+     * Gitt en mengde med inntekter [inntekter] og en [nedsettelsesdato], returner en mengde med
+     * relevante inntekter (3 år før nedsettelsesdato). Om inntekten ikke finnes, antas den å være
+     * lik 0.
+     */
     private fun filtrerInntekter(
         nedsettelsesdato: LocalDate,
         inntekter: Set<InntektPerÅr>
@@ -49,6 +62,7 @@ class Inntektsbehov(private val input: Input) {
         return relevanteÅr.map { relevantÅr ->
             val år = inntekter.firstOrNull { entry -> entry.år == relevantÅr }
             if (år == null) {
+                // TODO: undersøk om denne burde være default eller om det bør kastes exception
                 return@map InntektPerÅr(relevantÅr, Beløp(0))
             }
             return@map år

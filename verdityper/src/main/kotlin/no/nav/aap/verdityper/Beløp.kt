@@ -34,7 +34,7 @@ class Beløp(verdi: BigDecimal) {
         return faktor.multiplisert(this)
     }
 
-    fun divitert(nevner: Beløp, scale: Int = 10): BigDecimal {
+    fun dividert(nevner: Beløp, scale: Int = 10): BigDecimal {
         return this.verdi.divide(nevner.verdi, scale, RoundingMode.HALF_UP)
     }
 

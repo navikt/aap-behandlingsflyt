@@ -8,6 +8,19 @@ import no.nav.aap.verdityper.Prosent
 import java.math.BigDecimal
 import java.time.Year
 
+/**
+ * @param grunnlaget Beregningsgrunnlag, muligens oppjustert etter uføregrad.
+ * @param type Om uføregrad er oppjustert eller ikke. [Type.STANDARD] betyr at justering etter uføregrad ikke
+ * ga høyere grunnlag.
+ * @param grunnlag Originalt beregningsgrunnlag, etter §11-19.
+ * @param grunnlagYtterligereNedsatt Beregningsgrunnlag, oppjustert etter uføregrad.
+ * @param uføregrad Uføregrad i prosent.
+ * @param uføreInntekterFraForegåendeÅr Inntekter de siste 3 år før [uføreYtterligereNedsattArbeidsevneÅr].
+ * @param uføreInntektIKroner I dag er dette det oppjusterte grunnlaget multiplisert med 10. Så gir lite mening. TODO!
+ * @param uføreYtterligereNedsattArbeidsevneÅr Hvilket år arbeidsevnen ble ytterligere nedsatt.
+ * @param er6GBegrenset Om grunnlaget fra [grunnlaget] er 6G-begrenset. // TODO: denne er overflødig, ligger i [grunnlaget]
+ * @param erGjennomsnitt Om grunnlaget fra [grunnlaget] er et gjennomsnitt. // TODO: også overflødig
+ */
 class GrunnlagUføre(
     private val grunnlaget: GUnit,
     private val type: Type,

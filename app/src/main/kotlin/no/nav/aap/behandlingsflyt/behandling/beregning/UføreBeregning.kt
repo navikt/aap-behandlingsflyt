@@ -2,7 +2,9 @@ package no.nav.aap.behandlingsflyt.behandling.beregning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
+import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.Prosent
 import java.time.Year
@@ -19,6 +21,10 @@ class UføreBeregning(
     }
 
     fun beregnUføre(ytterligereNedsattÅr: Year): GrunnlagUføre {
+        //TODO: Gang med årets G
+        // Hvilket år? Søknads-dato? Uføredato? Ytterligere nedsatt år?
+        val uføreInntektIKroner = grunnlag.grunnlaget().multiplisert(Beløp(10))
+
         if (grunnlag.grunnlaget() >= ytterligereNedsattGrunnlag.grunnlaget()) {
             return GrunnlagUføre(
                 grunnlaget = grunnlag.grunnlaget(),
@@ -27,7 +33,7 @@ class UføreBeregning(
                 grunnlagYtterligereNedsatt = ytterligereNedsattGrunnlag,
                 uføregrad = uføregrad,
                 uføreInntekterFraForegåendeÅr = inntekterForegåendeÅr.toList(), //TODO: wat?
-                uføreInntektIKroner = grunnlag.grunnlaget().multiplisert(Beløp(10)), //TODO: Gang med årets g
+                uføreInntektIKroner = uføreInntektIKroner,
                 uføreYtterligereNedsattArbeidsevneÅr = ytterligereNedsattÅr,
                 er6GBegrenset = grunnlag.er6GBegrenset(),
                 erGjennomsnitt = grunnlag.erGjennomsnitt()
@@ -39,8 +45,8 @@ class UføreBeregning(
                 grunnlag = grunnlag,
                 grunnlagYtterligereNedsatt = ytterligereNedsattGrunnlag,
                 uføregrad = uføregrad,
-                uføreInntekterFraForegåendeÅr = inntekterForegåendeÅr.toList(), //TODO: wat?
-                uføreInntektIKroner = grunnlag.grunnlaget().multiplisert(Beløp(10)), //TODO: Gang med årets g
+                uføreInntekterFraForegåendeÅr = inntekterForegåendeÅr.toList(), //TODO: wat? <- hva menes med wat?
+                uføreInntektIKroner = uføreInntektIKroner,
                 uføreYtterligereNedsattArbeidsevneÅr = ytterligereNedsattÅr,
                 er6GBegrenset = grunnlag.er6GBegrenset(),
                 erGjennomsnitt = grunnlag.erGjennomsnitt()

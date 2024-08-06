@@ -16,15 +16,8 @@ import org.junit.jupiter.api.Test
 class GrunnbeløpTest {
 
     @Test
-    fun `Genererer tidlinjer for grunnbeløp og gjennomsnittlig grunnbeløp`() {
-        val tidslinje = Grunnbeløp.tilTidslinje()
+    fun `Genererer tidslinjee for gjennomsnittlig grunnbeløp`() {
         val tidslinjeGjennomsnitt = Grunnbeløp.tilTidslinjeGjennomsnitt()
-
-        val periodeForTidslinje: Tidslinje<Any?> = Tidslinje(Periode(30 april 2010, 1 mai 2010), null)
-        val utregnetTidslinje = periodeForTidslinje.kombiner(
-            other = tidslinje,
-            joinStyle = StandardSammenslåere.kunHøyreLeftJoin()
-        )
 
         val periodeForGjennomsnitt: Tidslinje<Any?> = Tidslinje(Periode(31 desember 2009, 1 januar 2010), null)
         val utregnetTidslinjeGjennomsnitt = periodeForGjennomsnitt.kombiner(
@@ -32,15 +25,27 @@ class GrunnbeløpTest {
             joinStyle = StandardSammenslåere.kunHøyreLeftJoin()
         )
 
-        assertThat(utregnetTidslinje)
-            .containsExactly(
-                Segment(Periode(30 april 2010, 30 april 2010), Beløp(72881)),
-                Segment(Periode(1 mai 2010, 1 mai 2010), Beløp(75641))
-            )
         assertThat(utregnetTidslinjeGjennomsnitt)
             .containsExactly(
                 Segment(Periode(31 desember 2009, 31 desember 2009), Beløp(72006)),
                 Segment(Periode(1 januar 2010, 1 januar 2010), Beløp(74721))
+            )
+    }
+
+    @Test
+    fun `Genererer tidslinje for grunnbeløp`() {
+        val tidslinje = Grunnbeløp.tilTidslinje()
+
+        val periodeForTidslinje: Tidslinje<Any?> = Tidslinje(Periode(30 april 2010, 1 mai 2010), null)
+        val utregnetTidslinje = periodeForTidslinje.kombiner(
+            other = tidslinje,
+            joinStyle = StandardSammenslåere.kunHøyreLeftJoin()
+        )
+
+        assertThat(utregnetTidslinje)
+            .containsExactly(
+                Segment(Periode(30 april 2010, 30 april 2010), Beløp(72881)),
+                Segment(Periode(1 mai 2010, 1 mai 2010), Beløp(75641))
             )
     }
 }

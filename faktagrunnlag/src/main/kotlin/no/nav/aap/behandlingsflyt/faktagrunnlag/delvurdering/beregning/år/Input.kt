@@ -6,6 +6,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadev
 import no.nav.aap.verdityper.Prosent
 import java.time.LocalDate
 
+/**
+ * @param nedsettelsesDato Dato da arbeidsevnen ble nedsatt.
+ * @param inntekter Inntekter per år.
+ * @param uføregrad Hvis ikke-null, uføregrad i prosent.
+ * @param yrkesskadevurdering Hvis ikke-null, en yrkesskadevurdering.
+ * @param beregningVurdering Se [BeregningVurdering].
+ */
 data class Input(
     val nedsettelsesDato: LocalDate,
     val inntekter: Set<InntektPerÅr>,

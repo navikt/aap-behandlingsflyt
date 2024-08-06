@@ -128,7 +128,7 @@ class GrunnlagetForBeregningenTest {
     }
 
     @Test
-    fun `Hvis bruker har samme inntekt i kroner siste tre kalenderår beregnes grunnlaget til gjennomsnittet av inntektene`() {
+    fun `Hvis bruker har samme inntekt i kroner siste tre kalenderår blir grunnlaget det samme som om gjennomsnittet ble brukt`() {
         val inntekterPerÅr = setOf(
             InntektPerÅr(
                 Year.of(2022),
@@ -149,7 +149,7 @@ class GrunnlagetForBeregningenTest {
 
         assertThat(grunnlaget).isEqualTo(
             Grunnlag11_19(
-                grunnlaget = GUnit(BigDecimal(5)),
+                grunnlaget = GUnit(BigDecimal(5)),  // 5 er gjennomsnitt
                 er6GBegrenset = false,
                 erGjennomsnitt = false,
                 inntekter = inntekterPerÅr.toList()
@@ -180,7 +180,7 @@ class GrunnlagetForBeregningenTest {
         assertThat(grunnlaget).isEqualTo(
             Grunnlag11_19(
                 grunnlaget = GUnit(6),
-                er6GBegrenset = false,
+                er6GBegrenset = true,
                 erGjennomsnitt = false,
                 inntekter = inntekterPerÅr.toList()
             )
@@ -196,13 +196,37 @@ class GrunnlagetForBeregningenTest {
         )
         val grunnlagetForBeregningen = GrunnlagetForBeregningen(inntekterPerÅr)
 
+        val beregnetGrunnlag = grunnlagetForBeregningen.beregnGrunnlaget()
+
+        assertThat(beregnetGrunnlag.grunnlaget()).isEqualTo(GUnit(6))
+        assertThat(beregnetGrunnlag.er6GBegrenset()).isEqualTo(true)
+        assertThat(beregnetGrunnlag).isEqualTo(
+            Grunnlag11_19(
+                grunnlaget = GUnit(6),
+                er6GBegrenset = true,
+                erGjennomsnitt = false,
+                inntekter = inntekterPerÅr.toList()
+            )
+        )
+    }
+
+    @Test
+    fun `om nyeste inntekt er lav, så brukes gjennomsnitt`() {
+        val inntekterPerÅr = setOf(
+            InntektPerÅr(Year.of(2022), Beløp(3 * 109_784)),
+            InntektPerÅr(Year.of(2021), Beløp(4 * 104_716)),
+            InntektPerÅr(Year.of(2020), Beløp(5 * 100_853))
+        )
+
+        val grunnlagetForBeregningen = GrunnlagetForBeregningen(inntekterPerÅr)
+
         val grunnlaget = grunnlagetForBeregningen.beregnGrunnlaget()
 
         assertThat(grunnlaget).isEqualTo(
             Grunnlag11_19(
-                grunnlaget = GUnit(6),
+                grunnlaget = GUnit(4),
                 er6GBegrenset = false,
-                erGjennomsnitt = false,
+                erGjennomsnitt = true,
                 inntekter = inntekterPerÅr.toList()
             )
         )
@@ -222,8 +246,8 @@ class GrunnlagetForBeregningenTest {
         assertThat(grunnlaget).isEqualTo(
             Grunnlag11_19(
                 grunnlaget = GUnit(4),
-                er6GBegrenset = false,
-                erGjennomsnitt = false,
+                er6GBegrenset = true,
+                erGjennomsnitt = true,
                 inntekter = inntekterPerÅr.toList()
             )
         )

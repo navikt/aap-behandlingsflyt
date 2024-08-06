@@ -4,10 +4,10 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 
 /**
- * Faktor av antall G for representasjon av størrelsen på det maksnimalet grunnlaget
+ * Faktor av antall G for representasjon av størrelsen på det maksimale grunnlaget
  */
 class GUnit(verdi: BigDecimal) : Comparable<GUnit> {
-    val verdi = verdi.setScale(SCALE, RoundingMode.HALF_UP)
+    private val verdi = verdi.setScale(SCALE, RoundingMode.HALF_UP)
 
     constructor(intVerdi: Int) : this(BigDecimal(intVerdi))
     constructor(stringVerdi: String) : this(BigDecimal(stringVerdi))
@@ -15,6 +15,9 @@ class GUnit(verdi: BigDecimal) : Comparable<GUnit> {
     companion object {
         const val SCALE = 10
 
+        /**
+         * Gitt liste med [GUnit], returner gjennomsnittsverdien.
+         */
         fun gjennomsnittlig(gUnits: List<GUnit>): GUnit {
             val gjennomsnitt = gUnits.summer()
             return GUnit(gjennomsnitt.verdi.divide(BigDecimal(gUnits.size), RoundingMode.HALF_UP))

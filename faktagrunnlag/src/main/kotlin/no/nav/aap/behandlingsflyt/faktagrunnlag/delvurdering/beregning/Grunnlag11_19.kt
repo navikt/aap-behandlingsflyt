@@ -5,6 +5,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.verdityper.GUnit
 import java.math.BigDecimal
 
+/**
+ * Grunnlag-data relatert til §11-19.
+ *
+ * @param grunnlaget Hvilket grunnlag som beregningen skal basere seg utfra §11-19.
+ * @param er6GBegrenset Om minst ett av årene fra [inntekter] overstiger 6G.
+ * @param erGjennomsnitt Om [grunnlaget] er et gjennomsnitt.
+ * @param inntekter Inntekter de siste 3 år.
+ */
 class Grunnlag11_19(
     private val grunnlaget: GUnit,
     private val er6GBegrenset: Boolean,
@@ -39,8 +47,9 @@ class Grunnlag11_19(
         val grunnlaget: BigDecimal
     ) : Faktagrunnlag
 
+
     override fun toString(): String {
-        return "Grunnlag11_19(grunnlaget=$grunnlaget)"
+        return "Grunnlag11_19(grunnlaget=$grunnlaget, er6GBegrenset=$er6GBegrenset, erGjennomsnitt=$erGjennomsnitt, inntekter=$inntekter)"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -49,10 +58,19 @@ class Grunnlag11_19(
 
         other as Grunnlag11_19
 
-        return grunnlaget == other.grunnlaget
+        if (grunnlaget != other.grunnlaget) return false
+        if (er6GBegrenset != other.er6GBegrenset) return false
+        if (erGjennomsnitt != other.erGjennomsnitt) return false
+        if (inntekter != other.inntekter) return false
+
+        return true
     }
 
     override fun hashCode(): Int {
-        return grunnlaget.hashCode()
+        var result = grunnlaget.hashCode()
+        result = 31 * result + er6GBegrenset.hashCode()
+        result = 31 * result + erGjennomsnitt.hashCode()
+        result = 31 * result + inntekter.hashCode()
+        return result
     }
 }

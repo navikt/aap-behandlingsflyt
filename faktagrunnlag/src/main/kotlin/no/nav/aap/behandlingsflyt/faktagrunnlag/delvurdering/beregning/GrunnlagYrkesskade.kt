@@ -7,6 +7,22 @@ import no.nav.aap.verdityper.Prosent
 import java.math.BigDecimal
 import java.time.Year
 
+/**
+ * @param grunnlaget Det beregnede grunnlaget gitt yrkesskade.
+ * @param beregningsgrunnlag Hvilket grunnlag som ble brukt i beregningen for yrkesskade, muligens justert for uføre.
+ * @param terskelverdiForYrkesskade Gjeldende terskelverdi for yrkesskade (definert i §11-22).
+ * @param andelSomSkyldesYrkesskade Hvor stor del av [grunnlaget] som kommer fra yrkesskade.
+ * @param andelSomIkkeSkyldesYrkesskade Hvor stor del av [grunnlaget] som ikke kommer fra yrkesskade.
+ * @param andelYrkesskade Yrkesskadeprosent.
+ * @param benyttetAndelForYrkesskade Yrkesskadeprosent, muligens oppjustert etter [terskelverdiForYrkesskade].
+ * @param antattÅrligInntektYrkesskadeTidspunktet Selvforklarende.
+ * @param yrkesskadeTidspunkt Hvilket år yrkesskaden skjedde.
+ * @param grunnlagForBeregningAvYrkesskadeandel Delen av [grunnlaget] som skyldes yrkesskade.
+ * @param yrkesskadeinntektIG Inntekt på yrkesskadetidspunktet i G.
+ * @param grunnlagEtterYrkesskadeFordel Samme som [grunnlaget]. // TODO kan fjernes?
+ * @param er6GBegrenset Om inntekten i [beregningsgrunnlag] er 6G-begrenset.
+ * @param erGjennomsnitt Om inntekten i [beregningsgrunnlag] er et gjennomsnitt.
+ */
 class GrunnlagYrkesskade(
     private val grunnlaget: GUnit,
     private val beregningsgrunnlag: Beregningsgrunnlag,
@@ -21,7 +37,7 @@ class GrunnlagYrkesskade(
     private val yrkesskadeinntektIG: GUnit,
     private val grunnlagEtterYrkesskadeFordel: GUnit,
     private val er6GBegrenset: Boolean,
-    private val erGjennomsnitt: Boolean
+    private val erGjennomsnitt: Boolean // bort?
 ) : Beregningsgrunnlag {
 
     override fun grunnlaget(): GUnit {

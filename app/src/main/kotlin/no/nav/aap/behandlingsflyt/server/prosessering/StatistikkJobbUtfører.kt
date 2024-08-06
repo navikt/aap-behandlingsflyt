@@ -102,13 +102,13 @@ class StatistikkJobbUtfører(
 
         val beregningsGrunnlagDTO: BeregningsgrunnlagDTO = when (grunnlag) {
             is Grunnlag11_19 -> BeregningsgrunnlagDTO(
-                grunnlag = grunnlag.grunnlaget().verdi.toDouble(),
+                grunnlag = grunnlag.grunnlaget().verdi().toDouble(),
                 er6GBegrenset = grunnlag.er6GBegrenset(),
                 grunnlag11_19dto = grunnlag1119dto(grunnlag),
             )
 
             is GrunnlagUføre -> BeregningsgrunnlagDTO(
-                grunnlag = grunnlag.grunnlaget().verdi.toDouble(),
+                grunnlag = grunnlag.grunnlaget().verdi().toDouble(),
                 er6GBegrenset = grunnlag.er6GBegrenset(),
                 grunnlagUføre = GrunnlagUføreDTO(
                     type = grunnlag.type().toString(),
@@ -123,21 +123,21 @@ class StatistikkJobbUtfører(
             )
 
             is GrunnlagYrkesskade -> BeregningsgrunnlagDTO(
-                grunnlag = grunnlag.grunnlaget().verdi.toDouble(),
+                grunnlag = grunnlag.grunnlaget().verdi().toDouble(),
                 er6GBegrenset = grunnlag.er6GBegrenset(),
                 grunnlagYrkesskade = GrunnlagYrkesskadeDTO(
                     beregningsgrunnlag = grunnlag1119dto(grunnlag.underliggende() as Grunnlag11_19),
                     andelYrkesskade = grunnlag.andelYrkesskade().prosentverdi(),
-                    andelSomSkyldesYrkesskade = grunnlag.andelSomSkyldesYrkesskade().verdi,
-                    andelSomIkkeSkyldesYrkesskade = grunnlag.andelSomIkkeSkyldesYrkesskade().verdi,
+                    andelSomSkyldesYrkesskade = grunnlag.andelSomSkyldesYrkesskade().verdi(),
+                    andelSomIkkeSkyldesYrkesskade = grunnlag.andelSomIkkeSkyldesYrkesskade().verdi(),
                     antattÅrligInntektYrkesskadeTidspunktet = grunnlag.antattÅrligInntektYrkesskadeTidspunktet()
                         .verdi(),
                     benyttetAndelForYrkesskade = grunnlag.benyttetAndelForYrkesskade().prosentverdi(),
-                    grunnlagForBeregningAvYrkesskadeandel = grunnlag.grunnlagForBeregningAvYrkesskadeandel().verdi,
-                    grunnlagEtterYrkesskadeFordel = grunnlag.grunnlagEtterYrkesskadeFordel().verdi,
+                    grunnlagForBeregningAvYrkesskadeandel = grunnlag.grunnlagForBeregningAvYrkesskadeandel().verdi(),
+                    grunnlagEtterYrkesskadeFordel = grunnlag.grunnlagEtterYrkesskadeFordel().verdi(),
                     terskelverdiForYrkesskade = grunnlag.terskelverdiForYrkesskade().prosentverdi(),
                     yrkesskadeTidspunkt = grunnlag.yrkesskadeTidspunkt().value,
-                    yrkesskadeinntektIG = grunnlag.yrkesskadeinntektIG().verdi
+                    yrkesskadeinntektIG = grunnlag.yrkesskadeinntektIG().verdi()
                 )
             )
 

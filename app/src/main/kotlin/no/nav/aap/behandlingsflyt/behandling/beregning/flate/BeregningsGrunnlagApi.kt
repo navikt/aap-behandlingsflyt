@@ -6,6 +6,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
@@ -28,78 +29,7 @@ fun NormalOpenAPIRoute.beregningsGrunnlagApi(dataSource: DataSource) {
                     if (beregning == null) {
                         return@transaction null
                     }
-
-                    when (beregning) {
-                        is GrunnlagYrkesskade -> {
-                            BeregningDTO(
-                                grunnlag = beregning.grunnlaget(),
-                                faktagrunnlag = beregning.faktagrunnlag(),
-                                grunnlag11_19 = Grunnlag11_19DTO(
-                                    grunnlaget = beregning.grunnlaget().verdi(),
-                                    er6GBegrenset = beregning.er6GBegrenset(),
-                                    erGjennomsnitt = beregning.erGjennomsnitt(),
-                                    inntekter = (beregning.underliggende() as Grunnlag11_19).inntekter()
-                                        .map { it.år.value.toString() to it.beløp.verdi() }.toMap()
-                                ),
-                                grunnlagYrkesskade = GrunnlagYrkesskadeDTO(
-                                    grunnlaget = beregning.grunnlaget().verdi(),
-                                    beregningsgrunnlag = grunnlag11_19_to_DTO(beregning.underliggende() as Grunnlag11_19),
-                                    terskelverdiForYrkesskade = beregning.terskelverdiForYrkesskade().prosentverdi(),
-                                    andelSomSkyldesYrkesskade = beregning.andelSomSkyldesYrkesskade().verdi(),
-                                    andelYrkesskade = beregning.andelYrkesskade().prosentverdi(),
-                                    benyttetAndelForYrkesskade = beregning.benyttetAndelForYrkesskade().prosentverdi(),
-                                    andelSomIkkeSkyldesYrkesskade = beregning.andelSomIkkeSkyldesYrkesskade().verdi(),
-                                    antattÅrligInntektYrkesskadeTidspunktet = beregning.antattÅrligInntektYrkesskadeTidspunktet()
-                                        .verdi(),
-                                    yrkesskadeTidspunkt = beregning.yrkesskadeTidspunkt().value,
-                                    grunnlagForBeregningAvYrkesskadeandel = beregning.grunnlagForBeregningAvYrkesskadeandel()
-                                        .verdi(),
-                                    yrkesskadeinntektIG = beregning.yrkesskadeinntektIG().verdi(),
-                                    grunnlagEtterYrkesskadeFordel = beregning.grunnlagEtterYrkesskadeFordel().verdi(),
-                                    er6GBegrenset = beregning.er6GBegrenset(),
-                                    erGjennomsnitt = beregning.erGjennomsnitt(),
-                                )
-                            )
-                        }
-
-                        is GrunnlagUføre -> {
-                            BeregningDTO(
-                                grunnlag = beregning.grunnlaget(),
-                                faktagrunnlag = beregning.faktagrunnlag(),
-                                grunnlag11_19 = grunnlag11_19_to_DTO(beregning.underliggende()),
-                                grunnlagUføre = GrunnlagUføreDTO(
-                                    grunnlaget = beregning.grunnlaget().verdi(),
-                                    type = beregning.type().name,
-                                    grunnlag = grunnlag11_19_to_DTO(beregning.underliggende()),
-                                    grunnlagYtterligereNedsatt = grunnlag11_19_to_DTO(beregning.underliggendeYtterligereNedsatt()),
-                                    uføregrad = beregning.uføregrad().prosentverdi(),
-                                    uføreInntekterFraForegåendeÅr = beregning.underliggendeYtterligereNedsatt()
-                                        .inntekter().map { it.år.value.toString() to it.beløp.verdi() }.toMap(),
-                                    uføreInntektIKroner = beregning.uføreInntektIKroner().verdi(),
-                                    uføreYtterligereNedsattArbeidsevneÅr = beregning.uføreYtterligereNedsattArbeidsevneÅr().value,
-                                    er6GBegrenset = beregning.er6GBegrenset(),
-                                    erGjennomsnitt = beregning.erGjennomsnitt()
-                                )
-                            )
-                        }
-
-                        is Grunnlag11_19 -> {
-                            BeregningDTO(
-                                grunnlag = beregning.grunnlaget(),
-                                faktagrunnlag = beregning.faktagrunnlag(),
-                                grunnlag11_19 = grunnlag11_19_to_DTO(beregning),
-                            )
-                        }
-
-                        else -> {
-                            BeregningDTO(
-                                grunnlag = beregning.grunnlaget(),
-                                faktagrunnlag = beregning.faktagrunnlag(),
-                                grunnlag11_19 = grunnlag11_19_to_DTO(beregning as Grunnlag11_19),
-                            )
-                        }
-                    }
-
+                    beregningDTO(beregning)
                 }
 
                 if (begregningsgrunnlag == null) {
@@ -109,6 +39,77 @@ fun NormalOpenAPIRoute.beregningsGrunnlagApi(dataSource: DataSource) {
                 }
             }
         }
+    }
+}
+
+internal fun beregningDTO(beregning: Beregningsgrunnlag) =
+    when (beregning) {
+        is GrunnlagYrkesskade -> {
+            BeregningDTO(
+                grunnlag = beregning.grunnlaget(),
+                faktagrunnlag = beregning.faktagrunnlag(),
+                grunnlag11_19 = Grunnlag11_19DTO(
+                    grunnlaget = beregning.grunnlaget().verdi(),
+                    er6GBegrenset = beregning.er6GBegrenset(),
+                    erGjennomsnitt = beregning.erGjennomsnitt(),
+                    inntekter = (beregningsgrunnlag(beregning).inntekter()).associate { it.år.value.toString() to it.beløp.verdi() }
+                ),
+                grunnlagYrkesskade = GrunnlagYrkesskadeDTO(
+                    grunnlaget = beregning.grunnlaget().verdi(),
+                    beregningsgrunnlag = grunnlag11_19_to_DTO(beregningsgrunnlag(beregning)),
+                    terskelverdiForYrkesskade = beregning.terskelverdiForYrkesskade().prosentverdi(),
+                    andelSomSkyldesYrkesskade = beregning.andelSomSkyldesYrkesskade().verdi(),
+                    andelYrkesskade = beregning.andelYrkesskade().prosentverdi(),
+                    benyttetAndelForYrkesskade = beregning.benyttetAndelForYrkesskade().prosentverdi(),
+                    andelSomIkkeSkyldesYrkesskade = beregning.andelSomIkkeSkyldesYrkesskade().verdi(),
+                    antattÅrligInntektYrkesskadeTidspunktet = beregning.antattÅrligInntektYrkesskadeTidspunktet()
+                        .verdi(),
+                    yrkesskadeTidspunkt = beregning.yrkesskadeTidspunkt().value,
+                    grunnlagForBeregningAvYrkesskadeandel = beregning.grunnlagForBeregningAvYrkesskadeandel()
+                        .verdi(),
+                    yrkesskadeinntektIG = beregning.yrkesskadeinntektIG().verdi(),
+                    grunnlagEtterYrkesskadeFordel = beregning.grunnlagEtterYrkesskadeFordel().verdi(),
+                    er6GBegrenset = beregning.er6GBegrenset(),
+                    erGjennomsnitt = beregning.erGjennomsnitt(),
+                )
+            )
+        }
+
+        is GrunnlagUføre -> {
+            BeregningDTO(
+                grunnlag = beregning.grunnlaget(),
+                faktagrunnlag = beregning.faktagrunnlag(),
+                grunnlag11_19 = grunnlag11_19_to_DTO(beregning.underliggende()),
+                grunnlagUføre = GrunnlagUføreDTO(
+                    grunnlaget = beregning.grunnlaget().verdi(),
+                    type = beregning.type().name,
+                    grunnlag = grunnlag11_19_to_DTO(beregning.underliggende()),
+                    grunnlagYtterligereNedsatt = grunnlag11_19_to_DTO(beregning.underliggendeYtterligereNedsatt()),
+                    uføregrad = beregning.uføregrad().prosentverdi(),
+                    uføreInntekterFraForegåendeÅr = beregning.underliggendeYtterligereNedsatt()
+                        .inntekter().map { it.år.value.toString() to it.beløp.verdi() }.toMap(),
+                    uføreInntektIKroner = beregning.uføreInntektIKroner().verdi(),
+                    uføreYtterligereNedsattArbeidsevneÅr = beregning.uføreYtterligereNedsattArbeidsevneÅr().value,
+                    er6GBegrenset = beregning.er6GBegrenset(),
+                    erGjennomsnitt = beregning.erGjennomsnitt()
+                )
+            )
+        }
+
+        is Grunnlag11_19 -> {
+            BeregningDTO(
+                grunnlag = beregning.grunnlaget(),
+                faktagrunnlag = beregning.faktagrunnlag(),
+                grunnlag11_19 = grunnlag11_19_to_DTO(beregning),
+            )
+        }
+    }
+
+private fun beregningsgrunnlag(beregning: GrunnlagYrkesskade): Grunnlag11_19 {
+    return when (val underliggende = beregning.underliggende()) {
+        is Grunnlag11_19 -> underliggende
+        is GrunnlagUføre -> underliggende.underliggende()
+        is GrunnlagYrkesskade -> throw IllegalStateException("GrunnlagYrkesskade kan ikke ha grunnlag som også er GrunnlagYrkesskade")
     }
 }
 

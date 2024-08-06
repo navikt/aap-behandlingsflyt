@@ -65,7 +65,7 @@ object Grunnbeløp {
 
         companion object {
             fun finnGUnit(år: Year, beløp: Beløp): GUnit {
-                return GUnit(beløp.divitert(tilTidslinjeGjennomsnitt().segment(år.atDay(1))!!.verdi, GUnit.SCALE))
+                return GUnit(beløp.dividert(tilTidslinjeGjennomsnitt().segment(år.atDay(1))!!.verdi, GUnit.SCALE))
             }
 
             fun tilTidslinje(): Tidslinje<Beløp> {
