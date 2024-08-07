@@ -1,6 +1,6 @@
 dependencies {
     implementation(project(":verdityper"))
-    implementation("org.slf4j:slf4j-api:2.0.13")
+    implementation("org.slf4j:slf4j-api:2.0.14")
 
     testImplementation(project(":dbtest"))
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.3")

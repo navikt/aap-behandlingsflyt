@@ -2,7 +2,7 @@ dependencies {
     implementation(project(":verdityper"))
     implementation(project(":dbflyway"))
     implementation(project(":dbconnect"))
-    implementation("org.slf4j:slf4j-api:2.0.13")
+    implementation("org.slf4j:slf4j-api:2.0.14")
     implementation("dev.forst:ktor-openapi-generator:0.6.1")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.17.2")
 
