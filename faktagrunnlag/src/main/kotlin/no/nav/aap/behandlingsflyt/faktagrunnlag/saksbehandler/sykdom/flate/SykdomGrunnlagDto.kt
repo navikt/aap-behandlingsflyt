@@ -3,9 +3,9 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.NedreGrense
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
+import no.nav.aap.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDate
-import java.time.Year
 
 data class SykdomGrunnlagDto(
     val skalVurdereYrkesskade: Boolean,
@@ -37,8 +37,8 @@ data class SykdomsvurderingDto(
         return Yrkesskadevurdering(
             begrunnelse = begrunnelse,
             erÅrsakssammenheng = yrkesskadevurdering.erÅrsakssammenheng,
-            skadetidspunkt = null,
-            andelAvNedsettelse = null,
+            skadetidspunkt = nedsattArbeidsevneDato?.let { LocalDate.now().withYear(it) }, //FIXME: Må komme fra yrkesskaderegisteret
+            andelAvNedsettelse = Prosent.`50_PROSENT` //FIXME: Må fastsettes av saksbehandler
         )
     }
 
