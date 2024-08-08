@@ -45,9 +45,10 @@ class BeregningsGrunnlagApiTest {
 
         val res = beregningDTO(beregning)
 
-        assertThat(res.grunnlag11_19.inntekter).hasSize(3)
-        assertThat(res.grunnlag11_19.inntekter["2022"]).isEqualByComparingTo(BigDecimal(500000))
-        assertThat(res.grunnlag11_19.inntekter["2021"]).isEqualByComparingTo(BigDecimal(400000))
-        assertThat(res.grunnlag11_19.inntekter["2020"]).isEqualByComparingTo(BigDecimal(300000))
+        val grunnlag1119 = requireNotNull(res.grunnlagYrkesskadeUføre)
+        assertThat(grunnlag1119.beregningsgrunnlag.grunnlag.inntekter).hasSize(3)
+        assertThat(grunnlag1119.beregningsgrunnlag.grunnlag.inntekter["2022"]).isEqualByComparingTo(BigDecimal(500000))
+        assertThat(grunnlag1119.beregningsgrunnlag.grunnlag.inntekter["2021"]).isEqualByComparingTo(BigDecimal(400000))
+        assertThat(grunnlag1119.beregningsgrunnlag.grunnlag.inntekter["2020"]).isEqualByComparingTo(BigDecimal(300000))
     }
 }

@@ -154,7 +154,8 @@ class ApiTest {
                 behandlingId = behandling.id,
                 Grunnlag11_19(
                     grunnlaget = GUnit(7),
-                    er6GBegrenset = true, erGjennomsnitt = false,
+                    er6GBegrenset = true,
+                    erGjennomsnitt = false,
                     inntekter = listOf()
                 )
             )
@@ -168,18 +169,17 @@ class ApiTest {
 
         @Language("JSON") val expectedJSON =
             """{
-  "grunnlag": {},
-  "faktagrunnlag": {
-    "grunnlaget": 7.0
-  },
+  "beregningstypeDTO": "STANDARD",
+  "grunnlag": 7.0,
   "grunnlag11_19": {
     "grunnlaget": 7.0,
     "er6GBegrenset": false,
     "erGjennomsnitt": false,
     "inntekter": {}
   },
+  "grunnlagYrkesskade": null,
   "grunnlagUføre": null,
-  "grunnlagYrkesskade": null
+  "grunnlagYrkesskadeUføre": null
 }"""
         assertThat(asJSON).isEqualTo(ObjectMapper().readTree(expectedJSON))
     }

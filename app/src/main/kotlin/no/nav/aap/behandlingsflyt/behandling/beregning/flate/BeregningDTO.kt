@@ -1,15 +1,21 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning.flate
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Faktagrunnlag
-import no.nav.aap.verdityper.GUnit
 import java.math.BigDecimal
 
+enum class BeregningstypeDTO {
+    STANDARD,
+    UFØRE,
+    YRKESSKADE,
+    YRKESSKADE_UFØRE
+}
+
 class BeregningDTO(
-    val grunnlag: GUnit,
-    val faktagrunnlag: Faktagrunnlag,
-    val grunnlag11_19: Grunnlag11_19DTO,
-    val grunnlagUføre: GrunnlagUføreDTO? = null,
+    val beregningstypeDTO: BeregningstypeDTO,
+    val grunnlag: BigDecimal,
+    val grunnlag11_19: Grunnlag11_19DTO? = null,
     val grunnlagYrkesskade: GrunnlagYrkesskadeDTO? = null,
+    val grunnlagUføre: GrunnlagUføreDTO? = null,
+    val grunnlagYrkesskadeUføre: GrunnlagYrkesskadeUføreDTO? = null,
 )
 
 class GrunnlagUføreDTO(
@@ -35,6 +41,23 @@ class Grunnlag11_19DTO(
 class GrunnlagYrkesskadeDTO(
     val grunnlaget: BigDecimal,
     val beregningsgrunnlag: Grunnlag11_19DTO,
+    val terskelverdiForYrkesskade: Int,
+    val andelSomSkyldesYrkesskade: BigDecimal,
+    val andelYrkesskade: Int,
+    val benyttetAndelForYrkesskade: Int,
+    val andelSomIkkeSkyldesYrkesskade: BigDecimal,
+    val antattÅrligInntektYrkesskadeTidspunktet: BigDecimal,
+    val yrkesskadeTidspunkt: Int,
+    val grunnlagForBeregningAvYrkesskadeandel: BigDecimal,
+    val yrkesskadeinntektIG: BigDecimal,
+    val grunnlagEtterYrkesskadeFordel: BigDecimal,
+    val er6GBegrenset: Boolean,
+    val erGjennomsnitt: Boolean
+)
+
+class GrunnlagYrkesskadeUføreDTO(
+    val grunnlaget: BigDecimal,
+    val beregningsgrunnlag: GrunnlagUføreDTO,
     val terskelverdiForYrkesskade: Int,
     val andelSomSkyldesYrkesskade: BigDecimal,
     val andelYrkesskade: Int,
