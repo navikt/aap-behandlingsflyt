@@ -35,7 +35,7 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource) {
                                     request.behov,
                                     request.ingenEndringIGruppe ?: false,
                                     request.behandlingVersjon,
-                                    pipeline.context.bruker()
+                                    bruker()
                                 )
                             )
                             taSkriveLåsRepository.verifiserSkrivelås(lås)
