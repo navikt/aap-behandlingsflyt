@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.dbtest.InitTestDatabase
 import no.nav.aap.behandlingsflyt.dbtestdata.ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.HelseinstitusjonVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.EndringType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
@@ -18,7 +19,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
 
-class SoningRepositoryTest {
+class HelseinstitusjonRepositoryTest {
 
     @Test
     fun `Forventer at en soningsvurdering kan lagres`() {
@@ -26,14 +27,15 @@ class SoningRepositoryTest {
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val soningRepository = SoningRepository(connection)
+            val helseinstitusjonRepository = HelseinstitusjonRepository(connection)
 
-            val soningsvurdering = Soningsvurdering(
+            val helseinstitusjonVurdering = HelseinstitusjonVurdering(
                 dokumenterBruktIVurdering = listOf(JournalpostId("vsafdvasfv")),
-                soningUtenforFengsel = true
+                begrunnelse = "Hello there",
+                faarFriKostOgLosji = false
             )
 
-            soningRepository.lagre(behandling.id, soningsvurdering)
+            helseinstitusjonRepository.lagre(behandling.id, helseinstitusjonVurdering)
         }
     }
 
@@ -43,24 +45,26 @@ class SoningRepositoryTest {
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val soningRepository = SoningRepository(connection)
+            val helseinstitusjonRepository = HelseinstitusjonRepository(connection)
 
-            val soningsvurdering1 = Soningsvurdering(
+            val helseinstitusjonVurdering1 = HelseinstitusjonVurdering(
                 dokumenterBruktIVurdering = emptyList(),
-                soningUtenforFengsel = true
+                begrunnelse = "sdfgsdg",
+                faarFriKostOgLosji = false
             )
 
-            val soningsvurdering2 = Soningsvurdering(
+            val helseinstitusjonVurdering2 = HelseinstitusjonVurdering(
                 dokumenterBruktIVurdering = emptyList(),
-                soningUtenforFengsel = false
+                begrunnelse = "sdfgsdg",
+                faarFriKostOgLosji = true
             )
 
-            soningRepository.lagre(behandling.id, soningsvurdering1)
-            soningRepository.lagre(behandling.id, soningsvurdering2)
+            helseinstitusjonRepository.lagre(behandling.id, helseinstitusjonVurdering1)
+            helseinstitusjonRepository.lagre(behandling.id, helseinstitusjonVurdering2)
 
-            val faktisk = soningRepository.hentAktiveSoningsvurdering(behandling.id)
+            val faktisk = helseinstitusjonRepository.hentAktivHelseinstitusjonVurdering(behandling.id)
 
-            assertThat(faktisk).isEqualTo(soningsvurdering2)
+            assertThat(faktisk).isEqualTo(helseinstitusjonVurdering2)
         }
     }
 
@@ -70,18 +74,19 @@ class SoningRepositoryTest {
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val soningRepository = SoningRepository(connection)
+            val helseinstitusjonRepository = HelseinstitusjonRepository(connection)
 
-            val soningsvurdering = Soningsvurdering(
+            val helseinstitusjonVurdering = HelseinstitusjonVurdering(
                 dokumenterBruktIVurdering = listOf(JournalpostId("yolo"), JournalpostId("swag")),
-                soningUtenforFengsel = true
+                begrunnelse = "sdfgsdg",
+                faarFriKostOgLosji = true
             )
 
-            soningRepository.lagre(behandling.id, soningsvurdering)
+            helseinstitusjonRepository.lagre(behandling.id, helseinstitusjonVurdering)
 
-            val lagretSoningsvurdering = soningRepository.hentAktiveSoningsvurdering(behandling.id)
+            val lagretSoningsvurdering = helseinstitusjonRepository.hentAktivHelseinstitusjonVurdering(behandling.id)
 
-            assertThat(soningsvurdering).isEqualTo(lagretSoningsvurdering)
+            assertThat(helseinstitusjonVurdering).isEqualTo(lagretSoningsvurdering)
         }
     }
 
