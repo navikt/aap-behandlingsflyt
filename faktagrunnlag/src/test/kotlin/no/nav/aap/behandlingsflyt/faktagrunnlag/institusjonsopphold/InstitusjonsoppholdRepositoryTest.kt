@@ -73,7 +73,7 @@ class InstitusjonsoppholdRepositoryTest {
                 Institusjonsopphold.nyttOpphold(
                     "AS",
                     "A",
-                    LocalDate.now(),
+                    LocalDate.MIN,
                     null,
                     "123456789",
                     "Azkaban"

@@ -4,6 +4,7 @@ import no.nav.aap.verdityper.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 internal class DaterangeParserTest {
 
@@ -59,7 +60,7 @@ internal class DaterangeParserTest {
     @Test
     fun `Parser daterange der sluttdato er uendelig frem i tid`() {
         val fom = LocalDate.now()
-        val tom = DaterangeParser.MAX_DATE
+        val tom = DaterangeParser.MAX_DATE.format(DateTimeFormatter.ofPattern("u-MM-dd"))
         val periode = DaterangeParser.fromSQL("[$fom,$tom)")
 
         assertThat(periode.fom).isEqualTo(fom)
