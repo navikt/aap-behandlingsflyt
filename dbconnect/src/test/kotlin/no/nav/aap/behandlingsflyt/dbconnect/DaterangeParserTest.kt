@@ -55,4 +55,22 @@ internal class DaterangeParserTest {
         assertThat(periode.fom.minusDays(1)).isEqualTo(fom)
         assertThat(periode.tom.plusDays(1)).isEqualTo(tom)
     }
+
+    @Test
+    fun `Parser daterange der sluttdato er uendelig frem i tid`() {
+        val fom = LocalDate.now()
+        val periode = DaterangeParser.fromSQL("[$fom,)")
+
+        assertThat(periode.fom).isEqualTo(fom)
+        assertThat(periode.tom).isEqualTo(LocalDate.MAX)
+    }
+
+    @Test
+    fun `Parser daterange der startdato er uendelig bakover i tid`() {
+        val tom = LocalDate.now()
+        val periode = DaterangeParser.fromSQL("[,$tom]")
+
+        assertThat(periode.fom).isEqualTo(LocalDate.MIN)
+        assertThat(periode.tom).isEqualTo(tom)
+    }
 }

@@ -62,6 +62,39 @@ class InstitusjonsoppholdRepositoryTest {
         }
     }
 
+    @Test
+    fun `kan lagre institusjonsopphold uten sluttdato`() {
+        InitTestDatabase.dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val behandling = behandling(connection, sak)
+
+            val institusjonsoppholdRepository = InstitusjonsoppholdRepository(connection)
+            val institusjonsopphold = listOf(
+                Institusjonsopphold.nyttOpphold(
+                    "AS",
+                    "A",
+                    LocalDate.now(),
+                    null,
+                    "123456789",
+                    "Azkaban"
+                )
+            )
+            institusjonsoppholdRepository.lagreOpphold(behandling.id, institusjonsopphold)
+
+
+            val institusjonsoppholdTidslinje = institusjonsoppholdRepository.hent(behandling.id)
+            assertThat(institusjonsoppholdTidslinje).hasSize(1)
+            assertThat(institusjonsoppholdTidslinje.first().verdi).isEqualTo(
+                Institusjon(
+                    Institusjonstype.AS,
+                    Oppholdstype.A,
+                    "123456789",
+                    "Azkaban"
+                )
+            )
+        }
+    }
+
 
     @Test
     fun kopier() {
