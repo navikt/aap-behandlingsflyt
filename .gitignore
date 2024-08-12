@@ -5,8 +5,11 @@ target
 .classpath
 outdated-dependencies.txt
 bin
+/.idea/*
+!/.idea/inspectionProfiles
+/.idea/inspectionProfiles/**
+!.idea/inspectionProfiles/Tilgang.xml
 *.iml
-.idea
 _*.sh
 *.local
 *.localz

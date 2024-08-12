@@ -28,6 +28,7 @@ import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.torsHammerApi(dataSource: DataSource) {
     route("/api/hammer") {
+        @Suppress("UnauthorizedPost")
         route("/send").post<Unit, String, TorsHammerDto> { _, dto ->
             dataSource.transaction { connection ->
                 val sakService = SakService(connection)

@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.hendelse.statistikk.AvsluttetBehandlingDTO
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkHendelseDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.IDENT_QUERY
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoGateway.PERSONINFO_QUERY
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.TilgangResponse
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.pdl.HentPerson
 import no.nav.aap.pdl.HentPersonBolkResult
@@ -44,6 +45,7 @@ import no.nav.aap.pdl.PdlPersoninfoDataResponse
 import no.nav.aap.pdl.PdlRelasjon
 import no.nav.aap.pdl.PdlRelasjonDataResponse
 import no.nav.aap.pdl.PdlRequest
+import no.nav.aap.tilgang.TilgangRequest
 import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import no.nav.aap.yrkesskade.YrkesskadeModell
@@ -70,6 +72,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
     private val inst2 = embeddedServer(Netty, port = 0, module = { inst2Fake() }).apply { start() }
     private val medl = embeddedServer(Netty, port = 0, module = { medlFake() }).apply { start() }
     private val pesysFake = embeddedServer(Netty, port = 0, module = { pesysFake() }).apply { start() }
+    private val tilgang = embeddedServer(Netty, port = 0, module = {    tilgangFake() }).apply { start() }
 
     private val statistikk = embeddedServer(Netty, port = 0, module = { statistikkFake() }).apply { start() }
     val statistikkHendelser = mutableListOf<StatistikkHendelseDTO>()
@@ -122,6 +125,10 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         // Pesys
         System.setProperty("integrasjon.pesys.url", "http://localhost:${pesysFake.port()}")
         System.setProperty("integrasjon.pesys.scope", "scope")
+        
+        // Tilgang
+        System.setProperty("integrasjon.tilgang.url", "http://localhost:${tilgang.port()}")
+        System.setProperty("integrasjon.tilgang.scope", "scope")
 
         // testpersoner
         val BARNLØS_PERSON_30ÅR =
@@ -161,6 +168,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         saf.stop(0L, 0L)
         inst2.stop(0L, 0L)
         medl.stop(0L, 0L)
+        tilgang.stop(0L, 0L)
     }
 
     fun leggTil(person: TestPerson) {
@@ -270,6 +278,28 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
                     PERSON_BOLK_QUERY -> call.respond(barn(req))
                     else -> call.respond(HttpStatusCode.BadRequest)
                 }
+            }
+        }
+    }
+    
+    private fun Application.tilgangFake() {
+        install(ContentNegotiation) {
+            jackson()
+        }
+        install(StatusPages) {
+            exception<Throwable> { call, cause ->
+                this@tilgangFake.log.info(
+                    "TILGANG :: Ukjent feil ved kall til '{}'",
+                    call.request.local.uri,
+                    cause
+                )
+                call.respond(status = HttpStatusCode.InternalServerError, message = ErrorRespons(cause.message))
+            }
+        }
+        routing {
+            post("/tilgang") {
+                val req = call.receive<TilgangRequest>()
+                call.respond(TilgangResponse(true))
             }
         }
     }

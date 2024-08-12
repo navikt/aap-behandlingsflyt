@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.medlemskap.flate
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import com.zaxxer.hikari.HikariDataSource
@@ -12,11 +11,22 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUn
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.tilgang.Ressurs
+import no.nav.aap.tilgang.Operasjon
+import no.nav.aap.tilgang.Referanse
+import no.nav.aap.tilgang.ReferanseKilde
+import no.nav.aap.tilgang.RessursType
+import no.nav.aap.tilgang.authorizedGet
 
 fun NormalOpenAPIRoute.medlemskapsgrunnlagApi(dataSource: HikariDataSource) {
     route("/api/behandling") {
-        route("/{referanse}/grunnlag/medlemskap") {
-            get<BehandlingReferanse, MedlemskapGrunnlagDto> { req ->
+        route(
+            "/{referanse}/grunnlag/medlemskap",
+        ) {
+            authorizedGet<BehandlingReferanse, MedlemskapGrunnlagDto>(
+                Operasjon.SE,
+                Ressurs(Referanse("referanse", ReferanseKilde.PathParams), RessursType.Behandling)
+            ) { req ->
                 val medlemskap = dataSource.transaction(block = hentMedlemsskap(req))
                 respond(MedlemskapGrunnlagDto(medlemskap = medlemskap))
             }

@@ -9,6 +9,7 @@ dependencies {
     implementation(project(":dbconnect"))
     implementation(project(":dbflyway"))
     implementation(project(":httpklient"))
+    implementation(project(":tilgang"))
 
     implementation("com.zaxxer:HikariCP:5.1.0")
     implementation("org.flywaydb:flyway-database-postgresql:10.17.1")
