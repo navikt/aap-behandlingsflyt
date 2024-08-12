@@ -9,11 +9,12 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarBarnet
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvBarn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.flate.VurderingAvBarnDto
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = AVKLAR_BARNETILLEGG_KODE)
 class AvklarBarnetilleggLøsning(
-    @JsonProperty("vurdering", required = true) val vurdering: VurderingAvBarn,
+    @JsonProperty("vurdering", required = true) val vurdering: VurderingAvBarnDto,
     @JsonProperty("behovstype", required = true, defaultValue = AVKLAR_BARNETILLEGG_KODE) val behovstype: String = AVKLAR_BARNETILLEGG_KODE
 ) : AvklaringsbehovLøsning {
     override fun løs(connection: DBConnection, kontekst: AvklaringsbehovKontekst): LøsningsResultat {

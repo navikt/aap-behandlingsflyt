@@ -41,12 +41,16 @@ class BarnVurderingRepositoryTest {
             val barneVurderingRepository = BarnVurderingRepository(connection)
             val barneVurderingPeriode = setOf(
                 BarnVurderingPeriode(
-                    setOf(Ident("12345678910"), Ident("12345678911")),
-                    Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1))
+                    Ident("12345678910"),
+                    "Beskrivelse",
+                    true,
+                    listOf(Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1)))
                 ),
                 BarnVurderingPeriode(
-                    setOf(Ident("12345678910")),
-                    Periode(LocalDate.of(2024, 1, 2), LocalDate.of(2024, 1, 2))
+                    Ident("12345678910"),
+                    "Enda en beskrivelse",
+                    false,
+                    listOf(Periode(LocalDate.of(2024, 1, 2), LocalDate.of(2024, 1, 2)))
                 )
             )
 
@@ -70,14 +74,17 @@ class BarnVurderingRepositoryTest {
 
             val barnVurderingRepository = BarnVurderingRepository(connection)
             val barneVurderingPeriode1 = BarnVurderingPeriode(
-                setOf(Ident("12345678910"), Ident("12345678911")),
-                Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1))
+                Ident("12345678910"),
+                "Beskrivelse",
+                false,
+                listOf(Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1)))
             )
 
-
             val barneVurderingPeriode2 = BarnVurderingPeriode(
-                setOf(Ident("12345678910")),
-                Periode(LocalDate.of(2024, 1, 2), LocalDate.of(2024, 1, 2))
+                Ident("12345678910"),
+                "Beskrivelse",
+                false,
+                listOf(Periode(LocalDate.of(2024, 1, 2), LocalDate.of(2024, 1, 2)))
             )
 
 
@@ -104,8 +111,10 @@ class BarnVurderingRepositoryTest {
                 behandling1.id,
                 setOf(
                     BarnVurderingPeriode(
-                        setOf(Ident("12345678910"), Ident("12345678911")),
-                        Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1))
+                        Ident("12345678910"),
+                        "Beskrivelse",
+                        false,
+                        listOf(Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1)))
                     ),
                 )
             )
@@ -120,8 +129,10 @@ class BarnVurderingRepositoryTest {
             Assertions.assertThat(barnetilleggGrunnlag?.vurdering?.barn)
                 .containsExactly(
                     BarnVurderingPeriode(
-                        setOf(Ident("12345678910"), Ident("12345678911")),
-                        Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1))
+                        Ident("12345678910"),
+                        "Beskrivelse",
+                        false,
+                        listOf(Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1)))
                     )
                 )
         }
