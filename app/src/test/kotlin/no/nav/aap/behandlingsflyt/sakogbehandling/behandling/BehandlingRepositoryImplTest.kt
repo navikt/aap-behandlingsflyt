@@ -1,5 +1,8 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.behandling
 
+import io.mockk.every
+import io.mockk.mockkStatic
+import io.mockk.unmockkAll
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FakePdlGateway
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.dbtest.InitTestDatabase
@@ -10,11 +13,13 @@ import no.nav.aap.verdityper.sakogbehandling.TypeBehandling
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 class BehandlingRepositoryImplTest {
     @Test
     fun `kan lagre og hente ut behandling med uuid`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        val skapt = InitTestDatabase.dataSource.transaction { connection ->
             val sak = PersonOgSakService(connection, FakePdlGateway).finnEllerOpprett(
                 ident(),
                 Periode(LocalDate.now(), LocalDate.now().plusYears(3))
@@ -22,11 +27,15 @@ class BehandlingRepositoryImplTest {
             val repo = BehandlingRepositoryImpl(connection)
 
             // Opprett
-            val skapt = repo.opprettBehandling(
+            repo.opprettBehandling(
                 sakId = sak.id,
                 årsaker = listOf(Årsak(type = EndringType.MOTTATT_SØKNAD)),
                 typeBehandling = TypeBehandling.Førstegangsbehandling
             )
+        }
+
+        InitTestDatabase.dataSource.transaction { connection ->
+            val repo = BehandlingRepositoryImpl(connection)
 
             // Hent ut igjen
             val hententMedReferanse = repo.hent(skapt.referanse)
@@ -35,6 +44,38 @@ class BehandlingRepositoryImplTest {
             assertThat(hententMedReferanse.årsaker()).containsExactlyElementsOf(skapt.årsaker())
             assertThat(hententMedReferanse.årsaker()).containsExactlyElementsOf(listOf(Årsak(type = EndringType.MOTTATT_SØKNAD)))
             assertThat(hententMedReferanse.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
+        }
+    }
+
+    @Test
+    fun `oppretet dato lagres på behandling og hentes ut korrekt`() {
+        mockkStatic(LocalDateTime::class)
+        every { LocalDateTime.now() } returns LocalDateTime.of(2023, 1, 1, 1, 1)
+
+        val skapt = InitTestDatabase.dataSource.transaction { connection ->
+            val sak = PersonOgSakService(connection, FakePdlGateway).finnEllerOpprett(
+                ident(),
+                Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+            )
+            val repo = BehandlingRepositoryImpl(connection)
+
+            // Opprett
+            repo.opprettBehandling(
+                sakId = sak.id,
+                årsaker = listOf(Årsak(type = EndringType.MOTTATT_SØKNAD)),
+                typeBehandling = TypeBehandling.Førstegangsbehandling
+            )
+        }
+
+        unmockkAll()
+
+        InitTestDatabase.dataSource.transaction { connection ->
+            val repo = BehandlingRepositoryImpl(connection)
+
+            // Hent ut igjen
+            val hententMedReferanse = repo.hent(skapt.referanse)
+
+            assertThat(hententMedReferanse.opprettetTidspunkt).isEqualTo(skapt.opprettetTidspunkt);
         }
     }
 }

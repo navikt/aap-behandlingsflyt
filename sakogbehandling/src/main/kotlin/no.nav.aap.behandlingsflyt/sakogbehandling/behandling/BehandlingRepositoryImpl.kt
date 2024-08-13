@@ -14,16 +14,18 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
     override fun opprettBehandling(sakId: SakId, årsaker: List<Årsak>, typeBehandling: TypeBehandling): Behandling {
 
         val query = """
-            INSERT INTO BEHANDLING (sak_id, referanse, status, type)
-                 VALUES (?, ?, ?, ?)
+            INSERT INTO BEHANDLING (sak_id, referanse, status, type, opprettet_tid)
+                 VALUES (?, ?, ?, ?, ?)
             """.trimIndent()
         val behandlingsreferanse = BehandlingReferanse()
+        val opprettetTidspunkt = LocalDateTime.now()
         val behandlingId = connection.executeReturnKey(query) {
             setParams {
                 setLong(1, sakId.toLong())
                 setUUID(2, behandlingsreferanse.referanse)
                 setEnumName(3, Status.OPPRETTET)
                 setString(4, typeBehandling.identifikator())
+                setLocalDateTime(5, opprettetTidspunkt)
             }
         }
 
@@ -46,7 +48,8 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             sakId = sakId,
             typeBehandling = typeBehandling,
             årsaker = årsaker,
-            versjon = 0
+            versjon = 0,
+            opprettetTidspunkt = opprettetTidspunkt
         )
 
         return behandling
@@ -75,7 +78,8 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             status = row.getEnum("status"),
             stegHistorikk = hentStegHistorikk(behandlingId),
             versjon = row.getLong("versjon"),
-            årsaker = hentÅrsaker(behandlingId)
+            årsaker = hentÅrsaker(behandlingId),
+            opprettetTidspunkt = row.getLocalDateTime("opprettet_tid"),
         )
     }
 
