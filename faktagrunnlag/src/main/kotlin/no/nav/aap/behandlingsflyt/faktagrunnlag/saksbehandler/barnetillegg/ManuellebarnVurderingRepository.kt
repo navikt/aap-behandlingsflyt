@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn
+package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barnetillegg
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.Row
@@ -23,20 +23,20 @@ class ManuellebarnVurderingRepository(private val connection: DBConnection) {
 
     }
 
-    fun lagre(behandlingId: BehandlingId, barnVurderingPeriode: Set<BarnVurderingPeriode>) {
+    fun lagre(behandlingId: BehandlingId, manueltBarnVurdeirng: Set<ManueltBarnVurdeirng>) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         val eksisterendePerioder = eksisterendeGrunnlag?.vurdering?.barn ?: emptySet()
 
-        if (eksisterendePerioder != barnVurderingPeriode) {
+        if (eksisterendePerioder != manueltBarnVurdeirng) {
             if (eksisterendeGrunnlag != null) {
                 deaktiverGrunnlag(behandlingId)
             }
 
-            lagreNyttGrunnlag(behandlingId, barnVurderingPeriode)
+            lagreNyttGrunnlag(behandlingId, manueltBarnVurdeirng)
         }
     }
 
-    private fun lagreNyttGrunnlag(behandlingId: BehandlingId, barneVurderingPerioder: Set<BarnVurderingPeriode>) {
+    private fun lagreNyttGrunnlag(behandlingId: BehandlingId, barneVurderingPerioder: Set<ManueltBarnVurdeirng>) {
         val barnetilleggPeriodeQuery = """
             INSERT INTO BARN_VURDERING_PERIODER DEFAULT VALUES
             """.trimIndent()
@@ -56,12 +56,12 @@ class ManuellebarnVurderingRepository(private val connection: DBConnection) {
 
     }
 
-    private fun lagreBarnVurdering(perioderId: Long, barnVurderingPerioder: Set<BarnVurderingPeriode>) {
+    private fun lagreBarnVurdering(perioderId: Long, manueltBarnVurderingPerioder: Set<ManueltBarnVurdeirng>) {
         val query = """
             INSERT INTO BARN_VURDERING (perioder_id, ident, BEGRUNNELSE, SKAL_BEREGNES_BARNETILLEGG) VALUES (?, ?, ?, ?)
             """.trimIndent()
 
-        barnVurderingPerioder.forEach { barn ->
+        manueltBarnVurderingPerioder.forEach { barn ->
             val barnVurderingId = connection.executeReturnKey(query) {
                 setParams {
                     setLong(1, perioderId)
@@ -126,13 +126,13 @@ class ManuellebarnVurderingRepository(private val connection: DBConnection) {
         return BarnVurderingGrunnlag(
             row.getLong("id"),
             BehandlingId(row.getLong("BEHANDLING_ID")),
-            BarnVurdering(barneVurderingPerioder)
+            ManuelleBarnVurdeirng(barneVurderingPerioder)
         )
     }
 
-    private fun mapPeriode(row: Row): BarnVurderingPeriode {
+    private fun mapPeriode(row: Row): ManueltBarnVurdeirng {
 
-        return BarnVurderingPeriode(
+        return ManueltBarnVurdeirng(
             ident = Ident(row.getString("IDENT")),
             begrunnelse = row.getString("BEGRUNNELSE"),
             skalBeregnesBarnetillegg = row.getBoolean("SKAL_BEREGNES_BARNETILLEGG"),

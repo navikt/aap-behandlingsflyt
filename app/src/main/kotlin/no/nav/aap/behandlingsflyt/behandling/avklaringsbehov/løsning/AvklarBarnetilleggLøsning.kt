@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarManuelleBarnLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.flate.ManuelleBarnVurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barnetillegg.flate.ManuelleBarnVurderingDto
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = AVKLAR_BARNETILLEGG_KODE)

@@ -1,9 +1,9 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn
+package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barnetillegg
 
 import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.sakogbehandling.Ident
 
-class BarnVurderingPeriode (
+class ManueltBarnVurdeirng (
     val ident: Ident,
     val begrunnelse: String,
     val skalBeregnesBarnetillegg: Boolean,
@@ -13,7 +13,7 @@ class BarnVurderingPeriode (
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as BarnVurderingPeriode
+        other as ManueltBarnVurdeirng
 
         if (ident != other.ident) return false
         if (perioder != other.perioder) return false

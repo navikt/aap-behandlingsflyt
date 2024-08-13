@@ -6,8 +6,8 @@ import no.nav.aap.behandlingsflyt.dbtest.InitTestDatabase
 import no.nav.aap.behandlingsflyt.dbtestdata.ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.arbeidsevne.FakePdlGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnVurderingPeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.ManuellebarnVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barnetillegg.ManueltBarnVurdeirng
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barnetillegg.ManuellebarnVurderingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.EndringType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
@@ -40,13 +40,13 @@ class ManuellebarnVurderingRepositoryTest {
 
             val barneVurderingRepository = ManuellebarnVurderingRepository(connection)
             val barneVurderingPeriode = setOf(
-                BarnVurderingPeriode(
+                ManueltBarnVurdeirng(
                     Ident("12345678910"),
                     "Beskrivelse",
                     true,
                     listOf(Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1)))
                 ),
-                BarnVurderingPeriode(
+                ManueltBarnVurdeirng(
                     Ident("12345678910"),
                     "Enda en beskrivelse",
                     false,
@@ -73,14 +73,14 @@ class ManuellebarnVurderingRepositoryTest {
             val behandling = behandling(connection, sak)
 
             val barnVurderingRepository = ManuellebarnVurderingRepository(connection)
-            val barneVurderingPeriode1 = BarnVurderingPeriode(
+            val barneVurderingPeriode1 = ManueltBarnVurdeirng(
                 Ident("12345678910"),
                 "Beskrivelse",
                 false,
                 listOf(Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1)))
             )
 
-            val barneVurderingPeriode2 = BarnVurderingPeriode(
+            val barneVurderingPeriode2 = ManueltBarnVurdeirng(
                 Ident("12345678910"),
                 "Beskrivelse",
                 false,
@@ -110,7 +110,7 @@ class ManuellebarnVurderingRepositoryTest {
             barneVurderingRepository.lagre(
                 behandling1.id,
                 setOf(
-                    BarnVurderingPeriode(
+                    ManueltBarnVurdeirng(
                         Ident("12345678910"),
                         "Beskrivelse",
                         false,
@@ -128,7 +128,7 @@ class ManuellebarnVurderingRepositoryTest {
             val barnetilleggGrunnlag = barneVurderingRepository.hentHvisEksisterer(behandling2.id)
             Assertions.assertThat(barnetilleggGrunnlag?.vurdering?.barn)
                 .containsExactly(
-                    BarnVurderingPeriode(
+                    ManueltBarnVurdeirng(
                         Ident("12345678910"),
                         "Beskrivelse",
                         false,

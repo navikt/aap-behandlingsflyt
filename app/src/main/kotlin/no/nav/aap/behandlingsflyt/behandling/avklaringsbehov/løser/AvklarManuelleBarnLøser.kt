@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBarnetilleggLøsning
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.ManuellebarnVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barnetillegg.ManuellebarnVurderingRepository
 
 class AvklarManuelleBarnLøser(val connection: DBConnection) : AvklaringsbehovsLøser<AvklarBarnetilleggLøsning> {
 

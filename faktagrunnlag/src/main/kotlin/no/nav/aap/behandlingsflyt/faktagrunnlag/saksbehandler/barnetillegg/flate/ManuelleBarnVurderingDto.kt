@@ -1,7 +1,7 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.flate
+package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barnetillegg.flate
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnVurderingPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barnetillegg.ManuelleBarnVurdeirng
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barnetillegg.ManueltBarnVurdeirng
 import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import java.time.LocalDate
@@ -10,10 +10,10 @@ data class ManuelleBarnVurderingDto(
     val barn: List<ManueltBarnDto>
 ) {
     companion object {
-        fun fromManuelleBarnVurdering(manuelleBarnVurdering: BarnVurdering?): ManuelleBarnVurderingDto {
-            if (manuelleBarnVurdering == null) return ManuelleBarnVurderingDto(emptyList())
-            return ManuelleBarnVurderingDto(manuelleBarnVurdering.barn.map {
-                ManueltBarnDto.fromBarnVurderingPeriode(it)
+        fun toDto(manuelleManuelleBarnVurdeirng: ManuelleBarnVurdeirng?): ManuelleBarnVurderingDto {
+            if (manuelleManuelleBarnVurdeirng == null) return ManuelleBarnVurderingDto(emptyList())
+            return ManuelleBarnVurderingDto(manuelleManuelleBarnVurdeirng.barn.map {
+                ManueltBarnDto.toDto(it)
             })
         }
     }
@@ -30,7 +30,7 @@ data class ManueltBarnDto(
     val skalBeregnesBarnetillegg: Boolean,
     val forsørgeransvarPerioder: List<ForsørgeransvarPeriode>
 ) {
-    fun tilBarnVurderingPeriode() = BarnVurderingPeriode(
+    fun tilBarnVurderingPeriode() = ManueltBarnVurdeirng(
         ident = Ident(ident),
         perioder = forsørgeransvarPerioder.map { Periode(it.fraDato, it.tilDato ?: LocalDate.MAX) },
         begrunnelse = begrunnelse,
@@ -38,7 +38,7 @@ data class ManueltBarnDto(
     )
 
     companion object {
-        fun fromBarnVurderingPeriode(barnVurdeirng: BarnVurderingPeriode) = ManueltBarnDto(
+        fun toDto(barnVurdeirng: ManueltBarnVurdeirng) = ManueltBarnDto(
             ident = barnVurdeirng.ident.identifikator,
             begrunnelse = barnVurdeirng.begrunnelse,
             skalBeregnesBarnetillegg = barnVurdeirng.skalBeregnesBarnetillegg,

@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.flate
+package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barnetillegg.flate
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
@@ -7,9 +7,7 @@ import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.auth.token
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnVurderingGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.ManuellebarnVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barnetillegg.ManuellebarnVurderingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
@@ -44,7 +42,7 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource) {
                             IdentifiserteBarnDto("Pelle Potet", Ident("12345678912")),
                             IdentifiserteBarnDto("Kåre Kålrabi", Ident("12121212121"))
                         ),
-                        ManuelleBarnVurderingDto.fromManuelleBarnVurdering(manuelleBarnVurdering)
+                        ManuelleBarnVurderingDto.toDto(manuelleBarnVurdering)
                     )
                 }
                 respond(dto)

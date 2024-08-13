@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.flate
+package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barnetillegg.flate
 
 import no.nav.aap.verdityper.sakogbehandling.Ident
 
