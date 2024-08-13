@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barnetillegg
 import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.sakogbehandling.Ident
 
-class ManueltBarnVurdeirng (
+class ManueltBarnVurdeirng(
     val ident: Ident,
     val begrunnelse: String,
     val skalBeregnesBarnetillegg: Boolean,

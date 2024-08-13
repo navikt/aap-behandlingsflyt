@@ -71,7 +71,10 @@ class ManuellebarnVurderingRepository(private val connection: DBConnection) {
                 }
             }
 
-            connection.executeBatch("""INSERT INTO BARN_VURDERING_PERIODE (VURDERING_ID, PERIODE) VALUES (?, ?::daterange)""", barn.perioder) {
+            connection.executeBatch(
+                """INSERT INTO BARN_VURDERING_PERIODE (VURDERING_ID, PERIODE) VALUES (?, ?::daterange)""",
+                barn.perioder
+            ) {
                 setParams { periode ->
                     setLong(1, barnVurderingId)
                     setPeriode(2, periode)

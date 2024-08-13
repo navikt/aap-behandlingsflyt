@@ -7,13 +7,13 @@ import no.nav.aap.verdityper.sakogbehandling.Ident
 import java.time.LocalDate
 
 data class ManuelleBarnVurderingDto(
-    val barn: List<ManueltBarnDto>
+    val barn: List<ManueltBarnVurderingDto>
 ) {
     companion object {
         fun toDto(manuelleManuelleBarnVurdeirng: ManuelleBarnVurdeirng?): ManuelleBarnVurderingDto {
             if (manuelleManuelleBarnVurdeirng == null) return ManuelleBarnVurderingDto(emptyList())
             return ManuelleBarnVurderingDto(manuelleManuelleBarnVurdeirng.barn.map {
-                ManueltBarnDto.toDto(it)
+                ManueltBarnVurderingDto.toDto(it)
             })
         }
     }
@@ -24,7 +24,7 @@ data class ForsørgeransvarPeriode(
     val tilDato: LocalDate?
 )
 
-data class ManueltBarnDto(
+data class ManueltBarnVurderingDto(
     val ident: String,
     val begrunnelse: String,
     val skalBeregnesBarnetillegg: Boolean,
@@ -38,7 +38,7 @@ data class ManueltBarnDto(
     )
 
     companion object {
-        fun toDto(barnVurdeirng: ManueltBarnVurdeirng) = ManueltBarnDto(
+        fun toDto(barnVurdeirng: ManueltBarnVurdeirng) = ManueltBarnVurderingDto(
             ident = barnVurdeirng.ident.identifikator,
             begrunnelse = barnVurdeirng.begrunnelse,
             skalBeregnesBarnetillegg = barnVurdeirng.skalBeregnesBarnetillegg,
