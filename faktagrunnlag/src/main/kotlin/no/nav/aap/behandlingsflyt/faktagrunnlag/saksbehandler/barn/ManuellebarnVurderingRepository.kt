@@ -6,7 +6,7 @@ import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.Ident
 
-class BarnVurderingRepository(private val connection: DBConnection) {
+class ManuellebarnVurderingRepository(private val connection: DBConnection) {
 
     fun hentHvisEksisterer(behandlingsId: BehandlingId): BarnVurderingGrunnlag? {
         val query = """

@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.dbtestdata.ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.arbeidsevne.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnVurderingPeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.ManuellebarnVurderingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.EndringType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
@@ -19,14 +19,14 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class BarnVurderingRepositoryTest {
+class ManuellebarnVurderingRepositoryTest {
     @Test
     fun `Finner ikke barnetilleggGrunnlag hvis ikke lagret`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val barnetilleggRepository = BarnVurderingRepository(connection)
+            val barnetilleggRepository = ManuellebarnVurderingRepository(connection)
             val barnetilleggGrunnlag = barnetilleggRepository.hentHvisEksisterer(behandling.id)
             Assertions.assertThat(barnetilleggGrunnlag).isNull()
         }
@@ -38,7 +38,7 @@ class BarnVurderingRepositoryTest {
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val barneVurderingRepository = BarnVurderingRepository(connection)
+            val barneVurderingRepository = ManuellebarnVurderingRepository(connection)
             val barneVurderingPeriode = setOf(
                 BarnVurderingPeriode(
                     Ident("12345678910"),
@@ -72,7 +72,7 @@ class BarnVurderingRepositoryTest {
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val barnVurderingRepository = BarnVurderingRepository(connection)
+            val barnVurderingRepository = ManuellebarnVurderingRepository(connection)
             val barneVurderingPeriode1 = BarnVurderingPeriode(
                 Ident("12345678910"),
                 "Beskrivelse",
@@ -106,7 +106,7 @@ class BarnVurderingRepositoryTest {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
-            val barneVurderingRepository = BarnVurderingRepository(connection)
+            val barneVurderingRepository = ManuellebarnVurderingRepository(connection)
             barneVurderingRepository.lagre(
                 behandling1.id,
                 setOf(
