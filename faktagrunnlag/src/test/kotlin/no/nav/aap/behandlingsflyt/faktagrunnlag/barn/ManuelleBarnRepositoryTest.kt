@@ -20,7 +20,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class BarnRepositoryTest {
+class ManuelleBarnRepositoryTest {
 
     @Test
     fun `Finner ikke barn hvis det ikke finnes barn`() {

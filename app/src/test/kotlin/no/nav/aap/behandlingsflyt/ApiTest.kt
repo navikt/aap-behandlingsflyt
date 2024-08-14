@@ -206,7 +206,7 @@ class ApiTest {
         client.post<_, Unit>(
             URI.create("http://localhost:8080/").resolve("api/soknad/send"),
             PostRequest(
-                body = SøknadSendDto(responseSak.saksnummer, "123", Søknad(SøknadStudentDto("NEI"), "NEI"))
+                body = SøknadSendDto(responseSak.saksnummer, "123", Søknad(SøknadStudentDto("NEI"), "NEI", emptyList()))
             )
         )
 

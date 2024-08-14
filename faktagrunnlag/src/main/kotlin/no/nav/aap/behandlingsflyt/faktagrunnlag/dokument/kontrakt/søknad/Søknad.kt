@@ -5,7 +5,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.SkalGjenop
 
 class Søknad(
     val student: SøknadStudentDto,
-    val yrkesskade: String
+    val yrkesskade: String,
+    val manuelleBarn: List<ManuelleBarn>
 ) {
     fun harYrkesskade(): Boolean {
         return yrkesskade.uppercase() == "JA"
