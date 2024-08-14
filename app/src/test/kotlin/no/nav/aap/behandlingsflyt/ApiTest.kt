@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.SøknadStudentDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
@@ -37,6 +38,7 @@ import no.nav.aap.httpclient.post
 import no.nav.aap.httpclient.request.GetRequest
 import no.nav.aap.httpclient.request.PostRequest
 import no.nav.aap.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.GUnit
 import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.flyt.StegType
@@ -52,6 +54,7 @@ import java.net.URI
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.Year
 import java.time.temporal.ChronoUnit
 import java.util.*
 
@@ -156,7 +159,11 @@ class ApiTest {
                     grunnlaget = GUnit(7),
                     er6GBegrenset = true,
                     erGjennomsnitt = false,
-                    inntekter = listOf()
+                    inntekter = listOf(
+                        InntektPerÅr(Year.of(2023), Beløp(200000)),
+                        InntektPerÅr(Year.of(2022), Beløp(200000)),
+                        InntektPerÅr(Year.of(2021), Beløp(200000))
+                    )
                 )
             )
             behandling.referanse
@@ -170,12 +177,35 @@ class ApiTest {
         @Language("JSON") val expectedJSON =
             """{
   "beregningstypeDTO": "STANDARD",
-  "grunnlag": 7.0,
   "grunnlag11_19": {
-    "grunnlaget": 7.0,
-    "er6GBegrenset": false,
-    "erGjennomsnitt": false,
-    "inntekter": {}
+    "inntekter": [
+      {
+        "år": "2023",
+        "inntektIKroner": 200000.0,
+        "inntektIG": 1.7205929163,
+        "justertTilMaks6G": 1.7205929163
+      },
+      {
+        "år": "2022",
+        "inntektIKroner": 200000.0,
+        "inntektIG": 1.8217590906,
+        "justertTilMaks6G": 1.8217590906
+      },
+      {
+        "år": "2021",
+        "inntektIKroner": 200000.0,
+        "inntektIG": 1.9099278047,
+        "justertTilMaks6G": 1.9099278047
+      }
+    ],
+    "gjennomsnittligInntektSiste3år": 1.8174266039,
+    "inntektSisteÅr": {
+      "år": "2023",
+      "inntektIKroner": 200000.0,
+      "inntektIG": 1.7205929163,
+      "justertTilMaks6G": 1.7205929163
+    },
+    "grunnlag": 7.0
   },
   "grunnlagYrkesskade": null,
   "grunnlagUføre": null,

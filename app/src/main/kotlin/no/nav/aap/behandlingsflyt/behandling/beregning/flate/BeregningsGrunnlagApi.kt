@@ -11,11 +11,15 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.server.respondWithStatus
+import no.nav.aap.verdityper.Prosent
+import java.math.BigDecimal
+import java.math.RoundingMode
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.beregningsGrunnlagApi(dataSource: DataSource) {
@@ -47,53 +51,23 @@ internal fun beregningDTO(beregning: Beregningsgrunnlag): BeregningDTO {
         is GrunnlagYrkesskade -> {
             when (val underliggende = beregning.underliggende()) {
                 is GrunnlagUføre -> {
+                    val inntekter = inntekterTilDTO(underliggende.underliggende().inntekter())
+                    val uføre = uføreGrunnlagDTO(underliggende)
+                    val yrkesskade = yrkesskadeGrunnlagDTO(inntekter, beregning, underliggende)
                     BeregningDTO(
                         beregningstypeDTO = BeregningstypeDTO.YRKESSKADE_UFØRE,
-                        grunnlag = beregning.grunnlaget().verdi(),
-                        grunnlag11_19 = null,
-                        grunnlagYrkesskadeUføre = GrunnlagYrkesskadeUføreDTO(
-                            grunnlaget = beregning.grunnlaget().verdi(),
-                            beregningsgrunnlag = grunnlagUføre_to_DTO(underliggende),
-                            terskelverdiForYrkesskade = beregning.terskelverdiForYrkesskade().prosentverdi(),
-                            andelSomSkyldesYrkesskade = beregning.andelSomSkyldesYrkesskade().verdi(),
-                            andelYrkesskade = beregning.andelYrkesskade().prosentverdi(),
-                            benyttetAndelForYrkesskade = beregning.benyttetAndelForYrkesskade().prosentverdi(),
-                            andelSomIkkeSkyldesYrkesskade = beregning.andelSomIkkeSkyldesYrkesskade().verdi(),
-                            antattÅrligInntektYrkesskadeTidspunktet = beregning.antattÅrligInntektYrkesskadeTidspunktet()
-                                .verdi(),
-                            yrkesskadeTidspunkt = beregning.yrkesskadeTidspunkt().value,
-                            grunnlagForBeregningAvYrkesskadeandel = beregning.grunnlagForBeregningAvYrkesskadeandel()
-                                .verdi(),
-                            yrkesskadeinntektIG = beregning.yrkesskadeinntektIG().verdi(),
-                            grunnlagEtterYrkesskadeFordel = beregning.grunnlagEtterYrkesskadeFordel().verdi(),
-                            er6GBegrenset = beregning.er6GBegrenset(),
-                            erGjennomsnitt = beregning.erGjennomsnitt(),
+                        grunnlagYrkesskadeUføre = YrkesskadeUføreGrunnlagDTO(
+                            uføreGrunnlag = uføre,
+                            yrkesskadeGrunnlag = yrkesskade
                         )
                     )
                 }
 
                 is Grunnlag11_19 -> {
+                    val inntekter = inntekterTilDTO(underliggende.inntekter())
                     BeregningDTO(
                         beregningstypeDTO = BeregningstypeDTO.YRKESSKADE,
-                        grunnlag = beregning.grunnlaget().verdi(),
-                        grunnlagYrkesskade = GrunnlagYrkesskadeDTO(
-                            grunnlaget = beregning.grunnlaget().verdi(),
-                            beregningsgrunnlag = grunnlag11_19_to_DTO(underliggende),
-                            terskelverdiForYrkesskade = beregning.terskelverdiForYrkesskade().prosentverdi(),
-                            andelSomSkyldesYrkesskade = beregning.andelSomSkyldesYrkesskade().verdi(),
-                            andelYrkesskade = beregning.andelYrkesskade().prosentverdi(),
-                            benyttetAndelForYrkesskade = beregning.benyttetAndelForYrkesskade().prosentverdi(),
-                            andelSomIkkeSkyldesYrkesskade = beregning.andelSomIkkeSkyldesYrkesskade().verdi(),
-                            antattÅrligInntektYrkesskadeTidspunktet = beregning.antattÅrligInntektYrkesskadeTidspunktet()
-                                .verdi(),
-                            yrkesskadeTidspunkt = beregning.yrkesskadeTidspunkt().value,
-                            grunnlagForBeregningAvYrkesskadeandel = beregning.grunnlagForBeregningAvYrkesskadeandel()
-                                .verdi(),
-                            yrkesskadeinntektIG = beregning.yrkesskadeinntektIG().verdi(),
-                            grunnlagEtterYrkesskadeFordel = beregning.grunnlagEtterYrkesskadeFordel().verdi(),
-                            er6GBegrenset = beregning.er6GBegrenset(),
-                            erGjennomsnitt = beregning.erGjennomsnitt(),
-                        )
+                        grunnlagYrkesskade = yrkesskadeGrunnlagDTO(inntekter, beregning, underliggende)
                     )
 
                 }
@@ -105,15 +79,13 @@ internal fun beregningDTO(beregning: Beregningsgrunnlag): BeregningDTO {
         is GrunnlagUføre -> {
             BeregningDTO(
                 beregningstypeDTO = BeregningstypeDTO.UFØRE,
-                grunnlag = beregning.grunnlaget().verdi(),
-                grunnlagUføre = grunnlagUføre_to_DTO(beregning)
+                grunnlagUføre = uføreGrunnlagDTO(beregning)
             )
         }
 
         is Grunnlag11_19 -> {
             BeregningDTO(
                 beregningstypeDTO = BeregningstypeDTO.STANDARD,
-                grunnlag = beregning.grunnlaget().verdi(),
                 grunnlag11_19 = grunnlag11_19_to_DTO(beregning),
             )
         }
@@ -121,26 +93,89 @@ internal fun beregningDTO(beregning: Beregningsgrunnlag): BeregningDTO {
 }
 
 private fun grunnlag11_19_to_DTO(grunnlag: Grunnlag11_19): Grunnlag11_19DTO {
+    val inntekter = inntekterTilDTO(grunnlag.inntekter())
     return Grunnlag11_19DTO(
-        grunnlaget = grunnlag.grunnlaget().verdi(),
-        er6GBegrenset = grunnlag.er6GBegrenset(),
-        erGjennomsnitt = grunnlag.erGjennomsnitt(),
-        inntekter = grunnlag.inntekter().map { it.år.value.toString() to it.beløp.verdi() }.toMap()
+        inntekter = inntekter,
+        gjennomsnittligInntektSiste3år = gjennomsnittInntekter(inntekter), //FIXME
+        inntektSisteÅr = inntekter.maxBy(InntektDTO::år),
+        grunnlag = grunnlag.grunnlaget().verdi()
     )
 }
 
-private fun grunnlagUføre_to_DTO(grunnlag: GrunnlagUføre): GrunnlagUføreDTO {
-    return GrunnlagUføreDTO(
-        grunnlaget = grunnlag.grunnlaget().verdi(),
-        type = grunnlag.type().name,
-        grunnlag = grunnlag11_19_to_DTO(grunnlag.underliggende()),
-        grunnlagYtterligereNedsatt = grunnlag11_19_to_DTO(grunnlag.underliggendeYtterligereNedsatt()),
-        uføregrad = grunnlag.uføregrad().prosentverdi(),
-        uføreInntekterFraForegåendeÅr = grunnlag.underliggendeYtterligereNedsatt()
-            .inntekter().map { it.år.value.toString() to it.beløp.verdi() }.toMap(),
-        uføreInntektIKroner = grunnlag.uføreInntektIKroner().verdi(),
-        uføreYtterligereNedsattArbeidsevneÅr = grunnlag.uføreYtterligereNedsattArbeidsevneÅr().value,
-        er6GBegrenset = grunnlag.er6GBegrenset(),
-        erGjennomsnitt = grunnlag.erGjennomsnitt()
+@Deprecated("Må hentes fra beregningen")
+private fun gjennomsnittInntekter(inntekter: List<InntektDTO>): BigDecimal =
+    inntekter.sumOf { it.inntektIG }.divide(BigDecimal(3), RoundingMode.HALF_UP)
+
+private fun inntekterTilDTO(inntektPerÅr: List<InntektPerÅr>): List<InntektDTO> {
+    return inntektPerÅr.map(::inntekterTilDTO)
+}
+
+private fun inntekterTilDTO(inntektPerÅr: InntektPerÅr): InntektDTO {
+    //FIXME Må hente lagrede verdier
+    return InntektDTO(
+        år = inntektPerÅr.år.value.toString(),
+        inntektIKroner = inntektPerÅr.beløp.verdi(),
+        inntektIG = inntektPerÅr.gUnit().verdi(),
+        justertTilMaks6G = inntektPerÅr.gUnit().begrensTil6GUnits().verdi()
     )
 }
+
+@Deprecated("Må hentes fra beregningen")
+private fun gjennomsnittInntekterUføre(inntekter: List<UføreInntektDTO>): BigDecimal =
+    inntekter.sumOf { it.inntektIG }.divide(BigDecimal(3), RoundingMode.HALF_UP)
+
+private fun inntekterTilUføreDTO(inntektPerÅr: List<InntektPerÅr>, uføregrad: Prosent): List<UføreInntektDTO> {
+    return inntektPerÅr.map { inntekterTilUføreDTO(it, uføregrad) }
+}
+
+private fun inntekterTilUføreDTO(inntektPerÅr: InntektPerÅr, uføregrad: Prosent): UføreInntektDTO {
+    //FIXME Må hente lagrede verdier
+    return UføreInntektDTO(
+        år = inntektPerÅr.år.value.toString(),
+        inntektIKroner = inntektPerÅr.beløp.verdi(),
+        inntektIG = inntektPerÅr.gUnit().verdi(), //FIXME Finn inntekt før justering for uføregrad
+        justertTilMaks6G = inntektPerÅr.gUnit().begrensTil6GUnits().verdi(),
+        justertForUføreGrad = inntektPerÅr.gUnit().verdi(),
+        uføreGrad = uføregrad.prosentverdi() //FIXME Uføregrad pr inntekt
+    )
+}
+
+private fun uføreGrunnlagDTO(grunnlag: GrunnlagUføre): UføreGrunnlagDTO {
+    val inntekter = inntekterTilDTO(grunnlag.underliggende().inntekter())
+    val uføreInntekter =
+        inntekterTilUføreDTO(grunnlag.underliggendeYtterligereNedsatt().inntekter(), grunnlag.uføregrad())
+    return UføreGrunnlagDTO(
+        inntekter = inntekter,
+        gjennomsnittligInntektSiste3år = gjennomsnittInntekter(inntekter),
+        inntektSisteÅr = inntekter.maxBy(InntektDTO::år),
+        uføreInntekter = uføreInntekter,
+        gjennomsnittligInntektSiste3årUfør = gjennomsnittInntekterUføre(uføreInntekter),
+        inntektSisteÅrUfør = uføreInntekter.maxBy(UføreInntektDTO::år),
+        grunnlag = grunnlag.grunnlaget().verdi()
+    )
+}
+
+private fun yrkesskadeGrunnlagDTO(
+    inntekter: List<InntektDTO>,
+    beregning: GrunnlagYrkesskade,
+    underliggende: Beregningsgrunnlag
+) = YrkesskadeGrunnlagDTO(
+    inntekter = inntekter,
+    yrkesskadeinntekt = YrkesskadeInntektDTO(
+        prosentVekting = beregning.andelYrkesskade().prosentverdi(),
+        antattÅrligInntektIKronerYrkesskadeTidspunktet = beregning.antattÅrligInntektYrkesskadeTidspunktet()
+            .verdi(),
+        antattÅrligInntektIGYrkesskadeTidspunktet = beregning.yrkesskadeinntektIG().verdi(),
+        justertTilMaks6G = beregning.yrkesskadeinntektIG()
+            .verdi() //TODO: Skal YS reduseres til maks 6G
+    ),
+    standardBeregning = StandardBeregningDTO(
+        prosentVekting = beregning.andelYrkesskade().komplement().prosentverdi(),
+        inntektIG = underliggende.grunnlaget().verdi(),
+        justertTilMaks6G = underliggende.grunnlaget().verdi()
+    ),
+    gjennomsnittligInntektSiste3år = gjennomsnittInntekter(inntekter),
+    inntektSisteÅr = inntekter.maxBy(InntektDTO::år),
+    yrkesskadeGrunnlag = beregning.grunnlaget().verdi(),
+    grunnlag = beregning.grunnlaget().verdi()
+)
