@@ -3,5 +3,5 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barnetillegg.flat
 data class BarnetilleggGrunnlagDto(
     val manueltOppgitteBarn: List<ManueltBarnDto>,
     val folkeregistrerteBarn: List<FolkeregistrertBarnDto>,
-    val vurdering: ManuelleBarnVurderingDto
+    val vurdering: ManuelleBarnVurderingDto?
 )

@@ -127,8 +127,6 @@ class ManuellebarnVurderingRepository(private val connection: DBConnection) {
         }.toSet()
 
         return BarnVurderingGrunnlag(
-            row.getLong("id"),
-            BehandlingId(row.getLong("BEHANDLING_ID")),
             ManuelleBarnVurdeirng(barneVurderingPerioder)
         )
     }

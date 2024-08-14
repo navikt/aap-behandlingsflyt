@@ -10,8 +10,7 @@ data class ManuelleBarnVurderingDto(
     val barn: List<ManueltBarnVurderingDto>
 ) {
     companion object {
-        fun toDto(manuelleManuelleBarnVurdeirng: ManuelleBarnVurdeirng?): ManuelleBarnVurderingDto {
-            if (manuelleManuelleBarnVurdeirng == null) return ManuelleBarnVurderingDto(emptyList())
+        fun toDto(manuelleManuelleBarnVurdeirng: ManuelleBarnVurdeirng): ManuelleBarnVurderingDto {
             return ManuelleBarnVurderingDto(manuelleManuelleBarnVurdeirng.barn.map {
                 ManueltBarnVurderingDto.toDto(it)
             })

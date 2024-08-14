@@ -6,8 +6,8 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.auth.token
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barnetillegg.ManuelleBarnService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barnetillegg.ManuellebarnVurderingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
@@ -21,42 +21,14 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource) {
     route("/api/barnetillegg") {
         route("/grunnlag/{referanse}") {
             get<BehandlingReferanse, BarnetilleggGrunnlagDto> { req ->
-                val token = token()
                 val dto = dataSource.transaction { connection ->
                     val behandling: Behandling =
                         BehandlingReferanseService(BehandlingRepositoryImpl(connection)).behandling(req)
-                    val manueltOppgitteBarn = emptyList<Barn>() // TODO bruk repositroy for manuelle barn
-                    val manuelleBarnVurdering = ManuellebarnVurderingRepository(connection)
-                        .hentHvisEksisterer(behandling.id)?.vurdering
-                    val folkeregisterBarn = BarnRepository(connection).hent(behandling.id)
+                    val manuelleBarnVurderingRepository = ManuellebarnVurderingRepository(connection)
+                    val barnRepository = BarnRepository(connection)
+                    val manuelleBarnService = ManuelleBarnService(manuelleBarnVurderingRepository, barnRepository, PdlPersoninfoGateway)
 
-                    val manuelleBarn = manueltOppgitteBarn.map { barn ->
-                        val barnPersoninfo =
-                            PdlPersoninfoGateway.hentPersoninfoForIdent(barn.ident, token)
-                        ManueltBarnDto(
-                            navn = barnPersoninfo.fultNavn(),
-                            ident = barnPersoninfo.ident,
-                        )
-                    }
-
-                    val folkeregistrerteBarn = folkeregisterBarn.barn.map { barn ->
-                        val barnPersoninfo =
-                            PdlPersoninfoGateway.hentPersoninfoForIdent(barn.ident, token)
-                        FolkeregistrertBarnDto(
-                            navn = barnPersoninfo.fultNavn(),
-                            ident = barnPersoninfo.ident,
-                            forsorgerPeriode = barn.periodeMedRettTil()
-                        )
-                    }
-
-                    BarnetilleggGrunnlagDto(
-                        manueltOppgitteBarn = listOf( // TODO ikke bruk hardkodede verdier
-                            ManueltBarnDto("Pelle Potet", Ident("12345678912")),
-                            ManueltBarnDto("Kåre Kålrabi", Ident("12121212121"))
-                        ),
-                        folkeregistrerteBarn = folkeregistrerteBarn,
-                        ManuelleBarnVurderingDto.toDto(manuelleBarnVurdering)
-                    )
+                    manuelleBarnService.samleManuelleBarnGrunnlag(behandling.id, token())
                 }
                 respond(dto)
             }

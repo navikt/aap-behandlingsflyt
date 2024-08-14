@@ -6,7 +6,7 @@ import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.Ident
 
 class BarnVurderingGrunnlag(
-    val id: Long, val behandlingId: BehandlingId, val vurdering: ManuelleBarnVurdeirng
+    val vurdering: ManuelleBarnVurdeirng
 ) {
     fun tidslinje(): Tidslinje<Set<Ident>> {
         return Tidslinje(vurdering.barn.flatMap { barn ->
