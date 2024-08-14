@@ -391,12 +391,11 @@ class FlytOrkestratorTest {
         val fom = LocalDate.now().minusMonths(3)
         val periode = Periode(fom, fom.plusYears(3))
 
-        // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
         fakes.leggTil(
             TestPerson(
                 identer = setOf(ident),
                 fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
-                yrkesskade = listOf(TestYrkesskade()),
+                yrkesskade = emptyList(),
                 inntekter = listOf(
                     InntektPerÅr(
                         Year.now().minusYears(1),

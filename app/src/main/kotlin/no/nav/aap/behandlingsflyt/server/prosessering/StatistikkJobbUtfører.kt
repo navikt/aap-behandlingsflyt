@@ -62,7 +62,11 @@ class StatistikkJobbUtfører(
             StatistikkHendelseDTO(
                 saksnummer = hendelse.saksnummer.toString(),
                 behandlingType = hendelse.behandlingType,
-                status = hendelse.status
+                status = hendelse.status,
+                ident = hendelse.personIdent,
+                avklaringsbehov = hendelse.avklaringsbehov,
+                behandlingReferanse = hendelse.referanse,
+                behandlingOpprettetTidspunkt = hendelse.opprettetTidspunkt,
             )
         )
     }

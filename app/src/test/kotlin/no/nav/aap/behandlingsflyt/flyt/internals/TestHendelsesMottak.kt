@@ -35,7 +35,7 @@ class TestHendelsesMottak(private val dataSource: DataSource) {
         }
     }
 
-    fun håndtere(key: Saksnummer, hendelse: SakHendelse) {
+    private fun håndtere(key: Saksnummer, hendelse: SakHendelse) {
         dataSource.transaction { connection ->
             if (hendelse is DokumentMottattSakHendelse) {
                 val sakService = SakService(connection)
