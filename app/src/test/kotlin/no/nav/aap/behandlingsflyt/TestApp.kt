@@ -169,7 +169,7 @@ fun mapTilSøknad(dto: OpprettTestcaseDTO): Søknad {
     } else {
         "NEI"
     }
-    return Søknad(student = SøknadStudentDto(erStudent), harYrkesskade, emptyList())
+    return Søknad(student = SøknadStudentDto(erStudent), harYrkesskade)
 }
 
 private fun postgreSQLContainer(): PostgreSQLContainer<Nothing> {

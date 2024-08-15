@@ -84,8 +84,7 @@ class MottaDokumentService(
             Periode(mottattDato, mottattDato),
             søknad.student.erStudent(),
             søknad.student.skalGjennopptaStudie(),
-            søknad.harYrkesskade(),
-            søknad.manuelleBarn
+            søknad.harYrkesskade()
         )
     }
 

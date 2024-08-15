@@ -6,8 +6,8 @@ import no.nav.aap.behandlingsflyt.dbtest.InitTestDatabase
 import no.nav.aap.behandlingsflyt.dbtestdata.ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.arbeidsevne.FakePdlGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barnetillegg.ManueltBarnVurdeirng
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barnetillegg.ManuellebarnVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnVurderingPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnVurderingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.EndringType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
@@ -19,14 +19,14 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class ManuellebarnVurderingRepositoryTest {
+class BarnVurderingRepositoryTest {
     @Test
     fun `Finner ikke barnetilleggGrunnlag hvis ikke lagret`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val barnetilleggRepository = ManuellebarnVurderingRepository(connection)
+            val barnetilleggRepository = BarnVurderingRepository(connection)
             val barnetilleggGrunnlag = barnetilleggRepository.hentHvisEksisterer(behandling.id)
             Assertions.assertThat(barnetilleggGrunnlag).isNull()
         }
@@ -38,19 +38,15 @@ class ManuellebarnVurderingRepositoryTest {
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val barneVurderingRepository = ManuellebarnVurderingRepository(connection)
+            val barneVurderingRepository = BarnVurderingRepository(connection)
             val barneVurderingPeriode = setOf(
-                ManueltBarnVurdeirng(
-                    Ident("12345678910"),
-                    "Beskrivelse",
-                    true,
-                    listOf(Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1)))
+                BarnVurderingPeriode(
+                    setOf(Ident("12345678910"), Ident("12345678911")),
+                    Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1))
                 ),
-                ManueltBarnVurdeirng(
-                    Ident("12345678910"),
-                    "Enda en beskrivelse",
-                    false,
-                    listOf(Periode(LocalDate.of(2024, 1, 2), LocalDate.of(2024, 1, 2)))
+                BarnVurderingPeriode(
+                    setOf(Ident("12345678910")),
+                    Periode(LocalDate.of(2024, 1, 2), LocalDate.of(2024, 1, 2))
                 )
             )
 
@@ -72,19 +68,16 @@ class ManuellebarnVurderingRepositoryTest {
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val barnVurderingRepository = ManuellebarnVurderingRepository(connection)
-            val barneVurderingPeriode1 = ManueltBarnVurdeirng(
-                Ident("12345678910"),
-                "Beskrivelse",
-                false,
-                listOf(Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1)))
+            val barnVurderingRepository = BarnVurderingRepository(connection)
+            val barneVurderingPeriode1 = BarnVurderingPeriode(
+                setOf(Ident("12345678910"), Ident("12345678911")),
+                Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1))
             )
 
-            val barneVurderingPeriode2 = ManueltBarnVurdeirng(
-                Ident("12345678910"),
-                "Beskrivelse",
-                false,
-                listOf(Periode(LocalDate.of(2024, 1, 2), LocalDate.of(2024, 1, 2)))
+
+            val barneVurderingPeriode2 = BarnVurderingPeriode(
+                setOf(Ident("12345678910")),
+                Periode(LocalDate.of(2024, 1, 2), LocalDate.of(2024, 1, 2))
             )
 
 
@@ -106,15 +99,13 @@ class ManuellebarnVurderingRepositoryTest {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
-            val barneVurderingRepository = ManuellebarnVurderingRepository(connection)
+            val barneVurderingRepository = BarnVurderingRepository(connection)
             barneVurderingRepository.lagre(
                 behandling1.id,
                 setOf(
-                    ManueltBarnVurdeirng(
-                        Ident("12345678910"),
-                        "Beskrivelse",
-                        false,
-                        listOf(Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1)))
+                    BarnVurderingPeriode(
+                        setOf(Ident("12345678910"), Ident("12345678911")),
+                        Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1))
                     ),
                 )
             )
@@ -128,11 +119,9 @@ class ManuellebarnVurderingRepositoryTest {
             val barnetilleggGrunnlag = barneVurderingRepository.hentHvisEksisterer(behandling2.id)
             Assertions.assertThat(barnetilleggGrunnlag?.vurdering?.barn)
                 .containsExactly(
-                    ManueltBarnVurdeirng(
-                        Ident("12345678910"),
-                        "Beskrivelse",
-                        false,
-                        listOf(Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1)))
+                    BarnVurderingPeriode(
+                        setOf(Ident("12345678910"), Ident("12345678911")),
+                        Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1))
                     )
                 )
         }
