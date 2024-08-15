@@ -93,9 +93,9 @@ CREATE TABLE BEREGNING_YRKESSKADE
     BENYTTET_ANDEL_YRKESSKADE                 SMALLINT                               NOT NULL,
     YRKESSKADE_TIDSPUNKT                      SMALLINT                               NOT NULL,
     YRKESSKADE_INNTEKT_I_G                    NUMERIC(21, 10)                        NOT NULL,
-    ANTATT_ARLIG_INNTEKT_YRKESSKADE_TIDSPUNKT NUMERIC(21, 10)                        NOT NULL,
-    ANDEL_SOM_SKYLDES_YRKESSKADE              SMALLINT                               NOT NULL,
-    ANDEL_SOM_IKKE_SKYLDES_YRKESSKADE         SMALLINT                               NOT NULL,
+    ANTATT_ARLIG_INNTEKT_YRKESSKADE_TIDSPUNKT NUMERIC(19, 2)                        NOT NULL,
+    ANDEL_SOM_SKYLDES_YRKESSKADE              NUMERIC(21, 10)                               NOT NULL,
+    ANDEL_SOM_IKKE_SKYLDES_YRKESSKADE         NUMERIC(21, 10)                               NOT NULL,
     GRUNNLAG_ETTER_YRKESSKADE_FORDEL          NUMERIC(21, 10)                        NOT NULL,
     GRUNNLAG_FOR_BEREGNING_AV_YRKESSKADEANDEL NUMERIC(21, 10)                        NOT NULL,
     ER_GJENNOMSNITT                           BOOLEAN                                NOT NULL
