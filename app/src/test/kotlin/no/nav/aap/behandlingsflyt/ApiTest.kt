@@ -12,9 +12,9 @@ import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.dbtestdata.ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.SøknadStudentDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
@@ -156,13 +156,30 @@ class ApiTest {
             beregningsgrunnlagRepository.lagre(
                 behandlingId = behandling.id,
                 Grunnlag11_19(
-                    grunnlaget = GUnit(7),
-                    er6GBegrenset = true,
+                    grunnlaget = GUnit(3),
                     erGjennomsnitt = false,
                     inntekter = listOf(
-                        InntektPerÅr(Year.of(2023), Beløp(200000)),
-                        InntektPerÅr(Year.of(2022), Beløp(200000)),
-                        InntektPerÅr(Year.of(2021), Beløp(200000))
+                        GrunnlagInntekt(
+                            år = Year.of(2023),
+                            inntektIKroner = Beløp(200000),
+                            inntektIG = GUnit(3),
+                            inntekt6GBegrenset = GUnit(3),
+                            er6GBegrenset = false
+                        ),
+                        GrunnlagInntekt(
+                            år = Year.of(2022),
+                            inntektIKroner = Beløp(200000),
+                            inntektIG = GUnit(3),
+                            inntekt6GBegrenset = GUnit(3),
+                            er6GBegrenset = false
+                        ),
+                        GrunnlagInntekt(
+                            år = Year.of(2021),
+                            inntektIKroner = Beløp(200000),
+                            inntektIG = GUnit(3),
+                            inntekt6GBegrenset = GUnit(3),
+                            er6GBegrenset = false
+                        )
                     )
                 )
             )
@@ -182,30 +199,30 @@ class ApiTest {
       {
         "år": "2023",
         "inntektIKroner": 200000.0,
-        "inntektIG": 1.7205929163,
-        "justertTilMaks6G": 1.7205929163
+        "inntektIG": 3.0,
+        "justertTilMaks6G": 3.0
       },
       {
         "år": "2022",
         "inntektIKroner": 200000.0,
-        "inntektIG": 1.8217590906,
-        "justertTilMaks6G": 1.8217590906
+        "inntektIG": 3.0,
+        "justertTilMaks6G": 3.0
       },
       {
         "år": "2021",
         "inntektIKroner": 200000.0,
-        "inntektIG": 1.9099278047,
-        "justertTilMaks6G": 1.9099278047
+        "inntektIG": 3.0,
+        "justertTilMaks6G": 3.0
       }
     ],
-    "gjennomsnittligInntektSiste3år": 1.8174266039,
+    "gjennomsnittligInntektSiste3år": 3.0,
     "inntektSisteÅr": {
       "år": "2023",
       "inntektIKroner": 200000.0,
-      "inntektIG": 1.7205929163,
-      "justertTilMaks6G": 1.7205929163
+      "inntektIG": 3.0,
+      "justertTilMaks6G": 3.0
     },
-    "grunnlag": 7.0
+    "grunnlag": 3.0
   },
   "grunnlagYrkesskade": null,
   "grunnlagUføre": null,

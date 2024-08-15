@@ -7,8 +7,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag1
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.hendelse.avløp.AvsluttetBehandlingHendelseDTO
+import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.AvsluttetBehandlingDTO
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.BeregningsgrunnlagDTO
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.Grunnlag11_19DTO
@@ -107,13 +107,11 @@ class StatistikkJobbUtfører(
         val beregningsGrunnlagDTO: BeregningsgrunnlagDTO = when (grunnlag) {
             is Grunnlag11_19 -> BeregningsgrunnlagDTO(
                 grunnlag = grunnlag.grunnlaget().verdi().toDouble(),
-                er6GBegrenset = grunnlag.er6GBegrenset(),
                 grunnlag11_19dto = grunnlag1119dto(grunnlag),
             )
 
             is GrunnlagUføre -> BeregningsgrunnlagDTO(
                 grunnlag = grunnlag.grunnlaget().verdi().toDouble(),
-                er6GBegrenset = grunnlag.er6GBegrenset(),
                 grunnlagUføre = GrunnlagUføreDTO(
                     type = grunnlag.type().toString(),
                     grunnlag = grunnlag1119dto(grunnlag.underliggende()),
@@ -122,13 +120,12 @@ class StatistikkJobbUtfører(
                     uføreYtterligereNedsattArbeidsevneÅr = grunnlag.uføreYtterligereNedsattArbeidsevneÅr().value,
                     uføregrad = grunnlag.uføregrad().prosentverdi(),
                     uføreInntekterFraForegåendeÅr = grunnlag.underliggendeYtterligereNedsatt().inntekter()
-                        .associate { it.år.value.toString() to it.beløp.verdi() }
+                        .associate { it.år.value.toString() to it.inntektIKroner.verdi() }
                 )
             )
 
             is GrunnlagYrkesskade -> BeregningsgrunnlagDTO(
                 grunnlag = grunnlag.grunnlaget().verdi().toDouble(),
-                er6GBegrenset = grunnlag.er6GBegrenset(),
                 grunnlagYrkesskade = GrunnlagYrkesskadeDTO(
                     beregningsgrunnlag = grunnlag1119dto(grunnlag.underliggende() as Grunnlag11_19),
                     andelYrkesskade = grunnlag.andelYrkesskade().prosentverdi(),
@@ -163,7 +160,7 @@ class StatistikkJobbUtfører(
 
     private fun grunnlag1119dto(beregningsgrunnlag: Grunnlag11_19) =
         Grunnlag11_19DTO(
-            inntekter = beregningsgrunnlag.inntekter().associate { it.år.value.toString() to it.beløp.verdi() }
+            inntekter = beregningsgrunnlag.inntekter().associate { it.år.value.toString() to it.inntektIKroner.verdi() }
         )
 
 

@@ -16,10 +16,6 @@ sealed interface Beregningsgrunnlag {
      */
     fun faktagrunnlag(): Faktagrunnlag
     /**
-     * Om minst én inntekt i beregningen er begrenset oppdag til 6G.
-     */
-    fun er6GBegrenset(): Boolean
-    /**
      * Om et gjennomnsnitt av flere års inntekter er brukt i beregningen.
      */
     fun erGjennomsnitt(): Boolean

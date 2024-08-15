@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.GUnit
 import no.nav.aap.verdityper.Prosent
@@ -17,41 +16,42 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
         YRKESSKADE_UFØRE
     }
 
-    private fun hentInntekt(beregningsId: Long): List<InntektPerÅr> {
+    private fun hentInntekt(beregningsId: Long): List<GrunnlagInntekt> {
         return connection.queryList(
             """
-                SELECT BEREGNING_HOVED_ID, ARSTALL, INNTEKT
+                SELECT BEREGNING_HOVED_ID, ARSTALL, INNTEKT_I_KRONER, INNTEKT_I_G, INNTEKT_6G_BEGRENSET, ER_6G_BEGRENSET
                 FROM BEREGNING_INNTEKT
                 WHERE BEREGNING_HOVED_ID = ?
             """.trimIndent()
         ) {
             setParams { setLong(1, beregningsId) }
             setRowMapper { row ->
-                InntektPerÅr(
-                    år = row.getInt("ARSTALL"),
-                    beløp = Beløp(verdi = row.getBigDecimal("INNTEKT")),
+                GrunnlagInntekt(
+                    år = Year.of(row.getInt("ARSTALL")),
+                    inntektIKroner = Beløp(verdi = row.getBigDecimal("INNTEKT_I_KRONER")),
+                    inntektIG = GUnit(row.getBigDecimal("INNTEKT_I_G")),
+                    inntekt6GBegrenset = GUnit(row.getBigDecimal("INNTEKT_6G_BEGRENSET")),
+                    er6GBegrenset = row.getBoolean("ER_6G_BEGRENSET")
                 )
             }
         }
     }
 
     private fun hentStandardBeregning(beregningsId: Long): Grunnlag11_19 {
-        val inntekter = hentInntekt(beregningsId)
         return connection.queryFirst(
             """
-            SELECT  bh.G_UNIT AS G_UNIT_HOVED
-                    FROM BEREGNING_HOVED bh 
-                    WHERE bh.BEREGNING_ID = ?
+            SELECT ID, GRUNNLAG, ER_GJENNOMSNITT
+            FROM BEREGNING_HOVED
+            WHERE BEREGNING_ID = ?
             """.trimIndent()
         ) {
             setParams { setLong(1, beregningsId) }
             setRowMapper { row ->
                 Grunnlag11_19(
-                    grunnlaget = GUnit(row.getBigDecimal("G_UNIT_HOVED")),
-                    er6GBegrenset = false, // TODO!!
-                    erGjennomsnitt = false, // TODO!!
-                    inntekter = inntekter,
-                ) //TODO:tulledata
+                    grunnlaget = GUnit(row.getBigDecimal("GRUNNLAG")),
+                    erGjennomsnitt = row.getBoolean("ER_GJENNOMSNITT"),
+                    inntekter = hentInntekt(row.getLong("ID"))
+                )
             }
         }
     }
@@ -59,23 +59,22 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
     private fun hentUføreBeregning(beregningsId: Long): GrunnlagUføre {
         val beregningsHoved = connection.queryList(
             """
-            SELECT  bh.G_UNIT AS G_UNIT_HOVED,
-                    bh.ID
-                    FROM BEREGNING_HOVED bh 
-                    WHERE bh.BEREGNING_ID = ?
-            """.trimIndent()
+            SELECT ID, GRUNNLAG, ER_GJENNOMSNITT
+            FROM BEREGNING_HOVED
+            WHERE BEREGNING_ID = ?
+            """
         ) {
             setParams { setLong(1, beregningsId) }
             setRowMapper { row ->
+                val id = row.getLong("ID")
                 Pair(
-                    row.getLong("ID"),
+                    id,
                     Grunnlag11_19(
-                        grunnlaget = GUnit(row.getBigDecimal("G_UNIT_HOVED")),
-                        er6GBegrenset = false,
-                        erGjennomsnitt = false,
-                        inntekter = hentInntekt(row.getLong("ID"))
+                        grunnlaget = GUnit(row.getBigDecimal("GRUNNLAG")),
+                        erGjennomsnitt = row.getBoolean("ER_GJENNOMSNITT"),
+                        inntekter = hentInntekt(id)
                     )
-                ) //TODO:tulledata
+                )
             }
         }
 
@@ -102,7 +101,6 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
                     uføreInntekterFraForegåendeÅr = emptyList(), //TODO: egen henting for inntekt
                     uføreInntektIKroner = Beløp(0), //TODO: egen henting for inntekt
                     uføreYtterligereNedsattArbeidsevneÅr = Year.of(row.getInt("UFORE_YTTERLIGERE_NEDSATT_ARBEIDSEVNE_AR")),
-                    er6GBegrenset = false, //TODO: egen henting for inntekt
                     erGjennomsnitt = false //TODO: egen henting for inntekt
                 )
             }
@@ -134,7 +132,6 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
                     by.ANDEL_SOM_IKKE_SKYLDES_YRKESSKADE,
                     by.GRUNNLAG_ETTER_YRKESSKADE_FORDEL,
                     by.GRUNNLAG_FOR_BEREGNING_AV_YRKESSKADEANDEL,
-                    by.ER_6G_BEGRENSET,
                     by.ER_GJENNOMSNITT
                 FROM BEREGNING_YRKESSKADE by
                 WHERE by.BEREGNING_ID = ?
@@ -157,7 +154,6 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
                     andelSomIkkeSkyldesYrkesskade = GUnit(row.getBigDecimal("ANDEL_SOM_IKKE_SKYLDES_YRKESSKADE")),
                     grunnlagEtterYrkesskadeFordel = GUnit(row.getBigDecimal("GRUNNLAG_ETTER_YRKESSKADE_FORDEL")),
                     grunnlagForBeregningAvYrkesskadeandel = GUnit(row.getBigDecimal("GRUNNLAG_FOR_BEREGNING_AV_YRKESSKADEANDEL")),
-                    er6GBegrenset = row.getBoolean("ER_6G_BEGRENSET"),
                     erGjennomsnitt = row.getBoolean("ER_GJENNOMSNITT")
                 )
             }
@@ -222,17 +218,22 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
         return beregningId
     }
 
-    private fun lagre(beregningsId: Long, inntektPerÅr: List<InntektPerÅr>) {
+    private fun lagre(beregningsId: Long, inntekter: List<GrunnlagInntekt>) {
         connection.executeBatch(
             """
-            INSERT INTO BEREGNING_INNTEKT (BEREGNING_HOVED_ID, ARSTALL, INNTEKT) VALUES(?,?,?)
-        """.trimIndent(),
-            inntektPerÅr
+            INSERT INTO BEREGNING_INNTEKT
+            (BEREGNING_HOVED_ID, ARSTALL, INNTEKT_I_KRONER, INNTEKT_I_G, INNTEKT_6G_BEGRENSET, ER_6G_BEGRENSET)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """,
+            inntekter
         ) {
             setParams {
                 setLong(1, beregningsId)
                 setInt(2, it.år.value)
-                setBigDecimal(3, it.beløp.verdi)
+                setBigDecimal(3, it.inntektIKroner.verdi())
+                setBigDecimal(4, it.inntektIG.verdi())
+                setBigDecimal(5, it.inntekt6GBegrenset.verdi())
+                setBoolean(6, it.er6GBegrenset)
             }
         }
     }
@@ -246,10 +247,15 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
     }
 
     private fun lagre(beregningsId: Long, beregningsgrunnlag: Grunnlag11_19): Long {
-        return connection.executeReturnKey("INSERT INTO BEREGNING_HOVED (BEREGNING_ID, G_UNIT) VALUES (?, ?)") {
+        return connection.executeReturnKey(
+            """
+            INSERT INTO BEREGNING_HOVED (BEREGNING_ID, GRUNNLAG, ER_GJENNOMSNITT)
+            VALUES (?, ?, ?)"""
+        ) {
             setParams {
                 setLong(1, beregningsId)
                 setBigDecimal(2, beregningsgrunnlag.grunnlaget().verdi())
+                setBoolean(3, beregningsgrunnlag.erGjennomsnitt())
             }
         }
     }
@@ -312,9 +318,8 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
             ANDEL_SOM_IKKE_SKYLDES_YRKESSKADE,
             GRUNNLAG_ETTER_YRKESSKADE_FORDEL,
             GRUNNLAG_FOR_BEREGNING_AV_YRKESSKADEANDEL,
-            ER_6G_BEGRENSET,
             ER_GJENNOMSNITT
-            )VALUES (?, ?, ?,?,?,?,?,?,?,?,?,?,?,?)""".trimIndent()
+            )VALUES (?, ?, ?,?,?,?,?,?,?,?,?,?,?)""".trimIndent()
         ) {
             setParams {
                 setLong(1, grunnlagId)
@@ -329,8 +334,7 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
                 setBigDecimal(10, beregningsgrunnlag.andelSomIkkeSkyldesYrkesskade().verdi())
                 setBigDecimal(11, beregningsgrunnlag.grunnlagEtterYrkesskadeFordel().verdi())
                 setBigDecimal(12, beregningsgrunnlag.grunnlagForBeregningAvYrkesskadeandel().verdi())
-                setBoolean(13, beregningsgrunnlag.er6GBegrenset())
-                setBoolean(14, beregningsgrunnlag.erGjennomsnitt())
+                setBoolean(13, beregningsgrunnlag.erGjennomsnitt())
             }
         }
     }
@@ -355,9 +359,8 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
             ANDEL_SOM_IKKE_SKYLDES_YRKESSKADE,
             GRUNNLAG_ETTER_YRKESSKADE_FORDEL,
             GRUNNLAG_FOR_BEREGNING_AV_YRKESSKADEANDEL,
-            ER_6G_BEGRENSET,
             ER_GJENNOMSNITT
-            )VALUES (?, ?, ?,?,?,?,?,?,?,?,?,?,?,?)""".trimIndent()
+            )VALUES (?, ?, ?,?,?,?,?,?,?,?,?,?,?)""".trimIndent()
         ) {
             setParams {
                 setLong(1, beregningUføreId)
@@ -372,8 +375,7 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
                 setBigDecimal(10, beregningsgrunnlag.andelSomIkkeSkyldesYrkesskade().verdi())
                 setBigDecimal(11, beregningsgrunnlag.grunnlagEtterYrkesskadeFordel().verdi())
                 setBigDecimal(12, beregningsgrunnlag.grunnlagForBeregningAvYrkesskadeandel().verdi())
-                setBoolean(13, beregningsgrunnlag.er6GBegrenset())
-                setBoolean(14, beregningsgrunnlag.erGjennomsnitt())
+                setBoolean(13, beregningsgrunnlag.erGjennomsnitt())
             }
         }
     }

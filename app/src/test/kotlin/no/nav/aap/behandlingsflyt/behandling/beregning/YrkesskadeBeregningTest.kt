@@ -18,14 +18,13 @@ class YrkesskadeBeregningTest {
     fun `Hvis ingen yrkesskadeandel, så returneres samme grunnlag som 11-19`() {
         val grunnlag11_19 = Grunnlag11_19(
             grunnlaget = GUnit(4),
-            er6GBegrenset = false,
             erGjennomsnitt = false,
-            inntekter = listOf(InntektPerÅr(2022, Beløp(4 * GRUNNBELØP_2022)))
+            inntekter = emptyList()
         )
 
         val yrkesskadeBeregning = YrkesskadeBeregning(
             grunnlag11_19 = grunnlag11_19,
-            antattÅrligInntekt = InntektPerÅr(2022, Beløp(0)),
+            antattÅrligInntekt = InntektPerÅr(2022, Beløp(5* GRUNNBELØP_2022)),
             andelAvNedsettelsenSomSkyldesYrkesskaden = Prosent(0)
         )
 
@@ -38,9 +37,8 @@ class YrkesskadeBeregningTest {
     fun `Hvis antatt årlig arbeidsinntekt er lavere enn 11-19, så settes grunnlaget tilsvarende grunnlag fra 11-19 uavhengig av yrkesskadeandel`() {
         val grunnlag11_19 = Grunnlag11_19(
             grunnlaget = GUnit(4),
-            er6GBegrenset = false,
             erGjennomsnitt = false,
-            inntekter = listOf(InntektPerÅr(2022, Beløp(4 * GRUNNBELØP_2022)))
+            inntekter = emptyList()
         )
 
         val yrkesskadeBeregning = YrkesskadeBeregning(
@@ -58,9 +56,8 @@ class YrkesskadeBeregningTest {
     fun `Hvis yrkesskadeandel er 70 prosent, og antatt årlig arbeidsinntekt er høyere enn 11-19, beregnes grunnlaget med 30 prosent 11-19 og 70 prosent yrkesskade`() {
         val grunnlag11_19 = Grunnlag11_19(
             grunnlaget = GUnit(2),
-            er6GBegrenset = false,
             erGjennomsnitt = false,
-            inntekter = listOf(InntektPerÅr(2022, Beløp(4 * GRUNNBELØP_2022)))
+            inntekter = emptyList()
         )
 
         val yrkesskadeBeregning = YrkesskadeBeregning(
@@ -78,9 +75,8 @@ class YrkesskadeBeregningTest {
     fun `Hvis yrkesskadeandel er 71 prosent, og antatt årlig arbeidsinntekt er høyere enn 11-19, beregnes grunnlaget med 0 prosent 11-19 og 100 prosent yrkesskade`() {
         val grunnlag11_19 = Grunnlag11_19(
             grunnlaget = GUnit(2),
-            er6GBegrenset = false,
             erGjennomsnitt = false,
-            inntekter = listOf(InntektPerÅr(2022, Beløp(4 * GRUNNBELØP_2022)))
+            inntekter = emptyList()
         )
 
         val yrkesskadeBeregning = YrkesskadeBeregning(
@@ -98,9 +94,8 @@ class YrkesskadeBeregningTest {
     fun `Hvis yrkesskadeandel er 100 prosent, og antatt årlig arbeidsinntekt er høyere enn 11-19, så settes grunnlaget tilsvarende antatt årlig arbeidsinntekt`() {
         val grunnlag11_19 = Grunnlag11_19(
             grunnlaget = GUnit(2),
-            er6GBegrenset = false,
             erGjennomsnitt = false,
-            inntekter = listOf(InntektPerÅr(2022, Beløp(4 * GRUNNBELØP_2022)))
+            inntekter = emptyList()
         )
 
         val yrkesskadeBeregning = YrkesskadeBeregning(

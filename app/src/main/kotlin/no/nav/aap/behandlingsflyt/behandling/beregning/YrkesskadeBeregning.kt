@@ -52,7 +52,6 @@ class YrkesskadeBeregning(
             andelSomIkkeSkyldesYrkesskade = andelSomIkkeSkyldesYrkesskade,
             grunnlagEtterYrkesskadeFordel = grunnlag,
             grunnlagForBeregningAvYrkesskadeandel = grunnlagForBeregningAvYrkesskadeandel,
-            er6GBegrenset = grunnlag11_19.er6GBegrenset(),
             erGjennomsnitt = grunnlag11_19.erGjennomsnitt()
         )
     }

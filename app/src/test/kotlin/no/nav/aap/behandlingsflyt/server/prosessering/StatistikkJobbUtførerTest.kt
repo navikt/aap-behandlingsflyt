@@ -92,7 +92,7 @@ class StatistikkJobbUtførerTest {
                 behandlingId = opprettetBehandling.id,
                 Grunnlag11_19(
                     grunnlaget = GUnit(7),
-                    er6GBegrenset = true, erGjennomsnitt = false,
+                    erGjennomsnitt = false,
                     inntekter = listOf()
                 )
             )
@@ -159,7 +159,6 @@ class StatistikkJobbUtførerTest {
                 tilkjentYtelse = TilkjentYtelseDTO(perioder = listOf()),
                 beregningsGrunnlag = BeregningsgrunnlagDTO(
                     grunnlag = 7.0,
-                    er6GBegrenset = false,
                     grunnlag11_19dto = Grunnlag11_19DTO(inntekter = mapOf())
                 ),
                 vilkårsResultat =

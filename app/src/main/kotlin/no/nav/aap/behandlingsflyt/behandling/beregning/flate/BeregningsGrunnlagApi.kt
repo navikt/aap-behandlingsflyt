@@ -9,9 +9,9 @@ import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
@@ -106,17 +106,16 @@ private fun grunnlag11_19_to_DTO(grunnlag: Grunnlag11_19): Grunnlag11_19DTO {
 private fun gjennomsnittInntekter(inntekter: List<InntektDTO>): BigDecimal =
     inntekter.sumOf { it.inntektIG }.divide(BigDecimal(3), RoundingMode.HALF_UP)
 
-private fun inntekterTilDTO(inntektPerÅr: List<InntektPerÅr>): List<InntektDTO> {
-    return inntektPerÅr.map(::inntekterTilDTO)
+private fun inntekterTilDTO(inntekter: List<GrunnlagInntekt>): List<InntektDTO> {
+    return inntekter.map(::inntekterTilDTO)
 }
 
-private fun inntekterTilDTO(inntektPerÅr: InntektPerÅr): InntektDTO {
-    //FIXME Må hente lagrede verdier
+private fun inntekterTilDTO(inntekt: GrunnlagInntekt): InntektDTO {
     return InntektDTO(
-        år = inntektPerÅr.år.value.toString(),
-        inntektIKroner = inntektPerÅr.beløp.verdi(),
-        inntektIG = inntektPerÅr.gUnit().verdi(),
-        justertTilMaks6G = inntektPerÅr.gUnit().begrensTil6GUnits().verdi()
+        år = inntekt.år.value.toString(),
+        inntektIKroner = inntekt.inntektIKroner.verdi(),
+        inntektIG = inntekt.inntektIG.verdi(),
+        justertTilMaks6G = inntekt.inntekt6GBegrenset.verdi()
     )
 }
 
@@ -124,18 +123,18 @@ private fun inntekterTilDTO(inntektPerÅr: InntektPerÅr): InntektDTO {
 private fun gjennomsnittInntekterUføre(inntekter: List<UføreInntektDTO>): BigDecimal =
     inntekter.sumOf { it.inntektIG }.divide(BigDecimal(3), RoundingMode.HALF_UP)
 
-private fun inntekterTilUføreDTO(inntektPerÅr: List<InntektPerÅr>, uføregrad: Prosent): List<UføreInntektDTO> {
-    return inntektPerÅr.map { inntekterTilUføreDTO(it, uføregrad) }
+private fun inntekterTilUføreDTO(inntekter: List<GrunnlagInntekt>, uføregrad: Prosent): List<UføreInntektDTO> {
+    return inntekter.map { inntekterTilUføreDTO(it, uføregrad) }
 }
 
-private fun inntekterTilUføreDTO(inntektPerÅr: InntektPerÅr, uføregrad: Prosent): UføreInntektDTO {
+private fun inntekterTilUføreDTO(inntekt: GrunnlagInntekt, uføregrad: Prosent): UføreInntektDTO {
     //FIXME Må hente lagrede verdier
     return UføreInntektDTO(
-        år = inntektPerÅr.år.value.toString(),
-        inntektIKroner = inntektPerÅr.beløp.verdi(),
-        inntektIG = inntektPerÅr.gUnit().verdi(), //FIXME Finn inntekt før justering for uføregrad
-        justertTilMaks6G = inntektPerÅr.gUnit().begrensTil6GUnits().verdi(),
-        justertForUføreGrad = inntektPerÅr.gUnit().verdi(),
+        år = inntekt.år.value.toString(),
+        inntektIKroner = inntekt.inntektIKroner.verdi(),
+        inntektIG = inntekt.inntektIG.verdi(), //FIXME Finn inntekt før justering for uføregrad
+        justertTilMaks6G = inntekt.inntekt6GBegrenset.verdi(),
+        justertForUføreGrad = inntekt.inntektIKroner.verdi(),
         uføreGrad = uføregrad.prosentverdi() //FIXME Uføregrad pr inntekt
     )
 }

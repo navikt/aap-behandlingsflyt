@@ -19,12 +19,13 @@ class UføreBeregningTest {
             UføreBeregning(
                 grunnlag = Grunnlag11_19(
                     grunnlaget = GUnit(4),
-                    er6GBegrenset = false,
                     erGjennomsnitt = false,
                     inntekter = emptyList()
                 ),
                 ytterligereNedsattGrunnlag = Grunnlag11_19(
-                    grunnlaget = GUnit(4), er6GBegrenset = false, erGjennomsnitt = false, inntekter = emptyList()
+                    grunnlaget = GUnit(4),
+                    erGjennomsnitt = false,
+                    inntekter = emptyList()
                 ),
                 uføregrad = Prosent.`100_PROSENT`,
                 inntekterForegåendeÅr = setOf(
@@ -39,12 +40,13 @@ class UføreBeregningTest {
         val uføreBeregning = UføreBeregning(
             grunnlag = Grunnlag11_19(
                 grunnlaget = GUnit(4),
-                er6GBegrenset = false,
                 erGjennomsnitt = false,
                 inntekter = emptyList()
             ),
             ytterligereNedsattGrunnlag = Grunnlag11_19(
-                grunnlaget = GUnit("5"), er6GBegrenset = false, erGjennomsnitt = false, inntekter = emptyList()
+                grunnlaget = GUnit(5),
+                erGjennomsnitt = false,
+                inntekter = emptyList()
             ),
             uføregrad = Prosent.`30_PROSENT`,
             inntekterForegåendeÅr = setOf(
@@ -52,11 +54,9 @@ class UføreBeregningTest {
             )
         )
 
-        val grunnlagUføre = uføreBeregning.beregnUføre(
-            Year.now()
-        )
+        val grunnlagUføre = uføreBeregning.beregnUføre(Year.now())
 
-        assertThat(grunnlagUføre.grunnlaget()).isEqualTo(GUnit(5)) //TODO: er denne testen riktig?
+        assertThat(grunnlagUføre.grunnlaget()).isEqualTo(GUnit(5))
         assertThat(grunnlagUføre.type()).isEqualTo(GrunnlagUføre.Type.YTTERLIGERE_NEDSATT)
     }
 
@@ -64,13 +64,11 @@ class UføreBeregningTest {
     fun `Hvis bruker hadde lavere inntekt ved ytterligere nedsatt, justert for uføregrad, brukes inntekter fra nedsatt med halvparten`() {
         val uføreBeregning = UføreBeregning(
             grunnlag = Grunnlag11_19(
-                grunnlaget = GUnit(4),
-                er6GBegrenset = false,
+                grunnlaget = GUnit(5),
                 erGjennomsnitt = false, inntekter = emptyList()
             ),
             ytterligereNedsattGrunnlag = Grunnlag11_19(
-                grunnlaget = GUnit("5"),
-                er6GBegrenset = false,
+                grunnlaget = GUnit(4),
                 erGjennomsnitt = false, inntekter = emptyList()
             ),
             uføregrad = Prosent.`30_PROSENT`,
@@ -81,7 +79,7 @@ class UføreBeregningTest {
 
         val grunnlagUføre = uføreBeregning.beregnUføre(Year.now())
 
-        assertThat(grunnlagUføre.grunnlaget()).isEqualTo(GUnit(5)) //TODO: er denne testen riktig
-        assertThat(grunnlagUføre.type()).isEqualTo(GrunnlagUføre.Type.YTTERLIGERE_NEDSATT)
+        assertThat(grunnlagUføre.grunnlaget()).isEqualTo(GUnit(5))
+        assertThat(grunnlagUføre.type()).isEqualTo(GrunnlagUføre.Type.STANDARD)
     }
 }

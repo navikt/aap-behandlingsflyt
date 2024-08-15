@@ -2,9 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.beregning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
-import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.Prosent
 import java.time.Year
@@ -35,7 +33,6 @@ class UføreBeregning(
                 uføreInntekterFraForegåendeÅr = inntekterForegåendeÅr.toList(), //TODO: wat?
                 uføreInntektIKroner = uføreInntektIKroner,
                 uføreYtterligereNedsattArbeidsevneÅr = ytterligereNedsattÅr,
-                er6GBegrenset = grunnlag.er6GBegrenset(),
                 erGjennomsnitt = grunnlag.erGjennomsnitt()
             )
         } else {
@@ -48,7 +45,6 @@ class UføreBeregning(
                 uføreInntekterFraForegåendeÅr = inntekterForegåendeÅr.toList(), //TODO: wat? <- hva menes med wat?
                 uføreInntektIKroner = uføreInntektIKroner,
                 uføreYtterligereNedsattArbeidsevneÅr = ytterligereNedsattÅr,
-                er6GBegrenset = grunnlag.er6GBegrenset(),
                 erGjennomsnitt = grunnlag.erGjennomsnitt()
             )
         }

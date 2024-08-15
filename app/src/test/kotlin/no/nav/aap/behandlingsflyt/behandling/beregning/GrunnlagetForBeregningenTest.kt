@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.GUnit
@@ -46,14 +47,8 @@ class GrunnlagetForBeregningenTest {
     @Test
     fun `Hvis bruker ikke har inntekt beregnes grunnlaget til 0 kr`() {
         val inntekterPerÅr = setOf(
-            InntektPerÅr(
-                Year.of(2022),
-                Beløp(0)
-            ),
-            InntektPerÅr(
-                Year.of(2021),
-                Beløp(0)
-            ),
+            InntektPerÅr(Year.of(2022), Beløp(0)),
+            InntektPerÅr(Year.of(2021), Beløp(0)),
             InntektPerÅr(Year.of(2020), Beløp(0))
         )
         val grunnlagetForBeregningen = GrunnlagetForBeregningen(inntekterPerÅr)
@@ -63,9 +58,30 @@ class GrunnlagetForBeregningenTest {
         assertThat(grunnlaget).isEqualTo(
             Grunnlag11_19(
                 grunnlaget = GUnit(BigDecimal(0)),
-                er6GBegrenset = false,
                 erGjennomsnitt = false,
-                inntekter = inntekterPerÅr.toList()
+                inntekter = listOf(
+                    GrunnlagInntekt(
+                        år = Year.of(2022),
+                        inntektIKroner = Beløp(0),
+                        inntektIG = GUnit(0),
+                        inntekt6GBegrenset = GUnit(0),
+                        er6GBegrenset = false
+                    ),
+                    GrunnlagInntekt(
+                        år = Year.of(2021),
+                        inntektIKroner = Beløp(0),
+                        inntektIG = GUnit(0),
+                        inntekt6GBegrenset = GUnit(0),
+                        er6GBegrenset = false
+                    ),
+                    GrunnlagInntekt(
+                        år = Year.of(2020),
+                        inntektIKroner = Beløp(0),
+                        inntektIG = GUnit(0),
+                        inntekt6GBegrenset = GUnit(0),
+                        er6GBegrenset = false
+                    )
+                )
             )
         )
     }
@@ -75,12 +91,9 @@ class GrunnlagetForBeregningenTest {
         val inntekterPerÅr = setOf(
             InntektPerÅr(
                 Year.of(2022),
-                Beløp(5 * 109_784)
-            ),    // 548 920
-            InntektPerÅr(
-                Year.of(2021),
-                Beløp(0)
+                Beløp(5 * 109_784) // 548 920
             ),
+            InntektPerÅr(Year.of(2021), Beløp(0)),
             InntektPerÅr(Year.of(2020), Beløp(0))
         )
         val grunnlagetForBeregningen = GrunnlagetForBeregningen(inntekterPerÅr)
@@ -90,9 +103,30 @@ class GrunnlagetForBeregningenTest {
         assertThat(grunnlaget).isEqualTo(
             Grunnlag11_19(
                 grunnlaget = GUnit(BigDecimal(5)),
-                er6GBegrenset = false,
                 erGjennomsnitt = false,
-                inntekter = inntekterPerÅr.toList()
+                inntekter = listOf(
+                    GrunnlagInntekt(
+                        år = Year.of(2022),
+                        inntektIKroner = Beløp(5 * 109_784), // 548 920
+                        inntektIG = GUnit(5),
+                        inntekt6GBegrenset = GUnit(5),
+                        er6GBegrenset = false
+                    ),
+                    GrunnlagInntekt(
+                        år = Year.of(2021),
+                        inntektIKroner = Beløp(0),
+                        inntektIG = GUnit(0),
+                        inntekt6GBegrenset = GUnit(0),
+                        er6GBegrenset = false
+                    ),
+                    GrunnlagInntekt(
+                        år = Year.of(2020),
+                        inntektIKroner = Beløp(0),
+                        inntektIG = GUnit(0),
+                        inntekt6GBegrenset = GUnit(0),
+                        er6GBegrenset = false
+                    )
+                )
             )
         )
     }
@@ -102,16 +136,16 @@ class GrunnlagetForBeregningenTest {
         val inntekterPerÅr = setOf(
             InntektPerÅr(
                 Year.of(2022),
-                Beløp(5 * 109_784)
-            ),   // 548 920
+                Beløp(5 * 109_784) // 548 920
+            ),
             InntektPerÅr(
                 Year.of(2021),
-                Beløp(2 * 104_716)
-            ),   // 209 432
+                Beløp(2 * 104_716) // 209 432
+            ),
             InntektPerÅr(
                 Year.of(2020),
-                Beløp(2 * 100_853)
-            )    // 201 706
+                Beløp(2 * 100_853) // 201 706
+            )
         )
         val grunnlagetForBeregningen = GrunnlagetForBeregningen(inntekterPerÅr)
 
@@ -120,28 +154,50 @@ class GrunnlagetForBeregningenTest {
         assertThat(grunnlaget).isEqualTo(
             Grunnlag11_19(
                 grunnlaget = GUnit(BigDecimal(5)),
-                er6GBegrenset = false,
                 erGjennomsnitt = false,
-                inntekter = inntekterPerÅr.toList()
+                inntekter = listOf(
+                    GrunnlagInntekt(
+                        år = Year.of(2022),
+                        inntektIKroner = Beløp(5 * 109_784), // 548 920
+                        inntektIG = GUnit(5),
+                        inntekt6GBegrenset = GUnit(5),
+                        er6GBegrenset = false
+                    ),
+                    GrunnlagInntekt(
+                        år = Year.of(2021),
+                        inntektIKroner = Beløp(2 * 104_716), // 209 432
+                        inntektIG = GUnit(2),
+                        inntekt6GBegrenset = GUnit(2),
+                        er6GBegrenset = false
+                    ),
+                    GrunnlagInntekt(
+                        år = Year.of(2020),
+                        inntektIKroner = Beløp(2 * 100_853), // 201 706
+                        inntektIG = GUnit(2),
+                        inntekt6GBegrenset = GUnit(2),
+                        er6GBegrenset = false
+                    )
+                )
+
             )
         )
     }
 
     @Test
-    fun `Hvis bruker har samme inntekt i kroner siste tre kalenderår blir grunnlaget det samme som om gjennomsnittet ble brukt`() {
+    fun `Hvis bruker har samme inntekt i G siste tre kalenderår brukes siste år som grunnlag`() {
         val inntekterPerÅr = setOf(
             InntektPerÅr(
                 Year.of(2022),
-                Beløp(5 * 109_784)
-            ),   // 548 920
+                Beløp(5 * 109_784) // 548 920
+            ),
             InntektPerÅr(
                 Year.of(2021),
-                Beløp(5 * 104_716)
-            ),   // 523 580
+                Beløp(5 * 104_716) // 523 580
+            ),
             InntektPerÅr(
                 Year.of(2020),
-                Beløp(5 * 100_853)
-            )    // 504 265
+                Beløp(5 * 100_853) // 504 265
+            )
         )
         val grunnlagetForBeregningen = GrunnlagetForBeregningen(inntekterPerÅr)
 
@@ -149,10 +205,31 @@ class GrunnlagetForBeregningenTest {
 
         assertThat(grunnlaget).isEqualTo(
             Grunnlag11_19(
-                grunnlaget = GUnit(BigDecimal(5)),  // 5 er gjennomsnitt
-                er6GBegrenset = false,
+                grunnlaget = GUnit(BigDecimal(5)),  // gjennomsnitt er også 5
                 erGjennomsnitt = false,
-                inntekter = inntekterPerÅr.toList()
+                inntekter = listOf(
+                    GrunnlagInntekt(
+                        år = Year.of(2022),
+                        inntektIKroner = Beløp(5 * 109_784), // 548 920
+                        inntektIG = GUnit(5),
+                        inntekt6GBegrenset = GUnit(5),
+                        er6GBegrenset = false
+                    ),
+                    GrunnlagInntekt(
+                        år = Year.of(2021),
+                        inntektIKroner = Beløp(5 * 104_716), // 523 580
+                        inntektIG = GUnit(5),
+                        inntekt6GBegrenset = GUnit(5),
+                        er6GBegrenset = false
+                    ),
+                    GrunnlagInntekt(
+                        år = Year.of(2020),
+                        inntektIKroner = Beløp(5 * 100_853), // 504 265
+                        inntektIG = GUnit(5),
+                        inntekt6GBegrenset = GUnit(5),
+                        er6GBegrenset = false
+                    )
+                )
             )
         )
     }
@@ -162,16 +239,16 @@ class GrunnlagetForBeregningenTest {
         val inntekterPerÅr = setOf(
             InntektPerÅr(
                 Year.of(2022),
-                Beløp(7 * 109_784)
-            ),   // 768 488
+                Beløp(7 * 109_784) // 768 488
+            ),
             InntektPerÅr(
                 Year.of(2021),
-                Beløp(2 * 104_716)
-            ),   // 209 432
+                Beløp(2 * 104_716) // 209 432
+            ),
             InntektPerÅr(
                 Year.of(2020),
-                Beløp(2 * 100_853)
-            )    // 201 706
+                Beløp(2 * 100_853) // 201 706
+            )
         )
         val grunnlagetForBeregningen = GrunnlagetForBeregningen(inntekterPerÅr)
 
@@ -180,9 +257,30 @@ class GrunnlagetForBeregningenTest {
         assertThat(grunnlaget).isEqualTo(
             Grunnlag11_19(
                 grunnlaget = GUnit(6),
-                er6GBegrenset = true,
                 erGjennomsnitt = false,
-                inntekter = inntekterPerÅr.toList()
+                inntekter = listOf(
+                    GrunnlagInntekt(
+                        år = Year.of(2022),
+                        inntektIKroner = Beløp(7 * 109_784), // 768 488
+                        inntektIG = GUnit(7),
+                        inntekt6GBegrenset = GUnit(6),
+                        er6GBegrenset = true
+                    ),
+                    GrunnlagInntekt(
+                        år = Year.of(2021),
+                        inntektIKroner = Beløp(2 * 104_716), // 209 432
+                        inntektIG = GUnit(2),
+                        inntekt6GBegrenset = GUnit(2),
+                        er6GBegrenset = false
+                    ),
+                    GrunnlagInntekt(
+                        år = Year.of(2020),
+                        inntektIKroner = Beløp(2 * 100_853), // 201 706
+                        inntektIG = GUnit(2),
+                        inntekt6GBegrenset = GUnit(2),
+                        er6GBegrenset = false
+                    )
+                )
             )
         )
     }
@@ -190,22 +288,51 @@ class GrunnlagetForBeregningenTest {
     @Test
     fun `Gjennomsnittlig inntekt siste tre år begrenses oppad til 6G`() {
         val inntekterPerÅr = setOf(
-            InntektPerÅr(Year.of(2022), Beløp(7 * 109_784)),   // 768 488
-            InntektPerÅr(Year.of(2021), Beløp(7 * 104_716)),   // 733 012
-            InntektPerÅr(Year.of(2020), Beløp(7 * 100_853))    // 705 971
+            InntektPerÅr(
+                Year.of(2022),
+                Beløp(7 * 109_784) // 768 488
+            ),
+            InntektPerÅr(
+                Year.of(2021),
+                Beløp(7 * 104_716) // 733 012
+            ),
+            InntektPerÅr(
+                Year.of(2020),
+                Beløp(7 * 100_853) // 705 971
+            )
         )
         val grunnlagetForBeregningen = GrunnlagetForBeregningen(inntekterPerÅr)
 
         val beregnetGrunnlag = grunnlagetForBeregningen.beregnGrunnlaget()
 
         assertThat(beregnetGrunnlag.grunnlaget()).isEqualTo(GUnit(6))
-        assertThat(beregnetGrunnlag.er6GBegrenset()).isEqualTo(true)
         assertThat(beregnetGrunnlag).isEqualTo(
             Grunnlag11_19(
                 grunnlaget = GUnit(6),
-                er6GBegrenset = true,
                 erGjennomsnitt = false,
-                inntekter = inntekterPerÅr.toList()
+                inntekter = listOf(
+                    GrunnlagInntekt(
+                        år = Year.of(2022),
+                        inntektIKroner = Beløp(7 * 109_784), // 768 488
+                        inntektIG = GUnit(7),
+                        inntekt6GBegrenset = GUnit(6),
+                        er6GBegrenset = true
+                    ),
+                    GrunnlagInntekt(
+                        år = Year.of(2021),
+                        inntektIKroner = Beløp(7 * 104_716), // 733 012
+                        inntektIG = GUnit(7),
+                        inntekt6GBegrenset = GUnit(6),
+                        er6GBegrenset = true
+                    ),
+                    GrunnlagInntekt(
+                        år = Year.of(2020),
+                        inntektIKroner = Beløp(7 * 100_853), // 705 971
+                        inntektIG = GUnit(7),
+                        inntekt6GBegrenset = GUnit(6),
+                        er6GBegrenset = true
+                    )
+                )
             )
         )
     }
@@ -213,9 +340,18 @@ class GrunnlagetForBeregningenTest {
     @Test
     fun `om nyeste inntekt er lav, så brukes gjennomsnitt`() {
         val inntekterPerÅr = setOf(
-            InntektPerÅr(Year.of(2022), Beløp(3 * 109_784)),
-            InntektPerÅr(Year.of(2021), Beløp(4 * 104_716)),
-            InntektPerÅr(Year.of(2020), Beløp(5 * 100_853))
+            InntektPerÅr(
+                Year.of(2022),
+                Beløp(3 * 109_784) // 329 352
+            ),
+            InntektPerÅr(
+                Year.of(2021),
+                Beløp(4 * 104_716) // 418 864
+            ),
+            InntektPerÅr(
+                Year.of(2020),
+                Beløp(5 * 100_853) // 504 265
+            )
         )
 
         val grunnlagetForBeregningen = GrunnlagetForBeregningen(inntekterPerÅr)
@@ -225,9 +361,30 @@ class GrunnlagetForBeregningenTest {
         assertThat(grunnlaget).isEqualTo(
             Grunnlag11_19(
                 grunnlaget = GUnit(4),
-                er6GBegrenset = false,
                 erGjennomsnitt = true,
-                inntekter = inntekterPerÅr.toList()
+                inntekter = listOf(
+                    GrunnlagInntekt(
+                        år = Year.of(2022),
+                        inntektIKroner = Beløp(3 * 109_784), // 329 352
+                        inntektIG = GUnit(3),
+                        inntekt6GBegrenset = GUnit(3),
+                        er6GBegrenset = false
+                    ),
+                    GrunnlagInntekt(
+                        år = Year.of(2021),
+                        inntektIKroner = Beløp(4 * 104_716), // 418 864
+                        inntektIG = GUnit(4),
+                        inntekt6GBegrenset = GUnit(4),
+                        er6GBegrenset = false
+                    ),
+                    GrunnlagInntekt(
+                        år = Year.of(2020),
+                        inntektIKroner = Beløp(5 * 100_853), // 504 265
+                        inntektIG = GUnit(5),
+                        inntekt6GBegrenset = GUnit(5),
+                        er6GBegrenset = false
+                    )
+                )
             )
         )
     }
@@ -235,9 +392,18 @@ class GrunnlagetForBeregningenTest {
     @Test
     fun `Hvert av kalenderårene begrenses individuelt oppad til 6G før gjennomsnittet beregnes`() {
         val inntekterPerÅr = setOf(
-            InntektPerÅr(Year.of(2022), Beløp(3 * 109_784)),    //   329 352
-            InntektPerÅr(Year.of(2021), Beløp(3 * 104_716)),    //   314 148
-            InntektPerÅr(Year.of(2020), Beløp(12 * 100_853))    // 1 210 236
+            InntektPerÅr(
+                Year.of(2022),
+                Beløp(3 * 109_784) //   329 352
+            ),
+            InntektPerÅr(
+                Year.of(2021),
+                Beløp(3 * 104_716) //   314 148
+            ),
+            InntektPerÅr(
+                Year.of(2020),
+                Beløp(12 * 100_853) // 1 210 236
+            )
         )
         val grunnlagetForBeregningen = GrunnlagetForBeregningen(inntekterPerÅr)
 
@@ -246,39 +412,31 @@ class GrunnlagetForBeregningenTest {
         assertThat(grunnlaget).isEqualTo(
             Grunnlag11_19(
                 grunnlaget = GUnit(4),
-                er6GBegrenset = true,
                 erGjennomsnitt = true,
-                inntekter = inntekterPerÅr.toList()
+                inntekter = listOf(
+                    GrunnlagInntekt(
+                        år = Year.of(2022),
+                        inntektIKroner = Beløp(3 * 109_784), //   329 352
+                        inntektIG = GUnit(3),
+                        inntekt6GBegrenset = GUnit(3),
+                        er6GBegrenset = false
+                    ),
+                    GrunnlagInntekt(
+                        år = Year.of(2021),
+                        inntektIKroner = Beløp(3 * 104_716), //   314 148
+                        inntektIG = GUnit(3),
+                        inntekt6GBegrenset = GUnit(3),
+                        er6GBegrenset = false
+                    ),
+                    GrunnlagInntekt(
+                        år = Year.of(2020),
+                        inntektIKroner = Beløp(12 * 100_853), // 1 210 236
+                        inntektIG = GUnit(12),
+                        inntekt6GBegrenset = GUnit(6),
+                        er6GBegrenset = true
+                    )
+                )
             )
         )
-    }
-
-    @Test
-    fun `Om alle 3 foregående år overstiger 6G, så er er6GBegrenset true`() {
-        val inntekterPerÅr = setOf(
-            InntektPerÅr(Year.of(2022), Beløp(7 * 109_784)),    //   329 352
-            InntektPerÅr(Year.of(2021), Beløp(8 * 104_716)),    //   314 148
-            InntektPerÅr(Year.of(2020), Beløp(12 * 100_853))    // 1 210 236
-        )
-
-        val grunnlagetForBeregningen = GrunnlagetForBeregningen(inntekterPerÅr)
-        val grunnlaget = grunnlagetForBeregningen.beregnGrunnlaget()
-
-        assertThat(grunnlaget.er6GBegrenset()).isTrue()
-    }
-
-
-    @Test
-    fun `Om noen av de 3 foregående år overstiger 6G, så er er6GBegrenset true`() {
-        val inntekterPerÅr = setOf(
-            InntektPerÅr(Year.of(2022), Beløp(0 * 109_784)),    //   329 352
-            InntektPerÅr(Year.of(2021), Beløp(1 * 104_716)),    //   314 148
-            InntektPerÅr(Year.of(2020), Beløp(12 * 100_853))    // 1 210 236
-        )
-
-        val grunnlagetForBeregningen = GrunnlagetForBeregningen(inntekterPerÅr)
-        val grunnlaget = grunnlagetForBeregningen.beregnGrunnlaget()
-
-        assertThat(grunnlaget.er6GBegrenset()).isTrue()
     }
 }

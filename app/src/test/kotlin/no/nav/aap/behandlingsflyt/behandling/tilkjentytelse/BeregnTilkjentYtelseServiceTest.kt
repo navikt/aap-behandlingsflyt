@@ -25,7 +25,6 @@ class BeregnTilkjentYtelseServiceTest {
         val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
         val beregningsgrunnlag = Grunnlag11_19(
             grunnlaget = GUnit(BigDecimal(4)),
-            er6GBegrenset = false,
             erGjennomsnitt = false,
             inntekter = emptyList()
         )
@@ -86,7 +85,6 @@ class BeregnTilkjentYtelseServiceTest {
         val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
         val beregningsgrunnlag = Grunnlag11_19(
             grunnlaget = GUnit(BigDecimal(4)),
-            er6GBegrenset = false,
             erGjennomsnitt = false,
             inntekter = emptyList()
         )
@@ -142,7 +140,6 @@ class BeregnTilkjentYtelseServiceTest {
         val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
         val beregningsgrunnlag = Grunnlag11_19(
             grunnlaget = GUnit(BigDecimal(4)),
-            er6GBegrenset = false,
             erGjennomsnitt = false,
             inntekter = emptyList()
         )
@@ -216,7 +213,6 @@ class BeregnTilkjentYtelseServiceTest {
         val fødeselsdato = Fødselsdato(LocalDate.of(1985, 4, 1))
         val beregningsgrunnlag = Grunnlag11_19(
             grunnlaget = GUnit(BigDecimal(0)),
-            er6GBegrenset = false,
             erGjennomsnitt = false,
             inntekter = emptyList()
         )
@@ -277,7 +273,6 @@ class BeregnTilkjentYtelseServiceTest {
         val fødselsdato = Fødselsdato(LocalDate.of(1995, 4, 1))
         val beregningsgrunnlag = Grunnlag11_19(
             grunnlaget = GUnit(BigDecimal(0)),
-            er6GBegrenset = false,
             erGjennomsnitt = false,
             inntekter = emptyList()
         )

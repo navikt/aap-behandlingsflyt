@@ -117,7 +117,6 @@ data class GrunnlagUføreDTO(
  */
 data class BeregningsgrunnlagDTO(
     val grunnlag: Double,
-    val er6GBegrenset: Boolean,
     val grunnlag11_19dto: Grunnlag11_19DTO? = null,
     val grunnlagYrkesskade: GrunnlagYrkesskadeDTO? = null,
     val grunnlagUføre: GrunnlagUføreDTO? = null

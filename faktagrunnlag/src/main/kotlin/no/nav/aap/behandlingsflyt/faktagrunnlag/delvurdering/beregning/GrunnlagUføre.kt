@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre.Type
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.verdityper.Beløp
@@ -30,7 +31,6 @@ class GrunnlagUføre(
     private val uføreInntekterFraForegåendeÅr: List<InntektPerÅr>, // uføre ikke oppjustert
     private val uføreInntektIKroner: Beløp, // grunnlaget
     private val uføreYtterligereNedsattArbeidsevneÅr: Year,
-    private val er6GBegrenset: Boolean, // skal være individuelt på hver inntekt
     private val erGjennomsnitt: Boolean,
 ) : Beregningsgrunnlag {
 
@@ -60,10 +60,6 @@ class GrunnlagUføre(
 
     fun uføreYtterligereNedsattArbeidsevneÅr(): Year {
         return uføreYtterligereNedsattArbeidsevneÅr
-    }
-
-    override fun er6GBegrenset(): Boolean {
-        return er6GBegrenset
     }
 
     override fun erGjennomsnitt(): Boolean {

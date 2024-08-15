@@ -1,9 +1,14 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning
 
+import no.nav.aap.behandlingsflyt.behandling.beregning.GrunnlagetForBeregningen.GrunnlagInntektForBeregning.Companion.beregnGjennomsnitt
+import no.nav.aap.behandlingsflyt.behandling.beregning.GrunnlagetForBeregningen.GrunnlagInntektForBeregning.Companion.tilGrunnlagInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
+import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.GUnit
+import java.time.Year
 import java.util.*
 
 /**
@@ -27,31 +32,80 @@ class GrunnlagetForBeregningen(
      * Beregn grunnlaget etter §11-19. Implementering av https://lovdata.no/lov/1997-02-28-19/§11-19
      */
     fun beregnGrunnlaget(): Grunnlag11_19 {
-        // Inntekter justeres etter størrelsen på G-beløpet i de aktuelle årene.
-        val gUnits = inntekter.map { inntekt ->
-            Grunnbeløp.finnGUnit(inntekt.år, inntekt.beløp)
-        }
+        val beregnetInntekter = beregnInntekter()
 
-        val gUnitsBegrensetTil6GUnits = gUnits.map(GUnit::begrensTil6GUnits) // todo: her bør er6gbegrenset være
-        val er6Gbegrenset = gUnitsBegrensetTil6GUnits != gUnits
-        val gUnitFørsteÅr = gUnitsBegrensetTil6GUnits.first()
+        val inntektFørsteÅr = beregnetInntekter.first()
 
-        val gUnitGjennomsnitt = GUnit.gjennomsnittlig(gUnitsBegrensetTil6GUnits)
+        val gUnitGjennomsnitt = beregnetInntekter.beregnGjennomsnitt()
 
         // Om gjennomsnittlig inntekt siste tre år er høyere enn siste års inntekt, skal den brukes i beregningen
         // i stedet.
-        var gjeldende = gUnitFørsteÅr
-        var erGjennomsnitt = false
-        if (gUnitFørsteÅr < gUnitGjennomsnitt) {
-            erGjennomsnitt = true
-            gjeldende = gUnitGjennomsnitt
+        return if (inntektFørsteÅr.skalBrukeGjennomsnitt(gUnitGjennomsnitt)) {
+            Grunnlag11_19(
+                grunnlaget = gUnitGjennomsnitt,
+                erGjennomsnitt = true,
+                inntekter = beregnetInntekter.tilGrunnlagInntekt()
+            )
+        } else {
+            Grunnlag11_19(
+                grunnlaget = inntektFørsteÅr.grunnlag(),
+                erGjennomsnitt = false,
+                inntekter = beregnetInntekter.tilGrunnlagInntekt()
+            )
+        }
+    }
+
+    private class GrunnlagInntektForBeregning(
+        private val år: Year,
+        private val inntektIKroner: Beløp,
+        private val inntektIG: GUnit,
+        private val inntekt6GBegrenset: GUnit,
+        private val er6GBegrenset: Boolean
+    ) {
+        companion object {
+            fun Iterable<GrunnlagInntektForBeregning>.beregnGjennomsnitt(): GUnit {
+                return GUnit.gjennomsnittlig(this.map(GrunnlagInntektForBeregning::inntekt6GBegrenset))
+            }
+
+            fun Iterable<GrunnlagInntektForBeregning>.tilGrunnlagInntekt(): List<GrunnlagInntekt> {
+                return map { inntekt ->
+                    GrunnlagInntekt(
+                        år = inntekt.år,
+                        inntektIKroner = inntekt.inntektIKroner,
+                        inntektIG = inntekt.inntektIG,
+                        inntekt6GBegrenset = inntekt.inntekt6GBegrenset,
+                        er6GBegrenset = inntekt.er6GBegrenset
+                    )
+                }
+            }
         }
 
-        return Grunnlag11_19(
-            gjeldende,
-            er6GBegrenset = er6Gbegrenset, // TODO endre denne
-            erGjennomsnitt = erGjennomsnitt,
-            inntekter = inntekter.toList()
+        fun skalBrukeGjennomsnitt(gjennomsnitt: GUnit): Boolean {
+            return this.inntekt6GBegrenset < gjennomsnitt
+        }
+
+        fun grunnlag(): GUnit {
+            return inntekt6GBegrenset
+        }
+    }
+
+    private fun beregnInntekter(): List<GrunnlagInntektForBeregning> {
+        return inntekter.map(::beregnInntekt)
+    }
+
+    private fun beregnInntekt(inntektPerÅr: InntektPerÅr): GrunnlagInntektForBeregning {
+        val år = inntektPerÅr.år
+        val inntektIKroner = inntektPerÅr.beløp
+        // Inntekter justeres etter størrelsen på G-beløpet i de aktuelle årene.
+        val inntektIG = Grunnbeløp.finnGUnit(år, inntektIKroner)
+        val inntekt6GBegrenset = inntektIG.begrensTil6GUnits()
+        val er6GBegrenset = inntektIG > inntekt6GBegrenset
+        return GrunnlagInntektForBeregning(
+            år = år,
+            inntektIKroner = inntektIKroner,
+            inntektIG = inntektIG,
+            inntekt6GBegrenset = inntekt6GBegrenset,
+            er6GBegrenset = er6GBegrenset,
         )
     }
 }

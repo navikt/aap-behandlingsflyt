@@ -36,7 +36,6 @@ class GrunnlagYrkesskade(
     private val grunnlagForBeregningAvYrkesskadeandel: GUnit,
     private val yrkesskadeinntektIG: GUnit,
     private val grunnlagEtterYrkesskadeFordel: GUnit,
-    private val er6GBegrenset: Boolean,
     private val erGjennomsnitt: Boolean // bort?
 ) : Beregningsgrunnlag {
 
@@ -91,10 +90,6 @@ class GrunnlagYrkesskade(
         )
     }
 
-    override fun er6GBegrenset(): Boolean {
-        return er6GBegrenset
-    }
-
     override fun erGjennomsnitt(): Boolean {
         return erGjennomsnitt
     }
@@ -131,7 +126,6 @@ class GrunnlagYrkesskade(
         if (grunnlagForBeregningAvYrkesskadeandel != other.grunnlagForBeregningAvYrkesskadeandel) return false
         if (yrkesskadeinntektIG != other.yrkesskadeinntektIG) return false
         if (grunnlagEtterYrkesskadeFordel != other.grunnlagEtterYrkesskadeFordel) return false
-        if (er6GBegrenset != other.er6GBegrenset) return false
         if (erGjennomsnitt != other.erGjennomsnitt) return false
 
         return true
@@ -150,7 +144,6 @@ class GrunnlagYrkesskade(
         result = 31 * result + grunnlagForBeregningAvYrkesskadeandel.hashCode()
         result = 31 * result + yrkesskadeinntektIG.hashCode()
         result = 31 * result + grunnlagEtterYrkesskadeFordel.hashCode()
-        result = 31 * result + er6GBegrenset.hashCode()
         result = 31 * result + erGjennomsnitt.hashCode()
         return result
     }

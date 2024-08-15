@@ -49,18 +49,22 @@ CREATE TABLE BEREGNING
 
 CREATE TABLE BEREGNING_HOVED
 (
-    ID            BIGSERIAL                              NOT NULL PRIMARY KEY,
-    BEREGNING_ID  BIGINT                                 NOT NULL REFERENCES BEREGNING (ID),
-    G_UNIT        NUMERIC(21, 10)                        NOT NULL,
-    OPPRETTET_TID TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
+    ID              BIGSERIAL                              NOT NULL PRIMARY KEY,
+    BEREGNING_ID    BIGINT                                 NOT NULL REFERENCES BEREGNING (ID),
+    GRUNNLAG        NUMERIC(21, 10)                        NOT NULL,
+    ER_GJENNOMSNITT BOOLEAN                                NOT NULL,
+    OPPRETTET_TID   TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 CREATE TABLE BEREGNING_INNTEKT
 (
-    ID                 BIGSERIAL      NOT NULL PRIMARY KEY,
-    BEREGNING_HOVED_ID BIGINT         NOT NULL REFERENCES BEREGNING_HOVED (ID),
-    ARSTALL            INT            NOT NULL,
-    INNTEKT            NUMERIC(19, 2) NOT NULL
+    ID                   BIGSERIAL       NOT NULL PRIMARY KEY,
+    BEREGNING_HOVED_ID   BIGINT          NOT NULL REFERENCES BEREGNING_HOVED (ID),
+    ARSTALL              INT             NOT NULL,
+    INNTEKT_I_KRONER     NUMERIC(19, 2)  NOT NULL,
+    INNTEKT_I_G          NUMERIC(21, 10) NOT NULL,
+    INNTEKT_6G_BEGRENSET NUMERIC(21, 10) NOT NULL,
+    ER_6G_BEGRENSET      BOOLEAN         NOT NULL
 );
 
 CREATE TABLE BEREGNING_UFORE
@@ -94,7 +98,6 @@ CREATE TABLE BEREGNING_YRKESSKADE
     ANDEL_SOM_IKKE_SKYLDES_YRKESSKADE         SMALLINT                               NOT NULL,
     GRUNNLAG_ETTER_YRKESSKADE_FORDEL          NUMERIC(21, 10)                        NOT NULL,
     GRUNNLAG_FOR_BEREGNING_AV_YRKESSKADEANDEL NUMERIC(21, 10)                        NOT NULL,
-    ER_6G_BEGRENSET                           BOOLEAN                                NOT NULL,
     ER_GJENNOMSNITT                           BOOLEAN                                NOT NULL
 );
 
