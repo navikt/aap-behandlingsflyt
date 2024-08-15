@@ -1,11 +1,11 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger
 
-import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 
 class Personopplysning(
     val fødselsdato: Fødselsdato,
-    val opprettetTid: LocalDateTime = LocalDateTime.now(),
+    internal val id: Long? = null,
+    val dødsdato: Dødsdato? = null
 ) {
 
     // Denne skal kun sammenlikne data og ikke tidspunkter
@@ -15,15 +15,15 @@ class Personopplysning(
 
         other as Personopplysning
 
-        return fødselsdato == other.fødselsdato
+        if (fødselsdato != other.fødselsdato) return false
+        if (dødsdato != other.dødsdato) return false
+
+        return true
     }
 
     override fun hashCode(): Int {
-        return fødselsdato.hashCode()
-    }
-
-    fun skalInnhentes(): Boolean {
-        val iGår = LocalDateTime.now().truncatedTo(ChronoUnit.DAYS).minusDays(1)
-        return opprettetTid.truncatedTo(ChronoUnit.DAYS).isBefore(iGår)
+        var result = fødselsdato.hashCode()
+        result = 31 * result + (dødsdato?.hashCode() ?: 0)
+        return result
     }
 }

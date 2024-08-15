@@ -18,7 +18,7 @@ class YrkesskadeService private constructor(
 
     override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekst): Boolean {
         val sak = sakService.hent(kontekst.sakId)
-        val fødselsdato = requireNotNull(personopplysningRepository.hentHvisEksisterer(kontekst.behandlingId)?.personopplysning?.fødselsdato)
+        val fødselsdato = requireNotNull(personopplysningRepository.hentHvisEksisterer(kontekst.behandlingId)?.brukerPersonopplysning?.fødselsdato)
         val yrkesskadePeriode = yrkesskadeRegisterGateway.innhent(sak.person, fødselsdato)
 
         val behandlingId = kontekst.behandlingId

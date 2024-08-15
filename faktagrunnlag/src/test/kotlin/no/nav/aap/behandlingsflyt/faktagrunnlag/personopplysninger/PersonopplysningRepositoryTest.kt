@@ -46,7 +46,7 @@ class PersonopplysningRepositoryTest {
             val personopplysningRepository = PersonopplysningRepository(connection)
             personopplysningRepository.lagre(behandling.id, Personopplysning(Fødselsdato(17 mars 1992)))
             val personopplysningGrunnlag = personopplysningRepository.hentHvisEksisterer(behandling.id)
-            assertThat(personopplysningGrunnlag?.personopplysning).isEqualTo(Personopplysning(Fødselsdato(17 mars 1992)))
+            assertThat(personopplysningGrunnlag?.brukerPersonopplysning).isEqualTo(Personopplysning(Fødselsdato(17 mars 1992)))
         }
     }
 
@@ -67,7 +67,7 @@ class PersonopplysningRepositoryTest {
                     SELECT p.FODSELSDATO
                     FROM BEHANDLING b
                     INNER JOIN PERSONOPPLYSNING_GRUNNLAG g ON b.ID = g.BEHANDLING_ID
-                    INNER JOIN PERSONOPPLYSNING p ON g.PERSONOPPLYSNING_ID = p.ID
+                    INNER JOIN BRUKER_PERSONOPPLYSNING p ON g.Bruker_PERSONOPPLYSNING_ID = p.ID
                     WHERE b.SAK_ID = ?
                     """.trimIndent()
                 ) {
@@ -97,7 +97,7 @@ class PersonopplysningRepositoryTest {
             val behandling2 = behandling(connection, sak)
 
             val personopplysningGrunnlag = personopplysningRepository.hentHvisEksisterer(behandling2.id)
-            assertThat(personopplysningGrunnlag?.personopplysning).isEqualTo(Personopplysning(Fødselsdato(17 mars 1992)))
+            assertThat(personopplysningGrunnlag?.brukerPersonopplysning).isEqualTo(Personopplysning(Fødselsdato(17 mars 1992)))
         }
     }
 
@@ -128,7 +128,7 @@ class PersonopplysningRepositoryTest {
             val behandling2 = behandling(connection, sak)
 
             val personopplysningGrunnlag = personopplysningRepository.hentHvisEksisterer(behandling2.id)
-            assertThat(personopplysningGrunnlag?.personopplysning).isEqualTo(Personopplysning(Fødselsdato(17 mars 1992)))
+            assertThat(personopplysningGrunnlag?.brukerPersonopplysning).isEqualTo(Personopplysning(Fødselsdato(17 mars 1992)))
         }
     }
 
@@ -141,11 +141,11 @@ class PersonopplysningRepositoryTest {
 
             personopplysningRepository.lagre(behandling.id, Personopplysning(Fødselsdato(17 mars 1992)))
             val orginaltGrunnlag = personopplysningRepository.hentHvisEksisterer(behandling.id)
-            assertThat(orginaltGrunnlag?.personopplysning).isEqualTo(Personopplysning(Fødselsdato(17 mars 1992)))
+            assertThat(orginaltGrunnlag?.brukerPersonopplysning).isEqualTo(Personopplysning(Fødselsdato(17 mars 1992)))
 
             personopplysningRepository.lagre(behandling.id, Personopplysning(Fødselsdato(18 mars 1992)))
             val oppdatertGrunnlag = personopplysningRepository.hentHvisEksisterer(behandling.id)
-            assertThat(oppdatertGrunnlag?.personopplysning).isEqualTo(Personopplysning(Fødselsdato(18 mars 1992)))
+            assertThat(oppdatertGrunnlag?.brukerPersonopplysning).isEqualTo(Personopplysning(Fødselsdato(18 mars 1992)))
 
             data class Opplysning(val behandlingId: Long, val fødselsdato: LocalDate, val aktiv: Boolean)
 
@@ -155,7 +155,7 @@ class PersonopplysningRepositoryTest {
                     SELECT b.ID, p.FODSELSDATO, g.AKTIV
                     FROM BEHANDLING b
                     INNER JOIN PERSONOPPLYSNING_GRUNNLAG g ON b.ID = g.BEHANDLING_ID
-                    INNER JOIN PERSONOPPLYSNING p ON g.PERSONOPPLYSNING_ID = p.ID
+                    INNER JOIN BRUKER_PERSONOPPLYSNING p ON g.BRUKER_PERSONOPPLYSNING_ID = p.ID
                     WHERE b.SAK_ID = ?
                     """.trimIndent()
                 ) {
@@ -203,7 +203,7 @@ class PersonopplysningRepositoryTest {
                     SELECT b.ID AS BEHANDLING_ID, p.ID AS PERSONOPPLYSNING_ID, p.FODSELSDATO, g.AKTIV
                     FROM BEHANDLING b
                     INNER JOIN PERSONOPPLYSNING_GRUNNLAG g ON b.ID = g.BEHANDLING_ID
-                    INNER JOIN PERSONOPPLYSNING p ON g.PERSONOPPLYSNING_ID = p.ID
+                    INNER JOIN BRUKER_PERSONOPPLYSNING p ON g.BRUKER_PERSONOPPLYSNING_ID = p.ID
                     WHERE b.SAK_ID = ?
                     """.trimIndent()
                 ) {

@@ -30,8 +30,8 @@ object PdlBarnGateway : BarnGateway {
         tokenProvider = ClientCredentialsTokenProvider,
     )
 
-    override fun hentBarn(person: Person): List<Barn> {
-        return hentBarn(hentBarnRelasjoner(person))
+    override fun hentBarn(person: Person, relaterteBarnIdenter: List<Ident>): List<Barn> {
+        return hentBarn(hentBarnRelasjoner(person) + relaterteBarnIdenter)
     }
 
     private fun hentBarnRelasjoner(person: Person): List<Ident> {

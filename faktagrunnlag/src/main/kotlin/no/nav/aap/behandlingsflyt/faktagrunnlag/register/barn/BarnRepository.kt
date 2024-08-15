@@ -1,65 +1,153 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.Ident
 
 class BarnRepository(private val connection: DBConnection) {
 
-    fun hent(behandlingId: BehandlingId): BarnGrunnlag {
-        val barn = connection.queryList(
+    fun hentHvisEksisterer(behandlingId: BehandlingId): BarnGrunnlag? {
+
+        val grunnlag = connection.queryFirstOrNull(
             """
-                SELECT p.IDENT, p.FODSELSDATO, p.OPPRETTET_TID, p.DODSDATO
-                FROM BARNOPPLYSNING_GRUNNLAG g
-                INNER JOIN BARNOPPLYSNING p ON g.BGB_ID = p.BGB_ID
-                WHERE g.AKTIV AND g.BEHANDLING_ID = ?
-            """.trimIndent()
+            SELECT * 
+            FROM BARNOPPLYSNING_GRUNNLAG g 
+            WHERE g.AKTIV AND g.BEHANDLING_ID = ?
+        """.trimIndent()
         ) {
             setParams {
-                setLong(1, behandlingId.toLong())
+                setLong(1, behandlingId.id)
             }
-            setRowMapper { row ->
-                Barn (
-                    ident = Ident(row.getString("IDENT")),
-                    fødselsdato = Fødselsdato(row.getLocalDate("FODSELSDATO")),
-                    dødsdato = row.getLocalDateOrNull("DODSDATO")?.let { Dødsdato(it) }
+            setRowMapper {
+                BarnGrunnlag(
+                    registerbarn = hentBarn(it.getLongOrNull("register_barn_id")),
+                    oppgittBarn = hentOppgittBarn(it.getLongOrNull("oppgitt_barn_id"))
                 )
             }
         }
 
-        return BarnGrunnlag(
-            barn = barn
+        return grunnlag
+    }
+
+    fun hent(behandlingId: BehandlingId): BarnGrunnlag {
+        return requireNotNull(hentHvisEksisterer(behandlingId))
+    }
+
+    private fun hentOppgittBarn(id: Long?): OppgittBarn? {
+        if (id == null) {
+            return null
+        }
+
+        return OppgittBarn(id, connection.queryList(
+            """
+                SELECT p.IDENT
+                FROM OPPGITT_BARN p
+                WHERE p.oppgitt_barn_id = ?
+            """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, id)
+            }
+            setRowMapper { row ->
+                Ident(
+                    row.getString("IDENT")
+                )
+            }
+        }.toSet()
         )
     }
 
-    fun lagre(behandlingId: BehandlingId, barn: List<Barn>) {
-        deaktiverEksisterende(behandlingId)
+    private fun hentBarn(id: Long?): RegisterBarn? {
+        if (id == null) {
+            return null
+        }
 
-        val bgbId = connection.executeReturnKey("INSERT INTO BARNOPPLYSNING_GRUNNLAG_BARNOPPLYSNING DEFAULT VALUES") {}
+        return RegisterBarn(id = id, identer = connection.queryList(
+            """
+                SELECT p.IDENT
+                FROM BARNOPPLYSNING p
+                WHERE p.bgb_id = ?
+            """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, id)
+            }
+            setRowMapper { row ->
+                Ident(
+                    row.getString("IDENT")
+                )
+            }
+        })
+    }
+
+    fun lagreOppgitteBarn(behandlingId: BehandlingId, oppgittBarn: OppgittBarn?) {
+        val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
+
+        if (eksisterendeGrunnlag != null) {
+            deaktiverEksisterende(behandlingId)
+        }
+
+        val oppgittBarnId = if(oppgittBarn != null && oppgittBarn.identer.isNotEmpty()) {
+            connection.executeReturnKey("INSERT INTO OPPGITT_BARNOPPLYSNING DEFAULT VALUES") {}
+        } else {
+            null
+        }
+
+        connection.executeBatch(
+            """
+                INSERT INTO BARNOPPLYSNING (IDENT, BGB_ID) VALUES (?, ?)
+            """.trimIndent(),
+            requireNotNull(oppgittBarn?.identer)
+        ) {
+            setParams { barnet ->
+                setString(1, barnet.identifikator)
+                setLong(2, oppgittBarnId)
+            }
+        }
 
         connection.execute(
             """
-                INSERT INTO BARNOPPLYSNING_GRUNNLAG (BEHANDLING_ID, BGB_ID) VALUES (?, ?)
+                INSERT INTO BARNOPPLYSNING_GRUNNLAG (BEHANDLING_ID, register_barn_id, oppgitt_barn_id) VALUES (?, ?, ?)
+            """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setLong(2, eksisterendeGrunnlag?.registerbarn?.id)
+                setLong(3, oppgittBarnId)
+            }
+        }
+    }
+
+    fun lagreRegisterBarn(behandlingId: BehandlingId, barn: Set<Ident>) {
+        val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
+
+        if (eksisterendeGrunnlag != null) {
+            deaktiverEksisterende(behandlingId)
+        }
+
+        val bgbId = connection.executeReturnKey("INSERT INTO BARNOPPLYSNING_GRUNNLAG_BARNOPPLYSNING DEFAULT VALUES") {}
+
+        connection.executeBatch(
+            """
+                INSERT INTO BARNOPPLYSNING (IDENT, BGB_ID) VALUES (?, ?)
+            """.trimIndent(),
+            barn
+        ) {
+            setParams { barnet ->
+                setString(1, barnet.identifikator)
+                setLong(2, bgbId)
+            }
+        }
+
+        connection.execute(
+            """
+                INSERT INTO BARNOPPLYSNING_GRUNNLAG (BEHANDLING_ID, register_barn_id, oppgitt_barn_id) VALUES (?, ?, ?)
             """.trimIndent()
         ) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, bgbId)
-            }
-        }
-
-        connection.executeBatch(
-            """
-                INSERT INTO BARNOPPLYSNING (IDENT, FODSELSDATO, DODSDATO, BGB_ID) VALUES (?, ?, ?, ?)
-            """.trimIndent(),
-            barn
-        ) {
-            setParams {  barnet ->
-                setString(1, barnet.ident.identifikator)
-                setLocalDate(2, barnet.fødselsdato.toLocalDate())
-                setLocalDate(3, barnet.dødsdato?.toLocalDate())
-                setLong(4, bgbId)
+                setLong(3, eksisterendeGrunnlag?.oppgittBarn?.id)
             }
         }
     }
@@ -67,7 +155,7 @@ class BarnRepository(private val connection: DBConnection) {
     fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         require(fraBehandling != tilBehandling)
         val query = """
-            INSERT INTO BARNOPPLYSNING_GRUNNLAG (behandling_id, BGB_ID) SELECT ?, BGB_ID from BARNOPPLYSNING_GRUNNLAG where behandling_id = ? and aktiv
+            INSERT INTO BARNOPPLYSNING_GRUNNLAG (behandling_id, register_barn_id, oppgitt_barn_id) SELECT ?, register_barn_id, oppgitt_barn_id from BARNOPPLYSNING_GRUNNLAG where behandling_id = ? and aktiv
         """.trimIndent()
 
         connection.execute(query) {

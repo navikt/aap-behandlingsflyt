@@ -18,7 +18,8 @@ class PersonopplysningService private constructor(
         val personopplysninger = personopplysningGateway.innhent(sak.person) ?: error("fødselsdato skal alltid eksistere i PDL")
         val eksisterendeData = personopplysningRepository.hentHvisEksisterer(kontekst.behandlingId)
 
-        if (personopplysninger != eksisterendeData?.personopplysning) {
+        // TODO: Oppdatere person tabellen med identene til bruker for å detektere splitt / merge og utlede behovet for å feile
+        if (personopplysninger != eksisterendeData?.brukerPersonopplysning) {
             personopplysningRepository.lagre(kontekst.behandlingId, personopplysninger)
             return false
         }

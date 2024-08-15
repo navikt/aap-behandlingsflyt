@@ -6,33 +6,87 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.PdlBarnGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.RelatertPersonopplysning
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdentGateway
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.verdityper.flyt.FlytKontekst
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
+import no.nav.aap.verdityper.sakogbehandling.Ident
 
 class BarnService private constructor(
     private val sakService: SakService,
     private val barnRepository: BarnRepository,
+    private val personopplysningRepository: PersonopplysningRepository,
+    private val personRepository: PersonRepository,
     private val barnGateway: BarnGateway,
+    private val pdlGateway: IdentGateway,
     private val vilkårsresultatRepository: VilkårsresultatRepository
 ) : Informasjonskrav {
 
     override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekst): Boolean {
         val behandlingId = kontekst.behandlingId
+        val eksisterendeData = barnRepository.hentHvisEksisterer(behandlingId)
 
         val barn = if (harBehandlingsgrunnlag(behandlingId)) {
             val sak = sakService.hent(kontekst.sakId)
-            barnGateway.hentBarn(sak.person)
+            barnGateway.hentBarn(sak.person, eksisterendeData?.oppgittBarn?.identer?.toList() ?: emptyList())
         } else {
             emptyList()
         }
 
-        val eksisterendeData = barnRepository.hent(behandlingId)
-        if (barn.toSet() != eksisterendeData.barn.toSet()) {
-            barnRepository.lagre(behandlingId, barn)
+        val relatertePersonopplysninger =
+            personopplysningRepository.hentHvisEksisterer(behandlingId)?.relatertePersonopplysninger?.personopplysninger
+        val barnIdenter = barn.map { it.ident }.toSet()
+
+        oppdaterPersonIdenter(barnIdenter)
+
+        if (harEndringerIIdenter(barnIdenter, eksisterendeData)
+            || harEndringerIPersonopplysninger(barn, relatertePersonopplysninger)
+        ) {
+            barnRepository.lagreRegisterBarn(behandlingId, barnIdenter)
+            personopplysningRepository.lagre(behandlingId, barn)
             return false
         }
         return true
+    }
+
+    private fun oppdaterPersonIdenter(barnIdenter: Set<Ident>) {
+        barnIdenter.forEach { ident ->
+            val identliste = pdlGateway.hentAlleIdenterForPerson(ident)
+            if (identliste.isEmpty()) {
+                throw IllegalStateException("Fikk ingen treff på ident i PDL")
+            }
+
+            personRepository.finnEllerOpprett(identliste)
+        }
+    }
+
+    private fun harEndringerIPersonopplysninger(
+        barn: List<Barn>,
+        relatertePersonopplysninger: List<RelatertPersonopplysning>?
+    ): Boolean {
+        if (barn.isNotEmpty() && relatertePersonopplysninger.isNullOrEmpty()) {
+            return true
+        }
+        val eksisterendeData = relatertePersonopplysninger?.map { opplysning ->
+            Barn(
+                opplysning.ident(),
+                opplysning.fødselsdato,
+                opplysning.dødsdato
+            )
+        }?.toSet() ?: setOf()
+
+        return barn.toSet() != eksisterendeData
+    }
+
+    private fun harEndringerIIdenter(
+        barnIdenter: Set<Ident>,
+        eksisterendeData: BarnGrunnlag?
+    ): Boolean {
+        return barnIdenter != eksisterendeData?.registerbarn?.identer?.toSet()
     }
 
     private fun harBehandlingsgrunnlag(behandlingId: BehandlingId): Boolean {
@@ -48,7 +102,10 @@ class BarnService private constructor(
             return BarnService(
                 SakService(connection),
                 BarnRepository(connection),
+                PersonopplysningRepository(connection),
+                PersonRepository(connection),
                 PdlBarnGateway,
+                PdlIdentGateway,
                 VilkårsresultatRepository(connection)
             )
         }

@@ -6,9 +6,7 @@ import no.nav.aap.behandlingsflyt.dbtest.InitTestDatabase
 import no.nav.aap.behandlingsflyt.dbtestdata.ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.arbeidsevne.FakePdlGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.EndringType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
@@ -29,8 +27,8 @@ class BarnRepositoryTest {
             val behandling = behandling(connection, sak)
 
             val barnRepository = BarnRepository(connection)
-            val barn = barnRepository.hent(behandling.id)
-            assertThat(barn.barn).isEmpty()
+            val barn = barnRepository.hentHvisEksisterer(behandling.id)
+            assertThat(barn?.registerbarn?.identer).isNullOrEmpty()
         }
     }
 
@@ -41,17 +39,11 @@ class BarnRepositoryTest {
             val behandling = behandling(connection, sak)
 
             val barnRepository = BarnRepository(connection)
-            val barnListe = listOf(
-                Barn(
-                    ident = Ident("12345678910"),
-                    fødselsdato = Fødselsdato(LocalDate.now().minusDays(365)),
-                    dødsdato = null
-                )
-            )
+            val barnListe = setOf(Ident("12345678910"))
 
-            barnRepository.lagre(behandling.id, barnListe)
+            barnRepository.lagreRegisterBarn(behandling.id, barnListe)
             val barn = barnRepository.hent(behandling.id)
-            assertThat(barn.barn).size().isEqualTo(1)
+            assertThat(barn.registerbarn?.identer).size().isEqualTo(1)
         }
     }
 

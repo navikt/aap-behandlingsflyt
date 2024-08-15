@@ -1,3 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.barnetillegg.flate
 
-class BarnetilleggDto(val folkeregisterbarn: List<IdentifiserteBarnDto>)
+import no.nav.aap.verdityper.sakogbehandling.Ident
+
+class BarnetilleggDto(val oppgitteBarn: List<Ident>, val folkeregisterbarn: List<IdentifiserteBarnDto>, val barnSomTrengerVurdering: List<Ident>)

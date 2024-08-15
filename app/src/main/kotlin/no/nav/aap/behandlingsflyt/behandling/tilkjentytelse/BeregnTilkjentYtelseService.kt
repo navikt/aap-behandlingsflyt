@@ -95,8 +95,8 @@ class BeregnTilkjentYtelseService(
             JoinStyle.INNER_JOIN { periode, venstre, høyre ->
                 Segment(
                     periode, Barnetillegg(
-                        barnetillegg = venstre.verdi.multiplisert(høyre.verdi.barn().size),
-                        antallBarn = høyre.verdi.barn().size,
+                        barnetillegg = venstre.verdi.multiplisert(høyre.verdi.barnMedRettTil().size),
+                        antallBarn = høyre.verdi.barnMedRettTil().size,
                         barnetilleggsats = venstre.verdi
                     )
                 )

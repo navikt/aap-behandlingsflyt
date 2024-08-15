@@ -57,7 +57,7 @@ object Førstegangsbehandling : BehandlingType {
             .medSteg(steg = EtAnnetStedSteg, informasjonskrav = listOf(InstitusjonsoppholdService))
             .medSteg(steg = UnderveisSteg, informasjonskrav = listOf(PliktkortService))
             .medSteg(steg = BarnetilleggSteg, informasjonskrav = listOf(BarnService))
-            .medSteg(steg = BeregnTilkjentYtelseSteg, informasjonskrav = listOf(PersonopplysningService))
+            .medSteg(steg = BeregnTilkjentYtelseSteg)
             .medSteg(steg = SimulerUtbetalingSteg)
             .medSteg(steg = ForeslåVedtakSteg) // en-trinn
             .sluttÅOppdatereFaktagrunnlag()

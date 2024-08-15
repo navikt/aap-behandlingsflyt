@@ -135,7 +135,7 @@ class FlytOrkestratorTest {
                 journalpost = JournalpostId("20"),
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),
                 strukturertDokument = StrukturertDokument(
-                    Søknad(student = SøknadStudentDto("NEI"), yrkesskade = "NEI"),
+                    Søknad(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null),
                     Brevkode.SØKNAD
                 ),
                 periode = periode
@@ -420,7 +420,7 @@ class FlytOrkestratorTest {
                 journalpost = JournalpostId("20"),
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),
                 strukturertDokument = StrukturertDokument(
-                    Søknad(student = SøknadStudentDto("NEI"), yrkesskade = "NEI"),
+                    Søknad(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null),
                     Brevkode.SØKNAD
                 ),
                 periode = periode
@@ -453,7 +453,7 @@ class FlytOrkestratorTest {
                 journalpost = JournalpostId("10"),
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
-                    Søknad(student = SøknadStudentDto("NEI"), yrkesskade = "NEI"),
+                    Søknad(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null),
                     Brevkode.SØKNAD
                 ),
                 periode = periode
@@ -644,7 +644,8 @@ class FlytOrkestratorTest {
                 strukturertDokument = StrukturertDokument(
                     Søknad(
                         student = SøknadStudentDto("JA", "JA"),
-                        yrkesskade = "JA"
+                        yrkesskade = "JA",
+                        oppgitteBarn = null
                     ), Brevkode.SØKNAD
                 ),
                 periode = periode
@@ -952,7 +953,7 @@ class FlytOrkestratorTest {
                 journalpost = JournalpostId("1"),
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
-                    Søknad(student = SøknadStudentDto("NEI"), yrkesskade = "NEI"),
+                    Søknad(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null),
                     Brevkode.SØKNAD
                 ),
                 periode = periode
@@ -996,7 +997,7 @@ class FlytOrkestratorTest {
                 journalpost = JournalpostId("2"),
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
-                    Søknad(student = SøknadStudentDto("NEI"), yrkesskade = "NEI"),
+                    Søknad(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null),
                     Brevkode.SØKNAD
                 ),
                 periode = periode
@@ -1050,7 +1051,7 @@ class FlytOrkestratorTest {
                 journalpost = JournalpostId("3"),
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
-                    Søknad(student = SøknadStudentDto("NEI"), yrkesskade = "NEI"),
+                    Søknad(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null),
                     Brevkode.SØKNAD
                 ),
                 periode = periode

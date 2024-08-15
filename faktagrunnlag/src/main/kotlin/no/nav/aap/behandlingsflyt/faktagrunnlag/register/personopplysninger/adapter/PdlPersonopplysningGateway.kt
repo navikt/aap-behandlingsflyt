@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningGateway
@@ -16,7 +17,6 @@ import no.nav.aap.pdl.PdlRequest
 import no.nav.aap.pdl.PdlResponseHandler
 import no.nav.aap.requiredConfigForKey
 import java.net.URI
-import java.time.LocalDateTime
 
 object PdlPersonopplysningGateway : PersonopplysningGateway {
 
@@ -49,8 +49,9 @@ object PdlPersonopplysningGateway : PersonopplysningGateway {
             ?: return null
 
         return Personopplysning(
+            id = 0, // Setter no bs her for å få det gjennom
             fødselsdato = Fødselsdato.parse(foedselsdato),
-            opprettetTid = LocalDateTime.now(),
+            dødsdato = response.data?.hentPerson?.doedsfall?.first()?.doedsdato?.let { Dødsdato.parse(it) }
         )
     }
 }

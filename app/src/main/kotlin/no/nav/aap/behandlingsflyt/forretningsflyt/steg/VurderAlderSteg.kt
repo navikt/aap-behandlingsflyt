@@ -24,7 +24,7 @@ class VurderAlderSteg private constructor(
 
             val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
             for (periode in kontekst.perioder()) {
-                val aldersgrunnlag = Aldersgrunnlag(periode, personopplysningGrunnlag.personopplysning.fødselsdato)
+                val aldersgrunnlag = Aldersgrunnlag(periode, personopplysningGrunnlag.brukerPersonopplysning.fødselsdato)
                 Aldersvilkåret(vilkårsresultat).vurder(aldersgrunnlag)
             }
             vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)

@@ -23,7 +23,7 @@ fun NormalOpenAPIRoute.aldersGrunnlagApi(dataSource: DataSource) {
                         VilkårsresultatRepository(connection).hent(behandling.id).finnVilkår(Vilkårtype.ALDERSVILKÅRET)
                             .vilkårsperioder()
                     val fødselsdato =
-                        requireNotNull(PersonopplysningRepository(connection).hentHvisEksisterer(behandling.id)?.personopplysning?.fødselsdato?.toLocalDate())
+                        requireNotNull(PersonopplysningRepository(connection).hentHvisEksisterer(behandling.id)?.brukerPersonopplysning?.fødselsdato?.toLocalDate())
 
                     AlderDTO(fødselsdato, aldersvilkårperioder)
                 }

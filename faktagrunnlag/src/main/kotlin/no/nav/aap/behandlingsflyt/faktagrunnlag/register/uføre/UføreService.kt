@@ -18,7 +18,7 @@ class UføreService(
     override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekst): Boolean {
         val sak = sakService.hent(kontekst.sakId)
         val fødselsdato =
-            requireNotNull(personopplysningRepository.hentHvisEksisterer(kontekst.behandlingId)?.personopplysning?.fødselsdato)
+            requireNotNull(personopplysningRepository.hentHvisEksisterer(kontekst.behandlingId)?.brukerPersonopplysning?.fødselsdato)
         val uføregrad = uføreRegisterGateway.innhent(sak.person, fødselsdato)
 
         val behandlingId = kontekst.behandlingId
