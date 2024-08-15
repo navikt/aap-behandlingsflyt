@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.adapter
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.ManuelleBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.ErStudentStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.SkalGjenopptaStudieStatus
 import no.nav.aap.verdityper.Periode
@@ -11,6 +10,6 @@ class UbehandletSøknad(
     val periode: Periode,
     val erStudent: ErStudentStatus,
     val skalGjenopptaStudie: SkalGjenopptaStudieStatus?,
-    val harYrkesskade: Boolean,
-    val manuelleBarn: List<ManuelleBarn>
-)
+    val harYrkesskade: Boolean
+) {
+}

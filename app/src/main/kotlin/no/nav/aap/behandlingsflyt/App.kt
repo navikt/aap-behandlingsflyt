@@ -30,7 +30,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.avklaringsbeh
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.fatteVedtakGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.kvalitetssikringApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.utledSubtypes
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barnetillegg.flate.barnetilleggApi
+import no.nav.aap.behandlingsflyt.behandling.barnetillegg.flate.barnetilleggApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.flate.beregningsGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.flate.tilkjentYtelseAPI
 import no.nav.aap.behandlingsflyt.behandling.vilkår.alder.flate.aldersGrunnlagApi
