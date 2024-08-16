@@ -1,6 +1,5 @@
 package no.nav.aap.tilgang
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -10,30 +9,36 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.util.*
 import no.nav.aap.auth.token
+import no.nav.aap.json.DefaultJsonMapper
 import org.slf4j.LoggerFactory
 
-private val log = LoggerFactory.getLogger("TilgangPlugin")
+val log = LoggerFactory.getLogger("TilgangPlugin")
 
-fun Route.installerTilgangPlugin(
+inline fun <reified T : Behandlingsreferanse> Route.installerTilgangBPostPlugin(
     operasjon: Operasjon,
-    ressurs: Ressurs,
-    avklaringsbehovKode: String? = null
 ) {
-    if (ressurs.referanse.kilde === ReferanseKilde.RequestBody) {
-        install(DoubleReceive)
-    }
-    install(TilgangPlugin) {
-        this.operasjon = operasjon
-        this.ressurs = ressurs
-        this.avklaringsbehovKode = avklaringsbehovKode
-    }
+    install(DoubleReceive)
+    install(buildTilgangPlugin { call: ApplicationCall -> call.parseBehandlingFraRequestBody<T>(operasjon) })
 }
 
-val TilgangPlugin =
-    createRouteScopedPlugin(name = "TilgangPlugin", ::TilgangConfiguration) {
+inline fun <reified T : Saksreferanse> Route.installerTilgangPostPlugin(
+    operasjon: Operasjon,
+) {
+    install(DoubleReceive)
+    install(buildTilgangPlugin { call: ApplicationCall -> call.parseSakFraRequestBody<T>(operasjon) })
+}
+
+fun Route.installerTilgangGetPlugin(
+    operasjon: Operasjon,
+    referanse: Ressurs
+) {
+    install(buildTilgangPlugin { call: ApplicationCall -> call.parseFraPath(operasjon, referanse) })
+}
+
+inline fun buildTilgangPlugin(crossinline parse: suspend (call: ApplicationCall) -> TilgangRequest): RouteScopedPlugin<Unit> {
+    return createRouteScopedPlugin(name = "TilgangPlugin") {
         on(AuthenticationChecked) { call ->
-            val input =
-                call.tilTilgangInput(pluginConfig.ressurs, pluginConfig.avklaringsbehovKode, pluginConfig.operasjon)
+            val input = parse(call)
             val harTilgang =
                 TilgangGateway.harTilgang(
                     input,
@@ -44,28 +49,34 @@ val TilgangPlugin =
             }
         }
     }
+}
 
-suspend fun ApplicationCall.tilTilgangInput(
+fun ApplicationCall.parseFraPath(
+    operasjon: Operasjon,
     ressurs: Ressurs,
-    avklaringsbehovKode: String?,
+): TilgangRequest {
+    val referanse = parameters.getOrFail(ressurs.referanse)
+    return when (ressurs.type) {
+        RessursType.Sak -> TilgangRequest(referanse, null, null, operasjon)
+        RessursType.Behandling -> TilgangRequest(null, referanse, null, operasjon)
+    }
+}
+
+suspend inline fun <reified T : Behandlingsreferanse> ApplicationCall.parseBehandlingFraRequestBody(
     operasjon: Operasjon
 ): TilgangRequest {
-    val referanse = when (ressurs.referanse.kilde) {
-        ReferanseKilde.PathParams -> parameters.getOrFail(ressurs.referanse.variabelNavn)
-        ReferanseKilde.RequestBody -> {
-            ObjectMapper()
-                .readTree(receiveText())
-                .get(ressurs.referanse.variabelNavn)
-                .asText()
-        }
+    val referanseObject: T = DefaultJsonMapper.fromJson<T>(receiveText())
+    val referanse = referanseObject.hentBehandlingsreferanse()
+    val avklaringsbehovKode = referanseObject.hentAvklaringsbehovKode()
+    return TilgangRequest(null, referanse, avklaringsbehovKode, operasjon)
+}
 
-        ReferanseKilde.QueryParams -> request.queryParameters.getOrFail(ressurs.referanse.variabelNavn)
-    }
-    log.info("referanse $referanse")
-    return when (ressurs.type) {
-        RessursType.Sak -> TilgangRequest(referanse, null, avklaringsbehovKode, operasjon)
-        RessursType.Behandling -> TilgangRequest(null, referanse, avklaringsbehovKode, operasjon)
-    }
+suspend inline fun <reified T : Saksreferanse> ApplicationCall.parseSakFraRequestBody(
+    operasjon: Operasjon
+): TilgangRequest {
+    val referanseObject: T = DefaultJsonMapper.fromJson<T>(receiveText())
+    val referanse = referanseObject.hentSaksreferanse()
+    return TilgangRequest(referanse, null, null, operasjon)
 }
 
 enum class RessursType {
@@ -73,25 +84,16 @@ enum class RessursType {
     Behandling
 }
 
-data class Referanse(
-    val variabelNavn: String,
-    val kilde: ReferanseKilde
-)
+interface Saksreferanse {
+    fun hentSaksreferanse(): String
+}
 
-enum class ReferanseKilde {
-    RequestBody,
-    PathParams,
-    QueryParams,
+interface Behandlingsreferanse {
+    fun hentBehandlingsreferanse(): String
+    fun hentAvklaringsbehovKode(): String?
 }
 
 data class Ressurs(
-    val referanse: Referanse,
+    val referanse: String,
     val type: RessursType,
 )
-
-class TilgangConfiguration {
-    var operasjon = Operasjon.SE
-    var avklaringsbehovKode: String? = null
-    var ressurs =
-        Ressurs(Referanse("referanse", ReferanseKilde.PathParams), RessursType.Sak)
-}

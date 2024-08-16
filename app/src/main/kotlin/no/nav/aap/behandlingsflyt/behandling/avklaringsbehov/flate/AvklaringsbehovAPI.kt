@@ -11,12 +11,8 @@ import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.server.respondWithStatus
-import no.nav.aap.tilgang.Ressurs
 import no.nav.aap.tilgang.Operasjon
-import no.nav.aap.tilgang.Referanse
-import no.nav.aap.tilgang.ReferanseKilde
-import no.nav.aap.tilgang.RessursType
-import no.nav.aap.tilgang.authorizedPost
+import no.nav.aap.tilgang.authorizedBehandlingPost
 import org.slf4j.MDC
 import javax.sql.DataSource
 
@@ -25,15 +21,8 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource) {
         route(
             "/løs-behov"
         ) {
-            authorizedPost<Unit, LøsAvklaringsbehovPåBehandling, LøsAvklaringsbehovPåBehandling>(
-                Operasjon.SAKSBEHANDLE,
-                Ressurs(
-                    Referanse(
-                        "referanse",
-                        ReferanseKilde.RequestBody
-                    ),
-                    RessursType.Behandling,
-                )
+            authorizedBehandlingPost<Unit, LøsAvklaringsbehovPåBehandling, LøsAvklaringsbehovPåBehandling>(
+                Operasjon.SAKSBEHANDLE
             ) { _, request ->
                 dataSource.transaction { connection ->
                     val taSkriveLåsRepository = TaSkriveLåsRepository(connection)

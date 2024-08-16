@@ -13,8 +13,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.tilgang.Ressurs
 import no.nav.aap.tilgang.Operasjon
-import no.nav.aap.tilgang.Referanse
-import no.nav.aap.tilgang.ReferanseKilde
 import no.nav.aap.tilgang.RessursType
 import no.nav.aap.tilgang.authorizedGet
 
@@ -25,7 +23,7 @@ fun NormalOpenAPIRoute.medlemskapsgrunnlagApi(dataSource: HikariDataSource) {
         ) {
             authorizedGet<BehandlingReferanse, MedlemskapGrunnlagDto>(
                 Operasjon.SE,
-                Ressurs(Referanse("referanse", ReferanseKilde.PathParams), RessursType.Behandling)
+                Ressurs("referanse", RessursType.Behandling)
             ) { req ->
                 val medlemskap = dataSource.transaction(block = hentMedlemsskap(req))
                 respond(MedlemskapGrunnlagDto(medlemskap = medlemskap))

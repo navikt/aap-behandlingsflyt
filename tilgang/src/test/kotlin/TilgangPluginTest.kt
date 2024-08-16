@@ -18,14 +18,15 @@ import no.nav.aap.httpclient.post
 import no.nav.aap.httpclient.request.GetRequest
 import no.nav.aap.httpclient.request.PostRequest
 import no.nav.aap.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.tilgang.Behandlingsreferanse
 import org.assertj.core.api.Assertions.assertThat
 import no.nav.aap.tilgang.Ressurs
 import no.nav.aap.tilgang.Operasjon
-import no.nav.aap.tilgang.Referanse
-import no.nav.aap.tilgang.ReferanseKilde
 import no.nav.aap.tilgang.RessursType
+import no.nav.aap.tilgang.Saksreferanse
+import no.nav.aap.tilgang.authorizedBehandlingPost
 import no.nav.aap.tilgang.authorizedGet
-import no.nav.aap.tilgang.authorizedPost
+import no.nav.aap.tilgang.authorizedSakPost
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
@@ -42,15 +43,27 @@ class TilgangPluginTest {
             errorHandler = DefaultResponseHandler()
         )
 
-        private val log = LoggerFactory.getLogger(TilgangPluginTest::class.java)
+        class Saksinfo(val saksnummer: UUID) : Saksreferanse {
+            override fun hentSaksreferanse(): String {
+                return saksnummer.toString()
+            }
+        }
 
-        data class Saksinfo(val saksnummer: UUID);
+        class Behandlingsinfo(val behandlingsnummer: UUID) : Behandlingsreferanse {
+            override fun hentBehandlingsreferanse(): String {
+                return behandlingsnummer.toString()
+            }
 
-        fun NormalOpenAPIRoute.pathParamsTestRoute() {
+            override fun hentAvklaringsbehovKode(): String? {
+                return null
+            }
+        }
+
+        fun NormalOpenAPIRoute.getTestRoute() {
             route("testApi/sak/{saksnummer}") {
                 authorizedGet<TestReferanse, Saksinfo>(
                     Operasjon.SE,
-                    Ressurs(Referanse("saksnummer", ReferanseKilde.PathParams), RessursType.Sak)
+                    Ressurs("saksnummer", RessursType.Sak)
                 ) { req ->
                     respond(Saksinfo(saksnummer = req.saksnummer))
                 }
@@ -58,17 +71,26 @@ class TilgangPluginTest {
         }
 
         val uuid = UUID.randomUUID()
-        fun NormalOpenAPIRoute.responseBodyTestRoute() {
+        fun NormalOpenAPIRoute.postTestRouteSak() {
             route(
                 "testApi/sak",
             ) {
-                authorizedPost<Unit, Saksinfo, Saksinfo>(
+                authorizedSakPost<Unit, Saksinfo, Saksinfo>(
                     Operasjon.SAKSBEHANDLE,
-                    Ressurs(Referanse("saksnummer", ReferanseKilde.RequestBody), RessursType.Sak)
                 ) { _, dto ->
-                    log.info("responding...")
                     respond(Saksinfo(saksnummer = uuid))
+                }
+            }
+        }
 
+        fun NormalOpenAPIRoute.postTestRouteBehandling() {
+            route(
+                "testApi/behandling",
+            ) {
+                authorizedBehandlingPost<Unit, Behandlingsinfo, Behandlingsinfo>(
+                    Operasjon.SAKSBEHANDLE,
+                ) { _, dto ->
+                    respond(Behandlingsinfo(behandlingsnummer = uuid))
                 }
             }
         }
@@ -80,8 +102,9 @@ class TilgangPluginTest {
                 jackson()
             }
             apiRouting {
-                pathParamsTestRoute()
-                responseBodyTestRoute()
+                getTestRoute()
+                postTestRouteSak()
+                postTestRouteBehandling()
             }
             module(fakes)
         }.start()
@@ -123,13 +146,24 @@ class TilgangPluginTest {
 
     @Test
     fun `Skal kunne hente saksnummer fra request body`() {
-        val res = client.post<_,Saksinfo>(
+        val res = client.post<_, Saksinfo>(
             URI.create("http://localhost:8080/")
                 .resolve("testApi/sak"),
             PostRequest(Saksinfo(uuid))
         )
 
         assertThat(res?.saksnummer).isEqualTo(uuid)
+    }
+
+    @Test
+    fun `Skal kunne hente behandlingsnummer fra request body`() {
+        val res = client.post<_, Behandlingsinfo>(
+            URI.create("http://localhost:8080/")
+                .resolve("testApi/behandling"),
+            PostRequest(Behandlingsinfo(uuid))
+        )
+
+        assertThat(res?.behandlingsnummer).isEqualTo(uuid)
     }
 
 }
