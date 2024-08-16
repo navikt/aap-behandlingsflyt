@@ -95,7 +95,7 @@ class BarnRepository(private val connection: DBConnection) {
 
         connection.executeBatch(
             """
-                INSERT INTO BARNOPPLYSNING (IDENT, BGB_ID) VALUES (?, ?)
+                INSERT INTO OPPGITT_BARN (IDENT, oppgitt_barn_id) VALUES (?, ?)
             """.trimIndent(),
             requireNotNull(oppgittBarn?.identer)
         ) {

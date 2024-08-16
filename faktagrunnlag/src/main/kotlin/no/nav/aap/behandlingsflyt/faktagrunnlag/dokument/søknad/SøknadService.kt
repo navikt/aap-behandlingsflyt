@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeRegisterGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.OppgittStudent
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
@@ -14,7 +15,8 @@ import no.nav.aap.verdityper.flyt.FlytKontekst
 class SøknadService private constructor(
     private val mottaDokumentService: MottaDokumentService,
     private val studentRepository: StudentRepository,
-    private val sakService: SakService
+    private val sakService: SakService,
+    private val barnRepository: BarnRepository
 ) : Informasjonskrav {
 
     companion object : Informasjonskravkonstruktør {
@@ -24,7 +26,8 @@ class SøknadService private constructor(
                     MottattDokumentRepository(connection)
                 ),
                 StudentRepository(connection),
-                SakService(connection)
+                SakService(connection),
+                BarnRepository(connection)
             )
         }
     }
@@ -41,13 +44,19 @@ class SøknadService private constructor(
         for (ubehandletSøknad in ubehandletSøknader) {
             studentRepository.lagre(
                 behandlingId = behandlingId,
-                OppgittStudent(erStudentStatus = ubehandletSøknad.erStudent, skalGjenopptaStudieStatus = ubehandletSøknad.skalGjenopptaStudie)
+                OppgittStudent(
+                    erStudentStatus = ubehandletSøknad.erStudent,
+                    skalGjenopptaStudieStatus = ubehandletSøknad.skalGjenopptaStudie
+                )
             )
             if (ubehandletSøknad.harYrkesskade) {
                 YrkesskadeRegisterGateway.puttInnTestPerson(
                     sak.person.aktivIdent(),
                     sak.rettighetsperiode.fom.minusDays(60)
                 )
+            }
+            if (ubehandletSøknad.oppgittBarn != null) {
+                barnRepository.lagreOppgitteBarn(kontekst.behandlingId, ubehandletSøknad.oppgittBarn)
             }
 
             mottaDokumentService.knyttTilBehandling(
