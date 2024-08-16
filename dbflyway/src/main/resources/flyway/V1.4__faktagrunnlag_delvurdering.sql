@@ -49,11 +49,12 @@ CREATE TABLE BEREGNING
 
 CREATE TABLE BEREGNING_HOVED
 (
-    ID              BIGSERIAL                              NOT NULL PRIMARY KEY,
-    BEREGNING_ID    BIGINT                                 NOT NULL REFERENCES BEREGNING (ID),
-    GRUNNLAG        NUMERIC(21, 10)                        NOT NULL,
-    ER_GJENNOMSNITT BOOLEAN                                NOT NULL,
-    OPPRETTET_TID   TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
+    ID                          BIGSERIAL                              NOT NULL PRIMARY KEY,
+    BEREGNING_ID                BIGINT                                 NOT NULL REFERENCES BEREGNING (ID),
+    GRUNNLAG                    NUMERIC(21, 10)                        NOT NULL,
+    ER_GJENNOMSNITT             BOOLEAN                                NOT NULL,
+    GJENNOMSNITTLIG_INNTEKT_I_G NUMERIC(21, 10)                        NOT NULL,
+    OPPRETTET_TID               TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 CREATE TABLE BEREGNING_INNTEKT
@@ -93,9 +94,9 @@ CREATE TABLE BEREGNING_YRKESSKADE
     BENYTTET_ANDEL_YRKESSKADE                 SMALLINT                               NOT NULL,
     YRKESSKADE_TIDSPUNKT                      SMALLINT                               NOT NULL,
     YRKESSKADE_INNTEKT_I_G                    NUMERIC(21, 10)                        NOT NULL,
-    ANTATT_ARLIG_INNTEKT_YRKESSKADE_TIDSPUNKT NUMERIC(19, 2)                        NOT NULL,
-    ANDEL_SOM_SKYLDES_YRKESSKADE              NUMERIC(21, 10)                               NOT NULL,
-    ANDEL_SOM_IKKE_SKYLDES_YRKESSKADE         NUMERIC(21, 10)                               NOT NULL,
+    ANTATT_ARLIG_INNTEKT_YRKESSKADE_TIDSPUNKT NUMERIC(19, 2)                         NOT NULL,
+    ANDEL_SOM_SKYLDES_YRKESSKADE              NUMERIC(21, 10)                        NOT NULL,
+    ANDEL_SOM_IKKE_SKYLDES_YRKESSKADE         NUMERIC(21, 10)                        NOT NULL,
     GRUNNLAG_ETTER_YRKESSKADE_FORDEL          NUMERIC(21, 10)                        NOT NULL,
     GRUNNLAG_FOR_BEREGNING_AV_YRKESSKADEANDEL NUMERIC(21, 10)                        NOT NULL,
     ER_GJENNOMSNITT                           BOOLEAN                                NOT NULL

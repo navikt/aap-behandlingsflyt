@@ -19,6 +19,7 @@ class YrkesskadeBeregningTest {
         val grunnlag11_19 = Grunnlag11_19(
             grunnlaget = GUnit(4),
             erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(0),
             inntekter = emptyList()
         )
 
@@ -38,6 +39,7 @@ class YrkesskadeBeregningTest {
         val grunnlag11_19 = Grunnlag11_19(
             grunnlaget = GUnit(4),
             erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(0),
             inntekter = emptyList()
         )
 
@@ -57,6 +59,7 @@ class YrkesskadeBeregningTest {
         val grunnlag11_19 = Grunnlag11_19(
             grunnlaget = GUnit(2),
             erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(0),
             inntekter = emptyList()
         )
 
@@ -76,6 +79,7 @@ class YrkesskadeBeregningTest {
         val grunnlag11_19 = Grunnlag11_19(
             grunnlaget = GUnit(2),
             erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(0),
             inntekter = emptyList()
         )
 
@@ -95,6 +99,7 @@ class YrkesskadeBeregningTest {
         val grunnlag11_19 = Grunnlag11_19(
             grunnlaget = GUnit(2),
             erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(0),
             inntekter = emptyList()
         )
 

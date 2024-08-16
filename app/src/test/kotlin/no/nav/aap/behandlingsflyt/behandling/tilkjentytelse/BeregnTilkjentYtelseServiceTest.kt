@@ -26,6 +26,7 @@ class BeregnTilkjentYtelseServiceTest {
         val beregningsgrunnlag = Grunnlag11_19(
             grunnlaget = GUnit(BigDecimal(4)),
             erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(0),
             inntekter = emptyList()
         )
         val underveisgrunnlag = UnderveisGrunnlag(
@@ -86,6 +87,7 @@ class BeregnTilkjentYtelseServiceTest {
         val beregningsgrunnlag = Grunnlag11_19(
             grunnlaget = GUnit(BigDecimal(4)),
             erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(0),
             inntekter = emptyList()
         )
         val underveisgrunnlag = UnderveisGrunnlag(
@@ -141,6 +143,7 @@ class BeregnTilkjentYtelseServiceTest {
         val beregningsgrunnlag = Grunnlag11_19(
             grunnlaget = GUnit(BigDecimal(4)),
             erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(0),
             inntekter = emptyList()
         )
         val underveisgrunnlag = UnderveisGrunnlag(
@@ -214,6 +217,7 @@ class BeregnTilkjentYtelseServiceTest {
         val beregningsgrunnlag = Grunnlag11_19(
             grunnlaget = GUnit(BigDecimal(0)),
             erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(0),
             inntekter = emptyList()
         )
         val underveisgrunnlag = UnderveisGrunnlag(
@@ -274,6 +278,7 @@ class BeregnTilkjentYtelseServiceTest {
         val beregningsgrunnlag = Grunnlag11_19(
             grunnlaget = GUnit(BigDecimal(0)),
             erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(0),
             inntekter = emptyList()
         )
         val underveisgrunnlag = UnderveisGrunnlag(

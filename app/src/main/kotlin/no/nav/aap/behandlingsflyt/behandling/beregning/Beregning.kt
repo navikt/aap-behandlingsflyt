@@ -15,14 +15,9 @@ class Beregning(
 
         val beregningMedEllerUtenUføre = if (input.finnesUføreData()) {
             val ikkeOppjusterteInntekter = input.utledForYtterligereNedsatt()
-            val oppjusterteInntekter = oppjusterMhpUføregrad(ikkeOppjusterteInntekter)
-
-            // 6G-begrensning ligger her samt gjennomsnitt
-            val beregningVedUføre = beregn11_19Grunnlag(oppjusterteInntekter.toSet())
 
             val uføreberegning = UføreBeregning(
                 grunnlag = grunnlag11_19,
-                ytterligereNedsattGrunnlag = beregningVedUføre,
                 // TODO:
                 // Hva hvis bruker har flere uføregrader?
                 // Skal saksbahandler velge den som er knyttet til ytterligere nedsatt-tidspunktet?
@@ -56,12 +51,6 @@ class Beregning(
             }
         return beregningMedEllerUtenUføreMedEllerUtenYrkesskade
     }
-
-    private fun oppjusterMhpUføregrad(ikkeOppjusterteInntekter: Set<InntektPerÅr>) =
-        ikkeOppjusterteInntekter.map {
-            InntektPerÅr(it.år, it.beløp.dividert(input.uføregrad().komplement()))
-        }
-
 
     private fun beregn11_19Grunnlag(
         inntekterPerÅr: Set<InntektPerÅr>

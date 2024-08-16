@@ -59,6 +59,7 @@ class GrunnlagetForBeregningenTest {
             Grunnlag11_19(
                 grunnlaget = GUnit(BigDecimal(0)),
                 erGjennomsnitt = false,
+                gjennomsnittligInntektIG = GUnit(0),
                 inntekter = listOf(
                     GrunnlagInntekt(
                         år = Year.of(2022),
@@ -104,6 +105,7 @@ class GrunnlagetForBeregningenTest {
             Grunnlag11_19(
                 grunnlaget = GUnit(BigDecimal(5)),
                 erGjennomsnitt = false,
+                gjennomsnittligInntektIG = GUnit("1.6666666667"),
                 inntekter = listOf(
                     GrunnlagInntekt(
                         år = Year.of(2022),
@@ -155,6 +157,7 @@ class GrunnlagetForBeregningenTest {
             Grunnlag11_19(
                 grunnlaget = GUnit(BigDecimal(5)),
                 erGjennomsnitt = false,
+                gjennomsnittligInntektIG = GUnit(3),
                 inntekter = listOf(
                     GrunnlagInntekt(
                         år = Year.of(2022),
@@ -207,6 +210,7 @@ class GrunnlagetForBeregningenTest {
             Grunnlag11_19(
                 grunnlaget = GUnit(BigDecimal(5)),  // gjennomsnitt er også 5
                 erGjennomsnitt = false,
+                gjennomsnittligInntektIG = GUnit(5),
                 inntekter = listOf(
                     GrunnlagInntekt(
                         år = Year.of(2022),
@@ -258,6 +262,7 @@ class GrunnlagetForBeregningenTest {
             Grunnlag11_19(
                 grunnlaget = GUnit(6),
                 erGjennomsnitt = false,
+                gjennomsnittligInntektIG = GUnit("3.3333333333"),
                 inntekter = listOf(
                     GrunnlagInntekt(
                         år = Year.of(2022),
@@ -310,6 +315,7 @@ class GrunnlagetForBeregningenTest {
             Grunnlag11_19(
                 grunnlaget = GUnit(6),
                 erGjennomsnitt = false,
+                gjennomsnittligInntektIG = GUnit(6),
                 inntekter = listOf(
                     GrunnlagInntekt(
                         år = Year.of(2022),
@@ -362,6 +368,7 @@ class GrunnlagetForBeregningenTest {
             Grunnlag11_19(
                 grunnlaget = GUnit(4),
                 erGjennomsnitt = true,
+                gjennomsnittligInntektIG = GUnit(4),
                 inntekter = listOf(
                     GrunnlagInntekt(
                         år = Year.of(2022),
@@ -413,6 +420,7 @@ class GrunnlagetForBeregningenTest {
             Grunnlag11_19(
                 grunnlaget = GUnit(4),
                 erGjennomsnitt = true,
+                gjennomsnittligInntektIG = GUnit(4),
                 inntekter = listOf(
                     GrunnlagInntekt(
                         år = Year.of(2022),

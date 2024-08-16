@@ -93,6 +93,7 @@ class StatistikkJobbUtførerTest {
                 Grunnlag11_19(
                     grunnlaget = GUnit(7),
                     erGjennomsnitt = false,
+                    gjennomsnittligInntektIG = GUnit(0),
                     inntekter = listOf()
                 )
             )

@@ -44,12 +44,14 @@ class GrunnlagetForBeregningen(
             Grunnlag11_19(
                 grunnlaget = gUnitGjennomsnitt,
                 erGjennomsnitt = true,
+                gjennomsnittligInntektIG = gUnitGjennomsnitt,
                 inntekter = beregnetInntekter.tilGrunnlagInntekt()
             )
         } else {
             Grunnlag11_19(
                 grunnlaget = inntektFørsteÅr.grunnlag(),
                 erGjennomsnitt = false,
+                gjennomsnittligInntektIG = gUnitGjennomsnitt,
                 inntekter = beregnetInntekter.tilGrunnlagInntekt()
             )
         }

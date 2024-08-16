@@ -82,11 +82,13 @@ class BeregningsgrunnlagRepositoryTest {
         val grunnlag11_19Standard = Grunnlag11_19(
             grunnlaget = GUnit(1),
             erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(4),
             inntekter = inntektPerÅr
         )
         val grunnlag11_19Ytterligere = Grunnlag11_19(
             grunnlaget = GUnit(3),
             erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(4),
             inntekter = inntektPerÅrUføre
         )
         val grunnlagUføre = GrunnlagUføre(
@@ -126,11 +128,13 @@ class BeregningsgrunnlagRepositoryTest {
         val grunnlag11_19Standard = Grunnlag11_19(
             grunnlaget = GUnit(1),
             erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(1),
             inntekter = emptyList()
         )
         val grunnlag11_19Ytterligere = Grunnlag11_19(
             grunnlaget = GUnit(3),
             erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(3),
             inntekter = emptyList()
         )
         val grunnlagUføre = GrunnlagUføre(
@@ -168,6 +172,7 @@ class BeregningsgrunnlagRepositoryTest {
         val grunnlag11_19Standard = Grunnlag11_19(
             grunnlaget = GUnit("1.1"),
             erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit("1.1"),
             inntekter = emptyList()
         )
         InitTestDatabase.dataSource.transaction { connection ->

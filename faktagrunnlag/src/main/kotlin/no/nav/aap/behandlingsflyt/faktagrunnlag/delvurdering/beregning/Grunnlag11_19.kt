@@ -14,11 +14,16 @@ import java.math.BigDecimal
 class Grunnlag11_19(
     private val grunnlaget: GUnit,
     private val erGjennomsnitt: Boolean,
+    private val gjennomsnittligInntektIG: GUnit,
     private val inntekter: List<GrunnlagInntekt>,
 ) : Beregningsgrunnlag {
 
     fun inntekter(): List<GrunnlagInntekt> {
         return inntekter
+    }
+
+    fun gjennomsnittligInntektIG(): GUnit {
+        return gjennomsnittligInntektIG
     }
 
     override fun grunnlaget(): GUnit {

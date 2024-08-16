@@ -9,7 +9,6 @@ import java.time.Year
 
 class UføreBeregning(
     private val grunnlag: Grunnlag11_19,
-    private val ytterligereNedsattGrunnlag: Grunnlag11_19,
     private val uføregrad: Prosent,
     private val inntekterForegåendeÅr: Set<InntektPerÅr>,
 ) {
@@ -19,6 +18,12 @@ class UføreBeregning(
     }
 
     fun beregnUføre(ytterligereNedsattÅr: Year): GrunnlagUføre {
+
+        val oppjusterteInntekter = oppjusterMhpUføregrad(inntekterForegåendeÅr)
+
+        // 6G-begrensning ligger her samt gjennomsnitt
+        val ytterligereNedsattGrunnlag = beregn11_19Grunnlag(oppjusterteInntekter.toSet())
+
         //TODO: Gang med årets G
         // Hvilket år? Søknads-dato? Uføredato? Ytterligere nedsatt år?
         val uføreInntektIKroner = grunnlag.grunnlaget().multiplisert(Beløp(10))
@@ -48,5 +53,20 @@ class UføreBeregning(
                 erGjennomsnitt = grunnlag.erGjennomsnitt()
             )
         }
+    }
+
+    private fun oppjusterMhpUføregrad(ikkeOppjusterteInntekter: Set<InntektPerÅr>) =
+        ikkeOppjusterteInntekter.map {
+            InntektPerÅr(it.år, it.beløp.dividert(uføregrad.komplement()))
+        }
+
+
+    private fun beregn11_19Grunnlag(
+        inntekterPerÅr: Set<InntektPerÅr>
+    ): Grunnlag11_19 {
+        val grunnlag11_19 =
+            GrunnlagetForBeregningen(inntekterPerÅr).beregnGrunnlaget()
+
+        return grunnlag11_19
     }
 }

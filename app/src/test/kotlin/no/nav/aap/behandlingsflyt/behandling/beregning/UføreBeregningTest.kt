@@ -9,6 +9,7 @@ import no.nav.aap.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import java.math.BigDecimal
 import java.time.Year
 
 class UføreBeregningTest {
@@ -20,16 +21,23 @@ class UføreBeregningTest {
                 grunnlag = Grunnlag11_19(
                     grunnlaget = GUnit(4),
                     erGjennomsnitt = false,
-                    inntekter = emptyList()
-                ),
-                ytterligereNedsattGrunnlag = Grunnlag11_19(
-                    grunnlaget = GUnit(4),
-                    erGjennomsnitt = false,
+                    gjennomsnittligInntektIG = GUnit(0),
                     inntekter = emptyList()
                 ),
                 uføregrad = Prosent.`100_PROSENT`,
                 inntekterForegåendeÅr = setOf(
-                    InntektPerÅr(Year.of(2021), Beløp(5))
+                    InntektPerÅr(
+                        Year.of(2022),
+                        Beløp(BigDecimal(5 * 109_784)) // 548 920
+                    ),
+                    InntektPerÅr(
+                        Year.of(2021),
+                        Beløp(BigDecimal(5 * 104_716)) // 209 432
+                    ),
+                    InntektPerÅr(
+                        Year.of(2020),
+                        Beløp(BigDecimal(5 * 100_853)) // 201 706
+                    )
                 )
             )
         }
@@ -41,20 +49,27 @@ class UføreBeregningTest {
             grunnlag = Grunnlag11_19(
                 grunnlaget = GUnit(4),
                 erGjennomsnitt = false,
-                inntekter = emptyList()
-            ),
-            ytterligereNedsattGrunnlag = Grunnlag11_19(
-                grunnlaget = GUnit(5),
-                erGjennomsnitt = false,
+                gjennomsnittligInntektIG = GUnit(0),
                 inntekter = emptyList()
             ),
             uføregrad = Prosent.`30_PROSENT`,
             inntekterForegåendeÅr = setOf(
-                InntektPerÅr(Year.now().minusYears(1), Beløp(5))
+                InntektPerÅr(
+                    Year.of(2022),
+                    Beløp(BigDecimal(5 * 109_784).multiply(BigDecimal("0.7"))) // 548 920
+                ),
+                InntektPerÅr(
+                    Year.of(2021),
+                    Beløp(BigDecimal(5 * 104_716).multiply(BigDecimal("0.7"))) // 209 432
+                ),
+                InntektPerÅr(
+                    Year.of(2020),
+                    Beløp(BigDecimal(5 * 100_853).multiply(BigDecimal("0.7"))) // 201 706
+                )
             )
         )
 
-        val grunnlagUføre = uføreBeregning.beregnUføre(Year.now())
+        val grunnlagUføre = uføreBeregning.beregnUføre(Year.of(2023))
 
         assertThat(grunnlagUføre.grunnlaget()).isEqualTo(GUnit(5))
         assertThat(grunnlagUføre.type()).isEqualTo(GrunnlagUføre.Type.YTTERLIGERE_NEDSATT)
@@ -65,19 +80,28 @@ class UføreBeregningTest {
         val uføreBeregning = UføreBeregning(
             grunnlag = Grunnlag11_19(
                 grunnlaget = GUnit(5),
-                erGjennomsnitt = false, inntekter = emptyList()
-            ),
-            ytterligereNedsattGrunnlag = Grunnlag11_19(
-                grunnlaget = GUnit(4),
-                erGjennomsnitt = false, inntekter = emptyList()
+                erGjennomsnitt = false,
+                gjennomsnittligInntektIG = GUnit(0),
+                inntekter = emptyList()
             ),
             uføregrad = Prosent.`30_PROSENT`,
             inntekterForegåendeÅr = setOf(
-                InntektPerÅr(Year.now().minusYears(1), Beløp(5))
+                InntektPerÅr(
+                    Year.of(2022),
+                    Beløp(BigDecimal(4 * 109_784).multiply(BigDecimal("0.7"))) // 448 920
+                ),
+                InntektPerÅr(
+                    Year.of(2021),
+                    Beløp(BigDecimal(4 * 104_716).multiply(BigDecimal("0.7"))) // 209 432
+                ),
+                InntektPerÅr(
+                    Year.of(2020),
+                    Beløp(BigDecimal(4 * 100_853).multiply(BigDecimal("0.7"))) // 201 706
+                )
             )
         )
 
-        val grunnlagUføre = uføreBeregning.beregnUføre(Year.now())
+        val grunnlagUføre = uføreBeregning.beregnUføre(Year.of(2023))
 
         assertThat(grunnlagUføre.grunnlaget()).isEqualTo(GUnit(5))
         assertThat(grunnlagUføre.type()).isEqualTo(GrunnlagUføre.Type.STANDARD)

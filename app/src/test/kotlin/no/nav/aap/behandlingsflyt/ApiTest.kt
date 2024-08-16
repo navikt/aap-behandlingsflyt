@@ -158,6 +158,7 @@ class ApiTest {
                 Grunnlag11_19(
                     grunnlaget = GUnit(3),
                     erGjennomsnitt = false,
+                    gjennomsnittligInntektIG = GUnit(3),
                     inntekter = listOf(
                         GrunnlagInntekt(
                             år = Year.of(2023),

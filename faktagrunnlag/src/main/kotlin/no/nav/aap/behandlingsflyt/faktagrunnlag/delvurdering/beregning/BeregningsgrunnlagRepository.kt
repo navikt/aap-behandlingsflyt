@@ -40,7 +40,7 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
     private fun hentStandardBeregning(beregningsId: Long): Grunnlag11_19 {
         return connection.queryFirst(
             """
-            SELECT ID, GRUNNLAG, ER_GJENNOMSNITT
+            SELECT ID, GRUNNLAG, ER_GJENNOMSNITT, GJENNOMSNITTLIG_INNTEKT_I_G
             FROM BEREGNING_HOVED
             WHERE BEREGNING_ID = ?
             """.trimIndent()
@@ -50,6 +50,7 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
                 Grunnlag11_19(
                     grunnlaget = GUnit(row.getBigDecimal("GRUNNLAG")),
                     erGjennomsnitt = row.getBoolean("ER_GJENNOMSNITT"),
+                    gjennomsnittligInntektIG = GUnit(row.getBigDecimal("GJENNOMSNITTLIG_INNTEKT_I_G")),
                     inntekter = hentInntekt(row.getLong("ID"))
                 )
             }
@@ -59,7 +60,7 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
     private fun hentUføreBeregning(beregningsId: Long): GrunnlagUføre {
         val beregningsHoved = connection.queryList(
             """
-            SELECT ID, GRUNNLAG, ER_GJENNOMSNITT
+            SELECT ID, GRUNNLAG, ER_GJENNOMSNITT, GJENNOMSNITTLIG_INNTEKT_I_G
             FROM BEREGNING_HOVED
             WHERE BEREGNING_ID = ?
             """
@@ -72,6 +73,7 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
                     Grunnlag11_19(
                         grunnlaget = GUnit(row.getBigDecimal("GRUNNLAG")),
                         erGjennomsnitt = row.getBoolean("ER_GJENNOMSNITT"),
+                        gjennomsnittligInntektIG = GUnit(row.getBigDecimal("GJENNOMSNITTLIG_INNTEKT_I_G")),
                         inntekter = hentInntekt(id)
                     )
                 )
@@ -249,13 +251,14 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
     private fun lagre(beregningsId: Long, beregningsgrunnlag: Grunnlag11_19): Long {
         return connection.executeReturnKey(
             """
-            INSERT INTO BEREGNING_HOVED (BEREGNING_ID, GRUNNLAG, ER_GJENNOMSNITT)
-            VALUES (?, ?, ?)"""
+            INSERT INTO BEREGNING_HOVED (BEREGNING_ID, GRUNNLAG, ER_GJENNOMSNITT, GJENNOMSNITTLIG_INNTEKT_I_G)
+            VALUES (?, ?, ?, ?)"""
         ) {
             setParams {
                 setLong(1, beregningsId)
                 setBigDecimal(2, beregningsgrunnlag.grunnlaget().verdi())
                 setBoolean(3, beregningsgrunnlag.erGjennomsnitt())
+                setBigDecimal(4, beregningsgrunnlag.gjennomsnittligInntektIG().verdi())
             }
         }
     }
