@@ -65,7 +65,7 @@ fun NormalOpenAPIRoute.torsHammerApi(dataSource: DataSource) {
                 AlleHammereDto(hentDokumenterAvType.mapNotNull { it.strukturerteData<TorsHammerDto>()?.data?.hammer })
             }
             respond(response)
-
+            
         }
     }
 }

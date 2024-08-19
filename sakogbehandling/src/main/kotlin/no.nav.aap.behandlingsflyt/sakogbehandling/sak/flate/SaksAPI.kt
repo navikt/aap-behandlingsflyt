@@ -11,15 +11,15 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.Dokument
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.Operasjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.SafHentDokumentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.SafListDokumentGateway
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.TilgangGateway
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.TilgangRequest
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
+import no.nav.aap.tilgang.Operasjon
+import no.nav.aap.tilgang.TilgangGateway
+import no.nav.aap.tilgang.TilgangRequest
 import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.dokument.DokumentInfoId
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -130,7 +130,6 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                     )
                 }
             }
-
             route("/dokument/{journalpostId}/{dokumentinfoId}") {
                 get<HentDokumentDTO, DokumentResponsDTO> { req ->
                     val journalpostId = req.journalpostId
@@ -148,7 +147,6 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                     respond(DokumentResponsDTO(stream = dokumentRespons.dokument))
                 }
             }
-
             route("/{saksnummer}/lesetilgang") {
                 get<HentSakDTO, LesetilgangDTO> { req ->
                     val saksnummer = req.saksnummer

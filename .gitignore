@@ -5,8 +5,8 @@ target
 .classpath
 outdated-dependencies.txt
 bin
-*.iml
 .idea
+*.iml
 _*.sh
 *.local
 *.localz

@@ -25,13 +25,11 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource) {
                     MDC.putCloseable("sakId", lås.sakSkrivelås.id.toString()).use {
                         MDC.putCloseable("behandlingId", lås.behandlingSkrivelås.id.toString()).use {
                             BehandlingTilstandValidator(connection).validerTilstand(
-                                BehandlingReferanse(request.referanse),
-                                request.behandlingVersjon
+                                BehandlingReferanse(request.referanse), request.behandlingVersjon
                             )
 
                             AvklaringsbehovHendelseHåndterer(connection).håndtere(
-                                key = lås.behandlingSkrivelås.id,
-                                hendelse = LøsAvklaringsbehovBehandlingHendelse(
+                                key = lås.behandlingSkrivelås.id, hendelse = LøsAvklaringsbehovBehandlingHendelse(
                                     request.behov,
                                     request.ingenEndringIGruppe ?: false,
                                     request.behandlingVersjon,

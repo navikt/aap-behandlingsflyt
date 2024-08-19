@@ -1,0 +1,24 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Tilgang" />
+    <inspection_tool class="SSBasedInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <replaceConfiguration name="UnauthorizedPost" description="Vurder å bruke authorizedSakPost eller authorizedBehandlingPost for tilgangskontroll" suppressId="UnauthorizedPost" problemDescriptor="Vurder å bruke authorizedSakPost eller authorizedBehandlingPost for tilgangskontroll" text="$fun$&lt;$TParams$, $TResponse$, $TRequest$&gt;($args$){$lambda$}" recursive="false" caseInsensitive="false" type="Kotlin" pattern_context="default" reformatAccordingToStyle="true" shortenFQN="true" replacement="authorizedSakPost&lt;$TParams$, $TResponse$, $TRequest$&gt;($args$){$lambda$}">
+        <constraint name="__context__" within="" contains="" />
+        <constraint name="fun" regexp="post" within="" contains="" />
+        <constraint name="args" minCount="0" maxCount="2147483647" within="" contains="" />
+        <constraint name="lambda" minCount="0" maxCount="2147483647" within="" contains="" />
+        <constraint name="TParams" within="" contains="" />
+        <constraint name="TResponse" within="" contains="" />
+        <constraint name="TRequest" within="" contains="" />
+      </replaceConfiguration>
+      <replaceConfiguration name="UnauthroizedGet" uuid="cff9aab3-8d29-32cc-989d-014ec6c8be11" description="Vurder å bruke authorizedGet for tilgangskontroll" suppressId="UnauthorizedGet" problemDescriptor="Vurder å bruke authorizedGet for tilgangskontroll" text="$fun$&lt;$TParams$, $TResponse$&gt;($args$){$lambda$}" recursive="false" caseInsensitive="false" type="Kotlin" pattern_context="default" reformatAccordingToStyle="true" shortenFQN="true" replacement="authorizedGet&lt;$TParams$, $TResponse$&gt;($args$){$lambda$}">
+        <constraint name="__context__" within="" contains="" />
+        <constraint name="fun" regexp="get" within="" contains="" />
+        <constraint name="args" minCount="0" maxCount="2147483647" within="" contains="" />
+        <constraint name="lambda" minCount="0" maxCount="2147483647" within="" contains="" />
+        <constraint name="TParams" within="" contains="" />
+        <constraint name="TResponse" within="" contains="" />
+      </replaceConfiguration>
+    </inspection_tool>
+  </profile>
+</component>

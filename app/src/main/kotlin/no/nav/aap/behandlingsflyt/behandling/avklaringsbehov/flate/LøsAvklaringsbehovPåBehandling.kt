@@ -13,5 +13,4 @@ data class LøsAvklaringsbehovPåBehandling(
     @JsonProperty(value = "behandlingVersjon", required = true, defaultValue = "0") val behandlingVersjon: Long,
     @JsonProperty(value = "behov", required = true) val behov: AvklaringsbehovLøsning,
     @JsonProperty(value = "ingenEndringIGruppe") val ingenEndringIGruppe: Boolean?,
-) {
-}
+)
