@@ -15,9 +15,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 
 fun NormalOpenAPIRoute.medlemskapsgrunnlagApi(dataSource: HikariDataSource) {
     route("/api/behandling") {
-        route(
-            "/{referanse}/grunnlag/medlemskap",
-        ) {
+        route("/{referanse}/grunnlag/medlemskap") {
             get<BehandlingReferanse, MedlemskapGrunnlagDto> { req ->
                 val medlemskap = dataSource.transaction(block = hentMedlemsskap(req))
                 respond(MedlemskapGrunnlagDto(medlemskap = medlemskap))
