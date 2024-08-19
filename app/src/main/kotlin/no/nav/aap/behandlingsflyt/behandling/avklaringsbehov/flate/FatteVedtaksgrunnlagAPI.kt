@@ -21,7 +21,6 @@ import java.time.LocalDateTime
 fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(dataSource: HikariDataSource) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/fatte-vedtak") {
-            @Suppress("UnauthorizedGet")
             get<BehandlingReferanse, FatteVedtakGrunnlagDto> { req ->
 
                 val dto = dataSource.transaction { connection ->

@@ -29,7 +29,6 @@ import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedSakPost
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
-import org.slf4j.LoggerFactory
 import java.net.URI
 import java.util.*
 
