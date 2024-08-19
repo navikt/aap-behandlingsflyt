@@ -64,8 +64,9 @@ object Grunnbeløp {
         private val gjennomsnittBeløp: Beløp? = gjennomsnittBeløp?.let(::Beløp)
 
         companion object {
-            fun finnGUnit(år: Year, beløp: Beløp): GUnit {
-                return GUnit(beløp.dividert(tilTidslinjeGjennomsnitt().segment(år.atDay(1))!!.verdi, GUnit.SCALE))
+            fun finnGUnit(år: Year, beløp: Beløp): Pair<GUnit, Beløp> {
+                val grunnbeløp = tilTidslinjeGjennomsnitt().segment(år.atDay(1))!!.verdi
+                return Pair(GUnit(beløp.dividert(grunnbeløp, GUnit.SCALE)), grunnbeløp)
             }
 
             fun tilTidslinje(): Tidslinje<Beløp> {
@@ -102,7 +103,7 @@ object Grunnbeløp {
         }
     }
 
-    fun finnGUnit(år: Year, beløp: Beløp): GUnit {
+    fun finnGUnit(år: Year, beløp: Beløp): Pair<GUnit, Beløp> {
         return Element.finnGUnit(år, beløp)
     }
 

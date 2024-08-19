@@ -34,9 +34,9 @@ class GrunnlagYrkesskade(
     private val antattÅrligInntektYrkesskadeTidspunktet: Beløp,
     private val yrkesskadeTidspunkt: Year,
     private val grunnlagForBeregningAvYrkesskadeandel: GUnit,
+    private val grunnbeløp: Beløp,
     private val yrkesskadeinntektIG: GUnit,
-    private val grunnlagEtterYrkesskadeFordel: GUnit,
-    private val erGjennomsnitt: Boolean // bort?
+    private val grunnlagEtterYrkesskadeFordel: GUnit
 ) : Beregningsgrunnlag {
 
     override fun grunnlaget(): GUnit {
@@ -67,6 +67,10 @@ class GrunnlagYrkesskade(
         return yrkesskadeTidspunkt
     }
 
+    fun grunnbeløp(): Beløp {
+        return grunnbeløp
+    }
+
     fun yrkesskadeinntektIG(): GUnit {
         return yrkesskadeinntektIG
     }
@@ -88,10 +92,6 @@ class GrunnlagYrkesskade(
             grunnlaget = grunnlaget.verdi(),
             beregningsgrunnlag = beregningsgrunnlag.faktagrunnlag()
         )
-    }
-
-    override fun erGjennomsnitt(): Boolean {
-        return erGjennomsnitt
     }
 
     internal class Fakta(
@@ -124,9 +124,9 @@ class GrunnlagYrkesskade(
         if (antattÅrligInntektYrkesskadeTidspunktet != other.antattÅrligInntektYrkesskadeTidspunktet) return false
         if (yrkesskadeTidspunkt != other.yrkesskadeTidspunkt) return false
         if (grunnlagForBeregningAvYrkesskadeandel != other.grunnlagForBeregningAvYrkesskadeandel) return false
+        if (grunnbeløp != other.grunnbeløp) return false
         if (yrkesskadeinntektIG != other.yrkesskadeinntektIG) return false
         if (grunnlagEtterYrkesskadeFordel != other.grunnlagEtterYrkesskadeFordel) return false
-        if (erGjennomsnitt != other.erGjennomsnitt) return false
 
         return true
     }
@@ -142,11 +142,9 @@ class GrunnlagYrkesskade(
         result = 31 * result + antattÅrligInntektYrkesskadeTidspunktet.hashCode()
         result = 31 * result + yrkesskadeTidspunkt.hashCode()
         result = 31 * result + grunnlagForBeregningAvYrkesskadeandel.hashCode()
+        result = 31 * result + grunnbeløp.hashCode()
         result = 31 * result + yrkesskadeinntektIG.hashCode()
         result = 31 * result + grunnlagEtterYrkesskadeFordel.hashCode()
-        result = 31 * result + erGjennomsnitt.hashCode()
         return result
     }
-
-
 }

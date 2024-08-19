@@ -12,13 +12,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag1
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.UføreInntekt
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.server.respondWithStatus
 import no.nav.aap.verdityper.GUnit
-import no.nav.aap.verdityper.Prosent
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.beregningsGrunnlagApi(dataSource: DataSource) {
@@ -122,26 +122,31 @@ private fun inntekterTilDTO(inntekt: GrunnlagInntekt): InntektDTO {
     )
 }
 
-private fun inntekterTilUføreDTO(inntekter: List<GrunnlagInntekt>, uføregrad: Prosent): List<UføreInntektDTO> {
-    return inntekter.map { inntekterTilUføreDTO(it, uføregrad) }
+private fun inntekterTilUføreDTO(inntekter: List<Pair<UføreInntekt, GrunnlagInntekt>>): List<UføreInntektDTO> {
+    return inntekter.map { (uføreInntekt, grunnlagInntekt) -> inntekterTilUføreDTO(uføreInntekt, grunnlagInntekt) }
 }
 
-private fun inntekterTilUføreDTO(inntekt: GrunnlagInntekt, uføregrad: Prosent): UføreInntektDTO {
-    //FIXME Må hente lagrede verdier
+private fun inntekterTilUføreDTO(uføreInntekt: UføreInntekt, grunnlagInntekt: GrunnlagInntekt): UføreInntektDTO {
     return UføreInntektDTO(
-        år = inntekt.år.value.toString(),
-        inntektIKroner = inntekt.inntektIKroner.verdi(),
-        inntektIG = inntekt.inntektIG.verdi(), //FIXME Finn inntekt før justering for uføregrad
-        justertTilMaks6G = inntekt.inntekt6GBegrenset.verdi(),
-        justertForUføreGrad = inntekt.inntektIKroner.verdi(),
-        uføreGrad = uføregrad.prosentverdi() //FIXME Uføregrad pr inntekt
+        år = uføreInntekt.år.value.toString(),
+        inntektIKroner = uføreInntekt.inntektIKroner.verdi(),
+        inntektIG = grunnlagInntekt.inntektIG.verdi(),
+        justertTilMaks6G = grunnlagInntekt.inntekt6GBegrenset.verdi(),
+        justertForUføreGrad = grunnlagInntekt.inntektIKroner.verdi(),
+        uføreGrad = uføreInntekt.uføregrad.prosentverdi()
     )
 }
 
 private fun uføreGrunnlagDTO(grunnlag: GrunnlagUføre): UføreGrunnlagDTO {
     val inntekter = inntekterTilDTO(grunnlag.underliggende().inntekter())
-    val uføreInntekter =
-        inntekterTilUføreDTO(grunnlag.underliggendeYtterligereNedsatt().inntekter(), grunnlag.uføregrad())
+    val inntekterForUføre = grunnlag.uføreInntekterFraForegåendeÅr().map { uføreInntekt ->
+        Pair(
+            uføreInntekt,
+            grunnlag.underliggendeYtterligereNedsatt().inntekter()
+                .single { grunnlagInntekt -> grunnlagInntekt.år == uføreInntekt.år }
+        )
+    }
+    val uføreInntekter = inntekterTilUføreDTO(inntekterForUføre)
     return UføreGrunnlagDTO(
         inntekter = inntekter,
         gjennomsnittligInntektSiste3år = grunnlag.underliggende().gjennomsnittligInntektIG().verdi(),

@@ -26,7 +26,7 @@ class TestPerson(
     val yrkesskade: List<TestYrkesskade> = emptyList(),
     val institusjonsopphold: List<Institusjonsopphold> = emptyList(),
     val uføre: Prosent = Prosent(0),
-    inntekter: List<InntektPerÅr> = (1..10).map { InntektPerÅr(Year.now().minusYears(it.toLong()), Beløp("1000000.0")) }
+    inntekter: List<InntektPerÅr> = (1..10).map { InntektPerÅr(Year.now().minusYears(it.toLong()), Beløp("400000.0")) }
 ) {
     private val inntekter: MutableList<InntektPerÅr> = inntekter.toMutableList()
 

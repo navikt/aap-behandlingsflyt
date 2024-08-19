@@ -64,6 +64,7 @@ class GrunnlagetForBeregningenTest {
                     GrunnlagInntekt(
                         år = Year.of(2022),
                         inntektIKroner = Beløp(0),
+                       grunnbeløp = Beløp(109_784),
                         inntektIG = GUnit(0),
                         inntekt6GBegrenset = GUnit(0),
                         er6GBegrenset = false
@@ -71,6 +72,7 @@ class GrunnlagetForBeregningenTest {
                     GrunnlagInntekt(
                         år = Year.of(2021),
                         inntektIKroner = Beløp(0),
+                       grunnbeløp = Beløp(104_716),
                         inntektIG = GUnit(0),
                         inntekt6GBegrenset = GUnit(0),
                         er6GBegrenset = false
@@ -78,6 +80,7 @@ class GrunnlagetForBeregningenTest {
                     GrunnlagInntekt(
                         år = Year.of(2020),
                         inntektIKroner = Beløp(0),
+                        grunnbeløp = Beløp(100_853),
                         inntektIG = GUnit(0),
                         inntekt6GBegrenset = GUnit(0),
                         er6GBegrenset = false
@@ -110,6 +113,7 @@ class GrunnlagetForBeregningenTest {
                     GrunnlagInntekt(
                         år = Year.of(2022),
                         inntektIKroner = Beløp(5 * 109_784), // 548 920
+                        grunnbeløp = Beløp(109_784),
                         inntektIG = GUnit(5),
                         inntekt6GBegrenset = GUnit(5),
                         er6GBegrenset = false
@@ -117,6 +121,7 @@ class GrunnlagetForBeregningenTest {
                     GrunnlagInntekt(
                         år = Year.of(2021),
                         inntektIKroner = Beløp(0),
+                        grunnbeløp = Beløp(104_716),
                         inntektIG = GUnit(0),
                         inntekt6GBegrenset = GUnit(0),
                         er6GBegrenset = false
@@ -124,6 +129,7 @@ class GrunnlagetForBeregningenTest {
                     GrunnlagInntekt(
                         år = Year.of(2020),
                         inntektIKroner = Beløp(0),
+                        grunnbeløp = Beløp(100_853),
                         inntektIG = GUnit(0),
                         inntekt6GBegrenset = GUnit(0),
                         er6GBegrenset = false
@@ -162,6 +168,7 @@ class GrunnlagetForBeregningenTest {
                     GrunnlagInntekt(
                         år = Year.of(2022),
                         inntektIKroner = Beløp(5 * 109_784), // 548 920
+                        grunnbeløp = Beløp(109_784),
                         inntektIG = GUnit(5),
                         inntekt6GBegrenset = GUnit(5),
                         er6GBegrenset = false
@@ -169,6 +176,7 @@ class GrunnlagetForBeregningenTest {
                     GrunnlagInntekt(
                         år = Year.of(2021),
                         inntektIKroner = Beløp(2 * 104_716), // 209 432
+                        grunnbeløp = Beløp(104_716),
                         inntektIG = GUnit(2),
                         inntekt6GBegrenset = GUnit(2),
                         er6GBegrenset = false
@@ -176,6 +184,7 @@ class GrunnlagetForBeregningenTest {
                     GrunnlagInntekt(
                         år = Year.of(2020),
                         inntektIKroner = Beløp(2 * 100_853), // 201 706
+                        grunnbeløp = Beløp(100_853),
                         inntektIG = GUnit(2),
                         inntekt6GBegrenset = GUnit(2),
                         er6GBegrenset = false
@@ -215,6 +224,7 @@ class GrunnlagetForBeregningenTest {
                     GrunnlagInntekt(
                         år = Year.of(2022),
                         inntektIKroner = Beløp(5 * 109_784), // 548 920
+                        grunnbeløp = Beløp(109_784),
                         inntektIG = GUnit(5),
                         inntekt6GBegrenset = GUnit(5),
                         er6GBegrenset = false
@@ -222,6 +232,7 @@ class GrunnlagetForBeregningenTest {
                     GrunnlagInntekt(
                         år = Year.of(2021),
                         inntektIKroner = Beløp(5 * 104_716), // 523 580
+                        grunnbeløp = Beløp(104_716),
                         inntektIG = GUnit(5),
                         inntekt6GBegrenset = GUnit(5),
                         er6GBegrenset = false
@@ -229,6 +240,7 @@ class GrunnlagetForBeregningenTest {
                     GrunnlagInntekt(
                         år = Year.of(2020),
                         inntektIKroner = Beløp(5 * 100_853), // 504 265
+                        grunnbeløp = Beløp(100_853),
                         inntektIG = GUnit(5),
                         inntekt6GBegrenset = GUnit(5),
                         er6GBegrenset = false
@@ -267,6 +279,7 @@ class GrunnlagetForBeregningenTest {
                     GrunnlagInntekt(
                         år = Year.of(2022),
                         inntektIKroner = Beløp(7 * 109_784), // 768 488
+                        grunnbeløp = Beløp(109_784),
                         inntektIG = GUnit(7),
                         inntekt6GBegrenset = GUnit(6),
                         er6GBegrenset = true
@@ -274,6 +287,7 @@ class GrunnlagetForBeregningenTest {
                     GrunnlagInntekt(
                         år = Year.of(2021),
                         inntektIKroner = Beløp(2 * 104_716), // 209 432
+                        grunnbeløp = Beløp(104_716),
                         inntektIG = GUnit(2),
                         inntekt6GBegrenset = GUnit(2),
                         er6GBegrenset = false
@@ -281,6 +295,7 @@ class GrunnlagetForBeregningenTest {
                     GrunnlagInntekt(
                         år = Year.of(2020),
                         inntektIKroner = Beløp(2 * 100_853), // 201 706
+                        grunnbeløp = Beløp(100_853),
                         inntektIG = GUnit(2),
                         inntekt6GBegrenset = GUnit(2),
                         er6GBegrenset = false
@@ -320,6 +335,7 @@ class GrunnlagetForBeregningenTest {
                     GrunnlagInntekt(
                         år = Year.of(2022),
                         inntektIKroner = Beløp(7 * 109_784), // 768 488
+                        grunnbeløp = Beløp(109_784),
                         inntektIG = GUnit(7),
                         inntekt6GBegrenset = GUnit(6),
                         er6GBegrenset = true
@@ -327,6 +343,7 @@ class GrunnlagetForBeregningenTest {
                     GrunnlagInntekt(
                         år = Year.of(2021),
                         inntektIKroner = Beløp(7 * 104_716), // 733 012
+                        grunnbeløp = Beløp(104_716),
                         inntektIG = GUnit(7),
                         inntekt6GBegrenset = GUnit(6),
                         er6GBegrenset = true
@@ -334,6 +351,7 @@ class GrunnlagetForBeregningenTest {
                     GrunnlagInntekt(
                         år = Year.of(2020),
                         inntektIKroner = Beløp(7 * 100_853), // 705 971
+                        grunnbeløp = Beløp(100_853),
                         inntektIG = GUnit(7),
                         inntekt6GBegrenset = GUnit(6),
                         er6GBegrenset = true
@@ -373,6 +391,7 @@ class GrunnlagetForBeregningenTest {
                     GrunnlagInntekt(
                         år = Year.of(2022),
                         inntektIKroner = Beløp(3 * 109_784), // 329 352
+                        grunnbeløp = Beløp(109_784),
                         inntektIG = GUnit(3),
                         inntekt6GBegrenset = GUnit(3),
                         er6GBegrenset = false
@@ -380,6 +399,7 @@ class GrunnlagetForBeregningenTest {
                     GrunnlagInntekt(
                         år = Year.of(2021),
                         inntektIKroner = Beløp(4 * 104_716), // 418 864
+                        grunnbeløp = Beløp(104_716),
                         inntektIG = GUnit(4),
                         inntekt6GBegrenset = GUnit(4),
                         er6GBegrenset = false
@@ -387,6 +407,7 @@ class GrunnlagetForBeregningenTest {
                     GrunnlagInntekt(
                         år = Year.of(2020),
                         inntektIKroner = Beløp(5 * 100_853), // 504 265
+                        grunnbeløp = Beløp(100_853),
                         inntektIG = GUnit(5),
                         inntekt6GBegrenset = GUnit(5),
                         er6GBegrenset = false
@@ -425,6 +446,7 @@ class GrunnlagetForBeregningenTest {
                     GrunnlagInntekt(
                         år = Year.of(2022),
                         inntektIKroner = Beløp(3 * 109_784), //   329 352
+                        grunnbeløp = Beløp(109_784),
                         inntektIG = GUnit(3),
                         inntekt6GBegrenset = GUnit(3),
                         er6GBegrenset = false
@@ -432,6 +454,7 @@ class GrunnlagetForBeregningenTest {
                     GrunnlagInntekt(
                         år = Year.of(2021),
                         inntektIKroner = Beløp(3 * 104_716), //   314 148
+                        grunnbeløp = Beløp(104_716),
                         inntektIG = GUnit(3),
                         inntekt6GBegrenset = GUnit(3),
                         er6GBegrenset = false
@@ -439,6 +462,7 @@ class GrunnlagetForBeregningenTest {
                     GrunnlagInntekt(
                         år = Year.of(2020),
                         inntektIKroner = Beløp(12 * 100_853), // 1 210 236
+                        grunnbeløp = Beløp(100_853),
                         inntektIG = GUnit(12),
                         inntekt6GBegrenset = GUnit(6),
                         er6GBegrenset = true

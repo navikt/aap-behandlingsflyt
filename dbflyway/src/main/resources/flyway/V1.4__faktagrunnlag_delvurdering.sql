@@ -63,6 +63,7 @@ CREATE TABLE BEREGNING_INNTEKT
     BEREGNING_HOVED_ID   BIGINT          NOT NULL REFERENCES BEREGNING_HOVED (ID),
     ARSTALL              INT             NOT NULL,
     INNTEKT_I_KRONER     NUMERIC(19, 2)  NOT NULL,
+    GRUNNBELOP           NUMERIC(19, 2)  NOT NULL,
     INNTEKT_I_G          NUMERIC(21, 10) NOT NULL,
     INNTEKT_6G_BEGRENSET NUMERIC(21, 10) NOT NULL,
     ER_6G_BEGRENSET      BOOLEAN         NOT NULL
@@ -83,6 +84,17 @@ CREATE TABLE BEREGNING_UFORE
 
 CREATE UNIQUE INDEX UIDX_BEREGNING_UFORE_TYPE ON BEREGNING_UFORE (BEREGNING_ID, TYPE);
 
+CREATE TABLE BEREGNING_UFORE_INNTEKT
+(
+    ID                            BIGSERIAL      NOT NULL PRIMARY KEY,
+    BEREGNING_UFORE_ID            BIGINT         NOT NULL REFERENCES BEREGNING_UFORE (ID),
+    ARSTALL                       INT            NOT NULL,
+    INNTEKT_I_KRONER              NUMERIC(19, 2) NOT NULL,
+    UFOREGRAD                     SMALLINT       NOT NULL,
+    ARBEIDSGRAD                   SMALLINT       NOT NULL,
+    INNTEKT_JUSTERT_FOR_UFOREGRAD NUMERIC(19, 2) NOT NULL
+);
+
 CREATE TABLE BEREGNING_YRKESSKADE
 (
     ID                                        BIGSERIAL                              NOT NULL PRIMARY KEY,
@@ -93,13 +105,13 @@ CREATE TABLE BEREGNING_YRKESSKADE
     ANDEL_YRKESSKADE                          SMALLINT                               NOT NULL,
     BENYTTET_ANDEL_YRKESSKADE                 SMALLINT                               NOT NULL,
     YRKESSKADE_TIDSPUNKT                      SMALLINT                               NOT NULL,
+    GRUNNBELOP                                NUMERIC(19, 2)                         NOT NULL,
     YRKESSKADE_INNTEKT_I_G                    NUMERIC(21, 10)                        NOT NULL,
     ANTATT_ARLIG_INNTEKT_YRKESSKADE_TIDSPUNKT NUMERIC(19, 2)                         NOT NULL,
     ANDEL_SOM_SKYLDES_YRKESSKADE              NUMERIC(21, 10)                        NOT NULL,
     ANDEL_SOM_IKKE_SKYLDES_YRKESSKADE         NUMERIC(21, 10)                        NOT NULL,
     GRUNNLAG_ETTER_YRKESSKADE_FORDEL          NUMERIC(21, 10)                        NOT NULL,
-    GRUNNLAG_FOR_BEREGNING_AV_YRKESSKADEANDEL NUMERIC(21, 10)                        NOT NULL,
-    ER_GJENNOMSNITT                           BOOLEAN                                NOT NULL
+    GRUNNLAG_FOR_BEREGNING_AV_YRKESSKADEANDEL NUMERIC(21, 10)                        NOT NULL
 );
 
 CREATE TABLE BEREGNINGSGRUNNLAG

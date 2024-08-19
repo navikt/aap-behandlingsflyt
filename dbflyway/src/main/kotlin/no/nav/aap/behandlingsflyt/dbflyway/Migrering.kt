@@ -17,5 +17,4 @@ object Migrering {
 
         flyway.migrate()
     }
-
 }

@@ -27,7 +27,7 @@ class YrkesskadeBeregning(
 
         val grunnlagFra11_19 = grunnlag11_19.grunnlaget()
         // TODO: ...og skal antattÅrligInntektGUnits begrenses til 6G...
-        val antattÅrligInntektGUnits = antattÅrligInntekt.gUnit()
+        val (antattÅrligInntektGUnits, grunnbeløp) = antattÅrligInntekt.gUnit()
 
         // grunnlaget for arbeidsavklaringspengene skal ikke settes lavere enn den antatte årlige
         // arbeidsinntekten på skadetidspunktet:
@@ -47,12 +47,12 @@ class YrkesskadeBeregning(
             benyttetAndelForYrkesskade = andelForBeregning,
             antattÅrligInntektYrkesskadeTidspunktet = antattÅrligInntekt.beløp,
             yrkesskadeTidspunkt = antattÅrligInntekt.år,
+            grunnbeløp = grunnbeløp,
             yrkesskadeinntektIG = antattÅrligInntektGUnits,
             andelSomSkyldesYrkesskade = andelSomSkyldesYrkesskade,
             andelSomIkkeSkyldesYrkesskade = andelSomIkkeSkyldesYrkesskade,
             grunnlagEtterYrkesskadeFordel = grunnlag,
-            grunnlagForBeregningAvYrkesskadeandel = grunnlagForBeregningAvYrkesskadeandel,
-            erGjennomsnitt = grunnlag11_19.erGjennomsnitt()
+            grunnlagForBeregningAvYrkesskadeandel = grunnlagForBeregningAvYrkesskadeandel
         )
     }
 }

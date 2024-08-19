@@ -36,7 +36,7 @@ class Grunnlag11_19(
         )
     }
 
-    override fun erGjennomsnitt(): Boolean {
+    fun erGjennomsnitt(): Boolean {
         return erGjennomsnitt
     }
 

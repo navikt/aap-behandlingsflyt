@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.GrunnlagetForBeregningen.
 import no.nav.aap.behandlingsflyt.behandling.beregning.GrunnlagetForBeregningen.GrunnlagInntektForBeregning.Companion.tilGrunnlagInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.GUnit
@@ -60,6 +59,7 @@ class GrunnlagetForBeregningen(
     private class GrunnlagInntektForBeregning(
         private val år: Year,
         private val inntektIKroner: Beløp,
+        private val grunnbeløp: Beløp,
         private val inntektIG: GUnit,
         private val inntekt6GBegrenset: GUnit,
         private val er6GBegrenset: Boolean
@@ -74,6 +74,7 @@ class GrunnlagetForBeregningen(
                     GrunnlagInntekt(
                         år = inntekt.år,
                         inntektIKroner = inntekt.inntektIKroner,
+                        grunnbeløp = inntekt.grunnbeløp,
                         inntektIG = inntekt.inntektIG,
                         inntekt6GBegrenset = inntekt.inntekt6GBegrenset,
                         er6GBegrenset = inntekt.er6GBegrenset
@@ -99,12 +100,13 @@ class GrunnlagetForBeregningen(
         val år = inntektPerÅr.år
         val inntektIKroner = inntektPerÅr.beløp
         // Inntekter justeres etter størrelsen på G-beløpet i de aktuelle årene.
-        val inntektIG = Grunnbeløp.finnGUnit(år, inntektIKroner)
+        val (inntektIG, grunnbeløp) = inntektPerÅr.gUnit()
         val inntekt6GBegrenset = inntektIG.begrensTil6GUnits()
         val er6GBegrenset = inntektIG > inntekt6GBegrenset
         return GrunnlagInntektForBeregning(
             år = år,
             inntektIKroner = inntektIKroner,
+            grunnbeløp = grunnbeløp,
             inntektIG = inntektIG,
             inntekt6GBegrenset = inntekt6GBegrenset,
             er6GBegrenset = er6GBegrenset,

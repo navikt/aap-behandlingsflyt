@@ -163,6 +163,7 @@ class ApiTest {
                         GrunnlagInntekt(
                             år = Year.of(2023),
                             inntektIKroner = Beløp(200000),
+                            grunnbeløp = Beløp(100000),
                             inntektIG = GUnit(3),
                             inntekt6GBegrenset = GUnit(3),
                             er6GBegrenset = false
@@ -170,6 +171,7 @@ class ApiTest {
                         GrunnlagInntekt(
                             år = Year.of(2022),
                             inntektIKroner = Beløp(200000),
+                            grunnbeløp = Beløp(100000),
                             inntektIG = GUnit(3),
                             inntekt6GBegrenset = GUnit(3),
                             er6GBegrenset = false
@@ -177,6 +179,7 @@ class ApiTest {
                         GrunnlagInntekt(
                             år = Year.of(2021),
                             inntektIKroner = Beløp(200000),
+                            grunnbeløp = Beløp(100000),
                             inntektIG = GUnit(3),
                             inntekt6GBegrenset = GUnit(3),
                             er6GBegrenset = false

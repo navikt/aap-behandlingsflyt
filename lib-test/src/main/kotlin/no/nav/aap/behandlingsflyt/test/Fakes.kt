@@ -18,7 +18,6 @@ import no.nav.aap.Inntekt.InntektResponse
 import no.nav.aap.Inntekt.SumPi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.BARN_RELASJON_QUERY
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.PERSON_BOLK_QUERY
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PERSON_QUERY
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.AvsluttetBehandlingDTO
@@ -136,14 +135,12 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
                 identer = setOf(Ident("12345678910", true)),
                 fødselsdato = Fødselsdato(
                     LocalDate.now().minusYears(30),
-                ),
-                inntekter = (1..10).map { InntektPerÅr(Year.now().minusYears(it.toLong()), Beløp("1000000.0")) }
+                )
             )
         val BARNLØS_PERSON_18ÅR =
             TestPerson(
                 identer = setOf(Ident("42346734567", true)),
-                fødselsdato = Fødselsdato(LocalDate.now().minusYears(18).minusDays(10)),
-                inntekter = (1..10).map { InntektPerÅr(Year.now().minusYears(it.toLong()), Beløp("1000000.0")) }
+                fødselsdato = Fødselsdato(LocalDate.now().minusYears(18).minusDays(10))
             )
         val PERSON_MED_BARN_65ÅR =
             TestPerson(
@@ -151,8 +148,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
                 fødselsdato = Fødselsdato(LocalDate.now().minusYears(65)),
                 barn = listOf(
                     BARNLØS_PERSON_18ÅR, BARNLØS_PERSON_30ÅR
-                ),
-                inntekter = (1..10).map { InntektPerÅr(Year.now().minusYears(it.toLong()), Beløp("1000000.0")) }
+                )
             )
 
         // Legg til alle testpersoner
@@ -665,8 +661,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         if (person == null) {
             fakePersoner[forespurtIdent] = TestPerson(
                 identer = setOf(Ident(forespurtIdent)),
-                fødselsdato = Fødselsdato(LocalDate.now().minusYears(30)),
-                inntekter = (1..10).map { InntektPerÅr(Year.now().minusYears(it.toLong()), Beløp("1000000.0")) }
+                fødselsdato = Fødselsdato(LocalDate.now().minusYears(30))
             )
         }
 

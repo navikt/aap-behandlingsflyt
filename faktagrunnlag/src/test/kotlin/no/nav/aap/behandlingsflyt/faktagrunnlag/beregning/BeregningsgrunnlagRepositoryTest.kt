@@ -10,7 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.UføreInntekt
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.EndringType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
@@ -35,6 +35,7 @@ class BeregningsgrunnlagRepositoryTest {
             GrunnlagInntekt(
                 år = Year.of(2015),
                 inntektIKroner = Beløp(400000),
+                grunnbeløp = Beløp(100000),
                 inntektIG = GUnit(4),
                 inntekt6GBegrenset = GUnit(4),
                 er6GBegrenset = false
@@ -42,6 +43,7 @@ class BeregningsgrunnlagRepositoryTest {
             GrunnlagInntekt(
                 år = Year.of(2014),
                 inntektIKroner = Beløp(400000),
+                grunnbeløp = Beløp(100000),
                 inntektIG = GUnit(4),
                 inntekt6GBegrenset = GUnit(4),
                 er6GBegrenset = false
@@ -49,30 +51,37 @@ class BeregningsgrunnlagRepositoryTest {
             GrunnlagInntekt(
                 år = Year.of(2013),
                 inntektIKroner = Beløp(200000),
-                inntektIG = GUnit(4),
-                inntekt6GBegrenset = GUnit(4),
+                grunnbeløp = Beløp(100000),
+                inntektIG = GUnit(2),
+                inntekt6GBegrenset = GUnit(2),
                 er6GBegrenset = false
             )
         )
 
         val inntektPerÅrUføre = listOf(
-            GrunnlagInntekt(
-                år = Year.of(2022),
+            uføreInntekt(
+                år = 2022,
+                uføregrad = Prosent.`50_PROSENT`,
                 inntektIKroner = Beløp(300000),
+                grunnbeløp = Beløp(100000),
                 inntektIG = GUnit(4),
                 inntekt6GBegrenset = GUnit(4),
                 er6GBegrenset = false
             ),
-            GrunnlagInntekt(
-                år = Year.of(2021),
+            uføreInntekt(
+                år = 2021,
+                uføregrad = Prosent.`50_PROSENT`,
                 inntektIKroner = Beløp(350000),
+                grunnbeløp = Beløp(100000),
                 inntektIG = GUnit(4),
                 inntekt6GBegrenset = GUnit(4),
                 er6GBegrenset = false
             ),
-            GrunnlagInntekt(
-                år = Year.of(2020),
+            uføreInntekt(
+                år = 2020,
+                uføregrad = Prosent.`50_PROSENT`,
                 inntektIKroner = Beløp(350000),
+                grunnbeløp = Beløp(100000),
                 inntektIG = GUnit(4),
                 inntekt6GBegrenset = GUnit(4),
                 er6GBegrenset = false
@@ -89,7 +98,7 @@ class BeregningsgrunnlagRepositoryTest {
             grunnlaget = GUnit(3),
             erGjennomsnitt = false,
             gjennomsnittligInntektIG = GUnit(4),
-            inntekter = inntektPerÅrUføre
+            inntekter = inntektPerÅrUføre.map(InntekterForUføre::grunnlagInntekt)
         )
         val grunnlagUføre = GrunnlagUføre(
             grunnlaget = GUnit(4),
@@ -97,11 +106,8 @@ class BeregningsgrunnlagRepositoryTest {
             grunnlag = grunnlag11_19Standard,
             grunnlagYtterligereNedsatt = grunnlag11_19Ytterligere,
             uføregrad = Prosent(50),
-            //FIXME Må håndtere inntekter før oppjustering
-            uføreInntekterFraForegåendeÅr = inntektPerÅrUføre.map { InntektPerÅr(it.år, it.inntektIKroner) },
-            uføreInntektIKroner = Beløp(0),
-            uføreYtterligereNedsattArbeidsevneÅr = Year.of(2022),
-            erGjennomsnitt = false,
+            uføreInntekterFraForegåendeÅr = inntektPerÅrUføre.map(InntekterForUføre::uføreInntekt),
+            uføreYtterligereNedsattArbeidsevneÅr = Year.of(2022)
         )
         InitTestDatabase.dataSource.transaction { connection ->
             val beregningsgrunnlagRepository = BeregningsgrunnlagRepository(connection)
@@ -115,7 +121,8 @@ class BeregningsgrunnlagRepositoryTest {
 
             assertThat(beregningsgrunnlag).isEqualTo(grunnlagUføre)
             assertThat(beregningsgrunnlag.underliggende().inntekter()).isEqualTo(inntektPerÅr)
-            assertThat(beregningsgrunnlag.underliggendeYtterligereNedsatt().inntekter()).isEqualTo(inntektPerÅrUføre)
+            assertThat(beregningsgrunnlag.underliggendeYtterligereNedsatt().inntekter())
+                .isEqualTo(inntektPerÅrUføre.map(InntekterForUføre::grunnlagInntekt))
             assertThat(beregningsgrunnlag).isEqualTo(grunnlagUføre)
         }
     }
@@ -125,17 +132,75 @@ class BeregningsgrunnlagRepositoryTest {
         val sak = InitTestDatabase.dataSource.transaction { sak(it) }
         val behandling = InitTestDatabase.dataSource.transaction { behandling(it, sak) }
 
+        val inntektPerÅr = listOf(
+            GrunnlagInntekt(
+                år = Year.of(2015),
+                inntektIKroner = Beløp(400000),
+                grunnbeløp = Beløp(100000),
+                inntektIG = GUnit(4),
+                inntekt6GBegrenset = GUnit(4),
+                er6GBegrenset = false
+            ),
+            GrunnlagInntekt(
+                år = Year.of(2014),
+                inntektIKroner = Beløp(400000),
+                grunnbeløp = Beløp(100000),
+                inntektIG = GUnit(4),
+                inntekt6GBegrenset = GUnit(4),
+                er6GBegrenset = false
+            ),
+            GrunnlagInntekt(
+                år = Year.of(2013),
+                inntektIKroner = Beløp(200000),
+                grunnbeløp = Beløp(100000),
+                inntektIG = GUnit(2),
+                inntekt6GBegrenset = GUnit(2),
+                er6GBegrenset = false
+            )
+        )
+
         val grunnlag11_19Standard = Grunnlag11_19(
             grunnlaget = GUnit(1),
             erGjennomsnitt = false,
             gjennomsnittligInntektIG = GUnit(1),
-            inntekter = emptyList()
+            inntekter = inntektPerÅr
         )
+
+        val inntektPerÅrUføre = listOf(
+            uføreInntekt(
+                år = 2022,
+                uføregrad = Prosent.`50_PROSENT`,
+                inntektIKroner = Beløp(300000),
+                grunnbeløp = Beløp(100000),
+                inntektIG = GUnit(4),
+                inntekt6GBegrenset = GUnit(4),
+                er6GBegrenset = false
+            ),
+            uføreInntekt(
+                år = 2021,
+                uføregrad = Prosent.`50_PROSENT`,
+                inntektIKroner = Beløp(350000),
+                grunnbeløp = Beløp(100000),
+                inntektIG = GUnit(4),
+                inntekt6GBegrenset = GUnit(4),
+                er6GBegrenset = false
+            ),
+            uføreInntekt(
+                år = 2020,
+                uføregrad = Prosent.`50_PROSENT`,
+                inntektIKroner = Beløp(350000),
+                grunnbeløp = Beløp(100000),
+                inntektIG = GUnit(4),
+                inntekt6GBegrenset = GUnit(4),
+                er6GBegrenset = false
+            )
+        )
+
         val grunnlag11_19Ytterligere = Grunnlag11_19(
             grunnlaget = GUnit(3),
             erGjennomsnitt = false,
             gjennomsnittligInntektIG = GUnit(3),
-            inntekter = emptyList()
+            inntekter = inntektPerÅrUføre.map(InntekterForUføre::grunnlagInntekt)
         )
         val grunnlagUføre = GrunnlagUføre(
             grunnlaget = GUnit(4),
@@ -143,10 +208,8 @@ class BeregningsgrunnlagRepositoryTest {
             grunnlag = grunnlag11_19Standard,
             grunnlagYtterligereNedsatt = grunnlag11_19Ytterligere,
             uføregrad = Prosent(50),
-            uføreInntekterFraForegåendeÅr = emptyList(),
-            uføreInntektIKroner = Beløp(0),
-            uføreYtterligereNedsattArbeidsevneÅr = Year.of(2022),
-            erGjennomsnitt = false,
+            uføreInntekterFraForegåendeÅr = inntektPerÅrUføre.map(InntekterForUføre::uføreInntekt),
+            uføreYtterligereNedsattArbeidsevneÅr = Year.of(2022)
         )
 
         InitTestDatabase.dataSource.transaction { connection ->
@@ -199,5 +262,38 @@ class BeregningsgrunnlagRepositoryTest {
             sak.saksnummer,
             listOf(Årsak(EndringType.MOTTATT_SØKNAD))
         ).behandling
+    }
+
+    private class InntekterForUføre(
+        val uføreInntekt: UføreInntekt,
+        val grunnlagInntekt: GrunnlagInntekt
+    )
+
+    private fun uføreInntekt(
+        år: Int,
+        uføregrad: Prosent,
+        inntektIKroner: Beløp,
+        grunnbeløp: Beløp,
+        inntektIG: GUnit,
+        inntekt6GBegrenset: GUnit,
+        er6GBegrenset: Boolean
+    ): InntekterForUføre {
+        return InntekterForUføre(
+            UføreInntekt(
+                år = Year.of(år),
+                inntektIKroner = inntektIKroner.multiplisert(uføregrad.komplement()),
+                uføregrad = uføregrad,
+                arbeidsgrad = uføregrad.komplement(),
+                inntektJustertForUføregrad = inntektIKroner
+            ),
+            GrunnlagInntekt(
+                år = Year.of(år),
+                inntektIKroner = inntektIKroner,
+                grunnbeløp = grunnbeløp,
+                inntektIG = inntektIG,
+                inntekt6GBegrenset = inntekt6GBegrenset,
+                er6GBegrenset = er6GBegrenset
+            )
+        )
     }
 }

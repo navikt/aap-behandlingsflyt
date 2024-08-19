@@ -8,7 +8,7 @@ class InntektPerÅr(val år: Year, val beløp: Beløp) :
     Comparable<InntektPerÅr> {
     constructor(år: Int, beløp: Beløp) : this(Year.of(år), beløp)
 
-    fun gUnit(): GUnit {
+    fun gUnit(): Pair<GUnit, Beløp> {
         return Grunnbeløp.finnGUnit(år, beløp)
     }
 

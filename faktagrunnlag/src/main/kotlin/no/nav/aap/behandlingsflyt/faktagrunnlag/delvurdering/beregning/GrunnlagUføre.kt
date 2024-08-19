@@ -2,8 +2,6 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre.Type
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Faktagrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
-import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.GUnit
 import no.nav.aap.verdityper.Prosent
 import java.math.BigDecimal
@@ -17,10 +15,7 @@ import java.time.Year
  * @param grunnlagYtterligereNedsatt Beregningsgrunnlag, oppjustert etter uføregrad.
  * @param uføregrad Uføregrad i prosent.
  * @param uføreInntekterFraForegåendeÅr Inntekter de siste 3 år før [uføreYtterligereNedsattArbeidsevneÅr].
- * @param uføreInntektIKroner I dag er dette det oppjusterte grunnlaget multiplisert med 10. Så gir lite mening. TODO!
  * @param uføreYtterligereNedsattArbeidsevneÅr Hvilket år arbeidsevnen ble ytterligere nedsatt.
- * @param er6GBegrenset Om grunnlaget fra [grunnlaget] er 6G-begrenset. // TODO: denne er overflødig, ligger i [grunnlaget]
- * @param erGjennomsnitt Om grunnlaget fra [grunnlaget] er et gjennomsnitt. // TODO: også overflødig
  */
 class GrunnlagUføre(
     private val grunnlaget: GUnit,
@@ -28,10 +23,8 @@ class GrunnlagUføre(
     private val grunnlag: Grunnlag11_19,
     private val grunnlagYtterligereNedsatt: Grunnlag11_19,
     private val uføregrad: Prosent,
-    private val uføreInntekterFraForegåendeÅr: List<InntektPerÅr>, // uføre ikke oppjustert
-    private val uføreInntektIKroner: Beløp, // grunnlaget
-    private val uføreYtterligereNedsattArbeidsevneÅr: Year,
-    private val erGjennomsnitt: Boolean,
+    private val uføreInntekterFraForegåendeÅr: List<UføreInntekt>, // uføre før og etter oppjustering
+    private val uføreYtterligereNedsattArbeidsevneÅr: Year
 ) : Beregningsgrunnlag {
 
     enum class Type {
@@ -50,20 +43,16 @@ class GrunnlagUføre(
         )
     }
 
-    fun uføreInntektIKroner(): Beløp {
-        return uføreInntektIKroner
-    }
-
     fun uføregrad(): Prosent {
         return uføregrad
     }
 
-    fun uføreYtterligereNedsattArbeidsevneÅr(): Year {
-        return uføreYtterligereNedsattArbeidsevneÅr
+    fun uføreInntekterFraForegåendeÅr(): List<UføreInntekt> {
+        return uføreInntekterFraForegåendeÅr.toList()
     }
 
-    override fun erGjennomsnitt(): Boolean {
-        return erGjennomsnitt
+    fun uføreYtterligereNedsattArbeidsevneÅr(): Year {
+        return uføreYtterligereNedsattArbeidsevneÅr
     }
 
     internal class Fakta(
@@ -86,7 +75,7 @@ class GrunnlagUføre(
     }
 
     override fun toString(): String {
-        return "GrunnlagUføre(grunnlaget=$grunnlaget, gjeldende=$type, grunnlag=$grunnlag, grunnlagYtterligereNedsatt=$grunnlagYtterligereNedsatt)"
+        return "GrunnlagUføre(grunnlaget=$grunnlaget, type=$type, grunnlag=$grunnlag, grunnlagYtterligereNedsatt=$grunnlagYtterligereNedsatt, uføregrad=$uføregrad, uføreInntekterFraForegåendeÅr=$uføreInntekterFraForegåendeÅr, uføreYtterligereNedsattArbeidsevneÅr=$uføreYtterligereNedsattArbeidsevneÅr)"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -99,6 +88,9 @@ class GrunnlagUføre(
         if (type != other.type) return false
         if (grunnlag != other.grunnlag) return false
         if (grunnlagYtterligereNedsatt != other.grunnlagYtterligereNedsatt) return false
+        if (uføregrad != other.uføregrad) return false
+        if (uføreInntekterFraForegåendeÅr != other.uføreInntekterFraForegåendeÅr) return false
+        if (uføreYtterligereNedsattArbeidsevneÅr != other.uføreYtterligereNedsattArbeidsevneÅr) return false
 
         return true
     }
@@ -108,6 +100,9 @@ class GrunnlagUføre(
         result = 31 * result + type.hashCode()
         result = 31 * result + grunnlag.hashCode()
         result = 31 * result + grunnlagYtterligereNedsatt.hashCode()
+        result = 31 * result + uføregrad.hashCode()
+        result = 31 * result + uføreInntekterFraForegåendeÅr.hashCode()
+        result = 31 * result + uføreYtterligereNedsattArbeidsevneÅr.hashCode()
         return result
     }
 }

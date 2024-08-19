@@ -2,8 +2,8 @@ package no.nav.aap.behandlingsflyt.behandling.beregning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.UføreInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
-import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.Prosent
 import java.time.Year
 
@@ -22,11 +22,7 @@ class UføreBeregning(
         val oppjusterteInntekter = oppjusterMhpUføregrad(inntekterForegåendeÅr)
 
         // 6G-begrensning ligger her samt gjennomsnitt
-        val ytterligereNedsattGrunnlag = beregn11_19Grunnlag(oppjusterteInntekter.toSet())
-
-        //TODO: Gang med årets G
-        // Hvilket år? Søknads-dato? Uføredato? Ytterligere nedsatt år?
-        val uføreInntektIKroner = grunnlag.grunnlaget().multiplisert(Beløp(10))
+        val ytterligereNedsattGrunnlag = beregn11_19Grunnlag(oppjusterteInntekter)
 
         if (grunnlag.grunnlaget() >= ytterligereNedsattGrunnlag.grunnlaget()) {
             return GrunnlagUføre(
@@ -35,10 +31,8 @@ class UføreBeregning(
                 grunnlag = grunnlag,
                 grunnlagYtterligereNedsatt = ytterligereNedsattGrunnlag,
                 uføregrad = uføregrad,
-                uføreInntekterFraForegåendeÅr = inntekterForegåendeÅr.toList(), //TODO: wat?
-                uføreInntektIKroner = uføreInntektIKroner,
-                uføreYtterligereNedsattArbeidsevneÅr = ytterligereNedsattÅr,
-                erGjennomsnitt = grunnlag.erGjennomsnitt()
+                uføreInntekterFraForegåendeÅr = oppjusterteInntekter,
+                uføreYtterligereNedsattArbeidsevneÅr = ytterligereNedsattÅr
             )
         } else {
             return GrunnlagUføre(
@@ -47,26 +41,34 @@ class UføreBeregning(
                 grunnlag = grunnlag,
                 grunnlagYtterligereNedsatt = ytterligereNedsattGrunnlag,
                 uføregrad = uføregrad,
-                uføreInntekterFraForegåendeÅr = inntekterForegåendeÅr.toList(), //TODO: wat? <- hva menes med wat?
-                uføreInntektIKroner = uføreInntektIKroner,
-                uføreYtterligereNedsattArbeidsevneÅr = ytterligereNedsattÅr,
-                erGjennomsnitt = grunnlag.erGjennomsnitt()
+                uføreInntekterFraForegåendeÅr = oppjusterteInntekter,
+                uføreYtterligereNedsattArbeidsevneÅr = ytterligereNedsattÅr
             )
         }
     }
 
-    private fun oppjusterMhpUføregrad(ikkeOppjusterteInntekter: Set<InntektPerÅr>) =
-        ikkeOppjusterteInntekter.map {
-            InntektPerÅr(it.år, it.beløp.dividert(uføregrad.komplement()))
+    private fun oppjusterMhpUføregrad(ikkeOppjusterteInntekter: Set<InntektPerÅr>): List<UføreInntekt> {
+        return ikkeOppjusterteInntekter.map { inntekt ->
+            val arbeidsgrad = uføregrad.komplement()
+            UføreInntekt(
+                år = inntekt.år,
+                inntektIKroner = inntekt.beløp,
+                uføregrad = uføregrad,
+                arbeidsgrad = arbeidsgrad,
+                inntektJustertForUføregrad = inntekt.beløp.dividert(arbeidsgrad)
+            )
         }
-
+    }
 
     private fun beregn11_19Grunnlag(
-        inntekterPerÅr: Set<InntektPerÅr>
+        oppjusterteInntekter: List<UføreInntekt>
     ): Grunnlag11_19 {
-        val grunnlag11_19 =
-            GrunnlagetForBeregningen(inntekterPerÅr).beregnGrunnlaget()
-
-        return grunnlag11_19
+        val oppjusterteInntekterPerÅr = oppjusterteInntekter.map { inntekt ->
+            InntektPerÅr(
+                år = inntekt.år,
+                beløp = inntekt.inntektJustertForUføregrad
+            )
+        }.toSet()
+        return GrunnlagetForBeregningen(oppjusterteInntekterPerÅr).beregnGrunnlaget()
     }
 }

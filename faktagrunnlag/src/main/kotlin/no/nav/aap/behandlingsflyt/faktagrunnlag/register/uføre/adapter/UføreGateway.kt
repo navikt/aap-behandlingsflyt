@@ -44,7 +44,7 @@ object UføreGateway : UføreRegisterGateway {
     override fun innhent(person: Person, fødselsdato: Fødselsdato): Uføre {
         //FIXME: Fjerne mock respons
         if (true) {
-            return Uføre(Prosent.`0_PROSENT`)
+            return Uføre(Prosent(10))
         }
 
         val fom = fødselsdato.toLocalDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))

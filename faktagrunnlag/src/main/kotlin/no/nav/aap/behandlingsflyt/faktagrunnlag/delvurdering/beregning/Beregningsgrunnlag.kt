@@ -15,8 +15,4 @@ sealed interface Beregningsgrunnlag {
      * Brukt til serialisering. // TODO: bedre docstring
      */
     fun faktagrunnlag(): Faktagrunnlag
-    /**
-     * Om et gjennomnsnitt av flere års inntekter er brukt i beregningen.
-     */
-    fun erGjennomsnitt(): Boolean
 }
