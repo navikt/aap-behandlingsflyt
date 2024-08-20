@@ -19,9 +19,7 @@ import java.time.Year
  * @param yrkesskadeTidspunkt Hvilket år yrkesskaden skjedde.
  * @param grunnlagForBeregningAvYrkesskadeandel Delen av [grunnlaget] som skyldes yrkesskade.
  * @param yrkesskadeinntektIG Inntekt på yrkesskadetidspunktet i G.
- * @param grunnlagEtterYrkesskadeFordel Samme som [grunnlaget]. // TODO kan fjernes?
- * @param er6GBegrenset Om inntekten i [beregningsgrunnlag] er 6G-begrenset.
- * @param erGjennomsnitt Om inntekten i [beregningsgrunnlag] er et gjennomsnitt.
+ * @param grunnlagEtterYrkesskadeFordel Dette er det største av grunnlagene etter §11-19 eller inntekt på yrkesskadetidspunktet.
  */
 class GrunnlagYrkesskade(
     private val grunnlaget: GUnit,

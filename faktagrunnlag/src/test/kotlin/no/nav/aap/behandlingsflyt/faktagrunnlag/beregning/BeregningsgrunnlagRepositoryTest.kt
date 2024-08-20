@@ -249,6 +249,125 @@ class BeregningsgrunnlagRepositoryTest {
         }
     }
 
+    @Test
+    fun `lagre flere grunnlag`() {
+        val sak = InitTestDatabase.dataSource.transaction { sak(it) }
+        val behandling = InitTestDatabase.dataSource.transaction {
+            behandling(it, sak)
+        }
+
+        val grunnlag11_19Standard = Grunnlag11_19(
+            grunnlaget = GUnit("1.1"),
+            erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit("1.1"),
+            inntekter = emptyList()
+        )
+
+        InitTestDatabase.dataSource.transaction { connection ->
+            val beregningsgrunnlagRepository = BeregningsgrunnlagRepository(connection)
+            beregningsgrunnlagRepository.lagre(behandling.id, grunnlag11_19Standard)
+        }
+
+        val sak2 = InitTestDatabase.dataSource.transaction { sak(it) }
+        val behandling2 = InitTestDatabase.dataSource.transaction { behandling(it, sak2) }
+        val inntektPerÅr = listOf(
+            GrunnlagInntekt(
+                år = Year.of(2015),
+                inntektIKroner = Beløp(400000),
+                grunnbeløp = Beløp(100000),
+                inntektIG = GUnit(4),
+                inntekt6GBegrenset = GUnit(4),
+                er6GBegrenset = false
+            ),
+            GrunnlagInntekt(
+                år = Year.of(2014),
+                inntektIKroner = Beløp(400000),
+                grunnbeløp = Beløp(100000),
+                inntektIG = GUnit(4),
+                inntekt6GBegrenset = GUnit(4),
+                er6GBegrenset = false
+            ),
+            GrunnlagInntekt(
+                år = Year.of(2013),
+                inntektIKroner = Beløp(200000),
+                grunnbeløp = Beløp(100000),
+                inntektIG = GUnit(2),
+                inntekt6GBegrenset = GUnit(2),
+                er6GBegrenset = false
+            )
+        )
+
+        val inntektPerÅrUføre = listOf(
+            uføreInntekt(
+                år = 2022,
+                uføregrad = Prosent.`50_PROSENT`,
+                inntektIKroner = Beløp(300000),
+                grunnbeløp = Beløp(100000),
+                inntektIG = GUnit(4),
+                inntekt6GBegrenset = GUnit(4),
+                er6GBegrenset = false
+            ),
+            uføreInntekt(
+                år = 2021,
+                uføregrad = Prosent.`50_PROSENT`,
+                inntektIKroner = Beløp(350000),
+                grunnbeløp = Beløp(100000),
+                inntektIG = GUnit(4),
+                inntekt6GBegrenset = GUnit(4),
+                er6GBegrenset = false
+            ),
+            uføreInntekt(
+                år = 2020,
+                uføregrad = Prosent.`50_PROSENT`,
+                inntektIKroner = Beløp(350000),
+                grunnbeløp = Beløp(100000),
+                inntektIG = GUnit(4),
+                inntekt6GBegrenset = GUnit(4),
+                er6GBegrenset = false
+            )
+        )
+
+        val grunnlag11_19Standard_2 = Grunnlag11_19(
+            grunnlaget = GUnit(1),
+            erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(4),
+            inntekter = inntektPerÅr
+        )
+        val grunnlag11_19Ytterligere = Grunnlag11_19(
+            grunnlaget = GUnit(3),
+            erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(4),
+            inntekter = inntektPerÅrUføre.map(InntekterForUføre::grunnlagInntekt)
+        )
+        val grunnlagUføre = GrunnlagUføre(
+            grunnlaget = GUnit(4),
+            type = GrunnlagUføre.Type.YTTERLIGERE_NEDSATT,
+            grunnlag = grunnlag11_19Standard_2,
+            grunnlagYtterligereNedsatt = grunnlag11_19Ytterligere,
+            uføregrad = Prosent(50),
+            uføreInntekterFraForegåendeÅr = inntektPerÅrUføre.map(InntekterForUføre::uføreInntekt),
+            uføreYtterligereNedsattArbeidsevneÅr = Year.of(2022)
+        )
+
+        InitTestDatabase.dataSource.transaction { connection ->
+            val beregningsgrunnlagRepository = BeregningsgrunnlagRepository(connection)
+
+            beregningsgrunnlagRepository.lagre(behandling2.id, grunnlagUføre)
+        }
+
+        val uthentet = InitTestDatabase.dataSource.transaction {
+            BeregningsgrunnlagRepository(it).hentHvisEksisterer(behandling.id)
+        }
+
+        val uthentet2 = InitTestDatabase.dataSource.transaction {
+            BeregningsgrunnlagRepository(it).hentHvisEksisterer(behandling2.id)
+        }
+
+        assertThat(uthentet).isEqualTo(grunnlag11_19Standard)
+        assertThat(uthentet2).isEqualTo(grunnlagUføre)
+
+    }
+
     private companion object {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }

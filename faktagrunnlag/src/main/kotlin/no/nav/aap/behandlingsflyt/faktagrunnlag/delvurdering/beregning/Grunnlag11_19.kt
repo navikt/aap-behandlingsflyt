@@ -9,6 +9,7 @@ import java.math.BigDecimal
  *
  * @param grunnlaget Hvilket grunnlag som beregningen skal basere seg utfra §11-19.
  * @param erGjennomsnitt Om [grunnlaget] er et gjennomsnitt.
+ * @param gjennomsnittligInntektIG Gjennomsnittlig inntekt målt i G over siste 3 år.
  * @param inntekter Inntekter de siste 3 år.
  */
 class Grunnlag11_19(
@@ -58,6 +59,7 @@ class Grunnlag11_19(
 
         if (grunnlaget != other.grunnlaget) return false
         if (erGjennomsnitt != other.erGjennomsnitt) return false
+        if (gjennomsnittligInntektIG != other.gjennomsnittligInntektIG) return false
         if (inntekter != other.inntekter) return false
 
         return true
@@ -66,7 +68,9 @@ class Grunnlag11_19(
     override fun hashCode(): Int {
         var result = grunnlaget.hashCode()
         result = 31 * result + erGjennomsnitt.hashCode()
+        result = 31 * result + gjennomsnittligInntektIG.hashCode()
         result = 31 * result + inntekter.hashCode()
         return result
     }
+
 }

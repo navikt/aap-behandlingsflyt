@@ -4,6 +4,13 @@ import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.Prosent
 import java.time.Year
 
+/**
+ * @param år Hvilket år inntekten gjelder for.
+ * @param inntektIKroner Inntekt i kroner for dette året.
+ * @param uføregrad Uføregrad i prosent.
+ * @param arbeidsgrad Komplement av uføregrad.
+ * @param inntektJustertForUføregrad Inntekter oppjustert for uføregrad etter §11-28, fjerde ledd.
+ */
 class UføreInntekt(
     val år: Year,
     val inntektIKroner: Beløp,
