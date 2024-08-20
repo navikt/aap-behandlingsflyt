@@ -148,6 +148,7 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
                     by.ANDEL_YRKESSKADE,
                     by.BENYTTET_ANDEL_YRKESSKADE,
                     by.YRKESSKADE_TIDSPUNKT,
+                    by.GRUNNBELOP,
                     by.YRKESSKADE_INNTEKT_I_G,  
                     by.ANTATT_ARLIG_INNTEKT_YRKESSKADE_TIDSPUNKT,
                     by.ANDEL_SOM_SKYLDES_YRKESSKADE,
