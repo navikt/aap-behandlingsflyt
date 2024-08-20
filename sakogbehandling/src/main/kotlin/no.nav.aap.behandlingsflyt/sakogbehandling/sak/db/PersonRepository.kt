@@ -27,10 +27,79 @@ class PersonRepository(private val connection: DBConnection) {
             if (relevantePersoner.size > 1) {
                 throw IllegalStateException("Har flere personer knyttet til denne identen")
             }
-            relevantePersoner.first()
+            val person = relevantePersoner.first()
+            oppdater(person, identer)
+            person
         } else {
-            opprettPerson(identer.single { it.aktivIdent })
+            opprettPerson(identer)
         }
+    }
+
+    fun oppdater(person: Person, identer: List<Ident>) {
+
+        val oppdaterteIdenter = identer.filterNot { ident -> person.identer().contains(ident) }
+
+        if (oppdaterteIdenter.isEmpty()) {
+            return
+        }
+
+        if (oppdaterteIdenter.any { ident -> ident.aktivIdent }) {
+            connection.execute(
+                """
+                UPDATE person_ident SET primaer = false WHERE person_id = ?
+            """.trimIndent()
+            ) {
+                setParams {
+                    setLong(1, person.id)
+                }
+            }
+        }
+
+        leggTilNyeIdenterPåPerson(oppdaterteIdenter, person)
+
+        if (harKunEndretPrimær(person, oppdaterteIdenter)) {
+            val nyPrimær = oppdaterteIdenter.single { it.aktivIdent }
+            connection.execute(
+                """
+                UPDATE person_ident SET primaer = true WHERE person_id = ? and ident = ?
+            """.trimIndent()
+            ) {
+                setParams {
+                    setLong(1, person.id)
+                    setString(2, nyPrimær.identifikator)
+                }
+            }
+        }
+    }
+
+    private fun leggTilNyeIdenterPåPerson(
+        oppdaterteIdenter: List<Ident>,
+        person: Person
+    ) {
+        val nyeIdenter = oppdaterteIdenter.filter { ident ->
+            person.identer().none { id -> id.identifikator == ident.identifikator }
+        }
+        if (nyeIdenter.isNotEmpty()) {
+            connection.executeBatch(
+                "INSERT INTO " +
+                        "PERSON_IDENT (ident, primaer, person_id) " +
+                        "VALUES (?, ?, ?)", nyeIdenter
+            ) {
+                setParams { ident ->
+                    setString(1, ident.identifikator)
+                    setLong(2, person.id)
+                }
+            }
+        }
+    }
+
+    private fun harKunEndretPrimær(person: Person, oppdaterteIdenter: List<Ident>): Boolean {
+        if (oppdaterteIdenter.none { ident -> ident.aktivIdent }) {
+            return false
+        }
+        val nyPrimær = oppdaterteIdenter.single { it.aktivIdent }
+
+        return person.aktivIdent().identifikator != nyPrimær.identifikator
     }
 
     fun hent(identifikator: UUID): Person {
@@ -54,23 +123,24 @@ class PersonRepository(private val connection: DBConnection) {
                 setLong(1, personId)
             }
             setRowMapper { row ->
-                Person(personId, row.getUUID("referanse"), hentIdenter(personId))
+                val identer = hentIdenter(personId)
+                Person(personId, row.getUUID("referanse"), identer)
             }
         }
     }
 
     private fun hentIdenter(personId: Long): List<Ident> {
-        return connection.queryList("SELECT ident FROM PERSON_IDENT WHERE person_id = ?") {
+        return connection.queryList("SELECT ident, primaer FROM PERSON_IDENT WHERE person_id = ?") {
             setParams {
                 setLong(1, personId)
             }
             setRowMapper { row ->
-                Ident(row.getString("ident"))
+                Ident(row.getString("ident"), row.getBoolean("primaer"))
             }
         }
     }
 
-    private fun opprettPerson(ident: Ident): Person {
+    private fun opprettPerson(identer: List<Ident>): Person {
         val identifikator = UUID.randomUUID()
         val personId = connection.executeReturnKey(
             "INSERT INTO " +
@@ -81,25 +151,26 @@ class PersonRepository(private val connection: DBConnection) {
                 setUUID(1, identifikator)
             }
         }
-        connection.execute(
+        connection.executeBatch(
             "INSERT INTO " +
-                    "PERSON_IDENT (ident, person_id) " +
-                    "VALUES (?, ?)"
+                    "PERSON_IDENT (ident, primaer, person_id) " +
+                    "VALUES (?, ?, ?)", identer
         ) {
-            setParams {
+            setParams { ident ->
                 setString(1, ident.identifikator)
-                setLong(2, personId)
+                setBoolean(2, ident.aktivIdent)
+                setLong(3, personId)
             }
         }
 
-        return Person(personId, identifikator, listOf(ident))
+        return Person(personId, identifikator, identer)
     }
 
     fun finn(ident: Ident): Person? {
         return connection.queryFirstOrNull(
             "SELECT unique p.id, p.referanse " +
                     "FROM PERSON p " +
-                    "INNER JOIN PERSON_IDENT pi ON pi.person_id = p.id" +
+                    "INNER JOIN PERSON_IDENT pi ON pi.person_id = p.id " +
                     "WHERE pi.ident = ?"
         ) {
             setParams {

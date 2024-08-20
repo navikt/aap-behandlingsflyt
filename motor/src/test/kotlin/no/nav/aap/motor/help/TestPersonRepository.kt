@@ -60,12 +60,13 @@ class TestPersonRepository(private val connection: DBConnection) {
         }
         connection.execute(
             "INSERT INTO " +
-                    "PERSON_IDENT (ident, person_id) " +
-                    "VALUES (?, ?)"
+                    "PERSON_IDENT (ident, primaer, person_id) " +
+                    "VALUES (?, ?, ?)"
         ) {
             setParams {
                 setString(1, ident.identifikator)
-                setLong(2, personId)
+                setBoolean(2, true)
+                setLong(3, personId)
             }
         }
 

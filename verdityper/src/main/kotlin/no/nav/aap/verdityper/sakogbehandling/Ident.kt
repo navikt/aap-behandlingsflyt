@@ -5,22 +5,26 @@ import kotlin.math.min
 // TODO: vi antar at inlogget identifikator er aktiv, etter oppslag i PDL får vi den faktiske fasiten
 class Ident(val identifikator: String, val aktivIdent: Boolean = true) {
 
-    // TODO: skal equals/hashCode ta hensyn til aktivIdent?
+    override fun toString(): String {
+        return "Ident(identifikator='${identifikator.substring(0, min(identifikator.length, 6))}*****')"
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
         other as Ident
 
-        return identifikator == other.identifikator
+        if (identifikator != other.identifikator) return false
+        if (aktivIdent != other.aktivIdent) return false
+
+        return true
     }
 
     override fun hashCode(): Int {
-        return identifikator.hashCode()
-    }
-
-    override fun toString(): String {
-        return "Ident(identifikator='${identifikator.substring(0, min(identifikator.length, 6))}*****')"
+        var result = identifikator.hashCode()
+        result = 31 * result + aktivIdent.hashCode()
+        return result
     }
 
 

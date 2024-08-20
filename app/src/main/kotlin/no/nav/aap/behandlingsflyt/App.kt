@@ -197,7 +197,8 @@ fun NormalOpenAPIRoute.configApi() {
         get<Unit, List<DefinisjonDTO>> {
             respond(Definisjon.entries.map {
                 DefinisjonDTO(
-                    navn = it.name, type = it.kode,
+                    navn = it.name,
+                    type = it.kode,
                     behovType = it.type,
                     løsesISteg = it.løsesISteg
                 )
