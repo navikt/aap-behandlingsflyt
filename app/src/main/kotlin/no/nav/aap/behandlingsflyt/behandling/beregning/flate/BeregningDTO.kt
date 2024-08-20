@@ -75,5 +75,6 @@ class UføreInntektDTO(
 
 class YrkesskadeUføreGrunnlagDTO(
     val uføreGrunnlag: UføreGrunnlagDTO,
-    val yrkesskadeGrunnlag: YrkesskadeGrunnlagDTO
+    val yrkesskadeGrunnlag: YrkesskadeGrunnlagDTO,
+    val grunnlag: BigDecimal
 )

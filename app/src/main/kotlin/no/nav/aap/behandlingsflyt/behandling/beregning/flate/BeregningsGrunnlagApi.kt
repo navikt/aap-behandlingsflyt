@@ -59,7 +59,8 @@ internal fun beregningDTO(beregning: Beregningsgrunnlag): BeregningDTO {
                         beregningstypeDTO = BeregningstypeDTO.YRKESSKADE_UFØRE,
                         grunnlagYrkesskadeUføre = YrkesskadeUføreGrunnlagDTO(
                             uføreGrunnlag = uføre,
-                            yrkesskadeGrunnlag = yrkesskade
+                            yrkesskadeGrunnlag = yrkesskade,
+                            grunnlag = beregning.grunnlaget().verdi()
                         )
                     )
                 }
