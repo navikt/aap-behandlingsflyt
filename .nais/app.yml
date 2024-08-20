@@ -33,6 +33,7 @@ spec:
       - type: POSTGRES_15
         databases:
           - name: behandlingsflyt
+            tier: db-f1-micro
   liveness:
     path: /actuator/live
     initialDelay: 3
