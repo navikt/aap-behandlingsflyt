@@ -395,13 +395,14 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
                                                         ANDEL_YRKESSKADE,
                                                         BENYTTET_ANDEL_YRKESSKADE,
                                                         YRKESSKADE_TIDSPUNKT,
+                                                        GRUNNBELOP,
                                                         YRKESSKADE_INNTEKT_I_G,
                                                         ANTATT_ARLIG_INNTEKT_YRKESSKADE_TIDSPUNKT,
                                                         ANDEL_SOM_SKYLDES_YRKESSKADE,
                                                         ANDEL_SOM_IKKE_SKYLDES_YRKESSKADE,
                                                         GRUNNLAG_ETTER_YRKESSKADE_FORDEL,
                                                         GRUNNLAG_FOR_BEREGNING_AV_YRKESSKADEANDEL)
-                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
         ) {
             setParams {
                 setLong(1, beregningUføreId)
@@ -410,12 +411,13 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
                 setInt(4, beregningsgrunnlag.andelYrkesskade().prosentverdi())
                 setInt(5, beregningsgrunnlag.benyttetAndelForYrkesskade().prosentverdi())
                 setInt(6, beregningsgrunnlag.yrkesskadeTidspunkt().value)
-                setBigDecimal(7, beregningsgrunnlag.yrkesskadeinntektIG().verdi())
-                setBigDecimal(8, beregningsgrunnlag.antattÅrligInntektYrkesskadeTidspunktet().verdi())
-                setBigDecimal(9, beregningsgrunnlag.andelSomSkyldesYrkesskade().verdi())
-                setBigDecimal(10, beregningsgrunnlag.andelSomIkkeSkyldesYrkesskade().verdi())
-                setBigDecimal(11, beregningsgrunnlag.grunnlagEtterYrkesskadeFordel().verdi())
-                setBigDecimal(12, beregningsgrunnlag.grunnlagForBeregningAvYrkesskadeandel().verdi())
+                setBigDecimal(7, beregningsgrunnlag.grunnbeløp().verdi())
+                setBigDecimal(8, beregningsgrunnlag.yrkesskadeinntektIG().verdi())
+                setBigDecimal(9, beregningsgrunnlag.antattÅrligInntektYrkesskadeTidspunktet().verdi())
+                setBigDecimal(10, beregningsgrunnlag.andelSomSkyldesYrkesskade().verdi())
+                setBigDecimal(11, beregningsgrunnlag.andelSomIkkeSkyldesYrkesskade().verdi())
+                setBigDecimal(12, beregningsgrunnlag.grunnlagEtterYrkesskadeFordel().verdi())
+                setBigDecimal(13, beregningsgrunnlag.grunnlagForBeregningAvYrkesskadeandel().verdi())
             }
         }
     }
