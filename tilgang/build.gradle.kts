@@ -2,7 +2,7 @@ val ktorVersion = "2.3.12"
 dependencies {
     implementation(project(":httpklient"))
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
-    implementation("ch.qos.logback:logback-classic:1.5.6")
+    implementation("ch.qos.logback:logback-classic:1.5.7")
     implementation("dev.forst:ktor-openapi-generator:0.6.1")
     implementation("io.ktor:ktor-server-core:$ktorVersion")
     implementation("dev.forst:ktor-openapi-generator:0.6.1")
