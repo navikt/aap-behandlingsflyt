@@ -162,22 +162,6 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 }
             }
 
-            route("/{saksnummer}/identer") {
-                get<HentSakDTO, IdenterDto> { req ->
-                    val saksnummer = req.saksnummer
-                    val (sak, barn) = dataSource.transaction(readOnly = true) { connection ->
-                        val sak = SakRepositoryImpl(connection).hent(saksnummer = Saksnummer(saksnummer))
-                        val barn = SakRepositoryImpl(connection).finnBarn(saksnummer = Saksnummer(saksnummer))
-                        sak to barn
-                    }
-                    respond(
-                        IdenterDto(
-                            søker = sak.person.identer().map { it.identifikator },
-                            barn = barn.map { it.identifikator })
-                    )
-                }
-            }
-
             route("/{saksnummer}/personinformasjon") {
                 get<HentSakDTO, SakPersoninfoDTO> { req ->
                     val saksnummer = req.saksnummer

@@ -5,7 +5,6 @@ import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.Ident
 
 class BarnRepository(private val connection: DBConnection) {
-
     fun hentHvisEksisterer(behandlingId: BehandlingId): BarnGrunnlag? {
 
         val grunnlag = connection.queryFirstOrNull(

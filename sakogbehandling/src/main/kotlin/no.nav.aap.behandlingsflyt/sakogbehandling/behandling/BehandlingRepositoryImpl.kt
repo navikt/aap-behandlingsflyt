@@ -3,13 +3,19 @@ package no.nav.aap.behandlingsflyt.sakogbehandling.behandling
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.dbconnect.Row
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
+import no.nav.aap.verdityper.sakogbehandling.Ident
 import no.nav.aap.verdityper.sakogbehandling.SakId
 import no.nav.aap.verdityper.sakogbehandling.Status
 import no.nav.aap.verdityper.sakogbehandling.TypeBehandling
 import java.time.LocalDateTime
 
 class BehandlingRepositoryImpl(private val connection: DBConnection) : BehandlingRepository, BehandlingFlytRepository {
+
+    private val sakRepository = SakRepositoryImpl(connection)
 
     override fun opprettBehandling(sakId: SakId, årsaker: List<Årsak>, typeBehandling: TypeBehandling): Behandling {
 
@@ -231,6 +237,35 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                 setLong(1, behandling.id.toLong())
                 setEnumName(2, it.type)
                 setPeriode(3, it.periode)
+            }
+        }
+    }
+    
+    override fun finnSøker(referanse: BehandlingReferanse): Person {
+        val query = """
+            SELECT SAK_ID FROM BEHANDLING WHERE referanse = ?
+
+        """.trimIndent()
+        return connection.queryFirst(query) {
+            setParams {
+                setUUID(1, referanse.referanse)
+            }
+            setRowMapper {
+                    row -> sakRepository.finnSøker(SakId(row.getLong("SAK_ID")))
+            }
+        }
+    }
+    
+    override fun finnBarn(referanse: BehandlingReferanse): List<Ident> {
+        val query = """
+            SELECT SAK_ID FROM BEAHANDLING WHERE referanse = ?
+        """.trimIndent()
+        return connection.queryFirst(query) {
+            setParams {
+                setUUID(1, referanse.referanse)
+            }
+            setRowMapper { 
+                row -> sakRepository.finnBarn(SakId(row.getLong("SAK_ID")))
             }
         }
     }

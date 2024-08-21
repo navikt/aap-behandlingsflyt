@@ -157,6 +157,56 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository, S
         }
         return barn
     }
+    override fun finnBarn(sakId: SakId): List<Ident> {
+        val barn = connection.queryList(
+            """
+                SELECT DISTINCT p.IDENT
+                FROM BARNOPPLYSNING_GRUNNLAG g
+                INNER JOIN BARNOPPLYSNING p ON g.BGB_ID = p.BGB_ID
+                INNER JOIN BEHANDLING b ON g.BEHANDLING_ID = b.ID
+                WHERE g.AKTIV AND b.SAK_ID = ?
+            """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, sakId.toLong())
+            }
+            setRowMapper { row ->
+                Ident(row.getString("IDENT"))
+            }
+        }
+        return barn
+    }
+
+
+    override fun finnSøker(saksnummer: Saksnummer): Person {
+        return connection.queryFirst(
+            "SELECT person_id " +
+                    "FROM SAK " +
+                    "WHERE saksnummer = ?"
+        ) {
+            setParams {
+                setString(1, saksnummer.toString())
+            }
+            setRowMapper { row ->
+                personRepository.hent(row.getLong("person_id"))
+            }
+        }
+    }
+
+    override fun finnSøker(sakId: SakId): Person {
+        return connection.queryFirst(
+            "SELECT person_id " +
+                    "FROM SAK " +
+                    "WHERE id = ?"
+        ) {
+            setParams {
+                setLong(1, sakId.toLong())
+            }
+            setRowMapper { row ->
+                personRepository.hent(row.getLong("person_id"))
+            }
+        }
+    }
 
     private fun mapSak(row: Row) = Sak(
         id = SakId(row.getLong("id")),

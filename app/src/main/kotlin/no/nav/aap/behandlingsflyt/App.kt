@@ -62,6 +62,7 @@ import no.nav.aap.json.DefaultJsonMapper
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.api.motorApi
 import no.nav.aap.motor.retry.RetryService
+import no.nav.aap.pip.behandlingsflytPip
 import no.nav.aap.verdityper.feilhåndtering.ElementNotFoundException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -159,6 +160,7 @@ internal fun Application.server(dbConfig: DbConfig) {
                 aldersGrunnlagApi(dataSource)
                 barnetilleggApi(dataSource)
                 motorApi(dataSource)
+                behandlingsflytPip(dataSource)
             }
         }
         actuator(prometheus, motor)
