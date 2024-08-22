@@ -28,9 +28,9 @@ data class BistandVurderingDto(
        return BistandVurdering(
            begrunnelse = begrunnelse,
            erBehovForBistand = erBehovForBistand,
-           erBehovForAktivBehandling = grunnerTilBehovForBistand?.contains(BistandGrunn.AKTIV_BEHANDLING),
-           erBehovForArbeidsrettetTiltak = grunnerTilBehovForBistand?.contains(BistandGrunn.ARBEIDSRETTET_TILTAK),
-           erBehovForAnnenOppfølging = grunnerTilBehovForBistand?.contains(BistandGrunn.ANNEN_OPPFØLGING),
+           erBehovForAktivBehandling = grunnerTilBehovForBistand?.contains(BistandGrunn.AKTIV_BEHANDLING) ?: false,
+           erBehovForArbeidsrettetTiltak = grunnerTilBehovForBistand?.contains(BistandGrunn.ARBEIDSRETTET_TILTAK) ?: false,
+           erBehovForAnnenOppfølging = grunnerTilBehovForBistand?.contains(BistandGrunn.ANNEN_OPPFØLGING) ?: false,
        )
     }
 }

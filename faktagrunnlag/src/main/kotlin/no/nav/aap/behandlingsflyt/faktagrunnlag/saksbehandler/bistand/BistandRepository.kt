@@ -24,9 +24,9 @@ class BistandRepository(private val connection: DBConnection) {
                     vurdering = BistandVurdering(
                         begrunnelse = row.getString("BEGRUNNELSE"),
                         erBehovForBistand = row.getBoolean("ER_BEHOV_FOR_BISTAND"),
-                        erBehovForAktivBehandling = row.getBooleanOrNull("BEHOV_FOR_AKTIV_BEHANDLING"),
-                        erBehovForArbeidsrettetTiltak = row.getBooleanOrNull("BEHOV_FOR_ARBEIDSRETTET_TILTAK"),
-                        erBehovForAnnenOppfølging = row.getBooleanOrNull("BEHOV_FOR_ANNEN_OPPFOELGING")
+                        erBehovForAktivBehandling = row.getBoolean("BEHOV_FOR_AKTIV_BEHANDLING"),
+                        erBehovForArbeidsrettetTiltak = row.getBoolean("BEHOV_FOR_ARBEIDSRETTET_TILTAK"),
+                        erBehovForAnnenOppfølging = row.getBoolean("BEHOV_FOR_ANNEN_OPPFOELGING")
                     )
                 )
             }
