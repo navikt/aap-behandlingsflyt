@@ -33,6 +33,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.NedreGrense
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.YrkesskadevurderingDto
@@ -185,9 +186,10 @@ class FlytOrkestratorTest {
                 behandling.id,
                 LøsAvklaringsbehovBehandlingHendelse(
                     løsning = AvklarBistandsbehovLøsning(
-                        bistandsVurdering = BistandVurdering(
+                        bistandsVurderingDto = BistandVurderingDto(
                             begrunnelse = "Trenger hjelp fra nav",
-                            erBehovForBistand = true
+                            erBehovForBistand = true,
+                            emptyList()
                         ),
                     ),
                     behandlingVersjon = behandling.versjon,
@@ -299,9 +301,10 @@ class FlytOrkestratorTest {
                 behandling.id,
                 LøsAvklaringsbehovBehandlingHendelse(
                     løsning = AvklarBistandsbehovLøsning(
-                        bistandsVurdering = BistandVurdering(
+                        bistandsVurderingDto = BistandVurderingDto(
                             begrunnelse = "Trenger hjelp fra nav",
-                            erBehovForBistand = true
+                            erBehovForBistand = true,
+                            emptyList()
                         ),
                     ),
                     behandlingVersjon = behandling.versjon,
@@ -502,9 +505,10 @@ class FlytOrkestratorTest {
                 behandling.id,
                 LøsAvklaringsbehovBehandlingHendelse(
                     løsning = AvklarBistandsbehovLøsning(
-                        bistandsVurdering = BistandVurdering(
+                        bistandsVurderingDto = BistandVurderingDto(
                             begrunnelse = "Trenger hjelp fra nav",
-                            erBehovForBistand = true
+                            erBehovForBistand = true,
+                            emptyList()
                         ),
                     ),
                     behandlingVersjon = behandling.versjon,
@@ -718,9 +722,10 @@ class FlytOrkestratorTest {
                 behandling.id,
                 LøsAvklaringsbehovBehandlingHendelse(
                     løsning = AvklarBistandsbehovLøsning(
-                        bistandsVurdering = BistandVurdering(
+                        bistandsVurderingDto = BistandVurderingDto(
                             begrunnelse = "Trenger hjelp fra nav",
-                            erBehovForBistand = true
+                            erBehovForBistand = true,
+                            emptyList()
                         ),
                     ),
                     behandlingVersjon = behandling.versjon,

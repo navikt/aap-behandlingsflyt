@@ -22,8 +22,9 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(dataSource: HikariDataSource) {
                     val bistandRepository = BistandRepository(connection)
                     bistandRepository.hentHvisEksisterer(behandling.id)
                 }
+                val bistandVurderingDto = BistandVurderingDto.fraBistandVurdering(bistandsGrunnlag?.vurdering)
 
-                respond(BistandGrunnlagDto(bistandsGrunnlag?.vurdering))
+                respond(BistandGrunnlagDto(bistandVurderingDto))
             }
         }
     }
