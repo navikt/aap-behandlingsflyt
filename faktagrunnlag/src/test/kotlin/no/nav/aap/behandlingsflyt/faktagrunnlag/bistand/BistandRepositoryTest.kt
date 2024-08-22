@@ -54,9 +54,9 @@ class BistandRepositoryTest {
             val behandling = behandling(connection, sak)
 
             val bistandRepository = BistandRepository(connection)
-            bistandRepository.lagre(behandling.id, BistandVurdering(begrunnelse = "begrunnelse", erBehovForBistand = false, erBehovForAktivBehandling = false, erBehovForArbeidsrettetTiltak = false, erBehovForAnnenOppfølging = false))
-            bistandRepository.lagre(behandling.id, BistandVurdering(begrunnelse = "begrunnelse", erBehovForBistand = false, erBehovForAktivBehandling = false, erBehovForArbeidsrettetTiltak = false, erBehovForAnnenOppfølging = false))
-            bistandRepository.lagre(behandling.id, BistandVurdering(begrunnelse = "begrunnelse", erBehovForBistand = false, erBehovForAktivBehandling = false, erBehovForArbeidsrettetTiltak = false, erBehovForAnnenOppfølging = false))
+            bistandRepository.lagre(behandling.id, BistandVurdering(begrunnelse = "en begrunnelse", erBehovForBistand = false, erBehovForAktivBehandling = false, erBehovForArbeidsrettetTiltak = false, erBehovForAnnenOppfølging = false))
+            bistandRepository.lagre(behandling.id, BistandVurdering(begrunnelse = "annen begrunnelse", erBehovForBistand = false, erBehovForAktivBehandling = false, erBehovForArbeidsrettetTiltak = false, erBehovForAnnenOppfølging = false))
+            bistandRepository.lagre(behandling.id, BistandVurdering(begrunnelse = "annen begrunnelse", erBehovForBistand = false, erBehovForAktivBehandling = false, erBehovForArbeidsrettetTiltak = false, erBehovForAnnenOppfølging = false))
 
             val opplysninger = connection.queryList(
                 """
