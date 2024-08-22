@@ -41,9 +41,9 @@ class BistandRepositoryTest {
             val behandling = behandling(connection, sak)
 
             val bistandRepository = BistandRepository(connection)
-            bistandRepository.lagre(behandling.id, BistandVurdering("begrunnelse", false))
+            bistandRepository.lagre(behandling.id, BistandVurdering(begrunnelse = "begrunnelse", erBehovForBistand = false, erBehovForAktivBehandling = false, erBehovForArbeidsrettetTiltak = false, erBehovForAnnenOppfølging = false))
             val bistandGrunnlag = bistandRepository.hentHvisEksisterer(behandling.id)
-            assertThat(bistandGrunnlag?.vurdering).isEqualTo(BistandVurdering("begrunnelse", false))
+            assertThat(bistandGrunnlag?.vurdering).isEqualTo(BistandVurdering(begrunnelse = "begrunnelse", erBehovForBistand = false, erBehovForAktivBehandling = false, erBehovForArbeidsrettetTiltak = false, erBehovForAnnenOppfølging = false))
         }
     }
 
@@ -54,9 +54,9 @@ class BistandRepositoryTest {
             val behandling = behandling(connection, sak)
 
             val bistandRepository = BistandRepository(connection)
-            bistandRepository.lagre(behandling.id, BistandVurdering("en begrunnelse", false))
-            bistandRepository.lagre(behandling.id, BistandVurdering("annen begrunnelse", false))
-            bistandRepository.lagre(behandling.id, BistandVurdering("annen begrunnelse", false))
+            bistandRepository.lagre(behandling.id, BistandVurdering(begrunnelse = "begrunnelse", erBehovForBistand = false, erBehovForAktivBehandling = false, erBehovForArbeidsrettetTiltak = false, erBehovForAnnenOppfølging = false))
+            bistandRepository.lagre(behandling.id, BistandVurdering(begrunnelse = "begrunnelse", erBehovForBistand = false, erBehovForAktivBehandling = false, erBehovForArbeidsrettetTiltak = false, erBehovForAnnenOppfølging = false))
+            bistandRepository.lagre(behandling.id, BistandVurdering(begrunnelse = "begrunnelse", erBehovForBistand = false, erBehovForAktivBehandling = false, erBehovForArbeidsrettetTiltak = false, erBehovForAnnenOppfølging = false))
 
             val opplysninger = connection.queryList(
                 """
@@ -84,7 +84,7 @@ class BistandRepositoryTest {
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
             val bistandRepository = BistandRepository(connection)
-            bistandRepository.lagre(behandling1.id, BistandVurdering("begrunnelse", false))
+            bistandRepository.lagre(behandling1.id, BistandVurdering(begrunnelse = "begrunnelse", erBehovForBistand = false, erBehovForAktivBehandling = false, erBehovForArbeidsrettetTiltak = false, erBehovForAnnenOppfølging = false))
             connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
                 setParams {
                     setLong(1, behandling1.id.toLong())
@@ -94,7 +94,7 @@ class BistandRepositoryTest {
             val behandling2 = behandling(connection, sak)
 
             val bistandGrunnlag = bistandRepository.hentHvisEksisterer(behandling2.id)
-            assertThat(bistandGrunnlag?.vurdering).isEqualTo(BistandVurdering("begrunnelse", false))
+            assertThat(bistandGrunnlag?.vurdering).isEqualTo(BistandVurdering(begrunnelse = "begrunnelse", erBehovForBistand = false, erBehovForAktivBehandling = false, erBehovForArbeidsrettetTiltak = false, erBehovForAnnenOppfølging = false))
         }
     }
 
@@ -114,8 +114,8 @@ class BistandRepositoryTest {
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
             val bistandRepository = BistandRepository(connection)
-            bistandRepository.lagre(behandling1.id, BistandVurdering("en begrunnelse", false))
-            bistandRepository.lagre(behandling1.id, BistandVurdering("annen begrunnelse", false))
+            bistandRepository.lagre(behandling1.id, BistandVurdering(begrunnelse = "en begrunnelse", erBehovForBistand = false, erBehovForAktivBehandling = false, erBehovForArbeidsrettetTiltak = false, erBehovForAnnenOppfølging = false))
+            bistandRepository.lagre(behandling1.id, BistandVurdering(begrunnelse = "annen begrunnelse", erBehovForBistand = false, erBehovForAktivBehandling = false, erBehovForArbeidsrettetTiltak = false, erBehovForAnnenOppfølging = false))
             connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
                 setParams {
                     setLong(1, behandling1.id.toLong())
@@ -125,7 +125,7 @@ class BistandRepositoryTest {
             val behandling2 = behandling(connection, sak)
 
             val bistandGrunnlag = bistandRepository.hentHvisEksisterer(behandling2.id)
-            assertThat(bistandGrunnlag?.vurdering).isEqualTo(BistandVurdering("annen begrunnelse", false))
+            assertThat(bistandGrunnlag?.vurdering).isEqualTo(BistandVurdering(begrunnelse = "annen begrunnelse", erBehovForBistand = false, erBehovForAktivBehandling = false, erBehovForArbeidsrettetTiltak = false, erBehovForAnnenOppfølging = false))
         }
     }
 
@@ -136,13 +136,13 @@ class BistandRepositoryTest {
             val behandling = behandling(connection, sak)
             val bistandRepository = BistandRepository(connection)
 
-            bistandRepository.lagre(behandling.id, BistandVurdering("en begrunnelse", false))
+            bistandRepository.lagre(behandling.id, BistandVurdering(begrunnelse = "en begrunnelse", erBehovForBistand = false, erBehovForAktivBehandling = false, erBehovForArbeidsrettetTiltak = false, erBehovForAnnenOppfølging = false))
             val orginaltGrunnlag = bistandRepository.hentHvisEksisterer(behandling.id)
-            assertThat(orginaltGrunnlag?.vurdering).isEqualTo(BistandVurdering("en begrunnelse", false))
+            assertThat(orginaltGrunnlag?.vurdering).isEqualTo(BistandVurdering(begrunnelse = "en begrunnelse", erBehovForBistand = false, erBehovForAktivBehandling = false, erBehovForArbeidsrettetTiltak = false, erBehovForAnnenOppfølging = false))
 
-            bistandRepository.lagre(behandling.id, BistandVurdering("annen begrunnelse", false))
+            bistandRepository.lagre(behandling.id, BistandVurdering(begrunnelse = "annen begrunnelse", erBehovForBistand = false, erBehovForAktivBehandling = false, erBehovForArbeidsrettetTiltak = false, erBehovForAnnenOppfølging = false))
             val oppdatertGrunnlag = bistandRepository.hentHvisEksisterer(behandling.id)
-            assertThat(oppdatertGrunnlag?.vurdering).isEqualTo(BistandVurdering("annen begrunnelse", false))
+            assertThat(oppdatertGrunnlag?.vurdering).isEqualTo(BistandVurdering(begrunnelse = "annen begrunnelse", erBehovForBistand = false, erBehovForAktivBehandling = false, erBehovForArbeidsrettetTiltak = false, erBehovForAnnenOppfølging = false))
 
             data class Opplysning(
                 val aktiv: Boolean,
@@ -186,8 +186,8 @@ class BistandRepositoryTest {
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
             val bistandRepository = BistandRepository(connection)
-            bistandRepository.lagre(behandling1.id, BistandVurdering("en begrunnelse", false))
-            bistandRepository.lagre(behandling1.id, BistandVurdering("annen begrunnelse", false))
+            bistandRepository.lagre(behandling1.id, BistandVurdering(begrunnelse = "en begrunnelse", erBehovForBistand = false, erBehovForAktivBehandling = false, erBehovForArbeidsrettetTiltak = false, erBehovForAnnenOppfølging = false))
+            bistandRepository.lagre(behandling1.id, BistandVurdering(begrunnelse = "annen begrunnelse", erBehovForBistand = false, erBehovForAktivBehandling = false, erBehovForArbeidsrettetTiltak = false, erBehovForAnnenOppfølging = false))
             connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
                 setParams {
                     setLong(1, behandling1.id.toLong())
