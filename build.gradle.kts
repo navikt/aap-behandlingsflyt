@@ -11,6 +11,13 @@ allprojects {
     repositories {
         mavenCentral()
         maven("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
+        maven {
+            url = uri("https://maven.pkg.github.com/navikt/aap-statistikk")
+            credentials {
+                username = "x-access-token"
+                password = project.findProperty("githubPassword") as String? ?: error("Mangler githubPassword")
+            }
+        }
     }
 }
 
