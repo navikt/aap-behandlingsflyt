@@ -3,9 +3,9 @@ dependencies {
     implementation(project(":httpklient"))
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
     implementation("ch.qos.logback:logback-classic:1.5.7")
-    implementation("no.nav:ktor-openapi-generator:1.0-c6acd8655deb1b49b5bd846b9eab75ea00b70f64")
+    implementation("no.nav:ktor-openapi-generator:1.0-027307b46821e9c9443a21ff6f0d030d77102cad")
     implementation("io.ktor:ktor-server-core:$ktorVersion")
-    implementation("no.nav:ktor-openapi-generator:1.0-c6acd8655deb1b49b5bd846b9eab75ea00b70f64")
+    implementation("no.nav:ktor-openapi-generator:1.0-027307b46821e9c9443a21ff6f0d030d77102cad")
     
     implementation("io.ktor:ktor-server-auth:$ktorVersion")
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")

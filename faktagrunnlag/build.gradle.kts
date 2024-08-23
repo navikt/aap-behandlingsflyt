@@ -9,7 +9,7 @@ dependencies {
     implementation(project(":httpklient"))
     implementation(project(":tilgang"))
 
-    implementation("no.nav:ktor-openapi-generator:1.0-c6acd8655deb1b49b5bd846b9eab75ea00b70f64")
+    implementation("no.nav:ktor-openapi-generator:1.0-027307b46821e9c9443a21ff6f0d030d77102cad")
     implementation("io.ktor:ktor-http-jvm:$ktorVersion")
     implementation("com.zaxxer:HikariCP:5.1.0")
 
