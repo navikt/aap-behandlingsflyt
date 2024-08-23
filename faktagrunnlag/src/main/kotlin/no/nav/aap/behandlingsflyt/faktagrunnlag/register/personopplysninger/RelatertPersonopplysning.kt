@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.verdityper.sakogbehandling.Ident
-import java.util.UUID
+import java.util.*
 
 class RelatertPersonopplysning(
     private val person: Person,
@@ -12,6 +12,10 @@ class RelatertPersonopplysning(
 ) {
     fun personReferanse(): UUID {
         return person.identifikator
+    }
+
+    fun gjelderForIdent(ident: Ident): Boolean {
+        return person.identer().any { i -> i.identifikator == ident.identifikator }
     }
 
     fun ident(): Ident {

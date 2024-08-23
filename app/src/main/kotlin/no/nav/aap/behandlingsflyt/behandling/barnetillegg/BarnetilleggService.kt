@@ -69,8 +69,11 @@ class BarnetilleggService(
     }
 
     private fun mapTilBarn(ident: Ident, personopplysningerGrunnlag: PersonopplysningGrunnlag): Barn {
+        val personopplysning1 = personopplysningerGrunnlag.relatertePersonopplysninger?.personopplysninger?.single {
+            it.gjelderForIdent(ident)
+        }
         val personopplysning =
-            requireNotNull(personopplysningerGrunnlag.relatertePersonopplysninger?.personopplysninger?.first { it.ident() == ident })
+            requireNotNull(personopplysning1)
         return Barn(personopplysning.ident(), personopplysning.fødselsdato, personopplysning.dødsdato)
     }
 
