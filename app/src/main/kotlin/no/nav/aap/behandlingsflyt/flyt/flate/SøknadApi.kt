@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.flyt.flate
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.post
+import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
@@ -13,7 +14,6 @@ import no.nav.aap.behandlingsflyt.server.prosessering.HendelseMottattHåndtering
 import no.nav.aap.behandlingsflyt.server.prosessering.JOURNALPOST_ID
 import no.nav.aap.behandlingsflyt.server.prosessering.MOTTATT_TIDSPUNKT
 import no.nav.aap.behandlingsflyt.server.prosessering.PERIODE
-import no.nav.aap.behandlingsflyt.server.respondWithStatus
 import no.nav.aap.json.DefaultJsonMapper
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
@@ -46,7 +46,7 @@ fun NormalOpenAPIRoute.søknadApi(dataSource: DataSource) {
                 )
             }
             // Må ha String-respons på grunn av Accept-header. Denne må returnere json
-            respondWithStatus(HttpStatusCode.Accepted, "{}")
+            respond("{}", HttpStatusCode.Accepted)
         }
     }
 }

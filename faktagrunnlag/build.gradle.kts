@@ -1,3 +1,5 @@
+val ktorVersion = "2.3.12"
+
 dependencies {
     implementation(project(":sakogbehandling"))
     implementation(project(":verdityper"))
@@ -7,7 +9,8 @@ dependencies {
     implementation(project(":httpklient"))
     implementation(project(":tilgang"))
 
-    implementation("dev.forst:ktor-openapi-generator:0.6.1")
+    implementation("no.nav:ktor-openapi-generator:1.0-c6acd8655deb1b49b5bd846b9eab75ea00b70f64")
+    implementation("io.ktor:ktor-http-jvm:$ktorVersion")
     implementation("com.zaxxer:HikariCP:5.1.0")
 
     implementation("com.fasterxml.jackson.core:jackson-databind:2.17.2")

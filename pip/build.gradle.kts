@@ -6,7 +6,8 @@ dependencies {
     implementation(project(":dbconnect"))
     implementation(project(":sakogbehandling"))
     implementation(project(":faktagrunnlag"))
-    implementation("dev.forst:ktor-openapi-generator:0.6.1")
+    implementation("no.nav:ktor-openapi-generator:1.0-c6acd8655deb1b49b5bd846b9eab75ea00b70f64")
+    implementation("io.ktor:ktor-http-jvm:$ktorVersion")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.0")

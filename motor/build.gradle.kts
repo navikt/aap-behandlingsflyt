@@ -1,9 +1,12 @@
+val ktorVersion = "2.3.12"
+
 dependencies {
     implementation(project(":verdityper"))
     implementation(project(":dbflyway"))
     implementation(project(":dbconnect"))
     implementation("org.slf4j:slf4j-api:2.0.16")
-    implementation("dev.forst:ktor-openapi-generator:0.6.1")
+    implementation("no.nav:ktor-openapi-generator:1.0-c6acd8655deb1b49b5bd846b9eab75ea00b70f64")
+    implementation("io.ktor:ktor-http-jvm:$ktorVersion")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.17.2")
 
     testImplementation(project(":dbtestdata"))

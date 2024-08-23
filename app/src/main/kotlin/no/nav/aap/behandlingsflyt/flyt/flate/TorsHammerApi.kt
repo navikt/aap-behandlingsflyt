@@ -18,7 +18,6 @@ import no.nav.aap.behandlingsflyt.server.prosessering.HendelseMottattHåndtering
 import no.nav.aap.behandlingsflyt.server.prosessering.JOURNALPOST_ID
 import no.nav.aap.behandlingsflyt.server.prosessering.MOTTATT_TIDSPUNKT
 import no.nav.aap.behandlingsflyt.server.prosessering.PERIODE
-import no.nav.aap.behandlingsflyt.server.respondWithStatus
 import no.nav.aap.json.DefaultJsonMapper
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
@@ -49,7 +48,7 @@ fun NormalOpenAPIRoute.torsHammerApi(dataSource: DataSource) {
                         .medPayload(DefaultJsonMapper.toJson(dto))
                 )
             }
-            respondWithStatus(HttpStatusCode.Accepted, "{}")
+            respond("{}", HttpStatusCode.Accepted)
         }
         route("/{saksnummer}").get<HentSakDTO, AlleHammereDto> { dto ->
             val response = dataSource.transaction(readOnly = true) { connection ->
@@ -65,7 +64,7 @@ fun NormalOpenAPIRoute.torsHammerApi(dataSource: DataSource) {
                 AlleHammereDto(hentDokumenterAvType.mapNotNull { it.strukturerteData<TorsHammerDto>()?.data?.hammer })
             }
             respond(response)
-            
+
         }
     }
 }
