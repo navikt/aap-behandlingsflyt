@@ -15,7 +15,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.Bist
 @JsonTypeName(value = AVKLAR_BISTANDSBEHOV_KODE)
 class AvklarBistandsbehovLøsning(
     @JsonProperty("bistandsVurdering", required = true)
-    val bistandsVurderingDto: BistandVurderingDto,
+    val bistandsVurdering: BistandVurderingDto,
     @JsonProperty(
         "behovstype",
         required = true,

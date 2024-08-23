@@ -15,7 +15,7 @@ class AvklarBistandLøser(val connection: DBConnection) : AvklaringsbehovsLøser
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarBistandsbehovLøsning): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
 
-        val bistandsVurdering = løsning.bistandsVurderingDto.tilBistandVurdering()
+        val bistandsVurdering = løsning.bistandsVurdering.tilBistandVurdering()
         bistandRepository.lagre(
             behandlingId = behandling.id,
             bistandVurdering = bistandsVurdering
