@@ -18,8 +18,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.SafListDokumentGa
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.tilgang.Operasjon
+import no.nav.aap.tilgang.Ressurs
+import no.nav.aap.tilgang.RessursType
 import no.nav.aap.tilgang.TilgangGateway
 import no.nav.aap.tilgang.TilgangRequest
+import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.dokument.DokumentInfoId
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -37,32 +40,30 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 if (person == null) {
                     throw ElementNotFoundException()
                 } else {
-                    SakRepositoryImpl(connection).finnSakerFor(person)
-                        .map { sak ->
-                            SaksinfoDTO(
-                                saksnummer = sak.saksnummer.toString(),
-                                opprettetTidspunkt = sak.opprettetTidspunkt,
-                                periode = sak.rettighetsperiode,
-                                ident = sak.person.aktivIdent().identifikator
-                            )
-                        }
+                    SakRepositoryImpl(connection).finnSakerFor(person).map { sak ->
+                        SaksinfoDTO(
+                            saksnummer = sak.saksnummer.toString(),
+                            opprettetTidspunkt = sak.opprettetTidspunkt,
+                            periode = sak.rettighetsperiode,
+                            ident = sak.person.aktivIdent().identifikator
+                        )
+                    }
 
                 }
             }
             respond(saker)
         }
+        //TODO: Denne skal kun kalles fra mottak - vurder å skille ut i eget api, eller autoriser ved å sjekke klient-applikasjon
+        @Suppress("UnauthorizedPost")
         route("/finnEllerOpprett").post<Unit, SaksinfoDTO, FinnEllerOpprettSakDTO> { _, dto ->
             val saken: SaksinfoDTO = dataSource.transaction { connection ->
                 val ident = Ident(dto.ident)
                 val periode = Periode(
-                    dto.søknadsdato,
-                    dto.søknadsdato.plusYears(1)
+                    dto.søknadsdato, dto.søknadsdato.plusYears(1)
                 ) // Setter til et år frem i tid som er tilsvarende "vedtakslengde" i forskriften
-                val sak =
-                    PersonOgSakService(
-                        connection = connection,
-                        pdlGateway = PdlIdentGateway
-                    ).finnEllerOpprett(ident = ident, periode = periode)
+                val sak = PersonOgSakService(
+                    connection = connection, pdlGateway = PdlIdentGateway
+                ).finnEllerOpprett(ident = ident, periode = periode)
 
                 SaksinfoDTO(
                     saksnummer = sak.saksnummer.toString(),
@@ -76,20 +77,21 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
         route("") {
             route("/alle").get<Unit, List<SaksinfoDTO>> {
                 val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
-                    SakRepositoryImpl(connection).finnAlle()
-                        .map { sak ->
-                            SaksinfoDTO(
-                                saksnummer = sak.saksnummer.toString(),
-                                opprettetTidspunkt = sak.opprettetTidspunkt,
-                                periode = sak.rettighetsperiode,
-                                ident = sak.person.aktivIdent().identifikator
-                            )
-                        }
+                    SakRepositoryImpl(connection).finnAlle().map { sak ->
+                        SaksinfoDTO(
+                            saksnummer = sak.saksnummer.toString(),
+                            opprettetTidspunkt = sak.opprettetTidspunkt,
+                            periode = sak.rettighetsperiode,
+                            ident = sak.person.aktivIdent().identifikator
+                        )
+                    }
                 }
 
                 respond(saker)
             }
-            route("/{saksnummer}").get<HentSakDTO, UtvidetSaksinfoDTO> { req ->
+            route("/{saksnummer}").authorizedGet<HentSakDTO, UtvidetSaksinfoDTO>(
+                Operasjon.SE, Ressurs("saksnummer", RessursType.Sak)
+            ) { req ->
                 val saksnummer = req.saksnummer
 
                 val (sak, behandlinger) = dataSource.transaction(readOnly = true) { connection ->
@@ -119,11 +121,8 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 )
             }
             route("/{saksnummer}/dokumenter") {
-                get<HentSakDTO, List<Dokument>> { req ->
+                authorizedGet<HentSakDTO, List<Dokument>>(Operasjon.SE, Ressurs("saksnummer", RessursType.Sak)) { req ->
                     val token = token()
-                    // 1. gjør api-kall graphql med token over
-                    // 2. returner som streng
-                    // TODO gjør pent
                     val safRespons = SafListDokumentGateway.hentDokumenterForSak(Saksnummer(req.saksnummer), token)
                     respond(
                         safRespons
@@ -140,8 +139,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                     val dokumentRespons =
                         gateway.hentDokument(JournalpostId(journalpostId), DokumentInfoId(dokumentInfoId), token)
                     pipeline.context.response.headers.append(
-                        name = "Content-Disposition",
-                        value = "inline; filename=${dokumentRespons.filnavn}"
+                        name = "Content-Disposition", value = "inline; filename=${dokumentRespons.filnavn}"
                     )
 
                     respond(DokumentResponsDTO(stream = dokumentRespons.dokument))
@@ -153,17 +151,18 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                     val sak = dataSource.transaction(readOnly = true) { connection ->
                         SakRepositoryImpl(connection).hent(saksnummer = Saksnummer(saksnummer))
                     }
-                    val harLesetilgang =
-                        TilgangGateway.harTilgang(
-                            TilgangRequest(sak.saksnummer.toString(), null, null, Operasjon.SE),
-                            currentToken = token()
-                        )
+                    val harLesetilgang = TilgangGateway.harTilgang(
+                        TilgangRequest(sak.saksnummer.toString(), null, null, Operasjon.SE), currentToken = token()
+                    )
                     respond(LesetilgangDTO(harLesetilgang))
                 }
             }
 
             route("/{saksnummer}/personinformasjon") {
-                get<HentSakDTO, SakPersoninfoDTO> { req ->
+                authorizedGet<HentSakDTO, SakPersoninfoDTO>(
+                    Operasjon.SE,
+                    Ressurs("saksnummer", RessursType.Sak)
+                ) { req ->
                     val saksnummer = req.saksnummer
 
                     val ident = dataSource.transaction(readOnly = true) { connection ->
