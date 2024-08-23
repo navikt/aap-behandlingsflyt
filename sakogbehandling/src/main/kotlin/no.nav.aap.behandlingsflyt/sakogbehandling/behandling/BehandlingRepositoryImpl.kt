@@ -255,18 +255,4 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             }
         }
     }
-    
-    override fun finnBarn(referanse: BehandlingReferanse): List<Ident> {
-        val query = """
-            SELECT SAK_ID FROM BEAHANDLING WHERE referanse = ?
-        """.trimIndent()
-        return connection.queryFirst(query) {
-            setParams {
-                setUUID(1, referanse.referanse)
-            }
-            setRowMapper { 
-                row -> sakRepository.finnBarn(SakId(row.getLong("SAK_ID")))
-            }
-        }
-    }
 }

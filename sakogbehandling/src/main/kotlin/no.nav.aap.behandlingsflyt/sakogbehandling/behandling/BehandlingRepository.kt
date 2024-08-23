@@ -24,7 +24,5 @@ interface BehandlingRepository {
     fun oppdaterÅrsaker(behandling: Behandling, årsaker: List<Årsak>)
     
     fun finnSøker(referanse: BehandlingReferanse): Person
-    
-    fun finnBarn(referanse: BehandlingReferanse): List<Ident>
 }
 

@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn
 
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Saksnummer
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.Ident
 
@@ -28,6 +30,53 @@ class BarnRepository(private val connection: DBConnection) {
         return grunnlag
     }
 
+    fun hentHvisEksisterer(behandlingsreferanse: BehandlingReferanse): BarnGrunnlag? {
+        val grunnlag = connection.queryFirstOrNull(
+            """
+            SELECT * 
+            FROM BARNOPPLYSNING_GRUNNLAG g
+            INNER JOIN BEHANDLING b ON g.BEHANDLING_ID = b.ID
+            WHERE g.AKTIV AND b.REFERANSE = ?
+        """.trimIndent()
+        ) {
+            setParams {
+                setString(1, behandlingsreferanse.toString())
+            }
+            setRowMapper {
+                BarnGrunnlag(
+                    registerbarn = hentBarn(it.getLongOrNull("register_barn_id")),
+                    oppgittBarn = hentOppgittBarn(it.getLongOrNull("oppgitt_barn_id"))
+                )
+            }
+        }
+
+        return grunnlag
+    }
+
+    fun hentHvisEksisterer(saksnummer: Saksnummer): BarnGrunnlag? {
+        val grunnlag = connection.queryFirstOrNull(
+            """
+            SELECT * 
+            FROM BARNOPPLYSNING_GRUNNLAG g
+            INNER JOIN BEHANDLING b ON g.BEHANDLING_ID = b.ID
+            INNER JOIN SAK s ON b.SAK_ID = s.ID
+            WHERE g.AKTIV AND s.SAKSNUMMER = ?
+        """.trimIndent()
+        ) {
+            setParams {
+                setString(1, saksnummer.toString())
+            }
+            setRowMapper {
+                BarnGrunnlag(
+                    registerbarn = hentBarn(it.getLongOrNull("register_barn_id")),
+                    oppgittBarn = hentOppgittBarn(it.getLongOrNull("oppgitt_barn_id"))
+                )
+            }
+        }
+
+        return grunnlag
+    }
+
     fun hent(behandlingId: BehandlingId): BarnGrunnlag {
         return requireNotNull(hentHvisEksisterer(behandlingId))
     }
@@ -37,22 +86,23 @@ class BarnRepository(private val connection: DBConnection) {
             return null
         }
 
-        return OppgittBarn(id, connection.queryList(
-            """
+        return OppgittBarn(
+            id, connection.queryList(
+                """
                 SELECT p.IDENT
                 FROM OPPGITT_BARN p
                 WHERE p.oppgitt_barn_id = ?
             """.trimIndent()
-        ) {
-            setParams {
-                setLong(1, id)
-            }
-            setRowMapper { row ->
-                Ident(
-                    row.getString("IDENT")
-                )
-            }
-        }.toSet()
+            ) {
+                setParams {
+                    setLong(1, id)
+                }
+                setRowMapper { row ->
+                    Ident(
+                        row.getString("IDENT")
+                    )
+                }
+            }.toSet()
         )
     }
 
@@ -79,6 +129,54 @@ class BarnRepository(private val connection: DBConnection) {
         })
     }
 
+    fun hentOppgitteBarnForSaker(saksnumre: List<Saksnummer>): Map<Saksnummer, List<String>> {
+        require(saksnumre.isNotEmpty())
+        val placeholders = saksnumre.joinToString(",") { "?" }
+        val res = connection.queryList(
+            """
+            SELECT DISTINCT s.SAKSNUMMER, ob.IDENT
+            FROM BARNOPPLYSNING_GRUNNLAG g
+            INNER JOIN BEHANDLING b ON g.BEHANDLING_ID = b.ID
+            INNER JOIN SAK s ON b.SAK_ID = s.ID
+            INNER JOIN OPPGITT_BARN ob ON ob.ID = g.OPPGITT_BARN_ID
+            WHERE g.AKTIV AND s.SAKSNUMMER IN ($placeholders)
+        """.trimIndent()
+        ) {
+            setParams {
+                saksnumre.mapIndexed { index, saksnummer -> setString(index + 1, saksnummer.toString()) }
+            }
+            setRowMapper {
+                Pair(Saksnummer(it.getString("saksnummer")), it.getString("ident"))
+            }
+        }
+        return res
+            .groupBy({ it.first }, { it.second })
+    }
+
+    fun hentRegisterBarnForSaker(saksnumre: List<Saksnummer>): Map<Saksnummer, List<String>> {
+        require(saksnumre.isNotEmpty())
+        val placeholders = saksnumre.joinToString(",") { "?" }
+        val res = connection.queryList(
+            """
+            SELECT DISTINCT s.SAKSNUMMER, rb.IDENT
+            FROM BARNOPPLYSNING_GRUNNLAG g
+            INNER JOIN BEHANDLING b ON g.BEHANDLING_ID = b.ID
+            INNER JOIN SAK s ON b.SAK_ID = s.ID
+            INNER JOIN BARNOPPLYSNING rb ON rb.BGB_ID = g.REGISTER_BARN_ID
+            WHERE g.AKTIV AND s.SAKSNUMMER IN ($placeholders)
+        """.trimIndent()
+        ) {
+            setParams {
+                saksnumre.mapIndexed { index, saksnummer -> setString(index + 1, saksnummer.toString()) }
+            }
+            setRowMapper {
+                Pair(Saksnummer(it.getString("saksnummer")), it.getString("ident"))
+            }
+        }
+        return res
+            .groupBy({ it.first }, { it.second })
+    }
+
     fun lagreOppgitteBarn(behandlingId: BehandlingId, oppgittBarn: OppgittBarn?) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
 
@@ -86,7 +184,7 @@ class BarnRepository(private val connection: DBConnection) {
             deaktiverEksisterende(behandlingId)
         }
 
-        val oppgittBarnId = if(oppgittBarn != null && oppgittBarn.identer.isNotEmpty()) {
+        val oppgittBarnId = if (oppgittBarn != null && oppgittBarn.identer.isNotEmpty()) {
             connection.executeReturnKey("INSERT INTO OPPGITT_BARNOPPLYSNING DEFAULT VALUES") {}
         } else {
             null

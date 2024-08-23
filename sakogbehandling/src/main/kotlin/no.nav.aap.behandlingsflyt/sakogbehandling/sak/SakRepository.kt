@@ -16,10 +16,6 @@ interface SakRepository {
 
     fun hent(saksnummer: Saksnummer): Sak
 
-    fun finnBarn(saksnummer: Saksnummer): List<Ident>
-    
-    fun finnBarn(sakId: SakId): List<Ident>
-
     fun finnSøker(saksnummer: Saksnummer): Person
     
     fun finnSøker(sakId: SakId): Person
