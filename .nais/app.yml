@@ -54,6 +54,7 @@ spec:
       claims:
         extra:
           - "NAVident"
+          - "AZP_NAME"
   secureLogs:
     enabled: true
   accessPolicy:

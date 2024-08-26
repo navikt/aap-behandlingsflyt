@@ -3,11 +3,14 @@ package no.nav.aap.tilgang
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
 import io.ktor.server.plugins.doublereceive.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.util.*
+import no.nav.aap.auth.AzpName
+import no.nav.aap.auth.Bruker
 import no.nav.aap.auth.token
 import no.nav.aap.json.DefaultJsonMapper
 import org.slf4j.LoggerFactory
@@ -33,6 +36,24 @@ fun Route.installerTilgangGetPlugin(
     referanse: Ressurs
 ) {
     install(buildTilgangPlugin { call: ApplicationCall -> call.parseFraPath(operasjon, referanse) })
+}
+
+fun Route.installerTilgangGetPluginWithWhitelist(
+    Whitelist: List<String>
+) {
+    install(buildTilgangPluginWithWhitelist(Whitelist))
+}
+
+fun buildTilgangPluginWithWhitelist(Whitelist: List<String>) :RouteScopedPlugin<Unit>{
+    return createRouteScopedPlugin(name = "WhitelistPlugin") {
+        on(AuthenticationChecked) { call ->
+            val azn = call.azn()
+
+            if (azn.name !in Whitelist) {
+                call.respond(HttpStatusCode.Forbidden, "Ingen tilgang, $azn er ikke i whitelist")
+            }
+        }
+    }
 }
 
 inline fun buildTilgangPlugin(crossinline parse: suspend (call: ApplicationCall) -> TilgangRequest): RouteScopedPlugin<Unit> {
@@ -77,6 +98,14 @@ suspend inline fun <reified T : Saksreferanse> ApplicationCall.parseSakFraReques
     val referanseObject: T = DefaultJsonMapper.fromJson<T>(receiveText())
     val referanse = referanseObject.hentSaksreferanse()
     return TilgangRequest(referanse, null, null, operasjon)
+}
+
+fun ApplicationCall.azn(): AzpName {
+    val azp = principal<JWTPrincipal>()?.getClaim("AZP_NAME", String::class)
+    if (azp == null) {
+        error("azp mangler i AzureAD claims")
+    }
+    return AzpName(azp)
 }
 
 enum class RessursType {

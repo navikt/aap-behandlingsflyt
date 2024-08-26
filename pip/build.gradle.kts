@@ -6,6 +6,7 @@ dependencies {
     implementation(project(":dbconnect"))
     implementation(project(":sakogbehandling"))
     implementation(project(":faktagrunnlag"))
+    implementation(project(":tilgang"))
     implementation("no.nav:ktor-openapi-generator:1.0.6")
     implementation("io.ktor:ktor-http-jvm:$ktorVersion")
 

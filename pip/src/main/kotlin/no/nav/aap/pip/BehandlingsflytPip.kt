@@ -1,7 +1,6 @@
 package no.nav.aap.pip
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.dbconnect.transaction
@@ -11,13 +10,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
+import no.nav.aap.tilgang.authorizedGetWithWhitelist
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.behandlingsflytPip(dataSource: DataSource) {
     route("/pip/api") {
         route("/sak/{saksnummer}/identer") {
-            @Suppress("UnauthorizedGet")
-            get<SakDTO, IdenterDTO> { req ->
+            authorizedGetWithWhitelist<SakDTO, IdenterDTO>(listOf("tilgang")) { req ->
                 val saksnummer = req.saksnummer
                 val (søker, barn) = dataSource.transaction(readOnly = true) { connection ->
                     val søker = SakRepositoryImpl(connection).finnSøker(Saksnummer(saksnummer))
@@ -32,9 +31,9 @@ fun NormalOpenAPIRoute.behandlingsflytPip(dataSource: DataSource) {
                 )
             }
         }
+
         route("/behandling/{behandlingsnummer}/identer") {
-            @Suppress("UnauthorizedGet")
-            get<BehandlingDTO, IdenterDTO> { req ->
+            authorizedGetWithWhitelist<BehandlingDTO, IdenterDTO>(listOf("tilgang")) { req ->
                 val behandlingsnummer = req.behandlingsnummer
                 val (søker, barn) = dataSource.transaction(readOnly = true) { connection ->
                     val søker = BehandlingRepositoryImpl(connection).finnSøker(BehandlingReferanse(behandlingsnummer))
