@@ -52,6 +52,7 @@ fun buildTilgangPluginWithWhitelist(Whitelist: List<String>) :RouteScopedPlugin<
             if (azn.name !in Whitelist) {
                 call.respond(HttpStatusCode.Forbidden, "Ingen tilgang, $azn er ikke i whitelist")
             }
+            log.info("Tilgang gitt til $azn, er i godkjentListe $Whitelist")
         }
     }
 }
