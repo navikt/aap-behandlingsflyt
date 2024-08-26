@@ -101,7 +101,7 @@ suspend inline fun <reified T : Saksreferanse> ApplicationCall.parseSakFraReques
 }
 
 fun ApplicationCall.azn(): AzpName {
-    val azp = principal<JWTPrincipal>()?.getClaim("AZP_NAME", String::class)
+    val azp = principal<JWTPrincipal>()?.getClaim("azp_name", String::class)
     if (azp == null) {
         error("azp mangler i AzureAD claims")
     }
