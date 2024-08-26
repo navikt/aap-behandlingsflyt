@@ -128,7 +128,10 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         // Tilgang
         System.setProperty("integrasjon.tilgang.url", "http://localhost:${tilgang.port()}")
         System.setProperty("integrasjon.tilgang.scope", "scope")
+        System.setProperty("integrasjon.tilgang.azp", "azp")
 
+        // Mottak
+        System.setProperty("integrasjon.mottak.azp", "azp")
         // testpersoner
         val BARNLØS_PERSON_30ÅR =
             TestPerson(

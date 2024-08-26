@@ -15,7 +15,7 @@ import no.nav.aap.tilgang.authorizedGetWithApprovedList
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.behandlingsflytPip(dataSource: DataSource) {
-    val tilgangAzp = requiredConfigForKey("integrasjon.tilgang.scope")
+    val tilgangAzp = requiredConfigForKey("integrasjon.tilgang.azp")
     route("/pip/api") {
         route("/sak/{saksnummer}/identer") {
             authorizedGetWithApprovedList<SakDTO, IdenterDTO>(tilgangAzp) { req ->
