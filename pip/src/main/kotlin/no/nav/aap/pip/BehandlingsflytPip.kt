@@ -16,7 +16,7 @@ import javax.sql.DataSource
 fun NormalOpenAPIRoute.behandlingsflytPip(dataSource: DataSource) {
     route("/pip/api") {
         route("/sak/{saksnummer}/identer") {
-            authorizedGetWithWhitelist<SakDTO, IdenterDTO>(listOf("tilgang")) { req ->
+            authorizedGetWithWhitelist<SakDTO, IdenterDTO>(listOf("dev-gcp:aap:tilgang")) { req ->
                 val saksnummer = req.saksnummer
                 val (søker, barn) = dataSource.transaction(readOnly = true) { connection ->
                     val søker = SakRepositoryImpl(connection).finnSøker(Saksnummer(saksnummer))
@@ -33,7 +33,7 @@ fun NormalOpenAPIRoute.behandlingsflytPip(dataSource: DataSource) {
         }
 
         route("/behandling/{behandlingsnummer}/identer") {
-            authorizedGetWithWhitelist<BehandlingDTO, IdenterDTO>(listOf("tilgang")) { req ->
+            authorizedGetWithWhitelist<BehandlingDTO, IdenterDTO>(listOf("dev-gcp:aap:tilgang")) { req ->
                 val behandlingsnummer = req.behandlingsnummer
                 val (søker, barn) = dataSource.transaction(readOnly = true) { connection ->
                     val søker = BehandlingRepositoryImpl(connection).finnSøker(BehandlingReferanse(behandlingsnummer))
