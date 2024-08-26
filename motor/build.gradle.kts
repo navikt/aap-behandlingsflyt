@@ -5,7 +5,7 @@ dependencies {
     implementation(project(":dbflyway"))
     implementation(project(":dbconnect"))
     implementation("org.slf4j:slf4j-api:2.0.16")
-    implementation("no.nav:ktor-openapi-generator:1.0.4")
+    implementation("no.nav:ktor-openapi-generator:1.0.6")
     implementation("io.ktor:ktor-http-jvm:$ktorVersion")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.17.2")
 
