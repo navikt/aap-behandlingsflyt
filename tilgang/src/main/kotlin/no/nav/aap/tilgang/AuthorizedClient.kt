@@ -34,10 +34,10 @@ inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.a
 }
 
 inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.authorizedGetWithWhitelist(
-    whitelist: List<String>,
+    vararg whitelist: String,
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams) -> Unit
 ) {
-    ktorRoute.installerTilgangGetPluginWithWhitelist(whitelist)
+    ktorRoute.installerTilgangGetPluginWithWhitelist(whitelist.toList())
     @Suppress("UnauthorizedGet")
     get<TParams, TResponse> { params -> body(params) }
 }

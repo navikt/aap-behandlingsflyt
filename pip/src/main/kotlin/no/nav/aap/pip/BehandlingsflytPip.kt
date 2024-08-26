@@ -10,13 +10,15 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
+import no.nav.aap.requiredConfigForKey
 import no.nav.aap.tilgang.authorizedGetWithWhitelist
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.behandlingsflytPip(dataSource: DataSource) {
+    val tilgangAzp = requiredConfigForKey("integrasjon.tilgang.scope")
     route("/pip/api") {
         route("/sak/{saksnummer}/identer") {
-            authorizedGetWithWhitelist<SakDTO, IdenterDTO>(listOf("dev-gcp:aap:tilgang")) { req ->
+            authorizedGetWithWhitelist<SakDTO, IdenterDTO>(tilgangAzp) { req ->
                 val saksnummer = req.saksnummer
                 val (søker, barn) = dataSource.transaction(readOnly = true) { connection ->
                     val søker = SakRepositoryImpl(connection).finnSøker(Saksnummer(saksnummer))
@@ -33,7 +35,7 @@ fun NormalOpenAPIRoute.behandlingsflytPip(dataSource: DataSource) {
         }
 
         route("/behandling/{behandlingsnummer}/identer") {
-            authorizedGetWithWhitelist<BehandlingDTO, IdenterDTO>(listOf("dev-gcp:aap:tilgang")) { req ->
+            authorizedGetWithWhitelist<BehandlingDTO, IdenterDTO>(tilgangAzp) { req ->
                 val behandlingsnummer = req.behandlingsnummer
                 val (søker, barn) = dataSource.transaction(readOnly = true) { connection ->
                     val søker = BehandlingRepositoryImpl(connection).finnSøker(BehandlingReferanse(behandlingsnummer))
