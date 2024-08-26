@@ -10,7 +10,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.util.*
 import no.nav.aap.auth.AzpName
-import no.nav.aap.auth.Bruker
 import no.nav.aap.auth.token
 import no.nav.aap.json.DefaultJsonMapper
 import org.slf4j.LoggerFactory
@@ -38,21 +37,22 @@ fun Route.installerTilgangGetPlugin(
     install(buildTilgangPlugin { call: ApplicationCall -> call.parseFraPath(operasjon, referanse) })
 }
 
-fun Route.installerTilgangGetPluginWithWhitelist(
-    Whitelist: List<String>
+fun Route.installerTilgangPluginWithApprovedList(
+    approvedList: List<String>
 ) {
-    install(buildTilgangPluginWithWhitelist(Whitelist))
+    install(buildTilgangPluginWithApprovedList(approvedList))
 }
 
-fun buildTilgangPluginWithWhitelist(Whitelist: List<String>) :RouteScopedPlugin<Unit>{
-    return createRouteScopedPlugin(name = "WhitelistPlugin") {
+
+fun buildTilgangPluginWithApprovedList(approvedList: List<String>) :RouteScopedPlugin<Unit>{
+    return createRouteScopedPlugin(name = "ApprovedListPlugin") {
         on(AuthenticationChecked) { call ->
             val azn = call.azn()
 
-            if (azn.name !in Whitelist) {
-                call.respond(HttpStatusCode.Forbidden, "Ingen tilgang, $azn er ikke i whitelist")
+            if (azn.name !in approvedList) {
+                call.respond(HttpStatusCode.Forbidden, "Ingen tilgang, $azn er ikke i approvedList")
             }else {
-                log.info("Tilgang gitt til $azn, er i godkjentListe $Whitelist")
+                log.info("Tilgang gitt til $azn, er i godkjentListe $approvedList")
             }
         }
     }

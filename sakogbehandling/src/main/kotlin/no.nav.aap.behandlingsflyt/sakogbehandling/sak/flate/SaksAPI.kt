@@ -17,12 +17,14 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.SafHentDokumentGa
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.SafListDokumentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
+import no.nav.aap.requiredConfigForKey
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.Ressurs
 import no.nav.aap.tilgang.RessursType
 import no.nav.aap.tilgang.TilgangGateway
 import no.nav.aap.tilgang.TilgangRequest
 import no.nav.aap.tilgang.authorizedGet
+import no.nav.aap.tilgang.authorizedPostWithApprovedList
 import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.dokument.DokumentInfoId
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -31,6 +33,7 @@ import no.nav.aap.verdityper.sakogbehandling.Ident
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
+    val mottakAzp= requiredConfigForKey("integrasjon.mottak.azp")
     route("/api/sak") {
         route("/finn").post<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO> { _, dto ->
             val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
@@ -53,9 +56,8 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
             }
             respond(saker)
         }
-        //TODO: Denne skal kun kalles fra mottak - vurder å skille ut i eget api, eller autoriser ved å sjekke klient-applikasjon
-        @Suppress("UnauthorizedPost")
-        route("/finnEllerOpprett").post<Unit, SaksinfoDTO, FinnEllerOpprettSakDTO> { _, dto ->
+
+        route("/finnEllerOpprett").authorizedPostWithApprovedList<Unit, SaksinfoDTO, FinnEllerOpprettSakDTO>(mottakAzp) { _, dto ->
             val saken: SaksinfoDTO = dataSource.transaction { connection ->
                 val ident = Ident(dto.ident)
                 val periode = Periode(

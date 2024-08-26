@@ -23,6 +23,15 @@ inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : B
     post<TParams, TResponse, TRequest> { params, request -> body(params, request) }
 }
 
+inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Any> NormalOpenAPIRoute.authorizedPostWithApprovedList(
+    vararg approvedList: String,
+    noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams, TRequest) -> Unit
+) {
+    ktorRoute.installerTilgangPluginWithApprovedList(approvedList.toList())
+    @Suppress("UnauthorizedPost")
+    post<TParams, TResponse, TRequest> { params, request -> body(params, request) }
+}
+
 inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.authorizedGet(
     operasjon: Operasjon,
     ressurs: Ressurs,
@@ -33,11 +42,11 @@ inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.a
     get<TParams, TResponse> { params -> body(params) }
 }
 
-inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.authorizedGetWithWhitelist(
-    vararg whitelist: String,
+inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.authorizedGetWithApprovedList(
+    vararg approvedList: String,
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams) -> Unit
 ) {
-    ktorRoute.installerTilgangGetPluginWithWhitelist(whitelist.toList())
+    ktorRoute.installerTilgangPluginWithApprovedList(approvedList.toList())
     @Suppress("UnauthorizedGet")
     get<TParams, TResponse> { params -> body(params) }
 }
