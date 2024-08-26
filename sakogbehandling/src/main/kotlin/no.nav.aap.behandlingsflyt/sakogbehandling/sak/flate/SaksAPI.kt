@@ -89,9 +89,9 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
 
                 respond(saker)
             }
-            route("/{saksnummer}").authorizedGet<HentSakDTO, UtvidetSaksinfoDTO>(
+            route("/{saksnummer}").get<HentSakDTO, UtvidetSaksinfoDTO>/*(
                 Operasjon.SE, Ressurs("saksnummer", RessursType.Sak)
-            ) { req ->
+            )*/ { req ->
                 val saksnummer = req.saksnummer
 
                 val (sak, behandlinger) = dataSource.transaction(readOnly = true) { connection ->
@@ -121,7 +121,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 )
             }
             route("/{saksnummer}/dokumenter") {
-                authorizedGet<HentSakDTO, List<Dokument>>(Operasjon.SE, Ressurs("saksnummer", RessursType.Sak)) { req ->
+                /*authorizedGet<HentSakDTO, List<Dokument>>(Operasjon.SE, Ressurs("saksnummer", RessursType.Sak))*/ get<HentSakDTO, List<Dokument>> { req ->
                     val token = token()
                     val safRespons = SafListDokumentGateway.hentDokumenterForSak(Saksnummer(req.saksnummer), token)
                     respond(
@@ -159,10 +159,12 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
             }
 
             route("/{saksnummer}/personinformasjon") {
-                authorizedGet<HentSakDTO, SakPersoninfoDTO>(
+                /*authorizedGet<HentSakDTO, SakPersoninfoDTO>(
                     Operasjon.SE,
                     Ressurs("saksnummer", RessursType.Sak)
-                ) { req ->
+                )*/
+                 get<HentSakDTO, SakPersoninfoDTO>{ req ->
+
                     val saksnummer = req.saksnummer
 
                     val ident = dataSource.transaction(readOnly = true) { connection ->
