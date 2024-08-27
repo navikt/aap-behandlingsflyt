@@ -7,7 +7,7 @@ dependencies {
     implementation(project(":sakogbehandling"))
     implementation(project(":faktagrunnlag"))
     implementation(project(":tilgang"))
-    implementation("no.nav:ktor-openapi-generator:1.0.6")
+    implementation("no.nav:ktor-openapi-generator:1.0.10")
     implementation("io.ktor:ktor-http-jvm:$ktorVersion")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.0")
