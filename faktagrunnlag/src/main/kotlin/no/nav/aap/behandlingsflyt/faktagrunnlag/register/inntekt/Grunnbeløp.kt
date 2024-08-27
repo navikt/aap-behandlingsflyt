@@ -50,7 +50,19 @@ object Grunnbeløp {
         Element(1988, 4, 1, 31000, 30850),
         Element(1988, 1, 1, 30400, null),
         Element(1987, 5, 1, 29900, 29267),
+        Element(1986, 5, 1, 28000, 27_433),
+        Element(1986, 1, 1, 26_300, null),
+        Element(1985, 5, 1, 25_900, 25_333),
+        Element(1984, 5, 1, 24_200, 23_667),
+        Element(1983, 5, 1, 22_600, 22_333),
+        Element(1983, 1, 1, 21_800, null),
+        Element(1982, 5, 1, 21_200, 20_667),
+        Element(1981, 10, 1, 19_600, 18_658),
+        Element(1981, 5, 1, 19_100, null),
+        Element(1981, 1, 1, 17_400, null),
         Element(1980, 5, 1, 16900, 16633),
+        Element(1980, 1, 1, 16900, null),
+        Element(1979, 1, 1, 15200, 15200),
     )
 
     private class Element(

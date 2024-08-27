@@ -9,8 +9,10 @@ import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.StandardSammenslåere
 import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.Beløp
+import no.nav.aap.verdityper.GUnit
 import no.nav.aap.verdityper.Periode
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.data.Offset
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.Year
@@ -56,5 +58,12 @@ class GrunnbeløpTest {
         val exception = assertThrows<RuntimeException> { Grunnbeløp.finnGUnit(Year.of(1814), Beløp(1000)) }
 
         assertThat(exception.message).contains("Finner ikke grunnbeløp for år: 1814.")
+    }
+
+    @Test
+    fun `g-unit ganget med finnGUnit gir tilbake beløp`() {
+        val finnGUnit = Grunnbeløp.finnGUnit(Year.of(1979), Beløp(1000))
+
+        assertThat(finnGUnit.first.verdi().toDouble() * 15200).isCloseTo(1000.0, Offset.offset(0.1))
     }
 }
