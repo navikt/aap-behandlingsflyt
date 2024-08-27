@@ -116,7 +116,7 @@ class PersonopplysningRepository(private val connection: DBConnection) {
             deaktiverEksisterende(behandlingId)
         }
 
-        val relatertePersonopplysningerId = if(barn.isNotEmpty()) {
+        val relatertePersonopplysningerId = if (barn.isEmpty()) {
             null
         } else {
             val personopplysningerId = connection.executeReturnKey(
@@ -124,11 +124,15 @@ class PersonopplysningRepository(private val connection: DBConnection) {
             INSERT INTO PERSONOPPLYSNINGER DEFAULT VALUES
         """.trimIndent()
             )
-            connection.executeBatch("INSERT INTO PERSONOPPLYSNING (person_id,FODSELSDATO, dodsdato) VALUES (?, ?, ?)", barn) {
+            connection.executeBatch(
+                "INSERT INTO PERSONOPPLYSNING (person_id, personopplysninger_id, FODSELSDATO, dodsdato) VALUES (?, ?, ?, ?)",
+                barn
+            ) {
                 setParams {
                     setLong(1, requireNotNull(personRepository.finn(it.ident)).id)
-                    setLocalDate(2, it.fødselsdato.toLocalDate())
-                    setLocalDate(3, it.dødsdato?.toLocalDate())
+                    setLong(2, personopplysningerId)
+                    setLocalDate(3, it.fødselsdato.toLocalDate())
+                    setLocalDate(4, it.dødsdato?.toLocalDate())
                 }
             }
 

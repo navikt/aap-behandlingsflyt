@@ -109,8 +109,17 @@ class FlytOrkestratorTest {
         fakes.leggTil(
             TestPerson(
                 identer = setOf(ident),
-                fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
+                fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
                 yrkesskade = listOf(TestYrkesskade()),
+                barn = listOf(
+                    TestPerson(
+                        identer = setOf(Ident("1234123")),
+                        fødselsdato = Fødselsdato(LocalDate.now().minusYears(3)),
+                        yrkesskade = listOf(),
+                        barn = listOf(),
+                        inntekter = listOf()
+                    )
+                ),
                 inntekter = listOf(
                     InntektPerÅr(
                         Year.now().minusYears(1),

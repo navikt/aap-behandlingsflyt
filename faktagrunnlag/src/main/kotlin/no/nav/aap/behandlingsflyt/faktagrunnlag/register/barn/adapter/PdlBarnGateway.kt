@@ -31,7 +31,10 @@ object PdlBarnGateway : BarnGateway {
     )
 
     override fun hentBarn(person: Person, relaterteBarnIdenter: List<Ident>): List<Barn> {
-        return hentBarn(hentBarnRelasjoner(person) + relaterteBarnIdenter)
+        val barnRelasjoner = hentBarnRelasjoner(person)
+        val toMutableList = hentBarn(barnRelasjoner).toMutableList()
+        toMutableList.addAll(hentBarn(relaterteBarnIdenter))
+        return toMutableList
     }
 
     private fun hentBarnRelasjoner(person: Person): List<Ident> {

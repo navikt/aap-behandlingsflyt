@@ -168,7 +168,7 @@ class PersonRepository(private val connection: DBConnection) {
 
     fun finn(ident: Ident): Person? {
         return connection.queryFirstOrNull(
-            "SELECT unique p.id, p.referanse " +
+            "SELECT DISTINCT p.id, p.referanse " +
                     "FROM PERSON p " +
                     "INNER JOIN PERSON_IDENT pi ON pi.person_id = p.id " +
                     "WHERE pi.ident = ?"
