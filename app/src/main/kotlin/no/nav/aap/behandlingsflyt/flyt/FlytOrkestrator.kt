@@ -151,7 +151,7 @@ class FlytOrkestrator(
                     is TilbakeførtFraBeslutter -> behandlingFlyt.tilbakeflyt(avklaringsbehovene.tilbakeførtFraBeslutter())
                     is TilbakeførtFraKvalitetssikrer -> behandlingFlyt.tilbakeflyt(avklaringsbehovene.tilbakeførtFraKvalitetssikrer())
                     else -> {
-                        throw IllegalStateException("Uhåndter transisjon ved tilbakeføring. Faktisk type: ${result.javaClass}.")
+                        throw IllegalStateException("Uhåndtert transisjon ved tilbakeføring. Faktisk type: ${result.javaClass}.")
                     }
                 }
                 log.info(

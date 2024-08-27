@@ -11,7 +11,7 @@ object InitTestDatabase {
 
     init {
         // Postgres 15 korresponderer til versjon i nais.yaml
-        val postgres = PostgreSQLContainer<Nothing>("postgres:15")
+        val postgres = PostgreSQLContainer<Nothing>("postgres:16")
         postgres.start()
         val jdbcUrl = postgres.jdbcUrl
         val username = postgres.username

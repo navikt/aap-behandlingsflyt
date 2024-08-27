@@ -339,7 +339,7 @@ class ApiTest {
 }
 
 private fun postgreSQLContainer(): PostgreSQLContainer<Nothing> {
-    val postgres = PostgreSQLContainer<Nothing>("postgres:15")
+    val postgres = PostgreSQLContainer<Nothing>("postgres:16")
     postgres.waitingFor(HostPortWaitStrategy().withStartupTimeout(Duration.of(60L, ChronoUnit.SECONDS)))
     postgres.start()
     return postgres
