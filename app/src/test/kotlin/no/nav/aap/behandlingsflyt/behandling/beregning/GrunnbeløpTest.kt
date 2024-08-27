@@ -12,11 +12,13 @@ import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import java.time.Year
 
 class GrunnbeløpTest {
 
     @Test
-    fun `Genererer tidslinjee for gjennomsnittlig grunnbeløp`() {
+    fun `Genererer tidslinje for gjennomsnittlig grunnbeløp`() {
         val tidslinjeGjennomsnitt = Grunnbeløp.tilTidslinjeGjennomsnitt()
 
         val periodeForGjennomsnitt: Tidslinje<Any?> = Tidslinje(Periode(31 desember 2009, 1 januar 2010), null)
@@ -47,5 +49,12 @@ class GrunnbeløpTest {
                 Segment(Periode(30 april 2010, 30 april 2010), Beløp(72881)),
                 Segment(Periode(1 mai 2010, 1 mai 2010), Beløp(75641))
             )
+    }
+
+    @Test
+    fun `fornuftig feilmelding om man prøver å slå opp grunnbeløp som ikke finnes`() {
+        val exception = assertThrows<RuntimeException> { Grunnbeløp.finnGUnit(Year.of(1814), Beløp(1000)) }
+
+        assertThat(exception.message).contains("Finner ikke grunnbeløp for år: 1814.")
     }
 }

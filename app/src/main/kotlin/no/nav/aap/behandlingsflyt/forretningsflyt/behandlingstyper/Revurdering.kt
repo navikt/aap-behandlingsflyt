@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 
 object Revurdering : BehandlingType {
     override fun flyt(): BehandlingFlyt {
-        return Førstegangsbehandling.flyt() // Returnerer bare samme fly atm
+        return Førstegangsbehandling.flyt() // TODO Returnerer bare samme fly atm
     }
 
 }

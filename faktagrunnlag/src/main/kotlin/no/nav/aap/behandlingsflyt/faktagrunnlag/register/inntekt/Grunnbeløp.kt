@@ -49,7 +49,8 @@ object Grunnbeløp {
         Element(1989, 4, 1, 32700, 32275),
         Element(1988, 4, 1, 31000, 30850),
         Element(1988, 1, 1, 30400, null),
-        Element(1987, 5, 1, 29900, 29267)
+        Element(1987, 5, 1, 29900, 29267),
+        Element(1980, 5, 1, 16900, 16633),
     )
 
     private class Element(
@@ -65,7 +66,10 @@ object Grunnbeløp {
 
         companion object {
             fun finnGUnit(år: Year, beløp: Beløp): Pair<GUnit, Beløp> {
-                val grunnbeløp = tilTidslinjeGjennomsnitt().segment(år.atDay(1))!!.verdi
+                val grunnbeløp =
+                    tilTidslinjeGjennomsnitt().segment(år.atDay(1))?.verdi
+                        ?: throw RuntimeException("Finner ikke grunnbeløp for år: $år.")
+
                 return Pair(GUnit(beløp.dividert(grunnbeløp, GUnit.SCALE)), grunnbeløp)
             }
 
