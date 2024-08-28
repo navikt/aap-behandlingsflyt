@@ -60,6 +60,8 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.5.7")
     implementation("net.logstash.logback:logstash-logback-encoder:8.0")
 
+    implementation("no.nav.aap.statistikk:api-kontrakt:0.0.5")
+
     implementation(project(":motor"))
     implementation(project(":httpklient"))
     implementation(project(":sakogbehandling"))

@@ -4,9 +4,10 @@ import no.nav.aap.httpclient.ClientConfig
 import no.nav.aap.httpclient.RestClient
 import no.nav.aap.httpclient.post
 import no.nav.aap.httpclient.request.PostRequest
-import no.nav.aap.httpclient.tokenprovider.NoTokenTokenProvider
 import no.nav.aap.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.requiredConfigForKey
+import no.nav.aap.statistikk.api_kontrakt.AvsluttetBehandlingDTO
+import no.nav.aap.statistikk.api_kontrakt.MottaStatistikkDTO
 import org.slf4j.LoggerFactory
 import java.net.URI
 
@@ -22,7 +23,7 @@ class StatistikkGateway(restClient: RestClient<String>? = null) {
 
     private val uri = URI.create(requiredConfigForKey("integrasjon.statistikk.url"))
 
-    fun avgiStatistikk(hendelse: StatistikkHendelseDTO) {
+    fun avgiStatistikk(hendelse: MottaStatistikkDTO) {
         SECURE_LOGGER.info("Avgir statistikk. Payload: $hendelse")
         restClient.post<_, Unit>(uri = uri.resolve("/motta"), request = PostRequest(body = hendelse))
     }
