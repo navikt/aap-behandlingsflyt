@@ -19,15 +19,7 @@ import no.nav.aap.behandlingsflyt.hendelse.avløp.AvsluttetBehandlingHendelseDTO
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.hendelse.avløp.DefinisjonDTO
 import no.nav.aap.behandlingsflyt.hendelse.avløp.EndringDTO
-import no.nav.aap.behandlingsflyt.hendelse.statistikk.AvsluttetBehandlingDTO
-import no.nav.aap.behandlingsflyt.hendelse.statistikk.BeregningsgrunnlagDTO
-import no.nav.aap.behandlingsflyt.hendelse.statistikk.Grunnlag11_19DTO
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
-import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkHendelseDTO
-import no.nav.aap.behandlingsflyt.hendelse.statistikk.TilkjentYtelseDTO
-import no.nav.aap.behandlingsflyt.hendelse.statistikk.VilkårDTO
-import no.nav.aap.behandlingsflyt.hendelse.statistikk.VilkårsPeriodeDTO
-import no.nav.aap.behandlingsflyt.hendelse.statistikk.VilkårsResultatDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
@@ -38,6 +30,18 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.json.DefaultJsonMapper
 import no.nav.aap.motor.JobbInput
+import no.nav.aap.statistikk.api_kontrakt.AvklaringsbehovHendelse
+import no.nav.aap.statistikk.api_kontrakt.AvsluttetBehandlingDTO
+import no.nav.aap.statistikk.api_kontrakt.BehovType
+import no.nav.aap.statistikk.api_kontrakt.BeregningsgrunnlagDTO
+import no.nav.aap.statistikk.api_kontrakt.Endring
+import no.nav.aap.statistikk.api_kontrakt.EndringStatus
+import no.nav.aap.statistikk.api_kontrakt.Grunnlag11_19DTO
+import no.nav.aap.statistikk.api_kontrakt.MottaStatistikkDTO
+import no.nav.aap.statistikk.api_kontrakt.TilkjentYtelseDTO
+import no.nav.aap.statistikk.api_kontrakt.VilkårDTO
+import no.nav.aap.statistikk.api_kontrakt.VilkårsPeriodeDTO
+import no.nav.aap.statistikk.api_kontrakt.VilkårsResultatDTO
 import no.nav.aap.verdityper.GUnit
 import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.flyt.StegType
@@ -153,35 +157,39 @@ class StatistikkJobbUtførerTest {
         // Assert
 
         assertThat(fakes.mottatteVilkårsResult).isNotEmpty()
-        assertThat(fakes.mottatteVilkårsResult.first()).isEqualTo(
+        assertThat(fakes.mottatteVilkårsResult.first().toString()).isEqualTo(
             AvsluttetBehandlingDTO(
-                behandlingsReferanse = behandling.referanse,
-                saksnummer = sak.saksnummer,
+                behandlingsReferanse = behandling.referanse.referanse,
+                saksnummer = sak.saksnummer.toString(),
                 tilkjentYtelse = TilkjentYtelseDTO(perioder = listOf()),
                 beregningsGrunnlag = BeregningsgrunnlagDTO(
-                    grunnlag = 7.0,
-                    grunnlag11_19dto = Grunnlag11_19DTO(inntekter = mapOf())
+                    grunnlag11_19dto = Grunnlag11_19DTO(
+                        inntekter = mapOf(),
+                        grunnlaget = 7.0,
+                        er6GBegrenset = false,
+                        erGjennomsnitt = false,
+                    )
                 ),
                 vilkårsResultat =
                 VilkårsResultatDTO(
-                    typeBehandling = TypeBehandling.Førstegangsbehandling,
+                    typeBehandling = TypeBehandling.Førstegangsbehandling.toString(),
                     vilkår = listOf(
                         VilkårDTO(
-                            vilkårType = Vilkårtype.MEDLEMSKAP,
+                            vilkårType = no.nav.aap.statistikk.api_kontrakt.Vilkårtype.valueOf(Vilkårtype.MEDLEMSKAP.toString()),
                             perioder = listOf(
                                 VilkårsPeriodeDTO(
                                     fraDato = LocalDate.now().minusDays(1),
                                     tilDato = LocalDate.now().plusDays(1),
-                                    utfall = Utfall.OPPFYLT,
+                                    utfall = no.nav.aap.statistikk.api_kontrakt.Utfall.valueOf(Utfall.OPPFYLT.toString()),
                                     manuellVurdering = false,
                                     avslagsårsak = null,
-                                    innvilgelsesårsak = null,
+                                    innvilgelsesårsak = "null",
                                 )
                             )
                         )
                     )
                 )
-            )
+            ).toString()
         )
     }
 
@@ -245,13 +253,30 @@ class StatistikkJobbUtførerTest {
         assertThat(fakes.statistikkHendelser.size).isEqualTo(1)
 
         assertThat(fakes.statistikkHendelser.first()).isEqualTo(
-            StatistikkHendelseDTO(
+            MottaStatistikkDTO(
                 saksnummer = "456",
-                behandlingReferanse = referanse,
-                status = Status.UTREDES,
-                behandlingType = TypeBehandling.Klage,
+                behandlingReferanse = referanse.referanse,
+                status = Status.UTREDES.toString(),
+                behandlingType = no.nav.aap.statistikk.api_kontrakt.TypeBehandling.valueOf(TypeBehandling.Klage.toString()),
                 ident = fødselsNummer,
-                avklaringsbehov = avklaringsbehov,
+                avklaringsbehov = avklaringsbehov.map { avklaringsbehovHendelseDto ->
+                    AvklaringsbehovHendelse(
+                        definisjon = no.nav.aap.statistikk.api_kontrakt.Definisjon(
+                            type = avklaringsbehovHendelseDto.definisjon.type,
+                            behovType = BehovType.valueOf(avklaringsbehovHendelseDto.definisjon.behovType.toString()),
+                            løsesISteg = avklaringsbehovHendelseDto.definisjon.løsesISteg.toString()
+                        ),
+                        status = EndringStatus.valueOf(avklaringsbehovHendelseDto.status.toString()),
+                        endringer = avklaringsbehovHendelseDto.endringer.map { endring ->
+                            Endring(
+                                status = EndringStatus.valueOf(endring.status.toString()),
+                                tidsstempel = endring.tidsstempel,
+                                frist = endring.frist,
+                                endretAv = endring.endretAv
+                            )
+                        }
+                    )
+                },
                 behandlingOpprettetTidspunkt = payload.opprettetTidspunkt
             )
         )
