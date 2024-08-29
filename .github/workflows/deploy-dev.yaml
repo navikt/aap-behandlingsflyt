@@ -6,6 +6,7 @@ on:
     paths-ignore:
         - '.github/pr.yml'
         - '*.md'
+  workflow_dispatch:
 
 jobs:
   build:
