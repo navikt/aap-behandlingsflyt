@@ -5,7 +5,6 @@ import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
-import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Saksnummer
@@ -15,9 +14,10 @@ import no.nav.aap.behandlingsflyt.server.prosessering.JOURNALPOST_ID
 import no.nav.aap.behandlingsflyt.server.prosessering.MOTTATT_TIDSPUNKT
 import no.nav.aap.behandlingsflyt.server.prosessering.PERIODE
 import no.nav.aap.json.DefaultJsonMapper
+import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
-import no.nav.aap.verdityper.Periode
 import java.time.LocalDate
 import java.time.LocalDateTime
 import javax.sql.DataSource
@@ -33,7 +33,7 @@ fun NormalOpenAPIRoute.søknadApi(dataSource: DataSource) {
                 val flytJobbRepository = FlytJobbRepository(connection)
                 flytJobbRepository.leggTil(
                     JobbInput(HendelseMottattHåndteringOppgaveUtfører)
-                        .forSak(sak.id)
+                        .forSak(sak.id.toLong())
                         .medCallId()
                         .medParameter(JOURNALPOST_ID, dto.journalpostId)
                         .medParameter(BREVKODE, Brevkode.SØKNAD.name)

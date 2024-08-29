@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Status
-import no.nav.aap.verdityper.Periode
+import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDateTime
 
 data class UtvidetSaksinfoDTO(

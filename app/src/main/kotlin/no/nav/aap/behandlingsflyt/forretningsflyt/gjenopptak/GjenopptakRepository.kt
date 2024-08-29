@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.gjenopptak
 
-import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
+import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.SakId
 import no.nav.aap.verdityper.sakogbehandling.SakOgBehandling

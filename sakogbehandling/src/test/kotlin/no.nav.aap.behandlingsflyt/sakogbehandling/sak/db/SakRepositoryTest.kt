@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak.db
 
-import no.nav.aap.behandlingsflyt.dbconnect.transaction
-import no.nav.aap.behandlingsflyt.dbtest.InitTestDatabase
-import no.nav.aap.verdityper.Periode
+import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test

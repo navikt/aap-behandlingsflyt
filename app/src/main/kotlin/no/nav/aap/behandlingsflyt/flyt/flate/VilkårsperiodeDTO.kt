@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.flyt.flate
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.verdityper.Periode
+import no.nav.aap.komponenter.type.Periode
 
 data class VilkårsperiodeDTO(
     val periode: Periode,

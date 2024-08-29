@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate
 
-import no.nav.aap.behandlingsflyt.dbconnect.transaction
-import no.nav.aap.behandlingsflyt.dbtest.InitTestDatabase
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
+import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.verdityper.feilhåndtering.ElementNotFoundException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows

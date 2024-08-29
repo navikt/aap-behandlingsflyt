@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.server.prosessering
 
-import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.UnparsedStrukturertDokument
@@ -8,11 +7,13 @@ import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterMottattDokumentService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.json.DefaultJsonMapper
+import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
-import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
+import no.nav.aap.verdityper.sakogbehandling.SakId
 import java.time.LocalDateTime
 
 const val BREVKODE = "brevkode"
@@ -26,7 +27,7 @@ class HendelseMottattHåndteringOppgaveUtfører(connection: DBConnection) : Jobb
     private val mottaDokumentService = MottaDokumentService(MottattDokumentRepository(connection))
 
     override fun utfør(input: JobbInput) {
-        val sakId = input.sakId()
+        val sakId = SakId(input.sakId())
         val sakSkrivelås = låsRepository.låsSak(sakId)
 
         val brevkode = Brevkode.valueOf(input.parameter(BREVKODE))

@@ -1,6 +1,6 @@
 package no.nav.aap.tidslinje
 
-import no.nav.aap.verdityper.Periode
+import no.nav.aap.komponenter.type.Periode
 
 interface JoinStyle<VENSTRE, HØYRE, RETUR> {
     fun kombiner(periode: Periode, venstre: Segment<VENSTRE>?, høyre: Segment<HØYRE>?): Segment<RETUR>?

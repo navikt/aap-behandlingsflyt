@@ -4,7 +4,6 @@ import no.nav.aap.auth.Bruker
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SattPåVentLøsning
-import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
@@ -12,6 +11,7 @@ import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.server.prosessering.ProsesserBehandlingJobbUtfører
+import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.verdityper.flyt.FlytKontekst
@@ -67,7 +67,7 @@ class AvklaringsbehovOrkestrator(
     private fun fortsettProsessering(kontekst: FlytKontekst) {
         flytJobbRepository.leggTil(
             JobbInput(jobb = ProsesserBehandlingJobbUtfører).forBehandling(
-                kontekst.sakId, kontekst.behandlingId
+                kontekst.sakId?.toLong(), kontekst.behandlingId?.toLong()
             ).medCallId()
         )
     }

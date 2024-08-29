@@ -1,9 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.verdityper.Periode
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.sakogbehandling.Ident
-import java.time.LocalDate
 
 data class Barn(val ident: Ident, val fødselsdato: Fødselsdato, val dødsdato: Dødsdato? = null) {
     fun periodeMedRettTil(): Periode {
