@@ -61,6 +61,7 @@ class SamordningSteg(
 
         override fun type(): StegType {
             return StegType.SAMORDNING_GRADERING
+            return StegType.FASTSETT_UTTAK
         }
     }
 }
