@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger
 
-import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
-import no.nav.aap.behandlingsflyt.dbconnect.Row
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
+import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
 class PersonopplysningRepository(private val connection: DBConnection) {

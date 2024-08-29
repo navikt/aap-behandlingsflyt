@@ -10,13 +10,10 @@ include(
     "verdityper",
     "tidslinje",
     "dbflyway",
-    "dbconnect",
     "dbtest",
     "dbtestdata",
-    "motor",
     "httpklient",
     "lib-test",
-    "infrastructure",
-    "tilgang"
+    "tilgang",
+    "pip"
 )
-include("pip")

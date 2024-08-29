@@ -7,8 +7,8 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FASTSETT_BEREGNINGSTIDSPUNKT_KODE
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.FastsettBeregningstidspunktLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
-import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurdering
+import no.nav.aap.komponenter.dbconnect.DBConnection
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = FASTSETT_BEREGNINGSTIDSPUNKT_KODE)

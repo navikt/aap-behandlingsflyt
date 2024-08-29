@@ -3,9 +3,9 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykepengerErstatningLøsning
-import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
+import no.nav.aap.komponenter.dbconnect.DBConnection
 
 class AvklarSykepengerErstatningLøser(val connection: DBConnection) :
     AvklaringsbehovsLøser<AvklarSykepengerErstatningLøsning> {

@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FATTE_VEDTAK_KODE
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.FatteVedtakLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
-import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
+import no.nav.aap.komponenter.dbconnect.DBConnection
 
 @JsonTypeName(value = FATTE_VEDTAK_KODE)
 class FatteVedtakLøsning(

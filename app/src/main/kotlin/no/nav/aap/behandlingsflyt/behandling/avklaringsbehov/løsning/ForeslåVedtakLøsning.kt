@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FORESLÅ_VEDTAK_KODE
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ForeslåVedtakLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
-import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
+import no.nav.aap.komponenter.dbconnect.DBConnection
 
 @JsonTypeName(value = FORESLÅ_VEDTAK_KODE)
 class ForeslåVedtakLøsning(

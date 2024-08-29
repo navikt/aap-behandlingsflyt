@@ -9,8 +9,6 @@ import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FrivilligeAvklaringsbehov
-import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
-import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.flyt.utledType
@@ -20,6 +18,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.server.prosessering.ProsesserBehandlingJobbUtfører
+import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
@@ -88,11 +88,11 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
                     val lås = taSkriveLåsRepository.lås(req.referanse)
                     val behandling = behandling(connection, req)
                     val flytJobbRepository = FlytJobbRepository(connection)
-                    if (flytJobbRepository.hentJobberForBehandling(behandling.id).isEmpty()) {
+                    if (flytJobbRepository.hentJobberForBehandling(behandling.id.toLong()).isEmpty()) {
                         flytJobbRepository.leggTil(
                             JobbInput(ProsesserBehandlingJobbUtfører).forBehandling(
-                                behandling.sakId,
-                                behandling.id
+                                behandling.sakId?.toLong(),
+                                behandling.id?.toLong()
                             )
                         )
                     }

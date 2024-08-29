@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
-import no.nav.aap.behandlingsflyt.dbconnect.transaction
-import no.nav.aap.behandlingsflyt.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import kotlin.reflect.full.primaryConstructor

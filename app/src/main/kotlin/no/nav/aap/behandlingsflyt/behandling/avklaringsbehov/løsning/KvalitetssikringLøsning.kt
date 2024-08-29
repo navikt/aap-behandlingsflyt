@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.KVALITETSSIKRING_KO
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.KvalitetssikrerLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
-import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
+import no.nav.aap.komponenter.dbconnect.DBConnection
 
 @JsonTypeName(value = KVALITETSSIKRING_KODE)
 class KvalitetssikringLøsning(

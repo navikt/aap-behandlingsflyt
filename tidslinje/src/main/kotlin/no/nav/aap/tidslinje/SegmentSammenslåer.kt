@@ -1,6 +1,6 @@
 package no.nav.aap.tidslinje
 
-import no.nav.aap.verdityper.Periode
+import no.nav.aap.komponenter.type.Periode
 
 fun interface SegmentSammenslåer<Q, E, V, RETUR:Segment<V>?> {
 

@@ -1,13 +1,13 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold
 
-import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.adapter.InstitusjonsoppholdGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGateway as IInstitusjonsoppholdGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.verdityper.flyt.FlytKontekst
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGateway as IInstitusjonsoppholdGateway
 
 class InstitusjonsoppholdService private constructor(
     private val sakService: SakService,

@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.pliktkort
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.PeriodisertData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
-import no.nav.aap.verdityper.Periode
+import no.nav.aap.komponenter.type.Periode
 
 class Pliktkort(val timerArbeidPerPeriode: Set<ArbeidIPeriode>) : PeriodisertData {
     override fun periode(): Periode {

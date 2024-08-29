@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.flyt.internals
 
-import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingHendelse
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingHendelseHåndterer
 import no.nav.aap.behandlingsflyt.hendelse.mottak.DokumentMottattSakHendelse
@@ -15,6 +14,7 @@ import no.nav.aap.behandlingsflyt.server.prosessering.JOURNALPOST_ID
 import no.nav.aap.behandlingsflyt.server.prosessering.MOTTATT_TIDSPUNKT
 import no.nav.aap.behandlingsflyt.server.prosessering.PERIODE
 import no.nav.aap.json.DefaultJsonMapper
+import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
@@ -45,7 +45,7 @@ class TestHendelsesMottak(private val dataSource: DataSource) {
 
                 flytJobbRepository.leggTil(
                     JobbInput(HendelseMottattHåndteringOppgaveUtfører)
-                        .forSak(sak.id)
+                        .forSak(sak.id.toLong())
                         .medParameter(JOURNALPOST_ID, hendelse.journalpost.identifikator)
                         .medParameter(BREVKODE, hendelse.strukturertDokument.brevkode.name)
                         .medParameter(MOTTATT_TIDSPUNKT, DefaultJsonMapper.toJson(LocalDateTime.now()))

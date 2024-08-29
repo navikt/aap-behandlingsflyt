@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.server.prosessering
 
-import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.forretningsflyt.gjenopptak.GjenopptakRepository
+import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
@@ -17,13 +17,13 @@ class GjenopptaBehandlingJobbUtfører(
         val behandlingerForGjennopptak = gjenopptakRepository.finnBehandlingerForGjennopptak()
 
         behandlingerForGjennopptak.forEach { sakOgBehandling ->
-            val jobberPåBehandling = flytJobbRepository.hentJobberForBehandling(sakOgBehandling.behandlingId)
+            val jobberPåBehandling = flytJobbRepository.hentJobberForBehandling(sakOgBehandling.behandlingId.toLong())
 
             if (jobberPåBehandling.none { it.type() == ProsesserBehandlingJobbUtfører.type() }) {
                 flytJobbRepository.leggTil(
                     JobbInput(ProsesserBehandlingJobbUtfører).forBehandling(
-                        sakId = sakOgBehandling.sakId,
-                        behandlingId = sakOgBehandling.behandlingId
+                        sakID = sakOgBehandling.sakId.toLong(),
+                        behandlingId = sakOgBehandling.behandlingId.toLong()
                     )
                 )
             }

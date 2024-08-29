@@ -7,8 +7,8 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FASTSETT_ARBEIDSEVNE_KODE
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.FastsettArbeidsevneLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
-import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.Arbeidsevne
+import no.nav.aap.komponenter.dbconnect.DBConnection
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = FASTSETT_ARBEIDSEVNE_KODE)

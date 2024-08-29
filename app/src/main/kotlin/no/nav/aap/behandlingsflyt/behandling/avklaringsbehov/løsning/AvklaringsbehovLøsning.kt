@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
-import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
+import no.nav.aap.komponenter.dbconnect.DBConnection
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "behovstype", visible = true)
 sealed interface AvklaringsbehovLøsning {

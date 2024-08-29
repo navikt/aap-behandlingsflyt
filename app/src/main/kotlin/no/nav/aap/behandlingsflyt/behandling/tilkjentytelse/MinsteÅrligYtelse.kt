@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.GUnit
-import no.nav.aap.verdityper.Periode
 import java.time.LocalDate
 
 val MINSTE_ÅRLIG_YTELSE_TIDSLINJE = Tidslinje(

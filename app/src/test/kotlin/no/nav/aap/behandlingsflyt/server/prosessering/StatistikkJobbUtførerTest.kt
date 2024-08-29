@@ -4,8 +4,6 @@ import io.mockk.checkUnnecessaryStub
 import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
-import no.nav.aap.behandlingsflyt.dbconnect.transaction
-import no.nav.aap.behandlingsflyt.dbtest.InitTestDatabase
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
@@ -29,6 +27,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.json.DefaultJsonMapper
+import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.statistikk.api_kontrakt.AvklaringsbehovHendelse
 import no.nav.aap.statistikk.api_kontrakt.AvsluttetBehandlingDTO
@@ -43,7 +44,6 @@ import no.nav.aap.statistikk.api_kontrakt.VilkårDTO
 import no.nav.aap.statistikk.api_kontrakt.VilkårsPeriodeDTO
 import no.nav.aap.statistikk.api_kontrakt.VilkårsResultatDTO
 import no.nav.aap.verdityper.GUnit
-import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.flyt.StegType
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import no.nav.aap.verdityper.sakogbehandling.Status

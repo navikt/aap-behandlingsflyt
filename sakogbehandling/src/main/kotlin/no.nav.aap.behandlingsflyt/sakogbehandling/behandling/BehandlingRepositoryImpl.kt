@@ -1,13 +1,11 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.behandling
 
-import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
-import no.nav.aap.behandlingsflyt.dbconnect.Row
+import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
-import no.nav.aap.verdityper.sakogbehandling.Ident
 import no.nav.aap.verdityper.sakogbehandling.SakId
 import no.nav.aap.verdityper.sakogbehandling.Status
 import no.nav.aap.verdityper.sakogbehandling.TypeBehandling
@@ -240,7 +238,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             }
         }
     }
-    
+
     override fun finnSøker(referanse: BehandlingReferanse): Person {
         val query = """
             SELECT SAK_ID FROM BEHANDLING WHERE referanse = ?

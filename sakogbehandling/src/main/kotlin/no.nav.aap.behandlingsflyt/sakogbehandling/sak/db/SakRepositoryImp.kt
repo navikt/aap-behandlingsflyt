@@ -1,14 +1,14 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak.db
 
-import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
-import no.nav.aap.behandlingsflyt.dbconnect.Row
+import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakFlytRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Status
-import no.nav.aap.verdityper.Periode
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import no.nav.aap.verdityper.sakogbehandling.SakId
 import org.slf4j.LoggerFactory
@@ -136,7 +136,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository, S
             }
         }
     }
-    
+
     override fun finnSøker(saksnummer: Saksnummer): Person {
         return connection.queryFirst(
             "SELECT person_id " +

@@ -1,5 +1,8 @@
+val komponenterVersjon = "0.0.14"
+
 dependencies {
     implementation(project(":dbtest"))
-    implementation(project(":dbconnect"))
+    implementation("no.nav.aap.kelvin:dbconnect:$komponenterVersjon")
+    implementation("no.nav.aap.kelvin:dbtest:$komponenterVersjon")
     implementation(project(":verdityper"))
 }

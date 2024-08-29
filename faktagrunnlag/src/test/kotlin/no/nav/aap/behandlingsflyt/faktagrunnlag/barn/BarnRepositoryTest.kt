@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.barn
 
-import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
-import no.nav.aap.behandlingsflyt.dbconnect.transaction
-import no.nav.aap.behandlingsflyt.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.behandlingsflyt.dbtestdata.ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.arbeidsevne.FakePdlGateway
@@ -14,7 +14,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Saksnummer
-import no.nav.aap.verdityper.Periode
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -48,7 +48,7 @@ class BarnRepositoryTest {
             assertThat(barn.registerbarn?.identer).size().isEqualTo(1)
         }
     }
-    
+
     @Test
     fun `Henter barn for saker`() {
         InitTestDatabase.dataSource.transaction { connection ->
@@ -59,7 +59,7 @@ class BarnRepositoryTest {
             val oppgittBarn = OppgittBarn(null, setOf(Ident("0987654321")))
             barnRepository.lagreRegisterBarn(behandling.id, registerBarn)
             barnRepository.lagreOppgitteBarn(behandling.id, oppgittBarn)
-            
+
             val oppgitteBarnForSak = barnRepository.hentOppgitteBarnForSaker(listOf(sak.saksnummer, Saksnummer("1234")))
             val registerBarnForSak = barnRepository.hentRegisterBarnForSaker(listOf(sak.saksnummer, Saksnummer("1234")))
             assertThat(registerBarnForSak[sak.saksnummer]).hasSize(2)

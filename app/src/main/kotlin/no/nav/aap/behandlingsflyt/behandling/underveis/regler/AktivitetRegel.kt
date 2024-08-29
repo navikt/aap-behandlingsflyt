@@ -2,11 +2,11 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tidslinje.JoinStyle
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.StandardSammenslåere
 import no.nav.aap.tidslinje.Tidslinje
-import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDate
 import java.time.Period

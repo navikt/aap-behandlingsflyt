@@ -6,7 +6,6 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
-import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
@@ -18,6 +17,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.verdityper.GUnit
 import javax.sql.DataSource
 

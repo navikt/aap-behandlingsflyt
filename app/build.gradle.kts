@@ -40,6 +40,8 @@ fun getCheckedOutGitCommitHash(): String {
     return runCommand("git rev-parse --verify HEAD")
 }
 
+val komponenterVersjon = "0.0.14"
+
 dependencies {
     implementation("io.ktor:ktor-server-auth:$ktorVersion")
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
@@ -61,24 +63,26 @@ dependencies {
     implementation("net.logstash.logback:logstash-logback-encoder:8.0")
 
     implementation("no.nav.aap.statistikk:api-kontrakt:0.0.5")
-
-    implementation(project(":motor"))
+    implementation("no.nav.aap.kelvin:motor:$komponenterVersjon")
+    implementation("no.nav.aap.kelvin:dbconnect:$komponenterVersjon")
+    implementation("no.nav.aap.kelvin:dbmigrering:$komponenterVersjon")
+    implementation("no.nav.aap.kelvin:motor-api:$komponenterVersjon")
     implementation(project(":httpklient"))
     implementation(project(":sakogbehandling"))
     implementation(project(":faktagrunnlag"))
     implementation(project(":verdityper"))
     implementation(project(":tidslinje"))
     implementation(project(":dbflyway"))
-    implementation(project(":dbconnect"))
     implementation(project(":tilgang"))
     implementation(project(":pip"))
     implementation("com.zaxxer:HikariCP:5.1.0")
     implementation("org.flywaydb:flyway-database-postgresql:10.17.1")
-    runtimeOnly("org.postgresql:postgresql:42.7.4")
+    runtimeOnly("org.postgresql:postgresql:42.7.3")
 
     testImplementation(project(":dbtestdata"))
     testImplementation(project(":dbtest"))
     testImplementation(project(":lib-test"))
+    testImplementation("no.nav.aap.kelvin:dbtest:$komponenterVersjon")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.0")
     testImplementation("org.assertj:assertj-core:3.26.3")

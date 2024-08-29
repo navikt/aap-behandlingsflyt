@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykepengerErstatningFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykepengerErstatningVilkår
-import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
@@ -12,6 +11,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
 import no.nav.aap.verdityper.flyt.StegType
 

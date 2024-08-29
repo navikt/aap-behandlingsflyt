@@ -1,11 +1,11 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument
 
-import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Pliktkort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.aktivitet.TorsHammerDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.json.DefaultJsonMapper
+import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.slf4j.LoggerFactory
 

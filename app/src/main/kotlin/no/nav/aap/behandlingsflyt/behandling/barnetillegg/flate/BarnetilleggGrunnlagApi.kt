@@ -5,7 +5,6 @@ import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.BarnetilleggService
-import no.nav.aap.behandlingsflyt.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
@@ -16,6 +15,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import javax.sql.DataSource
 

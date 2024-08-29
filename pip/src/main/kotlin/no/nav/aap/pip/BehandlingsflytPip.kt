@@ -3,7 +3,7 @@ package no.nav.aap.pip
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.behandlingsflyt.dbconnect.transaction
+import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl

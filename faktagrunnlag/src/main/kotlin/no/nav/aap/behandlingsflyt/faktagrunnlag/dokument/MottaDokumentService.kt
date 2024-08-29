@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.pliktkort.Plik
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.adapter.UbehandletSøknad
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
-import no.nav.aap.verdityper.Periode
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.SakId
