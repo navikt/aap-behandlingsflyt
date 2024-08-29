@@ -43,7 +43,7 @@ object PdlPersonopplysningGateway : PersonopplysningGateway {
         val foedselsdato = response
             .data
             ?.hentPerson
-            ?.foedsel
+            ?.foedselsdato
             ?.first()
             ?.foedselsdato
             ?: return null
