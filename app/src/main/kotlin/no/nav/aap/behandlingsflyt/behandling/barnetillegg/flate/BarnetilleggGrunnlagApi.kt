@@ -48,8 +48,8 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource) {
 
                     BarnetilleggDto(
                         oppgitteBarn = barnGrunnlag?.oppgittBarn?.identer?.toList() ?: emptyList(),
-                        folkeregisterbarn = uavklarteBarn.map { hentBarn(it, personopplysningGrunnlag!!) },
-                        barnSomTrengerVurdering = uavklarteBarn.toList()
+                        folkeregisterbarn = folkeregister.map { hentBarn(it, personopplysningGrunnlag!!) },
+                        barnSomTrengerVurdering = uavklarteBarn.map { hentBarn(it, personopplysningGrunnlag!!) }.toList()
                     )
                 }
 
