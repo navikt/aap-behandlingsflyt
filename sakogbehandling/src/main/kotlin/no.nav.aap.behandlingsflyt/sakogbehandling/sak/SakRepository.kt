@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak
 
-import no.nav.aap.verdityper.Periode
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import no.nav.aap.verdityper.sakogbehandling.SakId
 
@@ -17,6 +17,6 @@ interface SakRepository {
     fun hent(saksnummer: Saksnummer): Sak
 
     fun finnSøker(saksnummer: Saksnummer): Person
-    
+
     fun finnSøker(sakId: SakId): Person
 }

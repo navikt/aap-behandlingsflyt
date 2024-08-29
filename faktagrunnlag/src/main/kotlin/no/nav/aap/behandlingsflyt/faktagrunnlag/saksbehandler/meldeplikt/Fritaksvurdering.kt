@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt
 
-import no.nav.aap.verdityper.Periode
+import no.nav.aap.komponenter.type.Periode
 
 data class Fritaksvurdering(
     val periode: Periode,

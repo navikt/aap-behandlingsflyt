@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt.internals
 
 import no.nav.aap.behandlingsflyt.hendelse.mottak.SakHendelse
-import no.nav.aap.verdityper.Periode
+import no.nav.aap.komponenter.type.Periode
 
 interface PersonHendelse {
 
