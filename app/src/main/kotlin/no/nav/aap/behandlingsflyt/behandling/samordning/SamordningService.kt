@@ -51,6 +51,6 @@ class SamordningService: Informasjonskrav {
     }
     
     override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekst): Boolean {
-        TODO("Not yet implemented")
+        return false 
     }
 }
