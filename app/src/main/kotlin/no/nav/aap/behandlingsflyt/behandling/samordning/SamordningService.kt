@@ -1,4 +1,10 @@
-package no.nav.aap.behandlingsflyt.behandling.underveis
+package no.nav.aap.behandlingsflyt.behandling.samordning
+
+import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
+import no.nav.aap.verdityper.flyt.FlytKontekst
+
 /*
 * Pleiepenger for sykt barn - team sykdom i familien
 * Pleiepenger for nærstående - team sykdom i familien
@@ -15,7 +21,7 @@ package no.nav.aap.behandlingsflyt.behandling.underveis
 
  */
 
-class SamordningService {
+class SamordningService: Informasjonskrav {
 
     fun hentYtelsePleiePengerSyktBarn() {}
 
@@ -37,4 +43,14 @@ class SamordningService {
      * Fulle sykepenger av deltidsstilling anses som en redusert ytelse
      */
     fun hentYtelseSykePenger() {}
+
+    companion object : Informasjonskravkonstruktør {
+        override fun konstruer(connection: DBConnection): SamordningService {
+            return SamordningService()
+        }
+    }
+    
+    override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekst): Boolean {
+        TODO("Not yet implemented")
+    }
 }

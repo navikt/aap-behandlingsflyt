@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis
 
+import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AktivitetRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.EtAnnetStedRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.GraderingArbeidRegel
