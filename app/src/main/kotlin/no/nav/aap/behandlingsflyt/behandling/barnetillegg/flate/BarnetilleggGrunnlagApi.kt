@@ -61,7 +61,7 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource) {
 
 fun hentBarn(ident: Ident, personopplysningGrunnlag: PersonopplysningGrunnlag): IdentifiserteBarnDto {
     val personopplysning =
-        requireNotNull(personopplysningGrunnlag.relatertePersonopplysninger?.personopplysninger?.first { it.ident() == ident })
+        requireNotNull(personopplysningGrunnlag.relatertePersonopplysninger?.personopplysninger?.first { relatertPersonopplysning -> relatertPersonopplysning.gjelderForIdent(ident) })
 
     return IdentifiserteBarnDto(
         ident,
