@@ -1,6 +1,8 @@
 name: Pull Request
 
-on: pull_request
+on:
+    pull_request:
+    workflow_dispatch:
 
 jobs:
     build:
@@ -44,4 +46,7 @@ jobs:
             -   run: gh pr merge --auto --rebase "$PR_URL"
                 env:
                     PR_URL: ${{ github.event.pull_request.html_url }}
+                    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            -   run: gh workflow run pr.yml
+                env:
                     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
