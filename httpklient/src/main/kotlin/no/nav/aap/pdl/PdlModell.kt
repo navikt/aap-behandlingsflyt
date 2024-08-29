@@ -93,7 +93,7 @@ data class HentPersonBolkResult(
 
 data class PdlPersoninfo(
     val forelderBarnRelasjon: List<PdlRelasjon>? = null,
-    val foedsel: List<PdlFoedsel>? = null,
+    val foedselsdato: List<PdlFoedsel>? = null,
     val doedsfall: Set<PDLDødsfall>? = null
 )
 

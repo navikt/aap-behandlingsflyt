@@ -62,7 +62,7 @@ object PdlBarnGateway : BarnGateway {
 
         return bolk.mapNotNull { res ->
             res.person?.let { person ->
-                person.foedsel?.let { foedsel ->
+                person.foedselsdato?.let { foedsel ->
                     foedsel.singleOrNull()?.let { fdato ->
                         Barn(ident = Ident(res.ident),
                             fødselsdato = Fødselsdato.parse(fdato.foedselsdato.toString()),
@@ -100,7 +100,7 @@ val PERSON_BOLK_QUERY = """
                 doedsfall {
                     doedsdato
                 },
-                foedsel {
+                foedselsdato {
                     foedselsdato
                 }
             }

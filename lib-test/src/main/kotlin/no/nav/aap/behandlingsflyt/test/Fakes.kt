@@ -124,7 +124,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         // Pesys
         System.setProperty("integrasjon.pesys.url", "http://localhost:${pesysFake.port()}")
         System.setProperty("integrasjon.pesys.scope", "scope")
-        
+
         // Tilgang
         System.setProperty("integrasjon.tilgang.url", "http://localhost:${tilgang.port()}")
         System.setProperty("integrasjon.tilgang.scope", "scope")
@@ -280,7 +280,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
             }
         }
     }
-    
+
     private fun Application.tilgangFake() {
         install(ContentNegotiation) {
             jackson()
@@ -617,7 +617,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         return HentPersonBolkResult(
             ident = person.identer.first().identifikator,
             person = PdlPersoninfo(
-                foedsel = listOf(PdlFoedsel(person.fødselsdato.toFormatedString())),
+                foedselsdato = listOf(PdlFoedsel(person.fødselsdato.toFormatedString())),
                 doedsfall = mapDødsfall(person)
             )
         )
@@ -712,7 +712,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         if (person == null) {
             return null
         }
-        return PdlPersoninfo(foedsel = listOf(PdlFoedsel(person.fødselsdato.toFormatedString())))
+        return PdlPersoninfo(foedselsdato = listOf(PdlFoedsel(person.fødselsdato.toFormatedString())))
     }
 
     private fun Application.azureFake() {
