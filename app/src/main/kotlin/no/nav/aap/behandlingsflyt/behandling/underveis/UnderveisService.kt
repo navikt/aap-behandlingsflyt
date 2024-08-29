@@ -24,6 +24,7 @@ class UnderveisService(
 ) {
 
     private val kvoteService = KvoteService()
+    private val samordningService = SamordningService()
 
     private val regelset = listOf(
         RettTilRegel(),
