@@ -1,14 +1,12 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.SafHentDokumentGateway.Companion.extractFileNameFromHeaders
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.httpclient.tokenprovider.OidcToken
-import no.nav.aap.verdityper.dokument.DokumentInfoId
-import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
-import java.net.URI
 import java.net.http.HttpHeaders
 
 class SafListDokumentGatewayTest {
@@ -42,13 +40,5 @@ class SafListDokumentGatewayTest {
         val response = extractFileNameFromHeaders(headers)
 
         assertThat(response).isEqualTo("400000000_ARKIV.pdf")
-    }
-
-    @Test
-    fun `konstruer saf-url`() {
-        val baseURL = URI.create("http://localhost:50309/rest")
-        val res = konstruerSafRestURL(baseURL, JournalpostId("1234"), DokumentInfoId("5674"), variantFormat = "ARKIV")
-
-        assertThat(res.toString()).isEqualTo("http://localhost:50309/rest/hentdokument/1234/5674/ARKIV")
     }
 }
