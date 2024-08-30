@@ -47,24 +47,10 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
         route("/{referanse}/flyt") {
             get<BehandlingReferanse, BehandlingFlytOgTilstandDto> { req ->
                 val dto = dataSource.transaction(readOnly = true) { connection ->
-                    val behandling = behandling(connection, req)
+                    var behandling = behandling(connection, req)
                     val flytJobbRepository = FlytJobbRepository(connection)
                     val gruppeVisningService = DynamiskStegGruppeVisningService(connection)
-                    val flyt = utledType(behandling.typeBehandling()).flyt()
 
-                    val stegGrupper: Map<StegGruppe, List<StegType>> =
-                        flyt.stegene().groupBy { steg -> steg.gruppe }
-
-                    val aktivtSteg = behandling.aktivtSteg()
-                    var erFullført = true
-                    val avklaringsbehovene = avklaringsbehov(
-                        connection,
-                        behandling.id
-                    )
-                    val alleAvklaringsbehovInkludertFrivillige = FrivilligeAvklaringsbehov(
-                        avklaringsbehovene,
-                        flyt, aktivtSteg
-                    )
                     val jobber = flytJobbRepository.hentJobberForBehandling(behandling.id.toLong())
                     val prosessering =
                         Prosessering(
@@ -86,6 +72,22 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
                                     navn = it.navn()
                                 )
                             })
+                    // Henter denne ut etter status er utledet for å være sikker på at dataene er i rett tilstand
+                    behandling = behandling(connection, req)
+                    val flyt = utledType(behandling.typeBehandling()).flyt()
+
+                    val stegGrupper: Map<StegGruppe, List<StegType>> =
+                        flyt.stegene().groupBy { steg -> steg.gruppe }
+                    val aktivtSteg = behandling.aktivtSteg()
+                    var erFullført = true
+                    val avklaringsbehovene = avklaringsbehov(
+                        connection,
+                        behandling.id
+                    )
+                    val alleAvklaringsbehovInkludertFrivillige = FrivilligeAvklaringsbehov(
+                        avklaringsbehovene,
+                        flyt, aktivtSteg
+                    )
                     val vurdertStegPair = utledVurdertGruppe(prosessering, aktivtSteg, flyt, avklaringsbehovene)
                     BehandlingFlytOgTilstandDto(
                         flyt = stegGrupper.map { (gruppe, steg) ->
