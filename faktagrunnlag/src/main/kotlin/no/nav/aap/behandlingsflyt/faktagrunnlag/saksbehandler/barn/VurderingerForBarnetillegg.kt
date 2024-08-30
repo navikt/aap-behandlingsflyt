@@ -1,4 +1,3 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn
 
-class VurderingAvBarn {
-}
+class VurderingerForBarnetillegg(val vurderteBarn: List<VurdertBarn>)
