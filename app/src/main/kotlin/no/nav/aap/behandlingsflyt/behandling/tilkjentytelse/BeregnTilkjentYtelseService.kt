@@ -64,6 +64,7 @@ class BeregnTilkjentYtelseService(
             maxOf(minsteÅrligYtelse, utgangspunktForÅrligYtelse)
         }
 
+        // TODO: Hvis vi har eget grunnlag for samordning må vi slå sammen denne tidslinjen her
         val gradertÅrligYtelseTidslinje = underveisTidslinje.kombiner(
             årligYtelseTidslinje,
             JoinStyle.INNER_JOIN { periode, venstre, høyre ->
