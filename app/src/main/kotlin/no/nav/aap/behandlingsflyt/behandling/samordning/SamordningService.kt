@@ -13,16 +13,23 @@ import no.nav.aap.verdityper.flyt.FlytKontekst
 * Foreldrepenger - team foreldrepenger
 * Sykepenger? - team sykdom (På vent fra Øyvind, har potensielt 2 apier, bør klareres)
 *
-*
-*
 * Informasjonselementer fra ytelsene:
 * Perioder med ytelse
 * utbetalingsgrad per periode
-
+*
+* -----Tables vi trenger?:------
+* SamordningGrunnlag
+* - bruk underveisGrunnlag table
+* SamordningPerioder
+* - bruk underveisPerioder table
+* SamordningPeriode
+* - id(pk) - gradering (smallint) - perioder_id(fk){samordningsperioder} - periode(daterange)
+*
+* YtelsesGradering
+* - id(pk) - samordningsperiodeId(fk) - ytelse(string/enum) - gradering (smallint)
  */
 
 class SamordningService: Informasjonskrav {
-
     fun hentYtelsePleiePengerSyktBarn() {}
 
     fun hentYtelsePleiePengerForNærFamilie() {}

@@ -67,6 +67,7 @@ spec:
       external:
         - host: pdl-api.dev-fss-pub.nais.io
         - host: pensjon-popp-q2.dev-fss-pub.nais.io
+        - host: fpabakus.dev-fss-pub.nais.io
       rules:
         - application: tilgang
         - application: yrkesskade-saker
@@ -121,3 +122,7 @@ spec:
       value: api://dev-fss.team-rocket.medlemskap-medl-api/.default
     - name: INTEGRASJON_MOTTAK_AZP
       value: dev-gcp:aap:mottak
+    - name: INTEGRASJON_FORELDREPENGER_URL
+      value: https://k9-abakus.dev-fss-pub.nais.io/k9/abakus/ekstern/api/ytelse/v1
+    - name: INTEGRASJON_FORELDREPENGER_SCOPE
+      value: api://dev-fss.k9saksbehandling.k9-abakus/.default
