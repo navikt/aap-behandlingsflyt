@@ -13,7 +13,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = AVKLAR_BARNETILLEGG_KODE)
 class AvklarBarnetilleggLøsning(
-    @JsonProperty("vurdering", required = true) val vurdering: VurderingerForBarnetillegg,
+    @JsonProperty("vurderingerForBarnetillegg", required = true) val vurderingerForBarnetillegg: VurderingerForBarnetillegg,
     @JsonProperty("behovstype", required = true, defaultValue = AVKLAR_BARNETILLEGG_KODE) val behovstype: String = AVKLAR_BARNETILLEGG_KODE
 ) : AvklaringsbehovLøsning {
     override fun løs(connection: DBConnection, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
