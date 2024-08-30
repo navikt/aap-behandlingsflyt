@@ -10,14 +10,11 @@ import no.nav.aap.httpclient.tokenprovider.azurecc.OnBehalfOfTokenProvider
 import no.nav.aap.requiredConfigForKey
 import no.nav.aap.saf.Journalpost
 import no.nav.aap.saf.SafDokumentoversiktFagsakDataResponse
+import no.nav.aap.saf.SafRequest
 import no.nav.aap.saf.SafResponseHandler
 import no.nav.aap.saf.Variantformat
-import no.nav.aap.verdityper.dokument.DokumentInfoId
-import no.nav.aap.verdityper.dokument.JournalpostId
 import org.slf4j.LoggerFactory
-import java.io.InputStream
 import java.net.URI
-import java.net.http.HttpHeaders
 
 val log = LoggerFactory.getLogger(SafListDokumentGateway::class.java)
 
@@ -49,27 +46,6 @@ object SafListDokumentGateway {
     }
 }
 
-fun konstruerSafRestURL(
-    baseUrl: URI,
-    journalpostId: JournalpostId,
-    dokumentInfoId: DokumentInfoId,
-    variantFormat: String
-): URI {
-    return URI.create("$baseUrl/hentdokument/${journalpostId.identifikator}/${dokumentInfoId.dokumentInfoId}/${variantFormat}")
-}
-
-fun extractFileNameFromHeaders(headers: HttpHeaders): String? {
-    val value = headers.map()["Content-Disposition"]?.firstOrNull()
-    if (value.isNullOrBlank()) {
-        return null
-    }
-    val regex =
-        Regex("filename=([^;]+)")
-
-    val matchResult = regex.find(value)
-    return matchResult?.groupValues?.get(1)
-}
-
 fun List<Journalpost>.tilArkivDokumenter(): List<Dokument> {
     return this.flatMap { journalpost ->
         journalpost.dokumenter.flatMap { dok ->
@@ -96,14 +72,7 @@ data class Dokument(
     val variantformat: Variantformat
 )
 
-
-data class SafDocumentResponse(val dokument: InputStream, val contentType: String, val filnavn: String)
-
 fun String.asQuery() = this.replace("\n", "")
-
-internal data class SafRequest(val query: String, val variables: Variables) {
-    data class Variables(val fagsakId: String)
-}
 
 private const val fagsakId = "\$fagsakId"
 // Skjema her: https://github.com/navikt/saf/blob/master/app/src/main/resources/schemas/saf.graphqls
