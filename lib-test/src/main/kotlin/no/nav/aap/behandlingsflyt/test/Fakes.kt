@@ -22,7 +22,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fød
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PERSON_QUERY
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.IDENT_QUERY
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoGateway.PERSONINFO_QUERY
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.TilgangResponse
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.pdl.HentPerson
 import no.nav.aap.pdl.HentPersonBolkResult
@@ -45,6 +44,7 @@ import no.nav.aap.pdl.PdlRequest
 import no.nav.aap.statistikk.api_kontrakt.AvsluttetBehandlingDTO
 import no.nav.aap.statistikk.api_kontrakt.MottaStatistikkDTO
 import no.nav.aap.tilgang.TilgangRequest
+import no.nav.aap.tilgang.TilgangResponse
 import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import no.nav.aap.yrkesskade.YrkesskadeModell
