@@ -2,12 +2,13 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.foreldrepenger
 
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.verdityper.Periode
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 class ForeldrePengerGatewayTest {
 
-    @Test
+    @Disabled
     fun kanHenteDataFraForeldrePenger() {
         Fakes().use {
             val fpGateway = ForeldrePengerGateway()

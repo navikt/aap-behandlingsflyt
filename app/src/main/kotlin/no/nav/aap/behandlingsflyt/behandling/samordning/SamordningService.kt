@@ -30,7 +30,6 @@ import no.nav.aap.verdityper.flyt.FlytKontekst
  */
 
 class SamordningService: Informasjonskrav {
-
     fun hentYtelsePleiePengerSyktBarn() {}
 
     fun hentYtelsePleiePengerForNærFamilie() {}

@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.foreldrepenger
 
-import io.ktor.http.*
 import no.nav.aap.httpclient.ClientConfig
 import no.nav.aap.httpclient.Header
 import no.nav.aap.httpclient.RestClient
@@ -10,6 +9,9 @@ import no.nav.aap.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvide
 import no.nav.aap.requiredConfigForKey
 import java.net.URI
 
+/**
+ * Henter foreldrepenger og svangerskapspenger for gitt periode
+ */
 class ForeldrePengerGateway {
     /*
     TODO: Avgjør hvilke vi faktisk skal sikte mot
