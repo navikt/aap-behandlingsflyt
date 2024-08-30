@@ -1,8 +1,8 @@
 package no.nav.aap.httpclient.error
 
+import no.nav.aap.httpclient.håndterStatus
 import no.nav.aap.komponenter.dbflyway.Miljø
 import no.nav.aap.komponenter.dbflyway.MiljøKode
-import no.nav.aap.httpclient.håndterStatus
 import org.slf4j.LoggerFactory
 import java.net.http.HttpHeaders
 import java.net.http.HttpRequest
@@ -32,10 +32,9 @@ class DefaultResponseHandler() : RestResponseHandler<String> {
     private fun loggRespons(value: String?) {
         // TODO: Temp
         val miljø = Miljø.er()
-        if (miljø in listOf(MiljøKode.LOKALT, MiljøKode.DEV)) {
+        if (miljø in listOf(MiljøKode.LOKALT)) {
             log.info(value)
         }
-        SECURE_LOGGER.info(value)
     }
 
     override fun bodyHandler(): HttpResponse.BodyHandler<String> {
