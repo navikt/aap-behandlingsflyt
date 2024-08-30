@@ -10,7 +10,6 @@ import java.net.http.HttpResponse
 
 
 class DefaultResponseHandler() : RestResponseHandler<String> {
-    private val SECURE_LOGGER = LoggerFactory.getLogger("secureLog")
     private val log = LoggerFactory.getLogger(DefaultResponseHandler::class.java)
 
     override fun <R> håndter(
