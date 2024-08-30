@@ -6,19 +6,22 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.httpclient.ClientConfig
 import no.nav.aap.httpclient.Header
 import no.nav.aap.httpclient.RestClient
-import no.nav.aap.httpclient.get
+import no.nav.aap.httpclient.error.InputStreamResponseHandler
 import no.nav.aap.httpclient.request.GetRequest
 import no.nav.aap.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.institusjon.InstitusjonoppholdRequest
+import no.nav.aap.json.DefaultJsonMapper
 import no.nav.aap.requiredConfigForKey
 import java.net.URI
 
 object InstitusjonsoppholdGateway : InstitusjonsoppholdGateway {
-    private val url = URI.create(requiredConfigForKey("integrasjon.institusjonsopphold.url") + "?Med-Institusjonsinformasjon=true")
+    private val url =
+        URI.create(requiredConfigForKey("integrasjon.institusjonsopphold.url") + "?Med-Institusjonsinformasjon=true")
     private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.institusjonsopphold.scope"))
-    private val client = RestClient.withDefaultResponseHandler(
+    private val client = RestClient(
         config = config,
         tokenProvider = ClientCredentialsTokenProvider,
+        responseHandler = InputStreamResponseHandler()
     )
 
     private fun query(request: InstitusjonoppholdRequest): List<no.nav.aap.institusjon.Institusjonsopphold> {
@@ -29,7 +32,9 @@ object InstitusjonsoppholdGateway : InstitusjonsoppholdGateway {
                 Header("Accept", "application/json")
             )
         )
-        return requireNotNull(client.get(uri = url, request = httpRequest))
+        return requireNotNull(client.get(uri = url, request = httpRequest, mapper = { body, _ ->
+            DefaultJsonMapper.streamFromJson(body)
+        }))
     }
 
     override fun innhent(person: Person): List<Institusjonsopphold> {

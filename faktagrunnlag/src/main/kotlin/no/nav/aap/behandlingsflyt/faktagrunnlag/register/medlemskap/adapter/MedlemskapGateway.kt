@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.httpclient.ClientConfig
 import no.nav.aap.httpclient.Header
 import no.nav.aap.httpclient.RestClient
+import no.nav.aap.httpclient.error.InputStreamResponseHandler
 import no.nav.aap.httpclient.request.GetRequest
 import no.nav.aap.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.json.DefaultJsonMapper
@@ -15,9 +16,10 @@ class MedlemskapGateway : MedlemskapGateway {
     private val url = URI.create(requiredConfigForKey("integrasjon.medl.url"))
     private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.medl.scope"))
 
-    private val client = RestClient.withDefaultResponseHandler(
+    private val client = RestClient(
         config = config,
-        tokenProvider = ClientCredentialsTokenProvider
+        tokenProvider = ClientCredentialsTokenProvider,
+        responseHandler = InputStreamResponseHandler()
     )
 
     private fun query(request: MedlemskapRequest): List<MedlemskapResponse> {
@@ -34,7 +36,7 @@ class MedlemskapGateway : MedlemskapGateway {
                 uri = url,
                 request = httpRequest,
                 mapper = { body, _ ->
-                    DefaultJsonMapper.fromJson(body)
+                    DefaultJsonMapper.streamFromJson(body)
                 }
             )
         )

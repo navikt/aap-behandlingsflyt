@@ -31,7 +31,7 @@ object SafListDokumentGateway {
     private val client = RestClient(
         config = config,
         tokenProvider = OnBehalfOfTokenProvider,
-        errorHandler = SafResponseHandler()
+        responseHandler = SafResponseHandler()
     )
 
     private fun query(request: SafRequest, currentToken: OidcToken): SafDokumentoversiktFagsakDataResponse {
