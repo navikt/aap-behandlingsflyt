@@ -26,7 +26,7 @@ class SamordningSteg(private val samordningRegelService: SamordningRegelService)
         }
 
         override fun type(): StegType {
-            return StegType.FASTSETT_UTTAK
+            return StegType.SAMORDNING_GRADERING
         }
     }
 
