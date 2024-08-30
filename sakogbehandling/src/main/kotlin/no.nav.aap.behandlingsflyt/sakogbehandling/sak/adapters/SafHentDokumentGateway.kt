@@ -11,6 +11,7 @@ import no.nav.aap.verdityper.dokument.DokumentInfoId
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.io.InputStream
 import java.net.URI
+import java.net.http.HttpHeaders
 
 class SafHentDokumentGateway(private val restClient: RestClient<InputStream>) {
     private val restUrl = URI.create(requiredConfigForKey("integrasjon.saf.url.rest"))
@@ -19,6 +20,18 @@ class SafHentDokumentGateway(private val restClient: RestClient<InputStream>) {
         val config = ClientConfig(
             scope = requiredConfigForKey("integrasjon.saf.scope"),
         )
+
+        fun extractFileNameFromHeaders(headers: HttpHeaders): String? {
+            val value = headers.map()["Content-Disposition"]?.firstOrNull()
+            if (value.isNullOrBlank()) {
+                return null
+            }
+            val regex =
+                Regex("filename=([^;]+)")
+
+            val matchResult = regex.find(value)
+            return matchResult?.groupValues?.get(1)
+        }
 
         fun withDefaultRestClient(): SafHentDokumentGateway {
             return SafHentDokumentGateway(
@@ -58,4 +71,15 @@ class SafHentDokumentGateway(private val restClient: RestClient<InputStream>) {
 
         return respons!!
     }
+
+    private fun konstruerSafRestURL(
+        baseUrl: URI,
+        journalpostId: JournalpostId,
+        dokumentInfoId: DokumentInfoId,
+        variantFormat: String
+    ): URI {
+        return URI.create("$baseUrl/hentdokument/${journalpostId.identifikator}/${dokumentInfoId.dokumentInfoId}/${variantFormat}")
+    }
 }
+
+data class SafDocumentResponse(val dokument: InputStream, val contentType: String, val filnavn: String)

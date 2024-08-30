@@ -3,6 +3,10 @@ package no.nav.aap.saf
 import no.nav.aap.pdl.GraphQLError
 import no.nav.aap.pdl.GraphQLExtensions
 
+data class SafRequest(val query: String, val variables: Variables) {
+    data class Variables(val fagsakId: String)
+}
+
 abstract class SafResponse(
     val errors: List<GraphQLError>?,
     val extensions: GraphQLExtensions?
