@@ -1,16 +1,21 @@
 package no.nav.aap.pdl
 
-import no.nav.aap.httpclient.error.DefaultResponseHandler
+import no.nav.aap.httpclient.error.InputStreamResponseHandler
 import no.nav.aap.httpclient.error.RestResponseHandler
+import java.io.InputStream
 import java.net.http.HttpHeaders
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 
-class PdlResponseHandler() : RestResponseHandler<String> {
+class PdlResponseHandler() : RestResponseHandler<InputStream> {
 
-    private val defaultErrorHandler = DefaultResponseHandler()
+    private val defaultErrorHandler = InputStreamResponseHandler()
 
-    override fun <R> håndter(request: HttpRequest, response: HttpResponse<String>, mapper: (String, HttpHeaders) -> R): R? {
+    override fun <R> håndter(
+        request: HttpRequest,
+        response: HttpResponse<InputStream>,
+        mapper: (InputStream, HttpHeaders) -> R
+    ): R? {
         val respons = defaultErrorHandler.håndter(request, response, mapper)
 
         if (respons != null && respons is PdlResponse) {
@@ -27,8 +32,8 @@ class PdlResponseHandler() : RestResponseHandler<String> {
         return respons
     }
 
-    override fun bodyHandler(): HttpResponse.BodyHandler<String> {
-        return HttpResponse.BodyHandlers.ofString()
+    override fun bodyHandler(): HttpResponse.BodyHandler<InputStream> {
+        return defaultErrorHandler.bodyHandler()
     }
 }
 

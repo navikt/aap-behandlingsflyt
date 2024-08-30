@@ -4,10 +4,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
 import no.nav.aap.httpclient.ClientConfig
 import no.nav.aap.httpclient.Header
 import no.nav.aap.httpclient.RestClient
-import no.nav.aap.httpclient.post
 import no.nav.aap.httpclient.request.PostRequest
 import no.nav.aap.httpclient.tokenprovider.OidcToken
 import no.nav.aap.httpclient.tokenprovider.azurecc.OnBehalfOfTokenProvider
+import no.nav.aap.json.DefaultJsonMapper
 import no.nav.aap.pdl.IdentVariables
 import no.nav.aap.pdl.PdlPersonNavnDataResponse
 import no.nav.aap.pdl.PdlRequest
@@ -37,12 +37,14 @@ object PdlPersoninfoGateway : PersoninfoGateway {
     private val client = RestClient(
         config = config,
         tokenProvider = OnBehalfOfTokenProvider,
-        errorHandler = PdlResponseHandler()
+        responseHandler = PdlResponseHandler()
     )
 
     private fun query(request: PdlRequest, currentToken: OidcToken): PdlPersonNavnDataResponse {
         val httpRequest = PostRequest(body = request, currentToken = currentToken)
-        return requireNotNull(client.post(uri = url, request = httpRequest))
+        return requireNotNull(client.post(uri = url, request = httpRequest, mapper = { body, _ ->
+            DefaultJsonMapper.streamFromJson(body)
+        }))
     }
 
     override fun hentPersoninfoForIdent(ident: Ident, currentToken: OidcToken): Personinfo {

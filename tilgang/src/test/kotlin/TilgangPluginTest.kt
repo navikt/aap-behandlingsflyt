@@ -19,14 +19,14 @@ import no.nav.aap.httpclient.request.GetRequest
 import no.nav.aap.httpclient.request.PostRequest
 import no.nav.aap.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.tilgang.Behandlingsreferanse
-import org.assertj.core.api.Assertions.assertThat
-import no.nav.aap.tilgang.Ressurs
 import no.nav.aap.tilgang.Operasjon
+import no.nav.aap.tilgang.Ressurs
 import no.nav.aap.tilgang.RessursType
 import no.nav.aap.tilgang.Saksreferanse
 import no.nav.aap.tilgang.authorizedBehandlingPost
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedSakPost
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import java.net.URI
@@ -39,7 +39,7 @@ class TilgangPluginTest {
         private val client = RestClient(
             config = ClientConfig(scope = "behandlingsflyt"),
             tokenProvider = ClientCredentialsTokenProvider,
-            errorHandler = DefaultResponseHandler()
+            responseHandler = DefaultResponseHandler()
         )
 
         class Saksinfo(val saksnummer: UUID) : Saksreferanse {

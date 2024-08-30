@@ -18,7 +18,7 @@ import java.util.*
 class RestClient<K>(
     private val config: ClientConfig,
     private val tokenProvider: TokenProvider,
-    private val errorHandler: RestResponseHandler<K>,
+    private val responseHandler: RestResponseHandler<K>,
     httpClient: HttpClient? = null
 ) {
 
@@ -58,8 +58,8 @@ class RestClient<K>(
     }
 
     private fun <R> executeRequestAndHandleResponse(request: HttpRequest, mapper: (K, HttpHeaders) -> R): R? {
-        val response = client.send(request, errorHandler.bodyHandler())
-        return errorHandler.håndter(request, response, mapper)
+        val response = client.send(request, responseHandler.bodyHandler())
+        return responseHandler.håndter(request, response, mapper)
     }
 }
 
