@@ -75,7 +75,7 @@ class ApiTest {
         private val client = RestClient(
             config = ClientConfig(scope = "behandlingsflyt"),
             tokenProvider = ClientCredentialsTokenProvider,
-            errorHandler = DefaultResponseHandler()
+            responseHandler = DefaultResponseHandler()
         )
 
         // Starter server

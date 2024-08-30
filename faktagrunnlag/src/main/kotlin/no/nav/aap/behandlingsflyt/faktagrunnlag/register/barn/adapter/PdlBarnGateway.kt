@@ -8,12 +8,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.httpclient.ClientConfig
 import no.nav.aap.httpclient.Header
 import no.nav.aap.httpclient.RestClient
-import no.nav.aap.httpclient.post
 import no.nav.aap.httpclient.request.PostRequest
 import no.nav.aap.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.json.DefaultJsonMapper
 import no.nav.aap.pdl.IdentVariables
 import no.nav.aap.pdl.PdlRelasjonDataResponse
 import no.nav.aap.pdl.PdlRequest
+import no.nav.aap.pdl.PdlResponseHandler
 import no.nav.aap.requiredConfigForKey
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import java.net.URI
@@ -25,9 +26,10 @@ object PdlBarnGateway : BarnGateway {
         scope = requiredConfigForKey("integrasjon.pdl.scope"),
         additionalHeaders = listOf(Header("Behandlingsnummer", "B287"))
     )
-    private val client = RestClient.withDefaultResponseHandler(
+    private val client = RestClient(
         config = config,
         tokenProvider = ClientCredentialsTokenProvider,
+        responseHandler = PdlResponseHandler()
     )
 
     override fun hentBarn(person: Person, relaterteBarnIdenter: List<Ident>): List<Barn> {
@@ -75,7 +77,9 @@ object PdlBarnGateway : BarnGateway {
 
     private fun query(request: PdlRequest): PdlRelasjonDataResponse {
         val httpRequest = PostRequest(body = request)
-        return requireNotNull(client.post(uri = url, request = httpRequest))
+        return requireNotNull(client.post(uri = url, request = httpRequest, mapper = { body, _ ->
+            DefaultJsonMapper.streamFromJson(body)
+        }))
     }
 }
 

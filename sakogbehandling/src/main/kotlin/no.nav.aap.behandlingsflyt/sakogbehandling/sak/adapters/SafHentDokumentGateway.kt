@@ -25,7 +25,7 @@ class SafHentDokumentGateway(private val restClient: RestClient<InputStream>) {
                 RestClient(
                     config = config,
                     tokenProvider = OnBehalfOfTokenProvider,
-                    errorHandler = InputStreamResponseHandler()
+                    responseHandler = InputStreamResponseHandler()
                 )
             )
         }
