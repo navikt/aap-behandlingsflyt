@@ -86,7 +86,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
                                     navn = it.navn()
                                 )
                             })
-                    val vurdertStegPair = utledVurdertGruppe(aktivtSteg, flyt, avklaringsbehovene)
+                    val vurdertStegPair = utledVurdertGruppe(prosessering, aktivtSteg, flyt, avklaringsbehovene)
                     BehandlingFlytOgTilstandDto(
                         flyt = stegGrupper.map { (gruppe, steg) ->
                             erFullført = erFullført && gruppe != aktivtSteg.gruppe
@@ -202,28 +202,31 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
 
 // Utleder hvilken visningsgruppe frontend skal rute til for kvalitetsikring / totrinn
 private fun utledVurdertGruppe(
+    prosessering: Prosessering,
     aktivtSteg: StegType,
     flyt: BehandlingFlyt,
     avklaringsbehovene: Avklaringsbehovene
 ): Pair<StegGruppe, StegType>? {
-    if (aktivtSteg == StegType.KVALITETSSIKRING) {
-        val relevanteBehov = avklaringsbehovene.alle().filter { it.kreverKvalitetssikring() }
-            .filter { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
-            .filter { avklaringsbehov -> !avklaringsbehov.erKvalitetssikretTidligere() }
+    if (prosessering.status == ProsesseringStatus.FERDIG) {
+        if (aktivtSteg == StegType.KVALITETSSIKRING) {
+            val relevanteBehov = avklaringsbehovene.alle().filter { it.kreverKvalitetssikring() }
+                .filter { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
+                .filter { avklaringsbehov -> !avklaringsbehov.erKvalitetssikretTidligere() }
 
-        val skalTilStegForBehov = flyt.skalTilStegForBehov(relevanteBehov)
-        val stegType = requireNotNull(skalTilStegForBehov)
+            val skalTilStegForBehov = flyt.skalTilStegForBehov(relevanteBehov)
+            val stegType = requireNotNull(skalTilStegForBehov)
 
-        return stegType.gruppe to stegType
-    } else if (aktivtSteg == StegType.FATTE_VEDTAK) {
-        val relevanteBehov = avklaringsbehovene.alle().filter { it.erTotrinn() }
-            .filter { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
-            .filter { avklaringsbehov -> !avklaringsbehov.erTotrinnsVurdert() }
+            return stegType.gruppe to stegType
+        } else if (aktivtSteg == StegType.FATTE_VEDTAK) {
+            val relevanteBehov = avklaringsbehovene.alle().filter { it.erTotrinn() }
+                .filter { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
+                .filter { avklaringsbehov -> !avklaringsbehov.erTotrinnsVurdert() }
 
-        val skalTilStegForBehov = flyt.skalTilStegForBehov(relevanteBehov)
-        val stegType = requireNotNull(skalTilStegForBehov)
+            val skalTilStegForBehov = flyt.skalTilStegForBehov(relevanteBehov)
+            val stegType = requireNotNull(skalTilStegForBehov)
 
-        return stegType.gruppe to stegType
+            return stegType.gruppe to stegType
+        }
     }
     return null
 }
