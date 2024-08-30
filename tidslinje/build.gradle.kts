@@ -1,4 +1,4 @@
-val komponenterVersjon = "0.0.14"
+val komponenterVersjon = "0.0.19"
 
 dependencies {
     implementation("no.nav.aap.kelvin:dbconnect:$komponenterVersjon") // Periode
