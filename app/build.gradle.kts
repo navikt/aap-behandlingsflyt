@@ -40,7 +40,7 @@ fun getCheckedOutGitCommitHash(): String {
     return runCommand("git rev-parse --verify HEAD")
 }
 
-val komponenterVersjon = "0.0.19"
+val komponenterVersjon = "0.0.23"
 
 dependencies {
     implementation("io.ktor:ktor-server-auth:$ktorVersion")
@@ -68,6 +68,7 @@ dependencies {
     implementation("no.nav.aap.kelvin:dbmigrering:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:motor-api:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
+    implementation("no.nav.aap.kelvin:infrastructure:$komponenterVersjon")
     implementation(project(":httpklient"))
     implementation(project(":sakogbehandling"))
     implementation(project(":faktagrunnlag"))
