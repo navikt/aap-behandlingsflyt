@@ -32,11 +32,11 @@ object PdlBarnGateway : BarnGateway {
         responseHandler = PdlResponseHandler()
     )
 
-    override fun hentBarn(person: Person, relaterteBarnIdenter: List<Ident>): List<Barn> {
+    override fun hentBarn(person: Person, relaterteBarnIdenter: List<Ident>): BarnInnhentingRespons {
         val barnRelasjoner = hentBarnRelasjoner(person)
-        val toMutableList = hentBarn(barnRelasjoner).toMutableList()
-        toMutableList.addAll(hentBarn(relaterteBarnIdenter))
-        return toMutableList
+        val registerBarn = hentBarn(barnRelasjoner)
+        val oppgitteBarn = hentBarn(relaterteBarnIdenter)
+        return BarnInnhentingRespons(registerBarn, oppgitteBarn)
     }
 
     private fun hentBarnRelasjoner(person: Person): List<Ident> {
