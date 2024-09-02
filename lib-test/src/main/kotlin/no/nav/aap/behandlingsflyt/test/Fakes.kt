@@ -144,6 +144,13 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         System.setProperty("integrasjon.sykepenger.scope", "scope")
 
         // testpersoner
+        val BARNLØS_PERSON_10ÅR =
+            TestPerson(
+                identer = setOf(Ident("84837942045", true)),
+                fødselsdato = Fødselsdato(
+                    LocalDate.now().minusYears(10),
+                )
+            )
         val BARNLØS_PERSON_30ÅR =
             TestPerson(
                 identer = setOf(Ident("12345678910", true)),
@@ -166,7 +173,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
             )
 
         // Legg til alle testpersoner
-        listOf(PERSON_MED_BARN_65ÅR).forEach { leggTil(it) }
+        listOf(PERSON_MED_BARN_65ÅR, BARNLØS_PERSON_10ÅR).forEach { leggTil(it) }
     }
 
     override fun close() {
