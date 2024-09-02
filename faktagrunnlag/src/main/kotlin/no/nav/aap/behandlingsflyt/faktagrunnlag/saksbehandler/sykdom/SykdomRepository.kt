@@ -87,19 +87,20 @@ class SykdomRepository(private val connection: DBConnection) {
 
         val query = """
             INSERT INTO SYKDOM_VURDERING 
-            (BEGRUNNELSE, ER_ARBEIDSEVNE_NEDSATT, ER_SYKDOM_SKADE_LYTE_VESETLING_DEL, ER_NEDSETTELSE_HOYERE_ENN_NEDRE_GRENSE, NEDRE_GRENSE, NEDSATT_ARBEIDSEVNE_DATO)
+            (BEGRUNNELSE, ER_ARBEIDSEVNE_NEDSATT, HAR_SYKDOM_SKADE_LYTE, ER_SYKDOM_SKADE_LYTE_VESETLING_DEL, ER_NEDSETTELSE_HOYERE_ENN_NEDRE_GRENSE, NEDRE_GRENSE, NEDSATT_ARBEIDSEVNE_DATO)
             VALUES
-            (?, ?, ?, ?, ?, ?)
+            (?, ?, ?, ?, ?, ?, ?)
         """.trimIndent()
 
         val id = connection.executeReturnKey(query) {
             setParams {
                 setString(1, vurdering.begrunnelse)
                 setBoolean(2, vurdering.erArbeidsevnenNedsatt)
-                setBoolean(3, vurdering.erSkadeSykdomEllerLyteVesentligdel)
-                setBoolean(4, vurdering.erNedsettelseIArbeidsevneHøyereEnnNedreGrense)
-                setEnumName(5, vurdering.nedreGrense)
-                setLocalDate(6, vurdering.nedsattArbeidsevneDato?.let { LocalDate.of(it, 1, 1) })
+                setBoolean(3, vurdering.harSkadeSykdomEllerLyte)
+                setBoolean(4, vurdering.erSkadeSykdomEllerLyteVesentligdel)
+                setBoolean(5, vurdering.erNedsettelseIArbeidsevneHøyereEnnNedreGrense)
+                setEnumName(6, vurdering.nedreGrense)
+                setLocalDate(7, vurdering.nedsattArbeidsevneDato?.let { LocalDate.of(it, 1, 1) })
             }
         }
 
@@ -167,7 +168,7 @@ class SykdomRepository(private val connection: DBConnection) {
         }
         return connection.queryFirstOrNull(
             """
-            SELECT BEGRUNNELSE, ER_SYKDOM_SKADE_LYTE_VESETLING_DEL, ER_NEDSETTELSE_HOYERE_ENN_NEDRE_GRENSE, NEDRE_GRENSE, NEDSATT_ARBEIDSEVNE_DATO, ER_ARBEIDSEVNE_NEDSATT
+            SELECT BEGRUNNELSE, HAR_SYKDOM_SKADE_LYTE, ER_SYKDOM_SKADE_LYTE_VESETLING_DEL, ER_NEDSETTELSE_HOYERE_ENN_NEDRE_GRENSE, NEDRE_GRENSE, NEDSATT_ARBEIDSEVNE_DATO, ER_ARBEIDSEVNE_NEDSATT
             FROM SYKDOM_VURDERING WHERE id = ?
             """.trimIndent()
         ) {
@@ -178,11 +179,12 @@ class SykdomRepository(private val connection: DBConnection) {
                 Sykdomsvurdering(
                     row.getString("BEGRUNNELSE"),
                     hentSykdomsDokumenter(sykdomId),
+                    row.getBoolean("HAR_SYKDOM_SKADE_LYTE"),
                     row.getBooleanOrNull("ER_SYKDOM_SKADE_LYTE_VESETLING_DEL"),
                     row.getBooleanOrNull("ER_NEDSETTELSE_HOYERE_ENN_NEDRE_GRENSE"),
                     row.getEnumOrNull("NEDRE_GRENSE"),
-                    row.getLocalDateOrNull("NEDSATT_ARBEIDSEVNE_DATO")?.let { it.year },
-                    row.getBoolean("ER_ARBEIDSEVNE_NEDSATT")
+                    row.getLocalDateOrNull("NEDSATT_ARBEIDSEVNE_DATO")?.year,
+                    row.getBooleanOrNull("ER_ARBEIDSEVNE_NEDSATT")
                 )
             }
         }
