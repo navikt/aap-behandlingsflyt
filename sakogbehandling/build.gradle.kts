@@ -2,7 +2,7 @@ val ktorVersion = "2.3.12"
 val komponenterVersjon = "0.0.23"
 
 dependencies {
-    implementation("no.nav:ktor-openapi-generator:1.0.10")
+    implementation("no.nav:ktor-openapi-generator:1.0.18")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.17.2")
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
 
