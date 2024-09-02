@@ -179,12 +179,12 @@ class SykdomRepository(private val connection: DBConnection) {
                 Sykdomsvurdering(
                     row.getString("BEGRUNNELSE"),
                     hentSykdomsDokumenter(sykdomId),
-                    row.getBooleanOrNull("HAR_SYKDOM_SKADE_LYTE"),
+                    row.getBoolean("HAR_SYKDOM_SKADE_LYTE"),
                     row.getBooleanOrNull("ER_SYKDOM_SKADE_LYTE_VESETLING_DEL"),
                     row.getBooleanOrNull("ER_NEDSETTELSE_HOYERE_ENN_NEDRE_GRENSE"),
                     row.getEnumOrNull("NEDRE_GRENSE"),
                     row.getLocalDateOrNull("NEDSATT_ARBEIDSEVNE_DATO")?.year,
-                    row.getBoolean("ER_ARBEIDSEVNE_NEDSATT")
+                    row.getBooleanOrNull("ER_ARBEIDSEVNE_NEDSATT")
                 )
             }
         }

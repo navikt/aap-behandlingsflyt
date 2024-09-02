@@ -9,12 +9,12 @@ import java.time.LocalDate
 data class Sykdomsvurdering(
     val begrunnelse: String,
     val dokumenterBruktIVurdering: List<JournalpostId>,
-    val harSkadeSykdomEllerLyte: Boolean?,
+    val harSkadeSykdomEllerLyte: Boolean,
     val erSkadeSykdomEllerLyteVesentligdel: Boolean?,
     val erNedsettelseIArbeidsevneHøyereEnnNedreGrense: Boolean?,
     val nedreGrense: NedreGrense?,
     val nedsattArbeidsevneDato: Int?,
-    val erArbeidsevnenNedsatt: Boolean
+    val erArbeidsevnenNedsatt: Boolean?
 ) {
     fun toDto(yrkesskadevurdering: Yrkesskadevurdering?) = SykdomsvurderingDto(
             begrunnelse,

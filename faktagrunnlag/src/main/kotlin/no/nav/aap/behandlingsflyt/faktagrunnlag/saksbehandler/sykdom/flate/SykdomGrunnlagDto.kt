@@ -23,8 +23,8 @@ data class RegistrertYrkesskade(val ref: String, val skadedato: LocalDate, val k
 data class SykdomsvurderingDto(
     val begrunnelse: String,
     val dokumenterBruktIVurdering: List<JournalpostId>,
-    val erArbeidsevnenNedsatt: Boolean,
-    val harSkadeSykdomEllerLyte: Boolean?,
+    val erArbeidsevnenNedsatt: Boolean?,
+    val harSkadeSykdomEllerLyte: Boolean,
     val erSkadeSykdomEllerLyteVesentligdel: Boolean?,
     val erNedsettelseIArbeidsevneHøyereEnnNedreGrense: Boolean?,
     val nedreGrense: NedreGrense?,
