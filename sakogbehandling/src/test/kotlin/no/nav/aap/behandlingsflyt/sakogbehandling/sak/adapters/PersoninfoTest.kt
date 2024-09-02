@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters
 
-import no.nav.aap.json.DefaultJsonMapper
+import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 import no.nav.aap.pdl.PdlPersonNavnDataResponse
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test

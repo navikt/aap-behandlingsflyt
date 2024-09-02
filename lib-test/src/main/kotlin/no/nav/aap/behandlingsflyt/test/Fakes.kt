@@ -323,7 +323,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
             post("/motta") {
                 val receive = call.receive<MottaStatistikkDTO>()
                 statistikkHendelser.add(receive)
-                call.respond(HttpStatusCode.OK)
+                call.respond(status = HttpStatusCode.Accepted, message = "{}")
             }
             post("/avsluttetBehandling") {
                 val receive = call.receive<AvsluttetBehandlingDTO>()
@@ -331,7 +331,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
                 synchronized(mottatteVilkårsResult) {
                     mottatteVilkårsResult.add(receive)
                 }
-                call.respond(HttpStatusCode.OK)
+                call.respond(status = HttpStatusCode.Accepted, message = "{}")
             }
         }
     }

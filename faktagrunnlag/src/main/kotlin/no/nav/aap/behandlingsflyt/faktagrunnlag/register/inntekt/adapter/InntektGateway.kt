@@ -5,14 +5,13 @@ import no.nav.aap.Inntekt.InntektResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektRegisterGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.httpclient.ClientConfig
-import no.nav.aap.httpclient.Header
-import no.nav.aap.httpclient.RestClient
-import no.nav.aap.httpclient.error.InputStreamResponseHandler
-import no.nav.aap.httpclient.request.PostRequest
-import no.nav.aap.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
-import no.nav.aap.json.DefaultJsonMapper
-import no.nav.aap.requiredConfigForKey
+import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
+import no.nav.aap.komponenter.httpklient.httpclient.Header
+import no.nav.aap.komponenter.httpklient.httpclient.RestClient
+import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
+import no.nav.aap.komponenter.httpklient.requiredConfigForKey
 import no.nav.aap.verdityper.Beløp
 import java.net.URI
 import java.time.Year
@@ -20,10 +19,9 @@ import java.time.Year
 object InntektGateway : InntektRegisterGateway {
     private val url = URI.create(requiredConfigForKey("integrasjon.inntekt.url"))
     val config = ClientConfig(scope = requiredConfigForKey("integrasjon.inntekt.scope"))
-    private val client = RestClient(
+    private val client = RestClient.withDefaultResponseHandler(
         config = config,
-        tokenProvider = ClientCredentialsTokenProvider,
-        responseHandler = InputStreamResponseHandler()
+        tokenProvider = ClientCredentialsTokenProvider
     )
 
     private fun query(request: InntektRequest): InntektResponse {
@@ -35,7 +33,7 @@ object InntektGateway : InntektRegisterGateway {
             )
         )
         return requireNotNull(client.post(uri = url, request = httpRequest, mapper = { body, _ ->
-            DefaultJsonMapper.streamFromJson(body)
+            DefaultJsonMapper.fromJson(body)
         }))
     }
 
