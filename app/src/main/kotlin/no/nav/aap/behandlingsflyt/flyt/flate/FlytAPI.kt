@@ -8,7 +8,6 @@ import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import com.zaxxer.hikari.HikariDataSource
 import io.ktor.http.*
-import no.nav.aap.auth.bruker
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.BehandlingTilstandValidator
@@ -33,6 +32,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbStatus
@@ -164,7 +164,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
                                     begrunnelse = body.begrunnelse,
                                     behandlingVersjon = body.behandlingVersjon,
                                     grunn = body.grunn,
-                                    bruker = pipeline.context.bruker()
+                                    bruker = bruker()
                                 )
                             )
                             taSkriveLåsRepository.verifiserSkrivelås(lås)

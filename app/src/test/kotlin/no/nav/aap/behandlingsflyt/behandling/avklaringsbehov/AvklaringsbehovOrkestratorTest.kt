@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
 import io.mockk.spyk
 import io.mockk.verify
-import no.nav.aap.auth.Bruker
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.dbtestdata.ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
@@ -18,6 +17,7 @@ import no.nav.aap.behandlingsflyt.server.prosessering.StoppetHendelseJobbUtføre
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbType

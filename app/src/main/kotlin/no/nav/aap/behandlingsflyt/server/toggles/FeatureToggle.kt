@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.server.toggles
 
-import no.nav.aap.configForKey
+import no.nav.aap.komponenter.httpklient.configForKey
 
 object FeatureToggle {
 

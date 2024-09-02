@@ -67,6 +67,7 @@ dependencies {
     implementation("no.nav.aap.kelvin:dbconnect:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:dbmigrering:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:motor-api:$komponenterVersjon")
+    implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
     implementation(project(":httpklient"))
     implementation(project(":sakogbehandling"))
     implementation(project(":faktagrunnlag"))

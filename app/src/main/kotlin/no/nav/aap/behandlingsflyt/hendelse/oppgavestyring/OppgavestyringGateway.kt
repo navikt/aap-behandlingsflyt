@@ -1,11 +1,11 @@
 package no.nav.aap.behandlingsflyt.hendelse.oppgavestyring
 
-import no.nav.aap.httpclient.ClientConfig
-import no.nav.aap.httpclient.RestClient
-import no.nav.aap.httpclient.post
-import no.nav.aap.httpclient.request.PostRequest
-import no.nav.aap.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
-import no.nav.aap.requiredConfigForKey
+import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
+import no.nav.aap.komponenter.httpklient.httpclient.RestClient
+import no.nav.aap.komponenter.httpklient.httpclient.post
+import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.httpklient.requiredConfigForKey
 import java.net.URI
 
 object OppgavestyringGateway {
