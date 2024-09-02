@@ -123,6 +123,6 @@ spec:
     - name: INTEGRASJON_MOTTAK_AZP
       value: dev-gcp:aap:mottak
     - name: INTEGRASJON_FORELDREPENGER_URL
-      value: https://k9-abakus.dev-fss-pub.nais.io/k9/abakus/ekstern/api/ytelse/v1
+      value: https://fpabakus.dev-fss-pub.nais.io/fpabakus/ekstern/api/ytelse/v1
     - name: INTEGRASJON_FORELDREPENGER_SCOPE
-      value: api://dev-fss.k9saksbehandling.k9-abakus/.default
+      value: api://dev-fss.teamforeldrepenger.fpabakus/.default
