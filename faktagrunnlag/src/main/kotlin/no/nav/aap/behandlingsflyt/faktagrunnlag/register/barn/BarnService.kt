@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.BarnInnhentingRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.PdlBarnGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.RelatertPersonopplysning
@@ -30,24 +31,25 @@ class BarnService private constructor(
         val behandlingId = kontekst.behandlingId
         val eksisterendeData = barnRepository.hentHvisEksisterer(behandlingId)
 
+        val oppgitteIdenter = eksisterendeData?.oppgittBarn?.identer?.toList() ?: emptyList()
         val barn = if (harBehandlingsgrunnlag(behandlingId)) {
             val sak = sakService.hent(kontekst.sakId)
-            barnGateway.hentBarn(sak.person, eksisterendeData?.oppgittBarn?.identer?.toList() ?: emptyList())
+            barnGateway.hentBarn(sak.person, oppgitteIdenter)
         } else {
-            emptyList()
+            BarnInnhentingRespons(emptyList(), emptyList())
         }
 
         val relatertePersonopplysninger =
             personopplysningRepository.hentHvisEksisterer(behandlingId)?.relatertePersonopplysninger?.personopplysninger
-        val barnIdenter = barn.map { it.ident }.toSet()
+        val barnIdenter = barn.registerBarn.map { it.ident }.toSet()
 
         oppdaterPersonIdenter(barnIdenter)
 
         if (harEndringerIIdenter(barnIdenter, eksisterendeData)
-            || harEndringerIPersonopplysninger(barn, relatertePersonopplysninger)
+            || harEndringerIPersonopplysninger(barn.alleBarn(), relatertePersonopplysninger)
         ) {
             barnRepository.lagreRegisterBarn(behandlingId, barnIdenter)
-            personopplysningRepository.lagre(behandlingId, barn)
+            personopplysningRepository.lagre(behandlingId, barn.alleBarn())
             return false
         }
         return true
