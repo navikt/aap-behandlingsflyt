@@ -43,7 +43,7 @@ class BarnService private constructor(
             personopplysningRepository.hentHvisEksisterer(behandlingId)?.relatertePersonopplysninger?.personopplysninger
         val barnIdenter = barn.registerBarn.map { it.ident }.toSet()
 
-        oppdaterPersonIdenter(barnIdenter)
+        oppdaterPersonIdenter(barn.alleBarn().map { it.ident }.toSet())
 
         if (harEndringerIIdenter(barnIdenter, eksisterendeData)
             || harEndringerIPersonopplysninger(barn.alleBarn(), relatertePersonopplysninger)
