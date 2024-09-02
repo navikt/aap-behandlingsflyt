@@ -20,6 +20,7 @@ class SykdomsInformasjonskravTest {
             sykdomsvurdering = Sykdomsvurdering(
                 begrunnelse = "",
                 dokumenterBruktIVurdering = emptyList(),
+                harSkadeSykdomEllerLyte = true,
                 erSkadeSykdomEllerLyteVesentligdel = true,
                 erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                 nedreGrense = NedreGrense.FEMTI,
@@ -39,6 +40,7 @@ class SykdomsInformasjonskravTest {
             sykdomsvurdering = Sykdomsvurdering(
                 begrunnelse = "",
                 dokumenterBruktIVurdering = emptyList(),
+                harSkadeSykdomEllerLyte = true,
                 erSkadeSykdomEllerLyteVesentligdel = true,
                 erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                 nedreGrense = NedreGrense.TRETTI,
@@ -63,6 +65,7 @@ class SykdomsInformasjonskravTest {
             sykdomsvurdering = Sykdomsvurdering(
                 begrunnelse = "",
                 dokumenterBruktIVurdering = emptyList(),
+                harSkadeSykdomEllerLyte = true,
                 erSkadeSykdomEllerLyteVesentligdel = true,
                 erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                 nedreGrense = NedreGrense.TRETTI,
@@ -87,6 +90,7 @@ class SykdomsInformasjonskravTest {
             sykdomsvurdering = Sykdomsvurdering(
                 begrunnelse = "",
                 dokumenterBruktIVurdering = emptyList(),
+                harSkadeSykdomEllerLyte = true,
                 erSkadeSykdomEllerLyteVesentligdel = true,
                 erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                 nedreGrense = NedreGrense.FEMTI,
@@ -111,6 +115,7 @@ class SykdomsInformasjonskravTest {
             sykdomsvurdering = Sykdomsvurdering(
                 begrunnelse = "",
                 dokumenterBruktIVurdering = emptyList(),
+                harSkadeSykdomEllerLyte = true,
                 erSkadeSykdomEllerLyteVesentligdel = true,
                 erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                 nedreGrense = NedreGrense.TRETTI,
@@ -135,6 +140,7 @@ class SykdomsInformasjonskravTest {
             sykdomsvurdering = Sykdomsvurdering(
                 begrunnelse = "",
                 dokumenterBruktIVurdering = emptyList(),
+                harSkadeSykdomEllerLyte = true,
                 erSkadeSykdomEllerLyteVesentligdel = true,
                 erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                 nedreGrense = NedreGrense.FEMTI,
@@ -144,5 +150,85 @@ class SykdomsInformasjonskravTest {
         )
 
         assertThat(sykdomGrunnlag.erKonsistent()).isTrue
+    }
+
+    @Test
+    fun `er konsistent hvis ikke ssl og ssl ikke vesentlig del`() {
+        val sykdomGrunnlag = SykdomGrunnlag(
+            id = 1L,
+            yrkesskadevurdering = null,
+            sykdomsvurdering = Sykdomsvurdering(
+                begrunnelse = "",
+                dokumenterBruktIVurdering = emptyList(),
+                harSkadeSykdomEllerLyte = false,
+                erSkadeSykdomEllerLyteVesentligdel = false,
+                erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
+                nedreGrense = NedreGrense.FEMTI,
+                nedsattArbeidsevneDato = Year.now().value,
+                erArbeidsevnenNedsatt = true,
+            )
+        )
+
+        assertThat(sykdomGrunnlag.erKonsistent()).isTrue
+    }
+
+    @Test
+    fun `er konsistent hvis ssl og ssl ikke vesentlig del`() {
+        val sykdomGrunnlag = SykdomGrunnlag(
+            id = 1L,
+            yrkesskadevurdering = null,
+            sykdomsvurdering = Sykdomsvurdering(
+                begrunnelse = "",
+                dokumenterBruktIVurdering = emptyList(),
+                harSkadeSykdomEllerLyte = true,
+                erSkadeSykdomEllerLyteVesentligdel = false,
+                erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
+                nedreGrense = NedreGrense.FEMTI,
+                nedsattArbeidsevneDato = Year.now().value,
+                erArbeidsevnenNedsatt = true,
+            )
+        )
+
+        assertThat(sykdomGrunnlag.erKonsistent()).isTrue
+    }
+
+    @Test
+    fun `er konsistent hvis ssl og ssl vesentlig del`() {
+        val sykdomGrunnlag = SykdomGrunnlag(
+            id = 1L,
+            yrkesskadevurdering = null,
+            sykdomsvurdering = Sykdomsvurdering(
+                begrunnelse = "",
+                dokumenterBruktIVurdering = emptyList(),
+                harSkadeSykdomEllerLyte = true,
+                erSkadeSykdomEllerLyteVesentligdel = true,
+                erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
+                nedreGrense = NedreGrense.FEMTI,
+                nedsattArbeidsevneDato = Year.now().value,
+                erArbeidsevnenNedsatt = true,
+            )
+        )
+
+        assertThat(sykdomGrunnlag.erKonsistent()).isTrue
+    }
+
+    @Test
+    fun `er ikke konsistend hvis ikke ssl og ssl vesentlig del`() {
+        val sykdomGrunnlag = SykdomGrunnlag(
+            id = 1L,
+            yrkesskadevurdering = null,
+            sykdomsvurdering = Sykdomsvurdering(
+                begrunnelse = "",
+                dokumenterBruktIVurdering = emptyList(),
+                harSkadeSykdomEllerLyte = false,
+                erSkadeSykdomEllerLyteVesentligdel = true,
+                erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
+                nedreGrense = NedreGrense.FEMTI,
+                nedsattArbeidsevneDato = Year.now().value,
+                erArbeidsevnenNedsatt = true,
+            )
+        )
+
+        assertThat(sykdomGrunnlag.erKonsistent()).isFalse
     }
 }

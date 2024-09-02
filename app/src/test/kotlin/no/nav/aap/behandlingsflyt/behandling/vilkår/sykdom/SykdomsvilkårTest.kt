@@ -26,6 +26,7 @@ class SykdomsvilkårTest {
                 sykdomsvurdering = Sykdomsvurdering(
                     begrunnelse = "",
                     dokumenterBruktIVurdering = listOf(),
+                    harSkadeSykdomEllerLyte = true,
                     erSkadeSykdomEllerLyteVesentligdel = true,
                     erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                     nedreGrense = NedreGrense.FEMTI,
@@ -47,6 +48,7 @@ class SykdomsvilkårTest {
                 sykdomsvurdering = Sykdomsvurdering(
                     begrunnelse = "",
                     dokumenterBruktIVurdering = listOf(),
+                    harSkadeSykdomEllerLyte = true,
                     erSkadeSykdomEllerLyteVesentligdel = true,
                     erNedsettelseIArbeidsevneHøyereEnnNedreGrense = false,
                     nedreGrense = NedreGrense.FEMTI,
