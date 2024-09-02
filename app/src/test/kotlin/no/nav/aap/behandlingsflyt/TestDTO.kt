@@ -21,7 +21,7 @@ data class OpprettTestcaseDTO(
     val institusjoner: Institusjoner = Institusjoner()
 )
 
-data class TestBarn(@JsonProperty(value = "fodselsdato", required = true) val fodselsdato: LocalDate)
+data class TestBarn(@JsonProperty(value = "fodselsdato", required = true) val fodselsdato: LocalDate, val harRelasjon: Boolean = true)
 
 data class OpprettTestPersonDto(
     @JsonProperty(value = "fødselsdato", required = true) val fødselsdato: LocalDate,

@@ -10,6 +10,7 @@ import io.ktor.server.netty.*
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.SøknadStudentDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgittBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
@@ -74,8 +75,10 @@ fun main() {
                 route("/opprett") {
                     post<Unit, OpprettTestcaseDTO, OpprettTestcaseDTO> { _, dto ->
                         val ident = genererIdent(dto.fødselsdato)
-                        val barn = dto.barn.map { genererBarn(it) }
+                        val barn = dto.barn.filter { it.harRelasjon }.map { genererBarn(it) }
+                        val urelaterteBarn = dto.barn.filter { !it.harRelasjon }.map { genererBarn(it) }
                         barn.forEach { fakes.leggTil(it) }
+                        urelaterteBarn.forEach { fakes.leggTil(it) }
                         fakes.leggTil(
                             TestPerson(
                                 identer = setOf(ident),
@@ -99,7 +102,7 @@ fun main() {
                                 journalpost = JournalpostId("" + System.currentTimeMillis()),
                                 mottattTidspunkt = LocalDateTime.now(),
                                 strukturertDokument = StrukturertDokument(
-                                    mapTilSøknad(dto),
+                                    mapTilSøknad(dto, urelaterteBarn),
                                     Brevkode.SØKNAD
                                 ),
                                 periode = periode
@@ -158,7 +161,7 @@ private fun genererBarn(dto: TestBarn): TestPerson {
     )
 }
 
-fun mapTilSøknad(dto: OpprettTestcaseDTO): Søknad {
+fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>): Søknad {
     val erStudent = if (dto.student) {
         "JA"
     } else {
@@ -169,7 +172,12 @@ fun mapTilSøknad(dto: OpprettTestcaseDTO): Søknad {
     } else {
         "NEI"
     }
-    return Søknad(student = SøknadStudentDto(erStudent), harYrkesskade, null)
+    val oppgittBarn = if (urelaterteBarn.isNotEmpty()) {
+        OppgittBarn(identer = urelaterteBarn.flatMap { it.identer.filter { it.aktivIdent } }.toSet())
+    } else {
+        null
+    }
+    return Søknad(student = SøknadStudentDto(erStudent), harYrkesskade, oppgittBarn)
 }
 
 private fun postgreSQLContainer(): PostgreSQLContainer<Nothing> {
