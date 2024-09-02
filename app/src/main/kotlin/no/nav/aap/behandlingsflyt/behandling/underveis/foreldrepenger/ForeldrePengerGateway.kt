@@ -13,20 +13,6 @@ import java.net.URI
  * Henter foreldrepenger og svangerskapspenger for gitt periode
  */
 class ForeldrePengerGateway {
-    /*
-    TODO: Avgjør hvilke vi faktisk skal sikte mot
-    K9-ABAKUS (Team forelderepenger)
-    - name: INTEGRASJON_FORELDREPENGER_URL
-      value: https://k9-abakus.dev-fss-pub.nais.io/k9/abakus/ekstern/api/ytelse/v1
-    - name: INTEGRASJON_FORELDREPENGER_SCOPE
-      value: api://dev-fss.k9saksbehandling.k9-abakus/.default
-
-   FBABAKUS (team syk familie)
-    - name: INTEGRASJON_FORELDREPENGER_URL
-      value: https://fpabakus.dev-fss-pub.nais.io/fpabakus/ekstern/api/ytelse/v1
-    - name: INTEGRASJON_FORELDREPENGER_SCOPE
-      value: api://dev-fss.teamforeldrepenger.fpabakus/.default
-*/
     private val url = URI.create(requiredConfigForKey("integrasjon.foreldrepenger.url") + "/hent-ytelse-vedtak")
     val config = ClientConfig(scope = requiredConfigForKey("integrasjon.foreldrepenger.scope"))
 
