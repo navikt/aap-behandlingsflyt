@@ -3,6 +3,7 @@ val komponenterVersjon = "0.0.19"
 
 dependencies {
     implementation("no.nav.aap.kelvin:infrastructure:$komponenterVersjon")
+    implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.17.2")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.2")

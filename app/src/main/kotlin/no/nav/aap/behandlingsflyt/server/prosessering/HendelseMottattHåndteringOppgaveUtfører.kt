@@ -6,8 +6,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.UnparsedStrukturertDoku
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterMottattDokumentService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
-import no.nav.aap.json.DefaultJsonMapper
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput

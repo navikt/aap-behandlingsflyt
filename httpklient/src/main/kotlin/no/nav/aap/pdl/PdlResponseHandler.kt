@@ -1,7 +1,7 @@
 package no.nav.aap.pdl
 
-import no.nav.aap.httpclient.error.InputStreamResponseHandler
-import no.nav.aap.httpclient.error.RestResponseHandler
+import no.nav.aap.komponenter.httpklient.httpclient.error.DefaultResponseHandler
+import no.nav.aap.komponenter.httpklient.httpclient.error.RestResponseHandler
 import java.io.InputStream
 import java.net.http.HttpHeaders
 import java.net.http.HttpRequest
@@ -9,7 +9,7 @@ import java.net.http.HttpResponse
 
 class PdlResponseHandler() : RestResponseHandler<InputStream> {
 
-    private val defaultErrorHandler = InputStreamResponseHandler()
+    private val defaultErrorHandler = DefaultResponseHandler()
 
     override fun <R> håndter(
         request: HttpRequest,

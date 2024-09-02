@@ -3,14 +3,13 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.httpclient.ClientConfig
-import no.nav.aap.httpclient.Header
-import no.nav.aap.httpclient.RestClient
-import no.nav.aap.httpclient.error.InputStreamResponseHandler
-import no.nav.aap.httpclient.request.PostRequest
-import no.nav.aap.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
-import no.nav.aap.json.DefaultJsonMapper
-import no.nav.aap.requiredConfigForKey
+import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
+import no.nav.aap.komponenter.httpklient.httpclient.Header
+import no.nav.aap.komponenter.httpklient.httpclient.RestClient
+import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
+import no.nav.aap.komponenter.httpklient.requiredConfigForKey
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import no.nav.aap.yrkesskade.YrkesskadeModell
 import no.nav.aap.yrkesskade.YrkesskadeRequest
@@ -47,10 +46,9 @@ object YrkesskadeRegisterGateway {
         scope = requiredConfigForKey("integrasjon.yrkesskade.scope"),
         additionalHeaders = listOf(Header("Nav-Consumer-Id", "aap-behandlingsflyt"))
     )
-    private val client = RestClient(
+    private val client = RestClient.withDefaultResponseHandler(
         config = config,
-        tokenProvider = ClientCredentialsTokenProvider,
-        responseHandler = InputStreamResponseHandler()
+        tokenProvider = ClientCredentialsTokenProvider
     )
 
     private fun query(request: YrkesskadeRequest): Yrkesskader? {
@@ -64,7 +62,7 @@ object YrkesskadeRegisterGateway {
 
         val httpRequest = PostRequest(body = request)
         return client.post(uri = url, request = httpRequest, mapper = { body, _ ->
-            DefaultJsonMapper.streamFromJson(body)
+            DefaultJsonMapper.fromJson(body)
         })
     }
 

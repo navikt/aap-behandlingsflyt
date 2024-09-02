@@ -1,4 +1,5 @@
 val ktorVersion = "2.3.12"
+val komponenterVersjon = "0.0.19"
 
 dependencies {
     implementation(project(":sakogbehandling"))
@@ -15,6 +16,7 @@ dependencies {
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
     implementation("io.ktor:ktor-server-cors:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
+    implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
 
     implementation("no.nav.aap.statistikk:api-kontrakt:0.0.5")
 

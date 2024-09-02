@@ -5,8 +5,6 @@ import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.auth.token
-import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Saksnummer
@@ -17,8 +15,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.SafHentDokumentGa
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.SafListDokumentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
+import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.httpklient.auth.token
+import no.nav.aap.komponenter.httpklient.requiredConfigForKey
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.requiredConfigForKey
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.Ressurs
 import no.nav.aap.tilgang.RessursType

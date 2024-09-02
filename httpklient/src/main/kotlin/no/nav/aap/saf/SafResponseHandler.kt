@@ -1,22 +1,23 @@
 package no.nav.aap.saf
 
-import no.nav.aap.httpclient.error.DefaultResponseHandler
-import no.nav.aap.httpclient.error.RestResponseHandler
+import no.nav.aap.komponenter.httpklient.httpclient.error.DefaultResponseHandler
+import no.nav.aap.komponenter.httpklient.httpclient.error.RestResponseHandler
 import no.nav.aap.pdl.GraphQLError
+import java.io.InputStream
 import java.net.http.HttpHeaders
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 
-class SafResponseHandler() : RestResponseHandler<String> {
+class SafResponseHandler() : RestResponseHandler<InputStream> {
 
-    private val defaultErrorHandler = DefaultResponseHandler()
+    private val defaultResponseHandler = DefaultResponseHandler()
 
     override fun <R> håndter(
         request: HttpRequest,
-        response: HttpResponse<String>,
-        mapper: (String, HttpHeaders) -> R
+        response: HttpResponse<InputStream>,
+        mapper: (InputStream, HttpHeaders) -> R
     ): R? {
-        val respons = defaultErrorHandler.håndter(request, response, mapper)
+        val respons = defaultResponseHandler.håndter(request, response, mapper)
 
         if (respons != null && respons is SafResponse) {
             if (respons.errors?.isNotEmpty() == true) {
@@ -32,8 +33,8 @@ class SafResponseHandler() : RestResponseHandler<String> {
         return respons
     }
 
-    override fun bodyHandler(): HttpResponse.BodyHandler<String> {
-        return HttpResponse.BodyHandlers.ofString()
+    override fun bodyHandler(): HttpResponse.BodyHandler<InputStream> {
+        return defaultResponseHandler.bodyHandler()
     }
 }
 

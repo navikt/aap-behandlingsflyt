@@ -9,9 +9,9 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.util.*
-import no.nav.aap.auth.AzpName
-import no.nav.aap.auth.token
-import no.nav.aap.json.DefaultJsonMapper
+import no.nav.aap.komponenter.httpklient.auth.AzpName
+import no.nav.aap.komponenter.httpklient.auth.token
+import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 import org.slf4j.LoggerFactory
 
 val log = LoggerFactory.getLogger("TilgangPlugin")
