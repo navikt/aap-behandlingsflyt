@@ -5,29 +5,28 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.Yrkes
 import no.nav.aap.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDate
-import java.time.Year
 
 data class Sykdomsvurdering(
     val begrunnelse: String,
     val dokumenterBruktIVurdering: List<JournalpostId>,
+    val harSkadeSykdomEllerLyte: Boolean?,
     val erSkadeSykdomEllerLyteVesentligdel: Boolean?,
     val erNedsettelseIArbeidsevneHøyereEnnNedreGrense: Boolean?,
     val nedreGrense: NedreGrense?,
     val nedsattArbeidsevneDato: Int?,
     val erArbeidsevnenNedsatt: Boolean
 ) {
-    fun toDto(yrkesskadevurdering: Yrkesskadevurdering?): SykdomsvurderingDto? {
-        return SykdomsvurderingDto(
+    fun toDto(yrkesskadevurdering: Yrkesskadevurdering?) = SykdomsvurderingDto(
             begrunnelse,
             dokumenterBruktIVurdering,
             erArbeidsevnenNedsatt,
+            harSkadeSykdomEllerLyte,
             erSkadeSykdomEllerLyteVesentligdel,
             erNedsettelseIArbeidsevneHøyereEnnNedreGrense,
             nedreGrense,
             nedsattArbeidsevneDato,
             mapYrkesskade(yrkesskadevurdering)
         )
-    }
 
     private fun mapYrkesskade(yrkesskadevurdering: Yrkesskadevurdering?): YrkesskadevurderingDto? {
         if (yrkesskadevurdering == null) {

@@ -24,29 +24,26 @@ data class SykdomsvurderingDto(
     val begrunnelse: String,
     val dokumenterBruktIVurdering: List<JournalpostId>,
     val erArbeidsevnenNedsatt: Boolean,
+    val harSkadeSykdomEllerLyte: Boolean?,
     val erSkadeSykdomEllerLyteVesentligdel: Boolean?,
     val erNedsettelseIArbeidsevneHøyereEnnNedreGrense: Boolean?,
     val nedreGrense: NedreGrense?,
     val nedsattArbeidsevneDato: Int?,
     val yrkesskadevurdering: YrkesskadevurderingDto?
 ) {
-    fun toYrkesskadevurdering(): Yrkesskadevurdering? {
-        if (yrkesskadevurdering == null) {
-            return null
-        }
-        return Yrkesskadevurdering(
-            begrunnelse = begrunnelse,
-            erÅrsakssammenheng = yrkesskadevurdering.erÅrsakssammenheng,
-            skadetidspunkt = nedsattArbeidsevneDato?.let { LocalDate.now().withYear(it) }, //FIXME: Må komme fra yrkesskaderegisteret
-            andelAvNedsettelse = Prosent.`50_PROSENT` //FIXME: Må fastsettes av saksbehandler
-        )
+
+    fun toYrkesskadevurdering() = yrkesskadevurdering?.let {
+        Yrkesskadevurdering(begrunnelse, it.erÅrsakssammenheng, nedsattArbeidsEvneDato(), Prosent.`50_PROSENT`)
     }
+
+    private fun nedsattArbeidsEvneDato() = nedsattArbeidsevneDato?.let { LocalDate.now().withYear(it) }
 
     fun toSykdomsvurdering(): Sykdomsvurdering {
         return Sykdomsvurdering(
             begrunnelse = begrunnelse,
             dokumenterBruktIVurdering = dokumenterBruktIVurdering,
             erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
+            harSkadeSykdomEllerLyte = harSkadeSykdomEllerLyte,
             erSkadeSykdomEllerLyteVesentligdel = erSkadeSykdomEllerLyteVesentligdel,
             erNedsettelseIArbeidsevneHøyereEnnNedreGrense = erNedsettelseIArbeidsevneHøyereEnnNedreGrense,
             nedreGrense = nedreGrense,
