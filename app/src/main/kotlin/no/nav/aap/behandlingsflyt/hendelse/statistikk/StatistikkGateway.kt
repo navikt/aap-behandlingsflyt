@@ -1,11 +1,11 @@
 package no.nav.aap.behandlingsflyt.hendelse.statistikk
 
+import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
-import no.nav.aap.komponenter.httpklient.requiredConfigForKey
 import no.nav.aap.statistikk.api_kontrakt.AvsluttetBehandlingDTO
 import no.nav.aap.statistikk.api_kontrakt.MottaStatistikkDTO
 import org.slf4j.LoggerFactory

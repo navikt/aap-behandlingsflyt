@@ -1,13 +1,13 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
+import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
-import no.nav.aap.komponenter.httpklient.requiredConfigForKey
 import no.nav.aap.pdl.IdentVariables
 import no.nav.aap.pdl.PdlGruppe
 import no.nav.aap.pdl.PdlIdenterDataResponse
