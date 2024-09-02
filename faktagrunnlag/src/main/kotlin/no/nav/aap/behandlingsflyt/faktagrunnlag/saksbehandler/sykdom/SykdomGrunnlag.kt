@@ -10,6 +10,7 @@ class SykdomGrunnlag(
         if (sykdomsvurdering == null) {
             return false
         }
+        if (!sykdomsvurdering.harSkadeSykdomEllerLyte && sykdomsvurdering.erSkadeSykdomEllerLyteVesentligdel == true) return false
         if (yrkesskadevurdering?.erÅrsakssammenheng == true) {
             return sykdomsvurdering.nedreGrense == NedreGrense.TRETTI
         }
