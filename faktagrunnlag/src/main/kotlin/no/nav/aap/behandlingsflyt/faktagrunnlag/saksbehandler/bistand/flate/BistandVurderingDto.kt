@@ -4,38 +4,24 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandVur
 
 data class BistandVurderingDto(
     val begrunnelse: String,
-    val erBehovForBistand: Boolean,
-    val grunnerTilBehovForBistand: List<BistandGrunn>?,
+    val erBehovForAktivBehandling: Boolean,
+    val erBehovForArbeidsrettetTiltak: Boolean,
+    val erBehovForAnnenOppfølging: Boolean?
 ) {
     companion object {
-       fun fraBistandVurdering(bistandVurdering: BistandVurdering?): BistandVurderingDto? {
-           if(bistandVurdering == null) return null
-           return BistandVurderingDto(
-              begrunnelse = bistandVurdering.begrunnelse,
-               erBehovForBistand = bistandVurdering.erBehovForBistand,
-               grunnerTilBehovForBistand = listOfNotNull(
-                   behovBooleanTilBistandGrunn(bistandVurdering.erBehovForAktivBehandling, BistandGrunn.AKTIV_BEHANDLING),
-                   behovBooleanTilBistandGrunn(bistandVurdering.erBehovForArbeidsrettetTiltak, BistandGrunn.ARBEIDSRETTET_TILTAK),
-                   behovBooleanTilBistandGrunn(bistandVurdering.erBehovForAnnenOppfølging, BistandGrunn.ANNEN_OPPFØLGING),
-               )
-           )
-       }
-        private fun behovBooleanTilBistandGrunn(erBehovBoolean: Boolean?, grunn: BistandGrunn): BistandGrunn? {
-            return if (erBehovBoolean == true) grunn else null
+        fun fraBistandVurdering(bistandVurdering: BistandVurdering?) = bistandVurdering?.toDto()
+    }
+
+    init {
+        require((erBehovForAktivBehandling || erBehovForArbeidsrettetTiltak) xor (erBehovForAnnenOppfølging != null)) {
+            "erBehovForAnnenOppfølging kan bare bli besvart hvis erBehovForAktivBehandling og erBehovForArbeidsrettetTiltak er besvart med nei"
         }
     }
-    fun tilBistandVurdering(): BistandVurdering {
-       return BistandVurdering(
-           begrunnelse = begrunnelse,
-           erBehovForBistand = erBehovForBistand,
-           erBehovForAktivBehandling = grunnerTilBehovForBistand?.contains(BistandGrunn.AKTIV_BEHANDLING) ?: false,
-           erBehovForArbeidsrettetTiltak = grunnerTilBehovForBistand?.contains(BistandGrunn.ARBEIDSRETTET_TILTAK) ?: false,
-           erBehovForAnnenOppfølging = grunnerTilBehovForBistand?.contains(BistandGrunn.ANNEN_OPPFØLGING) ?: false,
-       )
-    }
-}
-enum class BistandGrunn {
-    ARBEIDSRETTET_TILTAK,
-    AKTIV_BEHANDLING,
-    ANNEN_OPPFØLGING
+
+    fun tilBistandVurdering() = BistandVurdering(
+        begrunnelse = begrunnelse,
+        erBehovForAktivBehandling = erBehovForAktivBehandling,
+        erBehovForArbeidsrettetTiltak = erBehovForArbeidsrettetTiltak,
+        erBehovForAnnenOppfølging = erBehovForAnnenOppfølging
+    )
 }

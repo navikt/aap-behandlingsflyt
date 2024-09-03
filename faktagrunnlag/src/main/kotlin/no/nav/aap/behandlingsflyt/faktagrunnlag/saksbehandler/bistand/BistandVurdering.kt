@@ -1,10 +1,20 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingDto
+
 data class BistandVurdering(
     val begrunnelse: String,
-    val erBehovForBistand: Boolean,
     val erBehovForAktivBehandling: Boolean,
     val erBehovForArbeidsrettetTiltak: Boolean,
-    val erBehovForAnnenOppfølging: Boolean
-)
+    val erBehovForAnnenOppfølging: Boolean?
+) {
+    fun toDto() = BistandVurderingDto(
+        begrunnelse = begrunnelse,
+        erBehovForAktivBehandling = erBehovForAktivBehandling,
+        erBehovForArbeidsrettetTiltak = erBehovForArbeidsrettetTiltak,
+        erBehovForAnnenOppfølging = erBehovForAnnenOppfølging
+    )
+
+    fun erBehovForBistand() = erBehovForAktivBehandling || erBehovForArbeidsrettetTiltak || erBehovForAnnenOppfølging == true
+}
 
