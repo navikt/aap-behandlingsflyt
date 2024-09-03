@@ -15,6 +15,6 @@ data class BistandVurdering(
         erBehovForAnnenOppfølging = erBehovForAnnenOppfølging
     )
 
-    fun erBehovForBistand() = erBehovForAktivBehandling
+    fun erBehovForBistand() = erBehovForAktivBehandling || erBehovForArbeidsrettetTiltak || erBehovForAnnenOppfølging == true
 }
 
