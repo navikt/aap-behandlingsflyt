@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.barnetillegg.BarnetilleggService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -50,7 +51,8 @@ class BarnetilleggSteg(
                 BarnetilleggService(
                     SakOgBehandlingService(connection),
                     BarnRepository(connection),
-                    PersonopplysningRepository(connection)
+                    PersonopplysningRepository(connection),
+                    VilkårsresultatRepository(connection)
                 ),
                 BarnetilleggRepository(connection)
             )

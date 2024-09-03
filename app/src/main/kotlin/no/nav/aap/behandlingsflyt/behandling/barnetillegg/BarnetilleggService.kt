@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.barnetillegg
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningGrunnlag
@@ -14,12 +16,17 @@ import no.nav.aap.verdityper.sakogbehandling.Ident
 class BarnetilleggService(
     private val sakOgBehandlingService: SakOgBehandlingService,
     private val barnRepository: BarnRepository,
-    private val personopplysningRepository: PersonopplysningRepository
+    private val personopplysningRepository: PersonopplysningRepository,
+    private val vilkårsresultatRepository: VilkårsresultatRepository
 ) {
     fun beregn(behandlingId: BehandlingId): Tidslinje<RettTilBarnetillegg> {
         val sak = sakOgBehandlingService.hentSakFor(behandlingId)
         var resultat: Tidslinje<RettTilBarnetillegg> =
             Tidslinje(listOf(Segment(sak.rettighetsperiode, RettTilBarnetillegg())))
+
+        if (skalIkkeBeregneBarnetilegg(behandlingId)) {
+            return resultat
+        }
 
         val personopplysningerGrunnlag = requireNotNull(personopplysningRepository.hentHvisEksisterer(behandlingId))
 
@@ -73,6 +80,14 @@ class BarnetilleggService(
         }
 
         return resultat.kryss(sak.rettighetsperiode)
+    }
+
+    private fun skalIkkeBeregneBarnetilegg(behandlingId: BehandlingId): Boolean {
+        val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
+        val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
+        val bistandsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
+
+        return !(sykdomsvilkåret.harPerioderSomErOppfylt() && bistandsvilkåret.harPerioderSomErOppfylt())
     }
 
     private fun mapTilBarn(ident: Ident, personopplysningerGrunnlag: PersonopplysningGrunnlag): Barn {
