@@ -197,8 +197,9 @@ class FlytOrkestratorTest {
                     løsning = AvklarBistandsbehovLøsning(
                         bistandsVurdering = BistandVurderingDto(
                             begrunnelse = "Trenger hjelp fra nav",
-                            erBehovForBistand = true,
-                            emptyList()
+                            erBehovForAktivBehandling = true,
+                            erBehovForArbeidsrettetTiltak = false,
+                            erBehovForAnnenOppfølging = null
                         ),
                     ),
                     behandlingVersjon = behandling.versjon,
@@ -313,8 +314,9 @@ class FlytOrkestratorTest {
                     løsning = AvklarBistandsbehovLøsning(
                         bistandsVurdering = BistandVurderingDto(
                             begrunnelse = "Trenger hjelp fra nav",
-                            erBehovForBistand = true,
-                            emptyList()
+                            erBehovForAktivBehandling = true,
+                            erBehovForArbeidsrettetTiltak = false,
+                            erBehovForAnnenOppfølging = null
                         ),
                     ),
                     behandlingVersjon = behandling.versjon,
@@ -518,8 +520,9 @@ class FlytOrkestratorTest {
                     løsning = AvklarBistandsbehovLøsning(
                         bistandsVurdering = BistandVurderingDto(
                             begrunnelse = "Trenger hjelp fra nav",
-                            erBehovForBistand = true,
-                            emptyList()
+                            erBehovForAktivBehandling = true,
+                            erBehovForArbeidsrettetTiltak = false,
+                            erBehovForAnnenOppfølging = null
                         ),
                     ),
                     behandlingVersjon = behandling.versjon,
@@ -736,8 +739,9 @@ class FlytOrkestratorTest {
                     løsning = AvklarBistandsbehovLøsning(
                         bistandsVurdering = BistandVurderingDto(
                             begrunnelse = "Trenger hjelp fra nav",
-                            erBehovForBistand = true,
-                            emptyList()
+                            erBehovForAktivBehandling = true,
+                            erBehovForArbeidsrettetTiltak = false,
+                            erBehovForAnnenOppfølging = null
                         ),
                     ),
                     behandlingVersjon = behandling.versjon,
