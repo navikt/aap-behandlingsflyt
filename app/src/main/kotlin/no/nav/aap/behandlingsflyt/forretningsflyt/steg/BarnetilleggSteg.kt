@@ -7,7 +7,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.Barnet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnVurderingRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
@@ -49,7 +48,6 @@ class BarnetilleggSteg(
         override fun konstruer(connection: DBConnection): BehandlingSteg {
             return BarnetilleggSteg(
                 BarnetilleggService(
-                    BarnVurderingRepository(connection),
                     SakOgBehandlingService(connection),
                     BarnRepository(connection),
                     PersonopplysningRepository(connection)

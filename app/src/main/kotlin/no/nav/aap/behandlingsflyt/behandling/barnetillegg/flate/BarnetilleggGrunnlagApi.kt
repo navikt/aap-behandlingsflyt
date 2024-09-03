@@ -10,7 +10,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnVurderingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
@@ -29,7 +28,6 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource) {
                     val personopplysningRepository = PersonopplysningRepository(connection)
                     val barnRepository = BarnRepository(connection)
                     val barnetilleggService = BarnetilleggService(
-                        BarnVurderingRepository(connection),
                         SakOgBehandlingService(connection),
                         barnRepository,
                         personopplysningRepository
@@ -49,7 +47,9 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource) {
                     BarnetilleggDto(
                         oppgitteBarn = barnGrunnlag?.oppgittBarn?.identer?.toList() ?: emptyList(),
                         folkeregisterbarn = folkeregister.map { hentBarn(it, personopplysningGrunnlag!!) },
-                        barnSomTrengerVurdering = uavklarteBarn.map { hentBarn(it, personopplysningGrunnlag!!) }.toList()
+                        vurderteBarn = barnGrunnlag?.vurderteBarn?.barn ?: emptyList(),
+                        barnSomTrengerVurdering = uavklarteBarn.map { hentBarn(it, personopplysningGrunnlag!!) }
+                            .toList()
                     )
                 }
 
@@ -61,7 +61,11 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource) {
 
 fun hentBarn(ident: Ident, personopplysningGrunnlag: PersonopplysningGrunnlag): IdentifiserteBarnDto {
     val personopplysning =
-        requireNotNull(personopplysningGrunnlag.relatertePersonopplysninger?.personopplysninger?.single { relatertPersonopplysning -> relatertPersonopplysning.gjelderForIdent(ident) })
+        requireNotNull(personopplysningGrunnlag.relatertePersonopplysninger?.personopplysninger?.single { relatertPersonopplysning ->
+            relatertPersonopplysning.gjelderForIdent(
+                ident
+            )
+        })
 
     return IdentifiserteBarnDto(
         ident,
