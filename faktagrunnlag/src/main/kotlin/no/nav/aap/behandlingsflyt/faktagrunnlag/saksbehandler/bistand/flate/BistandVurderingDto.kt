@@ -12,6 +12,12 @@ data class BistandVurderingDto(
         fun fraBistandVurdering(bistandVurdering: BistandVurdering?) = bistandVurdering?.toDto()
     }
 
+    init {
+        require((erBehovForAktivBehandling || erBehovForArbeidsrettetTiltak) xor (erBehovForAnnenOppfølging != null)) {
+            "erBehovForAnnenOppfølging kan bare bli besvart hvis erBehovForAktivBehandling og erBehovForArbeidsrettetTiltak er besvart med nei"
+        }
+    }
+
     fun tilBistandVurdering() = BistandVurdering(
         begrunnelse = begrunnelse,
         erBehovForAktivBehandling = erBehovForAktivBehandling,
