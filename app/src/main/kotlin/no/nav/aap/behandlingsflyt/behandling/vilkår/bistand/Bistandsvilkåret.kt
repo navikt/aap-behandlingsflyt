@@ -23,7 +23,7 @@ class Bistandsvilkåret(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<B
         if (studentVurdering?.erOppfylt() == true) {
             utfall = Utfall.OPPFYLT
             innvilgelsesårsak = Innvilgelsesårsak.STUDENT
-        } else if (grunnlag.vurdering?.erBehovForBistand == true) {
+        } else if (grunnlag.vurdering?.erBehovForBistand() == true) {
             utfall = Utfall.OPPFYLT
         } else {
             utfall = Utfall.IKKE_OPPFYLT
