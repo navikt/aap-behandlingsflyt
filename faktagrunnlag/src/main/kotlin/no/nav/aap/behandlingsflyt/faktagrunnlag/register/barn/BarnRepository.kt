@@ -316,15 +316,18 @@ class BarnRepository(private val connection: DBConnection) {
         }
 
         for (barn in vurderteBarn) {
-            val barnVurderingId = connection.executeReturnKey("INSERT INTO BARN_VURDERING (IDENT, BARN_VURDERINGER_ID) VALUES (?, ?)") {
-                setParams {
-                    setString(1, barn.ident.identifikator)
-                    setLong(2, vurderteBarnId)
+            val barnVurderingId =
+                connection.executeReturnKey("INSERT INTO BARN_VURDERING (IDENT, BARN_VURDERINGER_ID) VALUES (?, ?)") {
+                    setParams {
+                        setString(1, barn.ident.identifikator)
+                        setLong(2, vurderteBarnId)
+                    }
                 }
-            }
-            connection.executeBatch("""
+            connection.executeBatch(
+                """
                 INSERT INTO BARN_VURDERING_PERIODE (BARN_VURDERING_ID, PERIODE, BEGRUNNELSE, HAR_FORELDREANSVAR) VALUES (?, ?, ?, ?)
-            """.trimIndent(), barn.vurderinger) {
+            """.trimIndent(), barn.vurderinger
+            ) {
                 setParams {
                     setLong(1, barnVurderingId)
                     setPeriode(2, it.periode)
