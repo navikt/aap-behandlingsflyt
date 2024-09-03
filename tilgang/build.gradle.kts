@@ -7,9 +7,9 @@ dependencies {
     implementation("no.nav.aap.kelvin:infrastructure:$komponenterVersjon")
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
     implementation("ch.qos.logback:logback-classic:1.5.7")
-    implementation("no.nav:ktor-openapi-generator:1.0.21")
+    implementation("no.nav:ktor-openapi-generator:1.0.22")
     implementation("io.ktor:ktor-server-core:$ktorVersion")
-    implementation("no.nav:ktor-openapi-generator:1.0.21")
+    implementation("no.nav:ktor-openapi-generator:1.0.22")
 
     implementation("io.ktor:ktor-server-auth:$ktorVersion")
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
