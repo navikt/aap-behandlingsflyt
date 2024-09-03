@@ -73,6 +73,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
     private val pesysFake = embeddedServer(Netty, port = 0, module = { pesysFake() }).apply { start() }
     private val tilgang = embeddedServer(Netty, port = 0, module = {    tilgangFake() }).apply { start() }
     private val foreldrepenger = embeddedServer(Netty, port = 0, module = {fpFake()}).apply { start() }
+    private val sykepenger = embeddedServer(Netty, port = 0, module = {spFake()}).apply { start() }
 
     private val statistikk = embeddedServer(Netty, port = 0, module = { statistikkFake() }).apply { start() }
     val statistikkHendelser = mutableListOf<StatistikkHendelseDTO>()
@@ -137,6 +138,10 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         // Foreldrepenger
         System.setProperty("integrasjon.foreldrepenger.url", "http://localhost:${foreldrepenger.port()}")
         System.setProperty("integrasjon.foreldrepenger.scope", "scope")
+
+        // Sykepenger
+        System.setProperty("integrasjon.sykepenger.url", "http://localhost:${sykepenger.port()}")
+        System.setProperty("integrasjon.sykepenger.scope", "scope")
 
         // testpersoner
         val BARNLØS_PERSON_30ÅR =
@@ -390,6 +395,28 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
             post("/hent-ytelse-vedtak") {
                 val req = call.receive<String>()
                 call.respond(foreldrepengerOgSvangerskapspengerResponse)
+            }
+        }
+    }
+
+    private fun Application.spFake() {
+        install(ContentNegotiation) {
+            jackson()
+        }
+        install(StatusPages) {
+            exception<Throwable> { call, cause ->
+                this@spFake.log.info(
+                    "SYKEPENGER :: Ukjent feil ved kall til '{}'",
+                    call.request.local.uri,
+                    cause
+                )
+                call.respond(status = HttpStatusCode.InternalServerError, message = ErrorRespons(cause.message))
+            }
+        }
+        routing {
+            post("/somethingsomething") {
+                val req = call.receive<String>()
+                call.respond("IMPLEMENT ME")
             }
         }
     }
