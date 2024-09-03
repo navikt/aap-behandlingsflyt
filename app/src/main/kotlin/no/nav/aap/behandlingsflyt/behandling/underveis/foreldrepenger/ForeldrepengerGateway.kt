@@ -12,7 +12,7 @@ import java.net.URI
 /**
  * Henter foreldrepenger og svangerskapspenger for gitt periode
  */
-class ForeldrePengerGateway {
+class ForeldrepengerGateway {
     private val url = URI.create(requiredConfigForKey("integrasjon.foreldrepenger.url") + "/hent-ytelse-vedtak")
     val config = ClientConfig(scope = requiredConfigForKey("integrasjon.foreldrepenger.scope"))
 
@@ -21,7 +21,7 @@ class ForeldrePengerGateway {
         tokenProvider = ClientCredentialsTokenProvider,
     )
 
-    private fun query(request: ForeldrePengerRequest): List<Ytelse> {
+    private fun query(request: ForeldrepengerRequest): List<Ytelse> {
         val httpRequest = PostRequest(
             body = request,
             additionalHeaders = listOf(
@@ -31,10 +31,10 @@ class ForeldrePengerGateway {
         return requireNotNull(client.post(uri = url, request = httpRequest))
     }
 
-    fun hentVedtakYtelseForPerson(request: ForeldrePengerRequest): ForeldrePengerResponse {
+    fun hentVedtakYtelseForPerson(request: ForeldrepengerRequest): ForeldrepengerResponse {
         try {
             val result = query(request)
-            return ForeldrePengerResponse(result)
+            return ForeldrepengerResponse(result)
         } catch (e : Exception) {
             throw RuntimeException("Feil ved henting av ytelser i foreldrepenger: ${e.message}")
         }
