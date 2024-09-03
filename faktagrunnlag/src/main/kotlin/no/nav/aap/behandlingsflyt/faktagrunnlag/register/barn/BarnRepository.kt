@@ -325,7 +325,7 @@ class BarnRepository(private val connection: DBConnection) {
                 }
             connection.executeBatch(
                 """
-                INSERT INTO BARN_VURDERING_PERIODE (BARN_VURDERING_ID, PERIODE, BEGRUNNELSE, HAR_FORELDREANSVAR) VALUES (?, ?, ?, ?)
+                INSERT INTO BARN_VURDERING_PERIODE (BARN_VURDERING_ID, PERIODE, BEGRUNNELSE, HAR_FORELDREANSVAR) VALUES (?, ?::daterange, ?, ?)
             """.trimIndent(), barn.vurderinger
             ) {
                 setParams {
