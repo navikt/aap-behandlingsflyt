@@ -8,7 +8,7 @@ class BistandRepository(private val connection: DBConnection) {
     fun hentHvisEksisterer(behandlingId: BehandlingId): BistandGrunnlag? {
         return connection.queryFirstOrNull(
             """
-            SELECT g.ID, b.BEGRUNNELSE, b.ER_BEHOV_FOR_BISTAND, b.behov_for_aktiv_behandling, b.behov_for_arbeidsrettet_tiltak, b.behov_for_annen_oppfoelging
+            SELECT g.ID, b.BEGRUNNELSE, b.behov_for_aktiv_behandling, b.behov_for_arbeidsrettet_tiltak, b.behov_for_annen_oppfoelging
             FROM BISTAND_GRUNNLAG g
             INNER JOIN BISTAND b ON g.BISTAND_ID = b.ID
             WHERE g.AKTIV AND g.BEHANDLING_ID = ?
@@ -23,10 +23,9 @@ class BistandRepository(private val connection: DBConnection) {
                     behandlingId = behandlingId,
                     vurdering = BistandVurdering(
                         begrunnelse = row.getString("BEGRUNNELSE"),
-                        erBehovForBistand = row.getBoolean("ER_BEHOV_FOR_BISTAND"),
                         erBehovForAktivBehandling = row.getBoolean("BEHOV_FOR_AKTIV_BEHANDLING"),
                         erBehovForArbeidsrettetTiltak = row.getBoolean("BEHOV_FOR_ARBEIDSRETTET_TILTAK"),
-                        erBehovForAnnenOppfølging = row.getBoolean("BEHOV_FOR_ANNEN_OPPFOELGING")
+                        erBehovForAnnenOppfølging = row.getBooleanOrNull("BEHOV_FOR_ANNEN_OPPFOELGING")
                     )
                 )
             }
@@ -43,13 +42,12 @@ class BistandRepository(private val connection: DBConnection) {
         }
 
         val bistandId =
-            connection.executeReturnKey("INSERT INTO BISTAND (BEGRUNNELSE, ER_BEHOV_FOR_BISTAND, BEHOV_FOR_AKTIV_BEHANDLING, BEHOV_FOR_ARBEIDSRETTET_TILTAK, BEHOV_FOR_ANNEN_OPPFOELGING) VALUES (?, ?, ?, ?, ?)") {
+            connection.executeReturnKey("INSERT INTO BISTAND (BEGRUNNELSE, BEHOV_FOR_AKTIV_BEHANDLING, BEHOV_FOR_ARBEIDSRETTET_TILTAK, BEHOV_FOR_ANNEN_OPPFOELGING) VALUES (?, ?, ?, ?)") {
                 setParams {
                     setString(1, bistandVurdering.begrunnelse)
-                    setBoolean(2, bistandVurdering.erBehovForBistand)
-                    setBoolean(3, bistandVurdering.erBehovForAktivBehandling)
-                    setBoolean(4, bistandVurdering.erBehovForArbeidsrettetTiltak)
-                    setBoolean(5, bistandVurdering.erBehovForAnnenOppfølging)
+                    setBoolean(2, bistandVurdering.erBehovForAktivBehandling)
+                    setBoolean(3, bistandVurdering.erBehovForArbeidsrettetTiltak)
+                    setBoolean(4, bistandVurdering.erBehovForAnnenOppfølging)
                 }
             }
 

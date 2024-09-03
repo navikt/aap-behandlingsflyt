@@ -16,6 +16,6 @@ data class BistandVurderingDto(
         begrunnelse = begrunnelse,
         erBehovForAktivBehandling = erBehovForAktivBehandling,
         erBehovForArbeidsrettetTiltak = erBehovForArbeidsrettetTiltak,
-        erBehovForAnnenOppfølging = erBehovForAnnenOppfølging ?: false
+        erBehovForAnnenOppfølging = erBehovForAnnenOppfølging
     )
 }

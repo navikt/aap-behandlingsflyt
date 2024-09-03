@@ -6,7 +6,7 @@ data class BistandVurdering(
     val begrunnelse: String,
     val erBehovForAktivBehandling: Boolean,
     val erBehovForArbeidsrettetTiltak: Boolean,
-    val erBehovForAnnenOppfølging: Boolean
+    val erBehovForAnnenOppfølging: Boolean?
 ) {
     fun toDto() = BistandVurderingDto(
         begrunnelse = begrunnelse,
@@ -14,5 +14,7 @@ data class BistandVurdering(
         erBehovForArbeidsrettetTiltak = erBehovForArbeidsrettetTiltak,
         erBehovForAnnenOppfølging = erBehovForAnnenOppfølging
     )
+
+    fun erBehovForBistand() = erBehovForAktivBehandling
 }
 
