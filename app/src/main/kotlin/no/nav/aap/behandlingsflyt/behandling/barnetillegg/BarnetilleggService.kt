@@ -25,43 +25,53 @@ class BarnetilleggService(
 
         val barnGrunnlag = barnRepository.hent(behandlingId)
         val folkeregisterBarn =
-            barnGrunnlag.registerbarn?.identer?.map { ident -> mapTilBarn(ident, personopplysningerGrunnlag) } ?: emptyList()
+            barnGrunnlag.registerbarn?.identer?.map { ident -> mapTilBarn(ident, personopplysningerGrunnlag) }
+                ?: emptyList()
         val folkeregisterBarnTidslinje = tilTidslinje(folkeregisterBarn)
 
-        resultat = resultat.kombiner(folkeregisterBarnTidslinje, JoinStyle.LEFT_JOIN { periode, venstreSegment, høyreSegment ->
-            val venstreVerdi = venstreSegment.verdi
-            if (høyreSegment?.verdi != null) {
-                venstreVerdi.leggTilFolkeregisterBarn(høyreSegment.verdi)
-            }
-            Segment(periode, venstreVerdi)
-        })
+        resultat =
+            resultat.kombiner(folkeregisterBarnTidslinje, JoinStyle.LEFT_JOIN { periode, venstreSegment, høyreSegment ->
+                val venstreVerdi = venstreSegment.verdi
+                if (høyreSegment?.verdi != null) {
+                    venstreVerdi.leggTilFolkeregisterBarn(høyreSegment.verdi)
+                }
+                Segment(periode, venstreVerdi)
+            })
 
         val oppgittBarn =
-            barnGrunnlag.oppgittBarn?.identer?.map { ident -> mapTilBarn(ident, personopplysningerGrunnlag) } ?: emptyList()
+            barnGrunnlag.oppgittBarn?.identer?.map { ident -> mapTilBarn(ident, personopplysningerGrunnlag) }
+                ?: emptyList()
         val oppgittBarnTidslinje = tilTidslinje(oppgittBarn)
-        resultat = resultat.kombiner(oppgittBarnTidslinje, JoinStyle.LEFT_JOIN { periode, venstreSegment, høyreSegment ->
-            val venstreVerdi = venstreSegment.verdi
-            if (høyreSegment?.verdi != null) {
-                venstreVerdi.leggTilOppgitteBarn(høyreSegment.verdi)
-            }
-            Segment(periode, venstreVerdi)
-        })
+        resultat =
+            resultat.kombiner(oppgittBarnTidslinje, JoinStyle.LEFT_JOIN { periode, venstreSegment, høyreSegment ->
+                val venstreVerdi = venstreSegment.verdi
+                if (høyreSegment?.verdi != null) {
+                    venstreVerdi.leggTilOppgitteBarn(høyreSegment.verdi)
+                }
+                Segment(periode, venstreVerdi)
+            })
 
         //hent saksbehanler else request saksbehandler
-        /*val relevanteBarn = barnVurderingRepository.hentHvisEksisterer(behandlingId)?.tidslinje() ?: Tidslinje()
+        val vurderteBarn = barnGrunnlag.vurderteBarn?.barn ?: emptyList()
 
-        resultat = resultat.kombiner(
-            relevanteBarn,
-            JoinStyle.CROSS_JOIN { periode, venstreSegment, høyreSegment ->
-                val høyreVerdi = høyreSegment?.verdi
-                val nyVenstreVerdi = venstreSegment?.verdi ?: RettTilBarnetillegg()
-                if (høyreVerdi != null) {
-                    nyVenstreVerdi.leggTilSaksbehandlerVurderingAvBarn(høyreVerdi)
-                }
+        for (barn in vurderteBarn) {
+            resultat = resultat.kombiner(
+                Tidslinje(barn.vurderinger.map { Segment(it.periode, it.harForeldreAnsvar) }),
+                JoinStyle.CROSS_JOIN { periode, venstreSegment, høyreSegment ->
+                    val høyreVerdi = høyreSegment?.verdi
+                    val nyVenstreVerdi = venstreSegment?.verdi ?: RettTilBarnetillegg()
+                    if (høyreVerdi != null) {
+                        if (høyreVerdi) {
+                            nyVenstreVerdi.godkjenteBarn(setOf(barn.ident))
+                        } else {
+                            nyVenstreVerdi.underkjenteBarn(setOf(barn.ident))
+                        }
+                    }
 
-                Segment(periode, nyVenstreVerdi)
-            })
-*/
+                    Segment(periode, nyVenstreVerdi)
+                })
+        }
+
         return resultat.kryss(sak.rettighetsperiode)
     }
 

@@ -14,7 +14,7 @@ class RettTilBarnetillegg(barn: Set<Ident> = emptySet()) {
     }
 
     fun leggTilOppgitteBarn(ident: Set<Ident>): RettTilBarnetillegg {
-        uavklarteBarn.addAll(ident.filter { !barnMedFolkeregisterRelasjonTil.contains(it) })
+        uavklarteBarn.addAll(ident.filter { ident -> !barnMedFolkeregisterRelasjonTil.any { it.er(ident) } })
         return this
     }
 
@@ -35,13 +35,13 @@ class RettTilBarnetillegg(barn: Set<Ident> = emptySet()) {
     }
 
     fun harBarnTilAvklaring(): Boolean {
-        return uavklarteBarn.filterNot { ident -> godkjenteUavklarteBarn.contains(ident) }
-            .filterNot { ident -> underkjenteUavklarteBarn.contains(ident) }.isNotEmpty()
+        return uavklarteBarn.filterNot { ident -> godkjenteUavklarteBarn.any { it.er(ident) } }
+            .filterNot { ident -> underkjenteUavklarteBarn.any { it.er(ident) } }.isNotEmpty()
     }
 
     fun barnTilAvklaring(): Set<Ident> {
-        return uavklarteBarn.filterNot { ident -> godkjenteUavklarteBarn.contains(ident) }
-            .filterNot { ident -> underkjenteUavklarteBarn.contains(ident) }.toSet()
+        return uavklarteBarn.filterNot { ident -> godkjenteUavklarteBarn.any { it.er(ident) } }
+            .filterNot { ident -> underkjenteUavklarteBarn.any { it.er(ident) } }.toSet()
     }
 
     fun registerBarn(): Set<Ident> {
