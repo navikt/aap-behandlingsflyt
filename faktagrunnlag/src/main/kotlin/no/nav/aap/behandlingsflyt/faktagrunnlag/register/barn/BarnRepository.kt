@@ -310,7 +310,7 @@ class BarnRepository(private val connection: DBConnection) {
         }
 
         val vurderteBarnId = if (vurderteBarn.isNotEmpty()) {
-            connection.executeReturnKey("INSERT INTO BARNOPPLYSNING_GRUNNLAG_BARNOPPLYSNING DEFAULT VALUES") {}
+            connection.executeReturnKey("INSERT INTO BARN_VURDERINGER DEFAULT VALUES") {}
         } else {
             null
         }
