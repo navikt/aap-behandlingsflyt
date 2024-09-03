@@ -8,7 +8,7 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.17.2")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.2")
     implementation("ch.qos.logback:logback-classic:1.5.7")
-    implementation("no.nav:ktor-openapi-generator:1.0.21")
+    implementation("no.nav:ktor-openapi-generator:1.0.22")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.0")
