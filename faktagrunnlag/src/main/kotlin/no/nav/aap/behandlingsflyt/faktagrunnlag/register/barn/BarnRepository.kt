@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Saksnummer
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -22,7 +24,8 @@ class BarnRepository(private val connection: DBConnection) {
             setRowMapper {
                 BarnGrunnlag(
                     registerbarn = hentBarn(it.getLongOrNull("register_barn_id")),
-                    oppgittBarn = hentOppgittBarn(it.getLongOrNull("oppgitt_barn_id"))
+                    oppgittBarn = hentOppgittBarn(it.getLongOrNull("oppgitt_barn_id")),
+                    vurderteBarn = hentVurderteBarn(it.getLongOrNull("vurderte_barn_id"))
                 )
             }
         }
@@ -45,7 +48,8 @@ class BarnRepository(private val connection: DBConnection) {
             setRowMapper {
                 BarnGrunnlag(
                     registerbarn = hentBarn(it.getLongOrNull("register_barn_id")),
-                    oppgittBarn = hentOppgittBarn(it.getLongOrNull("oppgitt_barn_id"))
+                    oppgittBarn = hentOppgittBarn(it.getLongOrNull("oppgitt_barn_id")),
+                    vurderteBarn = hentVurderteBarn(it.getLongOrNull("vurderte_barn_id"))
                 )
             }
         }
@@ -69,7 +73,8 @@ class BarnRepository(private val connection: DBConnection) {
             setRowMapper {
                 BarnGrunnlag(
                     registerbarn = hentBarn(it.getLongOrNull("register_barn_id")),
-                    oppgittBarn = hentOppgittBarn(it.getLongOrNull("oppgitt_barn_id"))
+                    oppgittBarn = hentOppgittBarn(it.getLongOrNull("oppgitt_barn_id")),
+                    vurderteBarn = hentVurderteBarn(it.getLongOrNull("vurderte_barn_id"))
                 )
             }
         }
@@ -104,6 +109,52 @@ class BarnRepository(private val connection: DBConnection) {
                 }
             }.toSet()
         )
+    }
+
+    private fun hentVurderteBarn(id: Long?): VurderteBarn? {
+        if (id == null) {
+            return null
+        }
+
+        return VurderteBarn(
+            id, connection.queryList(
+                """
+                SELECT p.id, p.IDENT
+                FROM BARN_VURDERING p
+                WHERE p.BARN_VURDERINGER_ID = ?
+            """.trimIndent()
+            ) {
+                setParams {
+                    setLong(1, id)
+                }
+                setRowMapper { row ->
+                    VurdertBarn(
+                        ident = Ident(row.getString("IDENT")), vurderinger = hentVurderinger(row.getLong("id"))
+                    )
+                }
+            }
+        )
+    }
+
+    private fun hentVurderinger(vurdertBarnId: Long): List<VurderingAvForeldreAnsvar> {
+        return connection.queryList(
+            """
+                SELECT periode, HAR_FORELDREANSVAR, BEGRUNNELSE
+                FROM BARN_VURDERING_PERIODE
+                WHERE BARN_VURDERING_ID = ?
+            """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, vurdertBarnId)
+            }
+            setRowMapper { row ->
+                VurderingAvForeldreAnsvar(
+                    row.getPeriode("periode"),
+                    row.getBoolean("HAR_FORELDREANSVAR"),
+                    row.getString("BEGRUNNELSE")
+                )
+            }
+        }
     }
 
     private fun hentBarn(id: Long?): RegisterBarn? {
@@ -204,13 +255,14 @@ class BarnRepository(private val connection: DBConnection) {
 
         connection.execute(
             """
-                INSERT INTO BARNOPPLYSNING_GRUNNLAG (BEHANDLING_ID, register_barn_id, oppgitt_barn_id) VALUES (?, ?, ?)
+                INSERT INTO BARNOPPLYSNING_GRUNNLAG (BEHANDLING_ID, register_barn_id, oppgitt_barn_id, vurderte_barn_id) VALUES (?, ?, ?, ?)
             """.trimIndent()
         ) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, eksisterendeGrunnlag?.registerbarn?.id)
                 setLong(3, oppgittBarnId)
+                setLong(4, eksisterendeGrunnlag?.vurderteBarn?.id)
             }
         }
     }
@@ -238,13 +290,60 @@ class BarnRepository(private val connection: DBConnection) {
 
         connection.execute(
             """
-                INSERT INTO BARNOPPLYSNING_GRUNNLAG (BEHANDLING_ID, register_barn_id, oppgitt_barn_id) VALUES (?, ?, ?)
+                INSERT INTO BARNOPPLYSNING_GRUNNLAG (BEHANDLING_ID, register_barn_id, oppgitt_barn_id, vurderte_barn_id) VALUES (?, ?, ?, ?)
             """.trimIndent()
         ) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, bgbId)
                 setLong(3, eksisterendeGrunnlag?.oppgittBarn?.id)
+                setLong(4, eksisterendeGrunnlag?.vurderteBarn?.id)
+            }
+        }
+    }
+
+    fun lagreVurderinger(behandlingId: BehandlingId, vurderteBarn: List<VurdertBarn>) {
+        val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
+
+        if (eksisterendeGrunnlag != null) {
+            deaktiverEksisterende(behandlingId)
+        }
+
+        val vurderteBarnId = if (vurderteBarn.isNotEmpty()) {
+            connection.executeReturnKey("INSERT INTO BARNOPPLYSNING_GRUNNLAG_BARNOPPLYSNING DEFAULT VALUES") {}
+        } else {
+            null
+        }
+
+        for (barn in vurderteBarn) {
+            val barnVurderingId = connection.executeReturnKey("INSERT INTO BARN_VURDERING (IDENT, BARN_VURDERINGER_ID) VALUES (?, ?)") {
+                setParams {
+                    setString(1, barn.ident.identifikator)
+                    setLong(2, vurderteBarnId)
+                }
+            }
+            connection.executeBatch("""
+                INSERT INTO BARN_VURDERING_PERIODE (BARN_VURDERING_ID, PERIODE, BEGRUNNELSE, HAR_FORELDREANSVAR) VALUES (?, ?, ?, ?)
+            """.trimIndent(), barn.vurderinger) {
+                setParams {
+                    setLong(1, barnVurderingId)
+                    setPeriode(2, it.periode)
+                    setString(3, it.begrunnelse)
+                    setBoolean(4, it.harForeldreAnsvar)
+                }
+            }
+        }
+
+        connection.execute(
+            """
+                INSERT INTO BARNOPPLYSNING_GRUNNLAG (BEHANDLING_ID, register_barn_id, oppgitt_barn_id, vurderte_barn_id) VALUES (?, ?, ?, ?)
+            """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setLong(2, eksisterendeGrunnlag?.registerbarn?.id)
+                setLong(3, eksisterendeGrunnlag?.oppgittBarn?.id)
+                setLong(4, vurderteBarnId)
             }
         }
     }
@@ -252,7 +351,7 @@ class BarnRepository(private val connection: DBConnection) {
     fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         require(fraBehandling != tilBehandling)
         val query = """
-            INSERT INTO BARNOPPLYSNING_GRUNNLAG (behandling_id, register_barn_id, oppgitt_barn_id) SELECT ?, register_barn_id, oppgitt_barn_id from BARNOPPLYSNING_GRUNNLAG where behandling_id = ? and aktiv
+            INSERT INTO BARNOPPLYSNING_GRUNNLAG (behandling_id, register_barn_id, oppgitt_barn_id, vurderte_barn_id) SELECT ?, register_barn_id, oppgitt_barn_id, vurderte_barn_id from BARNOPPLYSNING_GRUNNLAG where behandling_id = ? and aktiv
         """.trimIndent()
 
         connection.execute(query) {

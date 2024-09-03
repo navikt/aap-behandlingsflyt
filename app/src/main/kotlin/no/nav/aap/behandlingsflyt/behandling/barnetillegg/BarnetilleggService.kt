@@ -5,16 +5,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnVurderingRepository
 import no.nav.aap.tidslinje.JoinStyle
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.Ident
 
-//TODO: Må se på om faktagrunnlag.barn skal deles i to, en for registeropplysninger og en for delvurdering fra saksbehandler
 class BarnetilleggService(
-    private val barnVurderingRepository: BarnVurderingRepository,
     private val sakOgBehandlingService: SakOgBehandlingService,
     private val barnRepository: BarnRepository,
     private val personopplysningRepository: PersonopplysningRepository
