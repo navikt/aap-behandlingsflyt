@@ -126,3 +126,7 @@ spec:
       value: https://fpabakus.dev-fss-pub.nais.io/fpabakus/ekstern/api/ytelse/v1
     - name: INTEGRASJON_FORELDREPENGER_SCOPE
       value: api://dev-fss.teamforeldrepenger.fpabakus/.default
+    - name: INTEGRASJON_SYKEPENGER_URL
+      value: needValueHere
+    - name: INTEGRASJON_SYKEPENGER_SCOPE
+      value: needValueHere
