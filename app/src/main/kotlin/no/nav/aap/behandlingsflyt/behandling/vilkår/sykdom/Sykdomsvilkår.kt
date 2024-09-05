@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.komponenter.type.Periode
 
 class Sykdomsvilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<SykdomsFaktagrunnlag> {
@@ -26,7 +27,7 @@ class Sykdomsvilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<Sykd
         if (studentVurdering?.erOppfylt() == true) {
             utfall = Utfall.OPPFYLT
             innvilgelsesårsak = Innvilgelsesårsak.STUDENT
-        } else if (sykdomsvurdering?.erSkadeSykdomEllerLyteVesentligdel == true && sykdomsvurdering.erNedsettelseIArbeidsevneHøyereEnnNedreGrense == true) {
+        } else if (harSykdomBlittVurdertTilGodkjent(sykdomsvurdering)) {
             utfall = Utfall.OPPFYLT
             val yrkesskadevurdering = grunnlag.yrkesskadevurdering
             if (yrkesskadevurdering != null && yrkesskadevurdering.erÅrsakssammenheng) {
@@ -51,6 +52,15 @@ class Sykdomsvilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<Sykd
                 innvilgelsesårsak = innvilgelsesårsak
             )
         )
+    }
+
+    private fun harSykdomBlittVurdertTilGodkjent(sykdomsvurdering: Sykdomsvurdering?): Boolean {
+        if (sykdomsvurdering == null) {
+            return false
+        }
+        return sykdomsvurdering.erSkadeSykdomEllerLyteVesentligdel == true &&
+                sykdomsvurdering.erArbeidsevnenNedsatt == true
+                sykdomsvurdering.erNedsettelseIArbeidsevneHøyereEnnNedreGrense == true
     }
 
     private fun lagre(grunnlag: SykdomsFaktagrunnlag, vurderingsResultat: VurderingsResultat): VurderingsResultat {
