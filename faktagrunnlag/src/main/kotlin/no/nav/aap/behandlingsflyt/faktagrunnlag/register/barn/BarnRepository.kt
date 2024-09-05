@@ -235,7 +235,7 @@ class BarnRepository(private val connection: DBConnection) {
             deaktiverEksisterende(behandlingId)
         }
 
-        val oppgittBarnId = if (oppgittBarn != null && oppgittBarn.identer.isNotEmpty()) {
+        val oppgittBarnId = if (oppgittBarn != null && oppgittBarn.identer?.isNotEmpty() == true) {
             connection.executeReturnKey("INSERT INTO OPPGITT_BARNOPPLYSNING DEFAULT VALUES") {}
         } else {
             null
