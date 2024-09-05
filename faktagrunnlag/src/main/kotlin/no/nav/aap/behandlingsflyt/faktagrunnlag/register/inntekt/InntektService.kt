@@ -33,41 +33,43 @@ class InntektService private constructor(
     override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekst): Boolean {
         val behandlingId = kontekst.behandlingId
         val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
-        if (skalIkkeInnhenteOpplysninger(vilkårsresultat)) {
-            return false
-        }
+
         val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
         val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId)
         val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
 
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
 
-        val nedsettelsesDato = utledNedsettelsesdato(sykdomGrunnlag, studentGrunnlag);
-        val behov = Inntektsbehov(
-            Input(
-                nedsettelsesDato = nedsettelsesDato,
-                inntekter = setOf(),
-                uføregrad = Prosent.`0_PROSENT`,
-                yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
-                beregningVurdering = beregningVurdering
-            )
-        )
-        val inntektsBehov = behov.utledAlleRelevanteÅr()
-
         val sak = sakService.hent(kontekst.sakId)
 
-        val inntekter = inntektRegisterGateway.innhent(sak.person, inntektsBehov)
+        val inntekter = if (skalInnhenteOpplysninger(vilkårsresultat)) {
+            val nedsettelsesDato = utledNedsettelsesdato(sykdomGrunnlag, studentGrunnlag);
+            val behov = Inntektsbehov(
+                Input(
+                    nedsettelsesDato = nedsettelsesDato,
+                    inntekter = setOf(),
+                    uføregrad = Prosent.`0_PROSENT`,
+                    yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
+                    beregningVurdering = beregningVurdering
+                )
+            )
+            val inntektsBehov = behov.utledAlleRelevanteÅr()
+
+            inntektRegisterGateway.innhent(sak.person, inntektsBehov)
+        } else {
+            emptySet()
+        }
 
         inntektGrunnlagRepository.lagre(behandlingId, inntekter)
 
         return eksisterendeGrunnlag?.inntekter == inntekter
     }
 
-    private fun skalIkkeInnhenteOpplysninger(vilkårsresultat: Vilkårsresultat): Boolean {
+    private fun skalInnhenteOpplysninger(vilkårsresultat: Vilkårsresultat): Boolean {
         val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
         val bistandsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
 
-        return !(sykdomsvilkåret.harPerioderSomErOppfylt() && bistandsvilkåret.harPerioderSomErOppfylt())
+        return sykdomsvilkåret.harPerioderSomErOppfylt() && bistandsvilkåret.harPerioderSomErOppfylt()
     }
 
     private fun utledNedsettelsesdato(sykdomGrunnlag: SykdomGrunnlag?, studentGrunnlag: StudentGrunnlag?): LocalDate {
