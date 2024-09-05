@@ -13,7 +13,7 @@ class Søknad(
 ) {
     init {
         //only keep kids with non empty indenter
-        oppgitteBarn?.filter { it.identer.isNotEmpty() }
+        oppgitteBarn?.filter { it.identer!=null && it.identer!!.isNotEmpty() }
     }
     fun harYrkesskade(): Boolean {
         return yrkesskade.uppercase() == "JA"
