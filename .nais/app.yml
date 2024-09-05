@@ -74,6 +74,7 @@ spec:
           namespace: yrkesskade
         - application: oppgavestyring
         - application: statistikk
+        - application: spokelse
 
   env:
     - name: INTEGRASJON_PDL_URL
@@ -127,6 +128,6 @@ spec:
     - name: INTEGRASJON_FORELDREPENGER_SCOPE
       value: api://dev-fss.teamforeldrepenger.fpabakus/.default
     - name: INTEGRASJON_SYKEPENGER_URL
-      value: needValueHere
+      value: http://spokelse
     - name: INTEGRASJON_SYKEPENGER_SCOPE
-      value: needValueHere
+      value: api://dev-gcp.tbd.spokelse/.default

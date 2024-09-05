@@ -10,7 +10,7 @@ import no.nav.aap.requiredConfigForKey
 import java.net.URI
 
 class SykepengerGateway {
-    private val url = URI.create(requiredConfigForKey("integrasjon.sykepenger.url") + "/somethingsomething")
+    private val url = URI.create(requiredConfigForKey("integrasjon.sykepenger.url") + "/utbetalte-perioder")
     val config = ClientConfig(scope = requiredConfigForKey("integrasjon.sykepenger.scope"))
 
     private val client = RestClient.withDefaultResponseHandler(
@@ -18,7 +18,7 @@ class SykepengerGateway {
         tokenProvider = ClientCredentialsTokenProvider,
     )
 
-    private fun query(request: SykePengerRequest): List<SykePengerResponse> {
+    private fun query(request: SykePengerRequest): SykePengerResponse {
         val httpRequest = PostRequest(
             body = request,
             additionalHeaders = listOf(
@@ -30,11 +30,9 @@ class SykepengerGateway {
 
     fun hentYtelseSykepenger(request: SykePengerRequest): SykePengerResponse {
         try {
-            val result = query(request)
-            return SykePengerResponse("")
+            return query(request)
         } catch (e : Exception) {
             throw RuntimeException("Feil ved henting av ytelser i sykepenger: ${e.message}")
         }
     }
-    // Bruk denne?: https://github.com/navikt/helse-sporbar
 }
