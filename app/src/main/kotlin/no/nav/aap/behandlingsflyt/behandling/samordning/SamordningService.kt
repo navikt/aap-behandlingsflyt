@@ -1,9 +1,18 @@
 package no.nav.aap.behandlingsflyt.behandling.samordning
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.foreldrepenger.Aktør
+import no.nav.aap.behandlingsflyt.behandling.underveis.foreldrepenger.ForeldrepengerGateway
+import no.nav.aap.behandlingsflyt.behandling.underveis.foreldrepenger.ForeldrepengerRequest
+import no.nav.aap.behandlingsflyt.behandling.underveis.sykepenger.Personidentifikator
+import no.nav.aap.behandlingsflyt.behandling.underveis.sykepenger.SykePengerRequest
+import no.nav.aap.behandlingsflyt.behandling.underveis.sykepenger.SykepengerGateway
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.verdityper.Periode
 import no.nav.aap.verdityper.flyt.FlytKontekst
+import java.time.LocalDate
 
 /*
 * Informasjonselementer fra ytelsene:
@@ -22,25 +31,53 @@ import no.nav.aap.verdityper.flyt.FlytKontekst
 * - id(pk) - samordningsperiodeId(fk) - ytelse(string/enum) - gradering (smallint)
 */
 
-class SamordningService: Informasjonskrav {
+class SamordningService(
+    private val sakService: SakService,
+    private val fpGateway: ForeldrepengerGateway,
+    private val spGateway: SykepengerGateway
+): Informasjonskrav {
     /**
      * Anses som full ytelse, inklusivt 80% uttak
      * Henter svangerskapspenger, foreldrepenger, omsorgspenger, pleiepenger sykt barn og pleiepenger sykdom i familie
      */
-    fun hentYtelseForeldrePenger() {}
+    fun hentYtelseForeldrePenger(personIdent: String) {
+        val fpResponse = fpGateway.hentVedtakYtelseForPerson(
+            ForeldrepengerRequest(
+                Aktør(personIdent),
+                Periode(LocalDate.now(), LocalDate.now()) // TODO: Hente korrekte perioder her
+            )
+        )
+        // TODO: Gjør dette om til tidslinje
+    }
 
-    /**
-     * Fulle sykepenger av deltidsstilling anses som en redusert ytelse
-     */
-    fun hentYtelseSykePenger() {}
+    fun hentYtelseSykePenger(personIdent: String) {
+        val spResponse =  spGateway.hentYtelseSykepenger(
+            SykePengerRequest(
+                setOf(Personidentifikator(personIdent)),
+                LocalDate.now(), // TODO: Hente korrekte perioder her
+                LocalDate.now() // TODO: Hente korrekte perioder her
+            )
+        )
+        // TODO: Gjør dette om til tidslinje
+    }
+
+    override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekst): Boolean {
+        val sak = sakService.hent(kontekst.sakId)
+        val personIdent = sak.person.aktivIdent().identifikator
+
+        val spTidslinje = hentYtelseSykePenger(personIdent)
+        val fpTidslinje = hentYtelseForeldrePenger(personIdent)
+
+        return false 
+    }
 
     companion object : Informasjonskravkonstruktør {
         override fun konstruer(connection: DBConnection): SamordningService {
-            return SamordningService()
+            return SamordningService(
+                SakService(connection),
+                ForeldrepengerGateway(),
+                SykepengerGateway(),
+            )
         }
-    }
-    
-    override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekst): Boolean {
-        return false 
     }
 }
