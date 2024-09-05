@@ -228,7 +228,7 @@ class BarnRepository(private val connection: DBConnection) {
             .groupBy({ it.first }, { it.second })
     }
 
-    fun lagreOppgitteBarn(behandlingId: BehandlingId, oppgittBarn: OppgittBarn?) {
+    fun lagreOppgittBarn(behandlingId: BehandlingId, oppgittBarn: OppgittBarn?){
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
 
         if (eksisterendeGrunnlag != null) {
@@ -264,6 +264,12 @@ class BarnRepository(private val connection: DBConnection) {
                 setLong(3, oppgittBarnId)
                 setLong(4, eksisterendeGrunnlag?.vurderteBarn?.id)
             }
+        }
+    }
+
+    fun lagreOppgitteBarn(behandlingId: BehandlingId, oppgitteBarn: List<OppgittBarn?>) {
+        oppgitteBarn.filterNotNull().forEach { oppgittBarn ->
+            lagreOppgittBarn(behandlingId, oppgittBarn)
         }
     }
 
