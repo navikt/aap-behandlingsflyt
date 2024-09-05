@@ -10,8 +10,9 @@ import no.nav.aap.requiredConfigForKey
 import java.net.URI
 
 /**
- * Henter foreldrepenger og svangerskapspenger for gitt periode
- */
+ *  Henter svangerskapspenger, foreldrepenger(80% >= full ytelse), omsorgspenger, pleiepenger sykt barn og pleiepenger sykdom i familie
+*/
+
 class ForeldrepengerGateway {
     private val url = URI.create(requiredConfigForKey("integrasjon.foreldrepenger.url") + "/hent-ytelse-vedtak")
     val config = ClientConfig(scope = requiredConfigForKey("integrasjon.foreldrepenger.scope"))

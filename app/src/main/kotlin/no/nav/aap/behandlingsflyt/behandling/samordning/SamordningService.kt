@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.behandling.samordning
 import no.nav.aap.behandlingsflyt.behandling.underveis.foreldrepenger.Aktør
 import no.nav.aap.behandlingsflyt.behandling.underveis.foreldrepenger.ForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.behandling.underveis.foreldrepenger.ForeldrepengerRequest
-import no.nav.aap.behandlingsflyt.behandling.underveis.sykepenger.Personidentifikator
 import no.nav.aap.behandlingsflyt.behandling.underveis.sykepenger.SykePengerRequest
 import no.nav.aap.behandlingsflyt.behandling.underveis.sykepenger.SykepengerGateway
 import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
@@ -36,11 +35,8 @@ class SamordningService(
     private val fpGateway: ForeldrepengerGateway,
     private val spGateway: SykepengerGateway
 ): Informasjonskrav {
-    /**
-     * Anses som full ytelse, inklusivt 80% uttak
-     * Henter svangerskapspenger, foreldrepenger, omsorgspenger, pleiepenger sykt barn og pleiepenger sykdom i familie
-     */
-    fun hentYtelseForeldrePenger(personIdent: String) {
+
+    private fun hentYtelseForeldrePenger(personIdent: String) {
         val fpResponse = fpGateway.hentVedtakYtelseForPerson(
             ForeldrepengerRequest(
                 Aktør(personIdent),
@@ -50,10 +46,10 @@ class SamordningService(
         // TODO: Gjør dette om til tidslinje
     }
 
-    fun hentYtelseSykePenger(personIdent: String) {
+    private fun hentYtelseSykePenger(personIdent: String) {
         val spResponse =  spGateway.hentYtelseSykepenger(
             SykePengerRequest(
-                setOf(Personidentifikator(personIdent)),
+                setOf(personIdent),
                 LocalDate.now(), // TODO: Hente korrekte perioder her
                 LocalDate.now() // TODO: Hente korrekte perioder her
             )

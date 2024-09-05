@@ -400,6 +400,18 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
     }
 
     private fun Application.spFake() {
+        @Language("JSON")
+        val spResponse ="""
+        {
+            "utbetaltePerioder": [
+                { "personidentifikator": "11111111111", "grad": 100, "fom": "2018-01-01", "tom": "2018-01-10", "tags": ["IT1"] },
+                { "personidentifikator": "11111111112", "grad": 70, "fom": "2018-01-11", "tom": "2018-01-20", "tags": ["IT2"] },
+                { "personidentifikator": "11111111113", "grad": 60, "fom": "2018-01-19", "tom": "2018-01-31", "tags": ["S1"] },
+                { "personidentifikator": "11111111114", "grad": 50, "fom": "2018-02-01", "tom": "2018-02-10", "tags": ["S2"] }
+            ]
+        }
+        """.trimIndent()
+
         install(ContentNegotiation) {
             jackson()
         }
@@ -414,9 +426,9 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
             }
         }
         routing {
-            post("/somethingsomething") {
+            post("/utbetalte-perioder") {
                 val req = call.receive<String>()
-                call.respond("IMPLEMENT ME")
+                call.respond(spResponse)
             }
         }
     }
