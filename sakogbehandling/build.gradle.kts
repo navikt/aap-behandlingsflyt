@@ -1,5 +1,5 @@
 val ktorVersion = "2.3.12"
-val komponenterVersjon = "0.0.32"
+val komponenterVersjon = "0.0.34"
 
 dependencies {
     implementation("no.nav:ktor-openapi-generator:1.0.22")
