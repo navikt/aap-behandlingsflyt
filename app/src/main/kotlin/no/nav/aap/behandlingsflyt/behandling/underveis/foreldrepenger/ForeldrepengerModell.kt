@@ -3,12 +3,12 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.foreldrepenger
 import no.nav.aap.verdityper.Periode
 import java.time.LocalDate
 
-data class ForeldrepengerRequest (
+data class ForeldrePengerRequest (
     val ident: Aktør,
     val periode: Periode,
 )
 
-data class ForeldrepengerResponse(
+data class ForeldrePengerResponse(
     val ytelser: List<Ytelse>
 )
 
