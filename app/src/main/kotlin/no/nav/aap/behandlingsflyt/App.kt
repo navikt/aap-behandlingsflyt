@@ -54,7 +54,7 @@ import no.nav.aap.behandlingsflyt.server.exception.FlytOperasjonException
 import no.nav.aap.behandlingsflyt.server.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.server.prosessering.ProsesseringsJobber
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbflyway.Migrering
+import no.nav.aap.komponenter.dbmigrering.Migrering
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureConfig
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
