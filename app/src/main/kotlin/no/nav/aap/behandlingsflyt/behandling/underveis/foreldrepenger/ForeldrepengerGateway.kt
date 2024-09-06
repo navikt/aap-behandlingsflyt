@@ -1,12 +1,12 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.foreldrepenger
 
-import no.nav.aap.httpclient.ClientConfig
-import no.nav.aap.httpclient.Header
-import no.nav.aap.httpclient.RestClient
-import no.nav.aap.httpclient.post
-import no.nav.aap.httpclient.request.PostRequest
-import no.nav.aap.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
-import no.nav.aap.requiredConfigForKey
+import no.nav.aap.komponenter.config.requiredConfigForKey
+import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
+import no.nav.aap.komponenter.httpklient.httpclient.Header
+import no.nav.aap.komponenter.httpklient.httpclient.RestClient
+import no.nav.aap.komponenter.httpklient.httpclient.post
+import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import java.net.URI
 
 /**
