@@ -5,11 +5,11 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.foreldrepenger.Foreldrepe
 import no.nav.aap.behandlingsflyt.behandling.underveis.foreldrepenger.ForeldrepengerRequest
 import no.nav.aap.behandlingsflyt.behandling.underveis.sykepenger.SykePengerRequest
 import no.nav.aap.behandlingsflyt.behandling.underveis.sykepenger.SykepengerGateway
-import no.nav.aap.behandlingsflyt.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.verdityper.Periode
+import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.flyt.FlytKontekst
 import java.time.LocalDate
 
