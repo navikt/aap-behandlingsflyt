@@ -59,7 +59,7 @@ class Sykdomsvilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<Sykd
             return false
         }
         return sykdomsvurdering.erSkadeSykdomEllerLyteVesentligdel == true &&
-                sykdomsvurdering.erArbeidsevnenNedsatt == true
+                sykdomsvurdering.erArbeidsevnenNedsatt == true &&
                 sykdomsvurdering.erNedsettelseIArbeidsevneHøyereEnnNedreGrense == true
     }
 
