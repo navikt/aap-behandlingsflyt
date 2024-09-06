@@ -187,6 +187,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         medl.stop(0L, 0L)
         tilgang.stop(0L, 0L)
         foreldrepenger.stop(0L, 0L)
+        sykepenger.stop(0L, 0L)
     }
 
     fun leggTil(person: TestPerson) {
