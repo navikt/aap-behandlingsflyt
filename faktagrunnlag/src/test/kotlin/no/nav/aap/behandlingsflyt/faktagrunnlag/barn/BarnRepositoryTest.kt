@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.dbtestdata.ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.arbeidsevne.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgittBarn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.EndringType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
@@ -56,9 +56,9 @@ class BarnRepositoryTest {
             val behandling = behandling(connection, sak)
             val barnRepository = BarnRepository(connection)
             val registerBarn = setOf(Ident("1234567890"), Ident("1337"))
-            val oppgittBarn = OppgittBarn(null, setOf(Ident("0987654321")))
+            val oppgitteBarn = OppgitteBarn(null, setOf(Ident("0987654321")))
             barnRepository.lagreRegisterBarn(behandling.id, registerBarn)
-            barnRepository.lagreOppgitteBarn(behandling.id, oppgittBarn)
+            barnRepository.lagreOppgitteBarn(behandling.id, oppgitteBarn)
 
             val oppgitteBarnForSak = barnRepository.hentOppgitteBarnForSaker(listOf(sak.saksnummer, Saksnummer("1234")))
             val registerBarnForSak = barnRepository.hentRegisterBarnForSaker(listOf(sak.saksnummer, Saksnummer("1234")))
