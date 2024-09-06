@@ -85,7 +85,7 @@ class MottaDokumentService(
             søknad.student.erStudent(),
             søknad.student.skalGjennopptaStudie(),
             søknad.harYrkesskade(),
-            søknad.oppgitteBarn?: emptyList()
+            søknad.oppgitteBarn
         )
     }
 
