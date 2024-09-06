@@ -40,7 +40,7 @@ fun getCheckedOutGitCommitHash(): String {
     return runCommand("git rev-parse --verify HEAD")
 }
 
-val komponenterVersjon = "0.0.28"
+val komponenterVersjon = "0.0.32"
 
 dependencies {
     implementation("io.ktor:ktor-server-auth:$ktorVersion")
