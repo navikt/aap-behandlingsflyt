@@ -47,7 +47,7 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource) {
                     val personopplysningGrunnlag = personopplysningRepository.hentHvisEksisterer(behandling.id)
 
                     BarnetilleggDto(
-                        oppgitteBarn = barnGrunnlag?.oppgitteBarn?.identer?.toList() ?: emptyList(),
+                        oppgitteBarn = barnGrunnlag?.oppgittBarn?.identer?.toList() ?: emptyList(),
                         folkeregisterbarn = folkeregister.map { hentBarn(it, personopplysningGrunnlag!!) },
                         vurderteBarn = barnGrunnlag?.vurderteBarn?.barn ?: emptyList(),
                         barnSomTrengerVurdering = uavklarteBarn.map { hentBarn(it, personopplysningGrunnlag!!) }

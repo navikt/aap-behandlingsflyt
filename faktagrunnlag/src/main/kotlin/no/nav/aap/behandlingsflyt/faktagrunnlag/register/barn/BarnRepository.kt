@@ -24,7 +24,7 @@ class BarnRepository(private val connection: DBConnection) {
             setRowMapper {
                 BarnGrunnlag(
                     registerbarn = hentBarn(it.getLongOrNull("register_barn_id")),
-                    oppgitteBarn = hentOppgittBarn(it.getLongOrNull("oppgitt_barn_id")),
+                    oppgittBarn = hentOppgittBarn(it.getLongOrNull("oppgitt_barn_id")),
                     vurderteBarn = hentVurderteBarn(it.getLongOrNull("vurderte_barn_id"))
                 )
             }
@@ -48,7 +48,7 @@ class BarnRepository(private val connection: DBConnection) {
             setRowMapper {
                 BarnGrunnlag(
                     registerbarn = hentBarn(it.getLongOrNull("register_barn_id")),
-                    oppgitteBarn = hentOppgittBarn(it.getLongOrNull("oppgitt_barn_id")),
+                    oppgittBarn = hentOppgittBarn(it.getLongOrNull("oppgitt_barn_id")),
                     vurderteBarn = hentVurderteBarn(it.getLongOrNull("vurderte_barn_id"))
                 )
             }
@@ -73,7 +73,7 @@ class BarnRepository(private val connection: DBConnection) {
             setRowMapper {
                 BarnGrunnlag(
                     registerbarn = hentBarn(it.getLongOrNull("register_barn_id")),
-                    oppgitteBarn = hentOppgittBarn(it.getLongOrNull("oppgitt_barn_id")),
+                    oppgittBarn = hentOppgittBarn(it.getLongOrNull("oppgitt_barn_id")),
                     vurderteBarn = hentVurderteBarn(it.getLongOrNull("vurderte_barn_id"))
                 )
             }
@@ -86,12 +86,12 @@ class BarnRepository(private val connection: DBConnection) {
         return requireNotNull(hentHvisEksisterer(behandlingId))
     }
 
-    private fun hentOppgittBarn(id: Long?): OppgitteBarn? {
+    private fun hentOppgittBarn(id: Long?): OppgittBarn? {
         if (id == null) {
             return null
         }
 
-        return OppgitteBarn(
+        return OppgittBarn(
             id, connection.queryList(
                 """
                 SELECT p.IDENT
@@ -228,16 +228,14 @@ class BarnRepository(private val connection: DBConnection) {
             .groupBy({ it.first }, { it.second })
     }
 
-    fun lagreOppgitteBarn(behandlingId: BehandlingId, oppgitteBarn: OppgitteBarn?) {
+    fun lagreOppgitteBarn(behandlingId: BehandlingId, oppgittBarn: OppgittBarn?) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
 
         if (eksisterendeGrunnlag != null) {
             deaktiverEksisterende(behandlingId)
         }
-        val alleOppgitteBarn = HashSet(eksisterendeGrunnlag?.oppgitteBarn?.identer ?: emptySet())
-        alleOppgitteBarn.addAll(oppgitteBarn?.identer ?: emptySet())
 
-        val oppgittBarnId = if (alleOppgitteBarn.isNotEmpty()) {
+        val oppgittBarnId = if (oppgittBarn != null && oppgittBarn.identer.isNotEmpty()) {
             connection.executeReturnKey("INSERT INTO OPPGITT_BARNOPPLYSNING DEFAULT VALUES") {}
         } else {
             null
@@ -247,7 +245,7 @@ class BarnRepository(private val connection: DBConnection) {
             """
                 INSERT INTO OPPGITT_BARN (IDENT, oppgitt_barn_id) VALUES (?, ?)
             """.trimIndent(),
-            alleOppgitteBarn
+            requireNotNull(oppgittBarn?.identer)
         ) {
             setParams { barnet ->
                 setString(1, barnet.identifikator)
@@ -298,7 +296,7 @@ class BarnRepository(private val connection: DBConnection) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, bgbId)
-                setLong(3, eksisterendeGrunnlag?.oppgitteBarn?.id)
+                setLong(3, eksisterendeGrunnlag?.oppgittBarn?.id)
                 setLong(4, eksisterendeGrunnlag?.vurderteBarn?.id)
             }
         }
@@ -347,7 +345,7 @@ class BarnRepository(private val connection: DBConnection) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, eksisterendeGrunnlag?.registerbarn?.id)
-                setLong(3, eksisterendeGrunnlag?.oppgitteBarn?.id)
+                setLong(3, eksisterendeGrunnlag?.oppgittBarn?.id)
                 setLong(4, vurderteBarnId)
             }
         }

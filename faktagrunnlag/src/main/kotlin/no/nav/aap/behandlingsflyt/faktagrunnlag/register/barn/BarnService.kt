@@ -31,7 +31,7 @@ class BarnService private constructor(
         val behandlingId = kontekst.behandlingId
         val eksisterendeData = barnRepository.hentHvisEksisterer(behandlingId)
 
-        val oppgitteIdenter = eksisterendeData?.oppgitteBarn?.identer?.toList() ?: emptyList()
+        val oppgitteIdenter = eksisterendeData?.oppgittBarn?.identer?.toList() ?: emptyList()
         val barn = if (harBehandlingsgrunnlag(behandlingId)) {
             val sak = sakService.hent(kontekst.sakId)
             barnGateway.hentBarn(sak.person, oppgitteIdenter)
