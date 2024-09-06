@@ -1,13 +1,13 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgittBarn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.ErStudentStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.SkalGjenopptaStudieStatus
 
 class Søknad(
     val student: SøknadStudentDto,
     val yrkesskade: String,
-    val oppgitteBarn: OppgittBarn?
+    val oppgitteBarn: OppgitteBarn?
 ) {
     fun harYrkesskade(): Boolean {
         return yrkesskade.uppercase() == "JA"

@@ -55,7 +55,7 @@ fun NormalOpenAPIRoute.behandlingsflytPip(dataSource: DataSource) {
 }
 
 private fun BarnGrunnlag.tilUnikeIdentIdentifikatorer(): List<String> {
-    val oppgitteBarnIds = oppgittBarn?.identer?.map { it.identifikator } ?: emptyList()
+    val oppgitteBarnIds = oppgitteBarn?.identer?.map { it.identifikator } ?: emptyList()
     val registerBarnIds = registerbarn?.identer?.map { it.identifikator } ?: emptyList()
     return (oppgitteBarnIds + registerBarnIds).toSet().toList()
 }

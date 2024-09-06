@@ -46,7 +46,7 @@ class BarnetilleggService(
             })
 
         val oppgittBarn =
-            barnGrunnlag.oppgittBarn?.identer?.map { ident -> mapTilBarn(ident, personopplysningerGrunnlag) }
+            barnGrunnlag.oppgitteBarn?.identer?.map { ident -> mapTilBarn(ident, personopplysningerGrunnlag) }
                 ?: emptyList()
         val oppgittBarnTidslinje = tilTidslinje(oppgittBarn)
         resultat =

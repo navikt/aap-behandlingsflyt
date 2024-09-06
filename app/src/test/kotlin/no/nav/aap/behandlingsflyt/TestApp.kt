@@ -10,7 +10,7 @@ import io.ktor.server.netty.*
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.SøknadStudentDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgittBarn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
@@ -172,12 +172,12 @@ fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>): S�
     } else {
         "NEI"
     }
-    val oppgittBarn = if (urelaterteBarn.isNotEmpty()) {
-        OppgittBarn(identer = urelaterteBarn.flatMap { it.identer.filter { it.aktivIdent } }.toSet())
+    val oppgitteBarn = if (urelaterteBarn.isNotEmpty()) {
+        OppgitteBarn(identer = urelaterteBarn.flatMap { it.identer.filter { it.aktivIdent } }.toSet())
     } else {
         null
     }
-    return Søknad(student = SøknadStudentDto(erStudent), harYrkesskade, oppgittBarn)
+    return Søknad(student = SøknadStudentDto(erStudent), harYrkesskade, oppgitteBarn)
 }
 
 private fun postgreSQLContainer(): PostgreSQLContainer<Nothing> {
