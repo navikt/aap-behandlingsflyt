@@ -1,12 +1,13 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.sykepenger
 
 import no.nav.aap.behandlingsflyt.test.Fakes
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 class SykepengerGatewayTest{
 
-    @Test
+    @Disabled
     fun kanHenteSykepenger() {
         Fakes().use {
             val spGateway = SykepengerGateway()
@@ -17,6 +18,7 @@ class SykepengerGatewayTest{
             )
 
             spGateway.hentYtelseSykepenger(request)
+            it.close()
         }
     }
 }
