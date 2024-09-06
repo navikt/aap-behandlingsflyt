@@ -1,7 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
-import io.mockk.spyk
-import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.dbtestdata.ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
@@ -21,32 +19,22 @@ import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbType
+import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Condition
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 class AvklaringsbehovOrkestratorTest {
 
     @Test
-    fun taAvVentHvisPåVentOgFortsettProsessering() {
-        // TODO implementer
-    }
-
-    @Test
-    fun løsAvklaringsbehovOgFortsettProsessering() {
-        // TODO implementer
-    }
-
-    @Test
     fun `behandlingHendelseService dot stoppet blir kalt når en behandling er satt på vent`() {
         JobbType.leggTil(StoppetHendelseJobbUtfører)
         InitTestDatabase.dataSource.transaction { connection ->
-            // Bruker mock her fordi formålet med testen er å verifisere at noe blir kalt
-            val behandlingHendelseService = spyk<BehandlingHendelseService>(
+            val behandlingHendelseService =
                 BehandlingHendelseService(
                     FlytJobbRepository(connection),
                     SakService((connection))
                 )
-            )
 
             val avklaringsbehovOrkestrator = AvklaringsbehovOrkestrator(
                 connection,
@@ -67,7 +55,22 @@ class AvklaringsbehovOrkestratorTest {
                 )
             )
 
-            verify(exactly = 1) { behandlingHendelseService.stoppet(any(), any()) }
+            assertThat(hentJobber(connection)).haveAtLeastOne(
+                Condition<String>(
+                    { it -> it == StoppetHendelseJobbUtfører.type() },
+                    "skal være av rett type"
+                )
+            )
+        }
+    }
+
+    private fun hentJobber(connection: DBConnection): List<String> {
+        return connection.queryList("""
+            SELECT type FROM JOBB
+        """.trimIndent()) {
+            setRowMapper {
+                it.getString("type")
+            }
         }
     }
 
