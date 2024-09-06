@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad
 
-import com.fasterxml.jackson.annotation.JsonAlias
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgittBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.ErStudentStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.SkalGjenopptaStudieStatus
@@ -8,13 +7,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.SkalGjenop
 class Søknad(
     val student: SøknadStudentDto,
     val yrkesskade: String,
-    @JsonAlias("manuelleBarn")
-    val oppgitteBarn: List<OppgittBarn>? = emptyList()
+    val oppgitteBarn: OppgittBarn?
 ) {
-    init {
-        //only keep kids with non empty indenter
-        oppgitteBarn?.filter { it.identer!=null && it.identer!!.isNotEmpty() }
-    }
     fun harYrkesskade(): Boolean {
         return yrkesskade.uppercase() == "JA"
     }

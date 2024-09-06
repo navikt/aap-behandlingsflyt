@@ -172,12 +172,12 @@ fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>): S�
     } else {
         "NEI"
     }
-    val oppgitteBarn = if (urelaterteBarn.isNotEmpty()) {
-        urelaterteBarn.map { OppgittBarn(identer = it.identer.filter { it.aktivIdent }.toSet()) }
+    val oppgittBarn = if (urelaterteBarn.isNotEmpty()) {
+        OppgittBarn(identer = urelaterteBarn.flatMap { it.identer.filter { it.aktivIdent } }.toSet())
     } else {
         null
     }
-    return Søknad(student = SøknadStudentDto(erStudent), harYrkesskade, oppgitteBarn)
+    return Søknad(student = SøknadStudentDto(erStudent), harYrkesskade, oppgittBarn)
 }
 
 private fun postgreSQLContainer(): PostgreSQLContainer<Nothing> {

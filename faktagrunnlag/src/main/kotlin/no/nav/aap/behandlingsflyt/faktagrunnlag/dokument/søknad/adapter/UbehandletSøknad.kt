@@ -12,5 +12,5 @@ class UbehandletSøknad(
     val erStudent: ErStudentStatus, // TODO: Trekke student ut i eget objekt
     val skalGjenopptaStudie: SkalGjenopptaStudieStatus?,
     val harYrkesskade: Boolean,
-    val oppgittBarn: List<OppgittBarn>,
+    val oppgittBarn: OppgittBarn?
 )

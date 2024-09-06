@@ -228,14 +228,14 @@ class BarnRepository(private val connection: DBConnection) {
             .groupBy({ it.first }, { it.second })
     }
 
-    fun lagreOppgittBarn(behandlingId: BehandlingId, oppgittBarn: OppgittBarn?){
+    fun lagreOppgitteBarn(behandlingId: BehandlingId, oppgittBarn: OppgittBarn?) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
 
         if (eksisterendeGrunnlag != null) {
             deaktiverEksisterende(behandlingId)
         }
 
-        val oppgittBarnId = if (oppgittBarn != null && oppgittBarn.identer?.isNotEmpty() == true) {
+        val oppgittBarnId = if (oppgittBarn != null && oppgittBarn.identer.isNotEmpty()) {
             connection.executeReturnKey("INSERT INTO OPPGITT_BARNOPPLYSNING DEFAULT VALUES") {}
         } else {
             null
@@ -264,12 +264,6 @@ class BarnRepository(private val connection: DBConnection) {
                 setLong(3, oppgittBarnId)
                 setLong(4, eksisterendeGrunnlag?.vurderteBarn?.id)
             }
-        }
-    }
-
-    fun lagreOppgitteBarn(behandlingId: BehandlingId, oppgitteBarn: List<OppgittBarn?>) {
-        oppgitteBarn.filterNotNull().forEach { oppgittBarn ->
-            lagreOppgittBarn(behandlingId, oppgittBarn)
         }
     }
 
