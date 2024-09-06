@@ -10,7 +10,7 @@ class SykepengerGatewayTest{
     fun kanHenteSykepenger() {
         Fakes().use {
             val spGateway = SykepengerGateway()
-            val request = SykePengerRequest(
+            val request = SykepengerRequest(
                 setOf("12345678910"),
                 LocalDate.now(),
                 LocalDate.now().plusDays(1),

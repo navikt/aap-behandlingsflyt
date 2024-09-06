@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.samordning
 import no.nav.aap.behandlingsflyt.behandling.underveis.foreldrepenger.Aktør
 import no.nav.aap.behandlingsflyt.behandling.underveis.foreldrepenger.ForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.behandling.underveis.foreldrepenger.ForeldrepengerRequest
-import no.nav.aap.behandlingsflyt.behandling.underveis.sykepenger.SykePengerRequest
+import no.nav.aap.behandlingsflyt.behandling.underveis.sykepenger.SykepengerRequest
 import no.nav.aap.behandlingsflyt.behandling.underveis.sykepenger.SykepengerGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
@@ -36,7 +36,7 @@ class SamordningService(
     private val spGateway: SykepengerGateway
 ): Informasjonskrav {
 
-    private fun hentYtelseForeldrePenger(personIdent: String) {
+    private fun hentYtelseForeldrepenger(personIdent: String) {
         val fpResponse = fpGateway.hentVedtakYtelseForPerson(
             ForeldrepengerRequest(
                 Aktør(personIdent),
@@ -46,9 +46,9 @@ class SamordningService(
         // TODO: Gjør dette om til tidslinje
     }
 
-    private fun hentYtelseSykePenger(personIdent: String) {
+    private fun hentYtelseSykepenger(personIdent: String) {
         val spResponse =  spGateway.hentYtelseSykepenger(
-            SykePengerRequest(
+            SykepengerRequest(
                 setOf(personIdent),
                 LocalDate.now(), // TODO: Hente korrekte perioder her
                 LocalDate.now() // TODO: Hente korrekte perioder her
@@ -61,8 +61,8 @@ class SamordningService(
         val sak = sakService.hent(kontekst.sakId)
         val personIdent = sak.person.aktivIdent().identifikator
 
-        val spTidslinje = hentYtelseSykePenger(personIdent)
-        val fpTidslinje = hentYtelseForeldrePenger(personIdent)
+        val spTidslinje = hentYtelseSykepenger(personIdent)
+        val fpTidslinje = hentYtelseForeldrepenger(personIdent)
 
         return false 
     }

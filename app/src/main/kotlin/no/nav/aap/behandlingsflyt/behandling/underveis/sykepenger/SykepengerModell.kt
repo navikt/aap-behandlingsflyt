@@ -2,14 +2,14 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.sykepenger
 
 import java.time.LocalDate
 
-data class SykePengerRequest (
+data class SykepengerRequest (
     val personidentifikatorer: Set<String>,
     val fom: LocalDate,
     val tom: LocalDate,
     val oppløsning: Set<String> = emptySet()
 )
 
-data class SykePengerResponse(
+data class SykepengerResponse(
     val utbetaltePerioder: List<UtbetaltePerioder>
 )
 

@@ -5,10 +5,10 @@ import no.nav.aap.komponenter.type.Periode
 import org.junit.jupiter.api.Disabled
 import java.time.LocalDate
 
-class ForeldrePengerGatewayTest {
+class ForeldrepengerGatewayTest {
 
     @Disabled
-    fun kanHenteDataFraForeldrePenger() {
+    fun kanHenteDataFraForeldrepenger() {
         Fakes().use {
             val fpGateway = ForeldrepengerGateway()
             val request = ForeldrepengerRequest(

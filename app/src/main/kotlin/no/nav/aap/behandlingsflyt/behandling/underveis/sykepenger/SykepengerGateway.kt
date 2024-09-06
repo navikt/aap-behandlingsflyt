@@ -18,7 +18,7 @@ class SykepengerGateway {
         tokenProvider = ClientCredentialsTokenProvider,
     )
 
-    private fun query(request: SykePengerRequest): SykePengerResponse {
+    private fun query(request: SykepengerRequest): SykepengerResponse {
         val httpRequest = PostRequest(
             body = request,
             additionalHeaders = listOf(
@@ -28,7 +28,7 @@ class SykepengerGateway {
         return requireNotNull(client.post(uri = url, request = httpRequest))
     }
 
-    fun hentYtelseSykepenger(request: SykePengerRequest): SykePengerResponse {
+    fun hentYtelseSykepenger(request: SykepengerRequest): SykepengerResponse {
         try {
             return query(request)
         } catch (e : Exception) {
