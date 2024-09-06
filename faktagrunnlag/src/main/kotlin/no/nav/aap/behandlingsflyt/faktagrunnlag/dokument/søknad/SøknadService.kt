@@ -55,8 +55,8 @@ class SøknadService private constructor(
                     sak.rettighetsperiode.fom.minusDays(60)
                 )
             }
-            if (ubehandletSøknad.oppgittBarn != null) {
-                barnRepository.lagreOppgitteBarn(kontekst.behandlingId, ubehandletSøknad.oppgittBarn)
+            if (ubehandletSøknad.oppgitteBarn != null) {
+                barnRepository.lagreOppgitteBarn(kontekst.behandlingId, ubehandletSøknad.oppgitteBarn)
             }
 
             mottaDokumentService.knyttTilBehandling(
