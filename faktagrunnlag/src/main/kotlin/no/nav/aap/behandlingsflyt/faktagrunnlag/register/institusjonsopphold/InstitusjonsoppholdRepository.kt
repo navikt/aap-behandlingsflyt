@@ -1,10 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold
 
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
-import java.time.LocalDate
 
 class InstitusjonsoppholdRepository(private val connection: DBConnection) {
 
@@ -94,7 +92,7 @@ class InstitusjonsoppholdRepository(private val connection: DBConnection) {
                     setString(1, opphold.institusjonstype.name)
                     setString(2, opphold.kategori.name)
                     setString(3, opphold.orgnr)
-                    setPeriode(4, Periode(opphold.startdato, opphold.sluttdato ?: LocalDate.MAX))
+                    setPeriode(4, opphold.periode())
                     setLong(5, oppholdPersonId)
                     setString(6, opphold.institusjonsnavn)
                 }
