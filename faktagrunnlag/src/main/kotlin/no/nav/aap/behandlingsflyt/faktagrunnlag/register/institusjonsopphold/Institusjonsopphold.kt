@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold
 
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.verdityper.Tid
 import java.time.LocalDate
 
 class Institusjonsopphold(
@@ -12,7 +13,7 @@ class Institusjonsopphold(
     val institusjonsnavn: String
 ) {
     fun periode(): Periode {
-        return Periode(startdato, sluttdato ?: LocalDate.MAX)
+        return Periode(startdato, sluttdato ?: Tid.MAKS)
     }
 
     companion object {
