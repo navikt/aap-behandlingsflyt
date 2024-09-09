@@ -33,7 +33,8 @@ import tilgang.TilgangRequest
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
-    val mottakAzp= requiredConfigForKey("integrasjon.mottak.azp")
+    val mottakAzp = requiredConfigForKey("integrasjon.mottak.azp")
+    val postmottakAzp = requiredConfigForKey("integrasjon.postmottak.azp")
     route("/api/sak") {
         route("/finn").post<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO> { _, dto ->
             val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
@@ -57,7 +58,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
             respond(saker)
         }
 
-        route("/finnEllerOpprett").authorizedPostWithApprovedList<Unit, SaksinfoDTO, FinnEllerOpprettSakDTO>(mottakAzp) { _, dto ->
+        route("/finnEllerOpprett").authorizedPostWithApprovedList<Unit, SaksinfoDTO, FinnEllerOpprettSakDTO>(mottakAzp, postmottakAzp) { _, dto ->
             val saken: SaksinfoDTO = dataSource.transaction { connection ->
                 val ident = Ident(dto.ident)
                 val periode = Periode(

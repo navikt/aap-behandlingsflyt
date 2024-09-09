@@ -135,6 +135,9 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         // Mottak
         System.setProperty("integrasjon.mottak.azp", "azp")
 
+        // Postmottak
+        System.setProperty("integrasjon.postmottak.azp", "azp")
+
         // Foreldrepenger
         System.setProperty("integrasjon.foreldrepenger.url", "http://localhost:${foreldrepenger.port()}")
         System.setProperty("integrasjon.foreldrepenger.scope", "scope")
