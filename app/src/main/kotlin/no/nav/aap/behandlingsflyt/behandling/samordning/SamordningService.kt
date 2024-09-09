@@ -36,22 +36,22 @@ class SamordningService(
     private val spGateway: SykepengerGateway
 ): Informasjonskrav {
 
-    private fun hentYtelseForeldrepenger(personIdent: String) {
+    private fun hentYtelseForeldrepenger(personIdent: String, fom: LocalDate, tom: LocalDate) {
         val fpResponse = fpGateway.hentVedtakYtelseForPerson(
             ForeldrepengerRequest(
                 Aktør(personIdent),
-                Periode(LocalDate.now(), LocalDate.now()) // TODO: Hente korrekte perioder her
+                Periode(fom, tom)
             )
         )
         // TODO: Gjør dette om til tidslinje
     }
 
-    private fun hentYtelseSykepenger(personIdent: String) {
+    private fun hentYtelseSykepenger(personIdent: String, fom: LocalDate, tom: LocalDate) {
         val spResponse =  spGateway.hentYtelseSykepenger(
             SykepengerRequest(
                 setOf(personIdent),
-                LocalDate.now(), // TODO: Hente korrekte perioder her
-                LocalDate.now() // TODO: Hente korrekte perioder her
+                fom,
+                tom
             )
         )
         // TODO: Gjør dette om til tidslinje
@@ -61,8 +61,8 @@ class SamordningService(
         val sak = sakService.hent(kontekst.sakId)
         val personIdent = sak.person.aktivIdent().identifikator
 
-        val spTidslinje = hentYtelseSykepenger(personIdent)
-        val fpTidslinje = hentYtelseForeldrepenger(personIdent)
+        val spTidslinje = hentYtelseSykepenger(personIdent, sak.rettighetsperiode.fom, sak.rettighetsperiode.tom)
+        val fpTidslinje = hentYtelseForeldrepenger(personIdent, sak.rettighetsperiode.fom, sak.rettighetsperiode.tom)
 
         return false 
     }
