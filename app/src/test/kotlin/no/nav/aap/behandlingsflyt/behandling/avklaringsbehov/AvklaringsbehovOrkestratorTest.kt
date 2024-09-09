@@ -18,7 +18,6 @@ import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.FlytJobbRepository
-import no.nav.aap.motor.JobbType
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Condition
 import org.junit.jupiter.api.Test
@@ -28,8 +27,7 @@ class AvklaringsbehovOrkestratorTest {
 
     @Test
     fun `behandlingHendelseService dot stoppet blir kalt når en behandling er satt på vent`() {
-        JobbType.leggTil(StoppetHendelseJobbUtfører)
-        InitTestDatabase.dataSource.transaction { connection ->
+        val uthentedeJobber = InitTestDatabase.dataSource.transaction { connection ->
             val behandlingHendelseService =
                 BehandlingHendelseService(
                     FlytJobbRepository(connection),
@@ -55,19 +53,22 @@ class AvklaringsbehovOrkestratorTest {
                 )
             )
 
-            assertThat(hentJobber(connection)).haveAtLeastOne(
-                Condition<String>(
-                    { it -> it == StoppetHendelseJobbUtfører.type() },
-                    "skal være av rett type"
-                )
-            )
+            hentJobber(connection)
         }
+        assertThat(uthentedeJobber).haveAtLeastOne(
+            Condition<String>(
+                { it -> it == StoppetHendelseJobbUtfører.type() },
+                "skal være av rett type"
+            )
+        )
     }
 
     private fun hentJobber(connection: DBConnection): List<String> {
-        return connection.queryList("""
+        return connection.queryList(
+            """
             SELECT type FROM JOBB
-        """.trimIndent()) {
+        """.trimIndent()
+        ) {
             setRowMapper {
                 it.getString("type")
             }
