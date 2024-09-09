@@ -43,8 +43,6 @@ import no.nav.aap.pdl.PdlRelasjonDataResponse
 import no.nav.aap.pdl.PdlRequest
 import no.nav.aap.statistikk.api_kontrakt.AvsluttetBehandlingDTO
 import no.nav.aap.statistikk.api_kontrakt.MottaStatistikkDTO
-import no.nav.aap.tilgang.TilgangRequest
-import no.nav.aap.tilgang.TilgangResponse
 import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import no.nav.aap.yrkesskade.YrkesskadeModell
@@ -53,6 +51,8 @@ import no.nav.aap.yrkesskade.Yrkesskader
 import org.intellij.lang.annotations.Language
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import tilgang.TilgangRequest
+import tilgang.TilgangResponse
 import java.io.ByteArrayInputStream
 import java.time.LocalDate
 import java.time.Year

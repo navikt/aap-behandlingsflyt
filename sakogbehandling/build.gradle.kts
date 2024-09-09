@@ -1,5 +1,6 @@
 val ktorVersion = "2.3.12"
 val komponenterVersjon = "0.0.34"
+val tilgangVersjon = "0.0.2"
 
 dependencies {
     implementation("no.nav:ktor-openapi-generator:1.0.22")
@@ -9,8 +10,9 @@ dependencies {
     implementation(project(":verdityper"))
     implementation(project(":dbflyway"))
     implementation(project(":httpklient"))
-    implementation(project(":tilgang"))
-
+    
+    implementation("no.nav.aap.tilgang:plugin:$tilgangVersjon")
+    implementation("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
     implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:infrastructure:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:dbconnect:$komponenterVersjon")
