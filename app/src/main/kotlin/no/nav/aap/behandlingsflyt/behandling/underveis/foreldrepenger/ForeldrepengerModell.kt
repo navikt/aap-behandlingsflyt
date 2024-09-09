@@ -25,7 +25,7 @@ data class Anvist(
 )
 
 data class Utbetalingsgrad(
-    val verdi: Double
+    val verdi: Number
 )
 
 data class Aktør(
