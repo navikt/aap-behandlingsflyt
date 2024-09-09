@@ -6,9 +6,11 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
+@Disabled
 class ForeldrepengerGatewayTest {
 
     @Disabled
+    @Test
     fun kanHenteDataFraForeldrepenger() {
         Fakes().use {
             val fpGateway = ForeldrepengerGateway()

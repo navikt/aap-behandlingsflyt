@@ -5,9 +5,11 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
+@Disabled
 class SykepengerGatewayTest{
 
     @Disabled
+    @Test
     fun kanHenteSykepenger() {
         Fakes().use {
             val spGateway = SykepengerGateway()
