@@ -19,17 +19,17 @@ import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.Ressurs
 import no.nav.aap.tilgang.RessursType
 import no.nav.aap.tilgang.TilgangGateway
-import no.nav.aap.tilgang.TilgangRequest
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPostWithApprovedList
 import no.nav.aap.verdityper.dokument.DokumentInfoId
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.feilhåndtering.ElementNotFoundException
 import no.nav.aap.verdityper.sakogbehandling.Ident
+import tilgang.Operasjon
+import tilgang.TilgangRequest
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {

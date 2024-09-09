@@ -6,8 +6,9 @@ dependencies {
     implementation(project(":faktagrunnlag"))
     implementation(project(":verdityper"))
     implementation(project(":httpklient"))
-    implementation(project(":tilgang"))
     implementation(project(":app"))
+    implementation("no.nav.aap.tilgang:api-kontrakt:0.0.2")
+    implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
     implementation("io.ktor:ktor-server-auth:$ktorVersion")
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
@@ -16,7 +17,6 @@ dependencies {
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
     implementation("io.ktor:ktor-server-cors:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
-    implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
 
     implementation("no.nav.aap.statistikk:api-kontrakt:0.0.5")
 
