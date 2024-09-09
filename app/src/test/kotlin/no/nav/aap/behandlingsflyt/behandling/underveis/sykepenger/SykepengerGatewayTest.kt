@@ -5,6 +5,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import kotlin.test.assertEquals
 
 @Disabled
 class SykepengerGatewayTest{
@@ -20,7 +21,7 @@ class SykepengerGatewayTest{
 
     @Disabled
     @Test
-    fun kanHenteSykepenger() {
+    fun kanHenteInformasjonFraSykepenger() {
         val spGateway = SykepengerGateway()
         val request = SykepengerRequest(
             setOf("12345678910"),
@@ -28,6 +29,7 @@ class SykepengerGatewayTest{
             LocalDate.now().plusDays(1),
         )
 
-        spGateway.hentYtelseSykepenger(request)
+        val response = spGateway.hentYtelseSykepenger(request)
+        assertEquals( 50, response.utbetaltePerioder.get(3).grad)
     }
 }

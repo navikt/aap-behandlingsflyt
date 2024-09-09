@@ -6,6 +6,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import kotlin.test.assertEquals
 
 @Disabled
 class ForeldrepengerGatewayTest {
@@ -28,6 +29,7 @@ class ForeldrepengerGatewayTest {
             Periode(LocalDate.now().minusYears(1), LocalDate.now())
         )
 
-        fpGateway.hentVedtakYtelseForPerson(request)
+        val response = fpGateway.hentVedtakYtelseForPerson(request)
+        assertEquals(50.50, response.ytelser.get(0).anvist.get(0).utbetalingsgrad?.verdi)
     }
 }

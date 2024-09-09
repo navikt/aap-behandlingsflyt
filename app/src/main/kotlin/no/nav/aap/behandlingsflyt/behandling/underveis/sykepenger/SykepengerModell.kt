@@ -17,6 +17,6 @@ data class UtbetaltePerioder(
     val personidentifikator: String,
     val fom: LocalDate,
     val tom: LocalDate,
-    val grad: Int,
+    val grad: Number,
     val tags: Set<String>
 )
