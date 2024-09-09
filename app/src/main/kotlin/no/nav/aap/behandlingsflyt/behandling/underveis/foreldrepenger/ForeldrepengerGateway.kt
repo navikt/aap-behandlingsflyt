@@ -31,7 +31,7 @@ class ForeldrepengerGateway {
             )
         )
         val resp = requireNotNull(client.post(uri = url, request = httpRequest))
-        log.info(resp.toString())
+        log.info("Response from fp: $resp")
         return resp as List<Ytelse>
     }
 
