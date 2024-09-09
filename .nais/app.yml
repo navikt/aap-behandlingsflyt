@@ -67,12 +67,14 @@ spec:
       external:
         - host: pdl-api.dev-fss-pub.nais.io
         - host: pensjon-popp-q2.dev-fss-pub.nais.io
+        - host: fpabakus.dev-fss-pub.nais.io
       rules:
         - application: tilgang
         - application: yrkesskade-saker
           namespace: yrkesskade
         - application: oppgavestyring
         - application: statistikk
+        - application: spokelse
 
   env:
     - name: INTEGRASJON_PDL_URL
@@ -121,3 +123,11 @@ spec:
       value: api://dev-fss.team-rocket.medlemskap-medl-api/.default
     - name: INTEGRASJON_MOTTAK_AZP
       value: dev-gcp:aap:mottak
+    - name: INTEGRASJON_FORELDREPENGER_URL
+      value: https://fpabakus.dev-fss-pub.nais.io/fpabakus/ekstern/api/ytelse/v1
+    - name: INTEGRASJON_FORELDREPENGER_SCOPE
+      value: api://dev-fss.teamforeldrepenger.fpabakus/.default
+    - name: INTEGRASJON_SYKEPENGER_URL
+      value: http://spokelse
+    - name: INTEGRASJON_SYKEPENGER_SCOPE
+      value: api://dev-gcp.tbd.spokelse/.default

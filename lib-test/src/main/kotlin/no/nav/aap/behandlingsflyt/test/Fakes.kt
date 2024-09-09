@@ -72,6 +72,8 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
     private val medl = embeddedServer(Netty, port = 0, module = { medlFake() }).apply { start() }
     private val pesysFake = embeddedServer(Netty, port = 0, module = { pesysFake() }).apply { start() }
     private val tilgang = embeddedServer(Netty, port = 0, module = {    tilgangFake() }).apply { start() }
+    private val foreldrepenger = embeddedServer(Netty, port = 0, module = {fpFake()}).apply { start() }
+    private val sykepenger = embeddedServer(Netty, port = 0, module = {spFake()}).apply { start() }
 
     private val statistikk = embeddedServer(Netty, port = 0, module = { statistikkFake() }).apply { start() }
     val statistikkHendelser = mutableListOf<MottaStatistikkDTO>()
@@ -132,6 +134,15 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
 
         // Mottak
         System.setProperty("integrasjon.mottak.azp", "azp")
+
+        // Foreldrepenger
+        System.setProperty("integrasjon.foreldrepenger.url", "http://localhost:${foreldrepenger.port()}")
+        System.setProperty("integrasjon.foreldrepenger.scope", "scope")
+
+        // Sykepenger
+        System.setProperty("integrasjon.sykepenger.url", "http://localhost:${sykepenger.port()}")
+        System.setProperty("integrasjon.sykepenger.scope", "scope")
+
         // testpersoner
         val BARNLØS_PERSON_10ÅR =
             TestPerson(
@@ -175,6 +186,8 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         inst2.stop(0L, 0L)
         medl.stop(0L, 0L)
         tilgang.stop(0L, 0L)
+        foreldrepenger.stop(0L, 0L)
+        sykepenger.stop(0L, 0L)
     }
 
     fun leggTil(person: TestPerson) {
@@ -339,6 +352,91 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
                     mottatteVilkårsResult.add(receive)
                 }
                 call.respond(status = HttpStatusCode.Accepted, message = "{}")
+            }
+        }
+    }
+
+    private fun Application.fpFake() {
+        @Language("JSON")
+        val foreldrepengerOgSvangerskapspengerResponse = """
+            [{
+                "ytelse": "FORELDREPENGER",
+                "ytelseStatus": "AVSLUTTET",
+                "vedtattTidspunkt": "2023-02-16T09:52:35.255",
+                "anvist": [{
+                    "periode": {
+                        "fom": "2018-01-01",
+                        "tom": "2018-06-01"
+                    },
+                    "utbetalingsgrad": {
+                        "verdi": 50.50
+                    }
+                }]
+            },
+            {
+                "ytelse": "SVANGERSKAPSPENGER",
+                "ytelseStatus": "LØPENDE",
+                "vedtattTidspunkt": "2023-02-16T09:52:35.255",
+                "anvist": [{
+                    "periode": {
+                        "fom": "2018-06-02",
+                        "tom": "2018-12-31"
+                    }
+                }]
+            }]
+        """
+
+        install(ContentNegotiation) {
+            jackson()
+        }
+        install(StatusPages) {
+            exception<Throwable> { call, cause ->
+                this@fpFake.log.info(
+                    "FORELDREPENGER :: Ukjent feil ved kall til '{}'",
+                    call.request.local.uri,
+                    cause
+                )
+                call.respond(status = HttpStatusCode.InternalServerError, message = ErrorRespons(cause.message))
+            }
+        }
+        routing {
+            post("/hent-ytelse-vedtak") {
+                val req = call.receive<String>()
+                call.respond(foreldrepengerOgSvangerskapspengerResponse)
+            }
+        }
+    }
+
+    private fun Application.spFake() {
+        @Language("JSON")
+        val spResponse ="""
+        {
+            "utbetaltePerioder": [
+                { "personidentifikator": "11111111111", "grad": 100, "fom": "2018-01-01", "tom": "2018-01-10", "tags": ["IT1"] },
+                { "personidentifikator": "11111111112", "grad": 70, "fom": "2018-01-11", "tom": "2018-01-20", "tags": ["IT2"] },
+                { "personidentifikator": "11111111113", "grad": 60, "fom": "2018-01-19", "tom": "2018-01-31", "tags": ["S1"] },
+                { "personidentifikator": "11111111114", "grad": 50, "fom": "2018-02-01", "tom": "2018-02-10", "tags": ["S2"] }
+            ]
+        }
+        """.trimIndent()
+
+        install(ContentNegotiation) {
+            jackson()
+        }
+        install(StatusPages) {
+            exception<Throwable> { call, cause ->
+                this@spFake.log.info(
+                    "SYKEPENGER :: Ukjent feil ved kall til '{}'",
+                    call.request.local.uri,
+                    cause
+                )
+                call.respond(status = HttpStatusCode.InternalServerError, message = ErrorRespons(cause.message))
+            }
+        }
+        routing {
+            post("/utbetalte-perioder") {
+                val req = call.receive<String>()
+                call.respond(spResponse)
             }
         }
     }
