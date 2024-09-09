@@ -12,7 +12,7 @@ import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.samordningApi(dataSource: DataSource) {
     route("/api/samordning") {
-        route("/fpTest").post<Unit, ForeldrepengerResponse, ForeldrepengerRequest> { _, req ->
+        route("/fptest").post<Unit, ForeldrepengerResponse, ForeldrepengerRequest> { _, req ->
             val saker = dataSource.transaction { connection ->
                 val fpGateway = ForeldrepengerGateway()
                 fpGateway.hentVedtakYtelseForPerson(req)
