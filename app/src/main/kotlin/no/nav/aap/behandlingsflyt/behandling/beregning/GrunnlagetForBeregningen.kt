@@ -100,7 +100,9 @@ class GrunnlagetForBeregningen(
         val år = inntektPerÅr.år
         val inntektIKroner = inntektPerÅr.beløp
         // Inntekter justeres etter størrelsen på G-beløpet i de aktuelle årene.
-        val (inntektIG, grunnbeløp) = inntektPerÅr.gUnit()
+        val benyttetGjennomsnittsbeløp = inntektPerÅr.gUnit()
+        val inntektIG = benyttetGjennomsnittsbeløp.gUnit
+        val grunnbeløp = benyttetGjennomsnittsbeløp.beløp
         val inntekt6GBegrenset = inntektIG.begrensTil6GUnits()
         val er6GBegrenset = inntektIG > inntekt6GBegrenset
         return GrunnlagInntektForBeregning(
