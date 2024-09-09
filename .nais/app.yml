@@ -63,6 +63,7 @@ spec:
         - application: saksbehandling
         - application: mottak
         - application: tilgang
+        - application: postmottak-backend
     outbound:
       external:
         - host: pdl-api.dev-fss-pub.nais.io
@@ -123,6 +124,8 @@ spec:
       value: api://dev-fss.team-rocket.medlemskap-medl-api/.default
     - name: INTEGRASJON_MOTTAK_AZP
       value: dev-gcp:aap:mottak
+    - name: INTEGRASJON_POSTMOTTAK_AZP
+      value: dev-gcp:aap:postmottak-backend
     - name: INTEGRASJON_FORELDREPENGER_URL
       value: https://fpabakus.dev-fss-pub.nais.io/fpabakus/ekstern/api/ytelse/v1
     - name: INTEGRASJON_FORELDREPENGER_SCOPE
