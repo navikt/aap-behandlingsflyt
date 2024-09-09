@@ -7,6 +7,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import org.slf4j.LoggerFactory
 import java.net.URI
 
 /**
@@ -16,6 +17,7 @@ class ForeldrepengerGateway {
     private val url = URI.create(requiredConfigForKey("integrasjon.foreldrepenger.url") + "/hent-ytelse-vedtak")
     val config = ClientConfig(scope = requiredConfigForKey("integrasjon.foreldrepenger.scope"))
 
+    private val log = LoggerFactory.getLogger(ForeldrepengerGateway::class.java)
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
         tokenProvider = ClientCredentialsTokenProvider,
@@ -28,7 +30,9 @@ class ForeldrepengerGateway {
                 Header("Accept", "application/json")
             )
         )
-        return requireNotNull(client.post(uri = url, request = httpRequest))
+        val resp = requireNotNull(client.post(uri = url, request = httpRequest))
+        log.info(resp.toString())
+        return resp as List<Ytelse>
     }
 
     fun hentVedtakYtelseForPerson(request: ForeldrepengerRequest): ForeldrepengerResponse {
