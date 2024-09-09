@@ -9,124 +9,215 @@ import java.time.LocalDate
 import java.time.Year
 
 object Grunnbeløp {
-    private val grunnbeløp = listOf(
-        Element(2024, 5, 1, 124_028, 122_225),
-        Element(2023, 5, 1, 118620, 116239),
-        Element(2022, 5, 1, 111477, 109784),
-        Element(2021, 5, 1, 106399, 104716),
-        Element(2020, 5, 1, 101351, 100853),
-        Element(2019, 5, 1, 99858, 98866),
-        Element(2018, 5, 1, 96883, 95800),
-        Element(2017, 5, 1, 93634, 93281),
-        Element(2016, 5, 1, 92576, 91740),
-        Element(2015, 5, 1, 90068, 89502),
-        Element(2014, 5, 1, 88370, 87328),
-        Element(2013, 5, 1, 85245, 84204),
-        Element(2012, 5, 1, 82122, 81153),
-        Element(2011, 5, 1, 79216, 78024),
-        Element(2010, 5, 1, 75641, 74721),
-        Element(2009, 5, 1, 72881, 72006),
-        Element(2008, 5, 1, 70256, 69108),
-        Element(2007, 5, 1, 66812, 65505),
-        Element(2006, 5, 1, 62892, 62161),
-        Element(2005, 5, 1, 60699, 60059),
-        Element(2004, 5, 1, 58778, 58139),
-        Element(2003, 5, 1, 56861, 55964),
-        Element(2002, 5, 1, 54170, 53233),
-        Element(2001, 5, 1, 51360, 50603),
-        Element(2000, 5, 1, 49090, 48377),
-        Element(1999, 5, 1, 46950, 46423),
-        Element(1998, 5, 1, 45370, 44413),
-        Element(1997, 5, 1, 42500, 42000),
-        Element(1996, 5, 1, 41000, 40410),
-        Element(1995, 5, 1, 39230, 38847),
-        Element(1994, 5, 1, 38080, 37820),
-        Element(1993, 5, 1, 37300, 37033),
-        Element(1992, 5, 1, 36500, 36167),
-        Element(1991, 5, 1, 35500, 35033),
-        Element(1990, 12, 1, 34100, 33575),
-        Element(1990, 5, 1, 34000, null),
-        Element(1989, 4, 1, 32700, 32275),
-        Element(1988, 4, 1, 31000, 30850),
-        Element(1988, 1, 1, 30400, null),
-        Element(1987, 5, 1, 29900, 29267),
-        Element(1986, 5, 1, 28000, 27_433),
-        Element(1986, 1, 1, 26_300, null),
-        Element(1985, 5, 1, 25_900, 25_333),
-        Element(1984, 5, 1, 24_200, 23_667),
-        Element(1983, 5, 1, 22_600, 22_333),
-        Element(1983, 1, 1, 21_800, null),
-        Element(1982, 5, 1, 21_200, 20_667),
-        Element(1981, 10, 1, 19_600, 18_658),
-        Element(1981, 5, 1, 19_100, null),
-        Element(1981, 1, 1, 17_400, null),
-        Element(1980, 5, 1, 16_900, 16_633),
-        Element(1980, 1, 1, 16_100, null),
-        Element(1979, 1, 1, 15_200, 15_200),
-        Element(1978, 7, 1, 14_700, 14_550),
-        Element(1977, 12, 1, 14_400, 13_383),
-        Element(1977, 5, 1, 13_400, null),
-        Element(1977, 1, 1, 13_100, null),
-        Element(1976, 5, 1, 12_100, 12_000),
-        Element(1976, 1, 1, 11_800, null),
-    )
+    private val grunnbeløpene = sortedSetOf<Element>()
+    private val gjennomsnittsbeløpene = sortedSetOf<GjennomsnittElement>()
 
-    private class Element(
-        år: Int,
-        måned: Int,
-        dag: Int,
-        beløp: Int,
-        gjennomsnittBeløp: Int?
-    ) {
-        private val dato: LocalDate = LocalDate.of(år, måned, dag)
-        private val beløp: Beløp = Beløp(beløp)
-        private val gjennomsnittBeløp: Beløp? = gjennomsnittBeløp?.let(::Beløp)
+    init {
+        element(2024, 5, 124_028, 122_225)
+        element(2023, 5, 118_620, 116_239)
+        element(2022, 5, 111_477, 109_784)
+        element(2021, 5, 106_399, 104_716)
+        element(2020, 5, 101_351, 100_853)
+        element(2019, 5, 99_858, 98_866)
+        element(2018, 5, 96_883, 95_800)
+        element(2017, 5, 93_634, 93_281)
+        element(2016, 5, 92_576, 91_740)
+        element(2015, 5, 90_068, 89_502)
+        element(2014, 5, 88_370, 87_328)
+        element(2013, 5, 85_245, 84_204)
+        element(2012, 5, 82_122, 81_153)
+        element(2011, 5, 79_216, 78_024)
+        element(2010, 5, 75_641, 74_721)
+        element(2009, 5, 72_881, 72_006)
+        element(2008, 5, 70_256, 69_108)
+        element(2007, 5, 66_812, 65_505)
+        element(2006, 5, 62_892, 62_161)
+        element(2005, 5, 60_699, 60_059)
+        element(2004, 5, 58_778, 58_139)
+        element(2003, 5, 56_861, 55_964)
+        element(2002, 5, 54_170, 53_233)
+        element(2001, 5, 51_360, 50_603)
+        element(2000, 5, 49_090, 48_377)
+        element(1999, 5, 46_950, 46_423)
+        element(1998, 5, 45_370, 44_413)
+        element(1997, 5, 42_500, 42_000)
+        element(1996, 5, 41_000, 40_410)
+        element(1995, 5, 39_230, 38_847)
+        element(1994, 5, 38_080, 37_820)
+        element(1993, 5, 37_300, 37_033)
+        element(1992, 5, 36_500, 36_167)
+        element(1991, 5, 35_500, 35_033)
+        element(1990, 12, 34_100, 33_575)
+        element(1990, 5, 34_000)
+        element(1989, 4, 32_700, 32_275)
+        element(1988, 4, 31_000, 30_850)
+        element(1988, 1, 30_400)
+        element(1987, 5, 29_900, 29_267)
+        element(1986, 5, 28_000, 27_433)
+        element(1986, 1, 26_300)
+        element(1985, 5, 25_900, 25_333)
+        element(1984, 5, 24_200, 23_667)
+        element(1983, 5, 22_600, 22_333)
+        element(1983, 1, 21_800)
+        element(1982, 5, 21_200, 20_667)
+        element(1981, 10, 19_600, 18_658)
+        element(1981, 5, 19_100)
+        element(1981, 1, 17_400)
+        element(1980, 5, 16_900, 16_633)
+        element(1980, 1, 16_100)
+        element(1979, 1, 15_200, 15_200)
+        element(1978, 7, 14_700, 14_550)
+        element(1977, 12, 14_400, 13_383)
+        element(1977, 5, 13_400)
+        element(1977, 1, 13_100)
+        element(1976, 5, 12_100, 12_000)
+        element(1976, 1, 11_800)
+        element(1975, 5, 11_000, 10_800)
+        element(1975, 1, 10_400)
+        element(1974, 5, 9_700, 9_533)
+        element(1974, 1, 9_200)
+        element(1973, 1, 8_500, 8_500)
+        element(1972, 1, 7_900, 7_900)
+        element(1971, 5, 7_500, 7_400)
+        element(1971, 1, 7_200)
+        element(1970, 1, 6_800, 6_800)
+        element(1969, 1, 6_400, 6_400)
+        element(1968, 1, 5_900, 5_900)
+        element(1967, 1, 5_400, 5_400)
+    }
+
+    private fun element(år: Int, måned: Int, beløp: Int) {
+        val element = Element(år, måned, beløp)
+        if (!grunnbeløpene.add(element)) {
+            error("Må være unike grunnbeløp ($element)")
+        }
+    }
+
+    private fun element(år: Int, måned: Int, beløp: Int, gjennomsnittBeløp: Int) {
+        element(år, måned, beløp)
+        val gjennomsnittElement = GjennomsnittElement(år, gjennomsnittBeløp)
+        if (!gjennomsnittsbeløpene.add(gjennomsnittElement)) {
+            error("Må være unike gjennomsnittsbeløp ($gjennomsnittElement)")
+        }
+    }
+
+    private class Element private constructor(
+        private val dato: LocalDate,
+        private val beløp: Beløp
+    ) : Comparable<Element> {
+
+        constructor(år: Int, måned: Int, beløp: Int) : this(
+            dato = LocalDate.of(år, måned, 1),
+            beløp = Beløp(beløp)
+        )
+
+        override fun compareTo(other: Element): Int {
+            return this.dato.compareTo(other.dato)
+        }
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as Element
+
+            return dato == other.dato
+        }
+
+        override fun hashCode(): Int {
+            return dato.hashCode()
+        }
+
+        override fun toString(): String {
+            return "Element(dato=$dato, beløp=$beløp)"
+        }
 
         companion object {
-            fun finnGUnit(år: Year, beløp: Beløp): Pair<GUnit, Beløp> {
-                val grunnbeløp =
-                    tilTidslinjeGjennomsnitt().segment(år.atDay(1))?.verdi
-                        ?: throw RuntimeException("Finner ikke grunnbeløp for år: $år.")
-
-                return Pair(GUnit(beløp.dividert(grunnbeløp, GUnit.SCALE)), grunnbeløp)
-            }
-
             fun tilTidslinje(): Tidslinje<Beløp> {
-                val grunnbeløp = grunnbeløp
-                    .map { element -> element.dato to element.beløp }
-                    .reversed()
+                val siste = grunnbeløpene.last()
 
-                val (sisteDato, sisteBeløp) = grunnbeløp.last()
-
-                return grunnbeløp
-                    .zipWithNext { (gjeldendeDato, gjeldendeBeløp), (nesteDato, _) ->
-                        val periode = Periode(gjeldendeDato, nesteDato.minusDays(1))
-                        Segment(periode, gjeldendeBeløp)
+                return grunnbeløpene
+                    .zipWithNext { gjeldende, neste ->
+                        val periode = Periode(gjeldende.dato, neste.dato.minusDays(1))
+                        Segment(periode, gjeldende.beløp)
                     }
-                    .plus(Segment(Periode(sisteDato, LocalDate.MAX), sisteBeløp))
-                    .let(::Tidslinje)
-            }
-
-            fun tilTidslinjeGjennomsnitt(): Tidslinje<Beløp> {
-                val gjennomsnittligeGrunnbeløp = grunnbeløp
-                    .mapNotNull { element -> element.gjennomsnittBeløp?.let { beløp -> element.dato to beløp } }
-                    .reversed()
-
-                val (sisteDato, sisteGjennomsnittBeløp) = gjennomsnittligeGrunnbeløp.last()
-
-                return gjennomsnittligeGrunnbeløp
-                    .zipWithNext { (gjeldendeDato, gjeldendeGjennomsnittBeløp), (nesteDato, _) ->
-                        val periode = Periode(gjeldendeDato.withDayOfYear(1), nesteDato.withDayOfYear(1).minusDays(1))
-                        Segment(periode, gjeldendeGjennomsnittBeløp)
-                    }
-                    .plus(Segment(Periode(sisteDato.withDayOfYear(1), LocalDate.MAX), sisteGjennomsnittBeløp))
+                    .plus(Segment(Periode(siste.dato, LocalDate.MAX), siste.beløp))
                     .let(::Tidslinje)
             }
         }
     }
 
-    fun finnGUnit(år: Year, beløp: Beløp): Pair<GUnit, Beløp> {
-        return Element.finnGUnit(år, beløp)
+    private class GjennomsnittElement private constructor(
+        private val år: Year,
+        private val gjennomsnittBeløp: Beløp
+    ) : Comparable<GjennomsnittElement> {
+
+        constructor(år: Int, gjennomsnittBeløp: Int) : this(
+            år = Year.of(år),
+            gjennomsnittBeløp = Beløp(gjennomsnittBeløp)
+        )
+
+        override fun compareTo(other: GjennomsnittElement): Int {
+            return this.år.compareTo(other.år)
+        }
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as GjennomsnittElement
+
+            return år == other.år
+        }
+
+        override fun hashCode(): Int {
+            return år.hashCode()
+        }
+
+        override fun toString(): String {
+            return "GjennomsnittElement(dato=$år, gjennomsnittBeløp=$gjennomsnittBeløp)"
+        }
+
+        companion object {
+            fun finnGUnit(år: Year, beløp: Beløp): BenyttetGjennomsnittsbeløp {
+                val grunnbeløp =
+                    priv_tilTidslinjeGjennomsnitt().segment(år.atDay(1))?.verdi
+                        ?: throw RuntimeException("Finner ikke gjennomsnittsbeløp for år: $år.")
+
+                return BenyttetGjennomsnittsbeløp(
+                    år = år,
+                    beløp = grunnbeløp.gjennomsnittBeløp,
+                    gUnit = GUnit(beløp.dividert(grunnbeløp.gjennomsnittBeløp, GUnit.SCALE))
+                )
+            }
+
+            fun tilTidslinjeGjennomsnitt(): Tidslinje<Beløp> {
+                return priv_tilTidslinjeGjennomsnitt().mapValue(GjennomsnittElement::gjennomsnittBeløp)
+            }
+
+            private fun priv_tilTidslinjeGjennomsnitt(): Tidslinje<GjennomsnittElement> {
+                val siste = gjennomsnittsbeløpene.last()
+
+                return gjennomsnittsbeløpene
+                    .zipWithNext { gjeldende, neste ->
+                        val periode =
+                            Periode(gjeldende.år.atDay(1), neste.år.atDay(1).minusDays(1))
+                        Segment(periode, gjeldende)
+                    }
+                    .plus(Segment(Periode(siste.år.atDay(1), LocalDate.MAX), siste))
+                    .let(::Tidslinje)
+            }
+        }
+    }
+
+    class BenyttetGjennomsnittsbeløp(
+        val år: Year,
+        val beløp: Beløp,
+        val gUnit: GUnit
+    )
+
+    fun finnGUnit(år: Year, beløp: Beløp): BenyttetGjennomsnittsbeløp {
+        return GjennomsnittElement.finnGUnit(år, beløp)
     }
 
     fun tilTidslinje(): Tidslinje<Beløp> {
@@ -134,6 +225,6 @@ object Grunnbeløp {
     }
 
     fun tilTidslinjeGjennomsnitt(): Tidslinje<Beløp> {
-        return Element.tilTidslinjeGjennomsnitt()
+        return GjennomsnittElement.tilTidslinjeGjennomsnitt()
     }
 }
