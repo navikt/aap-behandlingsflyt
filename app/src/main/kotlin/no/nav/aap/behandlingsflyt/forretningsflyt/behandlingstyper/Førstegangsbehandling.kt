@@ -15,7 +15,6 @@ import no.nav.aap.behandlingsflyt.flyt.BehandlingFlytBuilder
 import no.nav.aap.behandlingsflyt.flyt.BehandlingType
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BarnetilleggSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BeregnTilkjentYtelseSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BrevSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.EtAnnetStedSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettArbeidsevneSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettBeregningstidspunktSteg
@@ -67,7 +66,6 @@ object Førstegangsbehandling : BehandlingType {
             .sluttÅOppdatereFaktagrunnlag()
             .medSteg(steg = FatteVedtakSteg) // to-trinn
             .medSteg(steg = IverksettVedtakSteg)
-            .medSteg(steg = BrevSteg)
             .build()
     }
 }
