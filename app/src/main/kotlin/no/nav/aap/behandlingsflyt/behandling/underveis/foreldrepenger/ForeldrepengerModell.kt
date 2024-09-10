@@ -9,10 +9,6 @@ data class ForeldrepengerRequest (
 )
 
 data class ForeldrepengerResponse(
-    val ytelser: List<Ytelse>
-)
-
-data class Ytelse(
     val ytelse: String,
     val ytelseStatus: String,
     val vedtattTidspunkt: LocalDate,
@@ -21,7 +17,7 @@ data class Ytelse(
 
 data class Anvist(
     val periode: Periode,
-    val utbetalingsgrad: Utbetalingsgrad?
+    val utbetalingsgrad: Utbetalingsgrad
 )
 
 data class Utbetalingsgrad(
@@ -31,21 +27,3 @@ data class Utbetalingsgrad(
 data class Aktør(
     val verdi: String
 )
-
-/*
-data class Ytelse (
-    val ytelser: Ytelser,
-    val Saksnummer: String,
-    val aktør: Aktør
-)
-
-enum class Ytelser {
-    PLEIEPENGER_SYKT_BARN,
-    PLEIEPENGER_NÆRSTÅENDE,
-    OMSORGSPENGER,
-    OPPLÆRINGSPENGER,
-    ENGANGSTØNAD,
-    FORELDREPENGER,
-    SVANGERSKAPSPENGER,
-    FRISINN
-}*/
