@@ -58,7 +58,7 @@ class MeldepliktRepositoryTest {
                 )
             )
             val meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling.id)
-            assertThat(meldepliktGrunnlag?.vurderinger)
+            assertThat(meldepliktGrunnlag?.vurdering)
                 .containsExactly(
                     Fritaksvurdering(
                         periode = Periode(13 august 2023, 25 august 2023),
@@ -134,7 +134,7 @@ class MeldepliktRepositoryTest {
             val behandling2 = behandling(connection, sak)
 
             val meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling2.id)
-            assertThat(meldepliktGrunnlag?.vurderinger)
+            assertThat(meldepliktGrunnlag?.vurdering)
                 .containsExactly(Fritaksvurdering(Periode(13 august 2023, 25 august 2023), "en begrunnelse", true))
         }
     }
@@ -171,7 +171,7 @@ class MeldepliktRepositoryTest {
             val behandling2 = behandling(connection, sak)
 
             val meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling2.id)
-            assertThat(meldepliktGrunnlag?.vurderinger)
+            assertThat(meldepliktGrunnlag?.vurdering)
                 .containsExactly(Fritaksvurdering(Periode(13 august 2023, 25 august 2023), "annen begrunnelse", true))
         }
     }
@@ -188,7 +188,7 @@ class MeldepliktRepositoryTest {
                 listOf(Fritaksvurdering(Periode(13 august 2023, 25 august 2023), "en begrunnelse", true))
             )
             val orginaltGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling.id)
-            assertThat(orginaltGrunnlag?.vurderinger)
+            assertThat(orginaltGrunnlag?.vurdering)
                 .containsExactly(Fritaksvurdering(Periode(13 august 2023, 25 august 2023), "en begrunnelse", true))
 
             meldepliktRepository.lagre(
@@ -196,7 +196,7 @@ class MeldepliktRepositoryTest {
                 listOf(Fritaksvurdering(Periode(13 august 2023, 25 august 2023), "annen begrunnelse", true))
             )
             val oppdatertGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling.id)
-            assertThat(oppdatertGrunnlag?.vurderinger)
+            assertThat(oppdatertGrunnlag?.vurdering)
                 .containsExactly(Fritaksvurdering(Periode(13 august 2023, 25 august 2023), "annen begrunnelse", true))
 
             data class Opplysning(

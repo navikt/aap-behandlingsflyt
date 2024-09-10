@@ -22,7 +22,7 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(dataSource: HikariDataSource) {
                     MeldepliktRepository(connection).hentHvisEksisterer(behandling.id)
                 }
 
-                respond(FritakMeldepliktGrunnlagDto(meldepliktGrunnlag?.vurderinger.orEmpty()))
+                respond(FritakMeldepliktGrunnlagDto(meldepliktGrunnlag?.vurdering.orEmpty()))
             }
         }
     }
