@@ -17,5 +17,6 @@ enum class StegGruppe(val skalVises: Boolean, val obligatoriskVisning: Boolean) 
     FATTE_VEDTAK(true, true),
     KVALITETSSIKRING(false, true),
     IVERKSETT_VEDTAK(false, true),
+    BREV(false, true),
     UDEFINERT(false, true)
 }
