@@ -362,31 +362,114 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
     private fun Application.fpFake() {
         @Language("JSON")
         val foreldrepengerOgSvangerskapspengerResponse = """
-            [{
-                "ytelse": "FORELDREPENGER",
-                "ytelseStatus": "AVSLUTTET",
-                "vedtattTidspunkt": "2023-02-16T09:52:35.255",
-                "anvist": [{
+            {
+            "aktor": {
+                "verdi": 2325108100427
+            },
+            "vedtattTidspunkt": "2024-08-22T14:52:09.94",
+            "ytelse": "FORELDREPENGER",
+            "saksnummer": 352017890,
+            "vedtakReferanse": "678d51f5-fe1e-4b45-be04-53d3c0ab9b17",
+            "ytelseStatus": "UNDER_BEHANDLING",
+            "kildesystem": "FPSAK",
+            "periode": {
+                "fom": "2024-09-05",
+                "tom": "2025-08-13"
+            },
+            "tilleggsopplysninger": null,
+            "anvist": [
+                {
                     "periode": {
-                        "fom": "2018-01-01",
-                        "tom": "2018-06-01"
+                        "fom": "2024-11-07",
+                        "tom": "2025-08-13"
+                    },
+                    "beløp": null,
+                    "dagsats": {
+                        "verdi": 1419.0
                     },
                     "utbetalingsgrad": {
-                        "verdi": 50.50
-                    }
-                }]
-            },
-            {
-                "ytelse": "SVANGERSKAPSPENGER",
-                "ytelseStatus": "LØPENDE",
-                "vedtattTidspunkt": "2023-02-16T09:52:35.255",
-                "anvist": [{
+                        "verdi": 100.0
+                    },
+                    "andeler": [
+                        {
+                            "arbeidsgiverIdent": {
+                                "ident": 896929119
+                            },
+                            "dagsats": {
+                                "verdi": 1419.0
+                            },
+                            "utbetalingsgrad": {
+                                "verdi": 100.0
+                            },
+                            "refusjonsgrad": {
+                                "verdi": 0.0
+                            },
+                            "inntektklasse": "ARBEIDSTAKER"
+                        }
+                    ]
+                },
+                {
                     "periode": {
-                        "fom": "2018-06-02",
-                        "tom": "2018-12-31"
-                    }
-                }]
-            }]
+                        "fom": "2024-09-05",
+                        "tom": "2024-09-25"
+                    },
+                    "beløp": null,
+                    "dagsats": {
+                        "verdi": 1419.0
+                    },
+                    "utbetalingsgrad": {
+                        "verdi": 100.0
+                    },
+                    "andeler": [
+                        {
+                            "arbeidsgiverIdent": {
+                                "ident": 896929119
+                            },
+                            "dagsats": {
+                                "verdi": 1419.0
+                            },
+                            "utbetalingsgrad": {
+                                "verdi": 100.0
+                            },
+                            "refusjonsgrad": {
+                                "verdi": 0.0
+                            },
+                            "inntektklasse": "ARBEIDSTAKER"
+                        }
+                    ]
+                },
+                {
+                    "periode": {
+                        "fom": "2024-09-26",
+                        "tom": "2024-11-06"
+                    },
+                    "beløp": null,
+                    "dagsats": {
+                        "verdi": 1419.0
+                    },
+                    "utbetalingsgrad": {
+                        "verdi": 100.0
+                    },
+                    "andeler": [
+                        {
+                            "arbeidsgiverIdent": {
+                                "ident": 896929119
+                            },
+                            "dagsats": {
+                                "verdi": 1419.0
+                            },
+                            "utbetalingsgrad": {
+                                "verdi": 100.0
+                            },
+                            "refusjonsgrad": {
+                                "verdi": 0.0
+                            },
+                            "inntektklasse": "ARBEIDSTAKER"
+                        }
+                    ]
+                }
+            ]
+        }
         """
 
         install(ContentNegotiation) {
