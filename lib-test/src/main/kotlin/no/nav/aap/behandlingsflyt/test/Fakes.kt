@@ -362,7 +362,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
     private fun Application.fpFake() {
         @Language("JSON")
         val foreldrepengerOgSvangerskapspengerResponse = """
-            {
+           [{
             "aktor": {
                 "verdi": 2325108100427
             },
@@ -469,7 +469,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
                     ]
                 }
             ]
-        }
+        }]
         """
 
         install(ContentNegotiation) {
