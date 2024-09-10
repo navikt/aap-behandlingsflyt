@@ -30,6 +30,6 @@ class ForeldrepengerGatewayTest {
         )
 
         val response = fpGateway.hentVedtakYtelseForPerson(request)
-        assertEquals(100.0, response.anvist[0].utbetalingsgrad.verdi)
+        assertEquals(100.0, response.ytelser[0].anvist[0].utbetalingsgrad.verdi)
     }
 }

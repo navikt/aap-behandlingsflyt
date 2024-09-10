@@ -9,6 +9,10 @@ data class ForeldrepengerRequest (
 )
 
 data class ForeldrepengerResponse(
+    val ytelser: List<Ytelse>
+)
+
+data class Ytelse(
     val ytelse: String,
     val ytelseStatus: String,
     val vedtattTidspunkt: LocalDate,

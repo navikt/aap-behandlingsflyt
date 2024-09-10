@@ -28,7 +28,8 @@ class ForeldrepengerGateway {
                 Header("Accept", "application/json")
             )
         )
-        return requireNotNull(client.post(uri = url, request = httpRequest))
+        val response: List<Ytelse> = requireNotNull(client.post(uri = url, request = httpRequest))
+        return ForeldrepengerResponse(response)
     }
 
     fun hentVedtakYtelseForPerson(request: ForeldrepengerRequest): ForeldrepengerResponse {
