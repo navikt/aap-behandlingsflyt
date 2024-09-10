@@ -11,10 +11,9 @@ class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>> = TreeSet()) : Iterab
     constructor(initSegmenter: List<Segment<T>>) : this(TreeSet(initSegmenter))
     constructor(periode: Periode, verdi: T) : this(TreeSet(listOf(Segment(periode, verdi))))
 
-    private val segmenter: NavigableSet<Segment<T>> = TreeSet()
+    private val segmenter: NavigableSet<Segment<T>> = TreeSet(initSegmenter)
 
     init {
-        segmenter.addAll(initSegmenter)
         // Sjekk etter overlapp
         validerIkkeOverlapp()
     }
@@ -34,7 +33,7 @@ class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>> = TreeSet()) : Iterab
     }
 
     fun perioder(): NavigableSet<Periode> {
-        return TreeSet(segmenter.map { it.periode })
+        return segmenter.mapTo(TreeSet(), Segment<T>::periode)
     }
 
     /**
@@ -46,16 +45,16 @@ class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>> = TreeSet()) : Iterab
         joinStyle: JoinStyle<T, E, V>
     ): Tidslinje<V> {
         if (this.segmenter.isEmpty()) {
-            val nyeSegmenter = other.segmenter.mapNotNull { segment ->
+            val nyeSegmenter = other.segmenter.mapNotNullTo(TreeSet()) { segment ->
                 joinStyle.kombiner(segment.periode, null, segment)
             }
-            return Tidslinje(nyeSegmenter.toCollection(TreeSet()))
+            return Tidslinje(nyeSegmenter)
         }
         if (other.segmenter.isEmpty()) {
-            val nyeSegmenter = this.segmenter.mapNotNull { segment ->
+            val nyeSegmenter = this.segmenter.mapNotNullTo(TreeSet()) { segment ->
                 joinStyle.kombiner(segment.periode, segment, null)
             }
-            return Tidslinje(nyeSegmenter.toCollection(TreeSet()))
+            return Tidslinje(nyeSegmenter)
         }
 
         val periodeIterator = PeriodeIterator(
@@ -83,7 +82,7 @@ class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>> = TreeSet()) : Iterab
 
     fun disjoint(periode: Periode): Tidslinje<T> {
         return kombiner(
-            Tidslinje(listOf(Segment(periode, null))),
+            Tidslinje(periode, null),
             StandardSammenslåere.kunVenstre()
         )
     }
@@ -105,36 +104,30 @@ class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>> = TreeSet()) : Iterab
 
     /**
      * Komprimerer tidslinjen
-     * - Slår sammen segmetner hvor verdien er identisk (benytter equals for sjekk)
+     * - Slår sammen segmenter hvor verdien er identisk (benytter equals for sjekk)
      */
     fun komprimer(): Tidslinje<T> {
-        val compressedSegmenter: NavigableSet<Segment<T>> = TreeSet()
-        segmenter.forEach { segment ->
-            if (compressedSegmenter.isEmpty()) {
-                compressedSegmenter.add(segment)
-            } else {
-                val nærliggendeSegment =
-                    compressedSegmenter.firstOrNull { it.inntil(segment) && it.verdi == segment.verdi }
-                if (nærliggendeSegment != null) {
-                    val forlengetKopi = nærliggendeSegment.forlengetKopi(segment.periode)
-                    compressedSegmenter.remove(nærliggendeSegment)
-                    compressedSegmenter.add(forlengetKopi)
-                } else {
-                    compressedSegmenter.add(segment)
-                }
+        val compressedSegmenter: List<Segment<T>> = segmenter.fold(emptyList()) { acc, neste ->
+            if (acc.isEmpty()) {
+                return@fold listOf(neste)
             }
+
+            val siste = acc.last()
+
+            if (siste.kanSammenslås(neste)) {
+                return@fold acc.dropLast(1) + siste.forlengetKopi(neste.periode)
+            }
+
+            acc + neste
         }
         return Tidslinje(compressedSegmenter)
     }
 
     fun <R> mapValue(mapper: (T) -> R): Tidslinje<R> {
-        val newSegments: NavigableSet<Segment<R>> = TreeSet()
-        segmenter.forEach { s ->
-            newSegments.add(
-                Segment(
-                    s.periode,
-                    mapper(s.verdi)
-                )
+        val newSegments: NavigableSet<Segment<R>> = segmenter.mapTo(TreeSet()) { s ->
+            Segment(
+                s.periode,
+                mapper(s.verdi)
             )
         }
         return Tidslinje(newSegments)
