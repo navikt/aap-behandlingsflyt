@@ -7,10 +7,10 @@ class BruddAktivitetspliktRepository(private val connection: DBConnection) {
     fun lagreBruddAktivitetspliktHendelse(request: BruddAktivitetspliktRequest) {
         connection.execute(
         """
-            INSERT INTO BRUDD_AKTIVITETSPLIKT (SAK_ID, BRUDD, PERIODE, BEGRUNNELSE, PARAGRAF, OPPRETTET_TID ) VALUES (?, ?, ?::daterange, ?, ?, ?)
+            INSERT INTO BRUDD_AKTIVITETSPLIKT (SAKSNUMMER, BRUDD, PERIODE, BEGRUNNELSE, PARAGRAF, OPPRETTET_TID ) VALUES (?, ?, ?::daterange, ?, ?, ?)
         """.trimIndent()) {
             setParams {
-                setLong(1, request.sakId)
+                setString(1, request.saksnummer)
                 setEnumName(2, request.brudd)
                 setPeriode(3, request.periode)
                 setString(4, request.begrunnelse)
