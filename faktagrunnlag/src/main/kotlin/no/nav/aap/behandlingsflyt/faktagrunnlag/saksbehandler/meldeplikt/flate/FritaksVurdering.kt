@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt
+package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate
 
 import no.nav.aap.komponenter.type.Periode
 

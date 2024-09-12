@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.FritaksPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.Fritaksvurdering
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
