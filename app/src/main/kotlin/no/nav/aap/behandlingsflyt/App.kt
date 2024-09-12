@@ -43,6 +43,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.m
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.flate.studentgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.sykdomsgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.sykepengerGrunnlagApi
+import no.nav.aap.behandlingsflyt.faktagrunnlag.bruddaktivitetsplikt.aktivitetspliktApi
 import no.nav.aap.behandlingsflyt.flyt.flate.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flate.flytApi
 import no.nav.aap.behandlingsflyt.flyt.flate.søknadApi
@@ -161,6 +162,9 @@ internal fun Application.server(dbConfig: DbConfig) {
                 motorApi(dataSource)
                 behandlingsflytPip(dataSource)
             }
+        }
+        apiRouting {
+            aktivitetspliktApi(dataSource)
         }
         actuator(prometheus, motor)
     }
