@@ -76,6 +76,7 @@ spec:
         - application: oppgavestyring
         - application: statistikk
         - application: spokelse
+          namespace: tbd
 
   env:
     - name: INTEGRASJON_PDL_URL
@@ -131,6 +132,6 @@ spec:
     - name: INTEGRASJON_FORELDREPENGER_SCOPE
       value: api://dev-fss.teamforeldrepenger.fpabakus/.default
     - name: INTEGRASJON_SYKEPENGER_URL
-      value: http://spokelse
+      value: http://spokelse.tbd
     - name: INTEGRASJON_SYKEPENGER_SCOPE
       value: api://dev-gcp.tbd.spokelse/.default
