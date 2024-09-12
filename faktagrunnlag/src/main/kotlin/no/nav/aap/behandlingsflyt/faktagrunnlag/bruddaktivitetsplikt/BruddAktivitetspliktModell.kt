@@ -4,7 +4,7 @@ import com.papsign.ktor.openapigen.annotations.parameters.PathParam
 import no.nav.aap.komponenter.type.Periode
 
 data class BruddAktivitetspliktRequest(
-    val sakId: Long,
+    val saksnummer: String,
     val brudd: AktivitetDtoType,
     val paragraf: String,
     val begrunnelse: String,
