@@ -6,7 +6,7 @@ import no.nav.aap.komponenter.type.Periode
 data class BruddAktivitetspliktRequest(
     val saksnummer: String,
     val brudd: AktivitetDtoType,
-    val paragraf: String,
+    val paragraf: Paragraf,
     val begrunnelse: String,
     val periode: Periode
 )
@@ -19,9 +19,15 @@ data class HentHendelseDto(@PathParam("saksnummer") val saksnummer: String)
 
 data class BruddAktivitetspliktHendelse(
     val brudd: AktivitetDtoType,
-    val paragraf: String,
+    val paragraf: Paragraf,
     val periode: Periode
 )
+
+enum class Paragraf {
+    PARAGRAF_11_7,
+    PARAGRAF_11_8,
+    PARAGRAF_11_9
+}
 
 enum class AktivitetDtoType {
     IKKE_MØTT_TIL_MØTE,
