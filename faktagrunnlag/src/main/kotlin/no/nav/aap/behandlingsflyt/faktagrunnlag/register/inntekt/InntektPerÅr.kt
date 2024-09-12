@@ -1,14 +1,13 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt
 
 import no.nav.aap.verdityper.Beløp
-import no.nav.aap.verdityper.GUnit
 import java.time.Year
 
 class InntektPerÅr(val år: Year, val beløp: Beløp) :
     Comparable<InntektPerÅr> {
     constructor(år: Int, beløp: Beløp) : this(Year.of(år), beløp)
 
-    fun gUnit(): Pair<GUnit, Beløp> {
+    fun gUnit(): Grunnbeløp.BenyttetGjennomsnittsbeløp {
         return Grunnbeløp.finnGUnit(år, beløp)
     }
 

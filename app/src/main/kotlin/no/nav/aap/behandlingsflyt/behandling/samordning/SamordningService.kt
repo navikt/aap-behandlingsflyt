@@ -10,6 +10,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.tidslinje.JoinStyle
+import no.nav.aap.tidslinje.Segment
+import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.flyt.FlytKontekst
 import java.time.LocalDate
 
@@ -36,17 +39,24 @@ class SamordningService(
     private val spGateway: SykepengerGateway
 ): Informasjonskrav {
 
-    private fun hentYtelseForeldrepenger(personIdent: String, fom: LocalDate, tom: LocalDate) {
+    private fun hentYtelseForeldrepenger(personIdent: String, fom: LocalDate, tom: LocalDate): Tidslinje<SamordningGradering> {
         val fpResponse = fpGateway.hentVedtakYtelseForPerson(
             ForeldrepengerRequest(
                 Aktør(personIdent),
                 Periode(fom, tom)
-            )
-        )
-        // TODO: Gjør dette om til tidslinje
+            ))
+
+
+        /*
+        Todo: Implementer tidslinjer, må avklares
+        return Tidslinje(listOf(Segment(
+
+        )))*/
+
+        return Tidslinje()
     }
 
-    private fun hentYtelseSykepenger(personIdent: String, fom: LocalDate, tom: LocalDate) {
+    private fun hentYtelseSykepenger(personIdent: String, fom: LocalDate, tom: LocalDate): Tidslinje<SamordningGradering> {
         val spResponse =  spGateway.hentYtelseSykepenger(
             SykepengerRequest(
                 setOf(personIdent),
@@ -54,17 +64,32 @@ class SamordningService(
                 tom
             )
         )
-        // TODO: Gjør dette om til tidslinje
+        /*
+        Todo: Implementer tidslinjer, må avklares
+        return Tidslinje(listOf(Segment(
+
+        )))*/
+        return Tidslinje()
     }
 
     override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekst): Boolean {
         val sak = sakService.hent(kontekst.sakId)
         val personIdent = sak.person.aktivIdent().identifikator
 
-        val spTidslinje = hentYtelseSykepenger(personIdent, sak.rettighetsperiode.fom, sak.rettighetsperiode.tom)
-        val fpTidslinje = hentYtelseForeldrepenger(personIdent, sak.rettighetsperiode.fom, sak.rettighetsperiode.tom)
+        val sykepenger = hentYtelseSykepenger(personIdent, sak.rettighetsperiode.fom, sak.rettighetsperiode.tom)
+        val foreldrepenger = hentYtelseForeldrepenger(personIdent, sak.rettighetsperiode.fom, sak.rettighetsperiode.tom)
 
-        return false 
+        //TODO: Implementer repo lookups
+        return false
+/*
+        val tidslinje = sykepenger.kombiner(
+            foreldrepenger,
+            JoinStyle.CROSS_JOIN) { periode, venstreSegment, høyreSegment ->
+                val verdi = requireNotNull(venstreSegment).verdi
+                if (høyreSegment != null) {
+                    Segment(periode,)
+                }
+        }*/
     }
 
     companion object : Informasjonskravkonstruktør {

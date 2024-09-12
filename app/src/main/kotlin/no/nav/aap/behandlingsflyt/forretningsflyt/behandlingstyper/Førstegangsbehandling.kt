@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper
 
-import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.SøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnService
@@ -15,6 +14,7 @@ import no.nav.aap.behandlingsflyt.flyt.BehandlingFlytBuilder
 import no.nav.aap.behandlingsflyt.flyt.BehandlingType
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BarnetilleggSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BeregnTilkjentYtelseSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BrevSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.EtAnnetStedSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettArbeidsevneSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettBeregningstidspunktSteg
@@ -24,7 +24,6 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.ForeslåVedtakSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FritakMeldepliktSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.IverksettVedtakSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.KvalitetssikringsSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SimulerUtbetalingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.StartBehandlingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.UnderveisSteg
@@ -58,13 +57,14 @@ object Førstegangsbehandling : BehandlingType {
             .medSteg(steg = FastsettGrunnlagSteg, informasjonskrav = listOf(InntektService))
             .medSteg(steg = EtAnnetStedSteg, informasjonskrav = listOf(InstitusjonsoppholdService))
             .medSteg(steg = UnderveisSteg, informasjonskrav = listOf(PliktkortService))
-            //.medSteg(steg = SamordningSteg, informasjonskrav = listOf(SamordningService))
+            // .medSteg(steg = SamordningSteg, informasjonskrav = listOf(SamordningService))
             .medSteg(steg = BarnetilleggSteg, informasjonskrav = listOf(BarnService))
             .medSteg(steg = BeregnTilkjentYtelseSteg)
             .medSteg(steg = SimulerUtbetalingSteg)
             .medSteg(steg = ForeslåVedtakSteg) // en-trinn
             .sluttÅOppdatereFaktagrunnlag()
             .medSteg(steg = FatteVedtakSteg) // to-trinn
+            .medSteg(steg = BrevSteg)
             .medSteg(steg = IverksettVedtakSteg)
             .build()
     }
