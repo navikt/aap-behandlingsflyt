@@ -1,19 +1,19 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.bruddaktivitetsplikt
 
-import com.fasterxml.jackson.databind.deser.impl.SetterlessProperty
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import java.time.LocalDateTime
 
 class BruddAktivitetspliktRepository(private val connection: DBConnection) {
     fun lagreBruddAktivitetspliktHendelse(request: BruddAktivitetspliktRequest) {
-        connection.execute(
-        """
+        val query = """
             INSERT INTO BRUDD_AKTIVITETSPLIKT (SAKSNUMMER, BRUDD, PERIODE, BEGRUNNELSE, PARAGRAF, OPPRETTET_TID ) VALUES (?, ?, ?::daterange, ?, ?, ?)
-        """.trimIndent()) {
-            setParams {
+            """.trimIndent()
+
+        connection.executeBatch(query, request.perioder) {
+            setParams { periode ->
                 setString(1, request.saksnummer)
                 setEnumName(2, request.brudd)
-                setPeriode(3, request.periode)
+                setPeriode(3, periode)
                 setString(4, request.begrunnelse)
                 setEnumName(5, request.paragraf)
                 setLocalDateTime(6, LocalDateTime.now())
@@ -21,7 +21,7 @@ class BruddAktivitetspliktRepository(private val connection: DBConnection) {
         }
     }
 
-    fun hentBruddAktivitetspliktHendelser(saksnummer: String) : List<BruddAktivitetspliktHendelse> {
+    fun hentBruddAktivitetspliktHendelser(saksnummer: String) : List<BruddAktivitetspliktHendelseDto> {
         return connection.queryList(
             """
                 SELECT *
@@ -30,10 +30,11 @@ class BruddAktivitetspliktRepository(private val connection: DBConnection) {
             """.trimIndent()) {
             setParams { setString(1, saksnummer) }
             setRowMapper { row ->
-                BruddAktivitetspliktHendelse(
+                BruddAktivitetspliktHendelseDto(
                     brudd = row.getEnum("BRUDD"),
                     paragraf = row.getEnum("PARAGRAF"),
-                    periode = row.getPeriode("PERIODE")
+                    periode = row.getPeriode("PERIODE"),
+                    begrunnelse = row.getString("BEGRUNNELSE")
                 )
             }
         }
