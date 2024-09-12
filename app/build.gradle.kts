@@ -15,12 +15,13 @@ tasks {
         destinationFile = layout.buildDirectory.file("version.properties")
         // Define property.
         property("project.version", getCheckedOutGitCommitHash())
+        property("swagger-ui.version", "5.17.14")
     }
 
     processResources {
         // Depend on output of the task to create properties,
         // so the properties file will be part of the Java resources.
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
         from(projectProps)
     }
 }
