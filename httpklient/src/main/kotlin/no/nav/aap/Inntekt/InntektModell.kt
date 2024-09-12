@@ -7,7 +7,7 @@ class InntektRequest (
 )
 
 class InntektResponse (
-    val inntekt: List<SumPi> = emptyList()
+    val inntekter: List<SumPi> = emptyList()
     )
 
 class SumPi(
