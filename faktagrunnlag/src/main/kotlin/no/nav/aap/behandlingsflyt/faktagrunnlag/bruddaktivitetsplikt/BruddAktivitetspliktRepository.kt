@@ -38,12 +38,4 @@ class BruddAktivitetspliktRepository(private val connection: DBConnection) {
             }
         }
     }
-
-    fun cleanup() {
-        connection.execute(
-            """
-                DELETE FROM BRUDD_AKTIVITETSPLIKT
-            """.trimIndent()) {
-        }
-    }
 }
