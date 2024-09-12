@@ -20,6 +20,7 @@ tasks {
     processResources {
         // Depend on output of the task to create properties,
         // so the properties file will be part of the Java resources.
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
         from(projectProps)
     }
 }
@@ -39,6 +40,7 @@ fun getCheckedOutGitCommitHash(): String {
     }
     return runCommand("git rev-parse --verify HEAD")
 }
+
 
 val komponenterVersjon = "0.0.46"
 
