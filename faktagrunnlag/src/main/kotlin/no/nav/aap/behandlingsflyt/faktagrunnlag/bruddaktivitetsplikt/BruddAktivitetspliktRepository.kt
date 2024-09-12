@@ -14,7 +14,7 @@ class BruddAktivitetspliktRepository(private val connection: DBConnection) {
                 setEnumName(2, request.brudd)
                 setPeriode(3, request.periode)
                 setString(4, request.begrunnelse)
-                setString(5, request.paragraf)
+                setEnumName(5, request.paragraf)
                 setLocalDateTime(6, LocalDateTime.now())
             }
         }
@@ -32,7 +32,7 @@ class BruddAktivitetspliktRepository(private val connection: DBConnection) {
             setRowMapper { row ->
                 BruddAktivitetspliktHendelse(
                     brudd = row.getEnum("BRUDD"),
-                    paragraf = row.getString("PARAGRAF"),
+                    paragraf = row.getEnum("PARAGRAF"),
                     periode = row.getPeriode("PERIODE")
                 )
             }
