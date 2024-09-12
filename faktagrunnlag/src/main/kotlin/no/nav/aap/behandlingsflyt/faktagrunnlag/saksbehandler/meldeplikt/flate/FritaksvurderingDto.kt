@@ -1,9 +1,8 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt
+package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.flate.PeriodeDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.FritaksPeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.Fritaksvurdering
-import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.FritaksPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 
 data class FritaksvurderingDto(
     val fritaksPerioder: List<FritaksPeriodeDto>,
