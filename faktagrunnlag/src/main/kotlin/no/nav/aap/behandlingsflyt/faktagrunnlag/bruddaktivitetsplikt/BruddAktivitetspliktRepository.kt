@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.bruddaktivitetsplikt
 
+import com.fasterxml.jackson.databind.deser.impl.SetterlessProperty
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import java.time.LocalDateTime
 
@@ -26,8 +27,7 @@ class BruddAktivitetspliktRepository(private val connection: DBConnection) {
                 SELECT *
                 FROM BRUDD_AKTIVITETSPLIKT
                 WHERE SAKSNUMMER = ?
-            """.trimIndent()
-        ) {
+            """.trimIndent()) {
             setParams { setString(1, saksnummer) }
             setRowMapper { row ->
                 BruddAktivitetspliktHendelse(
@@ -36,6 +36,14 @@ class BruddAktivitetspliktRepository(private val connection: DBConnection) {
                     periode = row.getPeriode("PERIODE")
                 )
             }
+        }
+    }
+
+    fun cleanup() {
+        connection.execute(
+            """
+                DELETE FROM BRUDD_AKTIVITETSPLIKT
+            """.trimIndent()) {
         }
     }
 }
