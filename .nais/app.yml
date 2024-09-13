@@ -74,6 +74,7 @@ spec:
         - application: yrkesskade-saker
           namespace: yrkesskade
         - application: oppgavestyring
+        - application: oppgave
         - application: statistikk
         - application: spokelse
           namespace: tbd
