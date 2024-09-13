@@ -10,7 +10,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.Client
 import java.net.URI
 
 /**
- * Henter foreldrepenger og svangerskapspenger for gitt periode
+ * Henter alle ytelser i fpabakus
  */
 class ForeldrepengerGateway {
     private val url = URI.create(requiredConfigForKey("integrasjon.foreldrepenger.url") + "/hent-ytelse-vedtak")
