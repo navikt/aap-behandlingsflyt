@@ -8,6 +8,8 @@ import no.nav.aap.behandlingsflyt.dbtestdata.ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.arbeidsevne.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.FritaksPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.FritaksvurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -43,34 +45,15 @@ class MeldepliktRepositoryTest {
             val behandling = behandling(connection, sak)
 
             val meldepliktRepository = MeldepliktRepository(connection)
-            meldepliktRepository.lagre(
-                behandling.id, listOf(
-                    FritaksvurderingDto(
-                        periode = Periode(13 august 2023, 25 august 2023),
-                        begrunnelse = "en begrunnelse",
-                        harFritak = true
-                    ),
-                    FritaksvurderingDto(
-                        periode = Periode(26 august 2023, 31 august 2023),
-                        begrunnelse = "annen begrunnelse",
-                        harFritak = false
-                    )
-                )
+            val fritaksvurdering = Fritaksvurdering(
+                listOf(
+                    FritaksPeriode(Periode(13 august 2023, 25 august 2023), true),
+                    FritaksPeriode(Periode(26 august 2023, 31 august 2023), false)
+                ), "en begrunnelse"
             )
+            meldepliktRepository.lagre(behandling.id, fritaksvurdering)
             val meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling.id)
-            assertThat(meldepliktGrunnlag?.vurdering)
-                .containsExactly(
-                    FritaksvurderingDto(
-                        periode = Periode(13 august 2023, 25 august 2023),
-                        begrunnelse = "en begrunnelse",
-                        harFritak = true
-                    ),
-                    FritaksvurderingDto(
-                        periode = Periode(26 august 2023, 31 august 2023),
-                        begrunnelse = "annen begrunnelse",
-                        harFritak = false
-                    )
-                )
+            assertThat(meldepliktGrunnlag?.vurdering).isEqualTo(fritaksvurdering)
         }
     }
 
@@ -81,23 +64,20 @@ class MeldepliktRepositoryTest {
             val behandling = behandling(connection, sak)
 
             val meldepliktRepository = MeldepliktRepository(connection)
-            meldepliktRepository.lagre(
-                behandling.id,
-                listOf(FritaksvurderingDto(Periode(13 august 2023, 25 august 2023), "en begrunnelse", true))
+            val fritaksvurdering = Fritaksvurdering(
+                listOf(FritaksPeriode(Periode(13 august 2023, 25 august 2023), true)),
+                "en begrunnelse"
             )
-            meldepliktRepository.lagre(
-                behandling.id,
-                listOf(FritaksvurderingDto(Periode(13 august 2023, 25 august 2023), "annen begrunnelse", true))
-            )
-            meldepliktRepository.lagre(
-                behandling.id,
-                listOf(FritaksvurderingDto(Periode(13 august 2023, 25 august 2023), "annen begrunnelse", true))
-            )
+
+            meldepliktRepository.lagre(behandling.id, fritaksvurdering)
+            repeat(2) {
+                meldepliktRepository.lagre(behandling.id, fritaksvurdering.copy(begrunnelse = "annen begrunnelse"))
+            }
 
             val opplysninger =
                 connection.queryList(
                     """
-                    SELECT v.BEGRUNNELSE 
+                    SELECT g.BEGRUNNELSE 
                     FROM BEHANDLING b
                     INNER JOIN MELDEPLIKT_FRITAK_GRUNNLAG g ON b.ID = g.BEHANDLING_ID
                     INNER JOIN MELDEPLIKT_FRITAK f ON g.MELDEPLIKT_ID = f.ID
@@ -122,9 +102,14 @@ class MeldepliktRepositoryTest {
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
             val meldepliktRepository = MeldepliktRepository(connection)
+            val fritaksvurdering = Fritaksvurdering(
+                listOf(FritaksPeriode(Periode(13 august 2023, 25 august 2023), true)),
+                "en begrunnelse"
+            )
+
             meldepliktRepository.lagre(
                 behandling1.id,
-                listOf(FritaksvurderingDto(Periode(13 august 2023, 25 august 2023), "en begrunnelse", true))
+                fritaksvurdering
             )
             connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
                 setParams {
@@ -134,8 +119,7 @@ class MeldepliktRepositoryTest {
             val behandling2 = behandling(connection, sak)
 
             val meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling2.id)
-            assertThat(meldepliktGrunnlag?.vurdering)
-                .containsExactly(FritaksvurderingDto(Periode(13 august 2023, 25 august 2023), "en begrunnelse", true))
+            assertThat(meldepliktGrunnlag?.vurdering).isEqualTo(fritaksvurdering)
         }
     }
 
@@ -155,13 +139,17 @@ class MeldepliktRepositoryTest {
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
             val meldepliktRepository = MeldepliktRepository(connection)
-            meldepliktRepository.lagre(
-                behandling1.id,
-                listOf(FritaksvurderingDto(Periode(13 august 2023, 25 august 2023), "en begrunnelse", true))
+            val fritaksvurdering = Fritaksvurdering(
+                listOf(FritaksPeriode(Periode(13 august 2023, 25 august 2023), true)),
+                "en begrunnelse"
             )
             meldepliktRepository.lagre(
                 behandling1.id,
-                listOf(FritaksvurderingDto(Periode(13 august 2023, 25 august 2023), "annen begrunnelse", true))
+                fritaksvurdering
+            )
+            meldepliktRepository.lagre(
+                behandling1.id,
+                fritaksvurdering.copy(begrunnelse = "annen begrunnelse")
             )
             connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
                 setParams {
@@ -171,8 +159,7 @@ class MeldepliktRepositoryTest {
             val behandling2 = behandling(connection, sak)
 
             val meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling2.id)
-            assertThat(meldepliktGrunnlag?.vurdering)
-                .containsExactly(FritaksvurderingDto(Periode(13 august 2023, 25 august 2023), "annen begrunnelse", true))
+            assertThat(meldepliktGrunnlag?.vurdering).isEqualTo(fritaksvurdering.copy(begrunnelse = "annen begrunnelse"))
         }
     }
 
@@ -183,21 +170,24 @@ class MeldepliktRepositoryTest {
             val behandling = behandling(connection, sak)
             val meldepliktRepository = MeldepliktRepository(connection)
 
-            meldepliktRepository.lagre(
-                behandling.id,
-                listOf(FritaksvurderingDto(Periode(13 august 2023, 25 august 2023), "en begrunnelse", true))
+            val fritaksvurdering = Fritaksvurdering(
+                listOf(FritaksPeriode(Periode(13 august 2023, 25 august 2023), true)),
+                "en begrunnelse"
             )
-            val orginaltGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling.id)
-            assertThat(orginaltGrunnlag?.vurdering)
-                .containsExactly(FritaksvurderingDto(Periode(13 august 2023, 25 august 2023), "en begrunnelse", true))
 
             meldepliktRepository.lagre(
                 behandling.id,
-                listOf(FritaksvurderingDto(Periode(13 august 2023, 25 august 2023), "annen begrunnelse", true))
+                fritaksvurdering
+            )
+            val orginaltGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling.id)
+            assertThat(orginaltGrunnlag?.vurdering).isEqualTo(fritaksvurdering)
+
+            meldepliktRepository.lagre(
+                behandling.id,
+                fritaksvurdering.copy(begrunnelse = "annen begrunnelse")
             )
             val oppdatertGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling.id)
-            assertThat(oppdatertGrunnlag?.vurdering)
-                .containsExactly(FritaksvurderingDto(Periode(13 august 2023, 25 august 2023), "annen begrunnelse", true))
+            assertThat(oppdatertGrunnlag?.vurdering).isEqualTo(fritaksvurdering.copy(begrunnelse = "annen begrunnelse"))
 
             data class Opplysning(
                 val behandlingId: Long,
@@ -210,7 +200,7 @@ class MeldepliktRepositoryTest {
             val opplysninger =
                 connection.queryList(
                     """
-                    SELECT g.BEHANDLING_ID, g.AKTIV, v.PERIODE, v.BEGRUNNELSE, v.HAR_FRITAK
+                    SELECT g.BEHANDLING_ID, g.AKTIV, v.PERIODE, g.BEGRUNNELSE, v.HAR_FRITAK
                     FROM BEHANDLING b
                     INNER JOIN MELDEPLIKT_FRITAK_GRUNNLAG g ON b.ID = g.BEHANDLING_ID
                     INNER JOIN MELDEPLIKT_FRITAK f ON g.MELDEPLIKT_ID = f.ID
@@ -258,13 +248,19 @@ class MeldepliktRepositoryTest {
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
             val meldepliktRepository = MeldepliktRepository(connection)
+
+            val fritaksvurdering = Fritaksvurdering(
+                listOf(FritaksPeriode(Periode(13 august 2023, 25 august 2023), true)),
+                "en begrunnelse"
+            )
+
             meldepliktRepository.lagre(
                 behandling1.id,
-                listOf(FritaksvurderingDto(Periode(13 august 2023, 25 august 2023), "en begrunnelse", true))
+                fritaksvurdering
             )
             meldepliktRepository.lagre(
                 behandling1.id,
-                listOf(FritaksvurderingDto(Periode(13 august 2023, 25 august 2023), "annen begrunnelse", true))
+                fritaksvurdering.copy(begrunnelse = "annen begrunnelse")
             )
             connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
                 setParams {
@@ -286,7 +282,7 @@ class MeldepliktRepositoryTest {
             val opplysninger =
                 connection.queryList(
                     """
-                    SELECT b.ID AS BEHANDLING_ID, f.ID AS MELDEPLIKT_ID, g.AKTIV, v.PERIODE, v.BEGRUNNELSE, v.HAR_FRITAK
+                    SELECT b.ID AS BEHANDLING_ID, f.ID AS MELDEPLIKT_ID, g.AKTIV, v.PERIODE, g.BEGRUNNELSE, v.HAR_FRITAK
                     FROM BEHANDLING b
                     INNER JOIN MELDEPLIKT_FRITAK_GRUNNLAG g ON b.ID = g.BEHANDLING_ID
                     INNER JOIN MELDEPLIKT_FRITAK f ON g.MELDEPLIKT_ID = f.ID
