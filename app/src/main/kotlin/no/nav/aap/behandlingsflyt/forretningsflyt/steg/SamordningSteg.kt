@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.behandling.samordning.AvklaringsType
-import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningRegelService
+import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
@@ -14,7 +14,7 @@ import no.nav.aap.verdityper.flyt.StegType
 import org.slf4j.LoggerFactory
 
 class SamordningSteg(
-    private val samordningRegelService: SamordningRegelService,
+    private val samordningRegelService: SamordningService,
     private val avklaringsbehovRepository: AvklaringsbehovRepository
 
 ) : BehandlingSteg {
@@ -25,7 +25,7 @@ class SamordningSteg(
     private val kanLukkes = false
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val samordningTidslinje = samordningRegelService.vurder(kontekst.behandlingId)
+        val samordningTidslinje = samordningRegelService.vurder()//kontekst.behandlingId)
         
         // Hvis perioden har ytelsesgradering som er manuell, 
         // så skal det opprettes et avklaringsbehov hvis ikke allerede vurdert
@@ -54,8 +54,8 @@ class SamordningSteg(
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
             return SamordningSteg(
-                SamordningRegelService(),
-                AvklaringsbehovRepositoryImpl(connection)
+                SamordningService(connection),
+                AvklaringsbehovRepositoryImpl(connection),
             )
         }
 
@@ -63,5 +63,4 @@ class SamordningSteg(
             return StegType.SAMORDNING_GRADERING
         }
     }
-
 }

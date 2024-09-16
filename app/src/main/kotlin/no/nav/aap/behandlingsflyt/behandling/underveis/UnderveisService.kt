@@ -1,11 +1,9 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis
 
-import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AktivitetRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.EtAnnetStedRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.GraderingArbeidRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.RettTilRegel
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.SamordningRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UnderveisInput
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Vurdering
@@ -26,14 +24,12 @@ class UnderveisService(
 ) {
 
     private val kvoteService = KvoteService()
-    private val samordningService = SamordningService()
 
     private val regelset = listOf(
         RettTilRegel(),
         EtAnnetStedRegel(),
         AktivitetRegel(),
         GraderingArbeidRegel(),
-        SamordningRegel(),
         VarighetRegel()
     )
 

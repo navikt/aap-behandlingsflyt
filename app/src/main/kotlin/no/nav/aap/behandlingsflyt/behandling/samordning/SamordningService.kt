@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.samordning
 import no.nav.aap.behandlingsflyt.behandling.underveis.foreldrepenger.Aktør
 import no.nav.aap.behandlingsflyt.behandling.underveis.foreldrepenger.ForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.behandling.underveis.foreldrepenger.ForeldrepengerRequest
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.SamordningRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.sykepenger.SykepengerRequest
 import no.nav.aap.behandlingsflyt.behandling.underveis.sykepenger.SykepengerGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
@@ -34,10 +35,15 @@ import java.time.LocalDate
 */
 
 class SamordningService(
-    private val sakService: SakService,
-    private val fpGateway: ForeldrepengerGateway,
-    private val spGateway: SykepengerGateway
+    connection: DBConnection
 ): Informasjonskrav {
+    private val fpGateway = ForeldrepengerGateway()
+    private val spGateway = SykepengerGateway()
+    private val sakService = SakService(connection)
+
+    private val regelset = listOf(
+        SamordningRegel()
+    )
 
     private fun hentYtelseForeldrepenger(personIdent: String, fom: LocalDate, tom: LocalDate): Tidslinje<SamordningGradering> {
         val fpResponse = fpGateway.hentVedtakYtelseForPerson(
@@ -92,13 +98,13 @@ class SamordningService(
         }*/
     }
 
+    fun vurder() : Tidslinje<SamordningGradering> {
+        return Tidslinje()
+    }
+
     companion object : Informasjonskravkonstruktør {
         override fun konstruer(connection: DBConnection): SamordningService {
-            return SamordningService(
-                SakService(connection),
-                ForeldrepengerGateway(),
-                SykepengerGateway(),
-            )
+            return SamordningService(connection)
         }
     }
 }

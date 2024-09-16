@@ -6,9 +6,13 @@ enum class Ytelse(val type: AvklaringsType) {
     PLEIEPENGER_BARN(AvklaringsType.AUTOMATISK),
     PLEIEPENGER_NÆR_FAMILIE(AvklaringsType.AUTOMATISK),
     SVANGERSKAPSPENGER(AvklaringsType.AUTOMATISK),
+    OMSORGSPENGER(AvklaringsType.AUTOMATISK),
+    OPPLÆRINGSPENGER(AvklaringsType.AUTOMATISK),
+    ENGANGSTØNAD(AvklaringsType.MANUELL),
+    FRISINN(AvklaringsType.MANUELL),
 }
 
 enum class AvklaringsType {
     MANUELL,
-    AUTOMATISK
+    AUTOMATISK,
 }
