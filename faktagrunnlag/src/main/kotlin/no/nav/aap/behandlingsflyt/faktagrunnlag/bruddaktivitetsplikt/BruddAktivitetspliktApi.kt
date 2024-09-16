@@ -27,5 +27,13 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
             }
             respond(response)
         }
+
+        route("/slett").post<Unit, String, String> { _, req ->
+            dataSource.transaction { connection ->
+                val repository = BruddAktivitetspliktRepository(connection)
+                repository.deleteAll()
+            }
+            respond("{}", HttpStatusCode.Accepted)
+        }
     }
 }
