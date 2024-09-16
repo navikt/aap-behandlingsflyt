@@ -2,11 +2,12 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.bruddaktivitetsplikt
 
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import java.time.LocalDateTime
+import java.util.*
 
 class BruddAktivitetspliktRepository(private val connection: DBConnection) {
     fun lagreBruddAktivitetspliktHendelse(request: BruddAktivitetspliktRequest) {
         val query = """
-            INSERT INTO BRUDD_AKTIVITETSPLIKT (SAKSNUMMER, BRUDD, PERIODE, BEGRUNNELSE, PARAGRAF, OPPRETTET_TID ) VALUES (?, ?, ?::daterange, ?, ?, ?)
+            INSERT INTO BRUDD_AKTIVITETSPLIKT (SAKSNUMMER, BRUDD, PERIODE, BEGRUNNELSE, PARAGRAF, OPPRETTET_TID , HENDELSE_ID) VALUES (?, ?, ?::daterange, ?, ?, ?, ?)
             """.trimIndent()
 
         connection.executeBatch(query, request.perioder) {
@@ -17,8 +18,16 @@ class BruddAktivitetspliktRepository(private val connection: DBConnection) {
                 setString(4, request.begrunnelse)
                 setEnumName(5, request.paragraf)
                 setLocalDateTime(6, LocalDateTime.now())
+                setUUID(7, UUID.randomUUID())
             }
         }
+    }
+
+    fun deleteAll() {
+        connection.execute(
+            """
+                DELETE FROM BRUDD_AKTIVITETSPLIKT
+            """.trimIndent()) {}
     }
 
     fun hentBruddAktivitetspliktHendelser(saksnummer: String) : List<BruddAktivitetspliktHendelseDto> {
