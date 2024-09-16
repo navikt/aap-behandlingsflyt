@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.bruddaktivitetsplikt
 
 import com.papsign.ktor.openapigen.annotations.parameters.PathParam
 import no.nav.aap.komponenter.type.Periode
+import java.util.*
 
 data class BruddAktivitetspliktRequest(
     val saksnummer: String,
@@ -21,7 +22,8 @@ data class BruddAktivitetspliktHendelseDto(
     val brudd: AktivitetTypeDto,
     val paragraf: ParagrafDto,
     val periode: Periode,
-    val begrunnelse: String
+    val begrunnelse: String,
+    val hendelseId: UUID
 )
 
 enum class ParagrafDto {

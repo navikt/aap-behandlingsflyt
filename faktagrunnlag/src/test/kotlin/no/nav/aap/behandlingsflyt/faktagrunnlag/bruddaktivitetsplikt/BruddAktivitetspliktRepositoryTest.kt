@@ -4,13 +4,10 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-@Disabled
 class BruddAktivitetspliktRepositoryTest() {
-    @Disabled
     @Test
     fun `kanLagreHendelser` () {
         val saksnummer = "mittSaksnummer"
@@ -34,7 +31,6 @@ class BruddAktivitetspliktRepositoryTest() {
         }
     }
 
-    @Disabled
     @Test
     fun `kanLagreFlereHendelserPåSammeSak` () {
         val saksnummer = "saksnummerSammeSak"
@@ -69,7 +65,6 @@ class BruddAktivitetspliktRepositoryTest() {
         }
     }
 
-    @Disabled
     @Test
     fun `vilIkkeLagreMedFeilInput` () {
         val saksnummer = "myIkkeLagreSaksnummer"
@@ -90,7 +85,6 @@ class BruddAktivitetspliktRepositoryTest() {
         }
     }
 
-    @Disabled
     @Test
     fun `lagrerToHendelserNårFlerePerioderSettes` () {
         val saksnummer = "myDobbelPeriodeSak"

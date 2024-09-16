@@ -43,7 +43,8 @@ class BruddAktivitetspliktRepository(private val connection: DBConnection) {
                     brudd = row.getEnum("BRUDD"),
                     paragraf = row.getEnum("PARAGRAF"),
                     periode = row.getPeriode("PERIODE"),
-                    begrunnelse = row.getString("BEGRUNNELSE")
+                    begrunnelse = row.getString("BEGRUNNELSE"),
+                    hendelseId = row.getUUID("HENDELSE_ID")
                 )
             }
         }
