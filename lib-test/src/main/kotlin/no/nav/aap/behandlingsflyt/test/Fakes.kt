@@ -132,9 +132,6 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         System.setProperty("integrasjon.tilgang.scope", "scope")
         System.setProperty("integrasjon.tilgang.azp", "azp")
 
-        // Mottak
-        System.setProperty("integrasjon.mottak.azp", "azp")
-
         // Postmottak
         System.setProperty("integrasjon.postmottak.azp", "azp")
 
