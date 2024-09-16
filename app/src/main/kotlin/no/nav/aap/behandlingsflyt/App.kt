@@ -34,6 +34,7 @@ import no.nav.aap.behandlingsflyt.behandling.barnetillegg.flate.barnetilleggApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.flate.beregningsGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.flate.tilkjentYtelseAPI
 import no.nav.aap.behandlingsflyt.behandling.vilkår.alder.flate.aldersGrunnlagApi
+import no.nav.aap.behandlingsflyt.faktagrunnlag.bruddaktivitetsplikt.aktivitetspliktApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.flate.beregningVurderingAPI
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.bistandsgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.helseinstitusjonVurderingAPI
@@ -43,7 +44,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.m
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.flate.studentgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.sykdomsgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.sykepengerGrunnlagApi
-import no.nav.aap.behandlingsflyt.faktagrunnlag.bruddaktivitetsplikt.aktivitetspliktApi
 import no.nav.aap.behandlingsflyt.flyt.flate.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flate.flytApi
 import no.nav.aap.behandlingsflyt.flyt.flate.søknadApi
@@ -78,7 +78,10 @@ val SYSTEMBRUKER = Bruker("Kelvin")
 private const val ANTALL_WORKERS = 5
 
 fun main() {
-    Thread.currentThread().setUncaughtExceptionHandler { _, e -> SECURE_LOGGER.error("Uhåndtert feil", e) }
+    Thread.currentThread().setUncaughtExceptionHandler { _, e ->
+        LoggerFactory.getLogger(App::class.java).error("Uhåndtert feil. Se secureLog for detaljer.")
+        SECURE_LOGGER.error("Uhåndtert feil", e)
+    }
     embeddedServer(Netty, port = 8080) { server(DbConfig()) }.start(wait = true)
 }
 
@@ -161,10 +164,8 @@ internal fun Application.server(dbConfig: DbConfig) {
                 barnetilleggApi(dataSource)
                 motorApi(dataSource)
                 behandlingsflytPip(dataSource)
+                aktivitetspliktApi(dataSource)
             }
-        }
-        apiRouting {
-            aktivitetspliktApi(dataSource)
         }
         actuator(prometheus, motor)
     }

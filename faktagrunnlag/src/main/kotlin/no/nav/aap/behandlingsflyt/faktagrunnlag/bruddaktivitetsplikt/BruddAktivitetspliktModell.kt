@@ -5,31 +5,32 @@ import no.nav.aap.komponenter.type.Periode
 
 data class BruddAktivitetspliktRequest(
     val saksnummer: String,
-    val brudd: AktivitetDtoType,
-    val paragraf: Paragraf,
+    val brudd: AktivitetTypeDto,
+    val paragraf: ParagrafDto,
     val begrunnelse: String,
-    val periode: Periode
+    val perioder: List<Periode>
 )
 
 data class BruddAktivitetspliktResponse(
-    val hendelser: List<BruddAktivitetspliktHendelse>
+    val hendelser: List<BruddAktivitetspliktHendelseDto>
 )
 
 data class HentHendelseDto(@PathParam("saksnummer") val saksnummer: String)
 
-data class BruddAktivitetspliktHendelse(
-    val brudd: AktivitetDtoType,
-    val paragraf: Paragraf,
-    val periode: Periode
+data class BruddAktivitetspliktHendelseDto(
+    val brudd: AktivitetTypeDto,
+    val paragraf: ParagrafDto,
+    val periode: Periode,
+    val begrunnelse: String
 )
 
-enum class Paragraf {
+enum class ParagrafDto {
     PARAGRAF_11_7,
     PARAGRAF_11_8,
     PARAGRAF_11_9
 }
 
-enum class AktivitetDtoType {
+enum class AktivitetTypeDto {
     IKKE_MØTT_TIL_MØTE,
     IKKE_MØTT_TIL_BEHANDLING,
     IKKE_MØTT_TIL_TILTAK,

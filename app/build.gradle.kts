@@ -15,11 +15,13 @@ tasks {
         destinationFile = layout.buildDirectory.file("version.properties")
         // Define property.
         property("project.version", getCheckedOutGitCommitHash())
+        property("swagger-ui.version", "5.17.14")
     }
 
     processResources {
         // Depend on output of the task to create properties,
         // so the properties file will be part of the Java resources.
+
         from(projectProps)
     }
 }
@@ -40,7 +42,8 @@ fun getCheckedOutGitCommitHash(): String {
     return runCommand("git rev-parse --verify HEAD")
 }
 
-val komponenterVersjon = "0.0.36"
+
+val komponenterVersjon = "0.0.53"
 
 dependencies {
     implementation("io.ktor:ktor-server-auth:$ktorVersion")

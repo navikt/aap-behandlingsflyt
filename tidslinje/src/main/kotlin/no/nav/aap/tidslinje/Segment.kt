@@ -14,8 +14,12 @@ class Segment<T>(val periode: Periode, val verdi: T) : Comparable<Segment<T>> {
         return Segment(utvidetPeriode, verdi)
     }
 
-    fun inntil(other: Segment<T>): Boolean {
+    private fun inntil(other: Segment<T>): Boolean {
         return this.periode.inntil(other.periode)
+    }
+
+    fun kanSammenslås(other: Segment<T>): Boolean {
+        return inntil(other) && this.verdi == other.verdi
     }
 
     override fun compareTo(other: Segment<T>): Int {

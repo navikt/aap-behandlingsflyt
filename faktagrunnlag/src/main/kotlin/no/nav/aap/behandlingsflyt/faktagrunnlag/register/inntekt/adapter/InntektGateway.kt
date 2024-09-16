@@ -45,7 +45,7 @@ object InntektGateway : InntektRegisterGateway {
         )
         val inntektRes = query(request)
 
-        return inntektRes.inntekt.map { inntekt ->
+        return inntektRes.inntekter.map { inntekt ->
             InntektPerÅr(
                 Year.of(inntekt.inntektAr),
                 Beløp(inntekt.belop)
