@@ -9,7 +9,7 @@ class MeldepliktRepository(private val connection: DBConnection) {
     fun hentHvisEksisterer(behandlingId: BehandlingId): MeldepliktGrunnlag? {
         return connection.queryList(
             """
-            SELECT f.ID AS MELDEPLIKT_ID, v.PERIODE, v.BEGRUNNELSE, v.HAR_FRITAK
+            SELECT f.ID AS MELDEPLIKT_ID, v.PERIODE, v.HAR_FRITAK
             FROM MELDEPLIKT_FRITAK_GRUNNLAG g
             INNER JOIN MELDEPLIKT_FRITAK f ON g.MELDEPLIKT_ID = f.ID
             INNER JOIN MELDEPLIKT_FRITAK_VURDERING v ON f.ID = v.MELDEPLIKT_ID
@@ -23,7 +23,6 @@ class MeldepliktRepository(private val connection: DBConnection) {
                 MeldepliktInternal(
                     meldepliktId = row.getLong("MELDEPLIKT_ID"),
                     periode = row.getPeriode("PERIODE"),
-                    begrunnelse = row.getString("BEGRUNNELSE"),
                     harFritak = row.getBoolean("HAR_FRITAK")
                 )
             }
@@ -32,57 +31,59 @@ class MeldepliktRepository(private val connection: DBConnection) {
             .firstOrNull()
     }
 
+    private fun meldepliktGrunnlag(behandlingId: BehandlingId, meldepliktId: Long, fritaksPerioder: List<FritaksPeriode>) = connection.queryFirstOrNull("""
+        SELECT BEGRUNNELSE, OPPRETTET_TID FROM MELDEPLIKT_FRITAK_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?
+    """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.toLong()) }
+        setRowMapper { row ->
+            MeldepliktGrunnlag(
+                meldepliktId,
+                behandlingId,
+                row.getLocalDateTime("OPPRETTET_TID"),
+                Fritaksvurdering(fritaksPerioder, row.getString("BEGRUNNELSE"))
+            )
+        }
+    }
+
     private data class MeldepliktInternal(
         val meldepliktId: Long,
         val periode: Periode,
-        val begrunnelse: String,
         val harFritak: Boolean
-    )
-
-    private fun Iterable<MeldepliktInternal>.grupperOgMapTilGrunnlag(behandlingId: BehandlingId): List<MeldepliktGrunnlag> {
-        return this
-            .groupBy(MeldepliktInternal::meldepliktId) { meldeplikt ->
-                Fritaksvurdering(
-                    periode = meldeplikt.periode,
-                    begrunnelse = meldeplikt.begrunnelse,
-                    harFritak = meldeplikt.harFritak
-                )
-            }
-            .map { (meldepliktId, fritaksvurderinger) ->
-                MeldepliktGrunnlag(
-                    id = meldepliktId,
-                    behandlingId = behandlingId,
-                    vurderinger = fritaksvurderinger
-                )
-            }
+    ) {
+        fun fritaksPeriode() = FritaksPeriode(periode, harFritak)
     }
 
-    fun lagre(behandlingId: BehandlingId, vurderinger: List<Fritaksvurdering>) {
+    private fun Iterable<MeldepliktInternal>.grupperOgMapTilGrunnlag(behandlingId: BehandlingId) =
+        groupBy(MeldepliktInternal::meldepliktId, MeldepliktInternal::fritaksPeriode)
+            .map { (meldepliktId, fritaksPerioder) -> meldepliktGrunnlag(behandlingId, meldepliktId, fritaksPerioder) }
+
+    fun lagre(behandlingId: BehandlingId, vurdering: Fritaksvurdering) {
         val meldepliktGrunnlag = hentHvisEksisterer(behandlingId)
 
-        if (meldepliktGrunnlag?.vurderinger == vurderinger) return
+        if (meldepliktGrunnlag?.vurdering == vurdering) return
 
-        if (meldepliktGrunnlag != null) {
-            deaktiverEksisterende(behandlingId)
-        }
+        if (meldepliktGrunnlag != null) deaktiverEksisterende(behandlingId)
 
         val meldepliktId = connection.executeReturnKey("INSERT INTO MELDEPLIKT_FRITAK DEFAULT VALUES")
 
-        connection.execute("INSERT INTO MELDEPLIKT_FRITAK_GRUNNLAG (BEHANDLING_ID, MELDEPLIKT_ID) VALUES (?, ?)") {
+        connection.execute("INSERT INTO MELDEPLIKT_FRITAK_GRUNNLAG (BEHANDLING_ID, MELDEPLIKT_ID, BEGRUNNELSE) VALUES (?, ?, ?)") {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, meldepliktId)
+                setString(3, vurdering.begrunnelse)
             }
         }
 
-        vurderinger.forEach { vurdering ->
-            connection.execute("INSERT INTO MELDEPLIKT_FRITAK_VURDERING (MELDEPLIKT_ID, PERIODE, BEGRUNNELSE, HAR_FRITAK) VALUES (?, ?::daterange, ?, ?)") {
-                setParams {
-                    setLong(1, meldepliktId)
-                    setPeriode(2, vurdering.periode)
-                    setString(3, vurdering.begrunnelse)
-                    setBoolean(4, vurdering.harFritak)
-                }
+        vurdering.fritaksPerioder.forEach { lagreFritaksPeriode(meldepliktId, it) }
+    }
+
+    private fun lagreFritaksPeriode(meldepliktId: Long, fritaksPeriode: FritaksPeriode) {
+        connection.execute("INSERT INTO MELDEPLIKT_FRITAK_VURDERING (MELDEPLIKT_ID, PERIODE, HAR_FRITAK) VALUES (?, ?::daterange, ?)") {
+            setParams {
+                setLong(1, meldepliktId)
+                setPeriode(2, fritaksPeriode.periode)
+                setBoolean(3, fritaksPeriode.harFritak)
             }
         }
     }
@@ -100,7 +101,7 @@ class MeldepliktRepository(private val connection: DBConnection) {
 
     fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         require(fraBehandling != tilBehandling)
-        connection.execute("INSERT INTO MELDEPLIKT_FRITAK_GRUNNLAG (BEHANDLING_ID, MELDEPLIKT_ID) SELECT ?, MELDEPLIKT_ID FROM MELDEPLIKT_FRITAK_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?") {
+        connection.execute("INSERT INTO MELDEPLIKT_FRITAK_GRUNNLAG (BEHANDLING_ID, MELDEPLIKT_ID, BEGRUNNELSE) SELECT ?, MELDEPLIKT_ID, BEGRUNNELSE FROM MELDEPLIKT_FRITAK_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?") {
             setParams {
                 setLong(1, tilBehandling.toLong())
                 setLong(2, fraBehandling.toLong())
