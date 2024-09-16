@@ -84,7 +84,6 @@ dependencies {
     runtimeOnly("org.postgresql:postgresql:42.7.4")
 
     testImplementation(project(":dbtestdata"))
-    testImplementation(project(":dbtest"))
     testImplementation(project(":lib-test"))
     testImplementation("no.nav.aap.kelvin:dbtest:$komponenterVersjon")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.0")

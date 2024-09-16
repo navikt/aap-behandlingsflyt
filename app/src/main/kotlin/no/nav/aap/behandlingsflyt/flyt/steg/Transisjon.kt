@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.flyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
 
-interface Transisjon {
+sealed interface Transisjon {
     fun funnetAvklaringsbehov(): List<Definisjon> = listOf()
 
     fun erTilbakeføring(): Boolean = false
