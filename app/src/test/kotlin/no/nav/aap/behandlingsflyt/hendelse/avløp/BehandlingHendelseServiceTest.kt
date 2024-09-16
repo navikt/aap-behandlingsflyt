@@ -27,6 +27,7 @@ import java.util.*
 class BehandlingHendelseServiceTest {
     @Test
     fun `verifiser at FlytJobbRepository blir kalt med riktige argumenter`() {
+        // SETUP
         val sakService = mockk<SakService>()
         val flytJobbRepository = mockk<FlytJobbRepository>()
 
@@ -50,7 +51,11 @@ class BehandlingHendelseServiceTest {
 
         every { avklaringsbehovene.alle() } returns emptyList()
 
+        // ACT
+
         behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
+
+        // VERIFY
 
         val calls = mutableListOf<JobbInput>()
         verify {

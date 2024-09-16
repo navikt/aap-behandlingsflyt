@@ -27,5 +27,4 @@ dependencies {
     implementation("com.nimbusds:nimbus-jose-jwt:9.40")
 
     api(project(":dbtestdata"))
-    api(project(":dbtest"))
 }
