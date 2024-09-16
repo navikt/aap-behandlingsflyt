@@ -61,7 +61,6 @@ spec:
     inbound:
       rules:
         - application: saksbehandling
-        - application: mottak
         - application: tilgang
         - application: postmottak-backend
     outbound:
@@ -124,8 +123,6 @@ spec:
       value: https://medlemskap-medl-api.dev-fss-pub.nais.io/api/v1/medlemskapsunntak
     - name: INTEGRASJON_MEDL_SCOPE
       value: api://dev-fss.team-rocket.medlemskap-medl-api/.default
-    - name: INTEGRASJON_MOTTAK_AZP
-      value: dev-gcp:aap:mottak
     - name: INTEGRASJON_POSTMOTTAK_AZP
       value: dev-gcp:aap:postmottak-backend
     - name: INTEGRASJON_FORELDREPENGER_URL
