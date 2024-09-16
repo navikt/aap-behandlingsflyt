@@ -165,9 +165,9 @@ internal fun Application.server(dbConfig: DbConfig) {
                 motorApi(dataSource)
                 behandlingsflytPip(dataSource)
             }
-            apiRouting {
-                aktivitetspliktApi(dataSource)
-            }
+        }
+        apiRouting {
+            aktivitetspliktApi(dataSource)
         }
         actuator(prometheus, motor)
     }
