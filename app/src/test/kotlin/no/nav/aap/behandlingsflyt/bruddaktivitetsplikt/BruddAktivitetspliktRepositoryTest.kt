@@ -1,5 +1,9 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.bruddaktivitetsplikt
+package no.nav.aap.behandlingsflyt.bruddaktivitetsplikt
 
+import no.nav.aap.behandlingsflyt.hendelse.bruddaktivitetsplikt.AktivitetTypeDto
+import no.nav.aap.behandlingsflyt.hendelse.bruddaktivitetsplikt.BruddAktivitetspliktRepository
+import no.nav.aap.behandlingsflyt.hendelse.bruddaktivitetsplikt.BruddAktivitetspliktRequest
+import no.nav.aap.behandlingsflyt.hendelse.bruddaktivitetsplikt.ParagrafDto
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode

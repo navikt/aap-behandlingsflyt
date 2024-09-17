@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.bruddaktivitetsplikt
+package no.nav.aap.behandlingsflyt.hendelse.bruddaktivitetsplikt
 
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import java.time.LocalDateTime

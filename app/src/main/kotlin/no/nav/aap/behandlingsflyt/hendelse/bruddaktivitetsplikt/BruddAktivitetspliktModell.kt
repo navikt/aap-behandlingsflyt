@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.bruddaktivitetsplikt
+package no.nav.aap.behandlingsflyt.hendelse.bruddaktivitetsplikt
 
 import com.papsign.ktor.openapigen.annotations.parameters.PathParam
 import no.nav.aap.komponenter.type.Periode

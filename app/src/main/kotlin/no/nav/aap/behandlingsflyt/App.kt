@@ -35,7 +35,7 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.flate.beregningsGrunnlagA
 import no.nav.aap.behandlingsflyt.behandling.samordning.samordningApi
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.flate.tilkjentYtelseAPI
 import no.nav.aap.behandlingsflyt.behandling.vilkår.alder.flate.aldersGrunnlagApi
-import no.nav.aap.behandlingsflyt.faktagrunnlag.bruddaktivitetsplikt.aktivitetspliktApi
+import no.nav.aap.behandlingsflyt.hendelse.bruddaktivitetsplikt.aktivitetspliktApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.flate.beregningVurderingAPI
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.bistandsgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.helseinstitusjonVurderingAPI
