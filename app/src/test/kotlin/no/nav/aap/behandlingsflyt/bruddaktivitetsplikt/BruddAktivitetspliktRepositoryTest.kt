@@ -10,6 +10,7 @@ import no.nav.aap.komponenter.type.Periode
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.util.*
 
 class BruddAktivitetspliktRepositoryTest() {
     @Test
@@ -27,7 +28,8 @@ class BruddAktivitetspliktRepositoryTest() {
                     listOf(
                         Periode(LocalDate.now(), LocalDate.now().plusDays(5))
                     ),
-                )
+                ),
+                UUID.randomUUID()
             )
 
             val lagretHendelse = repo.hentBruddAktivitetspliktHendelser(saksnummer)
@@ -49,7 +51,8 @@ class BruddAktivitetspliktRepositoryTest() {
                     listOf(
                         Periode(LocalDate.now(), LocalDate.now().plusDays(5))
                     ),
-                )
+                ),
+                UUID.randomUUID()
             )
 
             repo.lagreBruddAktivitetspliktHendelse(
@@ -61,7 +64,8 @@ class BruddAktivitetspliktRepositoryTest() {
                     listOf(
                         Periode(LocalDate.now().plusDays(5), LocalDate.now().plusDays(10))
                     ),
-                )
+                ),
+                UUID.randomUUID()
             )
 
             val lagretHendelse = repo.hentBruddAktivitetspliktHendelser(saksnummer)
@@ -81,7 +85,8 @@ class BruddAktivitetspliktRepositoryTest() {
                     ParagrafDto.PARAGRAF_11_8,
                     "Skal ikke lagres",
                     listOf(),
-                )
+                ),
+                UUID.randomUUID()
             )
 
             val lagretHendelse = repo.hentBruddAktivitetspliktHendelser(saksnummer)
@@ -104,7 +109,8 @@ class BruddAktivitetspliktRepositoryTest() {
                         Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
                         Periode(LocalDate.now().plusDays(6), LocalDate.now().plusDays(10))
                     ),
-                )
+                ),
+                UUID.randomUUID()
             )
 
             val lagretHendelse = repo.hentBruddAktivitetspliktHendelser(saksnummer)
