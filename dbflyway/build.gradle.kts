@@ -1,4 +1,4 @@
-val komponenterVersjon = "0.0.54"
+val komponenterVersjon = "0.0.59"
 
 dependencies {
     implementation("no.nav.aap.kelvin:dbmigrering:$komponenterVersjon")

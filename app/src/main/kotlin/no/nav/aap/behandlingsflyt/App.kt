@@ -8,21 +8,14 @@ import com.papsign.ktor.openapigen.route.route
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.ktor.http.*
-import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
-import io.ktor.server.auth.*
+import io.ktor.server.auth.authenticate
 import io.ktor.server.engine.*
-import io.ktor.server.metrics.micrometer.*
 import io.ktor.server.netty.*
-import io.ktor.server.plugins.callid.*
-import io.ktor.server.plugins.callloging.*
-import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.plugins.statuspages.*
-import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.micrometer.core.instrument.binder.logging.LogbackMetrics
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
@@ -35,7 +28,6 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.flate.beregningsGrunnlagA
 import no.nav.aap.behandlingsflyt.behandling.samordning.samordningApi
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.flate.tilkjentYtelseAPI
 import no.nav.aap.behandlingsflyt.behandling.vilkår.alder.flate.aldersGrunnlagApi
-import no.nav.aap.behandlingsflyt.hendelse.bruddaktivitetsplikt.aktivitetspliktApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.flate.beregningVurderingAPI
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.bistandsgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.helseinstitusjonVurderingAPI
@@ -51,10 +43,10 @@ import no.nav.aap.behandlingsflyt.flyt.flate.søknadApi
 import no.nav.aap.behandlingsflyt.flyt.flate.torsHammerApi
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.server.authenticate.AZURE
-import no.nav.aap.behandlingsflyt.server.authenticate.authentication
 import no.nav.aap.behandlingsflyt.server.exception.FlytOperasjonException
 import no.nav.aap.behandlingsflyt.server.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.server.prosessering.ProsesseringsJobber
+import no.nav.aap.komponenter.commonKtorModule
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbmigrering.Migrering
 import no.nav.aap.komponenter.httpklient.auth.Bruker
@@ -91,22 +83,8 @@ internal fun Application.server(dbConfig: DbConfig) {
     DefaultJsonMapper.objectMapper()
         .registerSubtypes(utledSubtypes())
 
-    install(MicrometerMetrics) {
-        registry = prometheus
-        meterBinders += LogbackMetrics()
-    }
-    generateOpenAPI()
-    install(ContentNegotiation) {
-        register(ContentType.Application.Json, JacksonConverter(objectMapper = DefaultJsonMapper.objectMapper(), true))
-    }
-    install(CallId) {
-        retrieveFromHeader(HttpHeaders.XCorrelationId)
-        generate { UUID.randomUUID().toString() }
-    }
-    install(CallLogging) {
-        callIdMdc("callId")
-        filter { call -> call.request.path().startsWith("/actuator").not() }
-    }
+    commonKtorModule(prometheus, AzureConfig(), "AAP - Behandlingsflyt")
+
     install(StatusPages) {
         exception<Throwable> { call, cause ->
             when (cause) {
@@ -131,8 +109,6 @@ internal fun Application.server(dbConfig: DbConfig) {
         anyHost()
         allowHeader(HttpHeaders.ContentType)
     }
-
-    authentication(AzureConfig())
 
     val dataSource = initDatasource(dbConfig)
     Migrering.migrate(dataSource)
