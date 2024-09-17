@@ -5,9 +5,10 @@ import java.time.LocalDateTime
 import java.util.*
 
 class BruddAktivitetspliktRepository(private val connection: DBConnection) {
-    fun lagreBruddAktivitetspliktHendelse(request: BruddAktivitetspliktRequest) {
+    fun lagreBruddAktivitetspliktHendelse(request: BruddAktivitetspliktRequest, innsendingId: UUID) {
         val query = """
-            INSERT INTO BRUDD_AKTIVITETSPLIKT (SAKSNUMMER, BRUDD, PERIODE, BEGRUNNELSE, PARAGRAF, OPPRETTET_TID , HENDELSE_ID) VALUES (?, ?, ?::daterange, ?, ?, ?, ?)
+            INSERT INTO BRUDD_AKTIVITETSPLIKT (SAKSNUMMER, BRUDD, PERIODE, BEGRUNNELSE, PARAGRAF, OPPRETTET_TID , HENDELSE_ID, INNSENDING_ID) 
+            VALUES (?, ?, ?::daterange, ?, ?, ?, ?, ?)
             """.trimIndent()
 
         connection.executeBatch(query, request.perioder) {
@@ -19,6 +20,7 @@ class BruddAktivitetspliktRepository(private val connection: DBConnection) {
                 setEnumName(5, request.paragraf)
                 setLocalDateTime(6, LocalDateTime.now())
                 setUUID(7, UUID.randomUUID())
+                setUUID(8, innsendingId)
             }
         }
     }

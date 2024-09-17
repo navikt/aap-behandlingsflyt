@@ -30,10 +30,10 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
 
                 val sakService = SakService(connection)
                 val sak = sakService.hent(Saksnummer(req.saksnummer))
-                val innsendingsId = UUID.randomUUID()
+                val innsendingId = UUID.randomUUID()
 
                 val repository = BruddAktivitetspliktRepository(connection)
-                repository.lagreBruddAktivitetspliktHendelse(req)
+                repository.lagreBruddAktivitetspliktHendelse(req, innsendingId)
 
                 val tom = req.perioder.maxOf { periode -> periode.tom }
                 val fom = req.perioder.minOf { periode -> periode.fom }
@@ -43,11 +43,11 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
                     JobbInput(HendelseMottattHåndteringOppgaveUtfører)
                         .forSak(sak.id.toLong())
                         .medCallId()
-                        .medParameter(JOURNALPOST_ID, innsendingsId.toString())
+                        .medParameter(JOURNALPOST_ID, innsendingId.toString())
                         .medParameter(BREVKODE, Brevkode.AKTIVITETSKORT.name)
                         .medParameter(PERIODE, DefaultJsonMapper.toJson(Periode(fom, tom)))
                         .medParameter(MOTTATT_TIDSPUNKT, DefaultJsonMapper.toJson(LocalDateTime.now()))
-                        .medPayload(DefaultJsonMapper.toJson(innsendingsId))
+                        .medPayload(DefaultJsonMapper.toJson(innsendingId))
                 )
             }
             respond("{}", HttpStatusCode.Accepted)
