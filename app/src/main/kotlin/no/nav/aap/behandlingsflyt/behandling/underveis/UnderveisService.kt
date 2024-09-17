@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetskortRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortRepository
 import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
@@ -21,7 +22,8 @@ class UnderveisService(
     private val behandlingService: SakOgBehandlingService,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val pliktkortRepository: PliktkortRepository,
-    private val underveisRepository: UnderveisRepository
+    private val underveisRepository: UnderveisRepository,
+    private val aktivitetskortRepository: AktivitetskortRepository
 ) {
 
     private val kvoteService = KvoteService()
@@ -79,6 +81,9 @@ class UnderveisService(
         val pliktkort = pliktkortGrunnlag?.pliktkort() ?: listOf()
         val innsendingsTidspunkt = pliktkortGrunnlag?.innsendingsdatoPerMelding() ?: mapOf()
         val kvote = kvoteService.beregn(behandlingId)
+
+        val aktivitetskortGrunnlag = aktivitetskortRepository.hentHvisEksisterer(behandlingId)
+        val aktivitetskort = aktivitetskortGrunnlag // Noe mer her?
 
         return UnderveisInput(
             rettighetsperiode = sak.rettighetsperiode,
