@@ -10,7 +10,6 @@ include(
     "verdityper",
     "tidslinje",
     "dbflyway",
-    "dbtest",
     "dbtestdata",
     "httpklient",
     "lib-test",
