@@ -83,7 +83,7 @@ class UnderveisService(
         val kvote = kvoteService.beregn(behandlingId)
 
         val aktivitetskortGrunnlag = aktivitetskortRepository.hentHvisEksisterer(behandlingId)
-        val aktivitetskort = aktivitetskortGrunnlag // Noe mer her?
+        val aktivitetskort = aktivitetskortGrunnlag?.aktivitestskort() ?: listOf() //TODO: Fikse input til underveis
 
         return UnderveisInput(
             rettighetsperiode = sak.rettighetsperiode,
@@ -91,7 +91,8 @@ class UnderveisService(
             opptrappingPerioder = listOf(),
             pliktkort = pliktkort,
             innsendingsTidspunkt = innsendingsTidspunkt,
-            kvote = kvote
+            kvote = kvote,
+
         )
     }
 }

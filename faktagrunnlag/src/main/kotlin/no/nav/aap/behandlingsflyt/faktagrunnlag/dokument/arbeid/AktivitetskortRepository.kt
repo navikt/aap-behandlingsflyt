@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReposito
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
-import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.SakId
 
@@ -23,12 +22,11 @@ class AktivitetskortRepository(private val connection: DBConnection) {
                 mapGrunnlag(it, behandlingId)
             }
         }
-        return null
     }
 
     private fun mapGrunnlag(row: Row, behandlingId: BehandlingId): AktivitetskortGrunnlag {
         val sakId = hentSakId(behandlingId)
-        val aktivitetskorteneId = row.getLong("aktivitetskortene_id")
+        val aktivitetskorteneId = row.getLong("AKTIVITETSKORTENE_ID")
 
         val query = """
             SELECT * FROM AKTIVITETSKORT WHERE aktivitetskortene_id = ?
@@ -39,7 +37,7 @@ class AktivitetskortRepository(private val connection: DBConnection) {
                 setLong(1, aktivitetskorteneId)
             }
             setRowMapper {
-                Aktivitetskort(JournalpostId(it.getString("journalpost")))
+                Aktivitetskort(it.getUUID("JOURNALPOST"))
             }
         }.toSet()
 
@@ -86,21 +84,21 @@ class AktivitetskortRepository(private val connection: DBConnection) {
             val query = """
             INSERT INTO AKTIVITETSKORT (JOURNALPOST, AKTIVITETSKORTENE_ID) VALUES (?, ?)
             """.trimIndent()
-            val aktivitetskortId = connection.executeReturnKey(query) {
+            connection.execute(query) {
                 setParams {
-                    setString(1, aktivitetskort.journalpostId.identifikator)
+                    setUUID(1, aktivitetskort.journalpostId)
                     setLong(2, aktivitetskorteneId)
                 }
             }
         }
 
         val grunnlagQuery = """
-            INSERT INTO PLIKKORT_GRUNNLAG (BEHANDLING_ID, AKTIVITETSKORTENE_ID) VALUES (?, ?)
+            INSERT INTO AKTIVITETSKORT_GRUNNLAG (BEHANDLING_ID, AKTIVITETSKORTENE_ID) VALUES (?, ?)
         """.trimIndent()
         connection.execute(grunnlagQuery) {
             setParams {
                 setLong(1, behandlingId.toLong())
-                setLong(2, pliktkorteneId)
+                setLong(2, aktivitetskorteneId)
             }
         }
     }
