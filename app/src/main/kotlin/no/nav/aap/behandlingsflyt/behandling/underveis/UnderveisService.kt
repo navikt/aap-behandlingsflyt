@@ -84,6 +84,7 @@ class UnderveisService(
 
         val aktivitetskortGrunnlag = aktivitetskortRepository.hentHvisEksisterer(behandlingId)
         val aktivitetskort = aktivitetskortGrunnlag?.aktivitestskort() ?: listOf() //TODO: Fikse input til underveis
+        //TODO: MÅ JOINES ET STED, HVOR GIR MEST MENING?
 
         return UnderveisInput(
             rettighetsperiode = sak.rettighetsperiode,

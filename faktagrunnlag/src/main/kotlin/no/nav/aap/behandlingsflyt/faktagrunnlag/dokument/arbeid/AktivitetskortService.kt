@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.flyt.FlytKontekst
 
 class AktivitetskortService (
@@ -22,29 +23,28 @@ class AktivitetskortService (
     }
 
     override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekst): Boolean {
-        val aktivitetskortSomIkkeErBehandlet = mottaDokumentService.pliktkortSomIkkeErBehandlet(kontekst.sakId)
+        val aktivitetskortSomIkkeErBehandlet = mottaDokumentService.aktivitetskortSomIkkeErBehandlet(kontekst.sakId)
         if (aktivitetskortSomIkkeErBehandlet.isEmpty()) {
             return true
         }
 
         val eksisterendeGrunnlag = aktivitetskortRepository.hentHvisEksisterer(kontekst.behandlingId)
-        val eksisterendePliktkort = eksisterendeGrunnlag?.aktivitetskort ?: emptySet()
-        val allePlussNye = HashSet<Aktivitetskort>(eksisterendePliktkort)
+        val eksisterendeAktivitetskort = eksisterendeGrunnlag?.aktivitetskortene ?: emptySet()
+        val allePlussNye = HashSet<Aktivitetskort>(eksisterendeAktivitetskort)
 
-        for (ubehandletAktivitetskort in aktivitetskortSomIkkeErBehandlet) {
-            val nyttPliktkort = Pliktkort(
-                journalpostId = ubehandletPliktkort.journalpostId,
-                timerArbeidPerPeriode = ubehandletPliktkort.timerArbeidPerPeriode
+        for (ubehandlet in aktivitetskortSomIkkeErBehandlet) {
+            val nyttAktivitetskort = Aktivitetskort(
+                journalpostId = ubehandlet
             )
             mottaDokumentService.knyttTilBehandling(
                 sakId = kontekst.sakId,
                 behandlingId = kontekst.behandlingId,
-                journalpostId = ubehandletPliktkort.journalpostId
+                journalpostId = JournalpostId(ubehandlet.toString())
             )
-            allePlussNye.add(nyttPliktkort)
+            allePlussNye.add(nyttAktivitetskort)
         }
 
-        aktivitetskortRepository.lagre(behandlingId = kontekst.behandlingId, pliktkortene = allePlussNye)
+        aktivitetskortRepository.lagre(behandlingId = kontekst.behandlingId, aktivitetskortene = allePlussNye)
         return false
     }
 }
