@@ -1,19 +1,16 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.behandling
 
-import io.mockk.every
-import io.mockk.mockkStatic
-import io.mockk.unmockkAll
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FakePdlGateway
 import no.nav.aap.behandlingsflyt.dbtestdata.ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.verdityper.flyt.EndringType
 import no.nav.aap.verdityper.sakogbehandling.TypeBehandling
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 class BehandlingRepositoryImplTest {
     @Test
@@ -48,9 +45,6 @@ class BehandlingRepositoryImplTest {
 
     @Test
     fun `oppretet dato lagres på behandling og hentes ut korrekt`() {
-        mockkStatic(LocalDateTime::class)
-        every { LocalDateTime.now() } returns LocalDateTime.of(2023, 1, 1, 1, 1)
-
         val skapt = InitTestDatabase.dataSource.transaction { connection ->
             val sak = PersonOgSakService(connection, FakePdlGateway).finnEllerOpprett(
                 ident(),
@@ -65,8 +59,6 @@ class BehandlingRepositoryImplTest {
                 typeBehandling = TypeBehandling.Førstegangsbehandling
             )
         }
-
-        unmockkAll()
 
         InitTestDatabase.dataSource.transaction { connection ->
             val repo = BehandlingRepositoryImpl(connection)
