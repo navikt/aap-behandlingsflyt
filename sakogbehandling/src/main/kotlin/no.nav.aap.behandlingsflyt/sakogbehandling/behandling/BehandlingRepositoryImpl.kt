@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.behandling
 
-import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
+import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.SakId
 import no.nav.aap.verdityper.sakogbehandling.Status
@@ -18,18 +18,17 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
     override fun opprettBehandling(sakId: SakId, årsaker: List<Årsak>, typeBehandling: TypeBehandling): Behandling {
 
         val query = """
-            INSERT INTO BEHANDLING (sak_id, referanse, status, type, opprettet_tid)
-                 VALUES (?, ?, ?, ?, ?)
+            INSERT INTO BEHANDLING (sak_id, referanse, status, type)
+                 VALUES (?, ?, ?, ?)
             """.trimIndent()
         val behandlingsreferanse = BehandlingReferanse()
-        val opprettetTidspunkt = LocalDateTime.now()
+
         val behandlingId = connection.executeReturnKey(query) {
             setParams {
                 setLong(1, sakId.toLong())
                 setUUID(2, behandlingsreferanse.referanse)
                 setEnumName(3, Status.OPPRETTET)
                 setString(4, typeBehandling.identifikator())
-                setLocalDateTime(5, opprettetTidspunkt)
             }
         }
 
@@ -46,17 +45,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             }
         }
 
-        val behandling = Behandling(
-            id = BehandlingId(behandlingId),
-            referanse = behandlingsreferanse,
-            sakId = sakId,
-            typeBehandling = typeBehandling,
-            årsaker = årsaker,
-            versjon = 0,
-            opprettetTidspunkt = opprettetTidspunkt
-        )
-
-        return behandling
+        return hent(BehandlingId(behandlingId))
     }
 
     override fun finnSisteBehandlingFor(sakId: SakId): Behandling? {
