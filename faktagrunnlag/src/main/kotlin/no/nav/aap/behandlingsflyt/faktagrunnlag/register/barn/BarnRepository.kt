@@ -356,13 +356,17 @@ class BarnRepository(private val connection: DBConnection) {
     fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         require(fraBehandling != tilBehandling)
         val query = """
-            INSERT INTO BARNOPPLYSNING_GRUNNLAG (behandling_id, register_barn_id, oppgitt_barn_id, vurderte_barn_id) SELECT ?, register_barn_id, oppgitt_barn_id, vurderte_barn_id from BARNOPPLYSNING_GRUNNLAG where behandling_id = ? and aktiv
+            INSERT INTO BARNOPPLYSNING_GRUNNLAG
+                (behandling_id, register_barn_id, oppgitt_barn_id, vurderte_barn_id)
+            SELECT ?, register_barn_id, oppgitt_barn_id, vurderte_barn_id
+                from BARNOPPLYSNING_GRUNNLAG
+                where behandling_id = ? and aktiv
         """.trimIndent()
 
         connection.execute(query) {
             setParams {
-                setLong(1, fraBehandling.toLong())
-                setLong(2, tilBehandling.toLong())
+                setLong(1, tilBehandling.toLong())
+                setLong(2, fraBehandling.toLong())
             }
         }
     }
