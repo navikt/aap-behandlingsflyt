@@ -40,6 +40,7 @@ import no.nav.aap.behandlingsflyt.flyt.flate.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flate.flytApi
 import no.nav.aap.behandlingsflyt.flyt.flate.søknadApi
 import no.nav.aap.behandlingsflyt.flyt.flate.torsHammerApi
+import no.nav.aap.behandlingsflyt.hendelse.bruddaktivitetsplikt.aktivitetspliktApi
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.server.authenticate.AZURE
 import no.nav.aap.behandlingsflyt.server.exception.FlytOperasjonException
@@ -140,10 +141,8 @@ internal fun Application.server(dbConfig: DbConfig) {
                 barnetilleggApi(dataSource)
                 motorApi(dataSource)
                 behandlingsflytPip(dataSource)
+                aktivitetspliktApi(dataSource)
             }
-        }
-        apiRouting {
-            //aktivitetspliktApi(dataSource)
         }
         actuator(prometheus, motor)
     }
