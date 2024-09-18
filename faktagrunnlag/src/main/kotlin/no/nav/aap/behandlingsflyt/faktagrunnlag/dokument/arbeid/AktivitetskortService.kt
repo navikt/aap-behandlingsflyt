@@ -22,7 +22,6 @@ class AktivitetskortService (
     }
 
     override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekst): Boolean {
-        kontekst.
         val aktivitetskortSomIkkeErBehandlet = mottaDokumentService.pliktkortSomIkkeErBehandlet(kontekst.sakId)
         if (aktivitetskortSomIkkeErBehandlet.isEmpty()) {
             return true
@@ -30,7 +29,7 @@ class AktivitetskortService (
 
         val eksisterendeGrunnlag = aktivitetskortRepository.hentHvisEksisterer(kontekst.behandlingId)
         val eksisterendePliktkort = eksisterendeGrunnlag?.aktivitetskort ?: emptySet()
-        val allePlussNye = HashSet<Pliktkort>(eksisterendePliktkort)
+        val allePlussNye = HashSet<Aktivitetskort>(eksisterendePliktkort)
 
         for (ubehandletAktivitetskort in aktivitetskortSomIkkeErBehandlet) {
             val nyttPliktkort = Pliktkort(
