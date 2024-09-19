@@ -2,12 +2,12 @@ package no.nav.aap.yrkesskade
 
 import java.time.LocalDate
 
-data class YrkesskadeRequest(
+class YrkesskadeRequest(
     val foedselsnumre: List<String>,
     val fomDato: LocalDate
 )
 
-data class YrkesskadeModell (
+class YrkesskadeModell(
     val kommunenr: String,
     val saksblokk: String,
     val saksnr: Int,
@@ -24,6 +24,6 @@ data class YrkesskadeModell (
     val saksreferanse: String
 )
 
-data class Yrkesskader (
-    val skader:List<YrkesskadeModell>?
+class Yrkesskader(
+    val skader: List<YrkesskadeModell>
 )
