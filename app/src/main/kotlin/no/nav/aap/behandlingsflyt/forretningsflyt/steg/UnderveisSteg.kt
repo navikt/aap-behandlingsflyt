@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.UnderveisService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetskortRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -33,7 +33,7 @@ class UnderveisSteg(private val underveisService: UnderveisService) : Behandling
                     VilkårsresultatRepository(connection),
                     PliktkortRepository(connection),
                     UnderveisRepository(connection),
-                    AktivitetskortRepository(connection)
+                    BruddAktivitetspliktRepository(connection)
                 )
             )
         }

@@ -2,12 +2,14 @@ package no.nav.aap.behandlingsflyt.server.authenticate
 
 import com.auth0.jwk.JwkProvider
 import com.auth0.jwk.JwkProviderBuilder
+import com.papsign.ktor.openapigen.route.response.OpenAPIPipelineContext
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.response.*
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureConfig
+import no.nav.aap.verdityper.sakogbehandling.NavIdent
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.net.URI
@@ -55,4 +57,12 @@ fun Application.authentication(config: AzureConfig) {
             }
         }
     }
+}
+
+fun OpenAPIPipelineContext.innloggetNavIdent(): NavIdent {
+    val principal = this.pipeline.call.principal<JWTPrincipal>(AZURE)!!
+    val navIdent = requireNotNull(principal["NAVident"]) {
+        "NAVident mangler i token"
+    }
+    return NavIdent(navIdent)
 }

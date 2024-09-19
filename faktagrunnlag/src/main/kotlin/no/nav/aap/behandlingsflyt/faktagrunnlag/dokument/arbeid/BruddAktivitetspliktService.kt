@@ -8,16 +8,16 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.flyt.FlytKontekst
 
-class AktivitetskortService (
+class BruddAktivitetspliktService (
     private val mottaDokumentService: MottaDokumentService,
-    private val aktivitetskortRepository: AktivitetskortRepository
+    private val bruddAktivitetspliktRepository: BruddAktivitetspliktRepository,
 ) : Informasjonskrav {
 
     companion object : Informasjonskravkonstruktør {
-        override fun konstruer(connection: DBConnection): AktivitetskortService {
-            return AktivitetskortService(
+        override fun konstruer(connection: DBConnection): BruddAktivitetspliktService {
+            return BruddAktivitetspliktService(
                 MottaDokumentService(MottattDokumentRepository(connection)),
-                AktivitetskortRepository(connection)
+                BruddAktivitetspliktRepository(connection)
             )
         }
     }
@@ -28,23 +28,23 @@ class AktivitetskortService (
             return true
         }
 
-        val eksisterendeGrunnlag = aktivitetskortRepository.hentHvisEksisterer(kontekst.behandlingId)
-        val eksisterendeAktivitetskort = eksisterendeGrunnlag?.aktivitetskortene ?: emptySet()
-        val allePlussNye = HashSet<Aktivitetskort>(eksisterendeAktivitetskort)
+        val eksisterendeBrudd = bruddAktivitetspliktRepository.hentGrunnlagHvisEksisterer(kontekst.behandlingId)
+            ?.bruddene
+            ?: emptyList()
 
-        for (ubehandlet in aktivitetskortSomIkkeErBehandlet) {
-            val nyttAktivitetskort = Aktivitetskort(
-                journalpostId = ubehandlet
-            )
+        val alleBrudd = HashSet<BruddAktivitetsplikt>(eksisterendeBrudd)
+
+        for (ubehandletInnsendingId in aktivitetskortSomIkkeErBehandlet) {
+            val nyeBrudd = bruddAktivitetspliktRepository.hentBruddForInnsending(ubehandletInnsendingId)
+            alleBrudd.addAll(nyeBrudd)
             mottaDokumentService.knyttTilBehandling(
                 sakId = kontekst.sakId,
                 behandlingId = kontekst.behandlingId,
-                journalpostId = JournalpostId(ubehandlet.toString())
+                journalpostId = JournalpostId(ubehandletInnsendingId.toString())
             )
-            allePlussNye.add(nyttAktivitetskort)
         }
 
-        aktivitetskortRepository.lagre(behandlingId = kontekst.behandlingId, aktivitetskortene = allePlussNye)
+        bruddAktivitetspliktRepository.nyttGrunnlag(behandlingId = kontekst.behandlingId, brudd = alleBrudd)
         return false
     }
 }

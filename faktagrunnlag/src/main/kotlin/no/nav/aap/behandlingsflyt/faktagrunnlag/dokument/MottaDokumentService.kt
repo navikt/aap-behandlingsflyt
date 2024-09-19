@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.InnsendingId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.adapter.UbehandletPliktkort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.pliktkort.Pliktkort
@@ -69,12 +70,12 @@ class MottaDokumentService(
         }.toSet()
     }
 
-    fun aktivitetskortSomIkkeErBehandlet(sakId: SakId): Set<UUID> {
+    fun aktivitetskortSomIkkeErBehandlet(sakId: SakId): Set<InnsendingId> {
         val ubehandledeAktivitetskort = mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, Brevkode.AKTIVITETSKORT)
 
         return ubehandledeAktivitetskort.map {
             (
-                (it.strukturerteData<UUID>() as StrukturertDokument<UUID>).data
+                InnsendingId((it.strukturerteData<UUID>() as StrukturertDokument<UUID>).data)
             )
         }.toSet()
     }

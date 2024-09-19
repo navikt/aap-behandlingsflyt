@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetskortRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortRepository
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
@@ -33,7 +33,7 @@ class UnderveisServiceTest {
                     VilkårsresultatRepository(connection),
                     PliktkortRepository(connection),
                     UnderveisRepository(connection),
-                    AktivitetskortRepository(connection)
+                    BruddAktivitetspliktRepository(connection)
                 )
             val søknadsdato = LocalDate.now().minusDays(29)
             val periode = Periode(søknadsdato, søknadsdato.plusYears(3))
@@ -92,7 +92,8 @@ class UnderveisServiceTest {
                 opptrappingPerioder = listOf(Periode(søknadsdato.plusYears(2), søknadsdato.plusYears(3))),
                 pliktkort = listOf(),
                 innsendingsTidspunkt = mapOf(),
-                kvote = kvote
+                kvote = kvote,
+                bruddAktivitetsplikt = setOf(),
             )
 
             val vurderingTidslinje = underveisService.vurderRegler(input)
