@@ -1,9 +1,12 @@
 import java.io.ByteArrayOutputStream
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.gradle.kotlin.dsl.processResources
 
 val ktorVersion = "2.3.12"
 
 plugins {
-    id("io.ktor.plugin")
+    id("behandlingsflyt.conventions")
+    id("io.ktor.plugin") version "2.3.12"
 }
 
 application {
@@ -23,6 +26,10 @@ tasks {
         // so the properties file will be part of the Java resources.
 
         from(projectProps)
+    }
+
+    withType<ShadowJar> {
+        mergeServiceFiles()
     }
 }
 

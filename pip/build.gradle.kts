@@ -2,6 +2,10 @@ val ktorVersion = "2.3.12"
 val komponenterVersjon = "0.0.63"
 val tilgangVersjon = "0.0.2"
 
+plugins {
+    id("behandlingsflyt.conventions")
+}
+
 dependencies {
     implementation(project(":integrasjon"))
     implementation(project(":verdityper"))

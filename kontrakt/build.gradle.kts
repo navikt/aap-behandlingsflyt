@@ -1,3 +1,7 @@
+plugins {
+    id("behandlingsflyt.conventions")
+}
+
 dependencies {
     implementation("com.fasterxml.jackson.core:jackson-annotations:2.17.2")
 

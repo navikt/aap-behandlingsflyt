@@ -1,5 +1,9 @@
 val komponenterVersjon = "0.0.63"
 
+plugins {
+    id("behandlingsflyt.conventions")
+}
+
 dependencies {
     implementation("no.nav.aap.kelvin:dbconnect:$komponenterVersjon") // Periode
     implementation(project(":verdityper"))

@@ -203,7 +203,7 @@ class Avklaringsbehovene(
         ValiderBehandlingTilstand.validerTilstandBehandling(
             behandling = behandling,
             avklaringsbehov = avklaringsbehov,
-            eksisterenedeAvklaringsbehov = avklaringsbehovene
+            eksisterendeAvklaringsbehov = avklaringsbehovene
         )
     }
 

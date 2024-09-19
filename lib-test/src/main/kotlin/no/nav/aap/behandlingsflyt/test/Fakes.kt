@@ -317,7 +317,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         }
         routing {
             post("/tilgang") {
-                val req = call.receive<TilgangRequest>()
+                call.receive<TilgangRequest>()
                 call.respond(TilgangResponse(true))
             }
         }
@@ -518,7 +518,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         }
         routing {
             post("/utbetalte-perioder") {
-                val req = call.receive<String>()
+                call.receive<String>()
                 call.respond(spResponse)
             }
         }
@@ -925,6 +925,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
     }
 
 
+    @Suppress("PropertyName")
     internal data class TestToken(
         val access_token: String,
         val refresh_token: String = "very.secure.token",
