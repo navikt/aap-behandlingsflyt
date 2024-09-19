@@ -8,9 +8,8 @@ import no.nav.aap.behandlingsflyt.dbtestdata.ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.arbeidsevne.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.FritaksPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.FritaksvurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.EndringType
@@ -47,8 +46,8 @@ class MeldepliktRepositoryTest {
             val meldepliktRepository = MeldepliktRepository(connection)
             val fritaksvurdering = Fritaksvurdering(
                 listOf(
-                    FritaksPeriode(Periode(13 august 2023, 25 august 2023), true),
-                    FritaksPeriode(Periode(26 august 2023, 31 august 2023), false)
+                    Fritaksperiode(Periode(13 august 2023, 25 august 2023), true),
+                    Fritaksperiode(Periode(26 august 2023, 31 august 2023), false)
                 ), "en begrunnelse"
             )
             meldepliktRepository.lagre(behandling.id, fritaksvurdering)
@@ -65,7 +64,7 @@ class MeldepliktRepositoryTest {
 
             val meldepliktRepository = MeldepliktRepository(connection)
             val fritaksvurdering = Fritaksvurdering(
-                listOf(FritaksPeriode(Periode(13 august 2023, 25 august 2023), true)),
+                listOf(Fritaksperiode(Periode(13 august 2023, 25 august 2023), true)),
                 "en begrunnelse"
             )
 
@@ -103,7 +102,7 @@ class MeldepliktRepositoryTest {
             val behandling1 = behandling(connection, sak)
             val meldepliktRepository = MeldepliktRepository(connection)
             val fritaksvurdering = Fritaksvurdering(
-                listOf(FritaksPeriode(Periode(13 august 2023, 25 august 2023), true)),
+                listOf(Fritaksperiode(Periode(13 august 2023, 25 august 2023), true)),
                 "en begrunnelse"
             )
 
@@ -140,7 +139,7 @@ class MeldepliktRepositoryTest {
             val behandling1 = behandling(connection, sak)
             val meldepliktRepository = MeldepliktRepository(connection)
             val fritaksvurdering = Fritaksvurdering(
-                listOf(FritaksPeriode(Periode(13 august 2023, 25 august 2023), true)),
+                listOf(Fritaksperiode(Periode(13 august 2023, 25 august 2023), true)),
                 "en begrunnelse"
             )
             meldepliktRepository.lagre(
@@ -171,7 +170,7 @@ class MeldepliktRepositoryTest {
             val meldepliktRepository = MeldepliktRepository(connection)
 
             val fritaksvurdering = Fritaksvurdering(
-                listOf(FritaksPeriode(Periode(13 august 2023, 25 august 2023), true)),
+                listOf(Fritaksperiode(Periode(13 august 2023, 25 august 2023), true)),
                 "en begrunnelse"
             )
 
@@ -250,7 +249,7 @@ class MeldepliktRepositoryTest {
             val meldepliktRepository = MeldepliktRepository(connection)
 
             val fritaksvurdering = Fritaksvurdering(
-                listOf(FritaksPeriode(Periode(13 august 2023, 25 august 2023), true)),
+                listOf(Fritaksperiode(Periode(13 august 2023, 25 august 2023), true)),
                 "en begrunnelse"
             )
 

@@ -8,15 +8,14 @@ import java.time.LocalDateTime
 
 data class MeldepliktGrunnlag(
     val id: Long,
-    val behandlingId: BehandlingId,
-    val opprettetTid: LocalDateTime,
-    val vurdering: Fritaksvurdering
+    val behandlingId: BehandlingId
+    val vurderinger: List<Fritaksvurdering>
 ) {
     fun toDto() = FritakMeldepliktGrunnlagDto(
         vurdering.begrunnelse, vurdering.fritaksPerioder.map(::toFritakMeldepliktVurderingDto), opprettetTid
     )
 
-    private fun toFritakMeldepliktVurderingDto(fritaksPeriode: FritaksPeriode) = FritakMeldepliktVurderingDto(
+    private fun toFritakMeldepliktVurderingDto(fritaksPeriode: Fritaksperiode) = FritakMeldepliktVurderingDto(
         fritaksPeriode.harFritak, PeriodeDto(fritaksPeriode.periode)
     )
 }
