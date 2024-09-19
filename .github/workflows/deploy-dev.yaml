@@ -46,6 +46,58 @@ jobs:
     outputs:
         image: ${{ steps.docker-push.outputs.image }}
 
+  publiser-kontrakt:
+      needs: build
+      permissions:
+          contents: write
+          packages: write
+          id-token: write
+      runs-on: ubuntu-latest
+      steps:
+          - uses: actions/checkout@v4
+            with:
+                fetch-depth: 0
+            #  Ha denne tidlig, så action kan skippe raskt om ingen endringer.
+          - uses: paulhatch/semantic-version@v5.4.0
+            id: tag
+            with:
+                change_path: "kontrakt/"
+                bump_each_commit: true
+                tag_prefix: ""
+                bump_each_commit_patch_pattern: ''
+                major_pattern: "(MAJOR)" # If major bump, include this in commit message
+          - uses: actions/setup-java@v4
+            with:
+                java-version: 22
+                distribution: 'temurin'
+          - uses: gradle/actions/setup-gradle@v4
+            with:
+                gradle-version: 8.9
+          - id: notes
+            if: ${{ steps.tag.outputs.changed == 'true' }}
+            run: |
+                randomDelimiter=${RANDOM}
+                text=$(git --no-pager log $(git describe --tags --abbrev=0)..HEAD --pretty=format:"%h %s")
+                echo 'CHANGELOG<<$randomDelimiter' >> $GITHUB_OUTPUT
+                echo $text >> $GITHUB_OUTPUT
+                echo '$randomDelimiter' >> $GITHUB_OUTPUT
+          - uses:  softprops/action-gh-release@v2
+            if: ${{ steps.tag.outputs.changed == 'true' }}
+            id: create_release
+            env:
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            with:
+                tag_name: ${{ steps.tag.outputs.version }}
+                name: ${{ steps.tag.outputs.version }}
+                body: |
+                    Endringer siden sist:
+                    ${{ steps.notes.outputs.CHANGELOG }}
+          - if: ${{ steps.tag.outputs.changed == 'true' }}
+            env:
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            run: |
+                ./gradlew -Pversion=${{ steps.tag.outputs.version }} publish
+
   deploy-dev:
     needs: build
     runs-on: ubuntu-latest
