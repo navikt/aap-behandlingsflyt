@@ -11,8 +11,9 @@ include(
     "tidslinje",
     "dbflyway",
     "dbtestdata",
-    "httpklient",
+    "integrasjon",
     "lib-test",
     "tilgang",
+    "kontrakt",
     "pip"
 )

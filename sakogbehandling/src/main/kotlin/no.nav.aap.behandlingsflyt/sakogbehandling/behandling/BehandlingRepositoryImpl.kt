@@ -7,7 +7,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.SakId
-import no.nav.aap.verdityper.sakogbehandling.Status
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.verdityper.sakogbehandling.TypeBehandling
 import java.time.LocalDateTime
 

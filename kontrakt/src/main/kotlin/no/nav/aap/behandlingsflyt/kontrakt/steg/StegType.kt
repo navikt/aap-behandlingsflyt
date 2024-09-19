@@ -1,13 +1,20 @@
-package no.nav.aap.verdityper.flyt
+package no.nav.aap.behandlingsflyt.kontrakt.steg
 
-import no.nav.aap.verdityper.sakogbehandling.Status
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 
-enum class StegType(val gruppe: StegGruppe, val status: Status, val tekniskSteg: Boolean = false) {
+enum class StegType(
+    val gruppe: StegGruppe,
+    val status: Status,
+    val tekniskSteg: Boolean = false
+) {
     START_BEHANDLING(
         gruppe = StegGruppe.START_BEHANDLING,
         status = Status.OPPRETTET
     ),
-    VURDER_ALDER(gruppe = StegGruppe.ALDER, status = Status.UTREDES),
+    VURDER_ALDER(
+        gruppe = StegGruppe.ALDER,
+        status = Status.UTREDES,
+    ),
     VURDER_LOVVALG(
         gruppe = StegGruppe.LOVVALG,
         status = Status.UTREDES
@@ -34,9 +41,12 @@ enum class StegType(val gruppe: StegGruppe, val status: Status, val tekniskSteg:
     ),
     KVALITETSSIKRING(
         gruppe = StegGruppe.KVALITETSSIKRING,
+        status = Status.UTREDES,
+    ),
+    BARNETILLEGG(
+        gruppe = StegGruppe.BARNETILLEGG,
         status = Status.UTREDES
     ),
-    BARNETILLEGG(gruppe = StegGruppe.BARNETILLEGG, status = Status.UTREDES),
     AVKLAR_SYKDOM(
         gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES
@@ -45,9 +55,18 @@ enum class StegType(val gruppe: StegGruppe, val status: Status, val tekniskSteg:
         gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES
     ),
-    FASTSETT_BEREGNINGSTIDSPUNKT(gruppe = StegGruppe.GRUNNLAG, status = Status.UTREDES),
-    FASTSETT_GRUNNLAG(gruppe = StegGruppe.GRUNNLAG, status = Status.UTREDES),
-    VIS_GRUNNLAG(gruppe = StegGruppe.GRUNNLAG, status = Status.UTREDES),
+    FASTSETT_BEREGNINGSTIDSPUNKT(
+        gruppe = StegGruppe.GRUNNLAG,
+        status = Status.UTREDES
+    ),
+    FASTSETT_GRUNNLAG(
+        gruppe = StegGruppe.GRUNNLAG,
+        status = Status.UTREDES
+    ),
+    VIS_GRUNNLAG(
+        gruppe = StegGruppe.GRUNNLAG,
+        status = Status.UTREDES
+    ),
     FASTSETT_UTTAK(
         gruppe = StegGruppe.UNDERVEIS,
         status = Status.UTREDES
@@ -76,11 +95,17 @@ enum class StegType(val gruppe: StegGruppe, val status: Status, val tekniskSteg:
         gruppe = StegGruppe.FATTE_VEDTAK,
         status = Status.UTREDES
     ),
-    BREV(gruppe = StegGruppe.BREV, status = Status.UTREDES),
-    IVERKSETT_VEDTAK(gruppe = StegGruppe.IVERKSETT_VEDTAK, status = Status.AVSLUTTET),
+    BREV(
+        gruppe = StegGruppe.BREV,
+        status = Status.AVSLUTTET,
+    ),
+    IVERKSETT_VEDTAK(
+        gruppe = StegGruppe.IVERKSETT_VEDTAK,
+        status = Status.AVSLUTTET
+    ),
     UDEFINERT(
         gruppe = StegGruppe.UDEFINERT,
         status = Status.UTREDES,
-        tekniskSteg = true
+        tekniskSteg = true,
     ) // Forbeholdt deklarasjon for avklaringsbehov som
 }

@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.server.prosessering
 
 import io.mockk.checkUnnecessaryStub
 import io.mockk.mockk
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
@@ -44,9 +44,9 @@ import no.nav.aap.statistikk.api_kontrakt.VilkårDTO
 import no.nav.aap.statistikk.api_kontrakt.VilkårsPeriodeDTO
 import no.nav.aap.statistikk.api_kontrakt.VilkårsResultatDTO
 import no.nav.aap.verdityper.GUnit
-import no.nav.aap.verdityper.flyt.StegType
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.verdityper.sakogbehandling.Ident
-import no.nav.aap.verdityper.sakogbehandling.Status
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.verdityper.sakogbehandling.TypeBehandling
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll

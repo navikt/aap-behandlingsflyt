@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.flyt.flate.visning
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.verdityper.flyt.StegGruppe
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegGruppe
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
 

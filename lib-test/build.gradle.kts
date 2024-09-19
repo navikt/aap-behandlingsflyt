@@ -5,7 +5,7 @@ dependencies {
     implementation(project(":sakogbehandling"))
     implementation(project(":faktagrunnlag"))
     implementation(project(":verdityper"))
-    implementation(project(":httpklient"))
+    implementation(project(":integrasjon"))
     implementation(project(":app"))
     implementation("no.nav.aap.tilgang:api-kontrakt:0.0.2")
     implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")

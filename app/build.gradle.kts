@@ -63,7 +63,7 @@ dependencies {
     implementation("no.nav.aap.kelvin:infrastructure:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:server:$komponenterVersjon")
 
-    implementation(project(":httpklient"))
+    implementation(project(":integrasjon"))
     implementation(project(":sakogbehandling"))
     implementation(project(":faktagrunnlag"))
     implementation(project(":verdityper"))

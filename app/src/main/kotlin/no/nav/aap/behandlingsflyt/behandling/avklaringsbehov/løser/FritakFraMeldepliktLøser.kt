@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FritakMeldepliktLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.FritaksPeriode
@@ -17,7 +17,7 @@ class FritakFraMeldepliktLøser(val connection: DBConnection) : Avklaringsbehovs
         val fritaksvurdering = løsning.fritaksvurdering.toFritaksvurdering()
 
         if (fritaksvurdering.fritaksPerioder.fritaksPeriodeOverlapper()) throw IllegalStateException("Valideringsfeil: Perioder overlapper")
-        
+
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
 
         meldepliktRepository.lagre(
@@ -39,8 +39,8 @@ class FritakFraMeldepliktLøser(val connection: DBConnection) : Avklaringsbehovs
         .sortedBy { it.periode.fom }
         .zipWithNext()
         .any { (tidlig, sent) ->  tidlig overlapperMed sent }
-    
+
     private infix fun FritaksPeriode.overlapperMed(other: FritaksPeriode) = periode.overlapper(other.periode)
-    
+
     private fun List<FritaksPeriode>.kreverToTrinn() = this.any { it.harFritak }
 }

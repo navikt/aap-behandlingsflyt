@@ -3,7 +3,7 @@ val komponenterVersjon = "0.0.63"
 val tilgangVersjon = "0.0.2"
 
 dependencies {
-    implementation(project(":httpklient"))
+    implementation(project(":integrasjon"))
     implementation(project(":verdityper"))
     implementation(project(":sakogbehandling"))
     implementation(project(":faktagrunnlag"))

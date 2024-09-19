@@ -9,7 +9,7 @@ dependencies {
 
     implementation(project(":verdityper"))
     implementation(project(":dbflyway"))
-    implementation(project(":httpklient"))
+    implementation(project(":integrasjon"))
     
     implementation("no.nav.aap.tilgang:plugin:$tilgangVersjon")
     implementation("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")

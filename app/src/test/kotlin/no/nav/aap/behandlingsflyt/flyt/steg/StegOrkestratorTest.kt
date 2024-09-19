@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.flyt.steg
 import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.EndringType
+import no.nav.aap.verdityper.flyt.EndringType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.komponenter.dbconnect.transaction

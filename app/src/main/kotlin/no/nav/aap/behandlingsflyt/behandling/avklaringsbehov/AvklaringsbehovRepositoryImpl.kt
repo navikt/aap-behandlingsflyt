@@ -1,9 +1,10 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
-import no.nav.aap.verdityper.flyt.StegType
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -162,7 +163,7 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         }
     }
 
-    override fun hent(behandlingId: BehandlingId): List<no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov> {
+    override fun hent(behandlingId: BehandlingId): List<Avklaringsbehov> {
         val query = """
             SELECT * FROM AVKLARINGSBEHOV WHERE behandling_id = ?
             """.trimIndent()
@@ -177,10 +178,10 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         }
     }
 
-    private fun mapAvklaringsbehov(row: Row): no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov {
-        val definisjon = Definisjon.forKode(row.getString("definisjon"))
+    private fun mapAvklaringsbehov(row: Row): Avklaringsbehov {
+        val definisjon = Definisjon.Companion.forKode(row.getString("definisjon"))
         val id = row.getLong("id")
-        return no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov(
+        return Avklaringsbehov(
             id = id,
             definisjon = definisjon,
             funnetISteg = row.getEnum("funnet_i_steg"),

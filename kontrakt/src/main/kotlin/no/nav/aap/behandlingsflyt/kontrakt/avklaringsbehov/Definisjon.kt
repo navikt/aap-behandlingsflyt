@@ -1,9 +1,9 @@
-package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
+package no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
-import no.nav.aap.verdityper.flyt.StegType
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import java.time.LocalDate
 import java.time.Period
 import java.util.*

@@ -21,7 +21,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.medlemskap.flate.M
 import no.nav.aap.behandlingsflyt.flyt.flate.SøknadSendDto
 import no.nav.aap.behandlingsflyt.flyt.flate.VilkårDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.EndringType
+import no.nav.aap.verdityper.flyt.EndringType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.FinnEllerOpprettSakDTO
@@ -41,7 +41,6 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.Client
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.GUnit
-import no.nav.aap.verdityper.flyt.StegType
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import no.nav.aap.verdityper.sakogbehandling.TypeBehandling
 import org.assertj.core.api.Assertions.assertThat
@@ -282,11 +281,11 @@ class ApiTest {
         data class DetaljertBehandlingDTO(
             val referanse: UUID,
             val type: String,
-            val status: no.nav.aap.verdityper.sakogbehandling.Status,
+            val status: no.nav.aap.behandlingsflyt.kontrakt.sak.Status,
             val opprettet: LocalDateTime,
             val avklaringsbehov: List<AvklaringsbehovDTO>,
             val vilkår: List<VilkårDTO>,
-            val aktivtSteg: StegType,
+            val aktivtSteg: no.nav.aap.behandlingsflyt.kontrakt.steg.StegType,
             val versjon: Long
         )
 

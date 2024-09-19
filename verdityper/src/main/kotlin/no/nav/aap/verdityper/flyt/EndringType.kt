@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.sakogbehandling.behandling
+package no.nav.aap.verdityper.flyt
 
 enum class EndringType {
     MOTTATT_SØKNAD,

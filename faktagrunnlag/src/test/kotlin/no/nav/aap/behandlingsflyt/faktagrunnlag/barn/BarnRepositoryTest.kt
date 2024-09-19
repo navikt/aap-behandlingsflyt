@@ -10,14 +10,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.EndringType
+import no.nav.aap.verdityper.flyt.EndringType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Saksnummer
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.sakogbehandling.Ident
-import no.nav.aap.verdityper.sakogbehandling.Status
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate

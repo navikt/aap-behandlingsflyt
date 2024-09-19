@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.flyt
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlag
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegOrkestrator
@@ -11,6 +10,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.TilbakeførtFraBeslutter
 import no.nav.aap.behandlingsflyt.flyt.steg.TilbakeførtFraKvalitetssikrer
 import no.nav.aap.behandlingsflyt.flyt.steg.Transisjon
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService

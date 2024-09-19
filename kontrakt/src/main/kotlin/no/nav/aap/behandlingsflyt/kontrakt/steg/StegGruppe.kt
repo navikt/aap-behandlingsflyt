@@ -1,4 +1,4 @@
-package no.nav.aap.verdityper.flyt
+package no.nav.aap.behandlingsflyt.kontrakt.steg
 
 enum class StegGruppe(val skalVises: Boolean, val obligatoriskVisning: Boolean) {
     START_BEHANDLING(false, true),

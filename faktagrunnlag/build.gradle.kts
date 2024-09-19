@@ -6,7 +6,7 @@ dependencies {
     implementation(project(":verdityper"))
     implementation(project(":tidslinje"))
     implementation(project(":dbflyway"))
-    implementation(project(":httpklient"))
+    implementation(project(":integrasjon"))
 
     implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:infrastructure:$komponenterVersjon")
