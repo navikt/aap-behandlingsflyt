@@ -26,15 +26,15 @@ class SamordningSteg(
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val samordningTidslinje = samordningRegelService.vurder()//kontekst.behandlingId)
-        
-        // Hvis perioden har ytelsesgradering som er manuell, 
+
+        // Hvis perioden har ytelsesgradering som er manuell,
         // så skal det opprettes et avklaringsbehov hvis ikke allerede vurdert
         if (samordningTidslinje.segmenter().any {
                 it.verdi.ytelsesGraderinger.any {
                     it.ytelse.type == AvklaringsType.MANUELL
                 }
             }) {
-            // Sjekk om det finnes perioder som ikke er vurdert 
+            // Sjekk om det finnes perioder som ikke er vurdert
             if (erUvurdert) {
                 return StegResultat(listOf(Definisjon.AVKLAR_SAMORDNING_GRADERING))
             } else {
@@ -61,7 +61,6 @@ class SamordningSteg(
 
         override fun type(): StegType {
             return StegType.SAMORDNING_GRADERING
-            return StegType.FASTSETT_UTTAK
         }
     }
 }

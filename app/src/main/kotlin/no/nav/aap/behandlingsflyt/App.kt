@@ -142,6 +142,7 @@ internal fun Application.server(dbConfig: DbConfig) {
                 barnetilleggApi(dataSource)
                 motorApi(dataSource)
                 behandlingsflytPip(dataSource)
+                aktivitetspliktApi(dataSource)
             }
             apiRouting {
                 aktivitetspliktApi(dataSource)
