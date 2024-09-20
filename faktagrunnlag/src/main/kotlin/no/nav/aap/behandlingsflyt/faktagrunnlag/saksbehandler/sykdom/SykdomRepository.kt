@@ -5,7 +5,6 @@ import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
-import java.time.LocalDate
 
 class SykdomRepository(private val connection: DBConnection) {
 
@@ -100,7 +99,7 @@ class SykdomRepository(private val connection: DBConnection) {
                 setBoolean(4, vurdering.erSkadeSykdomEllerLyteVesentligdel)
                 setBoolean(5, vurdering.erNedsettelseIArbeidsevneHøyereEnnNedreGrense)
                 setEnumName(6, vurdering.nedreGrense)
-                setLocalDate(7, vurdering.nedsattArbeidsevneDato?.let { LocalDate.of(it, 1, 1) })
+                setLocalDate(7, vurdering.nedsattArbeidsevneDato)
             }
         }
 
@@ -183,7 +182,7 @@ class SykdomRepository(private val connection: DBConnection) {
                     row.getBooleanOrNull("ER_SYKDOM_SKADE_LYTE_VESETLING_DEL"),
                     row.getBooleanOrNull("ER_NEDSETTELSE_HOYERE_ENN_NEDRE_GRENSE"),
                     row.getEnumOrNull("NEDRE_GRENSE"),
-                    row.getLocalDateOrNull("NEDSATT_ARBEIDSEVNE_DATO")?.year,
+                    row.getLocalDateOrNull("NEDSATT_ARBEIDSEVNE_DATO"),
                     row.getBooleanOrNull("ER_ARBEIDSEVNE_NEDSATT")
                 )
             }

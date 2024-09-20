@@ -74,7 +74,7 @@ class InntektService private constructor(
 
     private fun utledNedsettelsesdato(sykdomGrunnlag: SykdomGrunnlag?, studentGrunnlag: StudentGrunnlag?): LocalDate {
         val nedsettelsesdatoer = setOf(
-            sykdomGrunnlag?.sykdomsvurdering?.nedsattArbeidsevneDato?.let { LocalDate.of(it, 1, 1) },
+            sykdomGrunnlag?.sykdomsvurdering?.nedsattArbeidsevneDato,
             studentGrunnlag?.studentvurdering?.avbruttStudieDato
         ).filterNotNull()
 

@@ -8,7 +8,6 @@ import no.nav.aap.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import java.time.Year
 
 class SykdomsInformasjonskravTest {
 
@@ -24,7 +23,7 @@ class SykdomsInformasjonskravTest {
                 erSkadeSykdomEllerLyteVesentligdel = true,
                 erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                 nedreGrense = NedreGrense.FEMTI,
-                nedsattArbeidsevneDato = Year.now().value,
+                nedsattArbeidsevneDato = LocalDate.now(),
                 erArbeidsevnenNedsatt = true,
             )
         )
@@ -44,7 +43,7 @@ class SykdomsInformasjonskravTest {
                 erSkadeSykdomEllerLyteVesentligdel = true,
                 erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                 nedreGrense = NedreGrense.TRETTI,
-                nedsattArbeidsevneDato = Year.now().value,
+                nedsattArbeidsevneDato = LocalDate.now(),
                 erArbeidsevnenNedsatt = true,
             )
         )
@@ -69,7 +68,7 @@ class SykdomsInformasjonskravTest {
                 erSkadeSykdomEllerLyteVesentligdel = true,
                 erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                 nedreGrense = NedreGrense.TRETTI,
-                nedsattArbeidsevneDato = Year.now().value,
+                nedsattArbeidsevneDato = LocalDate.now(),
                 erArbeidsevnenNedsatt = true,
             )
         )
@@ -94,7 +93,7 @@ class SykdomsInformasjonskravTest {
                 erSkadeSykdomEllerLyteVesentligdel = true,
                 erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                 nedreGrense = NedreGrense.FEMTI,
-                nedsattArbeidsevneDato = Year.now().value,
+                nedsattArbeidsevneDato = LocalDate.now(),
                 erArbeidsevnenNedsatt = true,
             )
         )
@@ -119,7 +118,7 @@ class SykdomsInformasjonskravTest {
                 erSkadeSykdomEllerLyteVesentligdel = true,
                 erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                 nedreGrense = NedreGrense.TRETTI,
-                nedsattArbeidsevneDato = Year.now().value,
+                nedsattArbeidsevneDato = LocalDate.now(),
                 erArbeidsevnenNedsatt = true,
             )
         )
@@ -144,7 +143,7 @@ class SykdomsInformasjonskravTest {
                 erSkadeSykdomEllerLyteVesentligdel = true,
                 erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                 nedreGrense = NedreGrense.FEMTI,
-                nedsattArbeidsevneDato = Year.now().value,
+                nedsattArbeidsevneDato = LocalDate.now(),
                 erArbeidsevnenNedsatt = true,
             )
         )
@@ -164,7 +163,7 @@ class SykdomsInformasjonskravTest {
                 erSkadeSykdomEllerLyteVesentligdel = false,
                 erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                 nedreGrense = NedreGrense.FEMTI,
-                nedsattArbeidsevneDato = Year.now().value,
+                nedsattArbeidsevneDato = LocalDate.now(),
                 erArbeidsevnenNedsatt = true,
             )
         )
@@ -184,7 +183,7 @@ class SykdomsInformasjonskravTest {
                 erSkadeSykdomEllerLyteVesentligdel = false,
                 erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                 nedreGrense = NedreGrense.FEMTI,
-                nedsattArbeidsevneDato = Year.now().value,
+                nedsattArbeidsevneDato = LocalDate.now(),
                 erArbeidsevnenNedsatt = true,
             )
         )
@@ -204,7 +203,7 @@ class SykdomsInformasjonskravTest {
                 erSkadeSykdomEllerLyteVesentligdel = true,
                 erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                 nedreGrense = NedreGrense.FEMTI,
-                nedsattArbeidsevneDato = Year.now().value,
+                nedsattArbeidsevneDato = LocalDate.now(),
                 erArbeidsevnenNedsatt = true,
             )
         )
@@ -224,7 +223,7 @@ class SykdomsInformasjonskravTest {
                 erSkadeSykdomEllerLyteVesentligdel = true,
                 erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                 nedreGrense = NedreGrense.FEMTI,
-                nedsattArbeidsevneDato = Year.now().value,
+                nedsattArbeidsevneDato = LocalDate.now(),
                 erArbeidsevnenNedsatt = true,
             )
         )
