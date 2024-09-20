@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.behandling.underveis.sykepenger
+package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.sykepenger
 
 import java.time.LocalDate
 
