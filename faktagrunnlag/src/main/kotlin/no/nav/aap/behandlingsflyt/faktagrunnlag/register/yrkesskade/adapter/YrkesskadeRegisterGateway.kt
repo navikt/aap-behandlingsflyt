@@ -74,6 +74,13 @@ object YrkesskadeRegisterGateway {
             return emptyList()
         }
 
-        return response.skader.map { yrkesskade -> Yrkesskade(yrkesskade.saksreferanse, yrkesskade.skadedato) }
+        //FIXME: Kan denne være null?? Når da? Ser ut som at yrkesskade-saker alltid returnerer en liste med mindre det er en feil i responsen
+        val skader = response.skader
+
+        if (skader == null) {
+            return emptyList()
+        }
+
+        return skader.map { yrkesskade -> Yrkesskade(yrkesskade.saksreferanse, yrkesskade.skadedato) }
     }
 }

@@ -25,5 +25,6 @@ class YrkesskadeModell(
 )
 
 class Yrkesskader(
-    val skader: List<YrkesskadeModell>
+    //FIXME: Kan denne være null?? Når da? Ser ut som at yrkesskade-saker alltid returnerer en liste med mindre det er en feil i responsen
+    val skader: List<YrkesskadeModell>?
 )
