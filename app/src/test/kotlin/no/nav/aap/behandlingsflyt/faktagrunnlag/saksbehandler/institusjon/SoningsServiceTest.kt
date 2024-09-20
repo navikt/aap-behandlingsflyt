@@ -4,7 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.InstitusjonsoppholdDto
@@ -23,7 +23,7 @@ class SoningsServiceTest {
 
     val connection = mockk<DBConnection>()
     val soningRepository = mockk<SoningRepository>()
-    val institusjonRepository = mockk<InstitusjonsoppholdService>()
+    val institusjonRepository = mockk<InstitusjonsoppholdRepository>()
     val behandlingReferanseService = mockk<BehandlingReferanseService>()
 
     val soningsService = SoningsService(connection, soningRepository, institusjonRepository, behandlingReferanseService)
