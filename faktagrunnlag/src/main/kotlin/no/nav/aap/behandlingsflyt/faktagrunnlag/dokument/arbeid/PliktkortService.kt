@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.verdityper.flyt.FlytKontekst
+import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
 
 class PliktkortService private constructor(
     private val mottaDokumentService: MottaDokumentService,
@@ -13,6 +13,10 @@ class PliktkortService private constructor(
 ) : Informasjonskrav {
 
     companion object : Informasjonskravkonstruktør {
+        override fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
+            // Skal alltid innhentes
+            return true
+        }
         override fun konstruer(connection: DBConnection): PliktkortService {
             return PliktkortService(
                 MottaDokumentService(
@@ -23,7 +27,7 @@ class PliktkortService private constructor(
         }
     }
 
-    override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekst): Boolean {
+    override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekstMedPerioder): Boolean {
         val pliktkortSomIkkeErBehandlet = mottaDokumentService.pliktkortSomIkkeErBehandlet(kontekst.sakId)
         if (pliktkortSomIkkeErBehandlet.isEmpty()) {
             return true

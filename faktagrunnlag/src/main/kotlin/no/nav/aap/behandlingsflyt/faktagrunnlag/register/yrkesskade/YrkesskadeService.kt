@@ -1,12 +1,12 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade
 
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeRegisterGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.verdityper.flyt.FlytKontekst
+import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
 class YrkesskadeService private constructor(
@@ -16,7 +16,7 @@ class YrkesskadeService private constructor(
     private val yrkesskadeRegisterGateway: YrkesskadeRegisterGateway
 ) : Informasjonskrav {
 
-    override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekst): Boolean {
+    override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekstMedPerioder): Boolean {
         val sak = sakService.hent(kontekst.sakId)
         val fødselsdato = requireNotNull(personopplysningRepository.hentHvisEksisterer(kontekst.behandlingId)?.brukerPersonopplysning?.fødselsdato)
         val yrkesskadePeriode = yrkesskadeRegisterGateway.innhent(sak.person, fødselsdato)
@@ -42,6 +42,10 @@ class YrkesskadeService private constructor(
     }
 
     companion object : Informasjonskravkonstruktør {
+        override fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
+            // Skal kun innhente når 11-5 skal vurderes
+            return true
+        }
         override fun konstruer(connection: DBConnection): YrkesskadeService {
             return YrkesskadeService(
                 SakService(connection),

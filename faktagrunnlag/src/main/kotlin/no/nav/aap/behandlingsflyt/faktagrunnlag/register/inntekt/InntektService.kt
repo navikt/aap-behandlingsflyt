@@ -16,8 +16,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepos
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.verdityper.Prosent
-import no.nav.aap.verdityper.flyt.FlytKontekst
+import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
+import no.nav.aap.verdityper.flyt.Vurdering
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
+import no.nav.aap.verdityper.sakogbehandling.TypeBehandling
 import java.time.LocalDate
 
 class InntektService private constructor(
@@ -30,7 +32,7 @@ class InntektService private constructor(
     private val inntektRegisterGateway: InntektRegisterGateway
 ) : Informasjonskrav {
 
-    override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekst): Boolean {
+    override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekstMedPerioder): Boolean {
         val behandlingId = kontekst.behandlingId
         val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
 
@@ -86,6 +88,15 @@ class InntektService private constructor(
     }
 
     companion object : Informasjonskravkonstruktør {
+        override fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
+            // Skal kun innhente på nytt når det skal beregnes, førstegengasbehandling
+            return kontekst.behandlingType == TypeBehandling.Førstegangsbehandling || skalReberegne(kontekst.perioderTilVurdering)
+        }
+
+        private fun skalReberegne(vurderinger: Set<Vurdering>): Boolean {
+            return false
+        }
+
         override fun konstruer(connection: DBConnection): InntektService {
             return InntektService(
                 SakService(connection),

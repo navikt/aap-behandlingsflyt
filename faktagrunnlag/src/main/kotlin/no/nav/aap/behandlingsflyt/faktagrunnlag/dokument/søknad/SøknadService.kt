@@ -10,7 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.OppgittStu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.verdityper.flyt.FlytKontekst
+import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
 
 class SøknadService private constructor(
     private val mottaDokumentService: MottaDokumentService,
@@ -20,6 +20,10 @@ class SøknadService private constructor(
 ) : Informasjonskrav {
 
     companion object : Informasjonskravkonstruktør {
+        override fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
+            // Skal alltid innhentes
+            return true
+        }
         override fun konstruer(connection: DBConnection): SøknadService {
             return SøknadService(
                 MottaDokumentService(
@@ -32,7 +36,7 @@ class SøknadService private constructor(
         }
     }
 
-    override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekst): Boolean {
+    override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekstMedPerioder): Boolean {
         val ubehandletSøknader = mottaDokumentService.søknaderSomIkkeHarBlittBehandlet(kontekst.sakId)
         if (ubehandletSøknader.isEmpty()) {
             return true

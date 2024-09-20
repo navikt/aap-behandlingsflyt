@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.TilbakeførtFraKvalitetssikrer
 import no.nav.aap.behandlingsflyt.flyt.steg.Transisjon
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.periodisering.PerioderTilVurderingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -19,6 +20,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.verdityper.flyt.FlytKontekst
+import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.SakId
 import org.slf4j.LoggerFactory
@@ -47,6 +49,7 @@ class FlytOrkestrator(
     private val behandlingHendelseService = BehandlingHendelseService(
         FlytJobbRepository(connection), SakService(connection)
     )
+    private val perioderTilVurderingService = PerioderTilVurderingService(connection)
 
     fun opprettKontekst(sakId: SakId, behandlingId: BehandlingId): FlytKontekst {
         val typeBehandling = behandlingRepository.hentBehandlingType(behandlingId)
@@ -92,7 +95,15 @@ class FlytOrkestrator(
         val oppdaterFaktagrunnlagForKravliste =
             informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
                 kravliste = behandlingFlyt.faktagrunnlagFremTilOgMedGjeldendeSteg(),
-                kontekst = kontekst
+                kontekst = FlytKontekstMedPerioder(
+                    sakId = kontekst.sakId,
+                    behandlingId = kontekst.behandlingId,
+                    behandlingType = kontekst.behandlingType,
+                    perioderTilVurdering = perioderTilVurderingService.utled(
+                        kontekst = kontekst,
+                        stegType = behandling.aktivtSteg()
+                    )
+                )
             )
 
         val tilbakeføringsflyt = behandlingFlyt.tilbakeflytEtterEndringer(oppdaterFaktagrunnlagForKravliste)
@@ -138,12 +149,11 @@ class FlytOrkestrator(
         while (true) {
             connection.markerSavepoint()
 
-            informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
-                behandlingFlyt.faktagrunnlagForGjeldendeSteg(),
-                kontekst
+            val result = StegOrkestrator(connection, gjeldendeSteg).utfør(
+                kontekst,
+                behandling,
+                behandlingFlyt.faktagrunnlagForGjeldendeSteg()
             )
-
-            val result = StegOrkestrator(connection, gjeldendeSteg).utfør(kontekst, behandling)
 
             val avklaringsbehov = avklaringsbehovene.åpne()
             if (result.erTilbakeføring()) {

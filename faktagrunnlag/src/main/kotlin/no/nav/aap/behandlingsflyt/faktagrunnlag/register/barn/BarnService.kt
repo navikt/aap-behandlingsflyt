@@ -13,7 +13,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.verdityper.flyt.FlytKontekst
+import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.Ident
 
@@ -27,7 +27,7 @@ class BarnService private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository
 ) : Informasjonskrav {
 
-    override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekst): Boolean {
+    override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekstMedPerioder): Boolean {
         val behandlingId = kontekst.behandlingId
         val eksisterendeData = barnRepository.hentHvisEksisterer(behandlingId)
 
@@ -100,6 +100,10 @@ class BarnService private constructor(
     }
 
     companion object : Informasjonskravkonstruktør {
+        override fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
+            // Skal alltid innhentes
+            return true
+        }
         override fun konstruer(connection: DBConnection): BarnService {
             return BarnService(
                 SakService(connection),
