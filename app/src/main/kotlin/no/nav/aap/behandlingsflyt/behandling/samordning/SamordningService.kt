@@ -1,110 +1,39 @@
 package no.nav.aap.behandlingsflyt.behandling.samordning
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.foreldrepenger.Aktør
-import no.nav.aap.behandlingsflyt.behandling.underveis.foreldrepenger.ForeldrepengerGateway
-import no.nav.aap.behandlingsflyt.behandling.underveis.foreldrepenger.ForeldrepengerRequest
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.SamordningRegel
-import no.nav.aap.behandlingsflyt.behandling.underveis.sykepenger.SykepengerRequest
-import no.nav.aap.behandlingsflyt.behandling.underveis.sykepenger.SykepengerGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.tidslinje.JoinStyle
-import no.nav.aap.tidslinje.Segment
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.foreldrepenger.ForeldrepengerRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.sykepenger.SykepengerRepository
 import no.nav.aap.tidslinje.Tidslinje
-import no.nav.aap.verdityper.flyt.FlytKontekst
-import java.time.LocalDate
-
-/*
-* Informasjonselementer fra ytelsene:
-* Perioder med ytelse
-* utbetalingsgrad per periode
-*
-* -----Tables vi trenger?:------
-* SamordningGrunnlag
-* - bruk underveisGrunnlag table
-* SamordningPerioder
-* - bruk underveisPerioder table
-* SamordningPeriode
-* - id(pk) - gradering (smallint) - perioder_id(fk){samordningsperioder} - periode(daterange)
-*
-* YtelsesGradering
-* - id(pk) - samordningsperiodeId(fk) - ytelse(string/enum) - gradering (smallint)
-*/
+import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
 class SamordningService(
-    connection: DBConnection
-): Informasjonskrav {
-    private val fpGateway = ForeldrepengerGateway()
-    private val spGateway = SykepengerGateway()
-    private val sakService = SakService(connection)
+    private val samordningRepository: SamordningRepository,
+    private val foreldrepengerRepository: ForeldrepengerRepository,
+    private val sykepengerRepository: SykepengerRepository,
+) {
 
-    private val regelset = listOf(
-        SamordningRegel()
-    )
+    fun vurder(behandlingId: BehandlingId): Tidslinje<SamordningGradering> {
+        val fpGrunnlag = foreldrepengerRepository.hentHvisEksisterer(behandlingId)
+        val spGrunnlag = sykepengerRepository.hentHvisEksisterer(behandlingId)
 
-    private fun hentYtelseForeldrepenger(personIdent: String, fom: LocalDate, tom: LocalDate): Tidslinje<SamordningGradering> {
-        val fpResponse = fpGateway.hentVedtakYtelseForPerson(
-            ForeldrepengerRequest(
-                Aktør(personIdent),
-                Periode(fom, tom)
-            ))
+        // TODO: Implementer regler for overnevnte og produser tidslinje, finne ut om vi skal bruke SamordningGradering eller SamordningGraderingDto
+        val vurderRegler = vurderRegler()
 
+        samordningRepository.lagre(
+            behandlingId,
+            vurderRegler.segmenter()
+                .map {
+                    SamordningPeriode(
+                        it.periode,
+                        it.verdi.gradering
+                    )
+                })
 
-        /*
-        Todo: Implementer tidslinjer, må avklares
-        return Tidslinje(listOf(Segment(
-
-        )))*/
-
-        return Tidslinje()
+        return vurderRegler
     }
 
-    private fun hentYtelseSykepenger(personIdent: String, fom: LocalDate, tom: LocalDate): Tidslinje<SamordningGradering> {
-        val spResponse =  spGateway.hentYtelseSykepenger(
-            SykepengerRequest(
-                setOf(personIdent),
-                fom,
-                tom
-            )
-        )
-        /*
-        Todo: Implementer tidslinjer, må avklares
-        return Tidslinje(listOf(Segment(
-
-        )))*/
-        return Tidslinje()
-    }
-
-    override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekst): Boolean {
-        val sak = sakService.hent(kontekst.sakId)
-        val personIdent = sak.person.aktivIdent().identifikator
-
-        val sykepenger = hentYtelseSykepenger(personIdent, sak.rettighetsperiode.fom, sak.rettighetsperiode.tom)
-        val foreldrepenger = hentYtelseForeldrepenger(personIdent, sak.rettighetsperiode.fom, sak.rettighetsperiode.tom)
-
-        //TODO: Implementer repo lookups
-        return false
-/*
-        val tidslinje = sykepenger.kombiner(
-            foreldrepenger,
-            JoinStyle.CROSS_JOIN) { periode, venstreSegment, høyreSegment ->
-                val verdi = requireNotNull(venstreSegment).verdi
-                if (høyreSegment != null) {
-                    Segment(periode,)
-                }
-        }*/
-    }
-
-    fun vurder() : Tidslinje<SamordningGradering> {
-        return Tidslinje()
-    }
-
-    companion object : Informasjonskravkonstruktør {
-        override fun konstruer(connection: DBConnection): SamordningService {
-            return SamordningService(connection)
-        }
+    fun vurderRegler() : Tidslinje<SamordningGradering> {
+        return Tidslinje(listOf())
     }
 }
