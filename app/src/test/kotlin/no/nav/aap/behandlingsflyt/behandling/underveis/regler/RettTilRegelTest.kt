@@ -77,7 +77,8 @@ class RettTilRegelTest {
             opptrappingPerioder = listOf(),
             pliktkort = listOf(),
             innsendingsTidspunkt = mapOf(),
-            kvote = kvote
+            kvote = kvote,
+            bruddAktivitetsplikt = setOf(),
         )
         val grunnleggendeRettTidslinje = regel.vurder(input = input, Tidslinje())
 
@@ -156,7 +157,8 @@ class RettTilRegelTest {
             opptrappingPerioder = listOf(),
             pliktkort = listOf(),
             innsendingsTidspunkt = mapOf(),
-            kvote = kvote
+            kvote = kvote,
+            bruddAktivitetsplikt = setOf(),
         )
         val grunnleggendeRettTidslinje = regel.vurder(input = input, Tidslinje())
 

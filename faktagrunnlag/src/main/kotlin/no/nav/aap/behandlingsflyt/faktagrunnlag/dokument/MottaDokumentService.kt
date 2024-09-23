@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.InnsendingId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.adapter.UbehandletPliktkort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.pliktkort.Pliktkort
@@ -11,6 +12,7 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.SakId
 import java.time.LocalDateTime
+import java.util.UUID
 
 class MottaDokumentService(
     private val mottattDokumentRepository: MottattDokumentRepository,
@@ -64,6 +66,16 @@ class MottaDokumentService(
             UbehandletPliktkort(
                 it.journalpostId,
                 (it.strukturerteData<Pliktkort>() as StrukturertDokument<Pliktkort>).data.timerArbeidPerPeriode
+            )
+        }.toSet()
+    }
+
+    fun aktivitetskortSomIkkeErBehandlet(sakId: SakId): Set<InnsendingId> {
+        val ubehandledeAktivitetskort = mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, Brevkode.AKTIVITETSKORT)
+
+        return ubehandledeAktivitetskort.map {
+            (
+                InnsendingId((it.strukturerteData<UUID>() as StrukturertDokument<UUID>).data)
             )
         }.toSet()
     }
