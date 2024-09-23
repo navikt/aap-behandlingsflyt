@@ -20,7 +20,6 @@ class BruddAktivitetspliktRepository(private val connection: DBConnection) {
     )
 
     fun lagreBrudd(brudd: List<LagreBruddInput>): InnsendingId {
-        /* TODO: hent neste id. Generer ekstern id, som for Sak. */
         val query = """
             INSERT INTO BRUDD_AKTIVITETSPLIKT
             (SAK_ID, BRUDD, PERIODE, BEGRUNNELSE, PARAGRAF, NAV_IDENT, OPPRETTET_TID, HENDELSE_ID, INNSENDING_ID) 
@@ -39,7 +38,7 @@ class BruddAktivitetspliktRepository(private val connection: DBConnection) {
                 setString(6, request.navIdent.navIdent)
                 setLocalDateTime(7, LocalDateTime.now())
                 setUUID(8, HendelseId.ny().id)
-                setString(9, innsendingId.toString())
+                setUUID(9, innsendingId.value)
             }
         }
         return innsendingId
@@ -66,7 +65,7 @@ class BruddAktivitetspliktRepository(private val connection: DBConnection) {
         }
 
         val insertAktivitetskorteneQuery = """
-            INSERT INTO BRUDD_AKTIVITETSPLIKT_SNAPSHOT (BRUDD_AKTIVITETSPLIKT_GRUNNLAG_ID, BRUDD_AKTIVITETSPLIKT_ID)
+            INSERT INTO BRUDD_AKTIVITETSPLIKTER (BRUDD_AKTIVITETSPLIKT_GRUNNLAG_ID, BRUDD_AKTIVITETSPLIKT_ID)
             VALUES (?, ?)
             """.trimIndent()
         connection.executeBatch(insertAktivitetskorteneQuery, brudd) {
@@ -83,7 +82,7 @@ class BruddAktivitetspliktRepository(private val connection: DBConnection) {
         val query = """
             SELECT brudd.*
             FROM BRUDD_AKTIVITETSPLIKT brudd 
-            INNER JOIN BRUDD_AKTIVITETSPLIKT_SNAPSHOT snapshot ON brudd.id = snapshot.brudd_aktivitetsplikt_id
+            INNER JOIN BRUDD_AKTIVITETSPLIKTER snapshot ON brudd.id = snapshot.brudd_aktivitetsplikt_id
             WHERE snapshot.brudd_aktivitetsplikt_grunnlag_id = ?
         """.trimIndent()
         val bruddene = connection.querySet(query) {
@@ -133,7 +132,7 @@ class BruddAktivitetspliktRepository(private val connection: DBConnection) {
         """.trimIndent()
         return connection.queryList(query) {
             setParams {
-                setString(1, innsendingId.toString())
+                setUUID(1, innsendingId.value)
             }
             setRowMapper(::mapBruddAktivitetsplikt)
         }
@@ -197,7 +196,7 @@ class BruddAktivitetspliktRepository(private val connection: DBConnection) {
             val query = """
                 SELECT brudd.*
                 FROM BRUDD_AKTIVITETSPLIKT brudd 
-                INNER JOIN BRUDD_AKTIVITETSPLIKT_SNAPSHOT snapshot ON brudd.id = snapshot.brudd_aktivitetsplikt_id
+                INNER JOIN BRUDD_AKTIVITETSPLIKTER snapshot ON brudd.id = snapshot.brudd_aktivitetsplikt_id
                 WHERE snapshot.brudd_aktivitetsplikt_grunnlag_id = ?
             """.trimIndent()
             val bruddene = connection.querySet(query) {

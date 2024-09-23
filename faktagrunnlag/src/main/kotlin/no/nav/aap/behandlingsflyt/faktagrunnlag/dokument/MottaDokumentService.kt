@@ -12,7 +12,7 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.SakId
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 
 class MottaDokumentService(
     private val mottattDokumentRepository: MottattDokumentRepository,
@@ -73,11 +73,9 @@ class MottaDokumentService(
     fun aktivitetskortSomIkkeErBehandlet(sakId: SakId): Set<InnsendingId> {
         val ubehandledeAktivitetskort = mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, Brevkode.AKTIVITETSKORT)
 
-        return ubehandledeAktivitetskort.map {
-            (
-                InnsendingId((it.strukturerteData<UUID>() as StrukturertDokument<UUID>).data)
-            )
-        }.toSet()
+        return ubehandledeAktivitetskort
+            .map { it.strukturerteData<InnsendingId>()!!.data }
+            .toSet()
     }
 
     fun søknaderSomIkkeHarBlittBehandlet(sakId: SakId): Set<UbehandletSøknad> {

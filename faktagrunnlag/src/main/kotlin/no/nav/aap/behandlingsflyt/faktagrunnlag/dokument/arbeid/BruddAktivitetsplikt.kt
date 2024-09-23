@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
+import com.fasterxml.jackson.annotation.JsonValue
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.sakogbehandling.NavIdent
 import no.nav.aap.verdityper.sakogbehandling.SakId
@@ -8,7 +9,7 @@ import java.util.*
 
 data class BruddAktivitetspliktId(internal val id: Long)
 
-data class InnsendingId(private val value: UUID) {
+data class InnsendingId(@JsonValue val value: UUID) {
     override fun toString() = value.toString()
 
     companion object {
