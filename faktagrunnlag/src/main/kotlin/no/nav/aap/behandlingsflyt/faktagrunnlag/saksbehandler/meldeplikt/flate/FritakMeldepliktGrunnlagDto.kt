@@ -10,10 +10,10 @@ data class FritakMeldepliktGrunnlagDto(
 data class FritakMeldepliktVurderingDto(
     val begrunnelse: String,
     val vurderingsTidspunkt: LocalDateTime,
-    val fritaksperioder: List<FritaksperiodeDto>
+    val fritaksperioder: List<MeldepliktFritaksperiodeDto>
 )
 
-data class FritaksperiodeDto(
+data class MeldepliktFritaksperiodeDto(
     val periode: PeriodeDto,
     val harFritak: Boolean
 )

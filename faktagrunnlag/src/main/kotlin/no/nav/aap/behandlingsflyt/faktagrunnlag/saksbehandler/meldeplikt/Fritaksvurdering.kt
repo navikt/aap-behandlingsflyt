@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.flate.PeriodeDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.FritakMeldepliktVurderingDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.FritaksperiodeDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.MeldepliktFritaksperiodeDto
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDateTime
 
@@ -31,7 +31,7 @@ data class Fritaksperiode(
     val periode: Periode,
     val harFritak: Boolean
 ) {
-    fun toDto(): FritaksperiodeDto { return FritaksperiodeDto(PeriodeDto(periode), harFritak) }
+    fun toDto(): MeldepliktFritaksperiodeDto { return MeldepliktFritaksperiodeDto(PeriodeDto(periode), harFritak) }
 
     internal infix fun overlapperMed(other: Fritaksperiode): Boolean {
         return periode.overlapper(other.periode)
