@@ -16,31 +16,24 @@ class FritakFraMeldepliktLøser(val connection: DBConnection) : Avklaringsbehovs
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: FritakMeldepliktLøsning): LøsningsResultat {
         val fritaksvurdering = løsning.fritaksvurderingDto.toFritaksvurdering()
 
-        if (fritaksvurdering.fritaksperioder.fritaksPeriodeOverlapper()) throw IllegalStateException("Valideringsfeil: Perioder overlapper")
-        
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
+
+        val eksisterendeFritaksvurderinger = meldepliktRepository.hentHvisEksisterer(behandling.id)?.vurderinger.orEmpty()
 
         meldepliktRepository.lagre(
             behandlingId = behandling.id,
-            vurdering = fritaksvurdering
+            vurderinger =  listOf(fritaksvurdering) + eksisterendeFritaksvurderinger
         )
 
         return LøsningsResultat(
-            begrunnelse = "Vurdert fritak fra meldeplikt",
-            kreverToTrinn = fritaksvurdering.fritaksperioder.kreverToTrinn()
+            begrunnelse = fritaksvurdering.begrunnelse,
+            kreverToTrinn = fritaksvurdering.fritaksperioder.minstEttFritak()
         )
     }
 
     override fun forBehov(): Definisjon {
         return Definisjon.FRITAK_MELDEPLIKT
     }
-
-    private fun List<Fritaksperiode>.fritaksPeriodeOverlapper() = this
-        .sortedBy { it.periode.fom }
-        .zipWithNext()
-        .any { (tidlig, sent) ->  tidlig overlapperMed sent }
     
-    private infix fun Fritaksperiode.overlapperMed(other: Fritaksperiode) = periode.overlapper(other.periode)
-    
-    private fun List<Fritaksperiode>.kreverToTrinn() = this.any { it.harFritak }
+    private fun List<Fritaksperiode>.minstEttFritak() = this.any { it.harFritak }
 }

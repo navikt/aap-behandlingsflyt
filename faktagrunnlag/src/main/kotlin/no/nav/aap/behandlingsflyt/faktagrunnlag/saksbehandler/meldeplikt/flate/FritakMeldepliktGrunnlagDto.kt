@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate
 
-import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.flate.PeriodeDto
 import java.time.LocalDateTime
 
 data class FritakMeldepliktGrunnlagDto(
@@ -14,7 +14,7 @@ data class FritakMeldepliktVurderingDto(
 )
 
 data class FritaksperiodeDto(
-    val periode: Periode,
+    val periode: PeriodeDto,
     val harFritak: Boolean
 )
 
