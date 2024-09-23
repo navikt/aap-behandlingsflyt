@@ -20,8 +20,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.BARN_RELAS
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.PERSON_BOLK_QUERY
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PERSON_QUERY
-import no.nav.aap.behandlingsflyt.flyt.steg.Stopp
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.IDENT_QUERY
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoGateway.PERSONINFO_QUERY
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
@@ -61,7 +59,7 @@ import java.time.Year
 import java.util.*
 import no.nav.aap.pdl.PdlRelasjonData as BarnPdlData
 
-class Fakes(azurePort: Int = 0) : AutoCloseable {
+class Fakes(val azurePort: Int = 0) : AutoCloseable {
     private val log: Logger = LoggerFactory.getLogger(Fakes::class.java)
     private val azure = embeddedServer(Netty, port = azurePort, module = { azureFake() }).start()
     private val pdl = embeddedServer(Netty, port = 0, module = { pdlFake() }).start()

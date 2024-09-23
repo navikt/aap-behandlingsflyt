@@ -46,9 +46,11 @@ import no.nav.aap.verdityper.sakogbehandling.TypeBehandling
 import org.assertj.core.api.Assertions.assertThat
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
+import java.io.InputStream
 import java.net.URI
 import java.time.Duration
 import java.time.LocalDate
@@ -60,7 +62,8 @@ import java.util.*
 class ApiTest {
     companion object {
         private val postgres = postgreSQLContainer()
-        private val fakes = Fakes(azurePort = 8081)
+        private val fakes = Fakes(azurePort = 0)
+        private lateinit var port: Number
 
         private val dbConfig = DbConfig(
             host = "sdg",
@@ -71,17 +74,24 @@ class ApiTest {
             password = postgres.password
         )
 
-        private val client = RestClient(
+        private val client: RestClient<InputStream> = RestClient(
             config = ClientConfig(scope = "behandlingsflyt"),
             tokenProvider = ClientCredentialsTokenProvider,
             responseHandler = DefaultResponseHandler()
         )
 
         // Starter server
-        private val server = embeddedServer(Netty, port = 8080) {
+        private val server = embeddedServer(Netty, port = 0) {
             server(dbConfig = dbConfig)
             module(fakes)
-        }.start()
+        }
+
+        @JvmStatic
+        @BeforeAll
+        fun beforeall() {
+            server.start()
+            port = runBlocking { server.resolvedConnectors().filter { it.type == ConnectorType.HTTP }.first().port }
+        }
 
         @JvmStatic
         @AfterAll
@@ -129,7 +139,7 @@ class ApiTest {
         }
 
         val medlemskapGrunnlag: MedlemskapGrunnlagDto? = client.get(
-            URI.create("http://localhost:8080/")
+            URI.create("http://localhost:$port/")
                 .resolve("api/behandling/${opprettetBehandling.referanse}/grunnlag/medlemskap"),
             GetRequest()
         )
@@ -190,7 +200,7 @@ class ApiTest {
         }
 
         val asJSON: JsonNode? = client.get(
-            URI.create("http://localhost:8080/api/beregning/grunnlag/").resolve(referanse.toString()),
+            URI.create("http://localhost:$port/api/beregning/grunnlag/").resolve(referanse.toString()),
             GetRequest()
         ) { x, _ -> ObjectMapper().readTree(x) }
 
@@ -245,7 +255,7 @@ class ApiTest {
         )
 
         val responseSak: SaksinfoDTO? = client.post(
-            URI.create("http://localhost:8080/").resolve("api/sak/finnEllerOpprett"),
+            URI.create("http://localhost:$port/").resolve("api/sak/finnEllerOpprett"),
             PostRequest(
                 body = FinnEllerOpprettSakDTO("12345678910", LocalDate.now())
             )
@@ -254,7 +264,7 @@ class ApiTest {
         requireNotNull(responseSak)
 
         client.post<_, Unit>(
-            URI.create("http://localhost:8080/").resolve("api/soknad/send"),
+            URI.create("http://localhost:$port/").resolve("api/soknad/send"),
             PostRequest(
                 body = SøknadSendDto(responseSak.saksnummer, "123", Søknad(SøknadStudentDto("NEI"), "NEI", null))
             )
@@ -291,7 +301,7 @@ class ApiTest {
 
         val behandling = kallInntilKlar {
             client.get<DetaljertBehandlingDTO>(
-                URI.create("http://localhost:8080/")
+                URI.create("http://localhost:$port/")
                     .resolve("api/behandling/")
                     .resolve(utvidetSak.behandlinger.first().referanse.toString()),
                 GetRequest()
@@ -326,11 +336,10 @@ class ApiTest {
         responseSak: SaksinfoDTO,
     ): UtvidetSaksinfoDTO? {
         val utvidetSak3: UtvidetSaksinfoDTO? = client.get(
-            URI.create("http://localhost:8080/").resolve("api/sak/").resolve(responseSak.saksnummer),
+            URI.create("http://localhost:$port/").resolve("api/sak/").resolve(responseSak.saksnummer),
             GetRequest()
         )
         if (utvidetSak3?.behandlinger?.isNotEmpty() == true) {
-            println("GOT HERE: $utvidetSak3")
             return utvidetSak3
         }
         return null
