@@ -31,7 +31,7 @@ import no.nav.aap.statistikk.api_kontrakt.EndringStatus
 import no.nav.aap.statistikk.api_kontrakt.Grunnlag11_19DTO
 import no.nav.aap.statistikk.api_kontrakt.GrunnlagUføreDTO
 import no.nav.aap.statistikk.api_kontrakt.GrunnlagYrkesskadeDTO
-import no.nav.aap.statistikk.api_kontrakt.MottaStatistikkDTO
+import no.nav.aap.statistikk.api_kontrakt.StoppetBehandling
 import no.nav.aap.statistikk.api_kontrakt.TilkjentYtelseDTO
 import no.nav.aap.statistikk.api_kontrakt.TilkjentYtelsePeriodeDTO
 import no.nav.aap.statistikk.api_kontrakt.TypeBehandling
@@ -80,8 +80,8 @@ class StatistikkJobbUtfører(
         )
     }
 
-    private fun oversettHendelseTilKontrakt(hendelse: BehandlingFlytStoppetHendelse): MottaStatistikkDTO {
-        val statistikkHendelse = MottaStatistikkDTO(
+    private fun oversettHendelseTilKontrakt(hendelse: BehandlingFlytStoppetHendelse): StoppetBehandling {
+        val statistikkHendelse = StoppetBehandling(
             saksnummer = hendelse.saksnummer.toString(),
             behandlingType = typeBehandlingTilStatistikkKontrakt(hendelse.behandlingType),
             status = hendelse.status.toString(),
@@ -106,6 +106,7 @@ class StatistikkJobbUtfører(
             },
             behandlingReferanse = hendelse.referanse.referanse,
             behandlingOpprettetTidspunkt = hendelse.opprettetTidspunkt,
+            versjon = hendelse.versjon
         )
         return statistikkHendelse
     }

@@ -20,6 +20,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.BARN_RELAS
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.PERSON_BOLK_QUERY
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PERSON_QUERY
+import no.nav.aap.behandlingsflyt.flyt.steg.Stopp
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.IDENT_QUERY
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoGateway.PERSONINFO_QUERY
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
@@ -42,7 +44,7 @@ import no.nav.aap.pdl.PdlRelasjon
 import no.nav.aap.pdl.PdlRelasjonDataResponse
 import no.nav.aap.pdl.PdlRequest
 import no.nav.aap.statistikk.api_kontrakt.AvsluttetBehandlingDTO
-import no.nav.aap.statistikk.api_kontrakt.MottaStatistikkDTO
+import no.nav.aap.statistikk.api_kontrakt.StoppetBehandling
 import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import no.nav.aap.yrkesskade.YrkesskadeModell
@@ -76,7 +78,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
     private val sykepenger = embeddedServer(Netty, port = 0, module = {spFake()}).apply { start() }
 
     private val statistikk = embeddedServer(Netty, port = 0, module = { statistikkFake() }).apply { start() }
-    val statistikkHendelser = mutableListOf<MottaStatistikkDTO>()
+    val statistikkHendelser = mutableListOf<StoppetBehandling>()
     val mottatteVilkårsResult = mutableListOf<AvsluttetBehandlingDTO>()
 
 
@@ -341,7 +343,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         }
         routing {
             post("/motta") {
-                val receive = call.receive<MottaStatistikkDTO>()
+                val receive = call.receive<StoppetBehandling>()
                 statistikkHendelser.add(receive)
                 call.respond(status = HttpStatusCode.Accepted, message = "{}")
             }

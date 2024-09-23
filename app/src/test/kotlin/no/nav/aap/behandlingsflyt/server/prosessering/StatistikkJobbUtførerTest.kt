@@ -2,10 +2,10 @@ package no.nav.aap.behandlingsflyt.server.prosessering
 
 import io.mockk.checkUnnecessaryStub
 import io.mockk.mockk
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
@@ -18,6 +18,9 @@ import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.hendelse.avløp.DefinisjonDTO
 import no.nav.aap.behandlingsflyt.hendelse.avløp.EndringDTO
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
@@ -38,15 +41,13 @@ import no.nav.aap.statistikk.api_kontrakt.BeregningsgrunnlagDTO
 import no.nav.aap.statistikk.api_kontrakt.Endring
 import no.nav.aap.statistikk.api_kontrakt.EndringStatus
 import no.nav.aap.statistikk.api_kontrakt.Grunnlag11_19DTO
-import no.nav.aap.statistikk.api_kontrakt.MottaStatistikkDTO
+import no.nav.aap.statistikk.api_kontrakt.StoppetBehandling
 import no.nav.aap.statistikk.api_kontrakt.TilkjentYtelseDTO
 import no.nav.aap.statistikk.api_kontrakt.VilkårDTO
 import no.nav.aap.statistikk.api_kontrakt.VilkårsPeriodeDTO
 import no.nav.aap.statistikk.api_kontrakt.VilkårsResultatDTO
 import no.nav.aap.verdityper.GUnit
-import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.verdityper.sakogbehandling.Ident
-import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.verdityper.sakogbehandling.TypeBehandling
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
@@ -237,7 +238,8 @@ class StatistikkJobbUtførerTest {
             behandlingType = TypeBehandling.Klage,
             referanse = referanse,
             opprettetTidspunkt = LocalDateTime.now(),
-            avklaringsbehov = avklaringsbehov
+            avklaringsbehov = avklaringsbehov,
+            versjon = ApplikasjonsVersjon.versjon
         )
 
         val hendelse = DefaultJsonMapper.toJson(payload)
@@ -253,7 +255,7 @@ class StatistikkJobbUtførerTest {
         assertThat(fakes.statistikkHendelser.size).isEqualTo(1)
 
         assertThat(fakes.statistikkHendelser.first()).isEqualTo(
-            MottaStatistikkDTO(
+            StoppetBehandling(
                 saksnummer = "456",
                 behandlingReferanse = referanse.referanse,
                 status = Status.UTREDES.toString(),
@@ -277,7 +279,8 @@ class StatistikkJobbUtførerTest {
                         }
                     )
                 },
-                behandlingOpprettetTidspunkt = payload.opprettetTidspunkt
+                behandlingOpprettetTidspunkt = payload.opprettetTidspunkt,
+                versjon = ApplikasjonsVersjon.versjon
             )
         )
 

@@ -13,5 +13,6 @@ data class BehandlingFlytStoppetHendelse(
     val behandlingType: TypeBehandling,
     val status: Status,
     val avklaringsbehov: List<AvklaringsbehovHendelseDto>,
-    val opprettetTidspunkt: LocalDateTime
+    val opprettetTidspunkt: LocalDateTime,
+    val versjon: String
 )
