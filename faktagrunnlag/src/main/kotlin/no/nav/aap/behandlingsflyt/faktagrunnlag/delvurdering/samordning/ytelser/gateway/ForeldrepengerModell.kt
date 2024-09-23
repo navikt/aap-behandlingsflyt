@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.foreldrepenger
+package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelser.gateway
 
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
