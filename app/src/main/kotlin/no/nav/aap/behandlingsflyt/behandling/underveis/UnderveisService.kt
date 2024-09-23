@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortRepository
 import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
@@ -21,7 +22,8 @@ class UnderveisService(
     private val behandlingService: SakOgBehandlingService,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val pliktkortRepository: PliktkortRepository,
-    private val underveisRepository: UnderveisRepository
+    private val underveisRepository: UnderveisRepository,
+    private val bruddAktivitetspliktRepository: BruddAktivitetspliktRepository
 ) {
 
     private val kvoteService = KvoteService()
@@ -80,13 +82,18 @@ class UnderveisService(
         val innsendingsTidspunkt = pliktkortGrunnlag?.innsendingsdatoPerMelding() ?: mapOf()
         val kvote = kvoteService.beregn(behandlingId)
 
+        val bruddAktivitetsplikt = bruddAktivitetspliktRepository.hentGrunnlagHvisEksisterer(behandlingId)
+            ?.bruddene
+            ?: emptySet()
+
         return UnderveisInput(
             rettighetsperiode = sak.rettighetsperiode,
             relevanteVilkår = relevanteVilkår,
             opptrappingPerioder = listOf(),
             pliktkort = pliktkort,
             innsendingsTidspunkt = innsendingsTidspunkt,
-            kvote = kvote
+            kvote = kvote,
+            bruddAktivitetsplikt = bruddAktivitetsplikt,
         )
     }
 }
