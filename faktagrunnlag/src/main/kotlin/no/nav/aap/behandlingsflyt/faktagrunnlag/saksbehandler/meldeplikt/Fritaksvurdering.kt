@@ -9,7 +9,7 @@ import java.time.LocalDateTime
 data class Fritaksvurdering(
     val fritaksperioder: List<Fritaksperiode>,
     val begrunnelse: String,
-    val opprettetTid: LocalDateTime = LocalDateTime.now()
+    val opprettetTid: LocalDateTime
 ) {
     init {
         require(fritaksperioder.fritaksPeriodeOverlapperIkke()) {

@@ -27,7 +27,7 @@ class MeldepliktRepository(private val connection: DBConnection) {
                     meldepliktId = row.getLong("MELDEPLIKT_ID"),
                     vurderingId = row.getLong("VURDERING_ID"),
                     begrunnelse = row.getString("BEGRUNNELSE"),
-                    opprettetTid = row.getLocalDateTime("OPPRETTET_TID")
+                    vurderingOpprettet = row.getLocalDateTime("OPPRETTET_TID"),
                 )
             }
         }.grupperOgMapTilGrunnlag(behandlingId).firstOrNull()
@@ -37,7 +37,7 @@ class MeldepliktRepository(private val connection: DBConnection) {
         val meldepliktId: Long,
         val vurderingId: Long,
         val begrunnelse: String,
-        val opprettetTid: LocalDateTime
+        val vurderingOpprettet: LocalDateTime
     )
 
     private fun Iterable<MeldepliktInternal>.grupperOgMapTilGrunnlag(behandlingId: BehandlingId): List<MeldepliktGrunnlag> {
@@ -47,7 +47,7 @@ class MeldepliktRepository(private val connection: DBConnection) {
 
 
     private fun MeldepliktInternal.toFritaksvurdering(): Fritaksvurdering {
-        return Fritaksvurdering(fritaksperioder(this.vurderingId), this.begrunnelse)
+        return Fritaksvurdering(fritaksperioder(this.vurderingId), this.begrunnelse, vurderingOpprettet)
     }
 
     private fun fritaksperioder(vurderingId: Long): List<Fritaksperiode> {
