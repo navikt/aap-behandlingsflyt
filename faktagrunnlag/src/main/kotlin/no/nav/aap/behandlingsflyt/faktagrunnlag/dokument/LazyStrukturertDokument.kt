@@ -19,9 +19,10 @@ class LazyStrukturertDokument(
     @Suppress("UNCHECKED_CAST")
     fun <T> hent(): T? {
         val strukturerteData =
-            connection.queryFirstOrNull("SELECT strukturert_dokument FROM MOTTATT_DOKUMENT WHERE journalpost = ?") {
+            connection.queryFirstOrNull("SELECT strukturert_dokument FROM MOTTATT_DOKUMENT WHERE referanse_type = ? AND referanse = ?") {
                 setParams {
-                    setString(1, referanse.verdi)
+                    setEnumName(1, referanse.type)
+                    setString(2, referanse.verdi)
                 }
                 setRowMapper {
                     it.getStringOrNull("strukturert_dokument")

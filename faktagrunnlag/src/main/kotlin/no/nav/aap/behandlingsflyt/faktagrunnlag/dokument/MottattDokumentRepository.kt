@@ -5,40 +5,39 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
-import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.SakId
 
 class MottattDokumentRepository(private val connection: DBConnection) {
     fun lagre(mottattDokument: MottattDokument) {
         val query = """
-            INSERT INTO MOTTATT_DOKUMENT (sak_id, journalpost, MOTTATT_TID, type, status, strukturert_dokument, referanse, referanse_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO MOTTATT_DOKUMENT (sak_id, MOTTATT_TID, type, status, strukturert_dokument, referanse, referanse_type) VALUES (?, ?, ?, ?, ?, ?, ?)
         """.trimIndent()
 
         connection.execute(query) {
             setParams {
                 setLong(1, mottattDokument.sakId.toLong())
-                setString(2, mottattDokument.referanse.verdi)
-                setLocalDateTime(3, mottattDokument.mottattTidspunkt)
-                setEnumName(4, mottattDokument.type)
-                setEnumName(5, mottattDokument.status)
-                setString(6, mottattDokument.ustrukturerteData())
-                setString(7, mottattDokument.referanse.verdi)
-                setEnumName(8, mottattDokument.referanse.type)
+                setLocalDateTime(2, mottattDokument.mottattTidspunkt)
+                setEnumName(3, mottattDokument.type)
+                setEnumName(4, mottattDokument.status)
+                setString(5, mottattDokument.ustrukturerteData())
+                setString(6, mottattDokument.referanse.verdi)
+                setEnumName(7, mottattDokument.referanse.type)
             }
         }
     }
 
     fun oppdaterStatus(dokumentReferanse: MottattDokumentReferanse, behandlingId: BehandlingId, sakId: SakId, status: Status) {
         val query = """
-            UPDATE MOTTATT_DOKUMENT SET behandling_id = ?, status = ? WHERE journalpost = ? AND sak_id = ?
+            UPDATE MOTTATT_DOKUMENT SET behandling_id = ?, status = ? WHERE referanse_type = ? AND referanse = ? AND sak_id = ?
         """.trimIndent()
         connection.execute(query) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setEnumName(2, status)
-                setString(3, dokumentReferanse.verdi)
-                setLong(4, sakId.toLong())
+                setEnumName(3, dokumentReferanse.type)
+                setString(4, dokumentReferanse.verdi)
+                setLong(5, sakId.toLong())
             }
             setResultValidator {
                 require(1 == it)
@@ -77,20 +76,14 @@ class MottattDokumentRepository(private val connection: DBConnection) {
         )
     }
 
-    private fun mapDokumentReferanse(row: Row): MottattDokumentReferanse {
-        val referanseVerdi = row.getStringOrNull("referanse")
-        val referanseType = row.getEnumOrNull<MottattDokumentReferanse.Type, _>("referanse_type")
-        return when {
-            referanseVerdi != null && referanseType != null ->
-                MottattDokumentReferanse(type = referanseType, verdi = referanseVerdi)
-            /* Midlertidig inntil referanseVerdi og referanseType er backfilled. */
-            else -> MottattDokumentReferanse(JournalpostId(row.getString("journalpost")))
-        }
-    }
+    private fun mapDokumentReferanse(row: Row) = MottattDokumentReferanse(
+        type = row.getEnum<MottattDokumentReferanse.Type>("referanse_type"),
+        verdi = row.getString("referanse")
+    )
 
     fun hentDokumentRekkefølge(sakId: SakId, type: Brevkode): Set<DokumentRekkefølge> {
         val query = """
-            SELECT journalpost, referanse, referanse_type, MOTTATT_TID FROM MOTTATT_DOKUMENT WHERE sak_id = ? AND status = ? AND type = ?
+            SELECT referanse, referanse_type, MOTTATT_TID FROM MOTTATT_DOKUMENT WHERE sak_id = ? AND status = ? AND type = ?
         """.trimIndent()
 
         return connection.queryList(query) {
