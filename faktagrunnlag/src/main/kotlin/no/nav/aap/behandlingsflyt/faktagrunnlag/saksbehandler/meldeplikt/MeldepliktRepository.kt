@@ -8,7 +8,7 @@ class MeldepliktRepository(private val connection: DBConnection) {
 
     companion object {
         private const val FRITAKSPERIODE_QUERY =
-            "SELECT p.PERIODE, p.BEGRUNNELSE FROM MELDEPLIKT_FRITAK_PERIODE p WHERE p.VURDERING_ID = ?"
+            "SELECT p.PERIODE, p.HAR_FRITAK FROM MELDEPLIKT_FRITAK_PERIODE p WHERE p.VURDERING_ID = ?"
 
         private val FRITAK_QUERY = """
             SELECT f.ID AS MELDEPLIKT_ID, v.ID AS VURDERING_ID, v.BEGRUNNELSE, v.OPPRETTET_TID

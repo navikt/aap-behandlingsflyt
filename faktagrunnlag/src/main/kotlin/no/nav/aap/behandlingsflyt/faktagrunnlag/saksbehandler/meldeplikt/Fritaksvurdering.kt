@@ -12,9 +12,7 @@ data class Fritaksvurdering(
     val opprettetTid: LocalDateTime
 ) {
     init {
-        require(fritaksperioder.fritaksPeriodeOverlapperIkke()) {
-            "Ingen fritaksperioder kan overlappe"
-        }
+        require(fritaksperioder.fritaksPeriodeOverlapperIkke()) { "Ingen fritaksperioder kan overlappe" }
     }
 
     fun toDto(): FritakMeldepliktVurderingDto {
@@ -25,6 +23,16 @@ data class Fritaksvurdering(
         .sortedBy { it.periode.fom }
         .zipWithNext()
         .none { (tidlig, sent) ->  tidlig overlapperMed sent }
+
+    override fun equals(other: Any?): Boolean {
+        return this === other || (other is Fritaksvurdering && this.valueEquals(other))
+    }
+
+    private fun valueEquals(other: Fritaksvurdering): Boolean {
+        return fritaksperioder == other.fritaksperioder && begrunnelse == other.begrunnelse
+    }
+
+    override fun hashCode() = 31 * fritaksperioder.hashCode() + begrunnelse.hashCode()
 }
 
 data class Fritaksperiode(
