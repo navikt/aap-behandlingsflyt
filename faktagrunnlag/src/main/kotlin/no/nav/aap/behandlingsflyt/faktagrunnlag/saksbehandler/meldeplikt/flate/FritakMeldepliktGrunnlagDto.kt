@@ -4,12 +4,17 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.flate.PeriodeDto
 import java.time.LocalDateTime
 
 data class FritakMeldepliktGrunnlagDto(
-    val begrunnelse: String,
-    val vurderinger: List<FritakMeldepliktVurderingDto>,
-    val vurderingsTidspunkt: LocalDateTime
+    val vurderinger: List<FritakMeldepliktVurderingDto>
 )
 
 data class FritakMeldepliktVurderingDto(
-    val harFritak: Boolean,
-    val periode: PeriodeDto
+    val begrunnelse: String,
+    val vurderingsTidspunkt: LocalDateTime,
+    val fritaksperioder: List<MeldepliktFritaksperiodeDto>
 )
+
+data class MeldepliktFritaksperiodeDto(
+    val periode: PeriodeDto,
+    val harFritak: Boolean
+)
+
