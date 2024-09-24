@@ -54,7 +54,6 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.UUID
 
 class StatistikkJobbUtførerTest {
     companion object {
@@ -230,7 +229,7 @@ class StatistikkJobbUtførerTest {
                 )
             )
         )
-        val referanse = BehandlingReferanse(UUID.randomUUID())
+        val referanse = BehandlingReferanse()
         val fødselsNummer = Ident("xxx").toString()
         val payload = BehandlingFlytStoppetHendelse(
             saksnummer = Saksnummer("456"),
@@ -240,6 +239,7 @@ class StatistikkJobbUtførerTest {
             referanse = referanse,
             opprettetTidspunkt = LocalDateTime.now(),
             avklaringsbehov = avklaringsbehov,
+            hendelsesTidspunkt = LocalDateTime.now(),
             versjon = ApplikasjonsVersjon.versjon
         )
 

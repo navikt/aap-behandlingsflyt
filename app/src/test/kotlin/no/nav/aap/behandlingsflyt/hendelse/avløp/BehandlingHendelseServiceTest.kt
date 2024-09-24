@@ -64,7 +64,7 @@ class BehandlingHendelseServiceTest {
         }
 
         val hendelse = DefaultJsonMapper.fromJson<BehandlingFlytStoppetHendelse>(calls.first().payload())
-        assertThat(hendelse.referanse).isEqualTo(behandling.referanse)
+        assertThat(hendelse.referanse.referanse).isEqualTo(behandling.referanse.referanse)
 
         checkUnnecessaryStub(flytJobbRepository, vilkårsresultatRepository)
     }

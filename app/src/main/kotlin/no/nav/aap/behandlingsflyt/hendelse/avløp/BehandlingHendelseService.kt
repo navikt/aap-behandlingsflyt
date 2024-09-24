@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.hendelse.avløp
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.DefinisjonDTO
@@ -48,7 +47,7 @@ class BehandlingHendelseService(
         val hendelse = BehandlingFlytStoppetHendelse(
             personIdent = sak.person.aktivIdent().identifikator,
             saksnummer = sak.saksnummer,
-            referanse = BehandlingReferanse(behandling.referanse.referanse),
+            referanse = behandling.referanse,
             behandlingType = behandling.typeBehandling(),
             status = behandling.status(),
             avklaringsbehov = avklaringsbehovene.alle().map { avklaringsbehov ->
