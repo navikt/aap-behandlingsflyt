@@ -8,7 +8,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeSe
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
+import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.Fakes
+import no.nav.aap.behandlingsflyt.test.FakesExtension
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -24,23 +26,11 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
+@Fakes
 class InformasjonskravGrunnlagTest {
 
     companion object {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-        private val fakes = Fakes()
-
-        @BeforeAll
-        @JvmStatic
-        internal fun beforeAll() {
-            fakes.start()
-        }
-
-        @AfterAll
-        @JvmStatic
-        internal fun afterAll() {
-            fakes.close()
-        }
     }
 
     @Test
@@ -49,7 +39,7 @@ class InformasjonskravGrunnlagTest {
             val (ident, kontekst) = klargjør(connection)
             val informasjonskravGrunnlag = InformasjonskravGrunnlag(connection)
 
-            fakes.leggTil(TestPerson(
+            FakePersoner.leggTil(TestPerson(
                 identer = setOf(ident),
                 fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
                 yrkesskade = listOf(TestYrkesskade())
@@ -79,7 +69,7 @@ class InformasjonskravGrunnlagTest {
             val (ident, kontekst) = klargjør(connection)
             val informasjonskravGrunnlag = InformasjonskravGrunnlag(connection)
 
-            fakes.leggTil(TestPerson(
+            FakePersoner.leggTil(TestPerson(
                 identer = setOf(ident),
                 fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
                 yrkesskade = listOf(TestYrkesskade())

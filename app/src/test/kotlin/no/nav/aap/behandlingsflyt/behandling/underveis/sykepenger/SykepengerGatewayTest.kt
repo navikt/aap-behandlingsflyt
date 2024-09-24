@@ -1,32 +1,12 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.sykepenger
 
 import no.nav.aap.behandlingsflyt.test.Fakes
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import kotlin.test.assertEquals
 
-@Disabled
-class SykepengerGatewayTest{
-    companion object {
-        private val fakes = Fakes()
-
-        @JvmStatic
-        @BeforeAll
-        fun beforeAll() {
-            fakes.start()
-        }
-
-        @JvmStatic
-        @AfterAll
-        fun afterAll() {
-            fakes.close()
-        }
-    }
-
-    @Disabled
+@Fakes
+class SykepengerGatewayTest {
     @Test
     fun kanHenteInformasjonFraSykepenger() {
         val spGateway = SykepengerGateway()
@@ -37,6 +17,6 @@ class SykepengerGatewayTest{
         )
 
         val response = spGateway.hentYtelseSykepenger(request)
-        assertEquals( 50, response.utbetaltePerioder[3].grad)
+        assertEquals(50, response.utbetaltePerioder[3].grad)
     }
 }

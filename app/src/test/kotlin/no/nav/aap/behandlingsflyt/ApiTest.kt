@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import kotlinx.coroutines.delay
@@ -28,6 +27,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.FinnEllerOpprettSakDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksinfoDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.UtvidetSaksinfoDTO
+import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -49,6 +49,7 @@ import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.slf4j.LoggerFactory
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
 import java.io.InputStream
@@ -60,10 +61,12 @@ import java.time.Year
 import java.time.temporal.ChronoUnit
 import java.util.*
 
+private val logger = LoggerFactory.getLogger("ApiTest")
+
+@Fakes
 class ApiTest {
     companion object {
         private val postgres = postgreSQLContainer()
-        private val fakes = Fakes(azurePort = 0)
         private lateinit var port: Number
 
         private val dbConfig = DbConfig(
@@ -84,13 +87,11 @@ class ApiTest {
         // Starter server
         private val server = embeddedServer(Netty, port = 0) {
             server(dbConfig = dbConfig)
-            module(fakes)
         }
 
         @JvmStatic
         @BeforeAll
         fun beforeall() {
-            fakes.start()
             server.start()
             port = runBlocking { server.resolvedConnectors().filter { it.type == ConnectorType.HTTP }.first().port }
         }
@@ -99,7 +100,6 @@ class ApiTest {
         @AfterAll
         fun afterAll() {
             server.stop()
-            fakes.close()
             postgres.close()
         }
     }
@@ -248,7 +248,7 @@ class ApiTest {
 
     @Test
     fun test() {
-        fakes.leggTil(
+        FakePersoner.leggTil(
             TestPerson(
                 identer = setOf(Ident("12345678910")),
                 fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
@@ -310,7 +310,7 @@ class ApiTest {
             )
         }
 
-        println(behandling)
+        logger.info("Behandling: $behandling")
     }
 
     private fun <E> kallInntilKlar(block: () -> E): E? {
@@ -353,14 +353,4 @@ private fun postgreSQLContainer(): PostgreSQLContainer<Nothing> {
     postgres.waitingFor(HostPortWaitStrategy().withStartupTimeout(Duration.of(60L, ChronoUnit.SECONDS)))
     postgres.start()
     return postgres
-}
-
-private fun Application.module(fakes: Fakes) {
-    // Setter opp virtuell sandkasse lokalt
-    environment.monitor.subscribe(ApplicationStopped) { application ->
-        application.environment.log.info("Server har stoppet")
-        fakes.close()
-        // Release resources and unsubscribe from events
-        application.environment.monitor.unsubscribe(ApplicationStopped) {}
-    }
 }

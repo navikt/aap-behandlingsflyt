@@ -2,29 +2,12 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.foreldrepenger
 
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.type.Periode
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import kotlin.test.assertEquals
 
+@Fakes
 class ForeldrepengerGatewayTest {
-    companion object {
-        private val fakes = Fakes()
-
-        @JvmStatic
-        @BeforeAll
-        fun beforeAll() {
-            fakes.start()
-        }
-
-        @JvmStatic
-        @AfterAll
-        fun afterAll() {
-            fakes.close()
-        }
-    }
-
     @Test
     fun kanHenteDataFraForeldrepenger() {
         val fpGateway = ForeldrepengerGateway()

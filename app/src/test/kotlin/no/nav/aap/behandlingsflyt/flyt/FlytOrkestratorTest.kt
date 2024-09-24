@@ -49,6 +49,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.server.prosessering.ProsesseringsJobber
+import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
@@ -58,6 +59,7 @@ import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.Motor
+import no.nav.aap.statistikk.api_kontrakt.StoppetBehandling
 import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.flyt.StegStatus
@@ -77,18 +79,17 @@ import kotlin.system.measureTimeMillis
 
 private val log = LoggerFactory.getLogger(FlytOrkestratorTest::class.java)
 
+@Fakes
 class FlytOrkestratorTest {
 
     companion object {
         val dataSource = InitTestDatabase.dataSource
         private val motor = Motor(dataSource, 2, jobber = ProsesseringsJobber.alle())
         val hendelsesMottak = TestHendelsesMottak(dataSource)
-        val fakes = Fakes()
 
         @BeforeAll
         @JvmStatic
         internal fun beforeAll() {
-            fakes.start()
             motor.start()
         }
 
@@ -96,7 +97,6 @@ class FlytOrkestratorTest {
         @JvmStatic
         internal fun afterAll() {
             motor.stop()
-            fakes.close()
         }
     }
 
@@ -107,7 +107,7 @@ class FlytOrkestratorTest {
         val periode = Periode(fom, fom.plusYears(3))
 
         // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
-        fakes.leggTil(
+        FakePersoner.leggTil(
             TestPerson(
                 identer = setOf(ident),
                 fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
@@ -402,12 +402,12 @@ class FlytOrkestratorTest {
     }
 
     @Test
-    fun `starter statistikk-jobb etter endt steg`() {
+    fun `starter statistikk-jobb etter endt steg`(hendelser: List<StoppetBehandling>) {
         val ident = ident()
         val fom = LocalDate.now().minusMonths(3)
         val periode = Periode(fom, fom.plusYears(3))
 
-        fakes.leggTil(
+        FakePersoner.leggTil(
             TestPerson(
                 identer = setOf(ident),
                 fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
@@ -445,7 +445,7 @@ class FlytOrkestratorTest {
         ventPåSvar()
         val sak = hentSak(ident, periode)
 
-        assertThat(fakes.statistikkHendelser.first { it.saksnummer == sak.saksnummer.toString() }.saksnummer).isEqualTo(
+        assertThat(hendelser.first { it.saksnummer == sak.saksnummer.toString() }.saksnummer).isEqualTo(
             sak.saksnummer.toString()
         )
     }
@@ -455,7 +455,7 @@ class FlytOrkestratorTest {
         val ident = ident()
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
-        fakes.leggTil(
+        FakePersoner.leggTil(
             TestPerson(
                 identer = setOf(ident),
                 fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
@@ -642,7 +642,7 @@ class FlytOrkestratorTest {
         val ident = ident()
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
-        fakes.leggTil(
+        FakePersoner.leggTil(
             TestPerson(
                 identer = setOf(ident),
                 fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
@@ -963,7 +963,7 @@ class FlytOrkestratorTest {
         hentPerson(ident)
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
-        fakes.leggTil(
+        FakePersoner.leggTil(
             TestPerson(
                 identer = setOf(ident),
                 fødselsdato = Fødselsdato(LocalDate.now().minusYears(17))
