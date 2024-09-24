@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt.flate
 
-import no.nav.aap.verdityper.flyt.StegType
-import no.nav.aap.verdityper.sakogbehandling.Status
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import java.time.LocalDateTime
 import java.util.*
 

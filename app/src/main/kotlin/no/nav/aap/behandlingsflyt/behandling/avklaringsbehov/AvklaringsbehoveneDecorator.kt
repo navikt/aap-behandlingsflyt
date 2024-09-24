@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+
 interface AvklaringsbehoveneDecorator {
 
     fun alle(): List<Avklaringsbehov>

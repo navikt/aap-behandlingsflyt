@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.behandling
 
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.verdityper.flyt.StegStatus
-import no.nav.aap.verdityper.flyt.StegType
 import java.time.LocalDateTime
 
 class StegTilstand(private val tidspunkt: LocalDateTime = LocalDateTime.now(),

@@ -18,6 +18,7 @@ class MottattDokument(
     private val strukturertDokument: StrukturerteData?
 ) {
 
+    @Suppress("UNCHECKED_CAST")
     fun <T> strukturerteData(): StrukturertDokument<out T>? {
         if (strukturertDokument == null) {
             return null
@@ -49,6 +50,7 @@ class MottattDokument(
         return data()
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun data(): String? {
         return if (strukturertDokument is LazyStrukturertDokument) {
             val data = strukturertDokument.hent<Any>()

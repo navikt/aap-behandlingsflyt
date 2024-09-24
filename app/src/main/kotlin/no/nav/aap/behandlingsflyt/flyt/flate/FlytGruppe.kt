@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt.flate
 
-import no.nav.aap.verdityper.flyt.StegGruppe
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegGruppe
 
 data class FlytGruppe(
     val stegGruppe: StegGruppe,

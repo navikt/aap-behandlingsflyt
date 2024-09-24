@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.hendelse.avløp
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Status
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -63,7 +64,8 @@ class BehandlingHendelseService(
                     )
                 })
             },
-            opprettetTidspunkt = behandling.opprettetTidspunkt
+            opprettetTidspunkt = behandling.opprettetTidspunkt,
+            versjon = ApplikasjonsVersjon.versjon
         )
 
         val payload = DefaultJsonMapper.toJson(hendelse)

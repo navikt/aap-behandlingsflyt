@@ -3,17 +3,15 @@ package no.nav.aap.behandlingsflyt.behandling.samordning
 import no.nav.aap.behandlingsflyt.behandling.underveis.foreldrepenger.Aktør
 import no.nav.aap.behandlingsflyt.behandling.underveis.foreldrepenger.ForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.behandling.underveis.foreldrepenger.ForeldrepengerRequest
-import no.nav.aap.behandlingsflyt.behandling.underveis.sykepenger.SykepengerRequest
 import no.nav.aap.behandlingsflyt.behandling.underveis.sykepenger.SykepengerGateway
+import no.nav.aap.behandlingsflyt.behandling.underveis.sykepenger.SykepengerRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.tidslinje.JoinStyle
-import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.Tidslinje
-import no.nav.aap.verdityper.flyt.FlytKontekst
+import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
 import java.time.LocalDate
 
 /*
@@ -72,7 +70,7 @@ class SamordningService(
         return Tidslinje()
     }
 
-    override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekst): Boolean {
+    override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekstMedPerioder): Boolean {
         val sak = sakService.hent(kontekst.sakId)
         val personIdent = sak.person.aktivIdent().identifikator
 
@@ -93,6 +91,11 @@ class SamordningService(
     }
 
     companion object : Informasjonskravkonstruktør {
+        override fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
+            // Skal alltid innhentes
+            return true
+        }
+
         override fun konstruer(connection: DBConnection): SamordningService {
             return SamordningService(
                 SakService(connection),

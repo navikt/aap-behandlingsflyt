@@ -30,7 +30,8 @@ class AktivitetRegelTest {
                 Pair(fom.plusDays(27), JournalpostId("2")),
                 Pair(fom.plusDays(41), JournalpostId("3"))
             ),
-            kvote = kvote
+            kvote = kvote,
+            bruddAktivitetsplikt = setOf(),
         )
 
         val vurdertTidslinje = regel.vurder(input, Tidslinje())
@@ -48,7 +49,8 @@ class AktivitetRegelTest {
             opptrappingPerioder = listOf(),
             pliktkort = listOf(),
             innsendingsTidspunkt = mapOf(),
-            kvote = kvote
+            kvote = kvote,
+            bruddAktivitetsplikt = setOf(),
         )
 
         val vurdertTidslinje = regel.vurder(input, Tidslinje())
@@ -69,7 +71,8 @@ class AktivitetRegelTest {
                 Pair(fom.plusDays(27), JournalpostId("1")),
                 Pair(fom.plusDays(60), JournalpostId("2"))
             ),
-            kvote = kvote
+            kvote = kvote,
+            bruddAktivitetsplikt = setOf(),
         )
 
         val vurdertTidslinje = regel.vurder(input, Tidslinje())
@@ -94,7 +97,8 @@ class AktivitetRegelTest {
                 Pair(fom.plusDays(13), JournalpostId("1")),
                 Pair(fom.plusDays(33), JournalpostId("2"))
             ),
-            kvote = kvote
+            kvote = kvote,
+            bruddAktivitetsplikt = setOf(),
         )
 
         val vurdertTidslinje = regel.vurder(input, Tidslinje())

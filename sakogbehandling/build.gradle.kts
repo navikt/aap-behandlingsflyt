@@ -1,15 +1,19 @@
 val ktorVersion = "2.3.12"
-val komponenterVersjon = "0.0.59"
+val komponenterVersjon = "0.0.69"
 val tilgangVersjon = "0.0.2"
 
+plugins {
+    id("behandlingsflyt.conventions")
+}
+
 dependencies {
-    implementation("no.nav:ktor-openapi-generator:1.0.22")
+    implementation("no.nav:ktor-openapi-generator:1.0.32")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.17.2")
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
 
     implementation(project(":verdityper"))
     implementation(project(":dbflyway"))
-    implementation(project(":httpklient"))
+    implementation(project(":integrasjon"))
     
     implementation("no.nav.aap.tilgang:plugin:$tilgangVersjon")
     implementation("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")

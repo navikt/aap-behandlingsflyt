@@ -9,13 +9,15 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.arbeidsevne.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.EndringType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
+import no.nav.aap.verdityper.flyt.EndringType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Saksnummer
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -69,6 +71,27 @@ class BarnRepositoryTest {
         }
     }
 
+    @Test
+    fun `Kopiering av barn fra en behandling til en annen`() {
+        InitTestDatabase.dataSource.transaction { connection ->
+            val barnRepository = BarnRepository(connection)
+            // Given
+            val sak = sak(connection)
+            val gammelBehandling = behandling(connection, sak)
+            barnRepository.lagreOppgitteBarn(gammelBehandling.id, OppgitteBarn(identer = setOf(Ident("1"))))
+
+            // When
+            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(gammelBehandling.id, Status.AVSLUTTET )
+            val nyBehandling = behandling(connection, sak)
+            barnRepository.kopier(gammelBehandling.id, nyBehandling.id)
+
+            // Then
+            val gamleOppgitteBarn = barnRepository.hent(nyBehandling.id).oppgitteBarn?.identer
+            val nyeOppgitteBarn = barnRepository.hent(nyBehandling.id).oppgitteBarn?.identer
+            assertThat(nyeOppgitteBarn).isEqualTo(gamleOppgitteBarn)
+        }
+    }
+
     private companion object {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
@@ -86,5 +109,4 @@ class BarnRepositoryTest {
             listOf(Årsak(EndringType.MOTTATT_SØKNAD))
         ).behandling
     }
-
 }

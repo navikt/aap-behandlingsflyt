@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FritakMeldepliktLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksperiode
@@ -14,7 +14,7 @@ class FritakFraMeldepliktLøser(val connection: DBConnection) : Avklaringsbehovs
     private val meldepliktRepository = MeldepliktRepository(connection)
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: FritakMeldepliktLøsning): LøsningsResultat {
-        val fritaksvurdering = løsning.fritaksvurderingDto.toFritaksvurdering()
+        val fritaksvurdering = løsning.fritaksvurdering.toFritaksvurdering()
 
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
 
@@ -34,6 +34,6 @@ class FritakFraMeldepliktLøser(val connection: DBConnection) : Avklaringsbehovs
     override fun forBehov(): Definisjon {
         return Definisjon.FRITAK_MELDEPLIKT
     }
-    
+
     private fun List<Fritaksperiode>.minstEttFritak() = this.any { it.harFritak }
 }

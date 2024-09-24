@@ -1,9 +1,12 @@
 import java.io.ByteArrayOutputStream
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.gradle.kotlin.dsl.processResources
 
 val ktorVersion = "2.3.12"
 
 plugins {
-    id("io.ktor.plugin")
+    id("behandlingsflyt.conventions")
+    id("io.ktor.plugin") version "2.3.12"
 }
 
 application {
@@ -24,6 +27,10 @@ tasks {
 
         from(projectProps)
     }
+
+    withType<ShadowJar> {
+        mergeServiceFiles()
+    }
 }
 
 fun runCommand(command: String): String {
@@ -43,7 +50,7 @@ fun getCheckedOutGitCommitHash(): String {
 }
 
 
-val komponenterVersjon = "0.0.59"
+val komponenterVersjon = "0.0.69"
 
 dependencies {
     implementation("io.ktor:ktor-server-cors:$ktorVersion")
@@ -54,7 +61,7 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.5.8")
     implementation("net.logstash.logback:logstash-logback-encoder:8.0")
 
-    implementation("no.nav.aap.statistikk:api-kontrakt:0.0.5")
+    implementation("no.nav.aap.statistikk:api-kontrakt:0.0.6")
     implementation("no.nav.aap.kelvin:motor:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:dbconnect:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:dbmigrering:$komponenterVersjon")
@@ -63,7 +70,7 @@ dependencies {
     implementation("no.nav.aap.kelvin:infrastructure:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:server:$komponenterVersjon")
 
-    implementation(project(":httpklient"))
+    implementation(project(":integrasjon"))
     implementation(project(":sakogbehandling"))
     implementation(project(":faktagrunnlag"))
     implementation(project(":verdityper"))

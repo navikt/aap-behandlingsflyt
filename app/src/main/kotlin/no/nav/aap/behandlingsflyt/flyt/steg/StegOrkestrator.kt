@@ -1,6 +1,9 @@
 package no.nav.aap.behandlingsflyt.flyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.periodisering.PerioderTilVurderingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingFlytRepository
@@ -9,7 +12,6 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.verdityper.flyt.FlytKontekst
 import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
 import no.nav.aap.verdityper.flyt.StegStatus
-import no.nav.aap.verdityper.flyt.StegType
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import org.slf4j.LoggerFactory
 
@@ -29,24 +31,43 @@ private val log = LoggerFactory.getLogger(StegOrkestrator::class.java)
  *
  * @see no.nav.aap.verdityper.flyt.StegStatus.AVSLUTTER:        Teknisk markør for avslutting av steget
  */
-class StegOrkestrator(private val connection: DBConnection, private val aktivtSteg: FlytSteg) {
+class StegOrkestrator(
+    private val connection: DBConnection,
+    private val aktivtSteg: FlytSteg
+) {
 
     private val behandlingRepository = BehandlingFlytRepository(connection)
     private val avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection)
     private val perioderTilVurderingService = PerioderTilVurderingService(connection)
+    private val informasjonskravGrunnlag = InformasjonskravGrunnlag(connection)
 
     private val behandlingSteg = aktivtSteg.konstruer(connection)
 
     fun utfør(
         kontekst: FlytKontekst,
-        behandling: Behandling
+        behandling: Behandling,
+        faktagrunnlagForGjeldendeSteg: List<Informasjonskravkonstruktør>
     ): Transisjon {
         var gjeldendeStegStatus = StegStatus.START
         log.info("Behandler steg '{}'", aktivtSteg.type())
 
+        val kontekstMedPerioder = FlytKontekstMedPerioder(
+            sakId = kontekst.sakId,
+            behandlingId = kontekst.behandlingId,
+            behandlingType = kontekst.behandlingType,
+            perioderTilVurdering = perioderTilVurderingService.utled(
+                kontekst = kontekst,
+                stegType = aktivtSteg.type()
+            )
+        )
+        informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
+            faktagrunnlagForGjeldendeSteg,
+            kontekstMedPerioder
+        )
+
         while (true) {
             val resultat = utførTilstandsEndring(
-                kontekst,
+                kontekstMedPerioder,
                 gjeldendeStegStatus,
                 behandling
             )
@@ -70,11 +91,20 @@ class StegOrkestrator(private val connection: DBConnection, private val aktivtSt
         kontekst: FlytKontekst,
         behandling: Behandling
     ): Transisjon {
-        return utførTilstandsEndring(kontekst, StegStatus.TILBAKEFØRT, behandling)
+        val kontekstMedPerioder = FlytKontekstMedPerioder(
+            sakId = kontekst.sakId,
+            behandlingId = kontekst.behandlingId,
+            behandlingType = kontekst.behandlingType,
+            perioderTilVurdering = perioderTilVurderingService.utled(
+                kontekst = kontekst,
+                stegType = aktivtSteg.type()
+            )
+        )
+        return utførTilstandsEndring(kontekstMedPerioder, StegStatus.TILBAKEFØRT, behandling)
     }
 
     private fun utførTilstandsEndring(
-        kontekst: FlytKontekst,
+        kontekst: FlytKontekstMedPerioder,
         nesteStegStatus: StegStatus,
         behandling: Behandling
     ): Transisjon {
@@ -97,13 +127,7 @@ class StegOrkestrator(private val connection: DBConnection, private val aktivtSt
         return transisjon
     }
 
-    private fun behandleSteg(kontekst: FlytKontekst): Transisjon {
-        val kontekstMedPerioder = FlytKontekstMedPerioder(
-            sakId = kontekst.sakId,
-            behandlingId = kontekst.behandlingId,
-            behandlingType = kontekst.behandlingType,
-            perioderTilVurdering = perioderTilVurderingService.utled(kontekst = kontekst, stegType = aktivtSteg.type())
-        )
+    private fun behandleSteg(kontekstMedPerioder: FlytKontekstMedPerioder): Transisjon {
         val stegResultat = behandlingSteg.utfør(kontekstMedPerioder)
 
         val resultat = stegResultat.transisjon()
@@ -113,7 +137,7 @@ class StegOrkestrator(private val connection: DBConnection, private val aktivtSt
                 "Fant avklaringsbehov: {}",
                 resultat.funnetAvklaringsbehov()
             )
-            val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+            val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekstMedPerioder.behandlingId)
             avklaringsbehovene.leggTil(resultat.funnetAvklaringsbehov(), aktivtSteg.type())
         }
 
@@ -137,7 +161,7 @@ class StegOrkestrator(private val connection: DBConnection, private val aktivtSt
         return Fortsett
     }
 
-    private fun behandleStegBakover(kontekst: FlytKontekst): Transisjon {
+    private fun behandleStegBakover(kontekst: FlytKontekstMedPerioder): Transisjon {
         behandlingSteg.vedTilbakeføring(kontekst)
         return Fortsett
     }

@@ -1,13 +1,14 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.InnsendingId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Pliktkort
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.aktivitet.TorsHammerDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.slf4j.LoggerFactory
+import java.util.UUID
 
 private val log = LoggerFactory.getLogger(LazyStrukturertDokument::class.java)
 
@@ -34,7 +35,7 @@ class LazyStrukturertDokument(
         return when (brevkode) {
             Brevkode.SØKNAD -> DefaultJsonMapper.fromJson(strukturerteData, Søknad::class.java) as T
             Brevkode.PLIKTKORT -> DefaultJsonMapper.fromJson(strukturerteData, Pliktkort::class.java) as T
-            Brevkode.AKTIVITETSKORT -> DefaultJsonMapper.fromJson(strukturerteData, TorsHammerDto::class.java) as T
+            Brevkode.AKTIVITETSKORT -> DefaultJsonMapper.fromJson(strukturerteData, InnsendingId::class.java) as T
             Brevkode.UKJENT -> throw IllegalArgumentException("Ukjent brevkode")
         }
     }

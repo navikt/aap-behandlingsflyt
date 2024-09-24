@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.verdityper.flyt.FlytKontekst
+import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
 class MedlemskapService private constructor(
@@ -13,7 +13,7 @@ class MedlemskapService private constructor(
     private val sakService: SakService,
     private val medlemskapRepository: MedlemskapRepository,
 ) : Informasjonskrav {
-    override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekst): Boolean {
+    override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekstMedPerioder): Boolean {
         val behandlingId = kontekst.behandlingId
         val sak = sakService.hent(kontekst.sakId)
         val medlemskapPerioder = medlemskapGateway.innhent(sak.person)
@@ -36,6 +36,9 @@ class MedlemskapService private constructor(
     }
 
     companion object : Informasjonskravkonstruktør {
+        override fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
+            return true
+        }
         override fun konstruer(connection: DBConnection): MedlemskapService {
             return MedlemskapService(
                 MedlemskapGateway(),

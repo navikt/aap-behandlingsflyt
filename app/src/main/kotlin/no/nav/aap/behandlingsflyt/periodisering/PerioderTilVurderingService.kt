@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.periodisering
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.EndringType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -9,8 +8,8 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tidslinje.JoinStyle
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.Tidslinje
+import no.nav.aap.verdityper.flyt.EndringType
 import no.nav.aap.verdityper.flyt.FlytKontekst
-import no.nav.aap.verdityper.flyt.StegType
 import no.nav.aap.verdityper.flyt.Vurdering
 import no.nav.aap.verdityper.flyt.VurderingType
 import no.nav.aap.verdityper.sakogbehandling.TypeBehandling
@@ -19,12 +18,18 @@ class PerioderTilVurderingService(connection: DBConnection) {
     private val sakService: SakService = SakService(connection)
     private val behandlingRepository = BehandlingRepositoryImpl(connection)
 
-    fun utled(kontekst: FlytKontekst, stegType: StegType): Set<Vurdering> {
+    fun utled(kontekst: FlytKontekst, stegType: no.nav.aap.behandlingsflyt.kontrakt.steg.StegType): Set<Vurdering> {
         val sak = sakService.hent(kontekst.sakId)
         if (kontekst.behandlingType == TypeBehandling.Førstegangsbehandling) {
             // ved førstegangsbehandling skal hele perioden alltid vurderes for alle vilkår?
 
-            return setOf(Vurdering(type = VurderingType.FØRSTEGANGSBEHANDLING, periode = sak.rettighetsperiode))
+            return setOf(
+                Vurdering(
+                    type = VurderingType.FØRSTEGANGSBEHANDLING,
+                    årsaker = listOf(EndringType.MOTTATT_SØKNAD),
+                    periode = sak.rettighetsperiode
+                )
+            )
         }
 
         // TODO(" Sjekk vilkår/steg mot årsaker til vurdering (ligger på behandling)")
@@ -32,8 +37,9 @@ class PerioderTilVurderingService(connection: DBConnection) {
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
         val årsaker = behandling.årsaker()
 
-        var tidslinje = Tidslinje<VurderingType>()
-        årsaker.map { årsak -> utledVurdering(årsak, sak.rettighetsperiode) }.map { Tidslinje(it.periode, it.type) }
+        var tidslinje = Tidslinje<VurderingValue>()
+        årsaker.map { årsak -> utledVurdering(årsak, sak.rettighetsperiode) }.map { Tidslinje(it.periode,
+            VurderingValue(it.type, it.årsaker)) }
             .forEach { segment ->
                 tidslinje = tidslinje.kombiner(segment, JoinStyle.CROSS_JOIN { periode, venstreSegment, høyreSegment ->
                     val venstreVerdi = venstreSegment?.verdi
@@ -52,35 +58,48 @@ class PerioderTilVurderingService(connection: DBConnection) {
                 })
             }
 
-        return tidslinje.segmenter().map { Vurdering(periode = it.periode, type = it.verdi) }.toSet()
+        return tidslinje.komprimer().segmenter()
+            .map { Vurdering(type = it.verdi.type, årsaker = it.verdi.årsaker, periode = it.periode) }.toSet()
     }
 
-    private fun velgPrioritertVerdi(venstreVerdi: VurderingType, høyreVerdi: VurderingType): VurderingType {
-        val typer = setOf(venstreVerdi, høyreVerdi)
+    private fun velgPrioritertVerdi(venstreVerdi: VurderingValue, høyreVerdi: VurderingValue): VurderingValue {
+        val årsaker = (venstreVerdi.årsaker + høyreVerdi.årsaker).toSet()
+        val typer = setOf(venstreVerdi.type, høyreVerdi.type)
         if (typer.size == 1) {
             return venstreVerdi
         }
         if (typer.contains(VurderingType.FØRSTEGANGSBEHANDLING)) {
-            return VurderingType.FØRSTEGANGSBEHANDLING
+            return VurderingValue(VurderingType.FØRSTEGANGSBEHANDLING, årsaker.toList())
         } else if (typer.contains(VurderingType.REVURDERING)) {
-            return VurderingType.REVURDERING
+            return VurderingValue(VurderingType.REVURDERING, årsaker.toList())
         }
-        return typer.first()
+        return return VurderingValue(typer.first(), årsaker.toList())
     }
 
     private fun utledVurdering(årsak: Årsak, rettighetsperiode: Periode): Vurdering {
         return when (årsak.type) {
             EndringType.MOTTATT_SØKNAD -> Vurdering(
                 VurderingType.FØRSTEGANGSBEHANDLING,
+                listOf(årsak.type),
                 årsak.periode ?: rettighetsperiode
             )
 
-            EndringType.MOTTATT_AKTIVITETSMELDING -> Vurdering(VurderingType.REVURDERING, requireNotNull(årsak.periode))
+            EndringType.MOTTATT_AKTIVITETSMELDING -> Vurdering(
+                VurderingType.REVURDERING,
+                listOf(årsak.type),
+                requireNotNull(årsak.periode)
+            )
+
             EndringType.MOTTATT_MELDEKORT -> Vurdering(
-                VurderingType.FORLENGELSE,
+                VurderingType.REVURDERING,
+                listOf(årsak.type),
                 requireNotNull(årsak.periode)
             ) // TODO: Vurdere om denne skal utlede mer komplekst (dvs har mottatt for denne perioden før)
-            EndringType.MOTTATT_LEGEERKLÆRING -> Vurdering(VurderingType.FØRSTEGANGSBEHANDLING, rettighetsperiode)
+            EndringType.MOTTATT_LEGEERKLÆRING -> Vurdering(
+                VurderingType.FØRSTEGANGSBEHANDLING,
+                listOf(årsak.type),
+                rettighetsperiode
+            )
         }
     }
 }

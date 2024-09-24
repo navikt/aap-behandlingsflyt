@@ -1,4 +1,8 @@
-val komponenterVersjon = "0.0.59"
+val komponenterVersjon = "0.0.69"
+
+plugins {
+    id("behandlingsflyt.conventions")
+}
 
 dependencies {
     implementation("no.nav.aap.kelvin:dbmigrering:$komponenterVersjon")

@@ -42,7 +42,7 @@ import no.nav.aap.pdl.PdlRelasjon
 import no.nav.aap.pdl.PdlRelasjonDataResponse
 import no.nav.aap.pdl.PdlRequest
 import no.nav.aap.statistikk.api_kontrakt.AvsluttetBehandlingDTO
-import no.nav.aap.statistikk.api_kontrakt.MottaStatistikkDTO
+import no.nav.aap.statistikk.api_kontrakt.StoppetBehandling
 import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import no.nav.aap.yrkesskade.YrkesskadeModell
@@ -59,7 +59,7 @@ import java.time.Year
 import java.util.*
 import no.nav.aap.pdl.PdlRelasjonData as BarnPdlData
 
-class Fakes(azurePort: Int = 0) : AutoCloseable {
+class Fakes(val azurePort: Int = 0) : AutoCloseable {
     private val log: Logger = LoggerFactory.getLogger(Fakes::class.java)
     private val azure = embeddedServer(Netty, port = azurePort, module = { azureFake() }).start()
     private val pdl = embeddedServer(Netty, port = 0, module = { pdlFake() }).start()
@@ -76,7 +76,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
     private val sykepenger = embeddedServer(Netty, port = 0, module = {spFake()}).apply { start() }
 
     private val statistikk = embeddedServer(Netty, port = 0, module = { statistikkFake() }).apply { start() }
-    val statistikkHendelser = mutableListOf<MottaStatistikkDTO>()
+    val statistikkHendelser = mutableListOf<StoppetBehandling>()
     val mottatteVilkårsResult = mutableListOf<AvsluttetBehandlingDTO>()
 
 
@@ -317,7 +317,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         }
         routing {
             post("/tilgang") {
-                val req = call.receive<TilgangRequest>()
+                call.receive<TilgangRequest>()
                 call.respond(TilgangResponse(true))
             }
         }
@@ -341,7 +341,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         }
         routing {
             post("/motta") {
-                val receive = call.receive<MottaStatistikkDTO>()
+                val receive = call.receive<StoppetBehandling>()
                 statistikkHendelser.add(receive)
                 call.respond(status = HttpStatusCode.Accepted, message = "{}")
             }
@@ -518,7 +518,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         }
         routing {
             post("/utbetalte-perioder") {
-                val req = call.receive<String>()
+                call.receive<String>()
                 call.respond(spResponse)
             }
         }
@@ -925,6 +925,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
     }
 
 
+    @Suppress("PropertyName")
     internal data class TestToken(
         val access_token: String,
         val refresh_token: String = "very.secure.token",

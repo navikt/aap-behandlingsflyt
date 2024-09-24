@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.adapter.InstitusjonsoppholdGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.verdityper.flyt.FlytKontekst
+import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGateway as IInstitusjonsoppholdGateway
 
@@ -15,7 +15,7 @@ class InstitusjonsoppholdService private constructor(
     private val institusjonsoppholdRegisterGateway: IInstitusjonsoppholdGateway
 ) : Informasjonskrav {
 
-    override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekst): Boolean {
+    override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekstMedPerioder): Boolean {
         val behandlingId = kontekst.behandlingId
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
 
@@ -43,6 +43,9 @@ class InstitusjonsoppholdService private constructor(
     }
 
     companion object : Informasjonskravkonstruktør {
+        override fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
+            return true
+        }
         override fun konstruer(connection: DBConnection): InstitusjonsoppholdService {
             return InstitusjonsoppholdService(
                 SakService(connection),

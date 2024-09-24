@@ -18,10 +18,10 @@ import java.net.URI
 import java.time.LocalDate
 
 object YrkesskadeRegisterGateway {
-    @Deprecated("Kun for test")
+    @Deprecated("Brukes i dev på grunn av manglende integrasjon mot yrkesskaderegisteret i dolly")
     private val yrkesskaderTestMap = mutableMapOf<Ident, YrkesskadeModell>()
 
-    @Deprecated("Kun for test")
+    @Deprecated("Brukes i dev på grunn av manglende integrasjon mot yrkesskaderegisteret i dolly")
     fun puttInnTestPerson(ident: Ident, yrkesskadeDato: LocalDate) {
         yrkesskaderTestMap[ident] = YrkesskadeModell(
             kommunenr = "0301",
@@ -61,20 +61,26 @@ object YrkesskadeRegisterGateway {
         }
 
         val httpRequest = PostRequest(body = request)
-        return client.post(uri = url, request = httpRequest, mapper = { body, _ ->
-            DefaultJsonMapper.fromJson(body)
-        })
+        return client.post(uri = url, request = httpRequest) { body, _ -> DefaultJsonMapper.fromJson(body) }
     }
 
     fun innhent(person: Person, fødselsdato: Fødselsdato): List<Yrkesskade> {
-        val identer = person.identer().map { it.identifikator }
-        val request =
-            YrkesskadeRequest(identer, fomDato = fødselsdato.toLocalDate()) //TODO: fra når skal yrkesskade hentes
+        val identer = person.identer().map(Ident::identifikator)
+        //TODO: fra når skal yrkesskade hentes
+        val request = YrkesskadeRequest(identer, fødselsdato.toLocalDate())
         val response: Yrkesskader? = query(request)
 
-        val skader = response?.skader?.map { Yrkesskade(it.saksreferanse, it.skadedato) } ?: emptyList()
+        if (response == null) {
+            return emptyList()
+        }
 
-        return skader
+        //FIXME: Kan denne være null?? Når da? Ser ut som at yrkesskade-saker alltid returnerer en liste med mindre det er en feil i responsen
+        val skader = response.skader
+
+        if (skader == null) {
+            return emptyList()
+        }
+
+        return skader.map { yrkesskade -> Yrkesskade(yrkesskade.saksreferanse, yrkesskade.skadedato) }
     }
-
 }
