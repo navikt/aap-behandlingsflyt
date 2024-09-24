@@ -11,7 +11,7 @@ dependencies {
     implementation(project(":verdityper"))
     implementation(project(":integrasjon"))
     implementation(project(":app"))
-    implementation("no.nav.aap.tilgang:api-kontrakt:0.0.2")
+    implementation("no.nav.aap.tilgang:api-kontrakt:0.0.11")
     implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
     implementation("io.ktor:ktor-server-auth:$ktorVersion")
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
