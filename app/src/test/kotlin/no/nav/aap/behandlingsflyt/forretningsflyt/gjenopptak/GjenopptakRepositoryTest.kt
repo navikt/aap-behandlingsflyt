@@ -12,15 +12,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingFlytRepos
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.FakesExtension
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.flyt.ÅrsakTilBehandling
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -35,7 +32,10 @@ class GjenopptakRepositoryTest {
         dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
-            BehandlingFlytRepository(connection).oppdaterBehandlingStatus(behandlingId = behandling.id, status = Status.UTREDES)
+            BehandlingFlytRepository(connection).oppdaterBehandlingStatus(
+                behandlingId = behandling.id,
+                status = Status.UTREDES
+            )
             val avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection)
 
             val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
@@ -46,7 +46,10 @@ class GjenopptakRepositoryTest {
         dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
-            BehandlingFlytRepository(connection).oppdaterBehandlingStatus(behandlingId = behandling.id, status = Status.UTREDES)
+            BehandlingFlytRepository(connection).oppdaterBehandlingStatus(
+                behandlingId = behandling.id,
+                status = Status.UTREDES
+            )
             val avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection)
 
             val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
