@@ -30,13 +30,12 @@ data class HendelseId(val id: UUID) {
 /** Representerer fakta om ett enkelt brudd for én periode. */
 data class BruddAktivitetsplikt(
     /** Intern id brukt i databasen. Skal ikke deles utenfor appen. */
-    val id: BruddAktivitetspliktId?,
+    val id: BruddAktivitetspliktId,
 
     /** Ekstern id. Skal brukes hvis entiteten sendes ut av appen. */
     val hendelseId: HendelseId,
 
-    /** Knytter sammen flere brudd som ble rapportert inn av saksbehandler som én handling. Brukes
-     * som journalpostId i mottat_dokument. */
+    /** Knytter sammen flere brudd som ble rapportert inn av saksbehandler som én handling. */
     val innsendingId: InnsendingId,
 
     val navIdent: NavIdent,
