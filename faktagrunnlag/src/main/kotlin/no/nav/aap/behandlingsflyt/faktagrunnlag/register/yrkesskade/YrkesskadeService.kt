@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeRegisterGateway
@@ -16,9 +18,10 @@ class YrkesskadeService private constructor(
     private val yrkesskadeRegisterGateway: YrkesskadeRegisterGateway
 ) : Informasjonskrav {
 
-    override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekstMedPerioder): Boolean {
+    override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
-        val fødselsdato = requireNotNull(personopplysningRepository.hentHvisEksisterer(kontekst.behandlingId)?.brukerPersonopplysning?.fødselsdato)
+        val fødselsdato =
+            requireNotNull(personopplysningRepository.hentHvisEksisterer(kontekst.behandlingId)?.brukerPersonopplysning?.fødselsdato)
         val yrkesskadePeriode = yrkesskadeRegisterGateway.innhent(sak.person, fødselsdato)
 
         val behandlingId = kontekst.behandlingId
@@ -34,7 +37,7 @@ class YrkesskadeService private constructor(
         }
         val nyeData = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
 
-        return nyeData == gamleData
+        return if (nyeData == gamleData) IKKE_ENDRET else ENDRET
     }
 
     fun hentHvisEksisterer(behandlingId: BehandlingId): YrkesskadeGrunnlag? {

@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
@@ -27,7 +29,7 @@ class BarnService private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository
 ) : Informasjonskrav {
 
-    override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekstMedPerioder): Boolean {
+    override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val behandlingId = kontekst.behandlingId
         val eksisterendeData = barnRepository.hentHvisEksisterer(behandlingId)
 
@@ -50,9 +52,9 @@ class BarnService private constructor(
         ) {
             barnRepository.lagreRegisterBarn(behandlingId, barnIdenter)
             personopplysningRepository.lagre(behandlingId, barn.alleBarn())
-            return false
+            return ENDRET
         }
-        return true
+        return IKKE_ENDRET
     }
 
     private fun oppdaterPersonIdenter(barnIdenter: Set<Ident>) {

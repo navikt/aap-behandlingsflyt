@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
@@ -26,10 +28,10 @@ class BruddAktivitetspliktService (
         }
     }
 
-    override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekstMedPerioder): Boolean {
+    override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val aktivitetskortSomIkkeErBehandlet = mottaDokumentService.aktivitetskortSomIkkeErBehandlet(kontekst.sakId)
         if (aktivitetskortSomIkkeErBehandlet.isEmpty()) {
-            return true
+            return IKKE_ENDRET
         }
 
         val eksisterendeBrudd = bruddAktivitetspliktRepository.hentGrunnlagHvisEksisterer(kontekst.behandlingId)
@@ -49,7 +51,7 @@ class BruddAktivitetspliktService (
         }
 
         bruddAktivitetspliktRepository.nyttGrunnlag(behandlingId = kontekst.behandlingId, brudd = alleBrudd)
-        return false
+        return ENDRET
     }
 
 }

@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
@@ -37,10 +39,10 @@ class SøknadService private constructor(
         }
     }
 
-    override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekstMedPerioder): Boolean {
+    override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val ubehandletSøknader = mottaDokumentService.søknaderSomIkkeHarBlittBehandlet(kontekst.sakId)
         if (ubehandletSøknader.isEmpty()) {
-            return true
+            return IKKE_ENDRET
         }
 
         val behandlingId = kontekst.behandlingId
@@ -72,6 +74,6 @@ class SøknadService private constructor(
             )
         }
 
-        return false // Antar her at alle nye søknader gir en endring vi må ta hensyn til
+        return ENDRET // Antar her at alle nye søknader gir en endring vi må ta hensyn til
     }
 }

@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.adapter.UføreGateway
@@ -17,7 +19,7 @@ class UføreService(
     private val personopplysningRepository: PersonopplysningRepository,
     private val uføreRegisterGateway: UføreRegisterGateway
 ) : Informasjonskrav {
-    override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekstMedPerioder): Boolean {
+    override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
         val fødselsdato =
             requireNotNull(personopplysningRepository.hentHvisEksisterer(kontekst.behandlingId)?.brukerPersonopplysning?.fødselsdato)
@@ -37,7 +39,7 @@ class UføreService(
 
         val nyeData = uføreRepository.hentHvisEksisterer(behandlingId)
 
-        return nyeData == gamleData
+        return if (nyeData == gamleData) IKKE_ENDRET else ENDRET
     }
 
     companion object : Informasjonskravkonstruktør {
