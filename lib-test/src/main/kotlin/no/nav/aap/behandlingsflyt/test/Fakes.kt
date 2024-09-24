@@ -61,27 +61,77 @@ import no.nav.aap.pdl.PdlRelasjonData as BarnPdlData
 
 class Fakes(val azurePort: Int = 0) : AutoCloseable {
     private val log: Logger = LoggerFactory.getLogger(Fakes::class.java)
-    private val azure = embeddedServer(Netty, port = azurePort, module = { azureFake() }).start()
-    private val pdl = embeddedServer(Netty, port = 0, module = { pdlFake() }).start()
-    private val yrkesskade = embeddedServer(Netty, port = 0, module = { yrkesskadeFake() }).start()
-    private val inntekt = embeddedServer(Netty, port = 0, module = { poppFake() }).start()
-    private val oppgavestyring = embeddedServer(Netty, port = 0, module = { oppgavestyringFake() }).start()
+    private val azure = embeddedServer(Netty, port = azurePort, module = { azureFake() })
+    private val pdl = embeddedServer(Netty, port = 0, module = { pdlFake() })
+    private val yrkesskade = embeddedServer(Netty, port = 0, module = { yrkesskadeFake() })
+    private val inntekt = embeddedServer(Netty, port = 0, module = { poppFake() })
+    private val oppgavestyring = embeddedServer(Netty, port = 0, module = { oppgavestyringFake() })
     private val fakePersoner: MutableMap<String, TestPerson> = mutableMapOf()
-    private val saf = embeddedServer(Netty, port = 0, module = { safFake() }).apply { start() }
-    private val inst2 = embeddedServer(Netty, port = 0, module = { inst2Fake() }).apply { start() }
-    private val medl = embeddedServer(Netty, port = 0, module = { medlFake() }).apply { start() }
-    private val pesysFake = embeddedServer(Netty, port = 0, module = { pesysFake() }).apply { start() }
-    private val tilgang = embeddedServer(Netty, port = 0, module = {    tilgangFake() }).apply { start() }
-    private val foreldrepenger = embeddedServer(Netty, port = 0, module = {fpFake()}).apply { start() }
-    private val sykepenger = embeddedServer(Netty, port = 0, module = {spFake()}).apply { start() }
+    private val saf = embeddedServer(Netty, port = 0, module = { safFake() })
+    private val inst2 = embeddedServer(Netty, port = 0, module = { inst2Fake() })
+    private val medl = embeddedServer(Netty, port = 0, module = { medlFake() })
+    private val pesysFake = embeddedServer(Netty, port = 0, module = { pesysFake() })
+    private val tilgang = embeddedServer(Netty, port = 0, module = { tilgangFake() })
+    private val foreldrepenger = embeddedServer(Netty, port = 0, module = { fpFake() })
+    private val sykepenger = embeddedServer(Netty, port = 0, module = { spFake() })
 
-    private val statistikk = embeddedServer(Netty, port = 0, module = { statistikkFake() }).apply { start() }
+    private val statistikk = embeddedServer(Netty, port = 0, module = { statistikkFake() })
     val statistikkHendelser = mutableListOf<StoppetBehandling>()
     val mottatteVilkårsResult = mutableListOf<AvsluttetBehandlingDTO>()
 
 
     init {
         Thread.currentThread().setUncaughtExceptionHandler { _, e -> log.error("Uhåndtert feil", e) }
+
+        // testpersoner
+        val BARNLØS_PERSON_10ÅR =
+            TestPerson(
+                identer = setOf(Ident("84837942045", true)),
+                fødselsdato = Fødselsdato(
+                    LocalDate.now().minusYears(10),
+                )
+            )
+        val BARNLØS_PERSON_30ÅR =
+            TestPerson(
+                identer = setOf(Ident("12345678910", true)),
+                fødselsdato = Fødselsdato(
+                    LocalDate.now().minusYears(30),
+                )
+            )
+        val BARNLØS_PERSON_18ÅR =
+            TestPerson(
+                identer = setOf(Ident("42346734567", true)),
+                fødselsdato = Fødselsdato(LocalDate.now().minusYears(18).minusDays(10))
+            )
+        val PERSON_MED_BARN_65ÅR =
+            TestPerson(
+                identer = setOf(Ident("86322434234", true)),
+                fødselsdato = Fødselsdato(LocalDate.now().minusYears(65)),
+                barn = listOf(
+                    BARNLØS_PERSON_18ÅR, BARNLØS_PERSON_30ÅR
+                )
+            )
+
+        // Legg til alle testpersoner
+        listOf(PERSON_MED_BARN_65ÅR, BARNLØS_PERSON_10ÅR).forEach { leggTil(it) }
+    }
+
+    fun start() {
+        azure.start()
+        yrkesskade.start()
+        pdl.start()
+        azure.start()
+        inntekt.start()
+        oppgavestyring.start()
+        saf.start()
+        inst2.start()
+        medl.start()
+        tilgang.start()
+        foreldrepenger.start()
+        pesysFake.start()
+        sykepenger.start()
+        statistikk.start()
+
         // Azure
         System.setProperty("azure.openid.config.token.endpoint", "http://localhost:${azure.port()}/token")
         System.setProperty("azure.app.client.id", "behandlingsflyt")
@@ -142,38 +192,6 @@ class Fakes(val azurePort: Int = 0) : AutoCloseable {
         // Sykepenger
         System.setProperty("integrasjon.sykepenger.url", "http://localhost:${sykepenger.port()}")
         System.setProperty("integrasjon.sykepenger.scope", "scope")
-
-        // testpersoner
-        val BARNLØS_PERSON_10ÅR =
-            TestPerson(
-                identer = setOf(Ident("84837942045", true)),
-                fødselsdato = Fødselsdato(
-                    LocalDate.now().minusYears(10),
-                )
-            )
-        val BARNLØS_PERSON_30ÅR =
-            TestPerson(
-                identer = setOf(Ident("12345678910", true)),
-                fødselsdato = Fødselsdato(
-                    LocalDate.now().minusYears(30),
-                )
-            )
-        val BARNLØS_PERSON_18ÅR =
-            TestPerson(
-                identer = setOf(Ident("42346734567", true)),
-                fødselsdato = Fødselsdato(LocalDate.now().minusYears(18).minusDays(10))
-            )
-        val PERSON_MED_BARN_65ÅR =
-            TestPerson(
-                identer = setOf(Ident("86322434234", true)),
-                fødselsdato = Fødselsdato(LocalDate.now().minusYears(65)),
-                barn = listOf(
-                    BARNLØS_PERSON_18ÅR, BARNLØS_PERSON_30ÅR
-                )
-            )
-
-        // Legg til alle testpersoner
-        listOf(PERSON_MED_BARN_65ÅR, BARNLØS_PERSON_10ÅR).forEach { leggTil(it) }
     }
 
     override fun close() {
@@ -484,7 +502,7 @@ class Fakes(val azurePort: Int = 0) : AutoCloseable {
         }
         routing {
             post("/hent-ytelse-vedtak") {
-                val req = call.receive<String>()
+                call.receive<String>()
                 call.respond(foreldrepengerOgSvangerskapspengerResponse)
             }
         }
@@ -492,7 +510,7 @@ class Fakes(val azurePort: Int = 0) : AutoCloseable {
 
     private fun Application.spFake() {
         @Language("JSON")
-        val spResponse ="""
+        val spResponse = """
         {
             "utbetaltePerioder": [
                 { "personidentifikator": "11111111111", "grad": 100, "fom": "2018-01-01", "tom": "2018-01-10", "tags": ["IT1"] },

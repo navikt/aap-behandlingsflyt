@@ -49,6 +49,7 @@ class TestApp {
 fun main() {
     val postgres = postgreSQLContainer()
     val fakes = Fakes(azurePort = 8081)
+    fakes.start()
 
     // Starter server
     embeddedServer(Netty, port = 8080) {

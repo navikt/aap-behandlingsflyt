@@ -33,6 +33,7 @@ class InformasjonskravGrunnlagTest {
         @BeforeAll
         @JvmStatic
         internal fun beforeAll() {
+            fakes.start()
         }
 
         @AfterAll

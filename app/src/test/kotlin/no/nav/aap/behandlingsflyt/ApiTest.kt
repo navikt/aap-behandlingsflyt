@@ -90,6 +90,7 @@ class ApiTest {
         @JvmStatic
         @BeforeAll
         fun beforeall() {
+            fakes.start()
             server.start()
             port = runBlocking { server.resolvedConnectors().filter { it.type == ConnectorType.HTTP }.first().port }
         }

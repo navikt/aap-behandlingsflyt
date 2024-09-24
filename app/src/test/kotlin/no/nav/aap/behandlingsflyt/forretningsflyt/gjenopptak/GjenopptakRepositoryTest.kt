@@ -20,6 +20,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.flyt.ÅrsakTilBehandling
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -28,6 +29,12 @@ class GjenopptakRepositoryTest {
     companion object {
         val dataSource = InitTestDatabase.dataSource
         val fakes = Fakes()
+
+        @BeforeAll
+        @JvmStatic
+        internal fun beforeAll() {
+            fakes.start()
+        }
 
         @AfterAll
         @JvmStatic

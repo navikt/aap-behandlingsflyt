@@ -6,12 +6,19 @@ import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.net.http.HttpHeaders
 
 class SafListDokumentGatewayTest {
     companion object {
         val fakes = Fakes()
+
+        @BeforeAll
+        @JvmStatic
+        internal fun beforeAll() {
+            fakes.start()
+        }
 
         @AfterAll
         @JvmStatic

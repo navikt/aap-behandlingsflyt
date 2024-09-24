@@ -51,6 +51,7 @@ import no.nav.aap.verdityper.GUnit
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -58,6 +59,12 @@ import java.time.LocalDateTime
 class StatistikkJobbUtførerTest {
     companion object {
         private val fakes = Fakes()
+
+        @JvmStatic
+        @BeforeAll
+        fun beforeAll() {
+            fakes.start()
+        }
 
         @JvmStatic
         @AfterAll

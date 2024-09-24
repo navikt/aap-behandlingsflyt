@@ -88,6 +88,7 @@ class FlytOrkestratorTest {
         @BeforeAll
         @JvmStatic
         internal fun beforeAll() {
+            fakes.start()
             motor.start()
         }
 
@@ -946,7 +947,7 @@ class FlytOrkestratorTest {
     private fun ventPåSvar(sakId: SakId? = null, behandlingId: BehandlingId? = null) {
         val timeInMillis = measureTimeMillis {
             dataSource.transaction(readOnly = true) {
-                val maxTid = LocalDateTime.now().plusMinutes(1)
+                val maxTid = LocalDateTime.now().plusSeconds(20)
                 val testJobbRepository = TestJobbRepository(it)
                 while ((testJobbRepository.harOppgaver(sakId, behandlingId)) && maxTid.isAfter(LocalDateTime.now())) {
                     Thread.sleep(50L)
