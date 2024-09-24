@@ -77,7 +77,6 @@ class MeldepliktRepository(private val connection: DBConnection) {
                 setLong(2, meldepliktId)
             }
         }
-
         vurderinger.forEach { lagreFritaksvurdering(meldepliktId, it) }
     }
 
@@ -91,15 +90,18 @@ class MeldepliktRepository(private val connection: DBConnection) {
                 setLocalDateTime(3, vurdering.opprettetTid)
             }
         }
-        vurdering.fritaksperioder.forEach { lagreFritaksPeriode(vurderingId, it) }
+        vurdering.fritaksperioder.lagre(vurderingId)
     }
 
-    private fun lagreFritaksPeriode(vurderingId: Long, fritaksPeriode: Fritaksperiode) {
-        connection.execute("INSERT INTO MELDEPLIKT_FRITAK_PERIODE (VURDERING_ID, PERIODE, HAR_FRITAK) VALUES (?, ?::daterange, ?)") {
+    private fun List<Fritaksperiode>.lagre(vurderingId: Long) {
+        connection.executeBatch(
+            "INSERT INTO MELDEPLIKT_FRITAK_PERIODE (VURDERING_ID, PERIODE, HAR_FRITAK) VALUES (?, ?::daterange, ?)",
+            this
+        ) {
             setParams {
                 setLong(1, vurderingId)
-                setPeriode(2, fritaksPeriode.periode)
-                setBoolean(3, fritaksPeriode.harFritak)
+                setPeriode(2, it.periode)
+                setBoolean(3, it.harFritak)
             }
         }
     }
