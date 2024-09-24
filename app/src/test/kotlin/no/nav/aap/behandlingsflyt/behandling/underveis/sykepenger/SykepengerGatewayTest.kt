@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.sykepenger
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelser.gateway.SykepengerGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelser.gateway.SykepengerRequest
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerRequest
 import no.nav.aap.behandlingsflyt.test.Fakes
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Disabled

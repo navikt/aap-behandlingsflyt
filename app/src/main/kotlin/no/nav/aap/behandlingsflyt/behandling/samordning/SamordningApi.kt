@@ -4,12 +4,13 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.foreldrepenger.ForeldrepengerGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.foreldrepenger.ForeldrepengerRequest
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.foreldrepenger.ForeldrepengerResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerRequest
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerResponse
 import no.nav.aap.komponenter.dbconnect.transaction
 import javax.sql.DataSource
 
+// TODO: FJERN DENNE
 fun NormalOpenAPIRoute.samordningApi(dataSource: DataSource) {
     route("/api/samordning") {
         route("/fp-test").post<Unit, ForeldrepengerResponse, ForeldrepengerRequest> { _, req ->

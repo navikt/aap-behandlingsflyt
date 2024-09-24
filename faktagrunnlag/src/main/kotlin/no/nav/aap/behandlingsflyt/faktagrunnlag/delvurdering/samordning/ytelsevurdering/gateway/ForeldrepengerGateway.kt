@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelser.gateway
+package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway
 
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
@@ -9,30 +9,35 @@ import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import java.net.URI
 
-class SykepengerGateway {
-    private val url = URI.create(requiredConfigForKey("integrasjon.sykepenger.url") + "/utbetalte-perioder")
-    val config = ClientConfig(scope = requiredConfigForKey("integrasjon.sykepenger.scope"))
+/**
+ * Henter alle ytelser i fpabakus
+ */
+class ForeldrepengerGateway {
+    private val url = URI.create(requiredConfigForKey("integrasjon.foreldrepenger.url") + "/hent-ytelse-vedtak")
+    val config = ClientConfig(scope = requiredConfigForKey("integrasjon.foreldrepenger.scope"))
 
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
         tokenProvider = ClientCredentialsTokenProvider,
     )
 
-    private fun query(request: SykepengerRequest): SykepengerResponse {
+    private fun query(request: ForeldrepengerRequest): ForeldrepengerResponse {
         val httpRequest = PostRequest(
             body = request,
             additionalHeaders = listOf(
                 Header("Accept", "application/json")
             )
         )
-        return requireNotNull(client.post(uri = url, request = httpRequest))
+        val response: List<Ytelse> = requireNotNull(client.post(uri = url, request = httpRequest))
+        return ForeldrepengerResponse(response)
     }
 
-    fun hentYtelseSykepenger(request: SykepengerRequest): SykepengerResponse {
+    fun hentVedtakYtelseForPerson(request: ForeldrepengerRequest): ForeldrepengerResponse {
         try {
-            return query(request)
+            val result = query(request)
+            return result
         } catch (e : Exception) {
-            throw RuntimeException("Feil ved henting av ytelser i sykepenger: ${e.message}")
+            throw RuntimeException("Feil ved henting av ytelser i foreldrepenger: ${e.message}")
         }
     }
 }
