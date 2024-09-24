@@ -17,7 +17,6 @@ import no.nav.aap.verdityper.sakogbehandling.SakId
 import java.time.LocalDateTime
 
 const val BREVKODE = "brevkode"
-const val JOURNALPOST_ID = "journalpostId"
 const val MOTTATT_DOKUMENT_REFERANSE = "referanse"
 const val MOTTATT_TIDSPUNKT = "mottattTidspunkt"
 const val PERIODE = "periode"
@@ -35,13 +34,7 @@ class HendelseMottattHåndteringOppgaveUtfører(connection: DBConnection) : Jobb
         val payloadAsString = input.payload()
         val mottattTidspunkt = DefaultJsonMapper.fromJson<LocalDateTime>(input.parameter(MOTTATT_TIDSPUNKT))
 
-        val referanse = input.parameter(JOURNALPOST_ID).let { journalpostId ->
-            if (journalpostId.isBlank()) {
-                DefaultJsonMapper.fromJson(input.parameter(MOTTATT_DOKUMENT_REFERANSE))
-            } else {
-                MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, journalpostId)
-            }
-        }
+        val referanse = DefaultJsonMapper.fromJson<MottattDokumentReferanse>(input.parameter(MOTTATT_DOKUMENT_REFERANSE))
 
         // DO WORK
         mottaDokumentService.mottattDokument(

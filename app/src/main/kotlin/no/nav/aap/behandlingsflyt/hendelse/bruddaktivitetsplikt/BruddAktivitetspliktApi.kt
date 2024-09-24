@@ -14,10 +14,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.server.authenticate.innloggetNavIdent
 import no.nav.aap.behandlingsflyt.server.prosessering.BREVKODE
 import no.nav.aap.behandlingsflyt.server.prosessering.HendelseMottattHåndteringOppgaveUtfører
-import no.nav.aap.behandlingsflyt.server.prosessering.JOURNALPOST_ID
+import no.nav.aap.behandlingsflyt.server.prosessering.MOTTATT_DOKUMENT_REFERANSE
 import no.nav.aap.behandlingsflyt.server.prosessering.MOTTATT_TIDSPUNKT
 import no.nav.aap.behandlingsflyt.server.prosessering.PERIODE
-import no.nav.aap.behandlingsflyt.server.prosessering.MOTTATT_DOKUMENT_REFERANSE
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
@@ -55,7 +54,6 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
                     JobbInput(HendelseMottattHåndteringOppgaveUtfører)
                         .forSak(sak.id.toLong())
                         .medCallId()
-                        .medParameter(JOURNALPOST_ID, "")
                         .medParameter(MOTTATT_DOKUMENT_REFERANSE, DefaultJsonMapper.toJson(dokumentReferanse))
                         .medParameter(BREVKODE, Brevkode.AKTIVITETSKORT.name)
                         .medParameter(PERIODE, DefaultJsonMapper.toJson(Periode(fom, tom)))
