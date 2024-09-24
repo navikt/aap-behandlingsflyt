@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.flyt
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
-import no.nav.aap.behandlingsflyt.behandlingStoppetOppTeller
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlag
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegOrkestrator
@@ -19,6 +18,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Status.UTREDES
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
+import no.nav.aap.behandlingsflyt.stegFullførtTeller
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.verdityper.flyt.FlytKontekst
@@ -187,6 +187,8 @@ class FlytOrkestrator(
                 }
                 behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
                 return
+            } else {
+                prometheus.stegFullførtTeller(behandling.referanse.referanse).increment()
             }
             gjeldendeSteg = neste
         }
@@ -264,7 +266,6 @@ class FlytOrkestrator(
         behandling: Behandling,
         avklaringsbehovene: Avklaringsbehovene
     ) {
-        prometheus.behandlingStoppetOppTeller()
         log.info(
             "Stopper opp ved {} med {}",
             behandling.aktivtSteg(),
