@@ -12,17 +12,10 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.server.authenticate.innloggetNavIdent
-import no.nav.aap.behandlingsflyt.server.prosessering.BREVKODE
 import no.nav.aap.behandlingsflyt.server.prosessering.HendelseMottattHåndteringOppgaveUtfører
-import no.nav.aap.behandlingsflyt.server.prosessering.MOTTATT_DOKUMENT_REFERANSE
-import no.nav.aap.behandlingsflyt.server.prosessering.MOTTATT_TIDSPUNKT
-import no.nav.aap.behandlingsflyt.server.prosessering.PERIODE
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.FlytJobbRepository
-import no.nav.aap.motor.JobbInput
-import java.time.LocalDateTime
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
@@ -51,14 +44,12 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
 
                 val flytJobbRepository = FlytJobbRepository(connection)
                 flytJobbRepository.leggTil(
-                    JobbInput(HendelseMottattHåndteringOppgaveUtfører)
-                        .forSak(sak.id.toLong())
-                        .medCallId()
-                        .medParameter(MOTTATT_DOKUMENT_REFERANSE, DefaultJsonMapper.toJson(dokumentReferanse))
-                        .medParameter(BREVKODE, Brevkode.AKTIVITETSKORT.name)
-                        .medParameter(PERIODE, DefaultJsonMapper.toJson(Periode(fom, tom)))
-                        .medParameter(MOTTATT_TIDSPUNKT, DefaultJsonMapper.toJson(LocalDateTime.now()))
-                        .medPayload(DefaultJsonMapper.toJson(innsendingId))
+                    HendelseMottattHåndteringOppgaveUtfører.nyJobb(
+                        sakId = sak.id,
+                        brevkode = Brevkode.AKTIVITETSKORT,
+                        dokumentReferanse = dokumentReferanse,
+                        periode = Periode(fom, tom),
+                    )
                 )
             }
             respond("{}", HttpStatusCode.Accepted)

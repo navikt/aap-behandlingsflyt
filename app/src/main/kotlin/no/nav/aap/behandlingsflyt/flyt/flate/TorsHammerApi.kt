@@ -14,17 +14,10 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.HentSakDTO
-import no.nav.aap.behandlingsflyt.server.prosessering.BREVKODE
 import no.nav.aap.behandlingsflyt.server.prosessering.HendelseMottattHåndteringOppgaveUtfører
-import no.nav.aap.behandlingsflyt.server.prosessering.MOTTATT_DOKUMENT_REFERANSE
-import no.nav.aap.behandlingsflyt.server.prosessering.MOTTATT_TIDSPUNKT
-import no.nav.aap.behandlingsflyt.server.prosessering.PERIODE
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.FlytJobbRepository
-import no.nav.aap.motor.JobbInput
-import java.time.LocalDateTime
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.torsHammerApi(dataSource: DataSource) {
@@ -37,17 +30,13 @@ fun NormalOpenAPIRoute.torsHammerApi(dataSource: DataSource) {
 
                 val flytJobbRepository = FlytJobbRepository(connection)
                 flytJobbRepository.leggTil(
-                    JobbInput(HendelseMottattHåndteringOppgaveUtfører)
-                        .forSak(sak.id.toLong())
-                        .medCallId()
-                        .medParameter(
-                            MOTTATT_DOKUMENT_REFERANSE,
-                            DefaultJsonMapper.toJson(MottattDokumentReferanse(InnsendingId.ny())),
-                        ) // TODO: Skal disse arkiveres eller kan vi håndtere disse utenfor
-                        .medParameter(BREVKODE, Brevkode.AKTIVITETSKORT.name)
-                        .medParameter(PERIODE, DefaultJsonMapper.toJson(Periode(dto.hammer.dato, dto.hammer.dato)))
-                        .medParameter(MOTTATT_TIDSPUNKT, DefaultJsonMapper.toJson(LocalDateTime.now()))
-                        .medPayload(DefaultJsonMapper.toJson(dto))
+                    HendelseMottattHåndteringOppgaveUtfører.nyJobb(
+                        sakId = sak.id,
+                        dokumentReferanse = MottattDokumentReferanse(InnsendingId.ny()),
+                        brevkode = Brevkode.AKTIVITETSKORT,
+                        periode = Periode(dto.hammer.dato, dto.hammer.dato),
+                        payload = dto
+                    )
                 )
             }
             respond("{}", HttpStatusCode.Accepted)

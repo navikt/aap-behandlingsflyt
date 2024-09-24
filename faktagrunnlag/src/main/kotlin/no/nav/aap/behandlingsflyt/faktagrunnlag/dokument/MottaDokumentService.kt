@@ -72,7 +72,7 @@ class MottaDokumentService(
         val ubehandledeAktivitetskort = mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, Brevkode.AKTIVITETSKORT)
 
         return ubehandledeAktivitetskort
-            .map { it.strukturerteData<InnsendingId>()!!.data }
+            .map { it.referanse.asInnsendingId }
             .toSet()
     }
 

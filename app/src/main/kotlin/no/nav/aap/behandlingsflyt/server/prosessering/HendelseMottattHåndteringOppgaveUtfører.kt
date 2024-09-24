@@ -16,10 +16,10 @@ import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.verdityper.sakogbehandling.SakId
 import java.time.LocalDateTime
 
-const val BREVKODE = "brevkode"
-const val MOTTATT_DOKUMENT_REFERANSE = "referanse"
-const val MOTTATT_TIDSPUNKT = "mottattTidspunkt"
-const val PERIODE = "periode"
+private const val BREVKODE = "brevkode"
+private const val MOTTATT_DOKUMENT_REFERANSE = "referanse"
+private const val MOTTATT_TIDSPUNKT = "mottattTidspunkt"
+private const val PERIODE = "periode"
 
 class HendelseMottattHåndteringOppgaveUtfører(connection: DBConnection) : JobbUtfører {
     private val låsRepository = TaSkriveLåsRepository(connection)
@@ -59,6 +59,23 @@ class HendelseMottattHåndteringOppgaveUtfører(connection: DBConnection) : Jobb
     }
 
     companion object : Jobb {
+        fun nyJobb(
+            sakId: SakId,
+            dokumentReferanse: MottattDokumentReferanse,
+            brevkode: Brevkode,
+            periode: Periode?,
+            payload: Any? = null,
+        ) = JobbInput(HendelseMottattHåndteringOppgaveUtfører)
+            .apply {
+                forSak(sakId.toLong())
+                medCallId()
+                medParameter(MOTTATT_DOKUMENT_REFERANSE, DefaultJsonMapper.toJson(dokumentReferanse))
+                medParameter(BREVKODE, brevkode.name)
+                medParameter(PERIODE, if (periode == null) "" else DefaultJsonMapper.toJson(periode))
+                medParameter(MOTTATT_TIDSPUNKT, DefaultJsonMapper.toJson(LocalDateTime.now()))
+                medPayload(payload?.let { DefaultJsonMapper.toJson(it) })
+            }
+
         override fun konstruer(connection: DBConnection): JobbUtfører {
             return HendelseMottattHåndteringOppgaveUtfører(
                 connection
