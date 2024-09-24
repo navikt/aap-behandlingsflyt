@@ -16,7 +16,6 @@ import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.avklaringsbehovApi
@@ -79,7 +78,6 @@ fun main() {
 }
 
 internal fun Application.server(dbConfig: DbConfig) {
-    val prometheus = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
     DefaultJsonMapper.objectMapper()
         .registerSubtypes(utledSubtypes())
 
