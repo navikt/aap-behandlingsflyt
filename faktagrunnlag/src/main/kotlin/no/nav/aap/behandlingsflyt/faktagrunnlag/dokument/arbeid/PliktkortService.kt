@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -45,7 +46,7 @@ class PliktkortService private constructor(
             mottaDokumentService.knyttTilBehandling(
                 sakId = kontekst.sakId,
                 behandlingId = kontekst.behandlingId,
-                journalpostId = ubehandletPliktkort.journalpostId
+                referanse = MottattDokumentReferanse(ubehandletPliktkort.journalpostId)
             )
             allePlussNye.add(nyttPliktkort)
         }

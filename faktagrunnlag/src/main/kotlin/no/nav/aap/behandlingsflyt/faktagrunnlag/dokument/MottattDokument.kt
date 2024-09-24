@@ -3,13 +3,12 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
-import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.SakId
 import java.time.LocalDateTime
 
 class MottattDokument(
-    val journalpostId: JournalpostId,
+    val referanse: MottattDokumentReferanse,
     val sakId: SakId,
     val behandlingId: BehandlingId?,
     val mottattTidspunkt: LocalDateTime,
@@ -66,3 +65,4 @@ class MottattDokument(
         }
     }
 }
+

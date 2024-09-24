@@ -10,7 +10,9 @@ import java.util.*
 data class BruddAktivitetspliktId(internal val id: Long)
 
 data class InnsendingId(@JsonValue val value: UUID) {
-    override fun toString() = value.toString()
+    val asString get() = value.toString()
+
+    constructor(value: String): this(UUID.fromString(value))
 
     companion object {
         fun ny() = InnsendingId(UUID.randomUUID())

@@ -6,14 +6,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søkna
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
-import no.nav.aap.verdityper.dokument.JournalpostId
 import org.slf4j.LoggerFactory
-import java.util.UUID
 
 private val log = LoggerFactory.getLogger(LazyStrukturertDokument::class.java)
 
 class LazyStrukturertDokument(
-    private val journalpostId: JournalpostId,
+    private val referanse: MottattDokumentReferanse,
     internal val brevkode: Brevkode,
     private val connection: DBConnection
 ) : StrukturerteData {
@@ -23,7 +21,7 @@ class LazyStrukturertDokument(
         val strukturerteData =
             connection.queryFirstOrNull("SELECT strukturert_dokument FROM MOTTATT_DOKUMENT WHERE journalpost = ?") {
                 setParams {
-                    setString(1, journalpostId.identifikator)
+                    setString(1, referanse.verdi)
                 }
                 setRowMapper {
                     it.getStringOrNull("strukturert_dokument")

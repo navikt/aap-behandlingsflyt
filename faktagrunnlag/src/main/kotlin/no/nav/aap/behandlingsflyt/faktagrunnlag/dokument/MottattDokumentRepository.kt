@@ -12,22 +12,24 @@ import no.nav.aap.verdityper.sakogbehandling.SakId
 class MottattDokumentRepository(private val connection: DBConnection) {
     fun lagre(mottattDokument: MottattDokument) {
         val query = """
-            INSERT INTO MOTTATT_DOKUMENT (sak_id, journalpost, MOTTATT_TID, type, status, strukturert_dokument) VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO MOTTATT_DOKUMENT (sak_id, journalpost, MOTTATT_TID, type, status, strukturert_dokument, referanse, referanse_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """.trimIndent()
 
         connection.execute(query) {
             setParams {
                 setLong(1, mottattDokument.sakId.toLong())
-                setString(2, mottattDokument.journalpostId.identifikator)
+                setString(2, mottattDokument.referanse.verdi)
                 setLocalDateTime(3, mottattDokument.mottattTidspunkt)
                 setEnumName(4, mottattDokument.type)
                 setEnumName(5, mottattDokument.status)
                 setString(6, mottattDokument.ustrukturerteData())
+                setString(7, mottattDokument.referanse.verdi)
+                setEnumName(8, mottattDokument.referanse.type)
             }
         }
     }
 
-    fun oppdaterStatus(journalpostId: JournalpostId, behandlingId: BehandlingId, sakId: SakId, status: Status) {
+    fun oppdaterStatus(dokumentReferanse: MottattDokumentReferanse, behandlingId: BehandlingId, sakId: SakId, status: Status) {
         val query = """
             UPDATE MOTTATT_DOKUMENT SET behandling_id = ?, status = ? WHERE journalpost = ? AND sak_id = ?
         """.trimIndent()
@@ -35,7 +37,7 @@ class MottattDokumentRepository(private val connection: DBConnection) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setEnumName(2, status)
-                setString(3, journalpostId.identifikator)
+                setString(3, dokumentReferanse.verdi)
                 setLong(4, sakId.toLong())
             }
             setResultValidator {
@@ -62,22 +64,33 @@ class MottattDokumentRepository(private val connection: DBConnection) {
     }
 
     private fun mapMottattDokument(row: Row): MottattDokument {
-        val journalpostId = JournalpostId(row.getString("journalpost"))
         val brevkode: Brevkode = row.getEnum("type")
+        val referanse = mapDokumentReferanse(row)
         return MottattDokument(
-            journalpostId,
-            SakId(row.getLong("sak_id")),
-            null,
-            row.getLocalDateTime("MOTTATT_TID"),
-            brevkode,
-            row.getEnum("status"),
-            LazyStrukturertDokument(journalpostId, brevkode, connection)
+            referanse = referanse,
+            sakId = SakId(row.getLong("sak_id")),
+            behandlingId = null,
+            mottattTidspunkt = row.getLocalDateTime("MOTTATT_TID"),
+            type = brevkode,
+            status = row.getEnum("status"),
+            strukturertDokument = LazyStrukturertDokument(referanse, brevkode, connection),
         )
+    }
+
+    private fun mapDokumentReferanse(row: Row): MottattDokumentReferanse {
+        val referanseVerdi = row.getStringOrNull("referanse")
+        val referanseType = row.getEnumOrNull<MottattDokumentReferanse.Type, _>("referanse_type")
+        return when {
+            referanseVerdi != null && referanseType != null ->
+                MottattDokumentReferanse(type = referanseType, verdi = referanseVerdi)
+            /* Midlertidig inntil referanseVerdi og referanseType er backfilled. */
+            else -> MottattDokumentReferanse(JournalpostId(row.getString("journalpost")))
+        }
     }
 
     fun hentDokumentRekkefølge(sakId: SakId, type: Brevkode): Set<DokumentRekkefølge> {
         val query = """
-            SELECT journalpost, MOTTATT_TID FROM MOTTATT_DOKUMENT WHERE sak_id = ? AND status = ? AND type = ?
+            SELECT journalpost, referanse, referanse_type, MOTTATT_TID FROM MOTTATT_DOKUMENT WHERE sak_id = ? AND status = ? AND type = ?
         """.trimIndent()
 
         return connection.queryList(query) {
@@ -88,7 +101,7 @@ class MottattDokumentRepository(private val connection: DBConnection) {
             }
             setRowMapper {
                 DokumentRekkefølge(
-                    JournalpostId(it.getString("journalpost")),
+                    mapDokumentReferanse(it),
                     it.getLocalDateTime("mottatt_tid")
                 )
             }

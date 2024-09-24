@@ -6,6 +6,7 @@ import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
@@ -16,6 +17,7 @@ import no.nav.aap.behandlingsflyt.server.prosessering.HendelseMottattHåndtering
 import no.nav.aap.behandlingsflyt.server.prosessering.JOURNALPOST_ID
 import no.nav.aap.behandlingsflyt.server.prosessering.MOTTATT_TIDSPUNKT
 import no.nav.aap.behandlingsflyt.server.prosessering.PERIODE
+import no.nav.aap.behandlingsflyt.server.prosessering.MOTTATT_DOKUMENT_REFERANSE
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
@@ -43,6 +45,7 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
                     )
                 }
                 val innsendingId = repository.lagreBrudd(bruddAktivitetsplikt)
+                val dokumentReferanse = MottattDokumentReferanse(innsendingId)
 
                 val tom = req.perioder.maxOf { periode -> periode.tom }
                 val fom = req.perioder.minOf { periode -> periode.fom }
@@ -52,7 +55,8 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
                     JobbInput(HendelseMottattHåndteringOppgaveUtfører)
                         .forSak(sak.id.toLong())
                         .medCallId()
-                        .medParameter(JOURNALPOST_ID, innsendingId.toString())
+                        .medParameter(JOURNALPOST_ID, "")
+                        .medParameter(MOTTATT_DOKUMENT_REFERANSE, DefaultJsonMapper.toJson(dokumentReferanse))
                         .medParameter(BREVKODE, Brevkode.AKTIVITETSKORT.name)
                         .medParameter(PERIODE, DefaultJsonMapper.toJson(Periode(fom, tom)))
                         .medParameter(MOTTATT_TIDSPUNKT, DefaultJsonMapper.toJson(LocalDateTime.now()))

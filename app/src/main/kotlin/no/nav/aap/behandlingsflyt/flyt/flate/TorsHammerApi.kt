@@ -6,7 +6,9 @@ import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.InnsendingId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.aktivitet.TorsHammerDto
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
@@ -15,6 +17,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.HentSakDTO
 import no.nav.aap.behandlingsflyt.server.prosessering.BREVKODE
 import no.nav.aap.behandlingsflyt.server.prosessering.HendelseMottattHåndteringOppgaveUtfører
 import no.nav.aap.behandlingsflyt.server.prosessering.JOURNALPOST_ID
+import no.nav.aap.behandlingsflyt.server.prosessering.MOTTATT_DOKUMENT_REFERANSE
 import no.nav.aap.behandlingsflyt.server.prosessering.MOTTATT_TIDSPUNKT
 import no.nav.aap.behandlingsflyt.server.prosessering.PERIODE
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -38,9 +41,10 @@ fun NormalOpenAPIRoute.torsHammerApi(dataSource: DataSource) {
                     JobbInput(HendelseMottattHåndteringOppgaveUtfører)
                         .forSak(sak.id.toLong())
                         .medCallId()
+                        .medParameter(JOURNALPOST_ID, "")
                         .medParameter(
-                            JOURNALPOST_ID,
-                            System.currentTimeMillis().toString()
+                            MOTTATT_DOKUMENT_REFERANSE,
+                            DefaultJsonMapper.toJson(MottattDokumentReferanse(InnsendingId.ny())),
                         ) // TODO: Skal disse arkiveres eller kan vi håndtere disse utenfor
                         .medParameter(BREVKODE, Brevkode.AKTIVITETSKORT.name)
                         .medParameter(PERIODE, DefaultJsonMapper.toJson(Periode(dto.hammer.dato, dto.hammer.dato)))

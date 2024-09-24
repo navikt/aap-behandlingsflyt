@@ -5,6 +5,7 @@ import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -13,11 +14,13 @@ import no.nav.aap.behandlingsflyt.server.prosessering.HendelseMottattHåndtering
 import no.nav.aap.behandlingsflyt.server.prosessering.JOURNALPOST_ID
 import no.nav.aap.behandlingsflyt.server.prosessering.MOTTATT_TIDSPUNKT
 import no.nav.aap.behandlingsflyt.server.prosessering.PERIODE
+import no.nav.aap.behandlingsflyt.server.prosessering.MOTTATT_DOKUMENT_REFERANSE
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
+import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDate
 import java.time.LocalDateTime
 import javax.sql.DataSource
@@ -31,11 +34,13 @@ fun NormalOpenAPIRoute.søknadApi(dataSource: DataSource) {
                 val sak = sakService.hent(Saksnummer(dto.saksnummer))
 
                 val flytJobbRepository = FlytJobbRepository(connection)
+                val dokumentReferanse = MottattDokumentReferanse(JournalpostId(dto.journalpostId))
                 flytJobbRepository.leggTil(
                     JobbInput(HendelseMottattHåndteringOppgaveUtfører)
                         .forSak(sak.id.toLong())
                         .medCallId()
-                        .medParameter(JOURNALPOST_ID, dto.journalpostId)
+                        .medParameter(JOURNALPOST_ID, "")
+                        .medParameter(MOTTATT_DOKUMENT_REFERANSE, DefaultJsonMapper.toJson(dokumentReferanse))
                         .medParameter(BREVKODE, Brevkode.SØKNAD.name)
                         .medParameter(
                             PERIODE,

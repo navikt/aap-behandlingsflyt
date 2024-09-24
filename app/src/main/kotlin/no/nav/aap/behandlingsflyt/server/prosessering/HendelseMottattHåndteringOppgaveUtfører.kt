@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.server.prosessering
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.UnparsedStrukturertDokument
@@ -12,12 +13,12 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
-import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.sakogbehandling.SakId
 import java.time.LocalDateTime
 
 const val BREVKODE = "brevkode"
 const val JOURNALPOST_ID = "journalpostId"
+const val MOTTATT_DOKUMENT_REFERANSE = "referanse"
 const val MOTTATT_TIDSPUNKT = "mottattTidspunkt"
 const val PERIODE = "periode"
 
@@ -34,9 +35,17 @@ class HendelseMottattHåndteringOppgaveUtfører(connection: DBConnection) : Jobb
         val payloadAsString = input.payload()
         val mottattTidspunkt = DefaultJsonMapper.fromJson<LocalDateTime>(input.parameter(MOTTATT_TIDSPUNKT))
 
+        val referanse = input.parameter(JOURNALPOST_ID).let { journalpostId ->
+            if (journalpostId.isBlank()) {
+                DefaultJsonMapper.fromJson(input.parameter(MOTTATT_DOKUMENT_REFERANSE))
+            } else {
+                MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, journalpostId)
+            }
+        }
+
         // DO WORK
         mottaDokumentService.mottattDokument(
-            journalpostId = JournalpostId(input.parameter(JOURNALPOST_ID)),
+            referanse = referanse,
             sakId = sakId,
             mottattTidspunkt = mottattTidspunkt,
             brevkode = brevkode,

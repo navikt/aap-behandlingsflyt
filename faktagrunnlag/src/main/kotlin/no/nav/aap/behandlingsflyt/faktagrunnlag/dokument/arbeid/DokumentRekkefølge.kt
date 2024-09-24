@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
-import no.nav.aap.verdityper.dokument.JournalpostId
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
 import java.time.LocalDateTime
 
-class DokumentRekkefølge(val journalpostId: JournalpostId, val mottattTidspunkt: LocalDateTime) :
+class DokumentRekkefølge(val referanse: MottattDokumentReferanse, val mottattTidspunkt: LocalDateTime) :
     Comparable<DokumentRekkefølge> {
 
 
@@ -17,14 +17,14 @@ class DokumentRekkefølge(val journalpostId: JournalpostId, val mottattTidspunkt
 
         other as DokumentRekkefølge
 
-        if (journalpostId != other.journalpostId) return false
+        if (referanse != other.referanse) return false
         if (mottattTidspunkt != other.mottattTidspunkt) return false
 
         return true
     }
 
     override fun hashCode(): Int {
-        var result = journalpostId.hashCode()
+        var result = referanse.hashCode()
         result = 31 * result + mottattTidspunkt.hashCode()
         return result
     }

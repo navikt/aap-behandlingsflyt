@@ -2,11 +2,10 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.verdityper.dokument.JournalpostId
-import no.nav.aap.verdityper.flyt.FlytKontekst
 import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
 
 class BruddAktivitetspliktService (
@@ -45,7 +44,7 @@ class BruddAktivitetspliktService (
             mottaDokumentService.knyttTilBehandling(
                 sakId = kontekst.sakId,
                 behandlingId = kontekst.behandlingId,
-                journalpostId = JournalpostId(ubehandletInnsendingId.toString())
+                referanse = MottattDokumentReferanse(ubehandletInnsendingId),
             )
         }
 

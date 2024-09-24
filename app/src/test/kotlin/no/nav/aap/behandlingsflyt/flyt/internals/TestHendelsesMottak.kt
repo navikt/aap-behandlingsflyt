@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt.internals
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingHendelse
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingHendelseHåndterer
 import no.nav.aap.behandlingsflyt.hendelse.mottak.DokumentMottattSakHendelse
@@ -11,6 +12,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.server.prosessering.BREVKODE
 import no.nav.aap.behandlingsflyt.server.prosessering.HendelseMottattHåndteringOppgaveUtfører
 import no.nav.aap.behandlingsflyt.server.prosessering.JOURNALPOST_ID
+import no.nav.aap.behandlingsflyt.server.prosessering.MOTTATT_DOKUMENT_REFERANSE
 import no.nav.aap.behandlingsflyt.server.prosessering.MOTTATT_TIDSPUNKT
 import no.nav.aap.behandlingsflyt.server.prosessering.PERIODE
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -43,10 +45,13 @@ class TestHendelsesMottak(private val dataSource: DataSource) {
 
                 val flytJobbRepository = FlytJobbRepository(connection)
 
+                val referanse = MottattDokumentReferanse(hendelse.journalpost)
+
                 flytJobbRepository.leggTil(
                     JobbInput(HendelseMottattHåndteringOppgaveUtfører)
                         .forSak(sak.id.toLong())
-                        .medParameter(JOURNALPOST_ID, hendelse.journalpost.identifikator)
+                        .medParameter(JOURNALPOST_ID, "")
+                        .medParameter(MOTTATT_DOKUMENT_REFERANSE, DefaultJsonMapper.toJson(referanse))
                         .medParameter(BREVKODE, hendelse.strukturertDokument.brevkode.name)
                         .medParameter(MOTTATT_TIDSPUNKT, DefaultJsonMapper.toJson(LocalDateTime.now()))
                         .medParameter(PERIODE, "")

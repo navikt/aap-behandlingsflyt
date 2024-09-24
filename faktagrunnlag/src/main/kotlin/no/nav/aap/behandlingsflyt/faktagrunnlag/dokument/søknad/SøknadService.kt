@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
@@ -67,7 +68,7 @@ class SøknadService private constructor(
             mottaDokumentService.knyttTilBehandling(
                 sakId = kontekst.sakId,
                 behandlingId = kontekst.behandlingId,
-                journalpostId = ubehandletSøknad.journalpostId
+                referanse = MottattDokumentReferanse(ubehandletSøknad.journalpostId)
             )
         }
 

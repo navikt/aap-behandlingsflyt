@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
@@ -12,7 +13,6 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -62,7 +62,7 @@ class BruddAktivitetspliktServiceTest {
     ) {
         val dokument = StrukturertDokument(brudd.innsendingId, Brevkode.AKTIVITETSKORT)
         MottaDokumentService(MottattDokumentRepository(connection)).mottattDokument(
-            JournalpostId(brudd.innsendingId.toString()),
+            MottattDokumentReferanse(brudd.innsendingId),
             sak.id,
             brudd.opprettetTid,
             dokument.brevkode,
