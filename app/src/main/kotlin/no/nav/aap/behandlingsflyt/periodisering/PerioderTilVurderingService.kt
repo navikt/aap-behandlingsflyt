@@ -9,10 +9,10 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tidslinje.JoinStyle
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.Tidslinje
-import no.nav.aap.verdityper.flyt.EndringType
 import no.nav.aap.verdityper.flyt.FlytKontekst
 import no.nav.aap.verdityper.flyt.Vurdering
 import no.nav.aap.verdityper.flyt.VurderingType
+import no.nav.aap.verdityper.flyt.ÅrsakTilBehandling
 
 class PerioderTilVurderingService(connection: DBConnection) {
     private val sakService: SakService = SakService(connection)
@@ -26,7 +26,7 @@ class PerioderTilVurderingService(connection: DBConnection) {
             return setOf(
                 Vurdering(
                     type = VurderingType.FØRSTEGANGSBEHANDLING,
-                    årsaker = listOf(EndringType.MOTTATT_SØKNAD),
+                    årsaker = listOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
                     periode = sak.rettighetsperiode
                 )
             )
@@ -78,24 +78,24 @@ class PerioderTilVurderingService(connection: DBConnection) {
 
     private fun utledVurdering(årsak: Årsak, rettighetsperiode: Periode): Vurdering {
         return when (årsak.type) {
-            EndringType.MOTTATT_SØKNAD -> Vurdering(
+            ÅrsakTilBehandling.MOTTATT_SØKNAD -> Vurdering(
                 VurderingType.FØRSTEGANGSBEHANDLING,
                 listOf(årsak.type),
                 årsak.periode ?: rettighetsperiode
             )
 
-            EndringType.MOTTATT_AKTIVITETSMELDING -> Vurdering(
+            ÅrsakTilBehandling.MOTTATT_AKTIVITETSMELDING -> Vurdering(
                 VurderingType.REVURDERING,
                 listOf(årsak.type),
                 requireNotNull(årsak.periode)
             )
 
-            EndringType.MOTTATT_MELDEKORT -> Vurdering(
+            ÅrsakTilBehandling.MOTTATT_MELDEKORT -> Vurdering(
                 VurderingType.REVURDERING,
                 listOf(årsak.type),
                 requireNotNull(årsak.periode)
             ) // TODO: Vurdere om denne skal utlede mer komplekst (dvs har mottatt for denne perioden før)
-            EndringType.MOTTATT_LEGEERKLÆRING -> Vurdering(
+            ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING -> Vurdering(
                 VurderingType.FØRSTEGANGSBEHANDLING,
                 listOf(årsak.type),
                 rettighetsperiode

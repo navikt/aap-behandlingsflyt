@@ -1,6 +1,6 @@
 package no.nav.aap.verdityper.flyt
 
-enum class EndringType {
+enum class ÅrsakTilBehandling {
     MOTTATT_SØKNAD,
     MOTTATT_AKTIVITETSMELDING,
     MOTTATT_MELDEKORT,

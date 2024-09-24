@@ -16,7 +16,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.verdityper.flyt.EndringType
+import no.nav.aap.verdityper.flyt.ÅrsakTilBehandling
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -106,7 +106,7 @@ class BarnRepositoryTest {
     private fun behandling(connection: DBConnection, sak: Sak): Behandling {
         return SakOgBehandlingService(connection).finnEllerOpprettBehandling(
             sak.saksnummer,
-            listOf(Årsak(EndringType.MOTTATT_SØKNAD))
+            listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
         ).behandling
     }
 }

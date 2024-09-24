@@ -94,7 +94,7 @@ class FlytOrkestrator(
 
         val oppdaterFaktagrunnlagForKravliste =
             informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
-                kravliste = behandlingFlyt.faktagrunnlagFremTilOgMedGjeldendeSteg(),
+                kravliste = behandlingFlyt.alleFaktagrunnlagFørGjeldendeSteg(),
                 kontekst = FlytKontekstMedPerioder(
                     sakId = kontekst.sakId,
                     behandlingId = kontekst.behandlingId,
@@ -147,8 +147,6 @@ class FlytOrkestrator(
         var gjeldendeSteg = behandlingFlyt.forberedFlyt(behandling.aktivtSteg())
 
         while (true) {
-            connection.markerSavepoint()
-
             val result = StegOrkestrator(connection, gjeldendeSteg).utfør(
                 kontekst,
                 behandling,

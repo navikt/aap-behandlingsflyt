@@ -42,7 +42,10 @@ object Førstegangsbehandling : BehandlingType {
         return BehandlingFlytBuilder()
             .medSteg(steg = StartBehandlingSteg, informasjonskrav = listOf(SøknadService))
             .medSteg(steg = VurderLovvalgSteg)
-            .medSteg(steg = VurderAlderSteg, informasjonskrav = listOf(PersonopplysningService))
+            .medSteg(
+                steg = VurderAlderSteg,
+                informasjonskrav = listOf(PersonopplysningService)
+            )
             .medSteg(steg = VurderStudentSteg)
             // UføreService svarer med mocket respons inntil pesys-integrasjon er fullført:
             // Relevant issue: https://github.com/navikt/pensjon-pen/pull/13138

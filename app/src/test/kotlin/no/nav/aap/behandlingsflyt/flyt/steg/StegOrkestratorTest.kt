@@ -9,8 +9,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.verdityper.flyt.EndringType
 import no.nav.aap.verdityper.flyt.StegStatus
+import no.nav.aap.verdityper.flyt.ÅrsakTilBehandling
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -31,7 +31,7 @@ class StegOrkestratorTest {
             val sak = runBlocking {PersonOgSakService(connection, FakePdlGateway).finnEllerOpprett(ident, periode) }
             val behandling = SakOgBehandlingService(connection).finnEllerOpprettBehandling(
                 sak.saksnummer,
-                listOf(Årsak(EndringType.MOTTATT_SØKNAD))
+                listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
             ).behandling
             assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
 
@@ -45,10 +45,11 @@ class StegOrkestratorTest {
 
             assertThat(resultat).isNotNull
 
-            assertThat(behandling.stegHistorikk()).hasSize(3)
+            assertThat(behandling.stegHistorikk()).hasSize(4)
             assertThat(behandling.stegHistorikk()[0].status()).isEqualTo(StegStatus.START)
-            assertThat(behandling.stegHistorikk()[1].status()).isEqualTo(StegStatus.UTFØRER)
-            assertThat(behandling.stegHistorikk()[2].status()).isEqualTo(StegStatus.AVKLARINGSPUNKT)
+            assertThat(behandling.stegHistorikk()[1].status()).isEqualTo(StegStatus.OPPDATER_FAKTAGRUNNLAG)
+            assertThat(behandling.stegHistorikk()[2].status()).isEqualTo(StegStatus.UTFØRER)
+            assertThat(behandling.stegHistorikk()[3].status()).isEqualTo(StegStatus.AVKLARINGSPUNKT)
         }
     }
 }

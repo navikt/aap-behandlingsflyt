@@ -60,18 +60,15 @@ class StegOrkestrator(
                 stegType = aktivtSteg.type()
             )
         )
-        informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
-            faktagrunnlagForGjeldendeSteg,
-            kontekstMedPerioder
-        )
 
         while (true) {
             val resultat = utførTilstandsEndring(
                 kontekstMedPerioder,
                 gjeldendeStegStatus,
-                behandling
+                behandling,
+                faktagrunnlagForGjeldendeSteg
             )
-            if (gjeldendeStegStatus == StegStatus.START) {
+            if (gjeldendeStegStatus in setOf(StegStatus.START, StegStatus.OPPDATER_FAKTAGRUNNLAG)) {
                 // Legger denne her slik at vi får savepoint på at vi har byttet steg, slik at vi starter opp igjen på rett sted når prosessen dras i gang igjen
                 connection.markerSavepoint()
             }
@@ -100,13 +97,19 @@ class StegOrkestrator(
                 stegType = aktivtSteg.type()
             )
         )
-        return utførTilstandsEndring(kontekstMedPerioder, StegStatus.TILBAKEFØRT, behandling)
+        return utførTilstandsEndring(
+            kontekstMedPerioder,
+            StegStatus.TILBAKEFØRT,
+            behandling,
+            listOf()
+        )
     }
 
     private fun utførTilstandsEndring(
         kontekst: FlytKontekstMedPerioder,
         nesteStegStatus: StegStatus,
-        behandling: Behandling
+        behandling: Behandling,
+        faktagrunnlagForGjeldendeSteg: List<Informasjonskravkonstruktør>
     ): Transisjon {
         log.debug(
             "Behandler steg({}) med status({})",
@@ -115,6 +118,7 @@ class StegOrkestrator(
         )
         val transisjon = when (nesteStegStatus) {
             StegStatus.UTFØRER -> behandleSteg(kontekst)
+            StegStatus.OPPDATER_FAKTAGRUNNLAG -> oppdaterFaktagrunnlag(kontekst, faktagrunnlagForGjeldendeSteg)
             StegStatus.AVKLARINGSPUNKT -> harAvklaringspunkt(aktivtSteg.type(), kontekst.behandlingId)
             StegStatus.AVSLUTTER -> Fortsett
             StegStatus.TILBAKEFØRT -> behandleStegBakover(kontekst)
@@ -125,6 +129,17 @@ class StegOrkestrator(
         loggStegHistorikk(behandling, nyStegTilstand)
 
         return transisjon
+    }
+
+    private fun oppdaterFaktagrunnlag(
+        kontekstMedPerioder: FlytKontekstMedPerioder,
+        faktagrunnlagForGjeldendeSteg: List<Informasjonskravkonstruktør>
+    ): Fortsett {
+        informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
+            faktagrunnlagForGjeldendeSteg,
+            kontekstMedPerioder
+        )
+        return Fortsett
     }
 
     private fun behandleSteg(kontekstMedPerioder: FlytKontekstMedPerioder): Transisjon {

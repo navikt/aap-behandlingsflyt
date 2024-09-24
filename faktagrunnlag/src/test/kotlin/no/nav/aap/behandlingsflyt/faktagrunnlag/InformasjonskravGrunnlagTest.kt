@@ -15,8 +15,8 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.verdityper.flyt.EndringType
 import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
+import no.nav.aap.verdityper.flyt.ÅrsakTilBehandling
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
@@ -115,7 +115,7 @@ class InformasjonskravGrunnlagTest {
         val sak = PersonOgSakService(connection, FakePdlGateway).finnEllerOpprett(ident, periode)
         val behandling = SakOgBehandlingService(connection).finnEllerOpprettBehandling(
             sak.saksnummer,
-            listOf(Årsak(EndringType.MOTTATT_SØKNAD))
+            listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
         ).behandling
         val personopplysningRepository = PersonopplysningRepository(connection)
         personopplysningRepository.lagre(behandling.id, Personopplysning(Fødselsdato(LocalDate.now().minusYears(20))))

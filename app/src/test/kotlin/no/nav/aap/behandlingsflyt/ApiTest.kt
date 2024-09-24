@@ -42,7 +42,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.Client
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.GUnit
-import no.nav.aap.verdityper.flyt.EndringType
+import no.nav.aap.verdityper.flyt.ÅrsakTilBehandling
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import org.assertj.core.api.Assertions.assertThat
 import org.intellij.lang.annotations.Language
@@ -115,7 +115,7 @@ class ApiTest {
                 personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
             val behandling = behandlingRepo.opprettBehandling(
                 sak.id,
-                listOf(Årsak(type = EndringType.MOTTATT_SØKNAD)),
+                listOf(Årsak(type = ÅrsakTilBehandling.MOTTATT_SØKNAD)),
                 TypeBehandling.Førstegangsbehandling
             )
             val medlRepo = MedlemskapRepository(connection)
@@ -159,7 +159,7 @@ class ApiTest {
                 personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
             val behandling = behandlingRepo.opprettBehandling(
                 sak.id,
-                listOf(Årsak(type = EndringType.MOTTATT_SØKNAD)),
+                listOf(Årsak(type = ÅrsakTilBehandling.MOTTATT_SØKNAD)),
                 TypeBehandling.Førstegangsbehandling
             )
             val beregningsgrunnlagRepository = BeregningsgrunnlagRepository(connection)
