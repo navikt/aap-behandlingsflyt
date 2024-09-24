@@ -1,13 +1,10 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.behandling
 
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.tilgang.Behandlingsreferanse
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
-import no.nav.aap.verdityper.sakogbehandling.Ident
 import no.nav.aap.verdityper.sakogbehandling.SakId
-import no.nav.aap.verdityper.sakogbehandling.TypeBehandling
 
 interface BehandlingRepository {
 
@@ -22,7 +19,7 @@ interface BehandlingRepository {
     fun hent(referanse: BehandlingReferanse): Behandling
 
     fun oppdaterÅrsaker(behandling: Behandling, årsaker: List<Årsak>)
-    
+
     fun finnSøker(referanse: BehandlingReferanse): Person
 }
 

@@ -12,22 +12,23 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.hendelse.avløp.AvklaringsbehovHendelseDto
 import no.nav.aap.behandlingsflyt.hendelse.avløp.AvsluttetBehandlingHendelseDTO
-import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingFlytStoppetHendelse
-import no.nav.aap.behandlingsflyt.hendelse.avløp.DefinisjonDTO
-import no.nav.aap.behandlingsflyt.hendelse.avløp.EndringDTO
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.DefinisjonDTO
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.EndringDTO
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
@@ -48,12 +49,12 @@ import no.nav.aap.statistikk.api_kontrakt.VilkårsPeriodeDTO
 import no.nav.aap.statistikk.api_kontrakt.VilkårsResultatDTO
 import no.nav.aap.verdityper.GUnit
 import no.nav.aap.verdityper.sakogbehandling.Ident
-import no.nav.aap.verdityper.sakogbehandling.TypeBehandling
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.UUID
 
 class StatistikkJobbUtførerTest {
     companion object {
@@ -220,16 +221,16 @@ class StatistikkJobbUtførerTest {
                     type = "xxx",
                     behovType = Definisjon.BehovType.MANUELT_PÅKREVD, løsesISteg = StegType.FATTE_VEDTAK
                 ),
-                status = no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER,
+                status = no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER,
                 endringer = listOf(
                     EndringDTO(
-                        status = no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Status.SENDT_TILBAKE_FRA_BESLUTTER,
+                        status = no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_FRA_BESLUTTER,
                         endretAv = "kanskje_meg"
                     )
                 )
             )
         )
-        val referanse = BehandlingReferanse()
+        val referanse = BehandlingReferanse(UUID.randomUUID())
         val fødselsNummer = Ident("xxx").toString()
         val payload = BehandlingFlytStoppetHendelse(
             saksnummer = Saksnummer("456"),

@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.periodisering
 
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -12,7 +13,6 @@ import no.nav.aap.verdityper.flyt.EndringType
 import no.nav.aap.verdityper.flyt.FlytKontekst
 import no.nav.aap.verdityper.flyt.Vurdering
 import no.nav.aap.verdityper.flyt.VurderingType
-import no.nav.aap.verdityper.sakogbehandling.TypeBehandling
 
 class PerioderTilVurderingService(connection: DBConnection) {
     private val sakService: SakService = SakService(connection)

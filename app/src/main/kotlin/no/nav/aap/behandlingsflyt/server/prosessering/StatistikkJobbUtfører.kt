@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.server.prosessering
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
@@ -8,11 +7,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag1
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.hendelse.avløp.AvklaringsbehovHendelseDto
 import no.nav.aap.behandlingsflyt.hendelse.avløp.AvsluttetBehandlingHendelseDTO
-import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingFlytStoppetHendelse
-import no.nav.aap.behandlingsflyt.hendelse.avløp.EndringDTO
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.EndringDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -137,12 +137,12 @@ class StatistikkJobbUtfører(
         return BehovType.valueOf(avklaringsbehovHendelseDto.definisjon.behovType.toString())
     }
 
-    private fun typeBehandlingTilStatistikkKontrakt(typeBehandling: no.nav.aap.verdityper.sakogbehandling.TypeBehandling): TypeBehandling =
+    private fun typeBehandlingTilStatistikkKontrakt(typeBehandling: no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling): TypeBehandling =
         when (typeBehandling) {
-            no.nav.aap.verdityper.sakogbehandling.TypeBehandling.Førstegangsbehandling -> TypeBehandling.Førstegangsbehandling
-            no.nav.aap.verdityper.sakogbehandling.TypeBehandling.Revurdering -> TypeBehandling.Revurdering
-            no.nav.aap.verdityper.sakogbehandling.TypeBehandling.Tilbakekreving -> TypeBehandling.Tilbakekreving
-            no.nav.aap.verdityper.sakogbehandling.TypeBehandling.Klage -> TypeBehandling.Klage
+            no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling.Førstegangsbehandling -> TypeBehandling.Førstegangsbehandling
+            no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling.Revurdering -> TypeBehandling.Revurdering
+            no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling.Tilbakekreving -> TypeBehandling.Tilbakekreving
+            no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling.Klage -> TypeBehandling.Klage
         }
 
     /**

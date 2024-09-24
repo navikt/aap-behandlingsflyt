@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters
 
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.SafHentDokumentGateway.Companion.extractFileNameFromHeaders
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken

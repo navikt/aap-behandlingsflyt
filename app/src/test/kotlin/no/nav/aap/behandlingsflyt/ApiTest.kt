@@ -20,8 +20,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fød
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.medlemskap.flate.MedlemskapGrunnlagDto
 import no.nav.aap.behandlingsflyt.flyt.flate.SøknadSendDto
 import no.nav.aap.behandlingsflyt.flyt.flate.VilkårDTO
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
-import no.nav.aap.verdityper.flyt.EndringType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.FinnEllerOpprettSakDTO
@@ -41,8 +42,8 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.Client
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.GUnit
+import no.nav.aap.verdityper.flyt.EndringType
 import no.nav.aap.verdityper.sakogbehandling.Ident
-import no.nav.aap.verdityper.sakogbehandling.TypeBehandling
 import org.assertj.core.api.Assertions.assertThat
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.AfterAll
@@ -276,7 +277,7 @@ class ApiTest {
         requireNotNull(utvidetSak)
 
         data class EndringDTO(
-            val status: no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Status,
+            val status: Status,
             val tidsstempel: LocalDateTime = LocalDateTime.now(),
             val begrunnelse: String,
             val endretAv: String
@@ -284,7 +285,7 @@ class ApiTest {
 
         data class AvklaringsbehovDTO(
             val definisjon: Any,
-            val status: no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Status,
+            val status: Status,
             val endringer: List<EndringDTO>
         )
 

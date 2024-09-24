@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak
 
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.verdityper.sakogbehandling.TypeBehandling
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
 data class BeriketBehandling(

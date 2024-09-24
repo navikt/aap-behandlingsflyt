@@ -1,12 +1,12 @@
-package no.nav.aap.behandlingsflyt.hendelse.avløp
+package no.nav.aap.behandlingsflyt.kontrakt.hendelse
 
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
-import no.nav.aap.verdityper.sakogbehandling.TypeBehandling
 import java.time.LocalDateTime
 
-data class BehandlingFlytStoppetHendelse(
+class BehandlingFlytStoppetHendelse(
     val personIdent: String,
     val saksnummer: Saksnummer,
     val referanse: BehandlingReferanse,
@@ -14,5 +14,6 @@ data class BehandlingFlytStoppetHendelse(
     val status: Status,
     val avklaringsbehov: List<AvklaringsbehovHendelseDto>,
     val opprettetTidspunkt: LocalDateTime,
+    val hendelsesTidspunkt: LocalDateTime,
     val versjon: String
 )

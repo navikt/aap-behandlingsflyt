@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.sakogbehandling.sak
+package no.nav.aap.behandlingsflyt.kontrakt.sak
 
 import com.fasterxml.jackson.annotation.JsonValue
 import java.util.*
