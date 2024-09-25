@@ -171,7 +171,9 @@ class StatistikkJobbUtfører(
             log.info("Ingen tilkjente ytelser knyttet til avsluttet behandling ${behandling.id}.")
         }
 
-        val grunnlag = requireNotNull(beregningsgrunnlagRepository.hentHvisEksisterer(hendelse.behandlingId))
+        val grunnlag =
+            requireNotNull(beregningsgrunnlagRepository.hentHvisEksisterer(hendelse.behandlingId))
+            { "Kunne ikke finne beregningsgrunnlag for behandling ${behandling.id} og sak ${sak.saksnummer}" }
 
         val beregningsGrunnlagDTO: BeregningsgrunnlagDTO = beregningsgrunnlagDTO(grunnlag)
 
