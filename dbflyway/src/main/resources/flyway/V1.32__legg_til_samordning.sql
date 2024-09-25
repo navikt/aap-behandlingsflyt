@@ -88,7 +88,7 @@ CREATE TABLE SAMORDNING_YTELSE
     YTELSE_TYPE     VARCHAR(50)                            NOT NULL,
     YTELSER_ID      BIGINT                                 NOT NULL REFERENCES SAMORDNING_YTELSER (ID),
     KILDE           VARCHAR(30)                            NOT NULL,
-    SAKS_REF        VARCHAR(40)                            NOT NULL,
+    SAKS_REF        VARCHAR(40)                            NULL,
     OPPRETTET_TID   TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 

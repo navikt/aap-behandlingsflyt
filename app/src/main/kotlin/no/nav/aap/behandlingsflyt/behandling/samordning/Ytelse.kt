@@ -8,8 +8,7 @@ enum class Ytelse(val type: AvklaringsType) {
     SVANGERSKAPSPENGER(AvklaringsType.AUTOMATISK),
     OMSORGSPENGER(AvklaringsType.AUTOMATISK),
     OPPLÆRINGSPENGER(AvklaringsType.AUTOMATISK),
-    ENGANGSTØNAD(AvklaringsType.AUTOMATISK),
-    FRISINN(AvklaringsType.AUTOMATISK),
+    ENGANGSTØNAD(AvklaringsType.AUTOMATISK)
 }
 
 enum class AvklaringsType {

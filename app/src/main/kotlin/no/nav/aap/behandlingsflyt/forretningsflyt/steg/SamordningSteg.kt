@@ -6,8 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.behandling.samordning.AvklaringsType
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.foreldrepenger.ForeldrepengerRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.sykepenger.SykepengerRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
@@ -59,8 +58,7 @@ class SamordningSteg(
             return SamordningSteg(
                 SamordningService(
                     SamordningRepository(connection),
-                    ForeldrepengerRepository(connection),
-                    SykepengerRepository(connection)
+                    SamordningYtelseVurderingRepository(connection),
                 ),
                 AvklaringsbehovRepositoryImpl(connection)
             )
