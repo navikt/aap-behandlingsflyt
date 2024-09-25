@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
@@ -45,6 +46,7 @@ class GrunnlagKopierer(connection: DBConnection) {
     private val beregningsgrunnlagRepository = BeregningsgrunnlagRepository(connection)
     private val beregningVurderingRepository = BeregningVurderingRepository(connection)
     private val institusjonsoppholdRepository = InstitusjonsoppholdRepository(connection)
+    private val inntektGrunnlagRepository = InntektGrunnlagRepository(connection)
     private val bruddAktivitetspliktRepository = BruddAktivitetspliktRepository(connection)
 
     fun overfør(fraBehandlingId: BehandlingId, tilBehandlingId: BehandlingId) {
@@ -68,5 +70,6 @@ class GrunnlagKopierer(connection: DBConnection) {
         beregningsgrunnlagRepository.kopier(fraBehandlingId, tilBehandlingId)
         institusjonsoppholdRepository.kopier(fraBehandlingId, tilBehandlingId)
         bruddAktivitetspliktRepository.kopier(fraBehandlingId, tilBehandlingId)
+        inntektGrunnlagRepository.kopier(fraBehandlingId, tilBehandlingId)
     }
 }
