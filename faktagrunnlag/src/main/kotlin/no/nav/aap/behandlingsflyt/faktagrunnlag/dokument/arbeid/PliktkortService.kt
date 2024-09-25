@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
@@ -28,10 +30,10 @@ class PliktkortService private constructor(
         }
     }
 
-    override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekstMedPerioder): Boolean {
+    override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val pliktkortSomIkkeErBehandlet = mottaDokumentService.pliktkortSomIkkeErBehandlet(kontekst.sakId)
         if (pliktkortSomIkkeErBehandlet.isEmpty()) {
-            return true
+            return IKKE_ENDRET
         }
 
         val eksisterendeGrunnlag = pliktkortRepository.hentHvisEksisterer(kontekst.behandlingId)
@@ -53,6 +55,6 @@ class PliktkortService private constructor(
 
         pliktkortRepository.lagre(behandlingId = kontekst.behandlingId, pliktkortene = allePlussNye)
 
-        return false // Antar her at alle nye kort gir en endring vi må ta hensyn til
+        return ENDRET // Antar her at alle nye kort gir en endring vi må ta hensyn til
     }
 }

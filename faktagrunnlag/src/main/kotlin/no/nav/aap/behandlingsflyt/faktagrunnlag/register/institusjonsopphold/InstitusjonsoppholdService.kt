@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.adapter.InstitusjonsoppholdGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -15,7 +17,7 @@ class InstitusjonsoppholdService private constructor(
     private val institusjonsoppholdRegisterGateway: IInstitusjonsoppholdGateway
 ) : Informasjonskrav {
 
-    override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekstMedPerioder): Boolean {
+    override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val behandlingId = kontekst.behandlingId
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
 
@@ -28,7 +30,7 @@ class InstitusjonsoppholdService private constructor(
 
         institusjonsoppholdRepository.lagreOpphold(behandlingId, institusjonsopphold)
 
-        return erUendret(eksisterendeGrunnlag, hentHvisEksisterer(behandlingId))
+        return if (erUendret(eksisterendeGrunnlag, hentHvisEksisterer(behandlingId))) IKKE_ENDRET else ENDRET
     }
 
     private fun erUendret(

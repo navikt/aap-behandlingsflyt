@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.foreldrepenger.Foreldrepe
 import no.nav.aap.behandlingsflyt.behandling.underveis.sykepenger.SykepengerGateway
 import no.nav.aap.behandlingsflyt.behandling.underveis.sykepenger.SykepengerRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -70,7 +71,7 @@ class SamordningService(
         return Tidslinje()
     }
 
-    override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekstMedPerioder): Boolean {
+    override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
         val personIdent = sak.person.aktivIdent().identifikator
 
@@ -78,8 +79,8 @@ class SamordningService(
         val foreldrepenger = hentYtelseForeldrepenger(personIdent, sak.rettighetsperiode.fom, sak.rettighetsperiode.tom)
 
         //TODO: Implementer repo lookups
-        return false
-/*
+        return ENDRET
+        /*
         val tidslinje = sykepenger.kombiner(
             foreldrepenger,
             JoinStyle.CROSS_JOIN) { periode, venstreSegment, høyreSegment ->

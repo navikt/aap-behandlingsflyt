@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -13,7 +15,7 @@ class MedlemskapService private constructor(
     private val sakService: SakService,
     private val medlemskapRepository: MedlemskapRepository,
 ) : Informasjonskrav {
-    override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekstMedPerioder): Boolean {
+    override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val behandlingId = kontekst.behandlingId
         val sak = sakService.hent(kontekst.sakId)
         val medlemskapPerioder = medlemskapGateway.innhent(sak.person)
@@ -21,7 +23,7 @@ class MedlemskapService private constructor(
 
         medlemskapRepository.lagreUnntakMedlemskap(kontekst.behandlingId, medlemskapPerioder)
 
-        return erUendret(eksisterendeGrunnlag, hentHvisEksisterer(behandlingId))
+        return if (erUendret(eksisterendeGrunnlag, hentHvisEksisterer(behandlingId))) IKKE_ENDRET else ENDRET
     }
 
     fun hentHvisEksisterer(behandlingId: BehandlingId): MedlemskapUnntakGrunnlag? {

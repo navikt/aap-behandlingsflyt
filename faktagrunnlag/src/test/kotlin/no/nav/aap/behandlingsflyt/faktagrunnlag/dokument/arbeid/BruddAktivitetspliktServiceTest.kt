@@ -43,7 +43,7 @@ class BruddAktivitetspliktServiceTest {
             }
 
             // Etter første oppdatering av kravinformasjonen, skal bruddet vi la inn over dukke opp
-            bruddAktivitetsplitService.harIkkeGjortOppdateringNå(flytKontekst)
+            bruddAktivitetsplitService.oppdater(flytKontekst)
             BruddAktivitetspliktRepository(connection).hentGrunnlagHvisEksisterer(behandling.id).also {
                 assertEquals(1, it?.bruddene?.size)
             }

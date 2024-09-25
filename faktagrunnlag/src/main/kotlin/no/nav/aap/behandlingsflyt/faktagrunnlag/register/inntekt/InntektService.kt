@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Input
@@ -32,7 +34,7 @@ class InntektService private constructor(
     private val inntektRegisterGateway: InntektRegisterGateway
 ) : Informasjonskrav {
 
-    override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekstMedPerioder): Boolean {
+    override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val behandlingId = kontekst.behandlingId
         val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
 
@@ -64,7 +66,7 @@ class InntektService private constructor(
 
         inntektGrunnlagRepository.lagre(behandlingId, inntekter)
 
-        return eksisterendeGrunnlag?.inntekter == inntekter
+        return if (eksisterendeGrunnlag?.inntekter == inntekter) IKKE_ENDRET else ENDRET
     }
 
     private fun skalInnhenteOpplysninger(vilkårsresultat: Vilkårsresultat): Boolean {
