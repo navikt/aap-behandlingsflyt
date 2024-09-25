@@ -8,8 +8,7 @@ import java.time.LocalDate
 data class SykepengerRequest (
     val personidentifikatorer: Set<String>,
     val fom: LocalDate,
-    val tom: LocalDate,
-    val oppløsning: Set<String> = emptySet()
+    val tom: LocalDate
 )
 
 data class SykepengerResponse(
