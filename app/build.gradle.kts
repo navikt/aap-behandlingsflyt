@@ -1,6 +1,6 @@
-import java.io.ByteArrayOutputStream
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.gradle.kotlin.dsl.processResources
+import java.io.ByteArrayOutputStream
 
 val ktorVersion = "2.3.12"
 
@@ -50,7 +50,7 @@ fun getCheckedOutGitCommitHash(): String {
 }
 
 
-val komponenterVersjon = "0.0.69"
+val komponenterVersjon = "0.0.74"
 
 dependencies {
     implementation("io.ktor:ktor-server-cors:$ktorVersion")
