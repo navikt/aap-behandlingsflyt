@@ -33,6 +33,7 @@ class BarnetilleggService(
         val barnGrunnlag = barnRepository.hent(behandlingId)
         val folkeregisterBarn =
             barnGrunnlag.registerbarn?.identer?.map { ident -> mapTilBarn(ident, personopplysningerGrunnlag) }
+                ?.filterNotNull()
                 ?: emptyList()
         val folkeregisterBarnTidslinje = tilTidslinje(folkeregisterBarn)
 
@@ -47,6 +48,7 @@ class BarnetilleggService(
 
         val oppgittBarn =
             barnGrunnlag.oppgitteBarn?.identer?.map { ident -> mapTilBarn(ident, personopplysningerGrunnlag) }
+                ?.filterNotNull()
                 ?: emptyList()
         val oppgittBarnTidslinje = tilTidslinje(oppgittBarn)
         resultat =
@@ -90,13 +92,15 @@ class BarnetilleggService(
         return !(sykdomsvilkåret.harPerioderSomErOppfylt() && bistandsvilkåret.harPerioderSomErOppfylt())
     }
 
-    private fun mapTilBarn(ident: Ident, personopplysningerGrunnlag: PersonopplysningGrunnlag): Barn {
-        val personopplysning1 = personopplysningerGrunnlag.relatertePersonopplysninger?.personopplysninger?.single {
-            it.gjelderForIdent(ident)
+    private fun mapTilBarn(ident: Ident, personopplysningerGrunnlag: PersonopplysningGrunnlag): Barn? {
+        val personopplysning1 =
+            personopplysningerGrunnlag.relatertePersonopplysninger?.personopplysninger?.singleOrNull() {
+                it.gjelderForIdent(ident)
+            }
+        if (personopplysning1 == null) {
+            return null
         }
-        val personopplysning =
-            requireNotNull(personopplysning1)
-        return Barn(personopplysning.ident(), personopplysning.fødselsdato, personopplysning.dødsdato)
+        return Barn(personopplysning1.ident(), personopplysning1.fødselsdato, personopplysning1.dødsdato)
     }
 
     private fun tilTidslinje(barna: List<Barn>): Tidslinje<Set<Ident>> {
