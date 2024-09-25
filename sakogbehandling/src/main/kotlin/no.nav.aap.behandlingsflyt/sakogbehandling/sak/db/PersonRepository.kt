@@ -16,7 +16,7 @@ class PersonRepository(private val connection: DBConnection) {
             """SELECT person.id, person.referanse 
                     FROM person 
                     INNER JOIN person_ident ON person_ident.person_id = person.id 
-                    WHERE person_ident.ident IN (?::text[])"""
+                    WHERE person_ident.ident = ANY(?::text[])"""
         ) {
             setParams {
                 setArray(1, identer.map { it.identifikator })
