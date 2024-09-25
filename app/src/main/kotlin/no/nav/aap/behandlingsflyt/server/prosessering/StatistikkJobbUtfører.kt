@@ -172,15 +172,15 @@ class StatistikkJobbUtfører(
             )
         } ?: listOf())
 
-        if (tilkjentYtelseDTO.perioder.isEmpty()) {
+        if (tilkjentYtelse == null) {
             log.info("Ingen tilkjente ytelser knyttet til avsluttet behandling ${behandling.id}.")
         }
 
         val grunnlag =
-            requireNotNull(beregningsgrunnlagRepository.hentHvisEksisterer(hendelse.behandlingId))
-            { "Kunne ikke finne beregningsgrunnlag for behandling ${behandling.id} og sak ${sak.saksnummer}" }
+            beregningsgrunnlagRepository.hentHvisEksisterer(hendelse.behandlingId)
 
-        val beregningsGrunnlagDTO: BeregningsgrunnlagDTO = beregningsgrunnlagDTO(grunnlag)
+        val beregningsGrunnlagDTO: BeregningsgrunnlagDTO? =
+            if (grunnlag == null) null else beregningsgrunnlagDTO(grunnlag)
 
         log.info("Kaller aap-statistikk for sak ${sak.saksnummer}.")
 
@@ -255,8 +255,6 @@ class StatistikkJobbUtfører(
                 inkludererUføre = grunnlag.underliggende() is GrunnlagUføre
             )
         )
-
-        null -> throw RuntimeException("Beregningsgrunnlag kan ikke være null.")
     }
 
     private fun grunnlag1119dto(beregningsgrunnlag: Grunnlag11_19) = Grunnlag11_19DTO(
