@@ -1,19 +1,13 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.SamordningGraderingVurderingDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.SamordningGrunnlagDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.YtelsesVurderingDto
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
+import no.nav.aap.verdityper.Prosent
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
 class SamordningRepository (private val connection: DBConnection){
 
-    fun hent(behandlingId: BehandlingId): SamordningGrunnlagDto {
-        return requireNotNull(hentHvisEksisterer(behandlingId))
-    }
-
-    fun hentHvisEksisterer(behandlingId: BehandlingId): SamordningGrunnlagDto? {
+    fun hentHvisEksisterer(behandlingId: BehandlingId): SamordningGrunnlag? {
         val query = """
             SELECT * FROM SAMORDNING_GRUNNLAG WHERE behandling_id = ? and aktiv = true
         """.trimIndent()
@@ -27,9 +21,8 @@ class SamordningRepository (private val connection: DBConnection){
         }
     }
 
-    //TODO: FIKS mapGrunnlag og mapPeriode, gir ikke helt mening som er nå, må lande på kontrakt
-    private fun mapGrunnlag(row: Row): SamordningGrunnlagDto {
-        val samordningeneId = row.getLong("perioder_id")
+    private fun mapGrunnlag(row: Row): SamordningGrunnlag {
+        val perioderId = row.getLong("perioder_id")
 
         val query = """
             SELECT * FROM SAMORDNING_PERIODE WHERE perioder_id = ?
@@ -37,32 +30,22 @@ class SamordningRepository (private val connection: DBConnection){
 
         val samordningPerioder = connection.queryList(query) {
             setParams {
-                setLong(1, samordningeneId)
+                setLong(1, perioderId)
             }
             setRowMapper {
-                mapPeriode(it)
+                SamordningPeriode(
+                    it.getPeriode("periode"),
+                    Prosent(it.getInt("gradering"))
+                )
             }
         }.toList()
 
-        return SamordningGrunnlagDto(
-            SamordningGraderingVurderingDto(
-                "BEGRUNNELSE HER",
-                samordningPerioder
-            )
-        )
+        return SamordningGrunnlag(row.getLong("id"), samordningPerioder)
     }
-
-    private fun mapPeriode(it: Row): YtelsesVurderingDto {
-        return YtelsesVurderingDto(
-            it.getString("ytelse"),
-            it.getInt("gradering")
-        )
-    }
-
 
     fun lagre(behandlingId: BehandlingId, samordningPerioder: List<SamordningPeriode>) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
-        val eksisterendePerioder = eksisterendeGrunnlag?.samordningGraderingVurdering?.ytelsesVurderinger ?: emptySet()
+        val eksisterendePerioder = eksisterendeGrunnlag?.samordningPerioder ?: emptySet()
 
         if (eksisterendePerioder != samordningPerioder) {
             if (eksisterendeGrunnlag != null) {
@@ -83,10 +66,10 @@ class SamordningRepository (private val connection: DBConnection){
             INSERT INTO SAMORDNING_PERIODE (perioder_id, periode, gradering) VALUES (?, ?::daterange, ?)
             """.trimIndent()
         connection.executeBatch(query, samordningPerioder) {
-            setParams { periode ->
+            setParams {
                 setLong(1, perioderId)
-                setPeriode(2, periode.periode)
-                setInt(3, periode.gradering.prosentverdi())
+                setPeriode(2, it.periode)
+                setInt(3, it.gradering.prosentverdi())
             }
         }
 

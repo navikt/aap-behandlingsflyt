@@ -6,11 +6,11 @@ CREATE TABLE SAMORDNING_PERIODER
 );
 CREATE TABLE SAMORDNING_PERIODE
 (
-    ID            BIGSERIAL                              NOT NULL PRIMARY KEY,
-    PERIODER_ID   BIGINT                                 NOT NULL REFERENCES SAMORDNING_PERIODER (ID),
-    PERIODE       DATERANGE                              NOT NULL,
-    GRADERING     SMALLINT                               NULL,
-    OPPRETTET_TID TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
+    ID                                      BIGSERIAL                              NOT NULL PRIMARY KEY,
+    PERIODER_ID                             BIGINT                                 NOT NULL REFERENCES SAMORDNING_PERIODER (ID),
+    PERIODE                                 DATERANGE                              NOT NULL,
+    GRADERING                               SMALLINT                               NULL,
+    OPPRETTET_TID                           TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 ALTER TABLE SAMORDNING_PERIODE
     ADD CONSTRAINT SAMORDNING_PERIODE_IKKE_OVERLAPP_PERIODE EXCLUDE USING GIST (
@@ -22,7 +22,6 @@ CREATE TABLE SAMORDNING_GRUNNLAG
     ID                                      BIGSERIAL                              NOT NULL PRIMARY KEY,
     BEHANDLING_ID                           BIGINT                                 NOT NULL REFERENCES BEHANDLING (ID),
     PERIODER_ID                             BIGINT                                 NOT NULL REFERENCES SAMORDNING_PERIODER (ID),
-    SAMORDNING_YTELSEVURDERING_GRUNNLAG_ID  BIGINT                                 NOT NULL REFERENCES SAMORDNING_YTELSEVURDERING_GRUNNLAG(ID),
     AKTIV                                   BOOLEAN DEFAULT TRUE                   NOT NULL,
     OPPRETTET_TID TIMESTAMP(3)              DEFAULT CURRENT_TIMESTAMP              NOT NULL
 );
