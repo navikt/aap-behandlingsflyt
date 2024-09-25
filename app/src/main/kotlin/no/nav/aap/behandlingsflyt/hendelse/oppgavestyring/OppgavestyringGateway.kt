@@ -19,6 +19,6 @@ object OppgavestyringGateway {
     )
 
     fun varsleHendelse(hendelse: BehandlingFlytStoppetHendelse) {
-        client.post<_, Unit>(url.resolve("/behandling"), PostRequest(body = hendelse))
+        client.post<_, Unit>(url.resolve("/opprett-oppgave"), PostRequest(body = hendelse))
     }
 }
