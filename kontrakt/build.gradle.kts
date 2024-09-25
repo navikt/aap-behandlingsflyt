@@ -3,7 +3,7 @@ plugins {
     `maven-publish`
     `java-library`
 }
-val komponenterVersjon = "0.0.74"
+val komponenterVersjon = "0.0.73"
 
 dependencies {
     api("com.fasterxml.jackson.core:jackson-annotations:2.17.2")
