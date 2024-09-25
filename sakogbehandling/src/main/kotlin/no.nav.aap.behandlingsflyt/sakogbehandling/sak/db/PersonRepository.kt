@@ -13,7 +13,7 @@ class PersonRepository(private val connection: DBConnection) {
         require(identer.isNotEmpty())
 
         val relevantePersoner = connection.queryList(
-            """SELECT person.id, person.referanse 
+            """SELECT DISTINCT person.id, person.referanse 
                     FROM person 
                     INNER JOIN person_ident ON person_ident.person_id = person.id 
                     WHERE person_ident.ident = ANY(?::text[])"""
@@ -36,6 +36,7 @@ class PersonRepository(private val connection: DBConnection) {
     }
 
     fun oppdater(person: Person, identer: List<Ident>) {
+        require(identer.filter { it.aktivIdent }.size < 2)
 
         val oppdaterteIdenter = identer.filterNot { ident -> person.identer().contains(ident) }
 
