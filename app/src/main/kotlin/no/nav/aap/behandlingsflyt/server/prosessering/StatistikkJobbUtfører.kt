@@ -10,7 +10,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.hendelse.avløp.AvsluttetBehandlingHendelseDTO
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
-import no.nav.aap.behandlingsflyt.kontrakt.sak.Status as SakStatus
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.EndringDTO
@@ -43,6 +42,7 @@ import no.nav.aap.statistikk.api_kontrakt.VilkårsPeriodeDTO
 import no.nav.aap.statistikk.api_kontrakt.VilkårsResultatDTO
 import no.nav.aap.statistikk.api_kontrakt.Vilkårtype
 import org.slf4j.LoggerFactory
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status as BehandlingStatus
 
 private val log = LoggerFactory.getLogger(StatistikkJobbUtfører::class.java)
 
@@ -157,7 +157,7 @@ class StatistikkJobbUtfører(
         val vilkårsresultat = vilkårsresultatRepository.hent(hendelse.behandlingId)
         val sak = sakService.hent(behandling.sakId)
 
-        if (behandling.status() != SakStatus.AVSLUTTET) {
+        if (behandling.status() != BehandlingStatus.AVSLUTTET) {
             log.warn("Kjører statistikkjobb for behandling som ikke er avsluttet. Behandling-ref: ${behandling.referanse.referanse}. Sak: ${sak.saksnummer}")
         }
 

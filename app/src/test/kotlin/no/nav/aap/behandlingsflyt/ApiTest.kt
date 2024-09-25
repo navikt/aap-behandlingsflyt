@@ -293,7 +293,7 @@ class ApiTest {
         data class DetaljertBehandlingDTO(
             val referanse: UUID,
             val type: String,
-            val status: no.nav.aap.behandlingsflyt.kontrakt.sak.Status,
+            val status: no.nav.aap.behandlingsflyt.kontrakt.behandling.Status,
             val opprettet: LocalDateTime,
             val avklaringsbehov: List<AvklaringsbehovDTO>,
             val vilkår: List<VilkårDTO>,

@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.kontrakt.steg
 
-import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 
 enum class StegType(
     val gruppe: StegGruppe,

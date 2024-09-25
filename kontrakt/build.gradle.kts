@@ -3,14 +3,17 @@ plugins {
     `maven-publish`
     `java-library`
 }
+val komponenterVersjon = "0.0.69"
 
 dependencies {
     api("com.fasterxml.jackson.core:jackson-annotations:2.17.2")
-    api("no.nav:ktor-openapi-generator:1.0.32")
+    api("no.nav:ktor-openapi-generator:1.0.34")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.0")
     testImplementation("org.assertj:assertj-core:3.26.3")
+    testImplementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
+
 }
 
 group = "no.nav.aap.behandlingsflyt"
