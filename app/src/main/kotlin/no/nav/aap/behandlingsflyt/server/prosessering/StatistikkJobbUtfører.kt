@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.hendelse.avløp.AvsluttetBehandlingHendelseDTO
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Status as SakStatus
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.EndringDTO
@@ -155,6 +156,10 @@ class StatistikkJobbUtfører(
         val behandling = behandlingRepository.hent(hendelse.behandlingId)
         val vilkårsresultat = vilkårsresultatRepository.hent(hendelse.behandlingId)
         val sak = sakService.hent(behandling.sakId)
+
+        if (behandling.status() != SakStatus.AVSLUTTET) {
+            log.warn("Kjører statistikkjobb for behandling som ikke er avsluttet. Behandling-ref: ${behandling.referanse.referanse}. Sak: ${sak.saksnummer}")
+        }
 
         val tilkjentYtelse = tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)
 
