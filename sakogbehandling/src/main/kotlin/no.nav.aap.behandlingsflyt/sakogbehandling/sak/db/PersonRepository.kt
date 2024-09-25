@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak.db
 
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import java.util.*
 
@@ -16,10 +16,10 @@ class PersonRepository(private val connection: DBConnection) {
             """SELECT person.id, person.referanse 
                     FROM person 
                     INNER JOIN person_ident ON person_ident.person_id = person.id 
-                    WHERE person_ident.ident IN (?)"""
+                    WHERE person_ident.ident IN (?::text[])"""
         ) {
             setParams {
-                setString(1, identer.joinToString(",") { it.identifikator })
+                setArray(1, identer.map { it.identifikator })
             }
             setRowMapper(::mapPerson)
         }
