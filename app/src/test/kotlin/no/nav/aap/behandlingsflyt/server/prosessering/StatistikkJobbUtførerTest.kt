@@ -50,24 +50,14 @@ import no.nav.aap.statistikk.api_kontrakt.VilkårsResultatDTO
 import no.nav.aap.verdityper.GUnit
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 
+@Fakes
 class StatistikkJobbUtførerTest {
-    companion object {
-        private val fakes = Fakes()
-
-        @JvmStatic
-        @AfterAll
-        fun afterAll() {
-            fakes.close()
-        }
-    }
-
     @Test
-    fun `statistikk-jobb avgir avsluttet behandling-data korrekt`() {
+    fun `statistikk-jobb avgir avsluttet behandling-data korrekt`(mottatteVilkårsresultat: List<AvsluttetBehandlingDTO>) {
         val (behandling, sak) = InitTestDatabase.dataSource.transaction { connection ->
             val vilkårsResultatRepository = VilkårsresultatRepository(connection = connection)
             val behandlingRepository = BehandlingRepositoryImpl(connection)
@@ -157,8 +147,8 @@ class StatistikkJobbUtførerTest {
 
         // Assert
 
-        assertThat(fakes.mottatteVilkårsResult).isNotEmpty()
-        assertThat(fakes.mottatteVilkårsResult.first().toString()).isEqualTo(
+        assertThat(mottatteVilkårsresultat).isNotEmpty()
+        assertThat(mottatteVilkårsresultat.first().toString()).isEqualTo(
             AvsluttetBehandlingDTO(
                 behandlingsReferanse = behandling.referanse.referanse,
                 saksnummer = sak.saksnummer.toString(),
@@ -195,7 +185,7 @@ class StatistikkJobbUtførerTest {
     }
 
     @Test
-    fun `prosesserings-kall avgir statistikk korrekt`() {
+    fun `prosesserings-kall avgir statistikk korrekt`(hendelser: List<StoppetBehandling>) {
         // Blir ikke kalt i denne metoden, så derfor bare mock
         val vilkårsResultatRepository = mockk<VilkårsresultatRepository>()
         val behandlingRepository = mockk<BehandlingRepository>()
@@ -252,10 +242,10 @@ class StatistikkJobbUtførerTest {
         )
 
         // Assert
-        assertThat(fakes.statistikkHendelser).isNotEmpty()
-        assertThat(fakes.statistikkHendelser.size).isEqualTo(1)
+        assertThat(hendelser).isNotEmpty()
+        assertThat(hendelser.size).isEqualTo(1)
 
-        assertThat(fakes.statistikkHendelser.first()).isEqualTo(
+        assertThat(hendelser.first()).isEqualTo(
             StoppetBehandling(
                 saksnummer = "456",
                 behandlingReferanse = referanse.referanse,

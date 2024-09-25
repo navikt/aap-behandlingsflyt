@@ -4,7 +4,6 @@ import com.papsign.ktor.openapigen.route.apiRouting
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
@@ -17,7 +16,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fød
 import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.TestHendelsesMottak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
-import no.nav.aap.behandlingsflyt.test.Fakes
+import no.nav.aap.behandlingsflyt.test.AzurePortHolder
+import no.nav.aap.behandlingsflyt.test.FakePersoner
+import no.nav.aap.behandlingsflyt.test.FakeServers
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
@@ -48,7 +49,9 @@ class TestApp {
 // Kjøres opp for å få logback i console uten json
 fun main() {
     val postgres = postgreSQLContainer()
-    val fakes = Fakes(azurePort = 8081)
+
+    AzurePortHolder.setPort(8081)
+    FakeServers.start() // azurePort = 8081)
 
     // Starter server
     embeddedServer(Netty, port = 8080) {
@@ -66,7 +69,6 @@ fun main() {
         server(
             dbConfig
         )
-        module(fakes)
 
         val datasource = initDatasource(dbConfig)
 
@@ -77,9 +79,9 @@ fun main() {
                         val ident = genererIdent(dto.fødselsdato)
                         val barn = dto.barn.filter { it.harRelasjon }.map { genererBarn(it) }
                         val urelaterteBarn = dto.barn.filter { !it.harRelasjon }.map { genererBarn(it) }
-                        barn.forEach { fakes.leggTil(it) }
-                        urelaterteBarn.forEach { fakes.leggTil(it) }
-                        fakes.leggTil(
+                        barn.forEach { FakePersoner.leggTil(it) }
+                        urelaterteBarn.forEach { FakePersoner.leggTil(it) }
+                        FakePersoner.leggTil(
                             TestPerson(
                                 identer = setOf(ident),
                                 fødselsdato = Fødselsdato(dto.fødselsdato),
@@ -185,14 +187,4 @@ private fun postgreSQLContainer(): PostgreSQLContainer<Nothing> {
     postgres.waitingFor(HostPortWaitStrategy().withStartupTimeout(Duration.of(60L, ChronoUnit.SECONDS)))
     postgres.start()
     return postgres
-}
-
-private fun Application.module(fakes: Fakes) {
-    // Setter opp virtuell sandkasse lokalt
-    environment.monitor.subscribe(ApplicationStopped) { application ->
-        application.environment.log.info("Server har stoppet")
-        fakes.close()
-        // Release resources and unsubscribe from events
-        application.environment.monitor.unsubscribe(ApplicationStopped) {}
-    }
 }

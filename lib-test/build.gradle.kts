@@ -28,7 +28,11 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-databind:2.17.2")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.2")
 
+    implementation("ch.qos.logback:logback-classic:1.5.8")
+
     implementation("com.nimbusds:nimbus-jose-jwt:9.41.1")
+
+    implementation("org.junit.jupiter:junit-jupiter-api:5.11.0")
 
     api(project(":dbtestdata"))
 }
