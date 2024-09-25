@@ -97,11 +97,11 @@ enum class StegType(
     ),
     BREV(
         gruppe = StegGruppe.BREV,
-        status = Status.AVSLUTTET,
+        status = Status.IVERKSETTES,
     ),
     IVERKSETT_VEDTAK(
         gruppe = StegGruppe.IVERKSETT_VEDTAK,
-        status = Status.AVSLUTTET
+        status = Status.IVERKSETTES
     ),
     UDEFINERT(
         gruppe = StegGruppe.UDEFINERT,

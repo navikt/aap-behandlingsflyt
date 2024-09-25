@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.TilbakeførtFraKvalitetssikrer
 import no.nav.aap.behandlingsflyt.flyt.steg.Transisjon
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.periodisering.PerioderTilVurderingService
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -178,6 +179,10 @@ class FlytOrkestrator(
             if (!result.kanFortsette() || neste == null) {
                 if (neste == null) {
                     // Avslutter behandling
+                    behandlingRepository.oppdaterBehandlingStatus(
+                        behandlingId = behandling.id,
+                        status = Status.AVSLUTTET
+                    )
                     validerAtAvklaringsBehovErLukkede(avklaringsbehovene)
                     log.info("Behandlingen har nådd slutten, avslutter behandling")
                     behandlingHendelseService.avsluttet(behandling)
