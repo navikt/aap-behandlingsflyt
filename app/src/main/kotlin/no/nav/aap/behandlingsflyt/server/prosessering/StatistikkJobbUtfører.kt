@@ -171,7 +171,7 @@ class StatistikkJobbUtfører(
             log.info("Ingen tilkjente ytelser knyttet til avsluttet behandling ${behandling.id}.")
         }
 
-        val grunnlag = beregningsgrunnlagRepository.hentHvisEksisterer(hendelse.behandlingId)
+        val grunnlag = requireNotNull(beregningsgrunnlagRepository.hentHvisEksisterer(hendelse.behandlingId))
 
         val beregningsGrunnlagDTO: BeregningsgrunnlagDTO = beregningsgrunnlagDTO(grunnlag)
 
@@ -206,7 +206,7 @@ class StatistikkJobbUtfører(
     }
 
     private fun beregningsgrunnlagDTO(
-        grunnlag: Beregningsgrunnlag?
+        grunnlag: Beregningsgrunnlag
     ): BeregningsgrunnlagDTO = when (grunnlag) {
         is Grunnlag11_19 -> BeregningsgrunnlagDTO(
             grunnlag11_19dto = grunnlag1119dto(grunnlag),
