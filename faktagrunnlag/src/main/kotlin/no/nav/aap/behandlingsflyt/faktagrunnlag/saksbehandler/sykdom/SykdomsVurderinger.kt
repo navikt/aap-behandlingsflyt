@@ -6,7 +6,7 @@ import no.nav.aap.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDate
 
-data class Sykdomsvurdering(
+class Sykdomsvurdering(
     val begrunnelse: String,
     val dokumenterBruktIVurdering: List<JournalpostId>,
     val harSkadeSykdomEllerLyte: Boolean,
@@ -40,7 +40,7 @@ enum class NedreGrense {
     TRETTI, FEMTI
 }
 
-data class Yrkesskadevurdering(
+class Yrkesskadevurdering(
     val begrunnelse: String,
     val erÅrsakssammenheng: Boolean,
     val skadetidspunkt: LocalDate?,

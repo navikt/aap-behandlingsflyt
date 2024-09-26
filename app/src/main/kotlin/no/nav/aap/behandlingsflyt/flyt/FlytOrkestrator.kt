@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.flyt
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlag
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegOrkestrator
@@ -11,14 +10,20 @@ import no.nav.aap.behandlingsflyt.flyt.steg.TilbakeførtFraBeslutter
 import no.nav.aap.behandlingsflyt.flyt.steg.TilbakeførtFraKvalitetssikrer
 import no.nav.aap.behandlingsflyt.flyt.steg.Transisjon
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
+import no.nav.aap.behandlingsflyt.periodisering.PerioderTilVurderingService
+import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Status.UTREDES
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
+import no.nav.aap.behandlingsflyt.stegFullførtTeller
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.verdityper.flyt.FlytKontekst
+import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.SakId
 import org.slf4j.LoggerFactory
@@ -47,6 +52,7 @@ class FlytOrkestrator(
     private val behandlingHendelseService = BehandlingHendelseService(
         FlytJobbRepository(connection), SakService(connection)
     )
+    private val perioderTilVurderingService = PerioderTilVurderingService(connection)
 
     fun opprettKontekst(sakId: SakId, behandlingId: BehandlingId): FlytKontekst {
         val typeBehandling = behandlingRepository.hentBehandlingType(behandlingId)
@@ -91,8 +97,16 @@ class FlytOrkestrator(
 
         val oppdaterFaktagrunnlagForKravliste =
             informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
-                kravliste = behandlingFlyt.faktagrunnlagFremTilOgMedGjeldendeSteg(),
-                kontekst = kontekst
+                kravliste = behandlingFlyt.alleFaktagrunnlagFørGjeldendeSteg(),
+                kontekst = FlytKontekstMedPerioder(
+                    sakId = kontekst.sakId,
+                    behandlingId = kontekst.behandlingId,
+                    behandlingType = kontekst.behandlingType,
+                    perioderTilVurdering = perioderTilVurderingService.utled(
+                        kontekst = kontekst,
+                        stegType = behandling.aktivtSteg()
+                    )
+                )
             )
 
         val tilbakeføringsflyt = behandlingFlyt.tilbakeflytEtterEndringer(oppdaterFaktagrunnlagForKravliste)
@@ -136,14 +150,11 @@ class FlytOrkestrator(
         var gjeldendeSteg = behandlingFlyt.forberedFlyt(behandling.aktivtSteg())
 
         while (true) {
-            connection.markerSavepoint()
-
-            informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
-                behandlingFlyt.faktagrunnlagForGjeldendeSteg(),
-                kontekst
+            val result = StegOrkestrator(connection, gjeldendeSteg).utfør(
+                kontekst,
+                behandling,
+                behandlingFlyt.faktagrunnlagForGjeldendeSteg()
             )
-
-            val result = StegOrkestrator(connection, gjeldendeSteg).utfør(kontekst, behandling)
 
             val avklaringsbehov = avklaringsbehovene.åpne()
             if (result.erTilbakeføring()) {
@@ -168,6 +179,10 @@ class FlytOrkestrator(
             if (!result.kanFortsette() || neste == null) {
                 if (neste == null) {
                     // Avslutter behandling
+                    behandlingRepository.oppdaterBehandlingStatus(
+                        behandlingId = behandling.id,
+                        status = Status.AVSLUTTET
+                    )
                     validerAtAvklaringsBehovErLukkede(avklaringsbehovene)
                     log.info("Behandlingen har nådd slutten, avslutter behandling")
                     behandlingHendelseService.avsluttet(behandling)
@@ -177,6 +192,8 @@ class FlytOrkestrator(
                 }
                 behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
                 return
+            } else {
+                prometheus.stegFullførtTeller(behandling.referanse.referanse).increment()
             }
             gjeldendeSteg = neste
         }

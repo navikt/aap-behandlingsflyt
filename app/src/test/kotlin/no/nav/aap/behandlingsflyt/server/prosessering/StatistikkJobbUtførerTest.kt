@@ -2,29 +2,33 @@ package no.nav.aap.behandlingsflyt.server.prosessering
 
 import io.mockk.checkUnnecessaryStub
 import io.mockk.mockk
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.hendelse.avløp.AvklaringsbehovHendelseDto
 import no.nav.aap.behandlingsflyt.hendelse.avløp.AvsluttetBehandlingHendelseDTO
-import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingFlytStoppetHendelse
-import no.nav.aap.behandlingsflyt.hendelse.avløp.DefinisjonDTO
-import no.nav.aap.behandlingsflyt.hendelse.avløp.EndringDTO
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.DefinisjonDTO
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.EndringDTO
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
@@ -38,35 +42,22 @@ import no.nav.aap.statistikk.api_kontrakt.BeregningsgrunnlagDTO
 import no.nav.aap.statistikk.api_kontrakt.Endring
 import no.nav.aap.statistikk.api_kontrakt.EndringStatus
 import no.nav.aap.statistikk.api_kontrakt.Grunnlag11_19DTO
-import no.nav.aap.statistikk.api_kontrakt.MottaStatistikkDTO
+import no.nav.aap.statistikk.api_kontrakt.StoppetBehandling
 import no.nav.aap.statistikk.api_kontrakt.TilkjentYtelseDTO
 import no.nav.aap.statistikk.api_kontrakt.VilkårDTO
 import no.nav.aap.statistikk.api_kontrakt.VilkårsPeriodeDTO
 import no.nav.aap.statistikk.api_kontrakt.VilkårsResultatDTO
 import no.nav.aap.verdityper.GUnit
-import no.nav.aap.verdityper.flyt.StegType
 import no.nav.aap.verdityper.sakogbehandling.Ident
-import no.nav.aap.verdityper.sakogbehandling.Status
-import no.nav.aap.verdityper.sakogbehandling.TypeBehandling
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 
+@Fakes
 class StatistikkJobbUtførerTest {
-    companion object {
-        private val fakes = Fakes()
-
-        @JvmStatic
-        @AfterAll
-        fun afterAll() {
-            fakes.close()
-        }
-    }
-
     @Test
-    fun `statistikk-jobb avgir avsluttet behandling-data korrekt`() {
+    fun `statistikk-jobb avgir avsluttet behandling-data korrekt`(mottatteVilkårsresultat: List<AvsluttetBehandlingDTO>) {
         val (behandling, sak) = InitTestDatabase.dataSource.transaction { connection ->
             val vilkårsResultatRepository = VilkårsresultatRepository(connection = connection)
             val behandlingRepository = BehandlingRepositoryImpl(connection)
@@ -156,8 +147,8 @@ class StatistikkJobbUtførerTest {
 
         // Assert
 
-        assertThat(fakes.mottatteVilkårsResult).isNotEmpty()
-        assertThat(fakes.mottatteVilkårsResult.first().toString()).isEqualTo(
+        assertThat(mottatteVilkårsresultat).isNotEmpty()
+        assertThat(mottatteVilkårsresultat.first().toString()).isEqualTo(
             AvsluttetBehandlingDTO(
                 behandlingsReferanse = behandling.referanse.referanse,
                 saksnummer = sak.saksnummer.toString(),
@@ -194,7 +185,7 @@ class StatistikkJobbUtførerTest {
     }
 
     @Test
-    fun `prosesserings-kall avgir statistikk korrekt`() {
+    fun `prosesserings-kall avgir statistikk korrekt`(hendelser: List<StoppetBehandling>) {
         // Blir ikke kalt i denne metoden, så derfor bare mock
         val vilkårsResultatRepository = mockk<VilkårsresultatRepository>()
         val behandlingRepository = mockk<BehandlingRepository>()
@@ -219,10 +210,10 @@ class StatistikkJobbUtførerTest {
                     type = "xxx",
                     behovType = Definisjon.BehovType.MANUELT_PÅKREVD, løsesISteg = StegType.FATTE_VEDTAK
                 ),
-                status = no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER,
+                status = no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER,
                 endringer = listOf(
                     EndringDTO(
-                        status = no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Status.SENDT_TILBAKE_FRA_BESLUTTER,
+                        status = no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_FRA_BESLUTTER,
                         endretAv = "kanskje_meg"
                     )
                 )
@@ -237,7 +228,9 @@ class StatistikkJobbUtførerTest {
             behandlingType = TypeBehandling.Klage,
             referanse = referanse,
             opprettetTidspunkt = LocalDateTime.now(),
-            avklaringsbehov = avklaringsbehov
+            avklaringsbehov = avklaringsbehov,
+            hendelsesTidspunkt = LocalDateTime.now(),
+            versjon = ApplikasjonsVersjon.versjon
         )
 
         val hendelse = DefaultJsonMapper.toJson(payload)
@@ -249,11 +242,11 @@ class StatistikkJobbUtførerTest {
         )
 
         // Assert
-        assertThat(fakes.statistikkHendelser).isNotEmpty()
-        assertThat(fakes.statistikkHendelser.size).isEqualTo(1)
+        assertThat(hendelser).isNotEmpty()
+        assertThat(hendelser.size).isEqualTo(1)
 
-        assertThat(fakes.statistikkHendelser.first()).isEqualTo(
-            MottaStatistikkDTO(
+        assertThat(hendelser.first()).isEqualTo(
+            StoppetBehandling(
                 saksnummer = "456",
                 behandlingReferanse = referanse.referanse,
                 status = Status.UTREDES.toString(),
@@ -277,7 +270,8 @@ class StatistikkJobbUtførerTest {
                         }
                     )
                 },
-                behandlingOpprettetTidspunkt = payload.opprettetTidspunkt
+                behandlingOpprettetTidspunkt = payload.opprettetTidspunkt,
+                versjon = ApplikasjonsVersjon.versjon
             )
         )
 

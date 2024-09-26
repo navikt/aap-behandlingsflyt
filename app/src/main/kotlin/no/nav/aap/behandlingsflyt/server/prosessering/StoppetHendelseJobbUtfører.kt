@@ -1,8 +1,7 @@
 package no.nav.aap.behandlingsflyt.server.prosessering
 
-import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingFlytStoppetHendelse
-import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.BehandlingsFlytStoppetHendelseDTO
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 import no.nav.aap.motor.Jobb
@@ -19,18 +18,8 @@ class StoppetHendelseJobbUtfører private constructor() : JobbUtfører {
 
         val hendelse = DefaultJsonMapper.fromJson<BehandlingFlytStoppetHendelse>(payload)
 
-        val hendelseTilOppgaveStyring = BehandlingsFlytStoppetHendelseDTO(
-            avklaringsbehov = hendelse.avklaringsbehov,
-            behandlingType = hendelse.behandlingType,
-            opprettetTidspunkt = hendelse.opprettetTidspunkt,
-            referanse = hendelse.referanse,
-            personident = hendelse.personIdent,
-            saksnummer = hendelse.saksnummer,
-            status = hendelse.status,
-        )
-
-        log.info("Varsler hendelse til OppgaveStyring. Saksnummer: ${hendelseTilOppgaveStyring.saksnummer}")
-        OppgavestyringGateway.varsleHendelse(hendelseTilOppgaveStyring)
+        log.info("Varsler hendelse til OppgaveStyring. ${hendelse.saksnummer} :: ${hendelse.referanse.referanse}")
+        OppgavestyringGateway.varsleHendelse(hendelse)
     }
 
     companion object : Jobb {

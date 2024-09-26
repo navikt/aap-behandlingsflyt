@@ -6,8 +6,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.Samordni
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
@@ -46,6 +48,8 @@ class GrunnlagKopierer(connection: DBConnection) {
     private val beregningsgrunnlagRepository = BeregningsgrunnlagRepository(connection)
     private val beregningVurderingRepository = BeregningVurderingRepository(connection)
     private val institusjonsoppholdRepository = InstitusjonsoppholdRepository(connection)
+    private val inntektGrunnlagRepository = InntektGrunnlagRepository(connection)
+    private val bruddAktivitetspliktRepository = BruddAktivitetspliktRepository(connection)
     private val samordningYtelseVurderingRepository = SamordningYtelseVurderingRepository(connection)
     private val samordningRepository = SamordningRepository(connection)
 
@@ -69,6 +73,8 @@ class GrunnlagKopierer(connection: DBConnection) {
         beregningVurderingRepository.kopier(fraBehandlingId, tilBehandlingId)
         beregningsgrunnlagRepository.kopier(fraBehandlingId, tilBehandlingId)
         institusjonsoppholdRepository.kopier(fraBehandlingId, tilBehandlingId)
+        bruddAktivitetspliktRepository.kopier(fraBehandlingId, tilBehandlingId)
+        inntektGrunnlagRepository.kopier(fraBehandlingId, tilBehandlingId)
         samordningYtelseVurderingRepository.kopier(fraBehandlingId, tilBehandlingId)
         samordningRepository.kopier(fraBehandlingId, tilBehandlingId)
     }

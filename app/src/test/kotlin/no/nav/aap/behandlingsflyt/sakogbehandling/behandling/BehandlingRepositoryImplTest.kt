@@ -2,11 +2,12 @@ package no.nav.aap.behandlingsflyt.sakogbehandling.behandling
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FakePdlGateway
 import no.nav.aap.behandlingsflyt.dbtestdata.ident
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.verdityper.sakogbehandling.TypeBehandling
+import no.nav.aap.verdityper.flyt.ÅrsakTilBehandling
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -24,7 +25,7 @@ class BehandlingRepositoryImplTest {
             // Opprett
             repo.opprettBehandling(
                 sakId = sak.id,
-                årsaker = listOf(Årsak(type = EndringType.MOTTATT_SØKNAD)),
+                årsaker = listOf(Årsak(type = ÅrsakTilBehandling.MOTTATT_SØKNAD)),
                 typeBehandling = TypeBehandling.Førstegangsbehandling
             )
         }
@@ -37,7 +38,7 @@ class BehandlingRepositoryImplTest {
 
             assertThat(hententMedReferanse.referanse).isEqualTo(skapt.referanse)
             assertThat(hententMedReferanse.årsaker()).containsExactlyElementsOf(skapt.årsaker())
-            assertThat(hententMedReferanse.årsaker()).containsExactlyElementsOf(listOf(Årsak(type = EndringType.MOTTATT_SØKNAD)))
+            assertThat(hententMedReferanse.årsaker()).containsExactlyElementsOf(listOf(Årsak(type = ÅrsakTilBehandling.MOTTATT_SØKNAD)))
             assertThat(hententMedReferanse.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
         }
     }
@@ -54,7 +55,7 @@ class BehandlingRepositoryImplTest {
             // Opprett
             repo.opprettBehandling(
                 sakId = sak.id,
-                årsaker = listOf(Årsak(type = EndringType.MOTTATT_SØKNAD)),
+                årsaker = listOf(Årsak(type = ÅrsakTilBehandling.MOTTATT_SØKNAD)),
                 typeBehandling = TypeBehandling.Førstegangsbehandling
             )
         }

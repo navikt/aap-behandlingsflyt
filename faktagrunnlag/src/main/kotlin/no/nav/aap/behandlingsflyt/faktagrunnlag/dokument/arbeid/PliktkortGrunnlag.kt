@@ -9,21 +9,21 @@ data class PliktkortGrunnlag(
 ) {
     init {
         require(rekkefølge.size >= pliktkortene.size)
-        require(rekkefølge.all { pliktkortene.any { pk -> it.journalpostId == pk.journalpostId } })
+        require(rekkefølge.all { pliktkortene.any { pk -> it.referanse.asJournalpostId == pk.journalpostId } })
     }
 
     /**
      * Returnerer sortert stigende på innsendingstidspunkt
      */
     fun pliktkort(): List<Pliktkort> {
-        return pliktkortene.sortedWith(compareBy { rekkefølge.first { at -> at.journalpostId == it.journalpostId }.mottattTidspunkt })
+        return pliktkortene.sortedWith(compareBy { rekkefølge.first { at -> at.referanse.asJournalpostId == it.journalpostId }.mottattTidspunkt })
     }
 
     fun innsendingsdatoPerMelding(): Map<LocalDate, JournalpostId> {
         val datoer = HashMap<LocalDate, JournalpostId>()
 
         for (dokumentRekkefølge in rekkefølge) {
-            datoer[dokumentRekkefølge.mottattTidspunkt.toLocalDate()] = dokumentRekkefølge.journalpostId
+            datoer[dokumentRekkefølge.mottattTidspunkt.toLocalDate()] = dokumentRekkefølge.referanse.asJournalpostId
         }
 
         return datoer

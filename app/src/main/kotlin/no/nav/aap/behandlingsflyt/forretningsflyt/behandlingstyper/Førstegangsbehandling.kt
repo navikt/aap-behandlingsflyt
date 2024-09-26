@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.SøknadService
@@ -43,7 +44,10 @@ object Førstegangsbehandling : BehandlingType {
         return BehandlingFlytBuilder()
             .medSteg(steg = StartBehandlingSteg, informasjonskrav = listOf(SøknadService))
             .medSteg(steg = VurderLovvalgSteg)
-            .medSteg(steg = VurderAlderSteg, informasjonskrav = listOf(PersonopplysningService))
+            .medSteg(
+                steg = VurderAlderSteg,
+                informasjonskrav = listOf(PersonopplysningService)
+            )
             .medSteg(steg = VurderStudentSteg)
             // UføreService svarer med mocket respons inntil pesys-integrasjon er fullført:
             // Relevant issue: https://github.com/navikt/pensjon-pen/pull/13138
@@ -57,10 +61,10 @@ object Førstegangsbehandling : BehandlingType {
             .medSteg(steg = FastsettBeregningstidspunktSteg)
             .medSteg(steg = VisGrunnlagSteg)
             .medSteg(steg = FastsettGrunnlagSteg, informasjonskrav = listOf(InntektService))
-            .medSteg(steg = EtAnnetStedSteg, informasjonskrav = listOf(InstitusjonsoppholdService))
-            .medSteg(steg = UnderveisSteg, informasjonskrav = listOf(PliktkortService))
-            .medSteg(steg = SamordningSteg, informasjonskrav = listOf(SamordningYtelseVurderingService))
             .medSteg(steg = BarnetilleggSteg, informasjonskrav = listOf(BarnService))
+            .medSteg(steg = EtAnnetStedSteg, informasjonskrav = listOf(InstitusjonsoppholdService))
+            .medSteg(steg = UnderveisSteg, informasjonskrav = listOf(PliktkortService, BruddAktivitetspliktService))
+            .medSteg(steg = SamordningSteg, informasjonskrav = listOf(SamordningYtelseVurderingService))
             .medSteg(steg = BeregnTilkjentYtelseSteg)
             .medSteg(steg = SimulerUtbetalingSteg)
             .medSteg(steg = ForeslåVedtakSteg) // en-trinn

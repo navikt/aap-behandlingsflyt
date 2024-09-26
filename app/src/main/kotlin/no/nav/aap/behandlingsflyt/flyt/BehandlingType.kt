@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Førstegangsb
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Klage
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Revurdering
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Tilbakekreving
-import no.nav.aap.verdityper.sakogbehandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 
 interface BehandlingType {
     fun flyt(): BehandlingFlyt

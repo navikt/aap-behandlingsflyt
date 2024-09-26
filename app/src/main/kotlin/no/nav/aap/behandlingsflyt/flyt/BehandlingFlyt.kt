@@ -1,11 +1,11 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.EndringType
-import no.nav.aap.verdityper.flyt.StegType
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.verdityper.flyt.ÅrsakTilBehandling
 import java.util.*
 
 
@@ -33,7 +33,7 @@ class BehandlingFlyt private constructor(
         return aktivtSteg?.kravliste ?: emptyList()
     }
 
-    fun faktagrunnlagFremTilOgMedGjeldendeSteg(): List<Informasjonskravkonstruktør> {
+    fun alleFaktagrunnlagFørGjeldendeSteg(): List<Informasjonskravkonstruktør> {
         if (aktivtSteg?.oppdaterFaktagrunnlag != true) {
             return emptyList()
         }
@@ -41,7 +41,6 @@ class BehandlingFlyt private constructor(
         return flyt
             .takeWhile { it != aktivtSteg }
             .flatMap { it.kravliste }
-            .plus(faktagrunnlagForGjeldendeSteg())
     }
 
     fun forberedFlyt(aktivtSteg: StegType): FlytSteg {
@@ -197,13 +196,13 @@ class StegComparator(private var flyt: List<BehandlingFlyt.Behandlingsflytsteg>)
 
 class BehandlingFlytBuilder {
     private val flyt: MutableList<BehandlingFlyt.Behandlingsflytsteg> = mutableListOf()
-    private val endringTilSteg: MutableMap<EndringType, StegType> = mutableMapOf()
+    private val endringTilSteg: MutableMap<ÅrsakTilBehandling, StegType> = mutableMapOf()
     private var oppdaterFaktagrunnlag = true
     private var buildt = false
 
     fun medSteg(
         steg: FlytSteg,
-        vararg endringer: EndringType,
+        kunRelevantVedÅrsakerHvisSattEllersIkke: List<ÅrsakTilBehandling> = emptyList(),
         informasjonskrav: List<Informasjonskravkonstruktør> = emptyList()
     ): BehandlingFlytBuilder {
         if (buildt) {
@@ -213,7 +212,7 @@ class BehandlingFlytBuilder {
             throw IllegalStateException("[Utvikler feil] StegType UDEFINERT er ugyldig å legge til i flyten")
         }
         this.flyt.add(BehandlingFlyt.Behandlingsflytsteg(steg, informasjonskrav, oppdaterFaktagrunnlag))
-        endringer.forEach { endring ->
+        kunRelevantVedÅrsakerHvisSattEllersIkke.forEach { endring ->
             this.endringTilSteg[endring] = steg.type()
         }
         return this

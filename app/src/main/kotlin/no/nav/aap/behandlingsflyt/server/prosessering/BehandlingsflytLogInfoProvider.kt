@@ -8,7 +8,6 @@ import no.nav.aap.motor.mdc.LogInformasjon
 object BehandlingsflytLogInfoProvider : JobbLogInfoProvider {
 
     override fun hentInformasjon(connection: DBConnection, jobbInput: JobbInput): LogInformasjon? {
-
         val behandlingId = jobbInput.behandlingIdOrNull()
         val sakId = jobbInput.sakIdOrNull()
 
@@ -40,7 +39,7 @@ object BehandlingsflytLogInfoProvider : JobbLogInfoProvider {
                     setLong(1, sakId.toLong())
                 }
                 setRowMapper {
-                    LogInformasjon(mapOf())
+                    LogInformasjon(mapOf("saksnummer" to it.getString("saksnummer")))
                 }
             }
         }

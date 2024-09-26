@@ -1,11 +1,13 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.adapter.InstitusjonsoppholdGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.verdityper.flyt.FlytKontekst
+import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGateway as IInstitusjonsoppholdGateway
 
@@ -15,7 +17,7 @@ class InstitusjonsoppholdService private constructor(
     private val institusjonsoppholdRegisterGateway: IInstitusjonsoppholdGateway
 ) : Informasjonskrav {
 
-    override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekst): Boolean {
+    override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val behandlingId = kontekst.behandlingId
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
 
@@ -28,7 +30,7 @@ class InstitusjonsoppholdService private constructor(
 
         institusjonsoppholdRepository.lagreOpphold(behandlingId, institusjonsopphold)
 
-        return erUendret(eksisterendeGrunnlag, hentHvisEksisterer(behandlingId))
+        return if (erUendret(eksisterendeGrunnlag, hentHvisEksisterer(behandlingId))) IKKE_ENDRET else ENDRET
     }
 
     private fun erUendret(
@@ -43,6 +45,9 @@ class InstitusjonsoppholdService private constructor(
     }
 
     companion object : Informasjonskravkonstruktør {
+        override fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
+            return true
+        }
         override fun konstruer(connection: DBConnection): InstitusjonsoppholdService {
             return InstitusjonsoppholdService(
                 SakService(connection),

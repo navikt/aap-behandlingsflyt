@@ -1,7 +1,12 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
-import no.nav.aap.verdityper.flyt.FlytKontekst
+import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
 
 interface Informasjonskrav {
-    fun harIkkeGjortOppdateringNå(kontekst: FlytKontekst): Boolean
+    enum class Endret {
+        ENDRET,
+        IKKE_ENDRET,
+    }
+
+    fun oppdater(kontekst: FlytKontekstMedPerioder): Endret
 }

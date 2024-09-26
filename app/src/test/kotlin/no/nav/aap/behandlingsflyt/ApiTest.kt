@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import kotlinx.coroutines.delay
@@ -20,13 +19,15 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fød
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.medlemskap.flate.MedlemskapGrunnlagDto
 import no.nav.aap.behandlingsflyt.flyt.flate.SøknadSendDto
 import no.nav.aap.behandlingsflyt.flyt.flate.VilkårDTO
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.EndringType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.FinnEllerOpprettSakDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksinfoDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.UtvidetSaksinfoDTO
+import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -41,15 +42,17 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.Client
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.GUnit
-import no.nav.aap.verdityper.flyt.StegType
+import no.nav.aap.verdityper.flyt.ÅrsakTilBehandling
 import no.nav.aap.verdityper.sakogbehandling.Ident
-import no.nav.aap.verdityper.sakogbehandling.TypeBehandling
 import org.assertj.core.api.Assertions.assertThat
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.slf4j.LoggerFactory
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
+import java.io.InputStream
 import java.net.URI
 import java.time.Duration
 import java.time.LocalDate
@@ -58,10 +61,13 @@ import java.time.Year
 import java.time.temporal.ChronoUnit
 import java.util.*
 
+private val logger = LoggerFactory.getLogger("ApiTest")
+
+@Fakes
 class ApiTest {
     companion object {
         private val postgres = postgreSQLContainer()
-        private val fakes = Fakes(azurePort = 8081)
+        private lateinit var port: Number
 
         private val dbConfig = DbConfig(
             host = "sdg",
@@ -72,23 +78,28 @@ class ApiTest {
             password = postgres.password
         )
 
-        private val client = RestClient(
+        private val client: RestClient<InputStream> = RestClient(
             config = ClientConfig(scope = "behandlingsflyt"),
             tokenProvider = ClientCredentialsTokenProvider,
             responseHandler = DefaultResponseHandler()
         )
 
         // Starter server
-        private val server = embeddedServer(Netty, port = 8080) {
+        private val server = embeddedServer(Netty, port = 0) {
             server(dbConfig = dbConfig)
-            module(fakes)
-        }.start()
+        }
+
+        @JvmStatic
+        @BeforeAll
+        fun beforeall() {
+            server.start()
+            port = runBlocking { server.resolvedConnectors().filter { it.type == ConnectorType.HTTP }.first().port }
+        }
 
         @JvmStatic
         @AfterAll
         fun afterAll() {
             server.stop()
-            fakes.close()
             postgres.close()
         }
     }
@@ -105,7 +116,7 @@ class ApiTest {
                 personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
             val behandling = behandlingRepo.opprettBehandling(
                 sak.id,
-                listOf(Årsak(type = EndringType.MOTTATT_SØKNAD)),
+                listOf(Årsak(type = ÅrsakTilBehandling.MOTTATT_SØKNAD)),
                 TypeBehandling.Førstegangsbehandling
             )
             val medlRepo = MedlemskapRepository(connection)
@@ -130,7 +141,7 @@ class ApiTest {
         }
 
         val medlemskapGrunnlag: MedlemskapGrunnlagDto? = client.get(
-            URI.create("http://localhost:8080/")
+            URI.create("http://localhost:$port/")
                 .resolve("api/behandling/${opprettetBehandling.referanse}/grunnlag/medlemskap"),
             GetRequest()
         )
@@ -149,7 +160,7 @@ class ApiTest {
                 personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
             val behandling = behandlingRepo.opprettBehandling(
                 sak.id,
-                listOf(Årsak(type = EndringType.MOTTATT_SØKNAD)),
+                listOf(Årsak(type = ÅrsakTilBehandling.MOTTATT_SØKNAD)),
                 TypeBehandling.Førstegangsbehandling
             )
             val beregningsgrunnlagRepository = BeregningsgrunnlagRepository(connection)
@@ -191,7 +202,7 @@ class ApiTest {
         }
 
         val asJSON: JsonNode? = client.get(
-            URI.create("http://localhost:8080/api/beregning/grunnlag/").resolve(referanse.toString()),
+            URI.create("http://localhost:$port/api/beregning/grunnlag/").resolve(referanse.toString()),
             GetRequest()
         ) { x, _ -> ObjectMapper().readTree(x) }
 
@@ -237,7 +248,7 @@ class ApiTest {
 
     @Test
     fun test() {
-        fakes.leggTil(
+        FakePersoner.leggTil(
             TestPerson(
                 identer = setOf(Ident("12345678910")),
                 fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
@@ -246,7 +257,7 @@ class ApiTest {
         )
 
         val responseSak: SaksinfoDTO? = client.post(
-            URI.create("http://localhost:8080/").resolve("api/sak/finnEllerOpprett"),
+            URI.create("http://localhost:$port/").resolve("api/sak/finnEllerOpprett"),
             PostRequest(
                 body = FinnEllerOpprettSakDTO("12345678910", LocalDate.now())
             )
@@ -255,7 +266,7 @@ class ApiTest {
         requireNotNull(responseSak)
 
         client.post<_, Unit>(
-            URI.create("http://localhost:8080/").resolve("api/soknad/send"),
+            URI.create("http://localhost:$port/").resolve("api/soknad/send"),
             PostRequest(
                 body = SøknadSendDto(responseSak.saksnummer, "123", Søknad(SøknadStudentDto("NEI"), "NEI", null))
             )
@@ -267,7 +278,7 @@ class ApiTest {
         requireNotNull(utvidetSak)
 
         data class EndringDTO(
-            val status: no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Status,
+            val status: Status,
             val tidsstempel: LocalDateTime = LocalDateTime.now(),
             val begrunnelse: String,
             val endretAv: String
@@ -275,31 +286,31 @@ class ApiTest {
 
         data class AvklaringsbehovDTO(
             val definisjon: Any,
-            val status: no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Status,
+            val status: Status,
             val endringer: List<EndringDTO>
         )
 
         data class DetaljertBehandlingDTO(
             val referanse: UUID,
             val type: String,
-            val status: no.nav.aap.verdityper.sakogbehandling.Status,
+            val status: no.nav.aap.behandlingsflyt.kontrakt.behandling.Status,
             val opprettet: LocalDateTime,
             val avklaringsbehov: List<AvklaringsbehovDTO>,
             val vilkår: List<VilkårDTO>,
-            val aktivtSteg: StegType,
+            val aktivtSteg: no.nav.aap.behandlingsflyt.kontrakt.steg.StegType,
             val versjon: Long
         )
 
         val behandling = kallInntilKlar {
             client.get<DetaljertBehandlingDTO>(
-                URI.create("http://localhost:8080/")
+                URI.create("http://localhost:$port/")
                     .resolve("api/behandling/")
                     .resolve(utvidetSak.behandlinger.first().referanse.toString()),
                 GetRequest()
             )
         }
 
-        println(behandling)
+        logger.info("Behandling: $behandling")
     }
 
     private fun <E> kallInntilKlar(block: () -> E): E? {
@@ -327,11 +338,10 @@ class ApiTest {
         responseSak: SaksinfoDTO,
     ): UtvidetSaksinfoDTO? {
         val utvidetSak3: UtvidetSaksinfoDTO? = client.get(
-            URI.create("http://localhost:8080/").resolve("api/sak/").resolve(responseSak.saksnummer),
+            URI.create("http://localhost:$port/").resolve("api/sak/").resolve(responseSak.saksnummer),
             GetRequest()
         )
         if (utvidetSak3?.behandlinger?.isNotEmpty() == true) {
-            println("GOT HERE: $utvidetSak3")
             return utvidetSak3
         }
         return null
@@ -343,14 +353,4 @@ private fun postgreSQLContainer(): PostgreSQLContainer<Nothing> {
     postgres.waitingFor(HostPortWaitStrategy().withStartupTimeout(Duration.of(60L, ChronoUnit.SECONDS)))
     postgres.start()
     return postgres
-}
-
-private fun Application.module(fakes: Fakes) {
-    // Setter opp virtuell sandkasse lokalt
-    environment.monitor.subscribe(ApplicationStopped) { application ->
-        application.environment.log.info("Server har stoppet")
-        fakes.close()
-        // Release resources and unsubscribe from events
-        application.environment.monitor.unsubscribe(ApplicationStopped) {}
-    }
 }

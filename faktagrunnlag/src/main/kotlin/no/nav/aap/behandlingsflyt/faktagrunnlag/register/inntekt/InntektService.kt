@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Input
@@ -13,10 +15,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentGru
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.verdityper.Prosent
-import no.nav.aap.verdityper.flyt.FlytKontekst
+import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
+import no.nav.aap.verdityper.flyt.Vurdering
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import java.time.LocalDate
 
@@ -30,7 +34,7 @@ class InntektService private constructor(
     private val inntektRegisterGateway: InntektRegisterGateway
 ) : Informasjonskrav {
 
-    override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekst): Boolean {
+    override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val behandlingId = kontekst.behandlingId
         val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
 
@@ -62,7 +66,7 @@ class InntektService private constructor(
 
         inntektGrunnlagRepository.lagre(behandlingId, inntekter)
 
-        return eksisterendeGrunnlag?.inntekter == inntekter
+        return if (eksisterendeGrunnlag?.inntekter == inntekter) IKKE_ENDRET else ENDRET
     }
 
     private fun skalInnhenteOpplysninger(vilkårsresultat: Vilkårsresultat): Boolean {
@@ -86,6 +90,15 @@ class InntektService private constructor(
     }
 
     companion object : Informasjonskravkonstruktør {
+        override fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
+            // Skal kun innhente på nytt når det skal beregnes, førstegengasbehandling
+            return kontekst.behandlingType == TypeBehandling.Førstegangsbehandling || skalReberegne(kontekst.perioderTilVurdering)
+        }
+
+        private fun skalReberegne(vurderinger: Set<Vurdering>): Boolean {
+            return false
+        }
+
         override fun konstruer(connection: DBConnection): InntektService {
             return InntektService(
                 SakService(connection),

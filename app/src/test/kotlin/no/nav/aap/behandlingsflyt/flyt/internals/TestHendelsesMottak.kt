@@ -1,25 +1,19 @@
 package no.nav.aap.behandlingsflyt.flyt.internals
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingHendelse
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingHendelseHåndterer
 import no.nav.aap.behandlingsflyt.hendelse.mottak.DokumentMottattSakHendelse
 import no.nav.aap.behandlingsflyt.hendelse.mottak.SakHendelse
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdentGateway
-import no.nav.aap.behandlingsflyt.server.prosessering.BREVKODE
 import no.nav.aap.behandlingsflyt.server.prosessering.HendelseMottattHåndteringOppgaveUtfører
-import no.nav.aap.behandlingsflyt.server.prosessering.JOURNALPOST_ID
-import no.nav.aap.behandlingsflyt.server.prosessering.MOTTATT_TIDSPUNKT
-import no.nav.aap.behandlingsflyt.server.prosessering.PERIODE
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 import no.nav.aap.motor.FlytJobbRepository
-import no.nav.aap.motor.JobbInput
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.Ident
-import java.time.LocalDateTime
 import javax.sql.DataSource
 
 class TestHendelsesMottak(private val dataSource: DataSource) {
@@ -43,14 +37,16 @@ class TestHendelsesMottak(private val dataSource: DataSource) {
 
                 val flytJobbRepository = FlytJobbRepository(connection)
 
+                val referanse = MottattDokumentReferanse(hendelse.journalpost)
+
                 flytJobbRepository.leggTil(
-                    JobbInput(HendelseMottattHåndteringOppgaveUtfører)
-                        .forSak(sak.id.toLong())
-                        .medParameter(JOURNALPOST_ID, hendelse.journalpost.identifikator)
-                        .medParameter(BREVKODE, hendelse.strukturertDokument.brevkode.name)
-                        .medParameter(MOTTATT_TIDSPUNKT, DefaultJsonMapper.toJson(LocalDateTime.now()))
-                        .medParameter(PERIODE, "")
-                        .medPayload(DefaultJsonMapper.toJson(hendelse.strukturertDokument.data!!))
+                    HendelseMottattHåndteringOppgaveUtfører.nyJobb(
+                        sakId = sak.id,
+                        dokumentReferanse = referanse,
+                        brevkode = hendelse.strukturertDokument.brevkode,
+                        periode = null,
+                        payload = hendelse.strukturertDokument.data!!
+                    )
                 )
             }
         }

@@ -1,7 +1,10 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
@@ -10,7 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.OppgittStu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.verdityper.flyt.FlytKontekst
+import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
 
 class SøknadService private constructor(
     private val mottaDokumentService: MottaDokumentService,
@@ -20,6 +23,10 @@ class SøknadService private constructor(
 ) : Informasjonskrav {
 
     companion object : Informasjonskravkonstruktør {
+        override fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
+            // Skal alltid innhentes
+            return true
+        }
         override fun konstruer(connection: DBConnection): SøknadService {
             return SøknadService(
                 MottaDokumentService(
@@ -32,10 +39,10 @@ class SøknadService private constructor(
         }
     }
 
-    override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekst): Boolean {
+    override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val ubehandletSøknader = mottaDokumentService.søknaderSomIkkeHarBlittBehandlet(kontekst.sakId)
         if (ubehandletSøknader.isEmpty()) {
-            return true
+            return IKKE_ENDRET
         }
 
         val behandlingId = kontekst.behandlingId
@@ -49,6 +56,7 @@ class SøknadService private constructor(
                     skalGjenopptaStudieStatus = ubehandletSøknad.skalGjenopptaStudie
                 )
             )
+            //FIXME: Brukes i dev på grunn av manglende integrasjon mot yrkesskaderegisteret i dolly
             if (ubehandletSøknad.harYrkesskade) {
                 YrkesskadeRegisterGateway.puttInnTestPerson(
                     sak.person.aktivIdent(),
@@ -62,10 +70,10 @@ class SøknadService private constructor(
             mottaDokumentService.knyttTilBehandling(
                 sakId = kontekst.sakId,
                 behandlingId = kontekst.behandlingId,
-                journalpostId = ubehandletSøknad.journalpostId
+                referanse = MottattDokumentReferanse(ubehandletSøknad.journalpostId)
             )
         }
 
-        return false // Antar her at alle nye søknader gir en endring vi må ta hensyn til
+        return ENDRET // Antar her at alle nye søknader gir en endring vi må ta hensyn til
     }
 }

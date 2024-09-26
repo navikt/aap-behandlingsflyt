@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak.db
 
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import java.util.*
 
@@ -13,13 +13,13 @@ class PersonRepository(private val connection: DBConnection) {
         require(identer.isNotEmpty())
 
         val relevantePersoner = connection.queryList(
-            """SELECT person.id, person.referanse 
+            """SELECT DISTINCT person.id, person.referanse 
                     FROM person 
                     INNER JOIN person_ident ON person_ident.person_id = person.id 
-                    WHERE person_ident.ident IN (?)"""
+                    WHERE person_ident.ident = ANY(?::text[])"""
         ) {
             setParams {
-                setString(1, identer.joinToString(",") { it.identifikator })
+                setArray(1, identer.map { it.identifikator })
             }
             setRowMapper(::mapPerson)
         }
@@ -36,6 +36,7 @@ class PersonRepository(private val connection: DBConnection) {
     }
 
     fun oppdater(person: Person, identer: List<Ident>) {
+        require(identer.filter { it.aktivIdent }.size < 2)
 
         val oppdaterteIdenter = identer.filterNot { ident -> person.identer().contains(ident) }
 

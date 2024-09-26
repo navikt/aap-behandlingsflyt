@@ -3,13 +3,12 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
-import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.SakId
 import java.time.LocalDateTime
 
 class MottattDokument(
-    val journalpostId: JournalpostId,
+    val referanse: MottattDokumentReferanse,
     val sakId: SakId,
     val behandlingId: BehandlingId?,
     val mottattTidspunkt: LocalDateTime,
@@ -18,6 +17,7 @@ class MottattDokument(
     private val strukturertDokument: StrukturerteData?
 ) {
 
+    @Suppress("UNCHECKED_CAST")
     fun <T> strukturerteData(): StrukturertDokument<out T>? {
         if (strukturertDokument == null) {
             return null
@@ -49,6 +49,7 @@ class MottattDokument(
         return data()
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun data(): String? {
         return if (strukturertDokument is LazyStrukturertDokument) {
             val data = strukturertDokument.hent<Any>()
@@ -64,3 +65,4 @@ class MottattDokument(
         }
     }
 }
+

@@ -4,13 +4,13 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FakePdlGateway
 import no.nav.aap.behandlingsflyt.dbtestdata.ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapResponse
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.EndringType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tidslinje.Segment
+import no.nav.aap.verdityper.flyt.ÅrsakTilBehandling
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -26,7 +26,7 @@ class MedlemskapRepositoryTest {
             )
             val behandling = SakOgBehandlingService(connection).finnEllerOpprettBehandling(
                 sak.saksnummer,
-                listOf(Årsak(EndringType.MOTTATT_SØKNAD))
+                listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
             ).behandling
 
             // ACT

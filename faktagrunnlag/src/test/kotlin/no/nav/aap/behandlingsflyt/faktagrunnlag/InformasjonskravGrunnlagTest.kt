@@ -1,45 +1,33 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
-import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.behandlingsflyt.dbtestdata.ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeService
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.EndringType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
+import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
+import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.verdityper.flyt.FlytKontekst
+import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
+import no.nav.aap.verdityper.flyt.ÅrsakTilBehandling
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
+@Fakes
 class InformasjonskravGrunnlagTest {
 
     companion object {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-        private val fakes = Fakes()
-
-        @BeforeAll
-        @JvmStatic
-        internal fun beforeAll() {
-        }
-
-        @AfterAll
-        @JvmStatic
-        internal fun afterAll() {
-            fakes.close()
-        }
     }
 
     @Test
@@ -48,19 +36,25 @@ class InformasjonskravGrunnlagTest {
             val (ident, kontekst) = klargjør(connection)
             val informasjonskravGrunnlag = InformasjonskravGrunnlag(connection)
 
-            fakes.leggTil(TestPerson(
+            FakePersoner.leggTil(TestPerson(
                 identer = setOf(ident),
                 fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
                 yrkesskade = listOf(TestYrkesskade())
             ))
 
-            val initiell = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(listOf(YrkesskadeService), kontekst)
+            val initiell = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
+                listOf(YrkesskadeService),
+                kontekst
+            )
 
             assertThat(initiell)
                 .hasSize(1)
                 .allMatch { it === YrkesskadeService }
 
-            val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(listOf(YrkesskadeService), kontekst)
+            val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
+                listOf(YrkesskadeService),
+                kontekst
+            )
 
             assertThat(erOppdatert).isEmpty()
         }
@@ -72,13 +66,16 @@ class InformasjonskravGrunnlagTest {
             val (ident, kontekst) = klargjør(connection)
             val informasjonskravGrunnlag = InformasjonskravGrunnlag(connection)
 
-            fakes.leggTil(TestPerson(
+            FakePersoner.leggTil(TestPerson(
                 identer = setOf(ident),
                 fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
                 yrkesskade = listOf(TestYrkesskade())
             ))
 
-            val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(listOf(YrkesskadeService), kontekst)
+            val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
+                listOf(YrkesskadeService),
+                kontekst
+            )
 
             assertThat(erOppdatert)
                 .hasSize(1)
@@ -92,23 +89,27 @@ class InformasjonskravGrunnlagTest {
             val (_, kontekst) = klargjør(connection)
             val informasjonskravGrunnlag = InformasjonskravGrunnlag(connection)
 
-            val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(listOf(YrkesskadeService), kontekst)
+            val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
+                listOf(YrkesskadeService),
+                kontekst
+            )
 
             assertThat(erOppdatert).isEmpty()
         }
     }
 
-    private fun klargjør(connection: DBConnection): Pair<Ident, FlytKontekst> {
+    private fun klargjør(connection: DBConnection): Pair<Ident, FlytKontekstMedPerioder> {
         val ident = ident()
         val sak = PersonOgSakService(connection, FakePdlGateway).finnEllerOpprett(ident, periode)
         val behandling = SakOgBehandlingService(connection).finnEllerOpprettBehandling(
             sak.saksnummer,
-            listOf(Årsak(EndringType.MOTTATT_SØKNAD))
+            listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
         ).behandling
         val personopplysningRepository = PersonopplysningRepository(connection)
         personopplysningRepository.lagre(behandling.id, Personopplysning(Fødselsdato(LocalDate.now().minusYears(20))))
 
-        return ident to behandling.flytKontekst()
+        val flytKontekst = behandling.flytKontekst()
+        return ident to FlytKontekstMedPerioder(flytKontekst.sakId, flytKontekst.behandlingId, behandling.typeBehandling(), emptySet())
     }
 }
 

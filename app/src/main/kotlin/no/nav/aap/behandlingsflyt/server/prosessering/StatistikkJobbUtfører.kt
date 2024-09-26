@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.server.prosessering
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
@@ -8,11 +7,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag1
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.hendelse.avløp.AvklaringsbehovHendelseDto
 import no.nav.aap.behandlingsflyt.hendelse.avløp.AvsluttetBehandlingHendelseDTO
-import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingFlytStoppetHendelse
-import no.nav.aap.behandlingsflyt.hendelse.avløp.EndringDTO
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.EndringDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -31,7 +31,7 @@ import no.nav.aap.statistikk.api_kontrakt.EndringStatus
 import no.nav.aap.statistikk.api_kontrakt.Grunnlag11_19DTO
 import no.nav.aap.statistikk.api_kontrakt.GrunnlagUføreDTO
 import no.nav.aap.statistikk.api_kontrakt.GrunnlagYrkesskadeDTO
-import no.nav.aap.statistikk.api_kontrakt.MottaStatistikkDTO
+import no.nav.aap.statistikk.api_kontrakt.StoppetBehandling
 import no.nav.aap.statistikk.api_kontrakt.TilkjentYtelseDTO
 import no.nav.aap.statistikk.api_kontrakt.TilkjentYtelsePeriodeDTO
 import no.nav.aap.statistikk.api_kontrakt.TypeBehandling
@@ -42,6 +42,7 @@ import no.nav.aap.statistikk.api_kontrakt.VilkårsPeriodeDTO
 import no.nav.aap.statistikk.api_kontrakt.VilkårsResultatDTO
 import no.nav.aap.statistikk.api_kontrakt.Vilkårtype
 import org.slf4j.LoggerFactory
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status as BehandlingStatus
 
 private val log = LoggerFactory.getLogger(StatistikkJobbUtfører::class.java)
 
@@ -80,8 +81,8 @@ class StatistikkJobbUtfører(
         )
     }
 
-    private fun oversettHendelseTilKontrakt(hendelse: BehandlingFlytStoppetHendelse): MottaStatistikkDTO {
-        val statistikkHendelse = MottaStatistikkDTO(
+    private fun oversettHendelseTilKontrakt(hendelse: BehandlingFlytStoppetHendelse): StoppetBehandling {
+        val statistikkHendelse = StoppetBehandling(
             saksnummer = hendelse.saksnummer.toString(),
             behandlingType = typeBehandlingTilStatistikkKontrakt(hendelse.behandlingType),
             status = hendelse.status.toString(),
@@ -106,6 +107,7 @@ class StatistikkJobbUtfører(
             },
             behandlingReferanse = hendelse.referanse.referanse,
             behandlingOpprettetTidspunkt = hendelse.opprettetTidspunkt,
+            versjon = hendelse.versjon
         )
         return statistikkHendelse
     }
@@ -136,12 +138,12 @@ class StatistikkJobbUtfører(
         return BehovType.valueOf(avklaringsbehovHendelseDto.definisjon.behovType.toString())
     }
 
-    private fun typeBehandlingTilStatistikkKontrakt(typeBehandling: no.nav.aap.verdityper.sakogbehandling.TypeBehandling): TypeBehandling =
+    private fun typeBehandlingTilStatistikkKontrakt(typeBehandling: no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling): TypeBehandling =
         when (typeBehandling) {
-            no.nav.aap.verdityper.sakogbehandling.TypeBehandling.Førstegangsbehandling -> TypeBehandling.Førstegangsbehandling
-            no.nav.aap.verdityper.sakogbehandling.TypeBehandling.Revurdering -> TypeBehandling.Revurdering
-            no.nav.aap.verdityper.sakogbehandling.TypeBehandling.Tilbakekreving -> TypeBehandling.Tilbakekreving
-            no.nav.aap.verdityper.sakogbehandling.TypeBehandling.Klage -> TypeBehandling.Klage
+            no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling.Førstegangsbehandling -> TypeBehandling.Førstegangsbehandling
+            no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling.Revurdering -> TypeBehandling.Revurdering
+            no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling.Tilbakekreving -> TypeBehandling.Tilbakekreving
+            no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling.Klage -> TypeBehandling.Klage
         }
 
     /**
@@ -155,6 +157,10 @@ class StatistikkJobbUtfører(
         val vilkårsresultat = vilkårsresultatRepository.hent(hendelse.behandlingId)
         val sak = sakService.hent(behandling.sakId)
 
+        if (behandling.status() != BehandlingStatus.AVSLUTTET) {
+            log.warn("Kjører statistikkjobb for behandling som ikke er avsluttet. Behandling-ref: ${behandling.referanse.referanse}. Sak: ${sak.saksnummer}")
+        }
+
         val tilkjentYtelse = tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)
 
         val tilkjentYtelseDTO = TilkjentYtelseDTO(perioder = tilkjentYtelse?.map {
@@ -166,13 +172,15 @@ class StatistikkJobbUtfører(
             )
         } ?: listOf())
 
-        if (tilkjentYtelseDTO.perioder.isEmpty()) {
+        if (tilkjentYtelse == null) {
             log.info("Ingen tilkjente ytelser knyttet til avsluttet behandling ${behandling.id}.")
         }
 
-        val grunnlag = beregningsgrunnlagRepository.hentHvisEksisterer(hendelse.behandlingId)
+        val grunnlag =
+            beregningsgrunnlagRepository.hentHvisEksisterer(hendelse.behandlingId)
 
-        val beregningsGrunnlagDTO: BeregningsgrunnlagDTO = beregningsgrunnlagDTO(grunnlag)
+        val beregningsGrunnlagDTO: BeregningsgrunnlagDTO? =
+            if (grunnlag == null) null else beregningsgrunnlagDTO(grunnlag)
 
         log.info("Kaller aap-statistikk for sak ${sak.saksnummer}.")
 
@@ -205,7 +213,7 @@ class StatistikkJobbUtfører(
     }
 
     private fun beregningsgrunnlagDTO(
-        grunnlag: Beregningsgrunnlag?
+        grunnlag: Beregningsgrunnlag
     ): BeregningsgrunnlagDTO = when (grunnlag) {
         is Grunnlag11_19 -> BeregningsgrunnlagDTO(
             grunnlag11_19dto = grunnlag1119dto(grunnlag),
@@ -247,8 +255,6 @@ class StatistikkJobbUtfører(
                 inkludererUføre = grunnlag.underliggende() is GrunnlagUføre
             )
         )
-
-        null -> throw RuntimeException("Beregningsgrunnlag kan ikke være null.")
     }
 
     private fun grunnlag1119dto(beregningsgrunnlag: Grunnlag11_19) = Grunnlag11_19DTO(

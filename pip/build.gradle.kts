@@ -1,9 +1,13 @@
 val ktorVersion = "2.3.12"
-val komponenterVersjon = "0.0.63"
-val tilgangVersjon = "0.0.2"
+val komponenterVersjon = "0.0.74"
+val tilgangVersjon = "0.0.11"
+
+plugins {
+    id("behandlingsflyt.conventions")
+}
 
 dependencies {
-    implementation(project(":httpklient"))
+    implementation(project(":integrasjon"))
     implementation(project(":verdityper"))
     implementation(project(":sakogbehandling"))
     implementation(project(":faktagrunnlag"))
@@ -12,7 +16,7 @@ dependencies {
     implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:infrastructure:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:dbconnect:$komponenterVersjon")
-    implementation("no.nav:ktor-openapi-generator:1.0.22")
+    implementation("no.nav:ktor-openapi-generator:1.0.34")
     implementation("io.ktor:ktor-http-jvm:$ktorVersion")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.0")

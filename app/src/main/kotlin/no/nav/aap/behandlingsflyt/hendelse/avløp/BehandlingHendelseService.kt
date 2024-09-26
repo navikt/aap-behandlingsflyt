@@ -1,9 +1,13 @@
 package no.nav.aap.behandlingsflyt.hendelse.avløp
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Status
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.DefinisjonDTO
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.EndringDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.server.prosessering.StatistikkJobbUtfører
 import no.nav.aap.behandlingsflyt.server.prosessering.StatistikkType
@@ -12,6 +16,7 @@ import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 
 private val log = LoggerFactory.getLogger(BehandlingHendelseService::class.java)
 
@@ -42,7 +47,7 @@ class BehandlingHendelseService(
         val hendelse = BehandlingFlytStoppetHendelse(
             personIdent = sak.person.aktivIdent().identifikator,
             saksnummer = sak.saksnummer,
-            referanse = BehandlingReferanse(behandling.referanse.referanse),
+            referanse = behandling.referanse,
             behandlingType = behandling.typeBehandling(),
             status = behandling.status(),
             avklaringsbehov = avklaringsbehovene.alle().map { avklaringsbehov ->
@@ -63,7 +68,9 @@ class BehandlingHendelseService(
                     )
                 })
             },
-            opprettetTidspunkt = behandling.opprettetTidspunkt
+            opprettetTidspunkt = behandling.opprettetTidspunkt,
+            hendelsesTidspunkt = LocalDateTime.now(),
+            versjon = ApplikasjonsVersjon.versjon
         )
 
         val payload = DefaultJsonMapper.toJson(hendelse)

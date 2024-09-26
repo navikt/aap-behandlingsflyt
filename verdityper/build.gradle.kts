@@ -1,6 +1,11 @@
-val komponenterVersjon = "0.0.63"
+val komponenterVersjon = "0.0.74"
+
+plugins {
+    id("behandlingsflyt.conventions")
+}
 
 dependencies {
+    api(project(":kontrakt"))
     implementation("no.nav.aap.kelvin:dbconnect:$komponenterVersjon")
     implementation("com.fasterxml.jackson.core:jackson-annotations:2.17.2")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.0")

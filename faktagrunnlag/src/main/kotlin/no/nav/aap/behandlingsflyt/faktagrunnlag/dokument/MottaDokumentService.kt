@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.InnsendingId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.adapter.UbehandletPliktkort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.pliktkort.Pliktkort
@@ -7,7 +8,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søkna
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.adapter.UbehandletSøknad
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.SakId
 import java.time.LocalDateTime
@@ -17,7 +17,7 @@ class MottaDokumentService(
 ) {
 
     fun mottattDokument(
-        journalpostId: JournalpostId,
+        referanse: MottattDokumentReferanse,
         sakId: SakId,
         mottattTidspunkt: LocalDateTime,
         brevkode: Brevkode,
@@ -25,7 +25,7 @@ class MottaDokumentService(
     ) {
         mottattDokumentRepository.lagre(
             MottattDokument(
-                journalpostId = journalpostId,
+                referanse = referanse,
                 sakId = sakId,
                 mottattTidspunkt = mottattTidspunkt,
                 type = brevkode,
@@ -37,7 +37,7 @@ class MottaDokumentService(
     }
 
     fun mottattDokument(
-        journalpostId: JournalpostId,
+        referanse: MottattDokumentReferanse,
         sakId: SakId,
         mottattTidspunkt: LocalDateTime,
         brevkode: Brevkode,
@@ -45,7 +45,7 @@ class MottaDokumentService(
     ) {
         mottattDokumentRepository.lagre(
             MottattDokument(
-                journalpostId = journalpostId,
+                referanse = referanse,
                 sakId = sakId,
                 mottattTidspunkt = mottattTidspunkt,
                 type = brevkode,
@@ -62,10 +62,18 @@ class MottaDokumentService(
 
         return ubehandledePliktkort.map {
             UbehandletPliktkort(
-                it.journalpostId,
+                it.referanse.asJournalpostId,
                 (it.strukturerteData<Pliktkort>() as StrukturertDokument<Pliktkort>).data.timerArbeidPerPeriode
             )
         }.toSet()
+    }
+
+    fun aktivitetskortSomIkkeErBehandlet(sakId: SakId): Set<InnsendingId> {
+        val ubehandledeAktivitetskort = mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, Brevkode.AKTIVITETSKORT)
+
+        return ubehandledeAktivitetskort
+            .map { it.referanse.asInnsendingId }
+            .toSet()
     }
 
     fun søknaderSomIkkeHarBlittBehandlet(sakId: SakId): Set<UbehandletSøknad> {
@@ -80,7 +88,7 @@ class MottaDokumentService(
 
         val mottattDato = mottattDokument.mottattTidspunkt.toLocalDate()
         return UbehandletSøknad(
-            mottattDokument.journalpostId,
+            mottattDokument.referanse.asJournalpostId,
             Periode(mottattDato, mottattDato),
             søknad.student.erStudent(),
             søknad.student.skalGjennopptaStudie(),
@@ -89,7 +97,7 @@ class MottaDokumentService(
         )
     }
 
-    fun knyttTilBehandling(sakId: SakId, behandlingId: BehandlingId, journalpostId: JournalpostId) {
-        mottattDokumentRepository.oppdaterStatus(journalpostId, behandlingId, sakId, Status.BEHANDLET)
+    fun knyttTilBehandling(sakId: SakId, behandlingId: BehandlingId, referanse: MottattDokumentReferanse) {
+        mottattDokumentRepository.oppdaterStatus(referanse, behandlingId, sakId, Status.BEHANDLET)
     }
 }

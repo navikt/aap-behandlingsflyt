@@ -1,11 +1,14 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.verdityper.flyt.FlytKontekst
+import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
 
 class PliktkortService private constructor(
     private val mottaDokumentService: MottaDokumentService,
@@ -13,6 +16,10 @@ class PliktkortService private constructor(
 ) : Informasjonskrav {
 
     companion object : Informasjonskravkonstruktør {
+        override fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
+            // Skal alltid innhentes
+            return true
+        }
         override fun konstruer(connection: DBConnection): PliktkortService {
             return PliktkortService(
                 MottaDokumentService(
@@ -23,10 +30,10 @@ class PliktkortService private constructor(
         }
     }
 
-    override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekst): Boolean {
+    override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val pliktkortSomIkkeErBehandlet = mottaDokumentService.pliktkortSomIkkeErBehandlet(kontekst.sakId)
         if (pliktkortSomIkkeErBehandlet.isEmpty()) {
-            return true
+            return IKKE_ENDRET
         }
 
         val eksisterendeGrunnlag = pliktkortRepository.hentHvisEksisterer(kontekst.behandlingId)
@@ -41,13 +48,13 @@ class PliktkortService private constructor(
             mottaDokumentService.knyttTilBehandling(
                 sakId = kontekst.sakId,
                 behandlingId = kontekst.behandlingId,
-                journalpostId = ubehandletPliktkort.journalpostId
+                referanse = MottattDokumentReferanse(ubehandletPliktkort.journalpostId)
             )
             allePlussNye.add(nyttPliktkort)
         }
 
         pliktkortRepository.lagre(behandlingId = kontekst.behandlingId, pliktkortene = allePlussNye)
 
-        return false // Antar her at alle nye kort gir en endring vi må ta hensyn til
+        return ENDRET // Antar her at alle nye kort gir en endring vi må ta hensyn til
     }
 }

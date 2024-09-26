@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FakePdlGateway
 import no.nav.aap.behandlingsflyt.dbtestdata.ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.EndringType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -18,6 +17,7 @@ import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.GUnit
 import no.nav.aap.verdityper.Prosent
+import no.nav.aap.verdityper.flyt.ÅrsakTilBehandling
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
@@ -104,7 +104,7 @@ class TilkjentYtelseRepositoryTest {
     private fun behandling(connection: DBConnection, sak: Sak): Behandling {
         return SakOgBehandlingService(connection).finnEllerOpprettBehandling(
             sak.saksnummer,
-            listOf(Årsak(EndringType.MOTTATT_SØKNAD))
+            listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
         ).behandling
     }
 }
