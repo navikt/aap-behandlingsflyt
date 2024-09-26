@@ -13,7 +13,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.Prosent
-import no.nav.aap.verdityper.flyt.FlytKontekst
+import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
 import java.time.LocalDate
 
 class SamordningYtelseVurderingService(
@@ -24,7 +24,7 @@ class SamordningYtelseVurderingService(
     private val sakService = SakService(connection)
     private val samordningYtelseVurderingRepository = SamordningYtelseVurderingRepository(connection)
 
-    override fun harIkkeGjortOppdateringNå(kontekst: FlytKontekst): Boolean {
+    override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
         val personIdent = sak.person.aktivIdent().identifikator
         val foreldrepenger = hentYtelseForeldrepenger(personIdent, sak.rettighetsperiode.fom, sak.rettighetsperiode.tom)
@@ -35,10 +35,10 @@ class SamordningYtelseVurderingService(
 
         if (harEndingerIYtelser(eksisterendeData, samordningYtelser) ) {
             samordningYtelseVurderingRepository.lagreYtelser(kontekst.behandlingId, samordningYtelser)
-            return false
+            return Informasjonskrav.Endret.ENDRET
         }
 
-        return true
+        return Informasjonskrav.Endret.IKKE_ENDRET
     }
 
     private fun hentYtelseForeldrepenger(personIdent: String, fom: LocalDate, tom: LocalDate): ForeldrepengerResponse {
@@ -109,6 +109,10 @@ class SamordningYtelseVurderingService(
     }
 
     companion object : Informasjonskravkonstruktør {
+        override fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
+            return true
+        }
+
         override fun konstruer(connection: DBConnection): SamordningYtelseVurderingService {
             return SamordningYtelseVurderingService(connection)
         }
