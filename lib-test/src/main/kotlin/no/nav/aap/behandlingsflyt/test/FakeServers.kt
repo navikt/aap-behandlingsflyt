@@ -255,7 +255,7 @@ object FakeServers : AutoCloseable {
             }
         }
         routing {
-            post("/motta") {
+            post("/stoppetBehandling") {
                 val receive = call.receive<StoppetBehandling>()
                 statistikkHendelser.add(receive)
                 call.respond(status = HttpStatusCode.Companion.Accepted, message = "{}")

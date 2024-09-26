@@ -26,7 +26,7 @@ class StatistikkGateway(restClient: RestClient<String>? = null) {
 
     fun avgiStatistikk(hendelse: StoppetBehandling) {
         SECURE_LOGGER.info("Avgir statistikk. Payload: $hendelse")
-        restClient.post<_, Unit>(uri = uri.resolve("/motta"), request = PostRequest(body = hendelse), mapper = { body, _ ->
+        restClient.post<_, Unit>(uri = uri.resolve("/stoppetBehandling"), request = PostRequest(body = hendelse), mapper = { body, _ ->
             DefaultJsonMapper.fromJson(body as InputStream)
         })
     }
