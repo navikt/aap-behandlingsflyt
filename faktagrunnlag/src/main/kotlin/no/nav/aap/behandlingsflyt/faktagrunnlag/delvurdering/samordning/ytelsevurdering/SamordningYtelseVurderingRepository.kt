@@ -54,8 +54,8 @@ class SamordningYtelseVurderingRepository (private val connection: DBConnection)
             setRowMapper {
                 SamordningVurderingPeriode(
                     periode = it.getPeriode("periode"),
-                    gradering = Prosent(it.getInt("gradering")),
-                    kronesum = it.getInt("kronesum")
+                    gradering =  it.getIntOrNull("gradering")?.let { g -> Prosent(g) },
+                    kronesum = it.getIntOrNull("kronesum")
                 )
             }
         }
@@ -74,7 +74,7 @@ class SamordningYtelseVurderingRepository (private val connection: DBConnection)
                     ytelseType = it.getString("ytelse_type"),
                     ytelsePerioder = hentSamordningYtelsePerioder(it.getLong("id")),
                     kilde = it.getString("kilde"),
-                    saksRef = it.getString("saks_ref")
+                    saksRef = it.getStringOrNull("saks_ref")
                 )
             }
         }
@@ -91,8 +91,8 @@ class SamordningYtelseVurderingRepository (private val connection: DBConnection)
             setRowMapper {
                 SamordningYtelsePeriode(
                     periode = it.getPeriode("periode"),
-                    gradering = Prosent(it.getInt("gradering")),
-                    kronesum = it.getInt("kronesum")
+                    gradering =  it.getIntOrNull("gradering")?.let { g -> Prosent(g) },
+                    kronesum = it.getIntOrNull("kronesum")
                 )
             }
         }

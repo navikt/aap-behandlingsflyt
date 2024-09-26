@@ -9,7 +9,7 @@ CREATE TABLE SAMORDNING_PERIODE
     ID                                      BIGSERIAL                              NOT NULL PRIMARY KEY,
     PERIODER_ID                             BIGINT                                 NOT NULL REFERENCES SAMORDNING_PERIODER (ID),
     PERIODE                                 DATERANGE                              NOT NULL,
-    GRADERING                               SMALLINT                               NULL,
+    GRADERING                               SMALLINT                               NOT NULL,
     OPPRETTET_TID                           TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 ALTER TABLE SAMORDNING_PERIODE
