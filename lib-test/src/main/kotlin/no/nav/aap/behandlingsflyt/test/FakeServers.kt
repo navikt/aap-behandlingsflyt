@@ -413,10 +413,10 @@ object FakeServers : AutoCloseable {
         val spResponse = """
         {
             "utbetaltePerioder": [
-                { "personidentifikator": "11111111111", "grad": 100, "fom": "2018-01-01", "tom": "2018-01-10", "tags": ["IT1"] },
-                { "personidentifikator": "11111111112", "grad": 70, "fom": "2018-01-11", "tom": "2018-01-20", "tags": ["IT2"] },
-                { "personidentifikator": "11111111113", "grad": 60, "fom": "2018-01-19", "tom": "2018-01-31", "tags": ["S1"] },
-                { "personidentifikator": "11111111114", "grad": 50, "fom": "2018-02-01", "tom": "2018-02-10", "tags": ["S2"] }
+                { "personidentifikator": "11111111111", "grad": 100, "fom": "2018-01-01", "tom": "2018-01-10" },
+                { "personidentifikator": "11111111112", "grad": 70, "fom": "2018-01-11", "tom": "2018-01-20" },
+                { "personidentifikator": "11111111113", "grad": 60, "fom": "2018-01-19", "tom": "2018-01-31" },
+                { "personidentifikator": "11111111114", "grad": 50, "fom": "2018-02-01", "tom": "2018-02-10" }
             ]
         }
         """.trimIndent()
@@ -438,7 +438,7 @@ object FakeServers : AutoCloseable {
             }
         }
         routing {
-            post("/utbetalte-perioder") {
+            post("/utbetalte-perioder-aap") {
                 call.receive<String>()
                 call.respond(spResponse)
             }

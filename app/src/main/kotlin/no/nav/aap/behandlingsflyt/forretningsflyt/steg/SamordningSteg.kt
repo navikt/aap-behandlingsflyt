@@ -37,7 +37,6 @@ class SamordningSteg(
             }
         }
 
-        // Før eller etter? Hva gir mening?
         samordningRepository.lagre(
             kontekst.behandlingId,
             samordningTidslinje.segmenter()
