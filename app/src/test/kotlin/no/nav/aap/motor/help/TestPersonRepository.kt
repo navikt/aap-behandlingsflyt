@@ -14,10 +14,10 @@ class TestPersonRepository(private val connection: DBConnection) {
             """SELECT person.id, person.referanse 
                     FROM person 
                     INNER JOIN person_ident ON person_ident.person_id = person.id 
-                    WHERE person_ident.ident IN (?)"""
+                    WHERE person_ident.ident = ANY(?::text[])"""
         ) {
             setParams {
-                setString(1, identer.joinToString(",") { it.identifikator })
+                setArray(1, identer.map(Ident::identifikator))
             }
             setRowMapper(::mapPerson)
         }

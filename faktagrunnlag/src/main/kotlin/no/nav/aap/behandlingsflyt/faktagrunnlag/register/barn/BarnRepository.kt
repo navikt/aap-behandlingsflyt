@@ -182,7 +182,6 @@ class BarnRepository(private val connection: DBConnection) {
 
     fun hentOppgitteBarnForSaker(saksnumre: List<Saksnummer>): Map<Saksnummer, List<String>> {
         require(saksnumre.isNotEmpty())
-        val placeholders = saksnumre.joinToString(",") { "?" }
         val res = connection.queryList(
             """
             SELECT DISTINCT s.SAKSNUMMER, ob.IDENT
@@ -190,11 +189,11 @@ class BarnRepository(private val connection: DBConnection) {
             INNER JOIN BEHANDLING b ON g.BEHANDLING_ID = b.ID
             INNER JOIN SAK s ON b.SAK_ID = s.ID
             INNER JOIN OPPGITT_BARN ob ON ob.ID = g.OPPGITT_BARN_ID
-            WHERE g.AKTIV AND s.SAKSNUMMER IN ($placeholders)
+            WHERE g.AKTIV AND s.SAKSNUMMER = ANY(?::text[])
         """.trimIndent()
         ) {
             setParams {
-                saksnumre.mapIndexed { index, saksnummer -> setString(index + 1, saksnummer.toString()) }
+                setArray(1, saksnumre.map { it.toString() })
             }
             setRowMapper {
                 Pair(Saksnummer(it.getString("saksnummer")), it.getString("ident"))
@@ -206,7 +205,6 @@ class BarnRepository(private val connection: DBConnection) {
 
     fun hentRegisterBarnForSaker(saksnumre: List<Saksnummer>): Map<Saksnummer, List<String>> {
         require(saksnumre.isNotEmpty())
-        val placeholders = saksnumre.joinToString(",") { "?" }
         val res = connection.queryList(
             """
             SELECT DISTINCT s.SAKSNUMMER, rb.IDENT
@@ -214,11 +212,11 @@ class BarnRepository(private val connection: DBConnection) {
             INNER JOIN BEHANDLING b ON g.BEHANDLING_ID = b.ID
             INNER JOIN SAK s ON b.SAK_ID = s.ID
             INNER JOIN BARNOPPLYSNING rb ON rb.BGB_ID = g.REGISTER_BARN_ID
-            WHERE g.AKTIV AND s.SAKSNUMMER IN ($placeholders)
+            WHERE g.AKTIV AND s.SAKSNUMMER = ANY(?::text[])
         """.trimIndent()
         ) {
             setParams {
-                saksnumre.mapIndexed { index, saksnummer -> setString(index + 1, saksnummer.toString()) }
+                setArray(1, saksnumre.map { it.toString() })
             }
             setRowMapper {
                 Pair(Saksnummer(it.getString("saksnummer")), it.getString("ident"))
