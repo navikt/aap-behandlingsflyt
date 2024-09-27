@@ -35,7 +35,6 @@ import java.net.URI
 import java.time.Duration
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
-import kotlin.time.measureTime
 
 @Fakes
 class PipTest {
@@ -67,7 +66,7 @@ class PipTest {
         @BeforeAll
         fun beforeall() {
             server.start()
-            port = runBlocking { server.resolvedConnectors().filter { it.type == ConnectorType.HTTP }.first().port }
+            port = runBlocking { server.resolvedConnectors().first { it.type == ConnectorType.HTTP }.port }
         }
 
         @JvmStatic
@@ -82,14 +81,15 @@ class PipTest {
     fun `pip test sak`() {
         val dataSource = initDatasource(dbConfig)
 
-        val identer1 = listOf(
-            Ident("ident", true),
-            Ident("gammelident", false),
-            Ident("endaeldreident", false)
-        )
         val saksnummer = dataSource.transaction { connection ->
             val periode = Periode(LocalDate.now(), LocalDate.now())
-            val person = PersonRepository(connection).finnEllerOpprett(identer1)
+            val person = PersonRepository(connection).finnEllerOpprett(
+                listOf(
+                    Ident("ident", true),
+                    Ident("gammelident", false),
+                    Ident("endaeldreident", false)
+                )
+            )
             val sak = SakRepositoryImpl(connection).finnEllerOpprett(person, periode)
             val behandling = BehandlingRepositoryImpl(connection).opprettBehandling(
                 sak.id,
@@ -114,31 +114,11 @@ class PipTest {
             sak.saksnummer
         }
 
-        var pipIdenter: IdenterDTO? = null
-        val times = 1
-
-        var pip2Identer: IdenterDTO? = null
-        val pip2Tid = measureTime {
-            repeat(times) {
-                pip2Identer = client.get(
-                    URI.create("http://localhost:$port/")
-                        .resolve("pip/api2/sak/$saksnummer/identer"),
-                    GetRequest()
-                )
-            }
-        }
-
-        val pipTid = measureTime {
-            repeat(times) {
-                pipIdenter = client.get(
-                    URI.create("http://localhost:$port/")
-                        .resolve("pip/api/sak/$saksnummer/identer"),
-                    GetRequest()
-                )
-            }
-        }
-        println("Piptid: ${pipTid.inWholeMilliseconds}")
-        println("Pip2tid: ${pip2Tid.inWholeMilliseconds}")
+        val pipIdenter: IdenterDTO? = client.get(
+            URI.create("http://localhost:$port/")
+                .resolve("pip/api/sak/$saksnummer/identer"),
+            GetRequest()
+        )
 
         assertThat(pipIdenter).isNotNull
         assertThat(pipIdenter?.søker)
@@ -147,28 +127,21 @@ class PipTest {
         assertThat(pipIdenter?.barn)
             .isNotEmpty
             .contains("regbarn", "oppgittbarn", "vurdertbarn")
-
-        assertThat(pip2Identer).isNotNull
-        assertThat(pip2Identer?.søker)
-            .isNotEmpty
-            .contains("ident", "gammelident", "endaeldreident")
-        assertThat(pip2Identer?.barn)
-            .isNotEmpty
-            .contains("regbarn", "oppgittbarn", "vurdertbarn")
     }
 
     @Test
     fun `pip test behandling`() {
         val dataSource = initDatasource(dbConfig)
 
-        val identer1 = listOf(
-            Ident("ident", true),
-            Ident("gammelident", false),
-            Ident("endaeldreident", false)
-        )
         val behandlingsreferanse = dataSource.transaction { connection ->
             val periode = Periode(LocalDate.now(), LocalDate.now())
-            val person = PersonRepository(connection).finnEllerOpprett(identer1)
+            val person = PersonRepository(connection).finnEllerOpprett(
+                listOf(
+                    Ident("ident", true),
+                    Ident("gammelident", false),
+                    Ident("endaeldreident", false)
+                )
+            )
             val sak = SakRepositoryImpl(connection).finnEllerOpprett(person, periode)
             val behandling = BehandlingRepositoryImpl(connection).opprettBehandling(
                 sak.id,
@@ -213,45 +186,17 @@ class PipTest {
             behandling.referanse.referanse
         }
 
-        var pipIdenter: IdenterDTO? = null
-        val times = 1
-
-        var pip2Identer: IdenterDTO? = null
-        val pip2Tid = measureTime {
-            repeat(times) {
-                pip2Identer = client.get(
-                    URI.create("http://localhost:$port/")
-                        .resolve("pip/api2/behandling/$behandlingsreferanse/identer"),
-                    GetRequest()
-                )
-            }
-        }
-
-        val pipTid = measureTime {
-            repeat(times) {
-                pipIdenter = client.get(
-                    URI.create("http://localhost:$port/")
-                        .resolve("pip/api/behandling/$behandlingsreferanse/identer"),
-                    GetRequest()
-                )
-            }
-        }
-        println("Piptid: ${pipTid.inWholeMilliseconds}")
-        println("Pip2tid: ${pip2Tid.inWholeMilliseconds}")
+        val pipIdenter: IdenterDTO? = client.get(
+            URI.create("http://localhost:$port/")
+                .resolve("pip/api/behandling/$behandlingsreferanse/identer"),
+            GetRequest()
+        )
 
         assertThat(pipIdenter).isNotNull
         assertThat(pipIdenter?.søker)
             .hasSize(3)
             .contains("ident", "gammelident", "endaeldreident")
         assertThat(pipIdenter?.barn)
-            .hasSize(6)
-            .contains("regbarn", "oppgittbarn", "vurdertbarn", "regbar2", "oppgittbar2", "vurdertbar2")
-
-        assertThat(pip2Identer).isNotNull
-        assertThat(pip2Identer?.søker)
-            .hasSize(3)
-            .contains("ident", "gammelident", "endaeldreident")
-        assertThat(pip2Identer?.barn)
             .hasSize(6)
             .contains("regbarn", "oppgittbarn", "vurdertbarn", "regbar2", "oppgittbar2", "vurdertbar2")
     }
