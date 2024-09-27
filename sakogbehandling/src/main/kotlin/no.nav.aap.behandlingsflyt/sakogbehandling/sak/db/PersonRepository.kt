@@ -13,10 +13,10 @@ class PersonRepository(private val connection: DBConnection) {
         require(identer.isNotEmpty())
 
         val relevantePersoner = connection.queryList(
-            """SELECT DISTINCT person.id, person.referanse 
-                    FROM person 
-                    INNER JOIN person_ident ON person_ident.person_id = person.id 
-                    WHERE person_ident.ident = ANY(?::text[])"""
+            """SELECT DISTINCT person.id, person.referanse
+                        FROM person
+                        INNER JOIN person_ident ON person_ident.person_id = person.id
+                        WHERE person_ident.ident = ANY(?::text[])"""
         ) {
             setParams {
                 setArray(1, identer.map { it.identifikator })
@@ -29,7 +29,8 @@ class PersonRepository(private val connection: DBConnection) {
             }
             val person = relevantePersoner.first()
             oppdater(person, identer)
-            person
+            // Henter på nytt etter oppdatering
+            hent(person.id)
         } else {
             opprettPerson(identer)
         }
@@ -88,7 +89,8 @@ class PersonRepository(private val connection: DBConnection) {
             ) {
                 setParams { ident ->
                     setString(1, ident.identifikator)
-                    setLong(2, person.id)
+                    setBoolean(2, ident.aktivIdent)
+                    setLong(3, person.id)
                 }
             }
         }
