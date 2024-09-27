@@ -79,7 +79,7 @@ class PipTest {
     }
 
     @Test
-    fun `pip test`() {
+    fun `pip test sak`() {
         val dataSource = initDatasource(dbConfig)
 
         val identer1 = listOf(
@@ -155,6 +155,105 @@ class PipTest {
         assertThat(pip2Identer?.barn)
             .isNotEmpty
             .contains("regbarn", "oppgittbarn", "vurdertbarn")
+    }
+
+    @Test
+    fun `pip test behandling`() {
+        val dataSource = initDatasource(dbConfig)
+
+        val identer1 = listOf(
+            Ident("ident", true),
+            Ident("gammelident", false),
+            Ident("endaeldreident", false)
+        )
+        val behandlingsreferanse = dataSource.transaction { connection ->
+            val periode = Periode(LocalDate.now(), LocalDate.now())
+            val person = PersonRepository(connection).finnEllerOpprett(identer1)
+            val sak = SakRepositoryImpl(connection).finnEllerOpprett(person, periode)
+            val behandling = BehandlingRepositoryImpl(connection).opprettBehandling(
+                sak.id,
+                listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD, periode)),
+                TypeBehandling.Førstegangsbehandling
+            )
+
+            val barnRepository = BarnRepository(connection)
+
+            barnRepository.lagreRegisterBarn(behandling.id, setOf(Ident("regbarn")))
+            barnRepository.lagreOppgitteBarn(behandling.id, OppgitteBarn(identer = setOf(Ident("oppgittbarn"))))
+            barnRepository.lagreVurderinger(
+                behandling.id,
+                listOf(
+                    VurdertBarn(
+                        Ident("vurdertbarn"),
+                        listOf(VurderingAvForeldreAnsvar(periode, true, "fordi"))
+                    )
+                )
+            )
+
+
+            val periode2 = Periode(LocalDate.now().minusYears(5), LocalDate.now().minusYears(5))
+            val behandling2 = BehandlingRepositoryImpl(connection).opprettBehandling(
+                sak.id,
+                listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD, periode2)),
+                TypeBehandling.Førstegangsbehandling
+            )
+
+            barnRepository.lagreRegisterBarn(behandling2.id, setOf(Ident("regbar2")))
+            barnRepository.lagreOppgitteBarn(behandling2.id, OppgitteBarn(identer = setOf(Ident("oppgittbar2"))))
+            barnRepository.lagreVurderinger(
+                behandling2.id,
+                listOf(
+                    VurdertBarn(
+                        Ident("vurdertbar2"),
+                        listOf(VurderingAvForeldreAnsvar(periode, true, "fordi"))
+                    )
+                )
+            )
+
+            behandling.referanse.referanse
+        }
+
+        var pipIdenter: IdenterDTO? = null
+        val times = 1
+
+        var pip2Identer: IdenterDTO? = null
+        val pip2Tid = measureTime {
+            repeat(times) {
+                pip2Identer = client.get(
+                    URI.create("http://localhost:$port/")
+                        .resolve("pip/api2/behandling/$behandlingsreferanse/identer"),
+                    GetRequest()
+                )
+            }
+        }
+
+        val pipTid = measureTime {
+            repeat(times) {
+                pipIdenter = client.get(
+                    URI.create("http://localhost:$port/")
+                        .resolve("pip/api/behandling/$behandlingsreferanse/identer"),
+                    GetRequest()
+                )
+            }
+        }
+        println("Piptid: ${pipTid.inWholeMilliseconds}")
+        println("Pip2tid: ${pip2Tid.inWholeMilliseconds}")
+
+        assertThat(pipIdenter).isNotNull
+        assertThat(pipIdenter?.søker)
+            .hasSize(3)
+            .contains("ident", "gammelident", "endaeldreident")
+        assertThat(pipIdenter?.barn)
+            .hasSize(6)
+            .contains("regbarn", "oppgittbarn", "vurdertbarn", "regbar2", "oppgittbar2", "vurdertbar2")
+
+        assertThat(pip2Identer).isNotNull
+        assertThat(pip2Identer?.søker)
+            .hasSize(3)
+            .contains("ident", "gammelident", "endaeldreident")
+        assertThat(pip2Identer?.barn)
+            .hasSize(6)
+            .contains("regbarn", "oppgittbarn", "vurdertbarn", "regbar2", "oppgittbar2", "vurdertbar2")
     }
 }
 

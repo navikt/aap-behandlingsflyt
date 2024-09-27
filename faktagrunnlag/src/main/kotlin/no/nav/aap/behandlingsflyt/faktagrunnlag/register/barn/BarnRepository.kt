@@ -33,17 +33,18 @@ class BarnRepository(private val connection: DBConnection) {
         return grunnlag
     }
 
-    fun hentHvisEksisterer(behandlingsreferanse: BehandlingReferanse): BarnGrunnlag? {
-        val grunnlag = connection.queryFirstOrNull(
+    fun hentHvisEksistererForTilgangPip(behandlingsreferanse: BehandlingReferanse): List<BarnGrunnlag> {
+        val grunnlag = connection.queryList(
             """
             SELECT * 
             FROM BARNOPPLYSNING_GRUNNLAG g
             INNER JOIN BEHANDLING b ON g.BEHANDLING_ID = b.ID
-            WHERE g.AKTIV AND b.REFERANSE = ?
+            INNER JOIN BEHANDLING b2 ON b.sak_id = b2.sak_id
+            WHERE g.AKTIV AND b2.REFERANSE = ?
         """.trimIndent()
         ) {
             setParams {
-                setString(1, behandlingsreferanse.toString())
+                setUUID(1, behandlingsreferanse.referanse)
             }
             setRowMapper {
                 BarnGrunnlag(
