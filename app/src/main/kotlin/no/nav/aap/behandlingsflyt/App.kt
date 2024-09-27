@@ -17,7 +17,6 @@ import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.avklaringsbehovApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.fatteVedtakGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.kvalitetssikringApi
@@ -40,6 +39,7 @@ import no.nav.aap.behandlingsflyt.flyt.flate.flytApi
 import no.nav.aap.behandlingsflyt.flyt.flate.søknadApi
 import no.nav.aap.behandlingsflyt.flyt.flate.torsHammerApi
 import no.nav.aap.behandlingsflyt.hendelse.bruddaktivitetsplikt.aktivitetspliktApi
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.server.authenticate.AZURE
 import no.nav.aap.behandlingsflyt.server.exception.FlytOperasjonException
@@ -67,7 +67,7 @@ class App
 
 val SYSTEMBRUKER = Bruker("Kelvin")
 
-private const val ANTALL_WORKERS = 5
+private const val ANTALL_WORKERS = 4
 
 fun main() {
     Thread.currentThread().setUncaughtExceptionHandler { _, e ->
@@ -220,7 +220,7 @@ fun initDatasource(dbConfig: DbConfig) = HikariDataSource(HikariConfig().apply {
     jdbcUrl = dbConfig.url
     username = dbConfig.username
     password = dbConfig.password
-    maximumPoolSize = 10 + ANTALL_WORKERS
+    maximumPoolSize = 10 + (ANTALL_WORKERS * 2)
     minimumIdle = 1
     driverClassName = "org.postgresql.Driver"
     connectionTestQuery = "SELECT 1"
