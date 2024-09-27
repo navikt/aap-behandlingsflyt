@@ -21,7 +21,7 @@ jobs:
             - name: Setup Gradle for a non-wrapper project
               uses: gradle/actions/setup-gradle@v4
               with:
-                  gradle-version: 8.9
+                  gradle-version: wrapper
             - name: Bygg & test
               run: gradle test --continue --no-daemon --configuration-cache --stacktrace --info
             - uses: dorny/test-reporter@v1.9.1
