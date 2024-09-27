@@ -117,7 +117,7 @@ object FakeServers : AutoCloseable {
             }
         }
         routing {
-            post("/behandling") {
+            post("/opprett-oppgave") {
                 call.respond(HttpStatusCode.Companion.NoContent)
             }
         }
