@@ -1,12 +1,14 @@
-package no.nav.aap.behandlingsflyt.behandling.underveis.sykepenger
+package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway
 
 import java.time.LocalDate
+
+//personidentifikatorer er for en liste om vedkommende har hatt flere personidentifikatorerer.
+//Ikke for å slå opp fler personer i samme oppslag. Da blir responsen bare krøll - Team SP
 
 data class SykepengerRequest (
     val personidentifikatorer: Set<String>,
     val fom: LocalDate,
-    val tom: LocalDate,
-    val oppløsning: Set<String> = emptySet()
+    val tom: LocalDate
 )
 
 data class SykepengerResponse(
@@ -14,9 +16,7 @@ data class SykepengerResponse(
 )
 
 data class UtbetaltePerioder(
-    val personidentifikator: String,
     val fom: LocalDate,
     val tom: LocalDate,
     val grad: Number,
-    val tags: Set<String>
 )

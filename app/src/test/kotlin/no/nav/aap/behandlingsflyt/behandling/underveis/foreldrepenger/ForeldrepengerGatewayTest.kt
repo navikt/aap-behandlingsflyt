@@ -1,5 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.foreldrepenger
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Aktør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerRequest
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.type.Periode
 import org.junit.jupiter.api.Test

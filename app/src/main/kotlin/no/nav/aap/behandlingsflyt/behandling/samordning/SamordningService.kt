@@ -1,108 +1,37 @@
 package no.nav.aap.behandlingsflyt.behandling.samordning
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.foreldrepenger.Aktør
-import no.nav.aap.behandlingsflyt.behandling.underveis.foreldrepenger.ForeldrepengerGateway
-import no.nav.aap.behandlingsflyt.behandling.underveis.foreldrepenger.ForeldrepengerRequest
-import no.nav.aap.behandlingsflyt.behandling.underveis.sykepenger.SykepengerGateway
-import no.nav.aap.behandlingsflyt.behandling.underveis.sykepenger.SykepengerRequest
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.tidslinje.Tidslinje
-import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
-import java.time.LocalDate
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 
-/*
-* Informasjonselementer fra ytelsene:
-* Perioder med ytelse
-* utbetalingsgrad per periode
-*
-* -----Tables vi trenger?:------
-* SamordningGrunnlag
-* - bruk underveisGrunnlag table
-* SamordningPerioder
-* - bruk underveisPerioder table
-* SamordningPeriode
-* - id(pk) - gradering (smallint) - perioder_id(fk){samordningsperioder} - periode(daterange)
-*
-* YtelsesGradering
-* - id(pk) - samordningsperiodeId(fk) - ytelse(string/enum) - gradering (smallint)
-*/
+import no.nav.aap.tidslinje.Tidslinje
+import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
 class SamordningService(
-    private val sakService: SakService,
-    private val fpGateway: ForeldrepengerGateway,
-    private val spGateway: SykepengerGateway
-): Informasjonskrav {
+    private val samordningYtelseVurderingRepository: SamordningYtelseVurderingRepository,
+    private val underveisRepository: UnderveisRepository,
+) {
+    fun vurder(behandlingId: BehandlingId): Tidslinje<SamordningGradering> {
+        val samordningYtelseVurderingGrunnlag = samordningYtelseVurderingRepository.hentHvisEksisterer(behandlingId)
 
-    private fun hentYtelseForeldrepenger(personIdent: String, fom: LocalDate, tom: LocalDate): Tidslinje<SamordningGradering> {
-        val fpResponse = fpGateway.hentVedtakYtelseForPerson(
-            ForeldrepengerRequest(
-                Aktør(personIdent),
-                Periode(fom, tom)
-            ))
+        //TODO: Kan benytte denne til å filtrere perioder hvor det ikke er rett på ytelse uansett
+        underveisRepository.hentHvisEksisterer(behandlingId)
 
+        val vurderRegler = vurderRegler(samordningYtelseVurderingGrunnlag)
 
-        /*
-        Todo: Implementer tidslinjer, må avklares
-        return Tidslinje(listOf(Segment(
-
-        )))*/
-
-        return Tidslinje()
+        return vurderRegler
     }
 
-    private fun hentYtelseSykepenger(personIdent: String, fom: LocalDate, tom: LocalDate): Tidslinje<SamordningGradering> {
-        val spResponse =  spGateway.hentYtelseSykepenger(
-            SykepengerRequest(
-                setOf(personIdent),
-                fom,
-                tom
-            )
-        )
-        /*
-        Todo: Implementer tidslinjer, må avklares
-        return Tidslinje(listOf(Segment(
+    fun harGjortVurdering(behandlingId: BehandlingId): Boolean {
+        val samordningYtelseVurderingGrunnlag = samordningYtelseVurderingRepository.hentHvisEksisterer(behandlingId)
 
-        )))*/
-        return Tidslinje()
+        return samordningYtelseVurderingGrunnlag?.vurderingerId != null
+            && samordningYtelseVurderingGrunnlag.vurderinger != null
+            && samordningYtelseVurderingGrunnlag.vurderinger!!.isNotEmpty()
     }
 
-    override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
-        val sak = sakService.hent(kontekst.sakId)
-        val personIdent = sak.person.aktivIdent().identifikator
-
-        val sykepenger = hentYtelseSykepenger(personIdent, sak.rettighetsperiode.fom, sak.rettighetsperiode.tom)
-        val foreldrepenger = hentYtelseForeldrepenger(personIdent, sak.rettighetsperiode.fom, sak.rettighetsperiode.tom)
-
-        //TODO: Implementer repo lookups
-        return ENDRET
-        /*
-        val tidslinje = sykepenger.kombiner(
-            foreldrepenger,
-            JoinStyle.CROSS_JOIN) { periode, venstreSegment, høyreSegment ->
-                val verdi = requireNotNull(venstreSegment).verdi
-                if (høyreSegment != null) {
-                    Segment(periode,)
-                }
-        }*/
-    }
-
-    companion object : Informasjonskravkonstruktør {
-        override fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
-            // Skal alltid innhentes
-            return true
-        }
-
-        override fun konstruer(connection: DBConnection): SamordningService {
-            return SamordningService(
-                SakService(connection),
-                ForeldrepengerGateway(),
-                SykepengerGateway(),
-            )
-        }
+    private fun vurderRegler(samordning: SamordningYtelseVurderingGrunnlag?) : Tidslinje<SamordningGradering> {
+        //TODO: Kombiner til tidslinje her. Kaja skal utarbeide en oversikt over regler, avventer dette
+        return Tidslinje(listOf())
     }
 }

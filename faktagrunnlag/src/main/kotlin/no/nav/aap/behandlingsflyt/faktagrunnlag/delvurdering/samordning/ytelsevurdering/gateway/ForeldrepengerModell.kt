@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.behandling.underveis.foreldrepenger
+package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway
 
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
@@ -14,6 +14,8 @@ data class ForeldrepengerResponse(
 
 data class Ytelse(
     val ytelse: String,
+    val saksnummer: Long,
+    val kildesystem: String,
     val ytelseStatus: String,
     val vedtattTidspunkt: LocalDate,
     val anvist: List<Anvist>
@@ -21,7 +23,8 @@ data class Ytelse(
 
 data class Anvist(
     val periode: Periode,
-    val utbetalingsgrad: Utbetalingsgrad
+    val utbetalingsgrad: Utbetalingsgrad,
+    val beløp: Number?
 )
 
 data class Utbetalingsgrad(

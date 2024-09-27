@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AktivitetRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.EtAnnetStedRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.GraderingArbeidRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.RettTilRegel
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.SamordningRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UnderveisInput
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Vurdering
@@ -33,7 +32,6 @@ class UnderveisService(
         EtAnnetStedRegel(),
         AktivitetRegel(),
         GraderingArbeidRegel(),
-        SamordningRegel(),
         VarighetRegel()
     )
 

@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.behandling.underveis.foreldrepenger
+package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway
 
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig

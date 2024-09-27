@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.behandling.underveis.sykepenger
+package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway
 
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
@@ -10,7 +10,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.Client
 import java.net.URI
 
 class SykepengerGateway {
-    private val url = URI.create(requiredConfigForKey("integrasjon.sykepenger.url") + "/utbetalte-perioder")
+    private val url = URI.create(requiredConfigForKey("integrasjon.sykepenger.url") + "/utbetalte-perioder-aap")
     val config = ClientConfig(scope = requiredConfigForKey("integrasjon.sykepenger.scope"))
 
     private val client = RestClient.withDefaultResponseHandler(
