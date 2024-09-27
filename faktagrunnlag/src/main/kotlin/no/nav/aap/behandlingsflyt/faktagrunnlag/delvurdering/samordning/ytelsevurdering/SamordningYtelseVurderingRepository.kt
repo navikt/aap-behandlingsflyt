@@ -111,7 +111,7 @@ class SamordningYtelseVurderingRepository (private val connection: DBConnection)
 
         for (vurdering in samordningVurderinger) {
             val vurderingQuery = """
-                INSERT INTO SAMORDNING_VURDERING (ytelser_id, ytelse_type) VALUES (?, ?)
+                INSERT INTO SAMORDNING_VURDERING (vurderinger_id, ytelse_type) VALUES (?, ?)
                 """.trimIndent()
             val vurderingId = connection.executeReturnKey(vurderingQuery) {
                 setParams {
@@ -183,15 +183,13 @@ class SamordningYtelseVurderingRepository (private val connection: DBConnection)
             }
         }
 
-        // TODO: Blir det riktig å ta vare på vurderingerId fra forrige entry?
         val grunnlagQuery = """
-            INSERT INTO SAMORDNING_YTELSEVURDERING_GRUNNLAG (behandling_id, ytelser_id, vurderinger_id) VALUES (?, ?, ?)
+            INSERT INTO SAMORDNING_YTELSEVURDERING_GRUNNLAG (behandling_id, ytelser_id) VALUES (?, ?)
         """.trimIndent()
         connection.execute(grunnlagQuery) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, ytelserId)
-                setLong(3, eksisterendeGrunnlag?.vurderingerId)
             }
         }
     }

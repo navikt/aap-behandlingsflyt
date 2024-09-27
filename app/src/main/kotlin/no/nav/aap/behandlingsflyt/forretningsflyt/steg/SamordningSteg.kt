@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
@@ -65,6 +66,7 @@ class SamordningSteg(
             return SamordningSteg(
                 SamordningService(
                     SamordningYtelseVurderingRepository(connection),
+                    UnderveisRepository(connection)
                 ),
                 SamordningRepository(connection),
                 AvklaringsbehovRepositoryImpl(connection)
