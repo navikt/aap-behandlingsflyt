@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat
 
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import org.slf4j.LoggerFactory
 
@@ -104,37 +105,58 @@ class VilkårsresultatRepository(private val connection: DBConnection) {
             SELECT * FROM VILKAR WHERE resultat_id = ?
         """.trimIndent()
 
-        return connection.queryList(query) {
+        val vilkårene = connection.queryList(query) {
             setParams {
                 setLong(1, id)
             }
             setRowMapper(::mapVilkår)
         }
+
+        val perioderQuery = """
+            SELECT * FROM VILKAR_PERIODE WHERE vilkar_id = ANY(?::bigint[])
+        """.trimIndent()
+
+        val periodene = connection.queryList(perioderQuery) {
+            setParams {
+                setArray(1, vilkårene.map { vilkår -> "${vilkår.id}" })
+            }
+            setRowMapper(::mapPerioder)
+        }
+
+        return vilkårene.map { vilkår -> mapOmTilVilkår(vilkår, periodene) }
     }
 
-    private fun mapVilkår(row: Row): Vilkår {
-        val id = row.getLong("id")
-        return Vilkår(
+    private fun mapOmTilVilkår(
+        vilkår: VilårInternal,
+        perioder: List<VilkårPeriodeInternal>
+    ): Vilkår {
+        val relevantePerioder = perioder.filter { periode -> periode.vilkårId == vilkår.id }.map {
+            Vilkårsperiode(
+                periode = it.periode,
+                utfall = it.utfall,
+                manuellVurdering = it.manuellVurdering,
+                faktagrunnlag = LazyFaktaGrunnlag(connection = connection, periodeId = it.id),
+                begrunnelse = it.begrunnelse,
+                avslagsårsak = it.avslagsårsak,
+                innvilgelsesårsak = it.innvilgelsesårsak,
+                versjon = it.versjon
+            )
+        }
+
+        return Vilkår(vilkår.type, relevantePerioder.toSet())
+    }
+
+    private fun mapVilkår(row: Row): VilårInternal {
+        return VilårInternal(
+            id = row.getLong("id"),
             type = row.getEnum("type"),
-            vilkårsperioder = hentPerioder(id)
         )
     }
 
-    private fun hentPerioder(id: Long): Set<Vilkårsperiode> {
-        val query = """
-            SELECT * FROM VILKAR_PERIODE WHERE vilkar_id = ?
-        """.trimIndent()
-
-        return connection.queryList(query) {
-            setParams {
-                setLong(1, id)
-            }
-            setRowMapper(::mapPerioder)
-        }.toSet()
-    }
-
-    private fun mapPerioder(row: Row): Vilkårsperiode {
-        return Vilkårsperiode(
+    private fun mapPerioder(row: Row): VilkårPeriodeInternal {
+        return VilkårPeriodeInternal(
+            id = row.getLong("id"),
+            vilkårId = row.getLong("vilkar_id"),
             periode = row.getPeriode("periode"),
             utfall = row.getEnum("utfall"),
             manuellVurdering = row.getBoolean("manuell_vurdering"),
@@ -150,4 +172,19 @@ class VilkårsresultatRepository(private val connection: DBConnection) {
         val eksisterendeResultat = hent(fraBehandling)
         lagre(tilBehandling, eksisterendeResultat)
     }
+
+    internal class VilårInternal(val id: Long, val type: Vilkårtype)
+
+    internal class VilkårPeriodeInternal(
+        val id: Long,
+        val vilkårId: Long,
+        val periode: Periode,
+        val utfall: Utfall,
+        val manuellVurdering: Boolean = false,
+        val begrunnelse: String?,
+        val innvilgelsesårsak: Innvilgelsesårsak? = null,
+        val avslagsårsak: Avslagsårsak? = null,
+        val faktagrunnlag: Faktagrunnlag?,
+        val versjon: String
+    )
 }
