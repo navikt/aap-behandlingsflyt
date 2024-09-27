@@ -74,12 +74,15 @@ fun main() {
         LoggerFactory.getLogger(App::class.java).error("Uhåndtert feil. Se secureLog for detaljer.")
         SECURE_LOGGER.error("Uhåndtert feil", e)
     }
-    embeddedServer(Netty, port = 8080) { server(DbConfig()) }.start(wait = true)
+    embeddedServer(Netty, port = 8080, configure = {
+        connectionGroupSize = 8
+        workerGroupSize = 8
+        callGroupSize = 16
+    }) { server(DbConfig()) }.start(wait = true)
 }
 
 internal fun Application.server(dbConfig: DbConfig) {
-    DefaultJsonMapper.objectMapper()
-        .registerSubtypes(utledSubtypes())
+    DefaultJsonMapper.objectMapper().registerSubtypes(utledSubtypes())
 
     commonKtorModule(prometheus, AzureConfig(), "AAP - Behandlingsflyt")
 
