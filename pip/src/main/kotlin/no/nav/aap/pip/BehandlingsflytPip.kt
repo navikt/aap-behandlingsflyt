@@ -5,6 +5,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.PipRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
@@ -52,11 +53,48 @@ fun NormalOpenAPIRoute.behandlingsflytPip(dataSource: DataSource) {
             }
         }
     }
+    route("/pip/api2") {
+        route("/sak/{saksnummer}/identer") {
+            authorizedGetWithApprovedList<SakDTO, IdenterDTO>(tilgangAzp) { req ->
+                val saksnummer = req.saksnummer
+                val identer = dataSource.transaction(readOnly = true) { connection ->
+                    val pipRepository = PipRepository(connection)
+                    pipRepository.finnIdenterPåSak(Saksnummer(saksnummer))
+                }
+                respond(
+                    IdenterDTO(
+                        søker = identer.filter { it.opprinnelse == PipRepository.IdentPåSak.Opprinnelse.PERSON }
+                            .map { it.ident },
+                        barn = identer.filter { it.opprinnelse == PipRepository.IdentPåSak.Opprinnelse.BARN }
+                            .map { it.ident }.distinct()
+                    )
+                )
+            }
+        }
+
+        route("/behandling/{behandlingsnummer}/identer") {
+            authorizedGetWithApprovedList<BehandlingDTO, IdenterDTO>(tilgangAzp) { req ->
+                val behandlingsnummer = req.behandlingsnummer
+                val (søker, barn) = dataSource.transaction(readOnly = true) { connection ->
+                    val søker = BehandlingRepositoryImpl(connection).finnSøker(BehandlingReferanse(behandlingsnummer))
+                    val barn =
+                        BarnRepository(connection).hentHvisEksisterer(BehandlingReferanse(behandlingsnummer))
+                    søker to barn
+                }
+                respond(
+                    IdenterDTO(
+                        søker = søker.identer().map { it.identifikator },
+                        barn = barn?.tilUnikeIdentIdentifikatorer() ?: emptyList(),
+                    )
+                )
+            }
+        }
+    }
 }
 
 private fun BarnGrunnlag.tilUnikeIdentIdentifikatorer(): List<String> {
     val oppgitteBarnIds = oppgitteBarn?.identer?.map { it.identifikator } ?: emptyList()
     val registerBarnIds = registerbarn?.identer?.map { it.identifikator } ?: emptyList()
-    return (oppgitteBarnIds + registerBarnIds).toSet().toList()
+    val vurderteBarnIds = vurderteBarn?.barn?.map { it.ident.identifikator } ?: emptyList()
+    return (oppgitteBarnIds + registerBarnIds + vurderteBarnIds).toSet().toList()
 }
-
