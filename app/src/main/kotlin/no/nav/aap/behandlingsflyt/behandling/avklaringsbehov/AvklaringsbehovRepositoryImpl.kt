@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.ÅrsakTilReturKode
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
@@ -165,11 +166,13 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
     }
 
     override fun hent(behandlingId: BehandlingId): List<Avklaringsbehov> {
-        val query = """
-            SELECT * FROM AVKLARINGSBEHOV WHERE behandling_id = ?
+        val avklaringsbehovQuery = """
+            SELECT * 
+            FROM AVKLARINGSBEHOV ab
+            WHERE behandling_id = ?
             """.trimIndent()
 
-        return connection.queryList(query) {
+        val avklaringsbehovInternal = connection.queryList(avklaringsbehovQuery) {
             setParams {
                 setLong(1, behandlingId.toLong())
             }
@@ -177,67 +180,125 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
                 mapAvklaringsbehov(it)
             }
         }
-    }
 
-    private fun mapAvklaringsbehov(row: Row): Avklaringsbehov {
-        val definisjon = Definisjon.Companion.forKode(row.getString("definisjon"))
-        val id = row.getLong("id")
-        return Avklaringsbehov(
-            id = id,
-            definisjon = definisjon,
-            funnetISteg = row.getEnum("funnet_i_steg"),
-            kreverToTrinn = row.getBooleanOrNull("krever_to_trinn"),
-            historikk = hentEndringer(id).toMutableList()
-        )
-    }
-
-    private fun hentEndringer(avklaringsbehovId: Long): List<Endring> {
-        val query = """
+        val endringerQuery = """
             SELECT * FROM AVKLARINGSBEHOV_ENDRING 
-            WHERE avklaringsbehov_id = ? 
-            ORDER BY opprettet_tid ASC
+            WHERE avklaringsbehov_id = ANY(?::bigint[])
             """.trimIndent()
-
-        return connection.queryList(query) {
+        val endringerInternal = connection.queryList(endringerQuery) {
             setParams {
-                setLong(1, avklaringsbehovId)
+                setArray(1, avklaringsbehovInternal.map { "${it.id}" })
             }
             setRowMapper {
                 mapEndringer(it)
             }
         }
-    }
 
-    private fun mapEndringer(row: Row): Endring {
-        return Endring(
-            status = row.getEnum("status"),
-            tidsstempel = row.getLocalDateTime("opprettet_tid"),
-            begrunnelse = row.getString("begrunnelse"),
-            endretAv = row.getString("opprettet_av"),
-            frist = row.getLocalDateOrNull("frist"),
-            årsakTilRetur = hentÅrsaker(row.getLong("id")),
-            grunn = row.getEnumOrNull("venteaarsak")
-        )
-    }
-
-    private fun hentÅrsaker(endringId: Long): List<ÅrsakTilRetur> {
-        val query = """
+        val årsakerQuery = """
             SELECT * FROM AVKLARINGSBEHOV_ENDRING_AARSAK 
-            WHERE endring_id = ? 
-            ORDER BY opprettet_tid ASC
-            """.trimIndent()
+            WHERE endring_id = ANY(?::bigint[])
+        """.trimIndent()
 
-        return connection.queryList(query) {
+        val årsakerInternal = connection.queryList(årsakerQuery) {
             setParams {
-                setLong(1, endringId)
+                setArray(1, endringerInternal.map { "${it.id}" })
             }
             setRowMapper {
                 mapÅrsaker(it)
             }
         }
+
+        return avklaringsbehovInternal.map { mapTilAvklaringsBehov(it, endringerInternal, årsakerInternal) }
     }
 
-    private fun mapÅrsaker(row: Row): ÅrsakTilRetur {
-        return ÅrsakTilRetur(row.getEnum("aarsak_til_retur"), row.getStringOrNull("aarsak_til_retur_fritekst"))
+    private fun mapTilAvklaringsBehov(
+        avklaringsbehov: AvklaringsbehovInternal,
+        endringer: List<EndringInternal>,
+        årsaker: List<ÅrsakInternal>
+    ): Avklaringsbehov {
+
+        val relevanteEndringer = endringer.filter { it.avklaringsbehovId == avklaringsbehov.id }
+            .map { endring -> mapEndring(endring, årsaker) }
+            .sorted()
+            .toMutableList()
+
+        return Avklaringsbehov(
+            id = avklaringsbehov.id,
+            definisjon = avklaringsbehov.definisjon,
+            historikk = relevanteEndringer,
+            funnetISteg = avklaringsbehov.funnetISteg,
+            kreverToTrinn = avklaringsbehov.kreverToTrinn
+        )
     }
+
+    private fun mapEndring(
+        endring: EndringInternal,
+        årsaker: List<ÅrsakInternal>
+    ): Endring {
+        val relevanteÅrsaker = årsaker.filter { it.endringId == endring.id }
+            .map { årsak -> ÅrsakTilRetur(årsak = årsak.årsak, årsakFritekst = årsak.årsakFritekst) }
+
+        return Endring(
+            status = endring.status,
+            tidsstempel = endring.tidsstempel,
+            begrunnelse = endring.begrunnelse,
+            grunn = endring.grunn,
+            frist = endring.frist,
+            endretAv = endring.endretAv,
+            årsakTilRetur = relevanteÅrsaker
+        )
+    }
+
+    private fun mapAvklaringsbehov(row: Row): AvklaringsbehovInternal {
+        val definisjon = Definisjon.Companion.forKode(row.getString("definisjon"))
+        val id = row.getLong("id")
+        return AvklaringsbehovInternal(
+            id = id,
+            definisjon = definisjon,
+            funnetISteg = row.getEnum("funnet_i_steg"),
+            kreverToTrinn = row.getBooleanOrNull("krever_to_trinn"),
+        )
+    }
+
+
+    private fun mapEndringer(row: Row): EndringInternal {
+        return EndringInternal(
+            id = row.getLong("id"),
+            avklaringsbehovId = row.getLong("avklaringsbehov_id"),
+            status = row.getEnum("status"),
+            tidsstempel = row.getLocalDateTime("opprettet_tid"),
+            begrunnelse = row.getString("begrunnelse"),
+            endretAv = row.getString("opprettet_av"),
+            frist = row.getLocalDateOrNull("frist"),
+            grunn = row.getEnumOrNull("venteaarsak")
+        )
+    }
+
+    private fun mapÅrsaker(row: Row): ÅrsakInternal {
+        return ÅrsakInternal(
+            årsak = row.getEnum("aarsak_til_retur"),
+            endringId = row.getLong("endring_id"),
+            årsakFritekst = row.getStringOrNull("aarsak_til_retur_fritekst")
+        )
+    }
+
+    internal class AvklaringsbehovInternal(
+        val id: Long,
+        val definisjon: Definisjon,
+        val funnetISteg: StegType,
+        val kreverToTrinn: Boolean?
+    )
+
+    internal class EndringInternal(
+        val id: Long,
+        val avklaringsbehovId: Long,
+        val status: Status,
+        val tidsstempel: LocalDateTime,
+        val begrunnelse: String,
+        val endretAv: String,
+        val frist: LocalDate?,
+        val grunn: ÅrsakTilSettPåVent?
+    )
+
+    internal class ÅrsakInternal(val endringId: Long, val årsak: ÅrsakTilReturKode, val årsakFritekst: String?)
 }
