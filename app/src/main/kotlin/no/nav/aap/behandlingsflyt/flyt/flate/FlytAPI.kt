@@ -89,6 +89,8 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
                         flyt, aktivtSteg
                     )
                     val vurdertStegPair = utledVurdertGruppe(prosessering, aktivtSteg, flyt, avklaringsbehovene)
+                    val vilkårsresultat = vilkårResultat(connection, behandling.id)
+                    val alleAvklaringsbehov = alleAvklaringsbehovInkludertFrivillige.alle()
                     BehandlingFlytOgTilstandDto(
                         flyt = stegGrupper.map { (gruppe, steg) ->
                             erFullført = erFullført && gruppe != aktivtSteg.gruppe
@@ -99,7 +101,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
                                 steg = steg.map { stegType ->
                                     FlytSteg(
                                         stegType = stegType,
-                                        avklaringsbehov = alleAvklaringsbehovInkludertFrivillige.alle()
+                                        avklaringsbehov = alleAvklaringsbehov
                                             .filter { avklaringsbehov -> avklaringsbehov.skalLøsesISteg(stegType) }
                                             .map { behov ->
                                                 AvklaringsbehovDTO(
@@ -109,7 +111,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
                                                 )
                                             },
                                         vilkårDTO = hentUtRelevantVilkårForSteg(
-                                            vilkårsresultat = vilkårResultat(connection, behandling.id),
+                                            vilkårsresultat = vilkårsresultat,
                                             stegType = stegType
                                         )
                                     )
