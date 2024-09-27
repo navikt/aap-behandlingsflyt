@@ -12,21 +12,6 @@ class PersonRepository(private val connection: DBConnection) {
     fun finnEllerOpprett(identer: List<Ident>): Person {
         require(identer.isNotEmpty())
 
-        val relevantePersoner = hentRelevantePersoner(identer)
-        return if (relevantePersoner.isNotEmpty()) {
-            if (relevantePersoner.size > 1) {
-                throw IllegalStateException("Har flere personer knyttet til denne identen")
-            }
-            val person = relevantePersoner.first()
-            oppdater(person, identer)
-            // Henter på nytt etter oppdatering
-            hentRelevantePersoner(identer).first()
-        } else {
-            opprettPerson(identer)
-        }
-    }
-
-    private fun hentRelevantePersoner(identer: List<Ident>): List<Person> {
         val relevantePersoner = connection.queryList(
             """SELECT DISTINCT person.id, person.referanse
                         FROM person
@@ -38,7 +23,17 @@ class PersonRepository(private val connection: DBConnection) {
             }
             setRowMapper(::mapPerson)
         }
-        return relevantePersoner
+        return if (relevantePersoner.isNotEmpty()) {
+            if (relevantePersoner.size > 1) {
+                throw IllegalStateException("Har flere personer knyttet til denne identen")
+            }
+            val person = relevantePersoner.first()
+            oppdater(person, identer)
+            // Henter på nytt etter oppdatering
+            hent(person.id)
+        } else {
+            opprettPerson(identer)
+        }
     }
 
     fun oppdater(person: Person, identer: List<Ident>) {
