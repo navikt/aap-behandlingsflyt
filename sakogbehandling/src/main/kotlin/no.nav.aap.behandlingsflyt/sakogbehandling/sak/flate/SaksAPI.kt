@@ -161,7 +161,10 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
             }
 
             route("/{saksnummer}/personinformasjon") {
-                get<HentSakDTO, SakPersoninfoDTO> { req ->
+                authorizedGet<HentSakDTO, SakPersoninfoDTO>(
+                    Operasjon.SE,
+                    Ressurs("saksnummer", RessursType.Sak)
+                ) { req ->
 
                     val saksnummer = req.saksnummer
 
