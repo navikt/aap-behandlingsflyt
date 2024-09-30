@@ -45,7 +45,7 @@ class EtAnnetStedUtlederService(connection: DBConnection) {
         }
 
 
-        return BehovForAvklaringer(input.harUavklartSoningsforhold(), klarForAvklaringer.isNotEmpty())
+        return BehovForAvklaringer(input.harUavklartSoningsforhold(), harIkkeBarnetillegg.isNotEmpty())
     }
 
     private fun konstruerInput(behandlingId: BehandlingId): EtAnnetStedInput {
