@@ -10,9 +10,22 @@ import java.util.SortedSet
 class Inntektsbehov(private val input: Input) {
 
     fun utledAlleRelevanteÅr(): Set<Year> {
-        return input.datoerForInnhenting()
+        return datoerForInnhenting()
             .flatMap(::treÅrForutFor)
             .toSortedSet()
+    }
+
+    private fun datoerForInnhenting(): Set<LocalDate> {
+        val ytterligereNedsattArbeidsevneDato = input.beregningVurdering?.ytterligereNedsattArbeidsevneDato
+        if (ytterligereNedsattArbeidsevneDato == null) {
+            return setOf(input.nedsettelsesDato)
+        }
+
+        return setOf(
+            input.nedsettelsesDato,
+            ytterligereNedsattArbeidsevneDato,
+            input.yrkesskadevurdering?.skadetidspunkt
+        ).filterNotNull().toSet()
     }
 
     fun hentYtterligereNedsattArbeidsevneDato(): LocalDate? {

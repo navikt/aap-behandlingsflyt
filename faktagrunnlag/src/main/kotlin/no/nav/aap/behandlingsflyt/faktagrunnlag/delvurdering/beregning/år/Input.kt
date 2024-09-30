@@ -19,14 +19,4 @@ data class Input(
     val uføregrad: Prosent?,
     val yrkesskadevurdering: Yrkesskadevurdering?,
     val beregningVurdering: BeregningVurdering?
-) {
-
-    fun datoerForInnhenting(): Set<LocalDate> {
-        val ytterligereNedsattArbeidsevneDato = beregningVurdering?.ytterligereNedsattArbeidsevneDato
-        if (ytterligereNedsattArbeidsevneDato == null) {
-            return setOf(nedsettelsesDato)
-        }
-
-        return setOf(nedsettelsesDato, ytterligereNedsattArbeidsevneDato)
-    }
-}
+)
