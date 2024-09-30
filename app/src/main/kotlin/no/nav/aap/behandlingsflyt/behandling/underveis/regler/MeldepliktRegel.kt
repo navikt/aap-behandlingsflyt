@@ -20,7 +20,7 @@ import java.util.*
  *   - Aktivitet
  *   - etc
  */
-class AktivitetRegel : UnderveisRegel {
+class MeldepliktRegel : UnderveisRegel {
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
 
         val nyttresultat = håndterMeldeplikt(resultat, input)

@@ -12,8 +12,8 @@ import java.time.LocalDate
 import java.time.Period
 
 
-class AktivitetRegelTest {
-    private val regel = AktivitetRegel()
+class MeldepliktRegelTest {
+    private val regel = MeldepliktRegel()
     private val kvote = Kvote(Period.ofYears(3))
 
     @Test
