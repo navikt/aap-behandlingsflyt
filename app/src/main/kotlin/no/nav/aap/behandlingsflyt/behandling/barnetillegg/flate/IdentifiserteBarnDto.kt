@@ -4,4 +4,4 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fød
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.sakogbehandling.Ident
 
-class IdentifiserteBarnDto(val ident: Ident, val forsorgerPeriode: Periode, val fødselsdato: Fødselsdato)
+class IdentifiserteBarnDto(val ident: Ident, val forsorgerPeriode: Periode, val fødselsdato: String)
