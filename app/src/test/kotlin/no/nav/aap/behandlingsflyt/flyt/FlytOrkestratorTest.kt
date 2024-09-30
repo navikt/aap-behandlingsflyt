@@ -17,6 +17,9 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVe
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.dbtestdata.ident
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
@@ -83,9 +86,9 @@ private val log = LoggerFactory.getLogger(FlytOrkestratorTest::class.java)
 class FlytOrkestratorTest {
 
     companion object {
-        val dataSource = InitTestDatabase.dataSource
+        private val dataSource = InitTestDatabase.dataSource
         private val motor = Motor(dataSource, 2, jobber = ProsesseringsJobber.alle())
-        val hendelsesMottak = TestHendelsesMottak(dataSource)
+        private val hendelsesMottak = TestHendelsesMottak(dataSource)
 
         @BeforeAll
         @JvmStatic
@@ -402,55 +405,6 @@ class FlytOrkestratorTest {
     }
 
     @Test
-    fun `starter statistikk-jobb etter endt steg`(hendelser: List<StoppetBehandling>) {
-        val ident = ident()
-        val fom = LocalDate.now().minusMonths(3)
-        val periode = Periode(fom, fom.plusYears(3))
-
-        FakePersoner.leggTil(
-            TestPerson(
-                identer = setOf(ident),
-                fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
-                yrkesskade = emptyList(),
-                inntekter = listOf(
-                    InntektPerÅr(
-                        Year.now().minusYears(1),
-                        Beløp(1000000)
-                    ),
-                    InntektPerÅr(
-                        Year.now().minusYears(2),
-                        Beløp(1000000)
-                    ),
-                    InntektPerÅr(
-                        Year.now().minusYears(3),
-                        Beløp(1000000)
-                    )
-                )
-            )
-        )
-
-
-        // Sender inn en søknad
-        hendelsesMottak.håndtere(
-            ident, DokumentMottattPersonHendelse(
-                journalpost = JournalpostId("20"),
-                mottattTidspunkt = LocalDateTime.now().minusMonths(3),
-                strukturertDokument = StrukturertDokument(
-                    Søknad(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null),
-                    Brevkode.SØKNAD
-                ),
-                periode = periode
-            )
-        )
-        ventPåSvar()
-        val sak = hentSak(ident, periode)
-
-        assertThat(hendelser.first { it.saksnummer == sak.saksnummer.toString() }.saksnummer).isEqualTo(
-            sak.saksnummer.toString()
-        )
-    }
-
-    @Test
     fun `skal avklare yrkesskade hvis det finnes spor av yrkesskade - yrkesskade har årsakssammenheng`() {
         val ident = ident()
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
@@ -563,9 +517,9 @@ class FlytOrkestratorTest {
                 LøsAvklaringsbehovBehandlingHendelse(
                     løsning = FastsettBeregningstidspunktLøsning(
                         beregningVurdering = BeregningVurdering(
-                            begrunnelse = "Trenger hjelp fra nav",
+                            begrunnelse = "Trenger hjelp fra Nav",
                             ytterligereNedsattArbeidsevneDato = null,
-                            antattÅrligInntekt = null
+                            antattÅrligInntekt = Beløp(700_000)
                         ),
                     ),
                     behandlingVersjon = behandling.versjon,
@@ -635,6 +589,62 @@ class FlytOrkestratorTest {
         assertThat(sykdomsvilkåret.vilkårsperioder())
             .hasSize(1)
             .allMatch { vilkårsperiode -> vilkårsperiode.erOppfylt() }
+
+        // Verifiser at beregningsgrunnlaget er av type yrkesskade
+        dataSource.transaction {
+            assertThat(BeregningsgrunnlagRepository(it).hentHvisEksisterer(behandling.id)?.javaClass).isEqualTo(
+                GrunnlagYrkesskade::class.java
+            )
+        }
+    }
+
+    @Test
+    fun `starter statistikk-jobb etter endt steg`(hendelser: List<StoppetBehandling>) {
+        val ident = ident()
+        val fom = LocalDate.now().minusMonths(3)
+        val periode = Periode(fom, fom.plusYears(3))
+
+        FakePersoner.leggTil(
+            TestPerson(
+                identer = setOf(ident),
+                fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
+                yrkesskade = emptyList(),
+                inntekter = listOf(
+                    InntektPerÅr(
+                        Year.now().minusYears(1),
+                        Beløp(1000000)
+                    ),
+                    InntektPerÅr(
+                        Year.now().minusYears(2),
+                        Beløp(1000000)
+                    ),
+                    InntektPerÅr(
+                        Year.now().minusYears(3),
+                        Beløp(1000000)
+                    )
+                )
+            )
+        )
+
+
+        // Sender inn en søknad
+        hendelsesMottak.håndtere(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("20"),
+                mottattTidspunkt = LocalDateTime.now().minusMonths(3),
+                strukturertDokument = StrukturertDokument(
+                    Søknad(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null),
+                    Brevkode.SØKNAD
+                ),
+                periode = periode
+            )
+        )
+        ventPåSvar()
+        val sak = hentSak(ident, periode)
+
+        assertThat(hendelser.first { it.saksnummer == sak.saksnummer.toString() }.saksnummer).isEqualTo(
+            sak.saksnummer.toString()
+        )
     }
 
     @Test

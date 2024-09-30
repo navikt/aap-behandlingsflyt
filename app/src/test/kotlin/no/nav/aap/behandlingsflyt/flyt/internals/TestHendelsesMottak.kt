@@ -19,14 +19,12 @@ import javax.sql.DataSource
 class TestHendelsesMottak(private val dataSource: DataSource) {
 
     fun håndtere(key: Ident, hendelse: PersonHendelse) {
-        val saksnummer: Saksnummer? = dataSource.transaction { connection ->
+        val saksnummer: Saksnummer = dataSource.transaction { connection ->
             val sak = PersonOgSakService(connection, PdlIdentGateway).finnEllerOpprett(key, hendelse.periode())
             sak.saksnummer
         }
         // Legg til kø for sak, men mocker ved å kalle videre bare
-        if (saksnummer != null) {
-            håndtere(saksnummer, hendelse.tilSakshendelse())
-        }
+        håndtere(saksnummer, hendelse.tilSakshendelse())
     }
 
     private fun håndtere(key: Saksnummer, hendelse: SakHendelse) {

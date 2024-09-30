@@ -24,6 +24,7 @@ class Underveisperiode(
         return periode.compareTo(other.periode)
     }
 
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -31,6 +32,7 @@ class Underveisperiode(
         other as Underveisperiode
 
         if (periode != other.periode) return false
+        if (meldePeriode != other.meldePeriode) return false
         if (utfall != other.utfall) return false
         if (avslagsårsak != other.avslagsårsak) return false
         if (grenseverdi != other.grenseverdi) return false
@@ -41,10 +43,11 @@ class Underveisperiode(
 
     override fun hashCode(): Int {
         var result = periode.hashCode()
+        result = 31 * result + (meldePeriode?.hashCode() ?: 0)
         result = 31 * result + utfall.hashCode()
         result = 31 * result + (avslagsårsak?.hashCode() ?: 0)
         result = 31 * result + grenseverdi.hashCode()
-        result = 31 * result + gradering.hashCode()
+        result = 31 * result + (gradering?.hashCode() ?: 0)
         return result
     }
 

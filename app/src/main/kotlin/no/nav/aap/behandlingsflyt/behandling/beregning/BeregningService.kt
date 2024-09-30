@@ -35,12 +35,12 @@ class BeregningService(
         val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
 
         val input = utledInput(
-            sykdomGrunnlag?.sykdomsvurdering,
-            student?.studentvurdering,
-            sykdomGrunnlag?.yrkesskadevurdering,
-            beregningVurdering,
-            inntektGrunnlag.inntekter,
-            uføre?.vurdering?.uføregrad
+            sykdomsvurdering = sykdomGrunnlag?.sykdomsvurdering,
+            studentVurdering = student?.studentvurdering,
+            yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
+            vurdering = beregningVurdering,
+            inntekter = inntektGrunnlag.inntekter,
+            uføregrad = uføre?.vurdering?.uføregrad
         )
 
         val beregning = Beregning(input)

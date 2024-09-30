@@ -28,7 +28,7 @@ class GrunnlagetForBeregningen(
     }
 
     /**
-     * Beregn grunnlaget etter §11-19. Implementering av https://lovdata.no/lov/1997-02-28-19/§11-19
+     * Beregn grunnlaget etter [§11-19](https://lovdata.no/lov/1997-02-28-19/§11-19).
      */
     fun beregnGrunnlaget(): Grunnlag11_19 {
         val beregnetInntekter = beregnInntekter()

@@ -14,7 +14,7 @@ class Beregning(
         val grunnlag11_19 = beregn11_19Grunnlag(input.utledForOrdinær())
 
         val beregningMedEllerUtenUføre = if (input.finnesUføreData()) {
-            val ikkeOppjusterteInntekter = input.utledForYtterligereNedsatt()
+            val inntekterFørYtterligereNedsattDato = input.utledForYtterligereNedsatt()
 
             val uføreberegning = UføreBeregning(
                 grunnlag = grunnlag11_19,
@@ -22,7 +22,7 @@ class Beregning(
                 // Hva hvis bruker har flere uføregrader?
                 // Skal saksbahandler velge den som er knyttet til ytterligere nedsatt-tidspunktet?
                 uføregrad = input.uføregrad(),
-                inntekterForegåendeÅr = ikkeOppjusterteInntekter
+                inntekterForegåendeÅr = inntekterFørYtterligereNedsattDato
             )
             val ytterligereNedsattArbeidsevneDato = input.hentYtterligereNedsattArbeidsevneDato()
             requireNotNull(ytterligereNedsattArbeidsevneDato)
@@ -33,7 +33,7 @@ class Beregning(
             grunnlag11_19
         }
 
-        // §11-22
+        // §11-22 Arbeidsavklaringspenger ved yrkesskade
         val beregningMedEllerUtenUføreMedEllerUtenYrkesskade =
             if (input.yrkesskadeVurderingEksisterer()) {
                 val inntektPerÅr = InntektPerÅr(
