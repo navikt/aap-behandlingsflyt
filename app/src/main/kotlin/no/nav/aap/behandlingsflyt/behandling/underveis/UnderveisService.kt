@@ -1,9 +1,10 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AktivitetRegel
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.EtAnnetStedRegel
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.InstitusjonRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.GraderingArbeidRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.RettTilRegel
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.SoningRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UnderveisInput
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Vurdering
@@ -29,10 +30,11 @@ class UnderveisService(
 
     private val regelset = listOf(
         RettTilRegel(),
-        EtAnnetStedRegel(),
+        InstitusjonRegel(),
         AktivitetRegel(),
         GraderingArbeidRegel(),
-        VarighetRegel()
+        VarighetRegel(),
+        SoningRegel()
     )
 
     fun vurder(behandlingId: BehandlingId): Tidslinje<Vurdering> {
@@ -79,6 +81,7 @@ class UnderveisService(
         val pliktkort = pliktkortGrunnlag?.pliktkort() ?: listOf()
         val innsendingsTidspunkt = pliktkortGrunnlag?.innsendingsdatoPerMelding() ?: mapOf()
         val kvote = kvoteService.beregn(behandlingId)
+        //val annetStedGrunnlag = etAnnetStedRepository().hentHvisEksisterer(behandlingId) //TODO: Vent / Implementer denne
 
         val bruddAktivitetsplikt = bruddAktivitetspliktRepository.hentGrunnlagHvisEksisterer(behandlingId)
             ?.bruddene
@@ -92,6 +95,7 @@ class UnderveisService(
             innsendingsTidspunkt = innsendingsTidspunkt,
             kvote = kvote,
             bruddAktivitetsplikt = bruddAktivitetsplikt,
+            etAnnetSted = listOf()
         )
     }
 }

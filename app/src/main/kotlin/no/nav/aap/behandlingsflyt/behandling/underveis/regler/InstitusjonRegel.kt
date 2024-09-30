@@ -3,16 +3,17 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 import no.nav.aap.tidslinje.Tidslinje
 
 /**
- * Legger på perioder hvor bruker ikke har rett fordi hen er et annet sted
- *
- * - Utland
- * - Institusjon
- * - Straffegjennomføring
- *
+ * - Hva med Utland?
  */
-class EtAnnetStedRegel : UnderveisRegel {
+class InstitusjonRegel : UnderveisRegel {
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
         // TODO
+
+        /*
+            erpåinstitusjon (50% reduksjon)
+                forsørgerEktefelle (INGEN REDUKSJON )
+                HAR DU BARNETILLEG FJERNES ALLE REDUKSJONER PÅ DENNE
+        * */
         return resultat
     }
 }
