@@ -9,6 +9,7 @@ import java.time.format.DateTimeFormatter
 
 data class Fritaksvurdering(
     val harFritak: Boolean,
+    val fraDato: LocalDate,
     val periode: Periode?,
     val begrunnelse: String,
     val opprettetTid: LocalDateTime
@@ -22,7 +23,7 @@ data class Fritaksvurdering(
     }
 
     constructor(harFritak: Boolean, fraDato: String, begrunnelse: String, opprettetTid: LocalDateTime): this(
-        harFritak, Periode(localDate(fraDato), Tid.MAKS), begrunnelse, opprettetTid
+        harFritak, localDate(fraDato), Periode(localDate(fraDato), Tid.MAKS), begrunnelse, opprettetTid
     )
 
     fun toDto(): FritakMeldepliktVurderingDto {
