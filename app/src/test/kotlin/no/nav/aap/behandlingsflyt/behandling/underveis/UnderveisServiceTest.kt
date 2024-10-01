@@ -94,6 +94,7 @@ class UnderveisServiceTest {
                 innsendingsTidspunkt = mapOf(),
                 kvote = kvote,
                 bruddAktivitetsplikt = setOf(),
+                etAnnetSted = listOf(),
             )
 
             val vurderingTidslinje = underveisService.vurderRegler(input)
