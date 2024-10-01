@@ -9,7 +9,7 @@ import java.time.format.DateTimeFormatter
 
 data class Fritaksvurdering(
     val harFritak: Boolean,
-    val fraDato: LocalDate,
+    val opprinneligFraDato: LocalDate,
     val periode: Periode?,
     val begrunnelse: String,
     val opprettetTid: LocalDateTime
