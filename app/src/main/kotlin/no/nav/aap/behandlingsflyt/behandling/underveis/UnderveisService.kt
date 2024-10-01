@@ -1,8 +1,9 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AktivitetRegel
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.InstitusjonRegel
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.BruddAktivitetspliktRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.GraderingArbeidRegel
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.InstitusjonRegel
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.RettTilRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.SoningRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UnderveisInput
@@ -33,7 +34,8 @@ class UnderveisService(
     private val regelset = listOf(
         RettTilRegel(),
         InstitusjonRegel(),
-        AktivitetRegel(),
+        MeldepliktRegel(),
+        BruddAktivitetspliktRegel(),
         GraderingArbeidRegel(),
         VarighetRegel(),
         SoningRegel()

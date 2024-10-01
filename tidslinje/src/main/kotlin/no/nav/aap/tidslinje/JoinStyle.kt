@@ -8,7 +8,7 @@ interface JoinStyle<VENSTRE, HØYRE, RETUR> {
     /**
      * Ene eller andre har verdi.
      */
-    class CROSS_JOIN<VENSTRE, HØYRE, RETUR>(
+    class OUTER_JOIN<VENSTRE, HØYRE, RETUR>(
         private val kombinerer: (Periode, Segment<VENSTRE>?, Segment<HØYRE>?) -> Segment<RETUR>?
     ) : JoinStyle<VENSTRE, HØYRE, RETUR> {
         override fun kombiner(periode: Periode, venstre: Segment<VENSTRE>?, høyre: Segment<HØYRE>?): Segment<RETUR>? {

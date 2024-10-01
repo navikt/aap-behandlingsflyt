@@ -66,7 +66,7 @@ class BarnetilleggService(
         for (barn in vurderteBarn) {
             resultat = resultat.kombiner(
                 Tidslinje(barn.vurderinger.map { Segment(it.periode, it.harForeldreAnsvar) }),
-                JoinStyle.CROSS_JOIN { periode, venstreSegment, høyreSegment ->
+                JoinStyle.OUTER_JOIN { periode, venstreSegment, høyreSegment ->
                     val høyreVerdi = høyreSegment?.verdi
                     val nyVenstreVerdi = venstreSegment?.verdi ?: RettTilBarnetillegg()
                     if (høyreVerdi != null) {
@@ -112,7 +112,7 @@ class BarnetilleggService(
         }.forEach { segment ->
             tidslinje = tidslinje.kombiner(
                 Tidslinje(listOf(segment)),
-                JoinStyle.CROSS_JOIN { periode, venstreSegment, høyreSegment ->
+                JoinStyle.OUTER_JOIN { periode, venstreSegment, høyreSegment ->
                     val verdi: MutableSet<Ident> = venstreSegment?.verdi ?: mutableSetOf()
                     if (høyreSegment?.verdi != null) {
                         verdi.add(høyreSegment.verdi)

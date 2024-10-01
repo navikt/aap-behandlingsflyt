@@ -12,7 +12,7 @@ data class BruddAktivitetspliktId(internal val id: Long)
 data class InnsendingId(@JsonValue val value: UUID) {
     val asString get() = value.toString()
 
-    constructor(value: String): this(UUID.fromString(value))
+    constructor(value: String) : this(UUID.fromString(value))
 
     companion object {
         fun ny() = InnsendingId(UUID.randomUUID())
@@ -27,7 +27,7 @@ data class HendelseId(val id: UUID) {
     }
 }
 
-/** Representerer fakta om ett enkelt brudd for én periode. */
+/** Representerer fakta om ett enkelt brudd (§§ 11-7 til 11-9) for én periode. */
 data class BruddAktivitetsplikt(
     /** Intern id brukt i databasen. Skal ikke deles utenfor appen. */
     val id: BruddAktivitetspliktId,
@@ -60,5 +60,28 @@ enum class AktivitetType {
     IKKE_MØTT_TIL_TILTAK,
     IKKE_MØTT_TIL_ANNEN_AKTIVITET,
     IKKE_SENDT_INN_DOKUMENTASJON,
-    IKKE_AKTIVT_BIDRAG
+    IKKE_AKTIVT_BIDRAG;
+
+    companion object {
+        private val kanStanses_11_8 = listOf(
+            IKKE_MØTT_TIL_BEHANDLING,
+            IKKE_MØTT_TIL_TILTAK,
+            IKKE_MØTT_TIL_ANNEN_AKTIVITET,
+        )
+
+        private val kanReduseres_11_9 = listOf(
+            IKKE_MØTT_TIL_MØTE,
+            IKKE_MØTT_TIL_BEHANDLING,
+            IKKE_MØTT_TIL_TILTAK,
+            IKKE_MØTT_TIL_ANNEN_AKTIVITET,
+            IKKE_SENDT_INN_DOKUMENTASJON,
+        )
+    }
+
+    val kanStanses_11_8: Boolean
+        get() = this in AktivitetType.kanStanses_11_8
+
+    val kanReduseres_11_9: Boolean
+        get() = this in AktivitetType.kanReduseres_11_9
+
 }

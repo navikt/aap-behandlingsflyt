@@ -12,8 +12,8 @@ import java.time.LocalDate
 import java.time.Period
 
 
-class AktivitetRegelTest {
-    private val regel = AktivitetRegel()
+class MeldepliktRegelTest {
+    private val regel = MeldepliktRegel()
     private val kvote = Kvote(Period.ofYears(3))
 
     @Test
@@ -32,6 +32,7 @@ class AktivitetRegelTest {
             ),
             kvote = kvote,
             bruddAktivitetsplikt = setOf(),
+            etAnnetSted = listOf(),
         )
 
         val vurdertTidslinje = regel.vurder(input, Tidslinje())
@@ -51,6 +52,7 @@ class AktivitetRegelTest {
             innsendingsTidspunkt = mapOf(),
             kvote = kvote,
             bruddAktivitetsplikt = setOf(),
+            etAnnetSted = listOf(),
         )
 
         val vurdertTidslinje = regel.vurder(input, Tidslinje())
@@ -73,6 +75,7 @@ class AktivitetRegelTest {
             ),
             kvote = kvote,
             bruddAktivitetsplikt = setOf(),
+            etAnnetSted = listOf(),
         )
 
         val vurdertTidslinje = regel.vurder(input, Tidslinje())
@@ -99,6 +102,7 @@ class AktivitetRegelTest {
             ),
             kvote = kvote,
             bruddAktivitetsplikt = setOf(),
+            etAnnetSted = listOf(),
         )
 
         val vurdertTidslinje = regel.vurder(input, Tidslinje())

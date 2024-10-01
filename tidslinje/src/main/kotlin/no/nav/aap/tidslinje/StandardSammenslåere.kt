@@ -4,8 +4,8 @@ import no.nav.aap.verdityper.Beløp
 import java.math.BigDecimal
 
 object StandardSammenslåere {
-    fun summerer(): JoinStyle.CROSS_JOIN<Beløp, Beløp, Beløp> {
-        return JoinStyle.CROSS_JOIN { periode, venstreSegment, høyreSegment ->
+    fun summerer(): JoinStyle.OUTER_JOIN<Beløp, Beløp, Beløp> {
+        return JoinStyle.OUTER_JOIN { periode, venstreSegment, høyreSegment ->
             val høyreVerdi = høyreSegment?.verdi ?: Beløp(BigDecimal.ZERO)
             val venstreVerdi = venstreSegment?.verdi ?: Beløp(BigDecimal.ZERO)
 
@@ -19,18 +19,18 @@ object StandardSammenslåere {
         }
     }
 
-    fun <T> prioriterHøyreSideCrossJoin(): JoinStyle.CROSS_JOIN<T, T, T> {
-        return JoinStyle.CROSS_JOIN { periode, venstre, høyre ->
-            if (høyre != null) return@CROSS_JOIN Segment(periode, høyre.verdi)
-            if (venstre == null) return@CROSS_JOIN null
+    fun <T> prioriterHøyreSideCrossJoin(): JoinStyle.OUTER_JOIN<T, T, T> {
+        return JoinStyle.OUTER_JOIN { periode, venstre, høyre ->
+            if (høyre != null) return@OUTER_JOIN Segment(periode, høyre.verdi)
+            if (venstre == null) return@OUTER_JOIN null
             Segment(periode, venstre.verdi)
         }
     }
 
-    fun <T> prioriterVenstreSideCrossJoin(): JoinStyle.CROSS_JOIN<T, T, T> {
-        return JoinStyle.CROSS_JOIN { periode, venstreSegment, høyreSegment ->
-            if (venstreSegment != null) return@CROSS_JOIN Segment(periode, venstreSegment.verdi)
-            if (høyreSegment == null) return@CROSS_JOIN null
+    fun <T> prioriterVenstreSideCrossJoin(): JoinStyle.OUTER_JOIN<T, T, T> {
+        return JoinStyle.OUTER_JOIN { periode, venstreSegment, høyreSegment ->
+            if (venstreSegment != null) return@OUTER_JOIN Segment(periode, venstreSegment.verdi)
+            if (høyreSegment == null) return@OUTER_JOIN null
             Segment(periode, høyreSegment.verdi)
         }
     }

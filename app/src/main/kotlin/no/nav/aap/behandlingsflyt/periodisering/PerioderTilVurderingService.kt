@@ -41,7 +41,7 @@ class PerioderTilVurderingService(connection: DBConnection) {
         årsaker.map { årsak -> utledVurdering(årsak, sak.rettighetsperiode) }.map { Tidslinje(it.periode,
             VurderingValue(it.type, it.årsaker)) }
             .forEach { segment ->
-                tidslinje = tidslinje.kombiner(segment, JoinStyle.CROSS_JOIN { periode, venstreSegment, høyreSegment ->
+                tidslinje = tidslinje.kombiner(segment, JoinStyle.OUTER_JOIN { periode, venstreSegment, høyreSegment ->
                     val venstreVerdi = venstreSegment?.verdi
                     val høyreVerdi = høyreSegment?.verdi
 

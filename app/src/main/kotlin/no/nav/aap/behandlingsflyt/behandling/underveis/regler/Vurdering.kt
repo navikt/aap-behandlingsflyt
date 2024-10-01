@@ -8,9 +8,10 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.Prosent
 import java.util.*
 
-class Vurdering(
+data class Vurdering(
     private val vurderinger: EnumMap<Vilkårtype, Utfall> = EnumMap(Vilkårtype::class.java),
     private val meldepliktVurdering: MeldepliktVurdering? = null,
+    private val bruddVurderingEndelig: BruddAktivitetspliktRegel.BruddVurderingEndelig? = null,
     private val gradering: Gradering? = null,
     private val grenseverdi: Prosent? = null
 ) {
@@ -18,39 +19,23 @@ class Vurdering(
     fun leggTilVurdering(vilkårtype: Vilkårtype, utfall: Utfall): Vurdering {
         val kopi = EnumMap(vurderinger)
         kopi[vilkårtype] = utfall
-        return Vurdering(
-            vurderinger = kopi,
-            meldepliktVurdering = meldepliktVurdering,
-            gradering = gradering,
-            grenseverdi = grenseverdi
-        )
+        return copy(vurderinger = kopi)
     }
 
     fun leggTilGradering(gradering: Gradering): Vurdering {
-        return Vurdering(
-            vurderinger = this.vurderinger,
-            meldepliktVurdering = meldepliktVurdering,
-            gradering = gradering,
-            grenseverdi = this.grenseverdi
-        )
+        return copy(gradering = gradering)
     }
 
     fun leggTilMeldepliktVurdering(meldepliktVurdering: MeldepliktVurdering): Vurdering {
-        return Vurdering(
-            vurderinger = vurderinger,
-            meldepliktVurdering = meldepliktVurdering,
-            gradering = gradering,
-            grenseverdi = grenseverdi
-        )
+        return copy(meldepliktVurdering = meldepliktVurdering)
+    }
+
+    fun leggTilBruddAktivitetspliktVurdering(bruddVurderingEndelig: BruddAktivitetspliktRegel.BruddVurderingEndelig): Vurdering {
+        return copy(bruddVurderingEndelig = bruddVurderingEndelig)
     }
 
     fun leggTilGrenseverdi(grenseverdi: Prosent): Vurdering {
-        return Vurdering(
-            vurderinger = this.vurderinger,
-            meldepliktVurdering = meldepliktVurdering,
-            gradering = this.gradering,
-            grenseverdi = grenseverdi
-        )
+        return copy(grenseverdi = grenseverdi)
     }
 
     fun vurderinger(): Map<Vilkårtype, Utfall> {

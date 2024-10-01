@@ -79,6 +79,7 @@ class RettTilRegelTest {
             innsendingsTidspunkt = mapOf(),
             kvote = kvote,
             bruddAktivitetsplikt = setOf(),
+            etAnnetSted = listOf(),
         )
         val grunnleggendeRettTidslinje = regel.vurder(input = input, Tidslinje())
 
@@ -159,6 +160,7 @@ class RettTilRegelTest {
             innsendingsTidspunkt = mapOf(),
             kvote = kvote,
             bruddAktivitetsplikt = setOf(),
+            etAnnetSted = listOf(),
         )
         val grunnleggendeRettTidslinje = regel.vurder(input = input, Tidslinje())
 
