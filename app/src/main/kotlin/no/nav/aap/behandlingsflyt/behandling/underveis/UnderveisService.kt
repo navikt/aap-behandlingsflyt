@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UnderveisInput
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Vurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
@@ -23,7 +24,8 @@ class UnderveisService(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val pliktkortRepository: PliktkortRepository,
     private val underveisRepository: UnderveisRepository,
-    private val bruddAktivitetspliktRepository: BruddAktivitetspliktRepository
+    private val bruddAktivitetspliktRepository: BruddAktivitetspliktRepository,
+    private val barnetilleggRepository: BarnetilleggRepository
 ) {
 
     private val kvoteService = KvoteService()
@@ -82,6 +84,7 @@ class UnderveisService(
         val innsendingsTidspunkt = pliktkortGrunnlag?.innsendingsdatoPerMelding() ?: mapOf()
         val kvote = kvoteService.beregn(behandlingId)
         //val annetStedGrunnlag = etAnnetStedRepository().hentHvisEksisterer(behandlingId) //TODO: Vent / Implementer denne
+        val barnetilleggGrunnlag = barnetilleggRepository.hentHvisEksisterer(behandlingId)
 
         val bruddAktivitetsplikt = bruddAktivitetspliktRepository.hentGrunnlagHvisEksisterer(behandlingId)
             ?.bruddene
@@ -95,7 +98,8 @@ class UnderveisService(
             innsendingsTidspunkt = innsendingsTidspunkt,
             kvote = kvote,
             bruddAktivitetsplikt = bruddAktivitetsplikt,
-            etAnnetSted = listOf()
+            etAnnetSted = listOf(),
+            barnetillegg = barnetilleggGrunnlag
         )
     }
 }

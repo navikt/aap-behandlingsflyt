@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetSted
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvote
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Pliktkort
@@ -18,5 +19,6 @@ data class UnderveisInput(
     val dødsdato: LocalDate? = null,
     val kvote: Kvote,
     val bruddAktivitetsplikt: Set<BruddAktivitetsplikt>,
-    val etAnnetSted: List<EtAnnetSted>
+    val etAnnetSted: List<EtAnnetSted>,
+    val barnetillegg: BarnetilleggGrunnlag?
 )
