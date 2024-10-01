@@ -44,7 +44,7 @@ class AktivitetRegel : UnderveisRegel {
 
             val tidslinje = Tidslinje(listOf(meldeperiode)).kombiner(
                 dokumentTidslinje,
-                JoinStyle.CROSS_JOIN { periode, venstreSegment, høyreSegment ->
+                JoinStyle.OUTER_JOIN { periode, venstreSegment, høyreSegment ->
                     val verdi = requireNotNull(venstreSegment).verdi
                     if (høyreSegment != null) {
                         Segment(periode, MeldepliktVurdering(høyreSegment.verdi, verdi.meldeperiode, Utfall.OPPFYLT))
@@ -54,7 +54,7 @@ class AktivitetRegel : UnderveisRegel {
                 })
 
             nyttresultat =
-                nyttresultat.kombiner(tidslinje, JoinStyle.CROSS_JOIN { periode, venstreSegment, høyreSegment ->
+                nyttresultat.kombiner(tidslinje, JoinStyle.OUTER_JOIN { periode, venstreSegment, høyreSegment ->
                     var verdi = venstreSegment?.verdi ?: Vurdering()
                     if (høyreSegment != null) {
                         verdi = verdi.leggTilMeldepliktVurdering(høyreSegment.verdi)

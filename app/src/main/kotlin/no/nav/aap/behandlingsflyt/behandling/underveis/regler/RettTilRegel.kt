@@ -26,7 +26,7 @@ class RettTilRegel : UnderveisRegel {
             val segmenter = vilkår.vilkårsperioder()
                 .map { Segment(it.periode, EnkelVurdering(vilkår.type, it.utfall)) }
 
-            retur.kombiner(Tidslinje(segmenter), JoinStyle.CROSS_JOIN { periode, venstre, høyre ->
+            retur.kombiner(Tidslinje(segmenter), JoinStyle.OUTER_JOIN { periode, venstre, høyre ->
                 SlåSammenVurderingerSammenslåer().sammenslå(periode, venstre, høyre)
             })
         }
