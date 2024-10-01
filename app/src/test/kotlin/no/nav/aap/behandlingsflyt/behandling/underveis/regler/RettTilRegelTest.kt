@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvote
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
@@ -80,6 +81,7 @@ class RettTilRegelTest {
             kvote = kvote,
             bruddAktivitetsplikt = setOf(),
             etAnnetSted = listOf(),
+            barnetillegg = BarnetilleggGrunnlag(1, listOf())
         )
         val grunnleggendeRettTidslinje = regel.vurder(input = input, Tidslinje())
 
@@ -161,6 +163,7 @@ class RettTilRegelTest {
             kvote = kvote,
             bruddAktivitetsplikt = setOf(),
             etAnnetSted = listOf(),
+            barnetillegg = BarnetilleggGrunnlag(1, listOf())
         )
         val grunnleggendeRettTidslinje = regel.vurder(input = input, Tidslinje())
 
