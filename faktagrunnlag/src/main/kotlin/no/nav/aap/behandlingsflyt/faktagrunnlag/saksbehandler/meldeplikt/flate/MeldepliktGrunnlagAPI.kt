@@ -15,17 +15,15 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.komponenter.dbconnect.transaction
 
 fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(dataSource: HikariDataSource) {
-    route("/api/behandling") {
-        route("/{referanse}/grunnlag/fritak-meldeplikt") {
-            get<BehandlingReferanse, FritakMeldepliktGrunnlagDto> { req ->
-                val meldepliktGrunnlag = dataSource.transaction { connection ->
-                    val behandling: Behandling =
-                        BehandlingReferanseService(BehandlingRepositoryImpl(connection)).behandling(req)
-                    MeldepliktRepository(connection).hentHvisEksisterer(behandling.id)
-                }
-
-                meldepliktGrunnlag?.let { respond(it.toDto()) } ?: respondWithStatus(HttpStatusCode.NoContent)
+    route("/api/behandling/{referanse}/grunnlag/fritak-meldeplikt") {
+        get<BehandlingReferanse, FritakMeldepliktGrunnlagDto> { req ->
+            val meldepliktGrunnlag = dataSource.transaction { connection ->
+                val behandling: Behandling =
+                    BehandlingReferanseService(BehandlingRepositoryImpl(connection)).behandling(req)
+                MeldepliktRepository(connection).hentHvisEksisterer(behandling.id)
             }
+
+            meldepliktGrunnlag?.let { respond(it.toDto()) } ?: respondWithStatus(HttpStatusCode.NoContent)
         }
     }
 }
