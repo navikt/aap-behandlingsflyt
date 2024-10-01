@@ -3,10 +3,10 @@ plugins {
     `maven-publish`
     `java-library`
 }
-val komponenterVersjon = "0.0.77"
+val komponenterVersjon = "0.0.86"
 
 dependencies {
-    api("com.fasterxml.jackson.core:jackson-annotations:2.17.2")
+    api("com.fasterxml.jackson.core:jackson-annotations:2.18.0")
     api("no.nav:ktor-openapi-generator:1.0.34")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.0")
