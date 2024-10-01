@@ -11,7 +11,7 @@ import java.util.*
 data class Vurdering(
     private val vurderinger: EnumMap<Vilkårtype, Utfall> = EnumMap(Vilkårtype::class.java),
     private val meldepliktVurdering: MeldepliktVurdering? = null,
-    private val bruddVurderingEndelig: BruddAktivitetspliktRegel.BruddVurderingEndelig? = null,
+    internal val aktivitetspliktVurdering: AktivitetspliktVurdering? = null,
     private val gradering: Gradering? = null,
     private val grenseverdi: Prosent? = null
 ) {
@@ -30,8 +30,8 @@ data class Vurdering(
         return copy(meldepliktVurdering = meldepliktVurdering)
     }
 
-    fun leggTilBruddAktivitetspliktVurdering(bruddVurderingEndelig: BruddAktivitetspliktRegel.BruddVurderingEndelig): Vurdering {
-        return copy(bruddVurderingEndelig = bruddVurderingEndelig)
+    fun leggTilAktivitetspliktVurdering(aktivitetspliktVurdering: AktivitetspliktVurdering): Vurdering {
+        return copy(aktivitetspliktVurdering = aktivitetspliktVurdering)
     }
 
     fun leggTilGrenseverdi(grenseverdi: Prosent): Vurdering {
@@ -122,11 +122,12 @@ data class Vurdering(
     }
 
     override fun toString(): String {
-        return "Vurdering(harRett=${harRett()}, meldeplikt=${meldepliktVurdering?.utfall ?: Utfall.IKKE_VURDERT}(${meldepliktVurdering?.årsak ?: "-"}), gradering=${
-            gradering?.gradering ?: Prosent(
-                0
-            )
-        })"
+        return """
+            Vurdering(
+            harRett=${harRett()},
+            meldeplikt=${meldepliktVurdering?.utfall ?: Utfall.IKKE_VURDERT}(${meldepliktVurdering?.årsak ?: "-"}),
+            gradering=${ gradering?.gradering ?: Prosent( 0) },
+            bruddAktivitetsplikt=${aktivitetspliktVurdering}
+            )""".trimIndent().replace("\n", "")
     }
-
 }
