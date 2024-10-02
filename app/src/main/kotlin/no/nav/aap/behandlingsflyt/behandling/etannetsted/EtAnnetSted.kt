@@ -6,6 +6,7 @@ data class EtAnnetSted (
     val periode: Periode,
     val soning: Soning,
     val institusjon: Institusjon,
+    val begrunnelse: String
 )
 
 data class Soning(
