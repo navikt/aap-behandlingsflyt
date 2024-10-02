@@ -57,7 +57,7 @@ dependencies {
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
 
  
-    implementation("io.micrometer:micrometer-registry-prometheus:1.13.3")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.13.5")
     implementation("ch.qos.logback:logback-classic:1.5.8")
     implementation("net.logstash.logback:logstash-logback-encoder:8.0")
 
