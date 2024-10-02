@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvote
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Grunn.INGEN_GYLDIG_GRUNN
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Grunn.STERKE_VELFERDSGRUNNER
@@ -195,6 +196,7 @@ class AktivitetspliktRegelTest {
         kvote = Kvote(Period.ofYears(365 * 3)),
         bruddAktivitetsplikt = bruddAktivitetsplikt,
         etAnnetSted = listOf(),
+        barnetillegg = BarnetilleggGrunnlag(1, listOf())
     )
 
     private fun brudd(
