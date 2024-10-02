@@ -1,5 +1,5 @@
 val ktorVersion = "2.3.12"
-val komponenterVersjon = "0.0.86"
+val komponenterVersjon = "0.0.89"
 
 plugins {
     id("behandlingsflyt.conventions")
@@ -10,7 +10,7 @@ dependencies {
     implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.0")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.0")
+ 
     implementation("ch.qos.logback:logback-classic:1.5.8")
     implementation("no.nav:ktor-openapi-generator:1.0.34")
 

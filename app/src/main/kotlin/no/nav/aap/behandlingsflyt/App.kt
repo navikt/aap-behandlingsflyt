@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt
 
+import com.papsign.ktor.openapigen.model.info.InfoModel
 import com.papsign.ktor.openapigen.route.apiRouting
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
@@ -25,6 +26,7 @@ import no.nav.aap.behandlingsflyt.behandling.barnetillegg.flate.barnetilleggApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.flate.beregningsGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.flate.tilkjentYtelseAPI
 import no.nav.aap.behandlingsflyt.behandling.vilkår.alder.flate.aldersGrunnlagApi
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.flate.beregningVurderingAPI
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.bistandsgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.helseinstitusjonVurderingAPI
@@ -84,7 +86,11 @@ fun main() {
 internal fun Application.server(dbConfig: DbConfig) {
     DefaultJsonMapper.objectMapper().registerSubtypes(utledSubtypes())
 
-    commonKtorModule(prometheus, AzureConfig(), "AAP - Behandlingsflyt")
+    commonKtorModule(
+        prometheus,
+        AzureConfig(),
+        InfoModel(title = "AAP - Behandlingsflyt", version = ApplikasjonsVersjon.versjon)
+    )
 
     install(StatusPages) {
         exception<Throwable> { call, cause ->
