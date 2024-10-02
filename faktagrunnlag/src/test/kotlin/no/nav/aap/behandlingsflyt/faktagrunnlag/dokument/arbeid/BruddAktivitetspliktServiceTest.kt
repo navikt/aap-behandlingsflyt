@@ -4,6 +4,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferans
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_7
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Type.IKKE_AKTIVT_BIDRAG
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
@@ -29,8 +31,8 @@ class BruddAktivitetspliktServiceTest {
 
             val brudd = nyeBrudd(
                 connection, sak,
-                brudd = AktivitetType.IKKE_AKTIVT_BIDRAG,
-                paragraf = Paragraf.PARAGRAF_11_7,
+                brudd = IKKE_AKTIVT_BIDRAG,
+                paragraf = PARAGRAF_11_7,
                 begrunnelse = "Orket ikke",
                 perioder = listOf(Periode(LocalDate.now(), LocalDate.now().plusDays(5))),
             ).first()

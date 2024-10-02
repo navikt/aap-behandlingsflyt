@@ -1,15 +1,15 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvote
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetType.IKKE_MØTT_TIL_TILTAK
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Grunn.INGEN_GYLDIG_GRUNN
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Grunn.STERKE_VELFERDSGRUNNER
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_8
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_9
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Type.IKKE_MØTT_TIL_TILTAK
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.HendelseId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.InnsendingId
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Paragraf
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Paragraf.PARAGRAF_11_8
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Paragraf.PARAGRAF_11_9
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.sakogbehandling.NavIdent
@@ -101,6 +101,73 @@ class AktivitetspliktRegelTest {
         assertEquals(listOf(PARAGRAF_11_9), vurdering.segment(dato(2020, 1, 15))!!.verdi.muligeSanksjoner)
     }
 
+    @Test
+    fun `12 dager med gydlig fravær i en meldeperiode kan gi stans fra siste fraværsdag`() {
+        val vurderinger = vurder(
+            rettighetsperiode = Periode(fom = dato(2020, 1, 1), tom = dato(2022, 12, 31)),
+            brudd(
+                aktivitetsType = IKKE_MØTT_TIL_TILTAK,
+                paragraf = PARAGRAF_11_8,
+                periode = Periode(dato(2020, 1, 1), dato(2020, 1, 12)),
+                opprettet = dato(2020, 4, 1),
+                grunn = STERKE_VELFERDSGRUNNER,
+            ),
+        )
+
+        /* Ingen av dagene kan gi reduksjon etter 11-9 pga. gyldig grunn. */
+        /* Fravær dag 1: telles ikke mot 10-dagers-kvote pga "inntil én dags fravær i meldeperiode"-regelen. */
+        /* Fravær dagene 2 – 11: gir ikke stans pga. gyldig grunn, men bruker opp 10 dager av kvoten for kalenderåret. */
+        for (dag in 1..11) {
+            val muligeSanksjoner = vurderinger.segment(dato(2020, 1, dag))!!.verdi.muligeSanksjoner
+            assertEquals(listOf<BruddAktivitetsplikt.Paragraf>(), muligeSanksjoner)
+        }
+
+        /* Fravær dag 12: gyldig grunn, men gir stans fordi kvoten er brukt opp. */
+        val muligeSanksjoner = vurderinger.segment(dato(2020, 1, 12))!!.verdi.muligeSanksjoner
+        assertEquals(listOf(PARAGRAF_11_8), muligeSanksjoner)
+    }
+
+    @Test
+    fun `10-dagers-kvote starter på 0 i nytt kalenderår`() {
+        val vurderinger = vurder(
+            rettighetsperiode = Periode(fom = dato(2020, 1, 1), tom = dato(2022, 12, 31)),
+            /* Fem brudd det første året (2020), hvorav fire teller mot kvoten. */
+            brudd(
+                aktivitetsType = IKKE_MØTT_TIL_TILTAK,
+                paragraf = PARAGRAF_11_8,
+                periode = Periode(dato(2020, 1, 1), dato(2020, 1, 5)),
+                opprettet = dato(2020, 4, 1),
+                grunn = STERKE_VELFERDSGRUNNER,
+            ),
+            /* Tolv brudd i første meldeperiode (2021). Meldeperioden starter den 6. januar. */
+            brudd(
+                aktivitetsType = IKKE_MØTT_TIL_TILTAK,
+                paragraf = PARAGRAF_11_8,
+                periode = Periode(fom = dato(2021, 1, 6), tom = dato(2021, 1, 6 + 11)),
+                opprettet = dato(2020, 4, 1),
+                grunn = STERKE_VELFERDSGRUNNER,
+            ),
+        )
+
+        /* Ingen av dagene kan gi reduksjon etter 11-9 pga. gyldig grunn. */
+
+        /* For 2021:
+         * Fravær første dag (den 6. januar) gir ikke stans:
+         * - telles ikke mot 10-dagers-kvote pga "inntil én dags fravær i meldeperiode"-regelen.
+         * Fravær dagene 2. til 11. gir ikke stans:
+         * - selv om 4 dager ble brukt av kvoten i 2020, så ble den resatt, så det er 10 dagers kvote i 2021.
+         * - gir ikke stans pga. gyldig grunn, men bruker opp 10 dager av kvoten for kalenderåret 2021.
+         *  */
+        for (dag in 6..<6 + 11) {
+            val muligeSanksjoner = vurderinger.segment(dato(2021, 1, dag))!!.verdi.muligeSanksjoner
+            assertEquals(listOf<BruddAktivitetsplikt.Paragraf>(), muligeSanksjoner)
+        }
+
+        /* Fravær dag 12: gyldig grunn, men gir stans fordi kvoten er brukt opp. */
+        val muligeSanksjoner = vurderinger.segment(dato(2021, 1, 6 + 11))!!.verdi.muligeSanksjoner
+        assertEquals(listOf(PARAGRAF_11_8), muligeSanksjoner)
+    }
+
     private fun dato(år: Int, mnd: Int, dag: Int) = LocalDate.of(år, mnd, dag)
 
     private fun vurder(
@@ -131,20 +198,22 @@ class AktivitetspliktRegelTest {
     )
 
     private fun brudd(
-        aktivitetsType: AktivitetType,
-        paragraf: Paragraf,
+        aktivitetsType: BruddAktivitetsplikt.Type,
+        paragraf: BruddAktivitetsplikt.Paragraf,
         periode: Periode,
         opprettet: LocalDate = periode.tom.plusMonths(4),
+        grunn: BruddAktivitetsplikt.Grunn = INGEN_GYLDIG_GRUNN,
     ) = BruddAktivitetsplikt(
         id = BruddAktivitetspliktId(0),
         hendelseId = HendelseId.ny(),
         innsendingId = InnsendingId.ny(),
         navIdent = NavIdent(""),
         sakId = SakId(1),
-        brudd = aktivitetsType,
+        type = aktivitetsType,
         paragraf = paragraf,
         begrunnelse = "Informasjon fra tiltaksarrangør",
         periode = periode,
         opprettetTid = opprettet.atStartOfDay(),
+        grunn = grunn,
     )
 }

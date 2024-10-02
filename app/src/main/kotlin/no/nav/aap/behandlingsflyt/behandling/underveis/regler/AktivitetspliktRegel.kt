@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.map
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AktivitetspliktRegel.BruddVurderingSteg0.Companion.ekspanderPerioderTilDager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AktivitetspliktRegel.BruddVurderingSteg1.Companion.vurderMeldeperioder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Paragraf
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tidslinje.JoinStyle
 import no.nav.aap.tidslinje.Segment
@@ -26,7 +25,7 @@ class AktivitetspliktRegel : UnderveisRegel {
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
         /* TODO § 11-7 */
         /* TODO: § 11-8 stans til ... vilkårene igjen er oppfylt */
-        /* TODO: forsøk å bruke mer av tidslinje */
+        /* TODO: skriv om til å bruke tidslinje */
 
         /* Antagelse: ingen perioder overlapper. Hva skal vi gjøre hvis det er to forskjellige brudd
         * registrert på én dag? */
@@ -70,11 +69,15 @@ class AktivitetspliktRegel : UnderveisRegel {
         val inntilEnDagRegel: Boolean,
         val tellerMot10DagersKvote: Boolean,
     ) {
-
         fun kanReduseresEtter_11_9(): Boolean {
-            if (!brudd.brudd.kanReduseres_11_9) {
+            if (!brudd.relevantFor_11_9) {
                 return false
             }
+
+            if (brudd.gyldigGrunnFor_11_9) {
+                return false
+            }
+
             val bruddetSkjedde = brudd.periode.fom
             val bruddetRegistrert = brudd.opprettetTid.toLocalDate()
             val treMånederEtterBruddet = bruddetSkjedde.plusMonths(3)
@@ -107,11 +110,13 @@ class AktivitetspliktRegel : UnderveisRegel {
                     val førsteBrudd = meldeperiode.first()
                     val inntilEnDagRegel =
                         førsteBrudd.brudd.id == enkeltbrudd.brudd.id && førsteBrudd.bruddDag == enkeltbrudd.bruddDag
+                    val tellerMot10DagersKvote = !inntilEnDagRegel
+
                     BruddVurderingSteg1(
                         brudd = enkeltbrudd.brudd,
                         bruddDag = enkeltbrudd.bruddDag,
                         inntilEnDagRegel = inntilEnDagRegel,
-                        tellerMot10DagersKvote = !inntilEnDagRegel,
+                        tellerMot10DagersKvote = tellerMot10DagersKvote,
                     )
                 }
             }
@@ -138,16 +143,15 @@ class AktivitetspliktRegel : UnderveisRegel {
 
             val posisjonKalenderår = if (steg1.tellerMot10DagersKvote) kvote else null
 
-            val kanStanses_11_8 = steg1.brudd.brudd.kanStanses_11_8 && (
-                    (posisjonKalenderår != null && posisjonKalenderår > 10)
-                            || (/* TODO: !steg2.gyldigFravær &&*/ !steg1.inntilEnDagRegel)
-                    )
+            val stansPåGrunnAvKvote = posisjonKalenderår != null && posisjonKalenderår > 10
+            val stansPåGrunnAvEnDagsRegel = (!steg1.brudd.gyldigGrunnFor_11_8 && !steg1.inntilEnDagRegel)
+            val kanStanses_11_8 = steg1.brudd.relevantFor_11_8 && (stansPåGrunnAvKvote || stansPåGrunnAvEnDagsRegel)
 
             return@map AktivitetspliktVurdering(
                 periode = Periode(steg1.bruddDag, steg1.bruddDag),
                 muligeSanksjoner = listOfNotNull(
-                    if (kanStanses_11_8) Paragraf.PARAGRAF_11_8 else null,
-                    if (steg1.kanReduseresEtter_11_9()) Paragraf.PARAGRAF_11_9 else null,
+                    if (kanStanses_11_8) BruddAktivitetsplikt.Paragraf.PARAGRAF_11_8 else null,
+                    if (steg1.kanReduseresEtter_11_9()) BruddAktivitetsplikt.Paragraf.PARAGRAF_11_9 else null,
                 ),
                 saksbehandlersØnsketSanksjon = steg1.brudd.paragraf,
             )

@@ -1,6 +1,11 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
 import com.fasterxml.jackson.annotation.JsonValue
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Type.IKKE_MØTT_TIL_ANNEN_AKTIVITET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Type.IKKE_MØTT_TIL_BEHANDLING
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Type.IKKE_MØTT_TIL_MØTE
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Type.IKKE_MØTT_TIL_TILTAK
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Type.IKKE_SENDT_INN_DOKUMENTASJON
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.sakogbehandling.NavIdent
 import no.nav.aap.verdityper.sakogbehandling.SakId
@@ -41,47 +46,79 @@ data class BruddAktivitetsplikt(
     val navIdent: NavIdent,
 
     val sakId: SakId,
-    val brudd: AktivitetType,
+    val type: Type,
     val paragraf: Paragraf,
     val begrunnelse: String,
     val periode: Periode,
     val opprettetTid: LocalDateTime,
-)
 
-enum class Paragraf {
-    PARAGRAF_11_7,
-    PARAGRAF_11_8,
-    PARAGRAF_11_9
-}
+    /* TODO: Fjern default når det er avklart hvilke grunner vi skal ha. */
+    /* TODO: Legg på persistering når det er avklart. */
+    val grunn: Grunn = Grunn.INGEN_GYLDIG_GRUNN,
+) {
 
-enum class AktivitetType {
-    IKKE_MØTT_TIL_MØTE,
-    IKKE_MØTT_TIL_BEHANDLING,
-    IKKE_MØTT_TIL_TILTAK,
-    IKKE_MØTT_TIL_ANNEN_AKTIVITET,
-    IKKE_SENDT_INN_DOKUMENTASJON,
-    IKKE_AKTIVT_BIDRAG;
+    enum class Type {
+        IKKE_MØTT_TIL_MØTE,
+        IKKE_MØTT_TIL_BEHANDLING,
+        IKKE_MØTT_TIL_TILTAK,
+        IKKE_MØTT_TIL_ANNEN_AKTIVITET,
+        IKKE_SENDT_INN_DOKUMENTASJON,
+        IKKE_AKTIVT_BIDRAG;
+    }
+
+    /** TODO: avklar behov for forskjellige grunner, og hvilke. */
+    enum class Grunn {
+        SYKDOM_ELLER_SKADE,
+        STERKE_VELFERDSGRUNNER,
+        RIMELIG_GRUNN,
+        INGEN_GYLDIG_GRUNN,
+    }
+
+    enum class Paragraf {
+        PARAGRAF_11_7,
+        PARAGRAF_11_8,
+        PARAGRAF_11_9
+    }
+
+    val relevantFor_11_8: Boolean
+        get() = this.type in bruddTyperRelevantFor_11_8
+
+    val gyldigGrunnFor_11_8: Boolean
+        get() = this.grunn in gyldigeGrunnerFor_11_8
+
+    val relevantFor_11_9: Boolean
+        get() = this.type in bruddTyperRelevantFor_11_9
+
+    val gyldigGrunnFor_11_9: Boolean
+        get() = this.grunn in gyldigeGrunnerFor_11_9
 
     companion object {
-        private val kanStanses_11_8 = listOf(
+        private val bruddTyperRelevantFor_11_8 = listOf(
             IKKE_MØTT_TIL_BEHANDLING,
             IKKE_MØTT_TIL_TILTAK,
             IKKE_MØTT_TIL_ANNEN_AKTIVITET,
         )
 
-        private val kanReduseres_11_9 = listOf(
+        private val gyldigeGrunnerFor_11_8 = listOf(
+            Grunn.SYKDOM_ELLER_SKADE,
+            Grunn.STERKE_VELFERDSGRUNNER,
+        )
+
+
+        private val bruddTyperRelevantFor_11_9 = listOf(
             IKKE_MØTT_TIL_MØTE,
             IKKE_MØTT_TIL_BEHANDLING,
             IKKE_MØTT_TIL_TILTAK,
             IKKE_MØTT_TIL_ANNEN_AKTIVITET,
             IKKE_SENDT_INN_DOKUMENTASJON,
         )
+
+        private val gyldigeGrunnerFor_11_9 = listOf(
+            Grunn.SYKDOM_ELLER_SKADE, /* TODO: bekreft at "sykdom eller skade" kan regnes som rimelig grunn. */
+            Grunn.STERKE_VELFERDSGRUNNER, /* TODO: bekreft at "sterke veldferdsgrunner" kan regnes som rimelig grunn. */
+            Grunn.RIMELIG_GRUNN,
+        )
     }
-
-    val kanStanses_11_8: Boolean
-        get() = this in AktivitetType.kanStanses_11_8
-
-    val kanReduseres_11_9: Boolean
-        get() = this in AktivitetType.kanReduseres_11_9
-
 }
+
+
