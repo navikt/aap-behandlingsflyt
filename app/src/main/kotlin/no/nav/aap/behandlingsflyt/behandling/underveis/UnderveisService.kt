@@ -55,7 +55,7 @@ class UnderveisService(
                         it.verdi.utfall(),
                         it.verdi.avslagsårsak(),
                         it.verdi.grenseverdi(),
-                        it.verdi.gradering()
+                        it.verdi.gradering(),
                     )
                 })
         return vurderRegler
@@ -86,8 +86,7 @@ class UnderveisService(
         val innsendingsTidspunkt = pliktkortGrunnlag?.innsendingsdatoPerMelding() ?: mapOf()
         val kvote = kvoteService.beregn(behandlingId)
         //val annetStedGrunnlag = etAnnetStedRepository().hentHvisEksisterer(behandlingId) //TODO: Vent / Implementer denne
-        val barnetilleggGrunnlag = barnetilleggRepository.hentHvisEksisterer(behandlingId)
-
+        val barnetilleggGrunnlag = requireNotNull(barnetilleggRepository.hentHvisEksisterer(behandlingId))
         val bruddAktivitetsplikt = bruddAktivitetspliktRepository.hentGrunnlagHvisEksisterer(behandlingId)
             ?.bruddene
             ?: emptySet()

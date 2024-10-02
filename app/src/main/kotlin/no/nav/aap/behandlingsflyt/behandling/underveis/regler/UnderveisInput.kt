@@ -20,5 +20,5 @@ data class UnderveisInput(
     val kvote: Kvote,
     val bruddAktivitetsplikt: Set<BruddAktivitetsplikt>,
     val etAnnetSted: List<EtAnnetSted>,
-    val barnetillegg: BarnetilleggGrunnlag?
+    val barnetillegg: BarnetilleggGrunnlag
 )

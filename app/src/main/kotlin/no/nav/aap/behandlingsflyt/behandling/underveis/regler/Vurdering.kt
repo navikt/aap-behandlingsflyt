@@ -13,7 +13,8 @@ data class Vurdering(
     private val meldepliktVurdering: MeldepliktVurdering? = null,
     private val bruddVurderingEndelig: BruddAktivitetspliktRegel.BruddVurderingEndelig? = null,
     private val gradering: Gradering? = null,
-    private val grenseverdi: Prosent? = null
+    private val grenseverdi: Prosent? = null,
+    private val institusjonVurdering: InstitusjonVurdering? = null,
 ) {
 
     fun leggTilVurdering(vilkårtype: Vilkårtype, utfall: Utfall): Vurdering {
@@ -36,6 +37,10 @@ data class Vurdering(
 
     fun leggTilGrenseverdi(grenseverdi: Prosent): Vurdering {
         return copy(grenseverdi = grenseverdi)
+    }
+
+    fun leggTilInstitusjonVurdering(vurdering: InstitusjonVurdering): Vurdering {
+        return copy(institusjonVurdering = vurdering)
     }
 
     fun vurderinger(): Map<Vilkårtype, Utfall> {
