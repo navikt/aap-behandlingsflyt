@@ -225,7 +225,6 @@ class StatistikkJobbUtfører(
                 type = UføreType.valueOf(grunnlag.type().toString()),
                 grunnlag = grunnlag1119dto(grunnlag.underliggende()),
                 grunnlagYtterligereNedsatt = grunnlag1119dto(grunnlag.underliggendeYtterligereNedsatt()),
-                uføreInntektIKroner = grunnlag.uføreInntekterFraForegåendeÅr()[0].inntektIKroner.verdi(), //TODO: Fjerne dette feltet og erstatt med uføreinntektene
                 uføreYtterligereNedsattArbeidsevneÅr = grunnlag.uføreYtterligereNedsattArbeidsevneÅr().value,
                 uføregrad = grunnlag.uføregrad().prosentverdi(),
                 uføreInntekterFraForegåendeÅr = grunnlag.uføreInntekterFraForegåendeÅr() // TODO: Vurdere hvilke felter som skal være med fra uføreinntektene
