@@ -22,4 +22,23 @@ data class Fritaksvurdering(
     fun toDto(): FritakMeldepliktVurderingDto {
         return FritakMeldepliktVurderingDto(begrunnelse, opprettetTid, harFritak, periode?.let { PeriodeDto(it) }, opprinneligFraDato)
     }
+
+    override fun equals(other: Any?): Boolean {
+        return this === other || (other is Fritaksvurdering && this.valueEquals(other))
+    }
+
+    private fun valueEquals(other: Fritaksvurdering): Boolean {
+        return harFritak == other.harFritak &&
+                opprinneligFraDato == other.opprinneligFraDato &&
+                periode == other.periode &&
+                begrunnelse == other.begrunnelse
+    }
+
+    override fun hashCode(): Int {
+        var result = harFritak.hashCode()
+        result = 31 * result + opprinneligFraDato.hashCode()
+        result = 31 * result + (periode?.hashCode() ?: 0)
+        result = 31 * result + begrunnelse.hashCode()
+        return result
+    }
 }

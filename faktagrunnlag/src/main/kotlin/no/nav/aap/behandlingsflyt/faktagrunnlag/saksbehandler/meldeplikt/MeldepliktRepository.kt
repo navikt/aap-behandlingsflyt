@@ -19,7 +19,7 @@ class MeldepliktRepository(private val connection: DBConnection) {
 
         private val INSERT_FRITAKSVURDERING_QUERY = """
             INSERT INTO MELDEPLIKT_FRITAK_VURDERING 
-            (MELDEPLIKT_ID, BEGRUNNELSE, HAR_FRITAK, OPPRINNELIG_FRA_DATO, GJELDENDE_PERIODE, OPPRETTET_TID) VALUES (?, ?, ?, ?, ?, ?)
+            (MELDEPLIKT_ID, BEGRUNNELSE, HAR_FRITAK, OPPRINNELIG_FRA_DATO, GJELDENDE_PERIODE, OPPRETTET_TID) VALUES (?, ?, ?, ?, ?::daterange, ?)
             """.trimIndent()
     }
 
