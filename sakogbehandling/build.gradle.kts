@@ -1,5 +1,5 @@
 val ktorVersion = "2.3.12"
-val komponenterVersjon = "0.0.77"
+val komponenterVersjon = "0.0.89"
 val tilgangVersjon = "0.0.11"
 
 plugins {
@@ -8,7 +8,7 @@ plugins {
 
 dependencies {
     implementation("no.nav:ktor-openapi-generator:1.0.34")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.17.2")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.18.0")
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
 
     implementation(project(":verdityper"))
@@ -22,7 +22,7 @@ dependencies {
     implementation("no.nav.aap.kelvin:dbconnect:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:dbmigrering:$komponenterVersjon")
     implementation("com.zaxxer:HikariCP:5.1.0")
-    implementation("org.flywaydb:flyway-database-postgresql:10.17.3")
+    implementation("org.flywaydb:flyway-database-postgresql:10.18.2")
     runtimeOnly("org.postgresql:postgresql:42.7.4")
 
     testImplementation(project(":dbtestdata"))

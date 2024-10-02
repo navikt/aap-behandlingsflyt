@@ -13,8 +13,8 @@ class BruddAktivitetspliktRepository(private val connection: DBConnection) {
     class LagreBruddInput(
         val sakId: SakId,
         val navIdent: NavIdent,
-        val brudd: AktivitetType,
-        val paragraf: Paragraf,
+        val brudd: BruddAktivitetsplikt.Type,
+        val paragraf: BruddAktivitetsplikt.Paragraf,
         val begrunnelse: String,
         val periode: Periode,
     )
@@ -154,7 +154,7 @@ class BruddAktivitetspliktRepository(private val connection: DBConnection) {
     private fun mapBruddAktivitetsplikt(row: Row): BruddAktivitetsplikt {
         return BruddAktivitetsplikt(
             id = BruddAktivitetspliktId(row.getLong("ID")),
-            brudd = row.getEnum("BRUDD"),
+            type = row.getEnum("BRUDD"),
             paragraf = row.getEnum("PARAGRAF"),
             periode = row.getPeriode("PERIODE"),
             begrunnelse = row.getString("BEGRUNNELSE"),

@@ -62,7 +62,7 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
                 val alleBrudd = repository.hentBrudd(sak.id)
                     .map {
                         BruddAktivitetspliktHendelseDto(
-                            brudd = it.brudd,
+                            brudd = it.type,
                             paragraf = it.paragraf,
                             periode = it.periode,
                             begrunnelse = it.begrunnelse,
