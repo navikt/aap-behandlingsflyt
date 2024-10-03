@@ -78,7 +78,7 @@ class BeregningService(
         studentVurdering: StudentVurdering?
     ): LocalDate {
         val nedsettelsesdatoer = setOf(
-            sykdomsvurdering?.nedsattArbeidsevneDato?.let { LocalDate.of(it, 1, 1) },
+            sykdomsvurdering?.nedsattArbeidsevneDato,
             studentVurdering?.avbruttStudieDato
         ).filterNotNull()
 
