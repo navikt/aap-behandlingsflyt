@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.verdityper.Tid
 
 class FritakFraMeldepliktLøser(val connection: DBConnection) : AvklaringsbehovsLøser<FritakMeldepliktLøsning> {
 
@@ -41,15 +42,23 @@ class FritakFraMeldepliktLøser(val connection: DBConnection) : Avklaringsbehovs
 
     //scope functions fordi smart cast er litt wonky med klasser fra en annen modul
     private infix fun Fritaksvurdering.lagPlassFor(nyVurdering: Fritaksvurdering): Fritaksvurdering {
+        validateVurderingIsNew(nyVurdering)
         return nyVurdering.periode?.let {
             this.copy(periode = this.periode except it)
-        } ?: throw IllegalStateException("Ny vurdering må ha en periode")
+        } ?: throw IllegalStateException("Ny fritaksvurdering må ha en periode")
     }
 
+    private fun validateVurderingIsNew(nyVurdering: Fritaksvurdering) {
+        require(nyVurdering.periode?.tom == Tid.MAKS) {
+            "ny vurdering uten periode/maksverdi for periode er endret/metode blir ikke brukt i riktig kontekst"
+        }
+    }
 
     private infix fun Periode?.except(åpenPeriode: Periode): Periode? {
-        return this?.takeIf { åpenPeriode.fom > it.fom }?.let {
-            Periode(it.fom, åpenPeriode.fom.minusDays(1))
+        //redundant men for klarhets skyld
+        require(åpenPeriode.tom == Tid.MAKS) {
+            "åpenPeriode parameter er ikke åpen/maksverdi for periode er endret"
         }
+        return this?.minus(åpenPeriode)?.ifEmpty { null }?.single()
     }
 }
