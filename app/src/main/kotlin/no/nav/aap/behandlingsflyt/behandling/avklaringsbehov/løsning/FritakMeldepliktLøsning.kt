@@ -15,15 +15,9 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = FRITAK_MELDEPLIKT_KODE)
 class FritakMeldepliktLøsning(
-    val fritaksvurdering: Fritaksvurdering,
-    val behovstype: String
+    @JsonProperty("fritaksvurdering", required = true) val fritaksvurdering: FritaksvurderingDto,
+    @JsonProperty("behovstype", required = true, defaultValue = FRITAK_MELDEPLIKT_KODE) val behovstype: String = FRITAK_MELDEPLIKT_KODE
 ) : AvklaringsbehovLøsning {
-
-    @JsonCreator
-    constructor(
-        @JsonProperty("fritaksvurdering", required = true) fritaksvurdering: FritaksvurderingDto,
-        @JsonProperty("behovstype", required = true, defaultValue = FRITAK_MELDEPLIKT_KODE) behovstype: String = FRITAK_MELDEPLIKT_KODE
-    ): this(fritaksvurdering.toFritaksvurdering(), behovstype)
 
     override fun løs(connection: DBConnection, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
         return FritakFraMeldepliktLøser(connection).løs(kontekst, this)
