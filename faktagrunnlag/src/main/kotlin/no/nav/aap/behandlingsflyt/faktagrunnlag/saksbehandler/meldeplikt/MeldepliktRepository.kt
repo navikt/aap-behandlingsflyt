@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt
 
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -10,7 +9,7 @@ class MeldepliktRepository(private val connection: DBConnection) {
 
     companion object {
         private val FRITAK_QUERY = """
-            SELECT f.ID AS MELDEPLIKT_ID, v.HAR_FRITAK, v.OPPRINNELIG_FRA_DATO, v.GJELDENDE_PERIODE, v.BEGRUNNELSE, v.OPPRETTET_TID
+            SELECT f.ID AS MELDEPLIKT_ID, v.HAR_FRITAK, v.FRA_DATO, v.BEGRUNNELSE, v.OPPRETTET_TID
             FROM MELDEPLIKT_FRITAK_GRUNNLAG g
             INNER JOIN MELDEPLIKT_FRITAK f ON g.MELDEPLIKT_ID = f.ID
             INNER JOIN MELDEPLIKT_FRITAK_VURDERING v ON f.ID = v.MELDEPLIKT_ID
@@ -19,7 +18,7 @@ class MeldepliktRepository(private val connection: DBConnection) {
 
         private val INSERT_FRITAKSVURDERING_QUERY = """
             INSERT INTO MELDEPLIKT_FRITAK_VURDERING 
-            (MELDEPLIKT_ID, BEGRUNNELSE, HAR_FRITAK, OPPRINNELIG_FRA_DATO, GJELDENDE_PERIODE, OPPRETTET_TID) VALUES (?, ?, ?, ?, ?::daterange, ?)
+            (MELDEPLIKT_ID, BEGRUNNELSE, HAR_FRITAK, FRA_DATO, OPPRETTET_TID) VALUES (?, ?, ?, ?, ?)
             """.trimIndent()
     }
 
@@ -30,8 +29,7 @@ class MeldepliktRepository(private val connection: DBConnection) {
                 MeldepliktInternal(
                     meldepliktId = row.getLong("MELDEPLIKT_ID"),
                     harFritak = row.getBoolean("HAR_FRITAK"),
-                    opprinneligFraDato = row.getLocalDate("OPPRINNELIG_FRA_DATO"),
-                    gjeldendePeriode = row.getPeriode("GJELDENDE_PERIODE"),
+                    fraDato = row.getLocalDate("FRA_DATO"),
                     begrunnelse = row.getString("BEGRUNNELSE"),
                     vurderingOpprettet = row.getLocalDateTime("OPPRETTET_TID"),
                 )
@@ -42,8 +40,7 @@ class MeldepliktRepository(private val connection: DBConnection) {
     private data class MeldepliktInternal(
         val meldepliktId: Long,
         val harFritak: Boolean,
-        val opprinneligFraDato: LocalDate,
-        val gjeldendePeriode: Periode,
+        val fraDato: LocalDate,
         val begrunnelse: String,
         val vurderingOpprettet: LocalDateTime
     )
@@ -55,7 +52,7 @@ class MeldepliktRepository(private val connection: DBConnection) {
 
 
     private fun MeldepliktInternal.toFritaksvurdering(): Fritaksvurdering {
-        return Fritaksvurdering(harFritak, opprinneligFraDato, gjeldendePeriode, begrunnelse, vurderingOpprettet)
+        return Fritaksvurdering(harFritak, fraDato, begrunnelse, vurderingOpprettet)
     }
 
     fun lagre(behandlingId: BehandlingId, vurderinger: List<Fritaksvurdering>) {
@@ -86,9 +83,8 @@ class MeldepliktRepository(private val connection: DBConnection) {
                 setLong(1, meldepliktId)
                 setString(2, it.begrunnelse)
                 setBoolean(3, it.harFritak)
-                setLocalDate(4, it.opprinneligFraDato)
-                setPeriode(5, it.periode)
-                setLocalDateTime(6, it.opprettetTid)
+                setLocalDate(4, it.fraDato)
+                setLocalDateTime(5, it.opprettetTid)
             }
         }
     }

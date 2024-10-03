@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Meldepl
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.StandardSammenslåere
 import no.nav.aap.tidslinje.Tidslinje
@@ -24,7 +25,7 @@ class FritakFraMeldepliktLøser(val connection: DBConnection) : Avklaringsbehovs
 
         meldepliktRepository.lagre(
             behandlingId = behandling.id,
-            vurderinger =  (eksisterendeFritaksvurderinger plasser løsning.fritaksvurdering).map { it.verdi }
+            vurderinger =  (eksisterendeFritaksvurderinger plasser løsning.fritaksvurdering).komprimer().map { it.verdi }
         )
 
         return LøsningsResultat(
@@ -38,24 +39,15 @@ class FritakFraMeldepliktLøser(val connection: DBConnection) : Avklaringsbehovs
     }
 
     private infix fun List<Fritaksvurdering>.plasser(nyVurdering: Fritaksvurdering): Tidslinje<Fritaksvurdering> {
-        validateVurderingIsNew(nyVurdering)
-        return this.tidslinje().kombiner(nyVurdering.tidslinje(), StandardSammenslåere.prioriterHøyreSideCrossJoin()).komprimer()
-    }
-
-    private fun List<Fritaksvurdering>.tidslinje(): Tidslinje<Fritaksvurdering> {
-        val segmenter = map { Segment(it.periode, it) }
-        return Tidslinje(segmenter)
+        val sortedFritaksvurdering = this.sortedBy { it.opprettetTid } + nyVurdering
+        return sortedFritaksvurdering.drop(1).fold(sortedFritaksvurdering.first().tidslinje()) { acc, fritaksvurdering ->
+            acc.kombiner(fritaksvurdering.tidslinje(), StandardSammenslåere.prioriterHøyreSideCrossJoin())
+        }
     }
 
     private fun Fritaksvurdering.tidslinje(): Tidslinje<Fritaksvurdering> {
         return Tidslinje(
-            listOf(Segment(this.periode, this))
+            listOf(Segment(Periode(fraDato, Tid.MAKS), this))
         )
-    }
-
-    private fun validateVurderingIsNew(nyVurdering: Fritaksvurdering) {
-        require(nyVurdering.periode?.tom == Tid.MAKS) {
-            "ny vurdering uten periode/maksverdi for periode er endret/metode blir ikke brukt i riktig kontekst"
-        }
     }
 }
