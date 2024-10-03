@@ -6,11 +6,12 @@ data class InstitusjonVurdering (
     val skalReduseres: Boolean = true,
     val begrunnelse: String,
     val årsak: Årsak?,
-    val grad: Prosent = Prosent.`50_PROSENT`
+    val grad: Prosent
 )
 
 enum class Årsak {
     BARNETILLEGG,
     FORSØRGER,
-    UTEN_REDUKSJON_TRE_MND
+    UTEN_REDUKSJON_TRE_MND,
+    KOST_OG_LOSJI
 }

@@ -14,7 +14,7 @@ data class Vurdering(
     internal val aktivitetspliktVurdering: AktivitetspliktVurdering? = null,
     private val gradering: Gradering? = null,
     private val grenseverdi: Prosent? = null,
-    private val institusjonVurdering: InstitusjonVurdering? = null,
+    internal val institusjonVurdering: InstitusjonVurdering? = null,
 ) {
 
     fun leggTilVurdering(vilkårtype: Vilkårtype, utfall: Utfall): Vurdering {
