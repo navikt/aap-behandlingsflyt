@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate
 
-import com.papsign.ktor.openapigen.route.StatusCode
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post

@@ -10,11 +10,13 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.OnBehalfOfTokenProvider
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 import no.nav.aap.pdl.IdentVariables
+import no.nav.aap.pdl.PdlNavnData
 import no.nav.aap.pdl.PdlPersonNavnDataResponse
 import no.nav.aap.pdl.PdlRequest
 import no.nav.aap.pdl.PdlResponseHandler
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import java.net.URI
+import kotlin.collections.map
 
 object PdlPersoninfoGateway : PersoninfoGateway {
 
@@ -28,6 +30,23 @@ object PdlPersoninfoGateway : PersoninfoGateway {
         }
     }
 """.trimIndent()
+
+    private const val identer = "\$identer"
+    val PERSONINFO_BOLK_QUERY = """
+        query($identer: [ID!]!) {
+            hentPersonBolk(identer: $identer) {
+                ident,
+                person {
+                    navn(historikk: false) {
+                        fornavn
+                        mellomnavn
+                        etternavn
+                    }
+                },
+                code
+            }
+        }
+    """.trimIndent()
 
     private val url = URI.create(requiredConfigForKey("integrasjon.pdl.url"))
     val config = ClientConfig(
@@ -52,6 +71,19 @@ object PdlPersoninfoGateway : PersoninfoGateway {
         val response: PdlPersonNavnDataResponse = query(request, currentToken)
         val navn = response.data?.hentPerson?.navn?.first()
         return Personinfo(ident, navn?.fornavn, navn?.mellomnavn, navn?.etternavn)
+    }
+
+    override fun hentPersoninfoForIdenter(identer: List<Ident>, currentToken: OidcToken): List<Personinfo> {
+        val request = PdlRequest(PERSONINFO_BOLK_QUERY, IdentVariables(identer = identer.map { it.identifikator }))
+        val response: PdlPersonNavnDataResponse = query(request, currentToken)
+
+        return response.data?.hentPersonBolk?.map { person -> mapPersoninformasjon(person) } ?: emptyList()
+    }
+
+    private fun mapPersoninformasjon(data: PdlNavnData): Personinfo {
+        val navn = data.navn.first()
+
+        return Personinfo(Ident(data.ident), navn.fornavn, navn.mellomnavn, navn.etternavn)
     }
 }
 

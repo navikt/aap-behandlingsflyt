@@ -40,9 +40,11 @@ class PdlPersonNavnDataResponse(
 ) : PdlResponse(errors, extensions)
 
 data class HentPerson(
-    val hentPerson: PdlNavnData
+    val hentPerson: PdlNavnData? = null,
+    val hentPersonBolk: List<PdlNavnData>? = null
 )
 data class PdlNavnData(
+    val ident: String,
     val navn: List<PdlNavn>
 )
 
