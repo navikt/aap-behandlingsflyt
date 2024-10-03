@@ -12,7 +12,7 @@ data class FritakMeldepliktVurderingDto(
     val begrunnelse: String,
     val vurderingsTidspunkt: LocalDateTime,
     val harFritak: Boolean,
-    val gjeldendePeriode: PeriodeDto?,
+    val gjeldendePeriode: PeriodeDto,
     val opprinneligFraDato: LocalDate
 )
 

@@ -10,7 +10,7 @@ import java.time.LocalDateTime
 data class Fritaksvurdering(
     val harFritak: Boolean,
     val opprinneligFraDato: LocalDate,
-    val periode: Periode?,
+    val periode: Periode,
     val begrunnelse: String,
     val opprettetTid: LocalDateTime
 ) {
@@ -20,7 +20,7 @@ data class Fritaksvurdering(
     )
 
     fun toDto(): FritakMeldepliktVurderingDto {
-        return FritakMeldepliktVurderingDto(begrunnelse, opprettetTid, harFritak, periode?.let { PeriodeDto(it) }, opprinneligFraDato)
+        return FritakMeldepliktVurderingDto(begrunnelse, opprettetTid, harFritak, PeriodeDto(periode), opprinneligFraDato)
     }
 
     override fun equals(other: Any?): Boolean {
@@ -37,7 +37,7 @@ data class Fritaksvurdering(
     override fun hashCode(): Int {
         var result = harFritak.hashCode()
         result = 31 * result + opprinneligFraDato.hashCode()
-        result = 31 * result + (periode?.hashCode() ?: 0)
+        result = 31 * result + (periode.hashCode())
         result = 31 * result + begrunnelse.hashCode()
         return result
     }

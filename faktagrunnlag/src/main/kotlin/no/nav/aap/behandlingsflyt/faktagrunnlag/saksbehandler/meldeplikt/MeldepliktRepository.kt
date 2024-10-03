@@ -31,7 +31,7 @@ class MeldepliktRepository(private val connection: DBConnection) {
                     meldepliktId = row.getLong("MELDEPLIKT_ID"),
                     harFritak = row.getBoolean("HAR_FRITAK"),
                     opprinneligFraDato = row.getLocalDate("OPPRINNELIG_FRA_DATO"),
-                    gjeldendePeriode = row.getPeriodeOrNull("GJELDENDE_PERIODE"),
+                    gjeldendePeriode = row.getPeriode("GJELDENDE_PERIODE"),
                     begrunnelse = row.getString("BEGRUNNELSE"),
                     vurderingOpprettet = row.getLocalDateTime("OPPRETTET_TID"),
                 )
@@ -43,7 +43,7 @@ class MeldepliktRepository(private val connection: DBConnection) {
         val meldepliktId: Long,
         val harFritak: Boolean,
         val opprinneligFraDato: LocalDate,
-        val gjeldendePeriode: Periode?,
+        val gjeldendePeriode: Periode,
         val begrunnelse: String,
         val vurderingOpprettet: LocalDateTime
     )
