@@ -10,7 +10,7 @@ class UbehandletSøknad(
     val journalpostId: JournalpostId,
     val periode: Periode,
     val erStudent: ErStudentStatus, // TODO: Trekke student ut i eget objekt
-    val skalGjenopptaStudie: SkalGjenopptaStudieStatus?,
+    val skalGjenopptaStudie: SkalGjenopptaStudieStatus,
     val harYrkesskade: Boolean,
     val oppgitteBarn: OppgitteBarn?
 )
