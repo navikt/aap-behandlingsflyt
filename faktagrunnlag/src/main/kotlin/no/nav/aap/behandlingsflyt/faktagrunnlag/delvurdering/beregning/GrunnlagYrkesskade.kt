@@ -12,12 +12,13 @@ import java.time.Year
  * @param beregningsgrunnlag Hvilket grunnlag som ble brukt i beregningen for yrkesskade, muligens justert for uføre.
  * @param terskelverdiForYrkesskade Gjeldende terskelverdi for yrkesskade (definert i §11-22).
  * @param andelSomSkyldesYrkesskade Hvor stor del av [grunnlaget] som kommer fra yrkesskade.
- * @param andelSomIkkeSkyldesYrkesskade Hvor stor del av [grunnlaget] som ikke kommer fra yrkesskade.
  * @param andelYrkesskade Yrkesskadeprosent.
  * @param benyttetAndelForYrkesskade Yrkesskadeprosent, muligens oppjustert etter [terskelverdiForYrkesskade].
+ * @param andelSomIkkeSkyldesYrkesskade Hvor stor del av [grunnlaget] som ikke kommer fra yrkesskade.
  * @param antattÅrligInntektYrkesskadeTidspunktet Selvforklarende.
  * @param yrkesskadeTidspunkt Hvilket år yrkesskaden skjedde.
  * @param grunnlagForBeregningAvYrkesskadeandel Delen av [grunnlaget] som skyldes yrkesskade.
+ * @param grunnbeløp Grunnbeløp i året for yrkesskadetidspunktet.
  * @param yrkesskadeinntektIG Inntekt på yrkesskadetidspunktet i G.
  * @param grunnlagEtterYrkesskadeFordel Dette er det største av grunnlagene etter §11-19 eller inntekt på yrkesskadetidspunktet.
  */

@@ -8,49 +8,39 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.Prosent
 import java.util.*
 
-class Vurdering(
+data class Vurdering(
     private val vurderinger: EnumMap<Vilkårtype, Utfall> = EnumMap(Vilkårtype::class.java),
     private val meldepliktVurdering: MeldepliktVurdering? = null,
+    internal val aktivitetspliktVurdering: AktivitetspliktVurdering? = null,
     private val gradering: Gradering? = null,
-    private val grenseverdi: Prosent? = null
+    private val grenseverdi: Prosent? = null,
+    private val institusjonVurdering: InstitusjonVurdering? = null,
 ) {
 
     fun leggTilVurdering(vilkårtype: Vilkårtype, utfall: Utfall): Vurdering {
         val kopi = EnumMap(vurderinger)
         kopi[vilkårtype] = utfall
-        return Vurdering(
-            vurderinger = kopi,
-            meldepliktVurdering = meldepliktVurdering,
-            gradering = gradering,
-            grenseverdi = grenseverdi
-        )
+        return copy(vurderinger = kopi)
     }
 
     fun leggTilGradering(gradering: Gradering): Vurdering {
-        return Vurdering(
-            vurderinger = this.vurderinger,
-            meldepliktVurdering = meldepliktVurdering,
-            gradering = gradering,
-            grenseverdi = this.grenseverdi
-        )
+        return copy(gradering = gradering)
     }
 
     fun leggTilMeldepliktVurdering(meldepliktVurdering: MeldepliktVurdering): Vurdering {
-        return Vurdering(
-            vurderinger = vurderinger,
-            meldepliktVurdering = meldepliktVurdering,
-            gradering = gradering,
-            grenseverdi = grenseverdi
-        )
+        return copy(meldepliktVurdering = meldepliktVurdering)
+    }
+
+    fun leggTilAktivitetspliktVurdering(aktivitetspliktVurdering: AktivitetspliktVurdering): Vurdering {
+        return copy(aktivitetspliktVurdering = aktivitetspliktVurdering)
     }
 
     fun leggTilGrenseverdi(grenseverdi: Prosent): Vurdering {
-        return Vurdering(
-            vurderinger = this.vurderinger,
-            meldepliktVurdering = meldepliktVurdering,
-            gradering = this.gradering,
-            grenseverdi = grenseverdi
-        )
+        return copy(grenseverdi = grenseverdi)
+    }
+
+    fun leggTilInstitusjonVurdering(vurdering: InstitusjonVurdering): Vurdering {
+        return copy(institusjonVurdering = vurdering)
     }
 
     fun vurderinger(): Map<Vilkårtype, Utfall> {
@@ -137,11 +127,12 @@ class Vurdering(
     }
 
     override fun toString(): String {
-        return "Vurdering(harRett=${harRett()}, meldeplikt=${meldepliktVurdering?.utfall ?: Utfall.IKKE_VURDERT}(${meldepliktVurdering?.årsak ?: "-"}), gradering=${
-            gradering?.gradering ?: Prosent(
-                0
-            )
-        })"
+        return """
+            Vurdering(
+            harRett=${harRett()},
+            meldeplikt=${meldepliktVurdering?.utfall ?: Utfall.IKKE_VURDERT}(${meldepliktVurdering?.årsak ?: "-"}),
+            gradering=${ gradering?.gradering ?: Prosent( 0) },
+            bruddAktivitetsplikt=${aktivitetspliktVurdering}
+            )""".trimIndent().replace("\n", "")
     }
-
 }

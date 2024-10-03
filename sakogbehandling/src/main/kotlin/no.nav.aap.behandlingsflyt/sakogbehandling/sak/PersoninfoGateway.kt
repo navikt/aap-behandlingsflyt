@@ -6,4 +6,5 @@ import no.nav.aap.verdityper.sakogbehandling.Ident
 
 interface PersoninfoGateway {
     fun hentPersoninfoForIdent(ident: Ident, currentToken: OidcToken): Personinfo
+    fun hentPersoninfoForIdenter(ident: List<Ident>, currentToken: OidcToken): List<Personinfo>
 }

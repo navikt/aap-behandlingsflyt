@@ -3,6 +3,8 @@ package no.nav.aap.behandlingsflyt.behandling.underveis
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UnderveisInput
 import no.nav.aap.behandlingsflyt.dbtestdata.MockDataSource
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
@@ -33,7 +35,8 @@ class UnderveisServiceTest {
                     VilkårsresultatRepository(connection),
                     PliktkortRepository(connection),
                     UnderveisRepository(connection),
-                    BruddAktivitetspliktRepository(connection)
+                    BruddAktivitetspliktRepository(connection),
+                    BarnetilleggRepository(connection)
                 )
             val søknadsdato = LocalDate.now().minusDays(29)
             val periode = Periode(søknadsdato, søknadsdato.plusYears(3))
@@ -94,6 +97,8 @@ class UnderveisServiceTest {
                 innsendingsTidspunkt = mapOf(),
                 kvote = kvote,
                 bruddAktivitetsplikt = setOf(),
+                etAnnetSted = listOf(),
+                barnetillegg = BarnetilleggGrunnlag(1, listOf())
             )
 
             val vurderingTidslinje = underveisService.vurderRegler(input)

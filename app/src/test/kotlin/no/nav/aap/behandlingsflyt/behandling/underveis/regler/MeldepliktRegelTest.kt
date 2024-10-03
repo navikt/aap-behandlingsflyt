@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvote
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.komponenter.type.Periode
@@ -12,8 +13,8 @@ import java.time.LocalDate
 import java.time.Period
 
 
-class AktivitetRegelTest {
-    private val regel = AktivitetRegel()
+class MeldepliktRegelTest {
+    private val regel = MeldepliktRegel()
     private val kvote = Kvote(Period.ofYears(3))
 
     @Test
@@ -32,6 +33,8 @@ class AktivitetRegelTest {
             ),
             kvote = kvote,
             bruddAktivitetsplikt = setOf(),
+            etAnnetSted = listOf(),
+            barnetillegg = BarnetilleggGrunnlag(1, listOf())
         )
 
         val vurdertTidslinje = regel.vurder(input, Tidslinje())
@@ -51,6 +54,8 @@ class AktivitetRegelTest {
             innsendingsTidspunkt = mapOf(),
             kvote = kvote,
             bruddAktivitetsplikt = setOf(),
+            etAnnetSted = listOf(),
+            barnetillegg = BarnetilleggGrunnlag(1, listOf())
         )
 
         val vurdertTidslinje = regel.vurder(input, Tidslinje())
@@ -73,6 +78,8 @@ class AktivitetRegelTest {
             ),
             kvote = kvote,
             bruddAktivitetsplikt = setOf(),
+            etAnnetSted = listOf(),
+            barnetillegg = BarnetilleggGrunnlag(1, listOf())
         )
 
         val vurdertTidslinje = regel.vurder(input, Tidslinje())
@@ -99,6 +106,8 @@ class AktivitetRegelTest {
             ),
             kvote = kvote,
             bruddAktivitetsplikt = setOf(),
+            etAnnetSted = listOf(),
+            barnetillegg = BarnetilleggGrunnlag(1, listOf())
         )
 
         val vurdertTidslinje = regel.vurder(input, Tidslinje())

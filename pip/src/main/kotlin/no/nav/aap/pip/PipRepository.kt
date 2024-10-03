@@ -6,7 +6,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 
 class PipRepository(private val connection: DBConnection) {
     class IdentPåSak(
-        private val ident: String,
+        val ident: String,
         private val opprinnelse: Opprinnelse
     ) {
         enum class Opprinnelse {

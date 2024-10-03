@@ -1,14 +1,16 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AktivitetRegel
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.InstitusjonRegel
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AktivitetspliktRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.GraderingArbeidRegel
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.InstitusjonRegel
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.RettTilRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.SoningRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UnderveisInput
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Vurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
@@ -23,7 +25,8 @@ class UnderveisService(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val pliktkortRepository: PliktkortRepository,
     private val underveisRepository: UnderveisRepository,
-    private val bruddAktivitetspliktRepository: BruddAktivitetspliktRepository
+    private val bruddAktivitetspliktRepository: BruddAktivitetspliktRepository,
+    private val barnetilleggRepository: BarnetilleggRepository
 ) {
 
     private val kvoteService = KvoteService()
@@ -31,7 +34,8 @@ class UnderveisService(
     private val regelset = listOf(
         RettTilRegel(),
         InstitusjonRegel(),
-        AktivitetRegel(),
+        MeldepliktRegel(),
+        AktivitetspliktRegel(),
         GraderingArbeidRegel(),
         VarighetRegel(),
         SoningRegel()
@@ -51,7 +55,7 @@ class UnderveisService(
                         it.verdi.utfall(),
                         it.verdi.avslagsårsak(),
                         it.verdi.grenseverdi(),
-                        it.verdi.gradering()
+                        it.verdi.gradering(),
                     )
                 })
         return vurderRegler
@@ -82,7 +86,7 @@ class UnderveisService(
         val innsendingsTidspunkt = pliktkortGrunnlag?.innsendingsdatoPerMelding() ?: mapOf()
         val kvote = kvoteService.beregn(behandlingId)
         //val annetStedGrunnlag = etAnnetStedRepository().hentHvisEksisterer(behandlingId) //TODO: Vent / Implementer denne
-
+        val barnetilleggGrunnlag = requireNotNull(barnetilleggRepository.hentHvisEksisterer(behandlingId))
         val bruddAktivitetsplikt = bruddAktivitetspliktRepository.hentGrunnlagHvisEksisterer(behandlingId)
             ?.bruddene
             ?: emptySet()
@@ -95,7 +99,8 @@ class UnderveisService(
             innsendingsTidspunkt = innsendingsTidspunkt,
             kvote = kvote,
             bruddAktivitetsplikt = bruddAktivitetsplikt,
-            etAnnetSted = listOf()
+            etAnnetSted = listOf(),
+            barnetillegg = barnetilleggGrunnlag
         )
     }
 }

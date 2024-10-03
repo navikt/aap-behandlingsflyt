@@ -226,7 +226,7 @@ data class UtbetalingMedBarneTilegg(val beløp: Beløp, val barnetilegg: Beløp,
 }
 
 class BarneTileggUtbetaling :
-    JoinStyle<Int, Beløp, Beløp> by JoinStyle.CROSS_JOIN(
+    JoinStyle<Int, Beløp, Beløp> by JoinStyle.OUTER_JOIN(
         { periode: Periode, venstreSegment, høyreSegment ->
             val prosent = venstreSegment?.verdi ?: 0
             val beløp = høyreSegment?.verdi ?: Beløp(0)
@@ -234,17 +234,17 @@ class BarneTileggUtbetaling :
         })
 
 class KombinertUtbetaling :
-    JoinStyle<Utbetaling, Beløp, UtbetalingMedBarneTilegg> by JoinStyle.CROSS_JOIN(
+    JoinStyle<Utbetaling, Beløp, UtbetalingMedBarneTilegg> by JoinStyle.OUTER_JOIN(
         { periode: Periode, venstreSegment, høyreSegment ->
             if (venstreSegment == null) {
-                return@CROSS_JOIN null
+                return@OUTER_JOIN null
             }
             val beløp = høyreSegment?.verdi ?: Beløp(0)
             Segment(periode, UtbetalingMedBarneTilegg(venstreSegment.verdi.beløp, beløp, venstreSegment.verdi.prosent))
         })
 
 class UtregningSammenslåer :
-    JoinStyle<Beløp, Prosent, Utbetaling> by JoinStyle.CROSS_JOIN(
+    JoinStyle<Beløp, Prosent, Utbetaling> by JoinStyle.OUTER_JOIN(
         { periode: Periode, venstreSegment, høyreSegment ->
             val beløp = venstreSegment?.verdi ?: Beløp(0)
             val prosent = høyreSegment?.verdi ?: Prosent(0)

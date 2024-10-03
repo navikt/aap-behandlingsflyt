@@ -39,13 +39,13 @@ class GraderingArbeidRegel : UnderveisRegel {
         val grenseverdiGradering = resultat.mapValue { Prosent(HØYESTE_GRADERING_NORMAL) }
             .kombiner(opptrappingTidslinje, StandardSammenslåere.prioriterHøyreSideCrossJoin())
 
-        return resultat.kombiner(grenseverdiGradering, JoinStyle.CROSS_JOIN{ periode, venstreSegment, høyreSegment ->
+        return resultat.kombiner(grenseverdiGradering, JoinStyle.OUTER_JOIN{ periode, venstreSegment, høyreSegment ->
             var vurdering = venstreSegment?.verdi
             if (høyreSegment != null) {
                 vurdering = vurdering?.leggTilGrenseverdi(høyreSegment.verdi)
             }
             Segment(periode, vurdering)
-        }).kombiner(arbeidsTidslinje,JoinStyle.CROSS_JOIN { periode, venstreSegment, høyreSegment ->
+        }).kombiner(arbeidsTidslinje,JoinStyle.OUTER_JOIN { periode, venstreSegment, høyreSegment ->
             var vurdering: Vurdering = venstreSegment?.verdi ?: Vurdering()
             if (høyreSegment != null) {
                 vurdering = vurdering.leggTilGradering(høyreSegment.verdi)

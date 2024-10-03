@@ -13,7 +13,7 @@ class Sykdomsvurdering(
     val erSkadeSykdomEllerLyteVesentligdel: Boolean?,
     val erNedsettelseIArbeidsevneHøyereEnnNedreGrense: Boolean?,
     val nedreGrense: NedreGrense?,
-    val nedsattArbeidsevneDato: Int?,
+    val nedsattArbeidsevneDato: LocalDate?,
     val erArbeidsevnenNedsatt: Boolean?
 ) {
     fun toDto(yrkesskadevurdering: Yrkesskadevurdering?) = SykdomsvurderingDto(

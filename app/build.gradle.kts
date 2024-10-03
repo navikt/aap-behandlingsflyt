@@ -50,18 +50,18 @@ fun getCheckedOutGitCommitHash(): String {
 }
 
 
-val komponenterVersjon = "0.0.77"
+val komponenterVersjon = "0.0.91"
 
 dependencies {
     implementation("io.ktor:ktor-server-cors:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
 
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.2")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.13.3")
+ 
+    implementation("io.micrometer:micrometer-registry-prometheus:1.13.5")
     implementation("ch.qos.logback:logback-classic:1.5.8")
     implementation("net.logstash.logback:logstash-logback-encoder:8.0")
 
-    implementation("no.nav.aap.statistikk:api-kontrakt:0.0.7")
+    implementation("no.nav.aap.statistikk:api-kontrakt:0.0.10")
     implementation("no.nav.aap.kelvin:motor:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:dbconnect:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:dbmigrering:$komponenterVersjon")
@@ -78,7 +78,7 @@ dependencies {
     implementation(project(":dbflyway"))
     implementation(project(":pip"))
     implementation("com.zaxxer:HikariCP:5.1.0")
-    implementation("org.flywaydb:flyway-database-postgresql:10.17.3")
+    implementation("org.flywaydb:flyway-database-postgresql:10.18.2")
     runtimeOnly("org.postgresql:postgresql:42.7.4")
 
     testImplementation(project(":dbtestdata"))

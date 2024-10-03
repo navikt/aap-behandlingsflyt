@@ -8,7 +8,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurd
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import java.time.Year
 
 
 class SykdomsvilkårTest {
@@ -30,7 +29,7 @@ class SykdomsvilkårTest {
                     erSkadeSykdomEllerLyteVesentligdel = true,
                     erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
                     nedreGrense = NedreGrense.FEMTI,
-                    nedsattArbeidsevneDato = Year.now().value,
+                    nedsattArbeidsevneDato = LocalDate.now(),
                     erArbeidsevnenNedsatt = true
                 ),
                 studentvurdering = null
@@ -52,7 +51,7 @@ class SykdomsvilkårTest {
                     erSkadeSykdomEllerLyteVesentligdel = true,
                     erNedsettelseIArbeidsevneHøyereEnnNedreGrense = false,
                     nedreGrense = NedreGrense.FEMTI,
-                    nedsattArbeidsevneDato = Year.now().value,
+                    nedsattArbeidsevneDato = LocalDate.now(),
                     erArbeidsevnenNedsatt = true
                 ),
                 studentvurdering = null

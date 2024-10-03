@@ -2,6 +2,9 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
 import no.nav.aap.behandlingsflyt.dbtestdata.ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_7
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Type.IKKE_AKTIVT_BIDRAG
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Type.IKKE_MØTT_TIL_BEHANDLING
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
@@ -24,8 +27,8 @@ class BruddAktivitetspliktRepositoryTest {
             val repo = BruddAktivitetspliktRepository(connection)
 
             nyeBrudd(connection, sak,
-                brudd = AktivitetType.IKKE_AKTIVT_BIDRAG,
-                paragraf = Paragraf.PARAGRAF_11_7,
+                brudd = IKKE_AKTIVT_BIDRAG,
+                paragraf = PARAGRAF_11_7,
                 begrunnelse = "Orket ikke",
                 perioder = listOf(Periode(LocalDate.now(), LocalDate.now().plusDays(5))),
             )
@@ -41,15 +44,15 @@ class BruddAktivitetspliktRepositoryTest {
             val sak = nySak(connection)
             val repo = BruddAktivitetspliktRepository(connection)
             nyeBrudd(connection, sak,
-                brudd = AktivitetType.IKKE_MØTT_TIL_BEHANDLING,
-                paragraf = Paragraf.PARAGRAF_11_7,
+                brudd = IKKE_MØTT_TIL_BEHANDLING,
+                paragraf = PARAGRAF_11_7,
                 begrunnelse = "Ville ikke",
                 perioder = listOf(Periode(LocalDate.now(), LocalDate.now().plusDays(5))),
             )
 
             nyeBrudd(connection, sak,
-                brudd = AktivitetType.IKKE_MØTT_TIL_BEHANDLING,
-                paragraf = Paragraf.PARAGRAF_11_7,
+                brudd = IKKE_MØTT_TIL_BEHANDLING,
+                paragraf = PARAGRAF_11_7,
                 begrunnelse = "Fant ikke fram",
                 perioder = listOf(Periode(LocalDate.now().plusDays(5), LocalDate.now().plusDays(10))),
             )
@@ -65,8 +68,8 @@ class BruddAktivitetspliktRepositoryTest {
             val sak = nySak(connection)
             val repo = BruddAktivitetspliktRepository(connection)
             nyeBrudd(connection, sak,
-                brudd = AktivitetType.IKKE_MØTT_TIL_BEHANDLING,
-                paragraf = Paragraf.PARAGRAF_11_7,
+                brudd = IKKE_MØTT_TIL_BEHANDLING,
+                paragraf = PARAGRAF_11_7,
                 begrunnelse = "Dobbel periode uten oppmøte",
                 perioder = listOf(
                     Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
@@ -118,8 +121,8 @@ fun nySak(connection: DBConnection): Sak {
 fun nyeBrudd(
     connection: DBConnection,
     sak: Sak,
-    brudd: AktivitetType = AktivitetType.IKKE_MØTT_TIL_BEHANDLING,
-    paragraf: Paragraf = Paragraf.PARAGRAF_11_7,
+    brudd: BruddAktivitetsplikt.Type = IKKE_MØTT_TIL_BEHANDLING,
+    paragraf: BruddAktivitetsplikt.Paragraf = PARAGRAF_11_7,
     begrunnelse: String = "En begrunnnelse",
     perioder: List<Periode> = listOf(Periode(LocalDate.now(), LocalDate.now().plusDays(5)))
 ): List<BruddAktivitetsplikt> {

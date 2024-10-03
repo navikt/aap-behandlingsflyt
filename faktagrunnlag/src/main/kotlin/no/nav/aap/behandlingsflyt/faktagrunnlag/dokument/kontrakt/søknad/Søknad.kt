@@ -9,6 +9,7 @@ class Søknad(
     val yrkesskade: String,
     val oppgitteBarn: OppgitteBarn?
 ) {
+    // TODO: Håndtere IKKE_OPPGITT?
     fun harYrkesskade(): Boolean {
         return yrkesskade.uppercase() == "JA"
     }
@@ -21,22 +22,24 @@ class SøknadStudentDto(
     fun erStudent(): ErStudentStatus {
       if (erStudent.uppercase() == "JA"){
           return ErStudentStatus.JA
-      } else if (erStudent.uppercase() == "AVBRUTT"){
+      } else if (erStudent.uppercase() == "AVBRUTT") {
           return ErStudentStatus.AVBRUTT
-      } else {
+      } else if (erStudent.uppercase() == "NEI") {
           return ErStudentStatus.NEI
+      } else {
+          return ErStudentStatus.IKKE_OPPGITT
       }
     }
 
-    fun skalGjennopptaStudie(): SkalGjenopptaStudieStatus? {
+    fun skalGjennopptaStudie(): SkalGjenopptaStudieStatus {
         if (kommeTilbake?.uppercase() == "JA"){
             return SkalGjenopptaStudieStatus.JA
         } else if (kommeTilbake?.uppercase() == "NEI"){
             return SkalGjenopptaStudieStatus.NEI
         } else if (kommeTilbake?.uppercase() == "VET IKKE"){
             return SkalGjenopptaStudieStatus.VET_IKKE
-        } else{
-            return null
+        } else {
+            return SkalGjenopptaStudieStatus.IKKE_OPPGITT
         }
     }
 }

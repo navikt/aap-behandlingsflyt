@@ -117,7 +117,7 @@ object FakeServers : AutoCloseable {
             }
         }
         routing {
-            post("/opprett-oppgave") {
+            post("/oppdater-oppgaver") {
                 call.respond(HttpStatusCode.Companion.NoContent)
             }
         }
@@ -202,6 +202,7 @@ object FakeServers : AutoCloseable {
                     IDENT_QUERY -> call.respond(identer(req))
                     PERSON_QUERY -> call.respond(personopplysninger(req))
                     PdlPersoninfoGateway.PERSONINFO_QUERY -> call.respond(navn(req))
+                    PdlPersoninfoGateway.PERSONINFO_BOLK_QUERY -> call.respond(bolknavn(req))
                     BARN_RELASJON_QUERY -> call.respond(barnRelasjoner(req))
                     PERSON_BOLK_QUERY -> call.respond(barn(req))
                     else -> call.respond(HttpStatusCode.Companion.BadRequest)
@@ -823,6 +824,7 @@ object FakeServers : AutoCloseable {
             extensions = null,
             data = HentPerson(
                 hentPerson = PdlNavnData(
+                    ident = testPerson.identer.first().identifikator,
                     navn = listOf(
                         PdlNavn(
                             fornavn = testPerson.navn.fornavn,
@@ -832,6 +834,28 @@ object FakeServers : AutoCloseable {
                     )
                 )
             ),
+        )
+    }
+
+    private fun bolknavn(req: PdlRequest): PdlPersonNavnDataResponse {
+        val navnData = req.variables.identer?.map {
+            val testPerson = hentEllerGenererTestPerson(it)
+            PdlNavnData(
+                ident = testPerson.identer.first().identifikator,
+                navn = listOf(
+                    PdlNavn(
+                        fornavn = testPerson.navn.fornavn,
+                        mellomnavn = null,
+                        etternavn = testPerson.navn.etternavn
+                    )
+                )
+            )
+        }
+
+        return PdlPersonNavnDataResponse(
+            errors = null,
+            extensions = null,
+            data = HentPerson(hentPersonBolk = navnData)
         )
     }
 
