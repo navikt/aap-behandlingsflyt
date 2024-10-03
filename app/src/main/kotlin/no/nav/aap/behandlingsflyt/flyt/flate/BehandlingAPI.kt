@@ -53,7 +53,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
                                     EndringDTO(
                                         status = endring.status,
                                         tidsstempel = endring.tidsstempel,
-                                        begrunnelse = endring.begrunnelse + "Noe",
+                                        begrunnelse = endring.begrunnelse,
                                         endretAv = endring.endretAv
                                     )
                                 }
@@ -91,8 +91,8 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
                     if (flytJobbRepository.hentJobberForBehandling(behandling.id.toLong()).isEmpty()) {
                         flytJobbRepository.leggTil(
                             JobbInput(ProsesserBehandlingJobbUtfører).forBehandling(
-                                behandling.sakId?.toLong(),
-                                behandling.id?.toLong()
+                                behandling.sakId.toLong(),
+                                behandling.id.toLong()
                             )
                         )
                     }

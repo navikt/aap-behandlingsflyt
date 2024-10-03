@@ -6,6 +6,10 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import java.time.LocalDateTime
 
+/**
+ * @param status Status på behandlingen.
+ * @param opprettetTidspunkt Når behandlingen ble opprettet.
+ */
 class BehandlingFlytStoppetHendelse(
     val personIdent: String,
     val saksnummer: Saksnummer,

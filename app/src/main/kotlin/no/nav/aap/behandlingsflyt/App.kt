@@ -43,10 +43,10 @@ import no.nav.aap.behandlingsflyt.flyt.flate.torsHammerApi
 import no.nav.aap.behandlingsflyt.hendelse.bruddaktivitetsplikt.aktivitetspliktApi
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
-import no.nav.aap.behandlingsflyt.server.authenticate.AZURE
 import no.nav.aap.behandlingsflyt.server.exception.FlytOperasjonException
 import no.nav.aap.behandlingsflyt.server.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.server.prosessering.ProsesseringsJobber
+import no.nav.aap.komponenter.AZURE
 import no.nav.aap.komponenter.commonKtorModule
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbmigrering.Migrering
