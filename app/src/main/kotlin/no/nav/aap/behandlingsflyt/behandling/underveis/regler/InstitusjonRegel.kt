@@ -106,7 +106,7 @@ class InstitusjonRegel : UnderveisRegel {
             input.etAnnetSted.filter {
                 it.institusjon.erPåInstitusjon
             }.map {
-                if (it.institusjon.forsørgerEktefelle) {
+                if (it.institusjon.forsørgerEktefelle || it.institusjon.harFasteKostnader) {
                     Segment(it.periode, InstitusjonVurdering(skalReduseres = false, it.begrunnelse, Årsak.FORSØRGER, Prosent.`100_PROSENT`))
                 } else {
                     Segment(it.periode, InstitusjonVurdering(skalReduseres = true, it.begrunnelse, Årsak.KOST_OG_LOSJI, Prosent.`50_PROSENT`))

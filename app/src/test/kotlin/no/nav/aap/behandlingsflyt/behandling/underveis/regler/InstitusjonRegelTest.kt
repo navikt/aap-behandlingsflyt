@@ -30,9 +30,9 @@ class InstitusjonRegelTest {
 
         val vurderingFraTidligereResultat = Vurdering(EnumMap(Vilkårtype::class.java), null, null, Gradering(TimerArbeid(BigDecimal(37.5)), Prosent(100), Prosent(100)))
 
-        val innlagt = EtAnnetSted(Periode(LocalDate.of(2024, 1, 15), (LocalDate.of(2024, 7, 1))), Soning(false, false), Institusjon(true, false), "")
-        val forsørgerNoenMensInnlagt = EtAnnetSted(Periode(LocalDate.of(2024, 7, 2), (LocalDate.of(2024, 7, 5))), Soning(false, false), Institusjon(true, true), "")
-        val innlagtMedReduksjon = EtAnnetSted(Periode(LocalDate.of(2024, 7, 6), (LocalDate.of(2024, 7, 10))), Soning(false, false), Institusjon(true, false), "")
+        val innlagt = EtAnnetSted(Periode(LocalDate.of(2024, 1, 15), (LocalDate.of(2024, 7, 1))), Soning(false, false), Institusjon(true, false, false), "")
+        val forsørgerNoenMensInnlagt = EtAnnetSted(Periode(LocalDate.of(2024, 7, 2), (LocalDate.of(2024, 7, 5))), Soning(false, false), Institusjon(true, true, false), "")
+        val innlagtMedReduksjon = EtAnnetSted(Periode(LocalDate.of(2024, 7, 6), (LocalDate.of(2024, 7, 10))), Soning(false, false), Institusjon(true, false, false), "")
 
         val intitusjonsOppholdet = listOf(innlagt, forsørgerNoenMensInnlagt, innlagtMedReduksjon)
         val barnetillegg = BarnetilleggGrunnlag(1, listOf(BarnetilleggPeriode(Periode(LocalDate.of(2024, 5, 1), LocalDate.of(2024, 6, 10)), setOf())))
