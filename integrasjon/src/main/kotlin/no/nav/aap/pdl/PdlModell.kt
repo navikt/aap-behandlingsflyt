@@ -44,7 +44,7 @@ data class HentPerson(
     val hentPersonBolk: List<PdlNavnData>? = null
 )
 data class PdlNavnData(
-    val ident: String,
+    val ident: String?,
     val navn: List<PdlNavn>
 )
 

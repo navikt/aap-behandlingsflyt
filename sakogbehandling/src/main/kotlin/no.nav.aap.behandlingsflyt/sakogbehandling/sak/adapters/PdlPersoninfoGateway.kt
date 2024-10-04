@@ -83,7 +83,7 @@ object PdlPersoninfoGateway : PersoninfoGateway {
     private fun mapPersoninformasjon(data: PdlNavnData): Personinfo {
         val navn = data.navn.first()
 
-        return Personinfo(Ident(data.ident), navn.fornavn, navn.mellomnavn, navn.etternavn)
+        return Personinfo(Ident(data.ident!!), navn.fornavn, navn.mellomnavn, navn.etternavn)
     }
 }
 
