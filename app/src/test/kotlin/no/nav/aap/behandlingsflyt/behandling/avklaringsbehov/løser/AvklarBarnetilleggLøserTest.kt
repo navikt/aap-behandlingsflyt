@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingerForBarnetillegg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarnDto
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -24,8 +25,8 @@ class AvklarBarnetilleggLøserTest {
         val nyeVurderinger = AvklarBarnetilleggLøsning(
             vurderingerForBarnetillegg = VurderingerForBarnetillegg(
                 listOf(
-                    VurdertBarn(
-                        barnIdent,
+                    VurdertBarnDto(
+                        barnIdent.identifikator,
                         listOf(VurderingAvForeldreAnsvar(LocalDate.now().minusMonths(1), false, "neida"))
                     )
                 )
