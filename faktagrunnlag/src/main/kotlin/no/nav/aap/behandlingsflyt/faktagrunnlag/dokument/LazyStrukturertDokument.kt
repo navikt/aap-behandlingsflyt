@@ -16,7 +16,6 @@ class LazyStrukturertDokument(
     private val connection: DBConnection
 ) : StrukturerteData {
 
-    @Suppress("UNCHECKED_CAST")
     fun <T> hent(): T? {
         val strukturerteData =
             connection.queryFirstOrNull("SELECT strukturert_dokument FROM MOTTATT_DOKUMENT WHERE referanse_type = ? AND referanse = ?") {
@@ -31,6 +30,8 @@ class LazyStrukturertDokument(
         if (strukturerteData == null) {
             return null
         }
+
+        @Suppress("UNCHECKED_CAST")
         return when (brevkode) {
             Brevkode.SØKNAD -> DefaultJsonMapper.fromJson(strukturerteData, Søknad::class.java) as T
             Brevkode.PLIKTKORT -> DefaultJsonMapper.fromJson(strukturerteData, Pliktkort::class.java) as T

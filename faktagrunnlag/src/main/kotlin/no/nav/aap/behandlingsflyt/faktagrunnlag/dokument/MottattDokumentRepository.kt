@@ -11,7 +11,7 @@ import no.nav.aap.verdityper.sakogbehandling.SakId
 class MottattDokumentRepository(private val connection: DBConnection) {
     fun lagre(mottattDokument: MottattDokument) {
         val query = """
-            INSERT INTO MOTTATT_DOKUMENT (sak_id, MOTTATT_TID, type, status, strukturert_dokument, referanse, referanse_type) VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO MOTTATT_DOKUMENT (sak_id, MOTTATT_TID, type, status, strukturert_dokument, referanse, referanse_type, behandling_id) VALUES (?, ?, ?, ?, ?, ?, ?,?)
         """.trimIndent()
 
         connection.execute(query) {
@@ -23,11 +23,17 @@ class MottattDokumentRepository(private val connection: DBConnection) {
                 setString(5, mottattDokument.ustrukturerteData())
                 setString(6, mottattDokument.referanse.verdi)
                 setEnumName(7, mottattDokument.referanse.type)
+                setLong(8, mottattDokument.behandlingId?.toLong())
             }
         }
     }
 
-    fun oppdaterStatus(dokumentReferanse: MottattDokumentReferanse, behandlingId: BehandlingId, sakId: SakId, status: Status) {
+    fun oppdaterStatus(
+        dokumentReferanse: MottattDokumentReferanse,
+        behandlingId: BehandlingId,
+        sakId: SakId,
+        status: Status
+    ) {
         val query = """
             UPDATE MOTTATT_DOKUMENT SET behandling_id = ?, status = ? WHERE referanse_type = ? AND referanse = ? AND sak_id = ?
         """.trimIndent()
@@ -68,7 +74,7 @@ class MottattDokumentRepository(private val connection: DBConnection) {
         return MottattDokument(
             referanse = referanse,
             sakId = SakId(row.getLong("sak_id")),
-            behandlingId = null,
+            behandlingId = row.getLongOrNull("BEHANDLING_ID")?.let { BehandlingId(it) },
             mottattTidspunkt = row.getLocalDateTime("MOTTATT_TID"),
             type = brevkode,
             status = row.getEnum("status"),

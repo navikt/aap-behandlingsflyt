@@ -63,7 +63,7 @@ class MottaDokumentService(
         return ubehandledePliktkort.map {
             UbehandletPliktkort(
                 it.referanse.asJournalpostId,
-                (it.strukturerteData<Pliktkort>() as StrukturertDokument<Pliktkort>).data.timerArbeidPerPeriode
+                it.strukturerteData<Pliktkort>()!!.data.timerArbeidPerPeriode
             )
         }.toSet()
     }
