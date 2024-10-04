@@ -1,5 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn
 
-import no.nav.aap.komponenter.type.Periode
+import java.time.LocalDate
 
-class VurderingAvForeldreAnsvar(val periode: Periode, val harForeldreAnsvar: Boolean, val begrunnelse: String)
+class VurderingAvForeldreAnsvar(val fraDato: LocalDate, val harForeldreAnsvar: Boolean, val begrunnelse: String)

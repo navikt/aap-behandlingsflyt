@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.Ident
 
@@ -149,7 +150,7 @@ class BarnRepository(private val connection: DBConnection) {
             }
             setRowMapper { row ->
                 VurderingAvForeldreAnsvar(
-                    row.getPeriode("periode"),
+                    row.getPeriode("periode").fom,
                     row.getBoolean("HAR_FORELDREANSVAR"),
                     row.getString("BEGRUNNELSE")
                 )
@@ -330,7 +331,7 @@ class BarnRepository(private val connection: DBConnection) {
             ) {
                 setParams {
                     setLong(1, barnVurderingId)
-                    setPeriode(2, it.periode)
+                    setPeriode(2, Periode(it.fraDato, it.fraDato))
                     setString(3, it.begrunnelse)
                     setBoolean(4, it.harForeldreAnsvar)
                 }
