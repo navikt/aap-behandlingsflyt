@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag1
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.hendelse.avløp.AvsluttetBehandlingHendelseDTO
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
@@ -15,6 +16,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendels
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.EndringDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
@@ -56,7 +58,8 @@ class StatistikkJobbUtfører(
     private val behandlingRepository: BehandlingRepository,
     private val sakService: SakService,
     private val tilkjentYtelseRepository: TilkjentYtelseRepository,
-    private val beregningsgrunnlagRepository: BeregningsgrunnlagRepository
+    private val beregningsgrunnlagRepository: BeregningsgrunnlagRepository,
+    private val dokumentRepository: MottattDokumentRepository,
 ) : JobbUtfører {
     override fun utfør(input: JobbInput) {
         log.info("Utfører jobbinput statistikk: $input")
@@ -82,10 +85,20 @@ class StatistikkJobbUtfører(
     }
 
     private fun oversettHendelseTilKontrakt(hendelse: BehandlingFlytStoppetHendelse): StoppetBehandling {
+        val behandling = behandlingRepository.hent(hendelse.referanse)
+        val hentDokumenterAvType = dokumentRepository.hentDokumenterAvType(
+            behandling.sakId,
+            Brevkode.SØKNAD
+        )
+
+        val mottattTidspunkt = hentDokumenterAvType
+            .filter { it.behandlingId == behandling.id }
+            .minOf { it.mottattTidspunkt }
+
         val statistikkHendelse = StoppetBehandling(
             saksnummer = hendelse.saksnummer.toString(),
             behandlingType = typeBehandlingTilStatistikkKontrakt(hendelse.behandlingType),
-            status = hendelse.status.toString(),
+            status = behandlingStatusTilStatistikkKontrakt(hendelse.status),
             ident = hendelse.personIdent,
             avklaringsbehov = hendelse.avklaringsbehov.map { avklaringsbehovHendelseDto ->
                 AvklaringsbehovHendelse(
@@ -107,10 +120,19 @@ class StatistikkJobbUtfører(
             },
             behandlingReferanse = hendelse.referanse.referanse,
             behandlingOpprettetTidspunkt = hendelse.opprettetTidspunkt,
-            versjon = hendelse.versjon
+            versjon = hendelse.versjon,
+            mottattTid = mottattTidspunkt
         )
         return statistikkHendelse
     }
+
+    private fun behandlingStatusTilStatistikkKontrakt(status: BehandlingStatus): no.nav.aap.statistikk.api_kontrakt.BehandlingStatus =
+        when (status) {
+            no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.OPPRETTET -> no.nav.aap.statistikk.api_kontrakt.BehandlingStatus.OPPRETTET
+            no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.UTREDES -> no.nav.aap.statistikk.api_kontrakt.BehandlingStatus.UTREDES
+            no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.IVERKSETTES -> no.nav.aap.statistikk.api_kontrakt.BehandlingStatus.IVERKSETTES
+            no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET -> no.nav.aap.statistikk.api_kontrakt.BehandlingStatus.AVSLUTTET
+        }
 
     private fun endringStatusTilStatistikkKontrakt(endring: EndringDTO): EndringStatus = when (endring.status) {
         Status.OPPRETTET -> EndringStatus.OPPRETTET
@@ -278,7 +300,8 @@ class StatistikkJobbUtfører(
                 behandlingRepository,
                 sakService,
                 TilkjentYtelseRepository(connection),
-                BeregningsgrunnlagRepository(connection)
+                BeregningsgrunnlagRepository(connection),
+                dokumentRepository = MottattDokumentRepository(connection)
             )
         }
 

@@ -217,7 +217,8 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         årsaker: List<ÅrsakInternal>
     ): Avklaringsbehov {
 
-        val relevanteEndringer = endringer.filter { it.avklaringsbehovId == avklaringsbehov.id }
+        val relevanteEndringer = endringer
+            .filter { it.avklaringsbehovId == avklaringsbehov.id }
             .map { endring -> mapEndring(endring, årsaker) }
             .sorted()
             .toMutableList()
@@ -235,7 +236,8 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         endring: EndringInternal,
         årsaker: List<ÅrsakInternal>
     ): Endring {
-        val relevanteÅrsaker = årsaker.filter { it.endringId == endring.id }
+        val relevanteÅrsaker = årsaker
+            .filter { it.endringId == endring.id }
             .map { årsak -> ÅrsakTilRetur(årsak = årsak.årsak, årsakFritekst = årsak.årsakFritekst) }
 
         return Endring(
