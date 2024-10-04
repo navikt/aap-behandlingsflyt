@@ -17,7 +17,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVe
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.dbtestdata.ident
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
@@ -241,7 +240,7 @@ class FlytOrkestratorTest {
         // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
         dataSource.transaction { dbConnection ->
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, dbConnection)
-            assertThat(avklaringsbehov.alle()).anySatisfy { !it.erÅpent() && it.definisjon == Definisjon.FORESLÅ_VEDTAK }
+            assertThat(avklaringsbehov.alle()).anySatisfy { assertThat(it.erÅpent() && it.definisjon == Definisjon.FORESLÅ_VEDTAK).isTrue() }
             assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         }
 
@@ -534,7 +533,7 @@ class FlytOrkestratorTest {
         // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
         dataSource.transaction {
             val avklaringsbehovene = hentAvklaringsbehov(behandling.id, it)
-            assertThat(avklaringsbehovene.alle()).anySatisfy { avklaringsbehov -> assertTrue(avklaringsbehov.erÅpent() && avklaringsbehov.definisjon == Definisjon.FORESLÅ_VEDTAK) }
+            assertThat(avklaringsbehovene.alle()).anySatisfy { avklaringsbehov -> assertThat(avklaringsbehov.erÅpent() && avklaringsbehov.definisjon == Definisjon.FORESLÅ_VEDTAK).isTrue() }
             assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         }
 
@@ -553,7 +552,7 @@ class FlytOrkestratorTest {
         // Saken står til To-trinnskontroll hos beslutter
         dataSource.transaction { connection ->
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
-            assertThat(avklaringsbehov.alle()).anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.FATTE_VEDTAK) }
+            assertThat(avklaringsbehov.alle()).anySatisfy { assertThat(it.erÅpent() && it.definisjon == Definisjon.FATTE_VEDTAK).isTrue() }
             assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         }
         behandling = hentBehandling(sak.id)
@@ -767,8 +766,9 @@ class FlytOrkestratorTest {
         // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
         dataSource.transaction { connection ->
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
-            // TODO: Denne feiler ved assertTrue - fiks!
-            assertThat(avklaringsbehov.alle()).anySatisfy { behov -> behov.erÅpent() && behov.definisjon == Definisjon.FORESLÅ_VEDTAK }
+            val actual = avklaringsbehov.alle()
+            assertThat(actual).isNotEmpty()
+            assertThat(actual).anySatisfy { behov -> assertThat(behov.erÅpent() && behov.definisjon == Definisjon.KVALITETSSIKRING).isTrue() }
             assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         }
 
@@ -810,7 +810,7 @@ class FlytOrkestratorTest {
         // Saken står til To-trinnskontroll hos beslutter
         dataSource.transaction { connection ->
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
-            assertThat(avklaringsbehov.alle()).anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.FATTE_VEDTAK) }
+            assertThat(avklaringsbehov.alle()).anySatisfy { assertThat(it.erÅpent() && it.definisjon == Definisjon.FATTE_VEDTAK).isTrue() }
             assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         }
         behandling = hentBehandling(sak.id)
@@ -841,7 +841,7 @@ class FlytOrkestratorTest {
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         dataSource.transaction { connection ->
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
-            assertThat(avklaringsbehov.alle()).anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.AVKLAR_SYKDOM) }
+            assertThat(avklaringsbehov.alle()).anySatisfy { assertThat(it.erÅpent() && it.definisjon == Definisjon.AVKLAR_SYKDOM).isTrue() }
         }
 
         dataSource.transaction {
@@ -875,7 +875,7 @@ class FlytOrkestratorTest {
         // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
         dataSource.transaction { connection ->
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
-            assertThat(avklaringsbehov.alle()).anySatisfy { behov -> assertTrue(behov.erÅpent() && behov.definisjon == Definisjon.FORESLÅ_VEDTAK) }
+            assertThat(avklaringsbehov.alle()).anySatisfy { behov -> assertThat(behov.erÅpent() && behov.definisjon == Definisjon.FORESLÅ_VEDTAK).isTrue() }
             assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         }
 
@@ -894,7 +894,7 @@ class FlytOrkestratorTest {
         // Saken står til To-trinnskontroll hos beslutter
         dataSource.transaction { connection ->
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
-            assertThat(avklaringsbehov.alle()).anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.FATTE_VEDTAK) }
+            assertThat(avklaringsbehov.alle()).anySatisfy { assertThat(it.erÅpent() && it.definisjon == Definisjon.FATTE_VEDTAK).isTrue() }
             assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         }
         behandling = hentBehandling(sak.id)
@@ -1047,7 +1047,7 @@ class FlytOrkestratorTest {
 
         dataSource.transaction { connection ->
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
-            assertThat(avklaringsbehov.alle()).anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.AVKLAR_SYKDOM) }
+            assertThat(avklaringsbehov.alle()).anySatisfy { assertThat(it.erÅpent() && it.definisjon == Definisjon.AVKLAR_SYKDOM).isTrue() }
         }
 
         hendelsesMottak.håndtere(
@@ -1077,8 +1077,8 @@ class FlytOrkestratorTest {
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
             assertThat(avklaringsbehov.alle())
                 .hasSize(2)
-                .anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.MANUELT_SATT_PÅ_VENT) }
-                .anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.AVKLAR_SYKDOM) }
+                .anySatisfy { assertThat(it.erÅpent() && it.definisjon == Definisjon.MANUELT_SATT_PÅ_VENT).isTrue() }
+                .anySatisfy { assertThat(it.erÅpent() && it.definisjon == Definisjon.AVKLAR_SYKDOM).isTrue() }
         }
         ventPåSvar(sak.id, behandling.id)
         hendelsesMottak.håndtere(
@@ -1101,9 +1101,8 @@ class FlytOrkestratorTest {
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
             assertThat(avklaringsbehov.alle())
                 .hasSize(2)
-                // TODO: Denne feiler ved assertTrue - fiks!
-                .anySatisfy { !it.erÅpent() && it.definisjon == Definisjon.MANUELT_SATT_PÅ_VENT }
-                .anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.AVKLAR_SYKDOM) }
+                .anySatisfy { assertThat(it.erÅpent() && it.definisjon == Definisjon.MANUELT_SATT_PÅ_VENT).isTrue() }
+                .anySatisfy { assertThat(it.erÅpent() && it.definisjon == Definisjon.AVKLAR_SYKDOM).isTrue() }
         }
 
     }
