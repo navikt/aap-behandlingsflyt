@@ -13,5 +13,6 @@ enum class Årsak {
     BARNETILLEGG,
     FORSØRGER,
     UTEN_REDUKSJON_TRE_MND,
-    KOST_OG_LOSJI
+    KOST_OG_LOSJI,
+    FASTE_KOSTNADER
 }
