@@ -7,7 +7,7 @@ plugins {
 }
 
 dependencies {
-    implementation("no.nav:ktor-openapi-generator:1.0.34")
+    implementation("no.nav:ktor-openapi-generator:1.0.42")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.18.0")
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
 
