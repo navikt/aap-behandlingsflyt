@@ -15,8 +15,9 @@ class HelseinstitusjonRepository(private val connection: DBConnection) {
             BEGRUNNELSE,
             FAAR_KOST_OG_LOSJI,
             HAR_FASTE_UTGIFTER,
-            FORSOERGER_EKTEFELLE)
-            VALUES(?, ?, ?, ?, ?)
+            FORSOERGER_EKTEFELLE,
+            periode)
+            VALUES(?, ?, ?, ?, ?, ?::daterange)
         """.trimMargin()) {
             setParams {
                 setLong(1, behandlingId.toLong())
@@ -24,6 +25,7 @@ class HelseinstitusjonRepository(private val connection: DBConnection) {
                 setBoolean(3, helseinstitusjonVurdering.faarFriKostOgLosji)
                 setBoolean(4, helseinstitusjonVurdering.harFasteUtgifter)
                 setBoolean(5, helseinstitusjonVurdering.forsoergerEktefelle)
+                setPeriode(6, helseinstitusjonVurdering.periode)
             }
         }
 
@@ -84,7 +86,8 @@ class HelseinstitusjonRepository(private val connection: DBConnection) {
                 begrunnelse = row.getString("BEGRUNNELSE"),
                 faarFriKostOgLosji = row.getBoolean("FAAR_KOST_OG_LOSJI"),
                 forsoergerEktefelle = row.getBooleanOrNull("FORSOERGER_EKTEFELLE"),
-                harFasteUtgifter = row.getBooleanOrNull("HAR_FASTE_UTGIFTER")
+                harFasteUtgifter = row.getBooleanOrNull("HAR_FASTE_UTGIFTER"),
+                periode = row.getPeriode("PERIODE")
                 )
     }
 

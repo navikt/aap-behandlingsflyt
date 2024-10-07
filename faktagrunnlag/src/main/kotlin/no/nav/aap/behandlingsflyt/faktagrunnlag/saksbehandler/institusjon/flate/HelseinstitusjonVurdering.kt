@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate
 
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 
 data class HelseinstitusjonVurdering(
@@ -8,4 +9,5 @@ data class HelseinstitusjonVurdering(
     val faarFriKostOgLosji: Boolean,
     val forsoergerEktefelle: Boolean? = null,
     val harFasteUtgifter: Boolean? = null,
+    val periode: Periode,
 )

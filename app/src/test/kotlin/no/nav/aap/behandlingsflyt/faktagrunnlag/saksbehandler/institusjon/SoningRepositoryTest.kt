@@ -33,7 +33,8 @@ class SoningRepositoryTest {
                 soningUtenforFengsel = true,
                 førsteArbeidsdag = LocalDate.now(),
                 arbeidUtenforAnstalt = true,
-                begrunnelse = "YOLO"
+                begrunnelse = "YOLO",
+                periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
             )
 
             soningRepository.lagre(behandling.id, soningsvurdering)
@@ -51,11 +52,13 @@ class SoningRepositoryTest {
             val soningsvurdering1 = Soningsvurdering(
                 dokumenterBruktIVurdering = emptyList(),
                 soningUtenforFengsel = true,
+                periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
             )
 
             val soningsvurdering2 = Soningsvurdering(
                 dokumenterBruktIVurdering = emptyList(),
                 soningUtenforFengsel = false,
+                periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
             )
 
             soningRepository.lagre(behandling.id, soningsvurdering1)
@@ -78,7 +81,8 @@ class SoningRepositoryTest {
             val soningsvurdering = Soningsvurdering(
                 dokumenterBruktIVurdering = listOf(JournalpostId("yolo"), JournalpostId("swag")),
                 soningUtenforFengsel = true,
-                førsteArbeidsdag = LocalDate.now()
+                førsteArbeidsdag = LocalDate.now(),
+                periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
             )
 
             soningRepository.lagre(behandling.id, soningsvurdering)

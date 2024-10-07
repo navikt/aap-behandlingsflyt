@@ -35,14 +35,14 @@ class EtAnnetStedUtlederService(connection: DBConnection) {
                 segment.periode,
                 true
             )
-        })
+        }).komprimer()
 
         val barnetilleggTidslinje = Tidslinje(barnetillegg.map { segment ->
             Segment(
                 segment.periode,
                 true
             )
-        })
+        }).komprimer()
 
         //fjern perioder hvor bruker har barnetillegg gjennom hele helseinstitusjonsoppholdet
         val oppholdUtenBarnetillegg = Tidslinje(helseOppholdTidslinje.filter { segment ->
