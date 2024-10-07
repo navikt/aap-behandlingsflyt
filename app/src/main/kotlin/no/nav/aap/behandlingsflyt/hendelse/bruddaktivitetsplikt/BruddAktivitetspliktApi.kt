@@ -49,6 +49,7 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
                         brevkode = Brevkode.AKTIVITETSKORT,
                         dokumentReferanse = dokumentReferanse,
                         periode = Periode(fom, tom),
+                        payload = innsendingId
                     )
                 )
             }

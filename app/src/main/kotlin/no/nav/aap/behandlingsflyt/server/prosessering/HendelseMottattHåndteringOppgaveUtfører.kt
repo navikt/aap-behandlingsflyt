@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.server.prosessering
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.UnparsedStrukturertDokument
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterMottattDokumentService
@@ -64,7 +64,7 @@ class HendelseMottattHåndteringOppgaveUtfører(connection: DBConnection) : Jobb
             dokumentReferanse: MottattDokumentReferanse,
             brevkode: Brevkode,
             periode: Periode?,
-            payload: Any? = null,
+            payload: Any,
         ) = JobbInput(HendelseMottattHåndteringOppgaveUtfører)
             .apply {
                 forSak(sakId.toLong())
