@@ -64,6 +64,16 @@ class EtAnnetStedUtlederService(connection: DBConnection) {
             return BehovForAvklaringer(false, true)
         }
 
+        // Hvis det er mindre en 3 måneder siden sist opphold og bruker er nå innlagt
+        if(oppholdUtenBarnetillegg.segmenter().filter { segment -> segment.verdi }.any(
+                { segment ->
+                    segment.periode.tom >= LocalDate.now() && oppholdUtenBarnetillegg.segmenter().any { segment.periode.fom.minusMonths(3) <= it.periode.tom }
+                }
+            )
+        ) {
+            return BehovForAvklaringer(false, true)
+        }
+
         return BehovForAvklaringer(false, false)
     }
 
