@@ -42,10 +42,11 @@ internal fun oppdaterTilstandBasertPåNyeVurderinger(
     val nyeVurderinger = løsning.vurderingerForBarnetillegg.vurderteBarn
 
     nyeVurderinger.map { it.toVurdertBarn() }.forEach { nyVurdering ->
-        val oppdatertTidslinje = tidslinjePerBarn[nyVurdering.ident.identifikator]?.kombiner(
+        val eksisterendeTidslinje = tidslinjePerBarn[nyVurdering.ident.identifikator] ?: Tidslinje()
+        val oppdatertTidslinje = eksisterendeTidslinje.kombiner(
             nyVurdering.tilTidslinje(),
             StandardSammenslåere.prioriterHøyreSideCrossJoin()
-        ) ?: Tidslinje()
+        )
 
         tidslinjePerBarn[nyVurdering.ident.identifikator] = oppdatertTidslinje.komprimer()
     }
