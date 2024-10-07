@@ -17,7 +17,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoGateway
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoBulkGateway
 import no.nav.aap.behandlingsflyt.server.prosessering.ProsesserBehandlingJobbUtfører
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -122,7 +122,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
                 }
 
                 val response = HashMap<String, String>()
-                val personinfo = PdlPersoninfoGateway.hentPersoninfoForIdenter(identer.map { Ident(it.ident) }, token())
+                val personinfo = PdlPersoninfoBulkGateway.hentPersoninfoForIdenter(identer.map { Ident(it.ident) }, token())
                 personinfo.forEach { personinfo -> response[personinfo.ident.identifikator] = personinfo.fultNavn() }
 
                 respond(
