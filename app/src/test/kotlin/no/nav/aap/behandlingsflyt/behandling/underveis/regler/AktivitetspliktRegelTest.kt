@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvote
+import no.nav.aap.behandlingsflyt.behandling.underveis.Meldeperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Grunn.INGEN_GYLDIG_GRUNN
@@ -130,6 +131,7 @@ class AktivitetspliktRegelTest {
 
     @Test
     fun `10-dagers-kvote starter på 0 i nytt kalenderår`() {
+        val førsteMeldeperiode2021 = 13
         val vurderinger = vurder(
             rettighetsperiode = Periode(fom = dato(2020, 1, 1), tom = dato(2022, 12, 31)),
             /* Fem brudd det første året (2020), hvorav fire teller mot kvoten. */
@@ -144,7 +146,7 @@ class AktivitetspliktRegelTest {
             brudd(
                 aktivitetsType = IKKE_MØTT_TIL_TILTAK,
                 paragraf = PARAGRAF_11_8,
-                periode = Periode(fom = dato(2021, 1, 6), tom = dato(2021, 1, 6 + 11)),
+                periode = Periode(fom = dato(2021, 1, førsteMeldeperiode2021), tom = dato(2021, 1, førsteMeldeperiode2021 + 11)),
                 opprettet = dato(2020, 4, 1),
                 grunn = STERKE_VELFERDSGRUNNER,
             ),
@@ -159,13 +161,13 @@ class AktivitetspliktRegelTest {
          * - selv om 4 dager ble brukt av kvoten i 2020, så ble den resatt, så det er 10 dagers kvote i 2021.
          * - gir ikke stans pga. gyldig grunn, men bruker opp 10 dager av kvoten for kalenderåret 2021.
          *  */
-        for (dag in 6..<6 + 11) {
+        for (dag in førsteMeldeperiode2021..<førsteMeldeperiode2021 + 11) {
             val muligeSanksjoner = vurderinger.segment(dato(2021, 1, dag))!!.verdi.muligeSanksjoner
             assertEquals(listOf<BruddAktivitetsplikt.Paragraf>(), muligeSanksjoner)
         }
 
         /* Fravær dag 12: gyldig grunn, men gir stans fordi kvoten er brukt opp. */
-        val muligeSanksjoner = vurderinger.segment(dato(2021, 1, 6 + 11))!!.verdi.muligeSanksjoner
+        val muligeSanksjoner = vurderinger.segment(dato(2021, 1, førsteMeldeperiode2021 + 11))!!.verdi.muligeSanksjoner
         assertEquals(listOf(PARAGRAF_11_8), muligeSanksjoner)
     }
 
