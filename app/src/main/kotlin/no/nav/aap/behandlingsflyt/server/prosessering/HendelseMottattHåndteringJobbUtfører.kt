@@ -21,7 +21,7 @@ private const val MOTTATT_DOKUMENT_REFERANSE = "referanse"
 private const val MOTTATT_TIDSPUNKT = "mottattTidspunkt"
 private const val PERIODE = "periode"
 
-class HendelseMottattHåndteringOppgaveUtfører(connection: DBConnection) : JobbUtfører {
+class HendelseMottattHåndteringJobbUtfører(connection: DBConnection) : JobbUtfører {
     private val låsRepository = TaSkriveLåsRepository(connection)
     private val hånderMottattDokumentService = HåndterMottattDokumentService(connection)
     private val mottaDokumentService = MottaDokumentService(MottattDokumentRepository(connection))
@@ -65,7 +65,7 @@ class HendelseMottattHåndteringOppgaveUtfører(connection: DBConnection) : Jobb
             brevkode: Brevkode,
             periode: Periode?,
             payload: Any,
-        ) = JobbInput(HendelseMottattHåndteringOppgaveUtfører)
+        ) = JobbInput(HendelseMottattHåndteringJobbUtfører)
             .apply {
                 forSak(sakId.toLong())
                 medCallId()
@@ -77,7 +77,7 @@ class HendelseMottattHåndteringOppgaveUtfører(connection: DBConnection) : Jobb
             }
 
         override fun konstruer(connection: DBConnection): JobbUtfører {
-            return HendelseMottattHåndteringOppgaveUtfører(
+            return HendelseMottattHåndteringJobbUtfører(
                 connection
             )
         }
