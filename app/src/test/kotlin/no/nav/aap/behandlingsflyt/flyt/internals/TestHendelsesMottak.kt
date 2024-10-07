@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdentGateway
-import no.nav.aap.behandlingsflyt.server.prosessering.HendelseMottattHåndteringOppgaveUtfører
+import no.nav.aap.behandlingsflyt.server.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
@@ -38,7 +38,7 @@ class TestHendelsesMottak(private val dataSource: DataSource) {
                 val referanse = MottattDokumentReferanse(hendelse.journalpost)
 
                 flytJobbRepository.leggTil(
-                    HendelseMottattHåndteringOppgaveUtfører.nyJobb(
+                    HendelseMottattHåndteringJobbUtfører.nyJobb(
                         sakId = sak.id,
                         dokumentReferanse = referanse,
                         brevkode = hendelse.strukturertDokument.brevkode,
