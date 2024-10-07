@@ -68,6 +68,7 @@ jobs:
                 bump_each_commit_patch_pattern: ''
                 major_pattern: "(MAJOR)" # If major bump, include this in commit message
           - uses: actions/setup-java@v4
+            if: ${{ steps.tag.outputs.changed == 'true' }}
             with:
                 java-version: 23
                 distribution: 'temurin'
