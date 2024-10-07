@@ -4,7 +4,7 @@ import com.papsign.ktor.openapigen.route.response.OpenAPIPipelineContext
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
-import no.nav.aap.komponenter.AZURE
+import no.nav.aap.komponenter.server.AZURE
 import no.nav.aap.verdityper.sakogbehandling.NavIdent
 
 
