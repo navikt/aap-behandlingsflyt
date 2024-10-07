@@ -67,6 +67,9 @@ spec:
         - application: saksbehandling
         - application: tilgang
         - application: postmottak-backend
+        - application: azure-token-generator # Ikke i prod :)
+          namespace: aura
+          cluster: dev-gcp
     outbound:
       external:
         - host: pdl-api.dev-fss-pub.nais.io
