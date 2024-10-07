@@ -65,12 +65,12 @@ class BarnetilleggService(
 
         for (barn in vurderteBarn) {
             resultat = resultat.kombiner(
-                Tidslinje(barn.vurderinger.map { Segment(it.periode, it.harForeldreAnsvar) }),
+                barn.tilTidslinje(),
                 JoinStyle.OUTER_JOIN { periode, venstreSegment, høyreSegment ->
                     val høyreVerdi = høyreSegment?.verdi
                     val nyVenstreVerdi = venstreSegment?.verdi ?: RettTilBarnetillegg()
                     if (høyreVerdi != null) {
-                        if (høyreVerdi) {
+                        if (høyreVerdi.harForeldreAnsvar) {
                             nyVenstreVerdi.godkjenteBarn(setOf(barn.ident))
                         } else {
                             nyVenstreVerdi.underkjenteBarn(setOf(barn.ident))

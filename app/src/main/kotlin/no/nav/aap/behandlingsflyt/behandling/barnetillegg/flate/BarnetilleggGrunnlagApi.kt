@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarnDto
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
@@ -47,9 +48,13 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource) {
                     val personopplysningGrunnlag = personopplysningRepository.hentHvisEksisterer(behandling.id)
 
                     BarnetilleggDto(
-                        oppgitteBarn = barnGrunnlag?.oppgitteBarn?.identer?.toList() ?: emptyList(),
                         folkeregisterbarn = folkeregister.map { hentBarn(it, personopplysningGrunnlag!!) },
-                        vurderteBarn = barnGrunnlag?.vurderteBarn?.barn ?: emptyList(),
+                        vurderteBarn = barnGrunnlag?.vurderteBarn?.barn?.map {
+                            VurdertBarnDto(
+                                it.ident.identifikator,
+                                it.vurderinger
+                            )
+                        } ?: emptyList(),
                         barnSomTrengerVurdering = uavklarteBarn.map { hentBarn(it, personopplysningGrunnlag!!) }
                             .toList()
                     )
