@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
+import java.time.Period
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.StansUtfall.IKKE_RELEVANT
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.StansUtfall.INNTIL_EN_DAG_UNNTAK
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.StansUtfall.STANS_ANDRE_DAG
@@ -12,7 +13,6 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tidslinje.JoinStyle
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.Tidslinje
-import java.time.Period
 
 private const val KVOTE_KALENDERÅR = 10
 
@@ -67,15 +67,11 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
                         )
                     else
                         Tidslinje(
-                            listOf(
-                                Segment(
-                                    bruddSegment.periode,
-                                    BruddVurderingSteg1(
-                                        brudd = brudd,
-                                        førsteFraværIMeldeperioden = false,
-                                        tellerMot10DagersKvote = true,
-                                    )
-                                )
+                            bruddSegment.periode,
+                            BruddVurderingSteg1(
+                                brudd = brudd,
+                                førsteFraværIMeldeperioden = false,
+                                tellerMot10DagersKvote = true,
                             )
                         )
                 }
@@ -92,15 +88,11 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
 
                     if (!brudd.erFraværFraFastsattAktivitet) {
                         return@kalenderår Tidslinje(
-                            listOfNotNull(
-                                Segment(
-                                    vurderingSegment.periode,
-                                    FraværFastsattAktivitetVurdering(
-                                        brudd = brudd,
-                                        muligUtfall = IKKE_RELEVANT,
-                                        skalStanses = false,
-                                    )
-                                ),
+                            vurderingSegment.periode,
+                            FraværFastsattAktivitetVurdering(
+                                brudd = brudd,
+                                muligUtfall = IKKE_RELEVANT,
+                                skalStanses = false,
                             )
                         )
                     }
@@ -110,27 +102,24 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
                     if (vurdering.tellerMot10DagersKvote) {
                         bruddetsPosisjonKalenderår = nestePosisjonKalenderår
                         nestePosisjonKalenderår += vurderingSegment.periode.antallDager()
-                        kvoteBruktOppDennePerioden = (KVOTE_KALENDERÅR + 1) in (bruddetsPosisjonKalenderår..<nestePosisjonKalenderår)
+                        kvoteBruktOppDennePerioden =
+                            (KVOTE_KALENDERÅR + 1) in (bruddetsPosisjonKalenderår..<nestePosisjonKalenderår)
                     }
 
                     if (vurdering.førsteFraværIMeldeperioden) {
                         assert(vurderingSegment.periode.antallDager() == 1)
                         return@kalenderår Tidslinje(
-                            listOfNotNull(
-                                Segment(
-                                    vurderingSegment.periode,
-                                    FraværFastsattAktivitetVurdering(
-                                        brudd = brudd,
-                                        muligUtfall = INNTIL_EN_DAG_UNNTAK,
-                                        skalStanses = false,
-                                    )
-                                ),
+                            vurderingSegment.periode,
+                            FraværFastsattAktivitetVurdering(
+                                brudd = brudd,
+                                muligUtfall = INNTIL_EN_DAG_UNNTAK,
+                                skalStanses = false,
                             )
                         )
                     }
 
                     if (kvoteBruktOppDennePerioden) {
-                        val stansInnenforPeriodeOffset = 11 - bruddetsPosisjonKalenderår!!
+                        val stansInnenforPeriodeOffset = (KVOTE_KALENDERÅR + 1) - bruddetsPosisjonKalenderår!!
                         val stansDag = vurderingSegment.periode.fom.plusDays(stansInnenforPeriodeOffset.toLong())
                         val stansPeriode = Periode(stansDag, stansDag)
                         val utenfor = vurderingSegment.periode.minus(stansPeriode)
@@ -153,44 +142,32 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
                     when (brudd.grunn) {
                         BruddAktivitetsplikt.Grunn.SYKDOM_ELLER_SKADE ->
                             Tidslinje(
-                                listOfNotNull(
-                                    Segment(
-                                        vurderingSegment.periode,
-                                        FraværFastsattAktivitetVurdering(
-                                            brudd = brudd,
-                                            muligUtfall = SYKDOM_ELLER_SKADE_UNNTAK,
-                                            skalStanses = false,
-                                        )
-                                    ),
+                                vurderingSegment.periode,
+                                FraværFastsattAktivitetVurdering(
+                                    brudd = brudd,
+                                    muligUtfall = SYKDOM_ELLER_SKADE_UNNTAK,
+                                    skalStanses = false,
                                 )
                             )
 
                         BruddAktivitetsplikt.Grunn.STERKE_VELFERDSGRUNNER ->
                             Tidslinje(
-                                listOfNotNull(
-                                    Segment(
-                                        vurderingSegment.periode,
-                                        FraværFastsattAktivitetVurdering(
-                                            brudd = brudd,
-                                            muligUtfall = STERKE_VELFERDSGRUNNER_UNNTAK,
-                                            skalStanses = false,
-                                        )
-                                    ),
+                                vurderingSegment.periode,
+                                FraværFastsattAktivitetVurdering(
+                                    brudd = brudd,
+                                    muligUtfall = STERKE_VELFERDSGRUNNER_UNNTAK,
+                                    skalStanses = false,
                                 )
                             )
 
                         BruddAktivitetsplikt.Grunn.RIMELIG_GRUNN,
                         BruddAktivitetsplikt.Grunn.INGEN_GYLDIG_GRUNN ->
                             Tidslinje(
-                                listOfNotNull(
-                                    Segment(
-                                        vurderingSegment.periode,
-                                        FraværFastsattAktivitetVurdering(
-                                            brudd = brudd,
-                                            muligUtfall = STANS_ANDRE_DAG,
-                                            skalStanses = brudd.paragraf == PARAGRAF_11_8,
-                                        )
-                                    ),
+                                vurderingSegment.periode,
+                                FraværFastsattAktivitetVurdering(
+                                    brudd = brudd,
+                                    muligUtfall = STANS_ANDRE_DAG,
+                                    skalStanses = brudd.paragraf == PARAGRAF_11_8,
                                 )
                             )
                     }
