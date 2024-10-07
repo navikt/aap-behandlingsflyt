@@ -34,7 +34,9 @@ object InntektGateway : InntektRegisterGateway {
         )
         return requireNotNull(client.post(uri = url, request = httpRequest, mapper = { body, _ ->
             DefaultJsonMapper.fromJson(body)
-        }))
+        })) {
+            "Får tom respons fra POPP, trenger verdier for å kunne beregne korrekt"
+        }
     }
 
     override fun innhent(person: Person, år: Set<Year>): Set<InntektPerÅr> {
