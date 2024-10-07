@@ -8,7 +8,6 @@ import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.OnBehalfOfTokenProvider
-import no.nav.aap.saf.Journalpost
 import no.nav.aap.saf.SafDokumentoversiktFagsakDataResponse
 import no.nav.aap.saf.SafRequest
 import no.nav.aap.saf.SafResponseHandler
@@ -42,24 +41,20 @@ object SafListDokumentGateway {
 
         val dokumentoversiktFagsak = response.data?.dokumentoversiktFagsak ?: return emptyList()
 
-        return dokumentoversiktFagsak.journalposter.tilArkivDokumenter()
-    }
-}
-
-fun List<Journalpost>.tilArkivDokumenter(): List<Dokument> {
-    return this.flatMap { journalpost ->
-        journalpost.dokumenter.flatMap { dok ->
-            dok.dokumentvarianter
-                .filter { it.variantformat === Variantformat.ARKIV }
-                .map {
-                    Dokument(
-                        journalpostId = journalpost.journalpostId,
-                        dokumentInfoId = dok.dokumentInfoId,
-                        tittel = dok.tittel,
-                        brevkode = dok.brevkode,
-                        variantformat = it.variantformat
-                    )
-                }
+        return dokumentoversiktFagsak.journalposter.flatMap { journalpost ->
+            journalpost.dokumenter.flatMap { dok ->
+                dok.dokumentvarianter
+                    .filter { it.variantformat === Variantformat.ARKIV }
+                    .map {
+                        Dokument(
+                            journalpostId = journalpost.journalpostId,
+                            dokumentInfoId = dok.dokumentInfoId,
+                            tittel = dok.tittel,
+                            brevkode = dok.brevkode,
+                            variantformat = it.variantformat
+                        )
+                    }
+            }
         }
     }
 }

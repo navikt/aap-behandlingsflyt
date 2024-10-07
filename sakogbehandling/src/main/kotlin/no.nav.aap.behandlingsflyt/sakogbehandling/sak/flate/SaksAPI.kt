@@ -21,7 +21,6 @@ import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.httpklient.httpclient.error.IkkeFunnetException
-import no.nav.aap.komponenter.httpklient.httpclient.error.ManglerTilgangException
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tilgang.Ressurs
 import no.nav.aap.tilgang.RessursType
@@ -156,9 +155,6 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                         respond(DokumentResponsDTO(stream = dokumentRespons.dokument))
                     } catch (e: IkkeFunnetException) {
                         respondWithStatus(HttpStatusCode.NotFound)
-                    } catch (e: ManglerTilgangException) {
-                        logger.warn("Mangler tilgang til å vise dokument på route: $journalpostId/$dokumentInfoId.", e)
-                        respondWithStatus(HttpStatusCode.Forbidden)
                     }
                 }
             }
