@@ -214,6 +214,58 @@ class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>> = TreeSet()) : Iterab
         return Tidslinje(segmenter)
     }
 
+    /* Knekker opp segmenterene i henhold til period fom startDato tom sluttDato. Hver periode
+     * blir en egen tidslinje.
+     */
+    fun splittOpp(
+        startDato: LocalDate,
+        sluttDato: LocalDate,
+        period: Period,
+    ): Tidslinje<Tidslinje<T>> {
+        if (this.segmenter.isEmpty()) {
+            return Tidslinje()
+        }
+
+        require(!(LocalDate.MIN == startDato || LocalDate.MAX == sluttDato || sluttDato.isBefore(startDato))) {
+            String.format(
+                "kan ikke periodisere tidslinjen mellom angitte datoer: [%s, %s]",
+                startDato,
+                sluttDato
+            )
+        }
+
+        val tidslinjer: NavigableSet<Segment<Tidslinje<T>>> = TreeSet()
+
+        val maxLocalDate: LocalDate = minOf(maxDato(), sluttDato)
+        var dt = startDato
+        while (!dt.isAfter(maxLocalDate)) {
+            val nextDt = dt.plus(period)
+            val p = Periode(dt, nextDt.minusDays(1))
+            tidslinjer.add(Segment(p, kryss(p)))
+            dt = nextDt
+        }
+
+        return Tidslinje(tidslinjer)
+    }
+
+    fun splittOpp(periode: Periode, period: Period): Tidslinje<Tidslinje<T>> {
+        return splittOpp(periode.fom, periode.tom, period)
+    }
+
+    fun <R> flatMap(mapper: (Segment<T>) -> Tidslinje<R>): Tidslinje<R> {
+        return Tidslinje(segmenter().flatMap {
+            mapper(it).segmenter()
+        })
+    }
+
+    fun splittOppKalenderår(): Tidslinje<Tidslinje<T>> {
+        if (segmenter.isEmpty()) return Tidslinje()
+        val førsteDagFørsteKalenderår = segmenter.first.periode.fom.withDayOfYear(1)
+        val sisteDag = segmenter.last.periode.tom
+        val sisteDagSisteKalenderår = sisteDag.withDayOfYear(sisteDag.lengthOfYear())
+        return splittOpp(førsteDagFørsteKalenderår, sisteDagSisteKalenderår, Period.ofYears(1))
+    }
+
     /**
      * Henter segmentet som inneholder datoen
      */

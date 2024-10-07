@@ -80,17 +80,14 @@ data class BruddAktivitetsplikt(
         PARAGRAF_11_9
     }
 
-    val relevantFor_11_8: Boolean
+    val erFraværFraFastsattAktivitet: Boolean
         get() = this.type in bruddTyperRelevantFor_11_8
 
-    val gyldigGrunnFor_11_8: Boolean
-        get() = this.grunn in gyldigeGrunnerFor_11_8
-
-    val relevantFor_11_9: Boolean
-        get() = this.type in bruddTyperRelevantFor_11_9
-
-    val gyldigGrunnFor_11_9: Boolean
+    val harRimeligGrunn: Boolean
         get() = this.grunn in gyldigeGrunnerFor_11_9
+
+    val erBruddPåNærmereBestemteAktivitetsplikter: Boolean
+        get() = this.type in bruddTyperRelevantFor_11_9
 
     companion object {
         private val bruddTyperRelevantFor_11_8 = listOf(
@@ -109,13 +106,12 @@ data class BruddAktivitetsplikt(
             IKKE_MØTT_TIL_MØTE,
             IKKE_MØTT_TIL_BEHANDLING,
             IKKE_MØTT_TIL_TILTAK,
-            IKKE_MØTT_TIL_ANNEN_AKTIVITET,
             IKKE_SENDT_INN_DOKUMENTASJON,
         )
 
         private val gyldigeGrunnerFor_11_9 = listOf(
-            Grunn.SYKDOM_ELLER_SKADE, /* TODO: bekreft at "sykdom eller skade" kan regnes som rimelig grunn. */
-            Grunn.STERKE_VELFERDSGRUNNER, /* TODO: bekreft at "sterke veldferdsgrunner" kan regnes som rimelig grunn. */
+            Grunn.SYKDOM_ELLER_SKADE,
+            Grunn.STERKE_VELFERDSGRUNNER,
             Grunn.RIMELIG_GRUNN,
         )
     }
