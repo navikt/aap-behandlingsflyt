@@ -21,7 +21,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoBulk
 import no.nav.aap.behandlingsflyt.server.prosessering.ProsesserBehandlingJobbUtfører
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.pip.PipRepository
@@ -122,7 +121,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
                 }
 
                 val response = HashMap<String, String>()
-                val personinfo = PdlPersoninfoBulkGateway.hentPersoninfoForIdenter(identer.map { Ident(it.ident) }, token())
+                val personinfo = PdlPersoninfoBulkGateway.hentPersoninfoForIdenter(identer.map { Ident(it.ident) })
                 personinfo.forEach { personinfo -> response[personinfo.ident.identifikator] = personinfo.fultNavn() }
 
                 respond(

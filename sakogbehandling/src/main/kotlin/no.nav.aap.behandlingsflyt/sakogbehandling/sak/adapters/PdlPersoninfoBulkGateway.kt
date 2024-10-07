@@ -5,7 +5,6 @@ import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 import no.nav.aap.pdl.IdentVariables
@@ -47,22 +46,26 @@ object PdlPersoninfoBulkGateway {
         responseHandler = PdlResponseHandler()
     )
 
-    private fun query(request: PdlRequest, currentToken: OidcToken): PdlPersonNavnDataResponse {
-        val httpRequest = PostRequest(body = request, currentToken = currentToken)
+    private fun query(request: PdlRequest): PdlPersonNavnDataResponse {
+        val httpRequest = PostRequest(body = request)
         return requireNotNull(client.post(uri = url, request = httpRequest, mapper = { body, _ ->
             DefaultJsonMapper.fromJson(body)
         }))
     }
 
-    fun hentPersoninfoForIdenter(identer: List<Ident>, currentToken: OidcToken): List<Personinfo> {
+    fun hentPersoninfoForIdenter(identer: List<Ident>): List<Personinfo> {
         val request = PdlRequest(PERSONINFO_BOLK_QUERY, IdentVariables(identer = identer.map { it.identifikator }))
-        val response: PdlPersonNavnDataResponse = query(request, currentToken)
+        val response: PdlPersonNavnDataResponse = query(request)
 
         return response.data?.hentPersonBolk?.map { person -> mapPersoninformasjon(person) } ?: emptyList()
     }
 
     private fun mapPersoninformasjon(data: PdlNavnData): Personinfo {
-        val navn = data.navn.first()
+        val navn = data.navn?.firstOrNull()
+
+        if(navn == null) {
+            return Personinfo(Ident(data.ident!!), "Ukjent", null, null)
+        }
 
         return Personinfo(Ident(data.ident!!), navn.fornavn, navn.mellomnavn, navn.etternavn)
     }

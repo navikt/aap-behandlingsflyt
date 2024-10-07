@@ -45,7 +45,7 @@ data class HentPerson(
 )
 data class PdlNavnData(
     val ident: String?,
-    val navn: List<PdlNavn>
+    val navn: List<PdlNavn>?
 )
 
 data class PdlNavn(
