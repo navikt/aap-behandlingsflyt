@@ -32,11 +32,14 @@ object InntektGateway : InntektRegisterGateway {
                 Header("Accept", "application/json")
             )
         )
-        return requireNotNull(client.post(uri = url, request = httpRequest, mapper = { body, _ ->
+        val inntektResponse: InntektResponse? = client.post(uri = url, request = httpRequest, mapper = { body, _ ->
             DefaultJsonMapper.fromJson(body)
-        })) {
-            "Får tom respons fra POPP, trenger verdier for å kunne beregne korrekt"
+        })
+
+        if (inntektResponse == null) {
+            return InntektResponse(emptyList())
         }
+        return inntektResponse
     }
 
     override fun innhent(person: Person, år: Set<Year>): Set<InntektPerÅr> {
