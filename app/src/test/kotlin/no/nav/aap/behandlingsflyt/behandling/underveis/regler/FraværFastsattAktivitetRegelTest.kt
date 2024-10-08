@@ -1,9 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvote
-import no.nav.aap.behandlingsflyt.behandling.underveis.Meldeperiode
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.StansUtfall.INNTIL_EN_DAG_UNNTAK
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.StansUtfall.STERKE_VELFERDSGRUNNER_UNNTAK
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.StansUtfall.UNNTAK_INNTIL_EN_DAG
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.StansUtfall.UNNTAK_STERKE_VELFERDSGRUNNER
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.StansUtfall.STANS_ANDRE_DAG
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.StansUtfall.STANS_TI_DAGER_BRUKT_OPP
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
@@ -19,7 +18,6 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.sakogbehandling.NavIdent
 import no.nav.aap.verdityper.sakogbehandling.SakId
-import org.junit.Ignore
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -47,7 +45,7 @@ class FraværFastsattAktivitetRegelTest {
         )
         assertEquals(1, vurderinger.segmenter().size)
         val vurdering = vurderinger.segment(dato(2020, 1, 1))!!.verdi
-        assertEquals(INNTIL_EN_DAG_UNNTAK, vurdering.muligUtfall)
+        assertEquals(UNNTAK_INNTIL_EN_DAG, vurdering.utfall)
     }
 
     @Test
@@ -65,7 +63,7 @@ class FraværFastsattAktivitetRegelTest {
         /* Kan sanksjonere med 11-9 fordi 2020-04-01 ikke er senere enn tre månder fra 2020-01-01, men
          * er nøyaktigt 3 måneder etter. */
         val vurdering = vurderinger.segment(dato(2020, 1, 2))!!.verdi
-        assertEquals(STANS_ANDRE_DAG, vurdering.muligUtfall)
+        assertEquals(STANS_ANDRE_DAG, vurdering.utfall)
     }
 
     @Test
@@ -79,8 +77,8 @@ class FraværFastsattAktivitetRegelTest {
                 opprettet = dato(2020, 4, 1),
             ),
         )
-        assertEquals(INNTIL_EN_DAG_UNNTAK, vurdering.segment(dato(2020, 1, 1))!!.verdi.muligUtfall)
-        assertEquals(STANS_ANDRE_DAG, vurdering.segment(dato(2020, 1, 2))!!.verdi.muligUtfall)
+        assertEquals(UNNTAK_INNTIL_EN_DAG, vurdering.segment(dato(2020, 1, 1))!!.verdi.utfall)
+        assertEquals(STANS_ANDRE_DAG, vurdering.segment(dato(2020, 1, 2))!!.verdi.utfall)
     }
 
     @Test
@@ -100,8 +98,8 @@ class FraværFastsattAktivitetRegelTest {
                 opprettet = dato(2020, 4, 1),
             ),
         )
-        assertEquals(INNTIL_EN_DAG_UNNTAK, vurdering.segment(dato(2020, 1, 1))!!.verdi.muligUtfall)
-        assertEquals(INNTIL_EN_DAG_UNNTAK, vurdering.segment(dato(2020, 1, 15))!!.verdi.muligUtfall)
+        assertEquals(UNNTAK_INNTIL_EN_DAG, vurdering.segment(dato(2020, 1, 1))!!.verdi.utfall)
+        assertEquals(UNNTAK_INNTIL_EN_DAG, vurdering.segment(dato(2020, 1, 15))!!.verdi.utfall)
     }
 
     @Test
@@ -119,18 +117,18 @@ class FraværFastsattAktivitetRegelTest {
 
         /* Fravær dag 1: telles ikke mot 10-dagers-kvote pga "inntil én dags fravær i meldeperiode"-regelen. */
         vurderinger.segment(dato(2020, 1, 1))!!.verdi.also {
-            assertEquals(INNTIL_EN_DAG_UNNTAK, it.muligUtfall)
+            assertEquals(UNNTAK_INNTIL_EN_DAG, it.utfall)
         }
 
         /* Fravær dagene 2 – 11: gir ikke stans pga. gyldig grunn, men bruker opp 10 dager av kvoten for kalenderåret. */
         for (dag in 2..11) {
-            val muligeUtfall = vurderinger.segment(dato(2020, 1, dag))!!.verdi.muligUtfall
-            assertEquals(STERKE_VELFERDSGRUNNER_UNNTAK, muligeUtfall)
+            val muligeUtfall = vurderinger.segment(dato(2020, 1, dag))!!.verdi.utfall
+            assertEquals(UNNTAK_STERKE_VELFERDSGRUNNER, muligeUtfall)
         }
 
         /* Fravær dag 12: gyldig grunn, men gir stans fordi kvoten er brukt opp. */
         vurderinger.segment(dato(2020, 1, 12))!!.verdi.also {
-            assertEquals(STANS_TI_DAGER_BRUKT_OPP, it.muligUtfall)
+            assertEquals(STANS_TI_DAGER_BRUKT_OPP, it.utfall)
         }
     }
 
@@ -162,18 +160,18 @@ class FraværFastsattAktivitetRegelTest {
 
         /* Første dag i 2021, inntil én-dags-regelen */
         vurderinger.segment(dato(2021, 1, startMeldeperiode2021))!!.verdi.also {
-            assertEquals(INNTIL_EN_DAG_UNNTAK, it.muligUtfall)
+            assertEquals(UNNTAK_INNTIL_EN_DAG, it.utfall)
         }
 
         /* Neste 10 dager i 2021 gir ikke stans pga ti dager fravær per kalenderår. */
         for (dag in (startMeldeperiode2021 + 1)..< startMeldeperiode2021 + 11) {
-            val kanStanses = vurderinger.segment(dato(2021, 1, dag))!!.verdi.muligUtfall
-            assertEquals(STERKE_VELFERDSGRUNNER_UNNTAK, kanStanses)
+            val kanStanses = vurderinger.segment(dato(2021, 1, dag))!!.verdi.utfall
+            assertEquals(UNNTAK_STERKE_VELFERDSGRUNNER, kanStanses)
         }
 
         /* Fravær dag 12: gyldig grunn, men gir stans fordi kvoten er brukt opp. */
         vurderinger.segment(dato(2021, 1, startMeldeperiode2021 + 11))!!.verdi.also {
-            assertEquals(STANS_TI_DAGER_BRUKT_OPP, it.muligUtfall)
+            assertEquals(STANS_TI_DAGER_BRUKT_OPP, it.utfall)
         }
     }
 
