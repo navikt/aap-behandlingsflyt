@@ -8,8 +8,7 @@ import no.nav.aap.tidslinje.JoinStyle
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.Tidslinje
 
-/**
- * Vurder om medlemmet kan sanksjoneres etter ftrl § 11-9 "Reduksjon av arbeidsavklaringspenger ved
+/** Vurder om medlemmet kan sanksjoneres etter ftrl § 11-9 "Reduksjon av arbeidsavklaringspenger ved
  * brudd på nærmere bestemte aktivitetsplikter". Altså en implementasjon av:
  * - [Folketrygdloven § 11-9](]https://lovdata.no/lov/1997-02-28-19/§11-9)
  * - [Forkskriftens § 4](https://lovdata.no/forskrift/2017-12-13-2100/§4)
@@ -20,21 +19,21 @@ class ReduksjonAktivitetspliktRegel : UnderveisRegel {
             .mapValue { brudd ->
                 when {
                     !brudd.erBruddPåNærmereBestemteAktivitetsplikter -> {
-                        return@mapValue ReduksjonAktivitetspliktVurdering(
+                        ReduksjonAktivitetspliktVurdering(
                             brudd = brudd,
                             vilkårsvurdering = IKKE_RELEVANT_BRUDD,
                             skalReduseres = false,
                         )
                     }
                     brudd.harRimeligGrunn -> {
-                        return@mapValue ReduksjonAktivitetspliktVurdering(
+                        ReduksjonAktivitetspliktVurdering(
                             brudd = brudd,
                             vilkårsvurdering = UNNTAK_RIMELIG_GRUNN,
                             skalReduseres = false,
                         )
                     }
                     else -> {
-                        return@mapValue ReduksjonAktivitetspliktVurdering(
+                        ReduksjonAktivitetspliktVurdering(
                             brudd = brudd,
                             vilkårsvurdering = VILKÅR_OPPFYLT,
                             skalReduseres = brudd.paragraf == PARAGRAF_11_9,
