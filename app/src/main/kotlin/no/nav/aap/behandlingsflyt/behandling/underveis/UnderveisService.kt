@@ -20,14 +20,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.SoningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soningsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.HelseinstitusjonVurdering
-import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
@@ -102,10 +100,14 @@ class UnderveisService(
         val kvote = kvoteService.beregn(behandlingId)
 
         val soningVurdering = soningRepository.hentAktivSoningsvurderingHvisEksisterer(behandlingId)
-        val helseInstitusjonVurdering = helseInstitusjonRepository.hentAktivHelseinstitusjonVurderingHvisEksisterer(behandlingId)
+        val helseInstitusjonVurdering =
+            helseInstitusjonRepository.hentAktivHelseinstitusjonVurderingHvisEksisterer(behandlingId)
         val etAnnetSted = mapTilEtAnnetSted(soningVurdering, helseInstitusjonVurdering)
 
         val barnetilleggGrunnlag = requireNotNull(barnetilleggRepository.hentHvisEksisterer(behandlingId))
+        val bruddAktivitetsplikt = bruddAktivitetspliktRepository.hentGrunnlagHvisEksisterer(behandlingId)
+            ?.lagTidslinje()
+            ?: Tidslinje()
 
         return UnderveisInput(
             rettighetsperiode = sak.rettighetsperiode,
@@ -114,31 +116,28 @@ class UnderveisService(
             pliktkort = pliktkort,
             innsendingsTidspunkt = innsendingsTidspunkt,
             kvote = kvote,
-            bruddAktivitetsplikt = bruddAktivitetspliktsInput(behandlingId),
+            bruddAktivitetsplikt = bruddAktivitetsplikt,
             etAnnetSted = etAnnetSted,
             barnetillegg = barnetilleggGrunnlag
         )
     }
 
-    private fun bruddAktivitetspliktsInput(behandlingId: BehandlingId): Tidslinje<BruddAktivitetsplikt> {
-        /* TODO: Dette krasjer hvis det er overlapp mellom brudd. */
-        return Tidslinje(
-            bruddAktivitetspliktRepository.hentGrunnlagHvisEksisterer(behandlingId)
-                ?.bruddene
-                ?.sortedBy { it.periode.fom }
-                ?.map { Segment(it.periode, it) }
-                ?: emptyList()
-        )
-    }
-
-    private fun mapTilEtAnnetSted(soningVurdering: Soningsvurdering?, helseInstitusjon: HelseinstitusjonVurdering?): List<EtAnnetSted> {
+    private fun mapTilEtAnnetSted(
+        soningVurdering: Soningsvurdering?,
+        helseInstitusjon: HelseinstitusjonVurdering?
+    ): List<EtAnnetSted> {
         //TODO: Kan foreløpig ikke vurdere om formueUnderForvaltning er sant, mangler data
         val etAnnetStedList = mutableListOf<EtAnnetSted>()
         soningVurdering?.let {
             etAnnetStedList.add(
                 EtAnnetSted(
                     it.periode,
-                    soning = Soning(true, false, soningUtenforFengsel = it.soningUtenforFengsel, arbeidUtenforAnstalt = it.arbeidUtenforAnstalt ?: false),
+                    soning = Soning(
+                        true,
+                        false,
+                        soningUtenforFengsel = it.soningUtenforFengsel,
+                        arbeidUtenforAnstalt = it.arbeidUtenforAnstalt ?: false
+                    ),
                     begrunnelse = it.begrunnelse ?: ""
                 )
             )
