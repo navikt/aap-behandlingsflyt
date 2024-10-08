@@ -32,7 +32,7 @@ class MeldepliktRegelTest {
                 Pair(fom.plusDays(41), JournalpostId("3"))
             ),
             kvote = kvote,
-            bruddAktivitetsplikt = setOf(),
+            bruddAktivitetsplikt = Tidslinje(),
             etAnnetSted = listOf(),
             barnetillegg = BarnetilleggGrunnlag(1, listOf())
         )
@@ -53,7 +53,7 @@ class MeldepliktRegelTest {
             pliktkort = listOf(),
             innsendingsTidspunkt = mapOf(),
             kvote = kvote,
-            bruddAktivitetsplikt = setOf(),
+            bruddAktivitetsplikt = Tidslinje(),
             etAnnetSted = listOf(),
             barnetillegg = BarnetilleggGrunnlag(1, listOf())
         )
@@ -77,7 +77,7 @@ class MeldepliktRegelTest {
                 Pair(fom.plusDays(60), JournalpostId("2"))
             ),
             kvote = kvote,
-            bruddAktivitetsplikt = setOf(),
+            bruddAktivitetsplikt = Tidslinje(),
             etAnnetSted = listOf(),
             barnetillegg = BarnetilleggGrunnlag(1, listOf())
         )
@@ -105,7 +105,7 @@ class MeldepliktRegelTest {
                 Pair(fom.plusDays(33), JournalpostId("2"))
             ),
             kvote = kvote,
-            bruddAktivitetsplikt = setOf(),
+            bruddAktivitetsplikt = Tidslinje(),
             etAnnetSted = listOf(),
             barnetillegg = BarnetilleggGrunnlag(1, listOf())
         )

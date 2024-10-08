@@ -2,9 +2,9 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import java.time.Period
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.StansUtfall.IKKE_RELEVANT
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.StansUtfall.UNNTAK_INNTIL_EN_DAG
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.StansUtfall.STANS_ANDRE_DAG
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.StansUtfall.STANS_TI_DAGER_BRUKT_OPP
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.StansUtfall.UNNTAK_INNTIL_EN_DAG
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.StansUtfall.UNNTAK_STERKE_VELFERDSGRUNNER
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.StansUtfall.UNNTAK_SYKDOM_ELLER_SKADE
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt
@@ -20,26 +20,19 @@ import no.nav.aap.tidslinje.Tidslinje
 
 private const val KVOTE_KALENDERÅR = 10
 
-/**
- * Vurder om medlemmet oppfyller aktivitetsplikten. Implementasjon av:
- * - [Folketrygdloven § 11-7](https://lovdata.no/lov/1997-02-28-19/§11-7)
+/** Vurder om medlemmet kan sanksjoneres etter § 11-8 "Fravær fra fastsatt aktivitet".
+ *
+ * Implementasjon av:
  * - [Folketrygdloven § 11-8](https://lovdata.no/lov/1997-02-28-19/§11-8)
  * - [Forskriftens § 3](https://lovdata.no/forskrift/2017-12-13-2100/§3)
  */
 class FraværFastsattAktivitetRegel : UnderveisRegel {
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
-        /* TODO § 11-7 */
         /* TODO: § 11-8 stans til ... vilkårene igjen er oppfylt */
 
-        /* TODO: Dette kommer til å kræsje om det er overlappende brudd. */
-        val bruddTidslinje = Tidslinje(
-            input.bruddAktivitetsplikt
-                .sortedBy { it.periode.fom }
-                .map { Segment(it.periode, it) }
-        )
-
         val bruddTidslinjeMedFørsteFraværIdentifisert: Tidslinje<BruddVurderingSteg1> =
-            bruddTidslinje.splittOpp(input.rettighetsperiode, Period.ofDays(14))
+            input.bruddAktivitetsplikt
+                .splittOpp(input.rettighetsperiode, Period.ofDays(14))
                 .flatMap { meldeperiodenSegment ->
                     val meldeperioden = meldeperiodenSegment.verdi
                     meldeperioden.flatMap { bruddSegment ->

@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.Period
+import no.nav.aap.tidslinje.Segment
 
 class ReduksjonFraværFastsattAktivitetRegelTest {
     @Test
@@ -92,7 +93,7 @@ class ReduksjonFraværFastsattAktivitetRegelTest {
         innsendingsTidspunkt = mapOf(),
         dødsdato = null,
         kvote = Kvote(Period.ofYears(365 * 3)),
-        bruddAktivitetsplikt = bruddAktivitetsplikt,
+        bruddAktivitetsplikt = Tidslinje(bruddAktivitetsplikt.sortedBy { it.periode.fom }.map { Segment(it.periode, it) }),
         etAnnetSted = listOf(),
         barnetillegg = BarnetilleggGrunnlag(1, listOf()),
     )

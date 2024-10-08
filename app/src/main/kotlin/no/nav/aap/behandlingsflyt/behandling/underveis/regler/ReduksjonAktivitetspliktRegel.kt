@@ -13,20 +13,16 @@ import no.nav.aap.tidslinje.Tidslinje
  */
 class ReduksjonAktivitetspliktRegel : UnderveisRegel {
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
-        /* TODO: Dette kommer til å kræsje om det er overlappende brudd. */
-        val vurderinger = Tidslinje(
-            input.bruddAktivitetsplikt
-                .sortedBy { it.periode.fom }
-                .map { Segment(it.periode, it) }
-        ).mapValue {
-            val kanReduseres = it.erBruddPåNærmereBestemteAktivitetsplikter && !it.harRimeligGrunn
+        val vurderinger = input.bruddAktivitetsplikt
+            .mapValue {
+                val kanReduseres = it.erBruddPåNærmereBestemteAktivitetsplikter && !it.harRimeligGrunn
 
-            ReduksjonAktivitetspliktVurdering(
-                brudd = it,
-                kanReduseres = kanReduseres,
-                skalReduseres = kanReduseres && it.paragraf == PARAGRAF_11_9,
-            )
-        }
+                ReduksjonAktivitetspliktVurdering(
+                    brudd = it,
+                    kanReduseres = kanReduseres,
+                    skalReduseres = kanReduseres && it.paragraf == PARAGRAF_11_9,
+                )
+            }
 
         return vurderinger.kombiner(
             resultat,

@@ -16,8 +16,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortRepository
+import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
@@ -89,9 +91,6 @@ class UnderveisService(
         val kvote = kvoteService.beregn(behandlingId)
         //val annetStedGrunnlag = etAnnetStedRepository().hentHvisEksisterer(behandlingId) //TODO: Vent / Implementer denne
         val barnetilleggGrunnlag = requireNotNull(barnetilleggRepository.hentHvisEksisterer(behandlingId))
-        val bruddAktivitetsplikt = bruddAktivitetspliktRepository.hentGrunnlagHvisEksisterer(behandlingId)
-            ?.bruddene
-            ?: emptySet()
 
         return UnderveisInput(
             rettighetsperiode = sak.rettighetsperiode,
@@ -100,9 +99,20 @@ class UnderveisService(
             pliktkort = pliktkort,
             innsendingsTidspunkt = innsendingsTidspunkt,
             kvote = kvote,
-            bruddAktivitetsplikt = bruddAktivitetsplikt,
+            bruddAktivitetsplikt = bruddAktivitetspliktsInput(behandlingId),
             etAnnetSted = listOf(),
             barnetillegg = barnetilleggGrunnlag
+        )
+    }
+
+    private fun bruddAktivitetspliktsInput(behandlingId: BehandlingId): Tidslinje<BruddAktivitetsplikt> {
+        /* TODO: Dette krasjer hvis det er overlapp mellom brudd. */
+        return Tidslinje(
+            bruddAktivitetspliktRepository.hentGrunnlagHvisEksisterer(behandlingId)
+                ?.bruddene
+                ?.sortedBy { it.periode.fom }
+                ?.map { Segment(it.periode, it) }
+                ?: emptyList()
         )
     }
 }

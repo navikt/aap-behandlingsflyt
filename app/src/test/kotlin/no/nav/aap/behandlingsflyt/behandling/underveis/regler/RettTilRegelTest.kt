@@ -79,7 +79,7 @@ class RettTilRegelTest {
             pliktkort = listOf(),
             innsendingsTidspunkt = mapOf(),
             kvote = kvote,
-            bruddAktivitetsplikt = setOf(),
+            bruddAktivitetsplikt = Tidslinje(),
             etAnnetSted = listOf(),
             barnetillegg = BarnetilleggGrunnlag(1, listOf())
         )
@@ -161,7 +161,7 @@ class RettTilRegelTest {
             pliktkort = listOf(),
             innsendingsTidspunkt = mapOf(),
             kvote = kvote,
-            bruddAktivitetsplikt = setOf(),
+            bruddAktivitetsplikt = Tidslinje(),
             etAnnetSted = listOf(),
             barnetillegg = BarnetilleggGrunnlag(1, listOf())
         )

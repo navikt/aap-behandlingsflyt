@@ -40,7 +40,7 @@ class InstitusjonRegelTest {
         val intitusjonsOppholdet = listOf(innlagt, forsørgerNoenMensInnlagt, innlagtMedReduksjon, fasteKostnader, innlagtPåNytt, innlagtPåNyttTreMndSenere)
         val barnetillegg = BarnetilleggGrunnlag(1, listOf(BarnetilleggPeriode(Periode(LocalDate.of(2024, 5, 1), LocalDate.of(2024, 6, 10)), setOf())))
         val input = UnderveisInput(
-            Periode(LocalDate.now(), LocalDate.now()), listOf(), listOf(), listOf(), mapOf(), null, Kvote(Period.ofDays(1)), setOf(), intitusjonsOppholdet, barnetillegg
+            Periode(LocalDate.now(), LocalDate.now()), listOf(), listOf(), listOf(), mapOf(), null, Kvote(Period.ofDays(1)), Tidslinje(), intitusjonsOppholdet, barnetillegg
         )
 
         val tidligereResultatTidslinje = Tidslinje(listOf( Segment(Periode(LocalDate.of(2024, 1, 5), LocalDate.of(2025, 5, 1)), vurderingFraTidligereResultat)))

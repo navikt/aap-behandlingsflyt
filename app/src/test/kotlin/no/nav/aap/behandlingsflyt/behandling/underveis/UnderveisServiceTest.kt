@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortRepository
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.tidslinje.Tidslinje
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -96,7 +97,7 @@ class UnderveisServiceTest {
                 pliktkort = listOf(),
                 innsendingsTidspunkt = mapOf(),
                 kvote = kvote,
-                bruddAktivitetsplikt = setOf(),
+                bruddAktivitetsplikt = Tidslinje(),
                 etAnnetSted = listOf(),
                 barnetillegg = BarnetilleggGrunnlag(1, listOf())
             )
