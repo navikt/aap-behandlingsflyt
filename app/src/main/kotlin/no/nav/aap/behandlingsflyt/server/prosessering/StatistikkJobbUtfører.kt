@@ -33,6 +33,7 @@ import no.nav.aap.statistikk.api_kontrakt.EndringStatus
 import no.nav.aap.statistikk.api_kontrakt.Grunnlag11_19DTO
 import no.nav.aap.statistikk.api_kontrakt.GrunnlagUføreDTO
 import no.nav.aap.statistikk.api_kontrakt.GrunnlagYrkesskadeDTO
+import no.nav.aap.statistikk.api_kontrakt.SakStatus
 import no.nav.aap.statistikk.api_kontrakt.StoppetBehandling
 import no.nav.aap.statistikk.api_kontrakt.TilkjentYtelseDTO
 import no.nav.aap.statistikk.api_kontrakt.TilkjentYtelsePeriodeDTO
@@ -91,6 +92,8 @@ class StatistikkJobbUtfører(
             Brevkode.SØKNAD
         )
 
+        val sak = sakService.hent(hendelse.saksnummer)
+
         val mottattTidspunkt = hentDokumenterAvType
             .filter { it.behandlingId == behandling.id }
             .minOf { it.mottattTidspunkt }
@@ -121,10 +124,19 @@ class StatistikkJobbUtfører(
             behandlingReferanse = hendelse.referanse.referanse,
             behandlingOpprettetTidspunkt = hendelse.opprettetTidspunkt,
             versjon = hendelse.versjon,
-            mottattTid = mottattTidspunkt
+            mottattTid = mottattTidspunkt,
+            sakStatus = behandlingflytSakStatusTilStatistikk(sak.status())
         )
         return statistikkHendelse
     }
+
+    private fun behandlingflytSakStatusTilStatistikk(sakStatus: no.nav.aap.behandlingsflyt.sakogbehandling.sak.Status): SakStatus =
+        when (sakStatus) {
+            no.nav.aap.behandlingsflyt.sakogbehandling.sak.Status.OPPRETTET -> SakStatus.OPPRETTET
+            no.nav.aap.behandlingsflyt.sakogbehandling.sak.Status.UTREDES -> SakStatus.UTREDES
+            no.nav.aap.behandlingsflyt.sakogbehandling.sak.Status.LØPENDE -> SakStatus.LØPENDE
+            no.nav.aap.behandlingsflyt.sakogbehandling.sak.Status.AVSLUTTET -> SakStatus.AVSLUTTET
+        }
 
     private fun behandlingStatusTilStatistikkKontrakt(status: BehandlingStatus): no.nav.aap.statistikk.api_kontrakt.BehandlingStatus =
         when (status) {

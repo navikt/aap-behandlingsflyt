@@ -34,7 +34,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Status.UTREDES
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
@@ -49,6 +51,7 @@ import no.nav.aap.statistikk.api_kontrakt.BeregningsgrunnlagDTO
 import no.nav.aap.statistikk.api_kontrakt.Endring
 import no.nav.aap.statistikk.api_kontrakt.EndringStatus
 import no.nav.aap.statistikk.api_kontrakt.Grunnlag11_19DTO
+import no.nav.aap.statistikk.api_kontrakt.SakStatus
 import no.nav.aap.statistikk.api_kontrakt.StoppetBehandling
 import no.nav.aap.statistikk.api_kontrakt.TilkjentYtelseDTO
 import no.nav.aap.statistikk.api_kontrakt.VilkårDTO
@@ -217,6 +220,15 @@ class StatistikkJobbUtførerTest {
         val tilkjentYtelseRepository = mockk<TilkjentYtelseRepository>()
         val beregningsgrunnlagRepository = mockk<BeregningsgrunnlagRepository>()
         val sakService = mockk<SakService>()
+
+        every { sakService.hent(Saksnummer.valueOf(sakId.id)) } returns Sak(
+            id = sakId,
+            saksnummer = Saksnummer.valueOf(sakId.id),
+            person = mockk(),
+            rettighetsperiode = mockk(),
+            status = UTREDES,
+            opprettetTidspunkt = LocalDateTime.now(),
+        )
         val dokumentRepository = mockk<MottattDokumentRepository>()
 
         val nå = LocalDateTime.now()
@@ -274,7 +286,7 @@ class StatistikkJobbUtførerTest {
 
         val fødselsNummer = Ident("xxx").toString()
         val payload = BehandlingFlytStoppetHendelse(
-            saksnummer = Saksnummer("456"),
+            saksnummer = Saksnummer.valueOf(sakId.id),
             personIdent = fødselsNummer,
             status = Status.UTREDES,
             behandlingType = TypeBehandling.Klage,
@@ -299,7 +311,7 @@ class StatistikkJobbUtførerTest {
 
         assertThat(hendelser.first()).isEqualTo(
             StoppetBehandling(
-                saksnummer = "456",
+                saksnummer = Saksnummer.valueOf(sakId.id).toString(),
                 behandlingReferanse = referanse.referanse,
                 status = BehandlingStatus.UTREDES,
                 behandlingType = no.nav.aap.statistikk.api_kontrakt.TypeBehandling.valueOf(TypeBehandling.Klage.toString()),
@@ -324,7 +336,8 @@ class StatistikkJobbUtførerTest {
                 },
                 behandlingOpprettetTidspunkt = payload.opprettetTidspunkt,
                 versjon = ApplikasjonsVersjon.versjon,
-                mottattTid = tidligsteMottattTid
+                mottattTid = tidligsteMottattTid,
+                sakStatus = SakStatus.UTREDES,
             )
         )
 
