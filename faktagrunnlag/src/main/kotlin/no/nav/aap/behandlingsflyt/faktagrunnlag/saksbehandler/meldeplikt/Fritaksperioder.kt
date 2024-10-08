@@ -19,7 +19,7 @@ class Fritaksperioder private constructor(
         return Fritaksperioder(sorterteFritaksvurderinger, nyeFritaksvurderinger)
     }
 
-    //trenger kanskje ikke å mappe fraDato siden den komprimerer fra l->r uansett + fradato skal ikke kunne flyttes fremover, men tydeligere :shrug:
+    //trenger kanskje ikke å mappe fraDato siden komprimering tar med seg leftmost verdi hele veien + fradato skal ikke kunne flyttes fremover, men tydeligere :shrug:
     fun gjeldendeFritaksvurderinger(): List<Fritaksvurdering> {
         return tidslinje().komprimer().map { it.verdi.copy(fraDato = it.periode.fom) }.trimHead()
     }
