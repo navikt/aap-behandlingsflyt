@@ -24,12 +24,10 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.pip.PipRepository
-import no.nav.aap.tilgang.Ressurs
-import no.nav.aap.tilgang.RessursType
+import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.Ident
-import tilgang.Operasjon
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
@@ -110,8 +108,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
         }
         route("/{referanse}/personinformasjon") {
             authorizedGet<BehandlingReferanse, BehandlingPersoninfo>(
-                Operasjon.SE,
-                Ressurs("referanse", RessursType.Behandling)
+                BehandlingPathParam("referanse")
             ) { req ->
 
                 val referanse = req.referanse

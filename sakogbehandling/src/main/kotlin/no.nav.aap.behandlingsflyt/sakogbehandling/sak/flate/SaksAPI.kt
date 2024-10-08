@@ -19,9 +19,7 @@ import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.tilgang.Ressurs
-import no.nav.aap.tilgang.RessursType
-import no.nav.aap.tilgang.TilgangGateway
+import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPostWithApprovedList
 import no.nav.aap.verdityper.dokument.DokumentInfoId
@@ -29,8 +27,6 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.feilhåndtering.ElementNotFoundException
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import org.slf4j.LoggerFactory
-import tilgang.Operasjon
-import tilgang.TilgangRequest
 import javax.sql.DataSource
 
 private val logger = LoggerFactory.getLogger("SaksAPI")
@@ -97,7 +93,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 respond(saker)
             }
             route("/{saksnummer}").authorizedGet<HentSakDTO, UtvidetSaksinfoDTO>(
-                Operasjon.SE, Ressurs("saksnummer", RessursType.Sak)
+                SakPathParam("saksnummer")
             ) { req ->
                 val saksnummer = req.saksnummer
 
@@ -128,7 +124,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 )
             }
             route("/{saksnummer}/dokumenter") {
-                authorizedGet<HentSakDTO, List<Dokument>>(Operasjon.SE, Ressurs("saksnummer", RessursType.Sak)) { req ->
+                authorizedGet<HentSakDTO, List<Dokument>>(SakPathParam("saksnummer")) { req ->
                     val token = token()
                     val safRespons = SafListDokumentGateway.hentDokumenterForSak(Saksnummer(req.saksnummer), token)
                     respond(
@@ -152,24 +148,10 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                     respond(DokumentResponsDTO(stream = dokumentRespons.dokument))
                 }
             }
-
-            route("/{saksnummer}/lesetilgang") {
-                get<HentSakDTO, LesetilgangDTO> { req ->
-                    val saksnummer = req.saksnummer
-                    val sak = dataSource.transaction(readOnly = true) { connection ->
-                        SakRepositoryImpl(connection).hent(saksnummer = Saksnummer(saksnummer))
-                    }
-                    val harLesetilgang = TilgangGateway.harTilgang(
-                        TilgangRequest(sak.saksnummer.toString(), null, null, Operasjon.SE), currentToken = token()
-                    )
-                    respond(LesetilgangDTO(harLesetilgang))
-                }
-            }
-
+            
             route("/{saksnummer}/personinformasjon") {
                 authorizedGet<HentSakDTO, SakPersoninfoDTO>(
-                    Operasjon.SE,
-                    Ressurs("saksnummer", RessursType.Sak)
+                    SakPathParam("saksnummer")
                 ) { req ->
 
                     val saksnummer = req.saksnummer
