@@ -18,11 +18,12 @@ class FritakFraMeldepliktLøser(val connection: DBConnection) : Avklaringsbehovs
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: FritakMeldepliktLøsning): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
         val fritaksvurderinger = løsning.fritaksvurderinger.map(FritaksvurderingDto::toFritaksvurdering)
+        val nyeFritaksperioder = Fritaksperioder(fritaksvurderinger)
         val eksisterendeFritaksperioder = Fritaksperioder(meldepliktRepository.hentHvisEksisterer(behandling.id)?.vurderinger.orEmpty())
 
         meldepliktRepository.lagre(
             behandlingId = behandling.id,
-            vurderinger =  (eksisterendeFritaksperioder leggTil fritaksvurderinger).gjeldendeFritaksvurderinger()
+            vurderinger =  eksisterendeFritaksperioder.leggTil(nyeFritaksperioder)
         )
 
         return LøsningsResultat(
