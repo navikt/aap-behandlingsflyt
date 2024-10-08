@@ -79,7 +79,6 @@ spec:
         - application: tilgang
         - application: yrkesskade-saker
           namespace: yrkesskade
-        - application: oppgavestyring
         - application: oppgave
         - application: statistikk
         - application: spokelse
