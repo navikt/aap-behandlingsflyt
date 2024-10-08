@@ -28,8 +28,9 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource) {
                         BehandlingReferanseService(BehandlingRepositoryImpl(connection)).behandling(req)
                     val personopplysningRepository = PersonopplysningRepository(connection)
                     val barnRepository = BarnRepository(connection)
+                    val sakOgBehandlingService = SakOgBehandlingService(connection)
                     val barnetilleggService = BarnetilleggService(
-                        SakOgBehandlingService(connection),
+                        sakOgBehandlingService,
                         barnRepository,
                         personopplysningRepository,
                         VilkårsresultatRepository(connection)
@@ -47,9 +48,15 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource) {
                     val personopplysningGrunnlag = personopplysningRepository.hentHvisEksisterer(behandling.id)
 
                     BarnetilleggDto(
-                        oppgitteBarn = barnGrunnlag?.oppgitteBarn?.identer?.toList() ?: emptyList(),
+                        søknadstidspunkt = sakOgBehandlingService.hentSakFor(behandling.id).rettighetsperiode.fom,
                         folkeregisterbarn = folkeregister.map { hentBarn(it, personopplysningGrunnlag!!) },
-                        vurderteBarn = barnGrunnlag?.vurderteBarn?.barn ?: emptyList(),
+                        vurderteBarn = barnGrunnlag?.vurderteBarn?.barn?.map {
+                            ExtendedVurdertBarnDto(
+                                ident = it.ident.identifikator,
+                                vurderinger = it.vurderinger,
+                                fødselsdato = hentBarn(it.ident, personopplysningGrunnlag!!).fødselsdato
+                            )
+                        } ?: emptyList(),
                         barnSomTrengerVurdering = uavklarteBarn.map { hentBarn(it, personopplysningGrunnlag!!) }
                             .toList()
                     )

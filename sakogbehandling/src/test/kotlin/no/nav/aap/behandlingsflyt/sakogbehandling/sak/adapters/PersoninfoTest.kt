@@ -9,7 +9,7 @@ class PersoninfoTest {
     @Test
     fun `skal mappe rett`() {
         val json = """
-            {"data":{"hentPerson":{"ident": "1234","navn":[{"fornavn":"LYKKELIG","mellomnavn":"PÅTROPPENDE","etternavn":"KLAUSTROFOBI"}]}}}
+            {"data":{"hentPerson":{"navn":[{"fornavn":"LYKKELIG","mellomnavn":"PÅTROPPENDE","etternavn":"KLAUSTROFOBI"}]}}}
         """.trimIndent()
 
         val respons = DefaultJsonMapper.fromJson<PdlPersonNavnDataResponse>(json)

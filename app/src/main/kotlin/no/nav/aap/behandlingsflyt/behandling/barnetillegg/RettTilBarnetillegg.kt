@@ -35,13 +35,16 @@ class RettTilBarnetillegg(barn: Set<Ident> = emptySet()) {
     }
 
     fun harBarnTilAvklaring(): Boolean {
-        return uavklarteBarn.filterNot { ident -> godkjenteUavklarteBarn.any { it.er(ident) } }
-            .filterNot { ident -> underkjenteUavklarteBarn.any { it.er(ident) } }.isNotEmpty()
+        return uavklarteBarnIdenter().isNotEmpty()
     }
 
     fun barnTilAvklaring(): Set<Ident> {
+        return uavklarteBarnIdenter().toSet()
+    }
+
+    private fun uavklarteBarnIdenter(): List<Ident> {
         return uavklarteBarn.filterNot { ident -> godkjenteUavklarteBarn.any { it.er(ident) } }
-            .filterNot { ident -> underkjenteUavklarteBarn.any { it.er(ident) } }.toSet()
+            .filterNot { ident -> underkjenteUavklarteBarn.any { it.er(ident) } }
     }
 
     fun registerBarn(): Set<Ident> {

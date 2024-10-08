@@ -1,13 +1,13 @@
 val ktorVersion = "2.3.12"
-val komponenterVersjon = "0.0.91"
-val tilgangVersjon = "0.0.11"
+val komponenterVersjon = "1.0.8"
+val tilgangVersjon = "0.0.13"
 
 plugins {
     id("behandlingsflyt.conventions")
 }
 
 dependencies {
-    implementation("no.nav:ktor-openapi-generator:1.0.34")
+    implementation("no.nav:ktor-openapi-generator:1.0.42")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.18.0")
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
 
@@ -27,11 +27,11 @@ dependencies {
 
     testImplementation(project(":dbtestdata"))
     testImplementation("no.nav.aap.kelvin:dbtest:$komponenterVersjon")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.0")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.1")
     testImplementation("org.assertj:assertj-core:3.26.3")
     testImplementation("io.mockk:mockk:1.13.12")
-    testImplementation("org.testcontainers:postgresql:1.20.1")
+    testImplementation("org.testcontainers:postgresql:1.20.2")
     testImplementation(kotlin("test"))
     testImplementation(project(":lib-test"))
 }

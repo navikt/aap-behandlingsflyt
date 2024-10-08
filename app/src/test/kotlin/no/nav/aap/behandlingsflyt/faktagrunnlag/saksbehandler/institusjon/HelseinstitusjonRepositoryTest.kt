@@ -32,7 +32,8 @@ class HelseinstitusjonRepositoryTest {
             val helseinstitusjonVurdering = HelseinstitusjonVurdering(
                 dokumenterBruktIVurdering = listOf(JournalpostId("vsafdvasfv")),
                 begrunnelse = "Hello there",
-                faarFriKostOgLosji = false
+                faarFriKostOgLosji = false,
+                periode = Periode(LocalDate.now(), LocalDate.now().plusMonths(3))
             )
 
             helseinstitusjonRepository.lagre(behandling.id, helseinstitusjonVurdering)
@@ -50,13 +51,15 @@ class HelseinstitusjonRepositoryTest {
             val helseinstitusjonVurdering1 = HelseinstitusjonVurdering(
                 dokumenterBruktIVurdering = emptyList(),
                 begrunnelse = "sdfgsdg",
-                faarFriKostOgLosji = false
+                faarFriKostOgLosji = false,
+                periode = Periode(LocalDate.now(), LocalDate.now().plusMonths(3))
             )
 
             val helseinstitusjonVurdering2 = HelseinstitusjonVurdering(
                 dokumenterBruktIVurdering = emptyList(),
                 begrunnelse = "sdfgsdg",
-                faarFriKostOgLosji = true
+                faarFriKostOgLosji = true,
+                periode = Periode(LocalDate.now(), LocalDate.now().plusMonths(2))
             )
 
             helseinstitusjonRepository.lagre(behandling.id, helseinstitusjonVurdering1)
@@ -79,7 +82,8 @@ class HelseinstitusjonRepositoryTest {
             val helseinstitusjonVurdering = HelseinstitusjonVurdering(
                 dokumenterBruktIVurdering = listOf(JournalpostId("yolo"), JournalpostId("swag")),
                 begrunnelse = "sdfgsdg",
-                faarFriKostOgLosji = true
+                faarFriKostOgLosji = true,
+                periode = Periode(LocalDate.now(), LocalDate.now().plusMonths(3))
             )
 
             helseinstitusjonRepository.lagre(behandling.id, helseinstitusjonVurdering)

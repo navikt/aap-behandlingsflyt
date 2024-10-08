@@ -16,5 +16,6 @@ data class Soning(
 
 data class Institusjon(
     val erPåInstitusjon: Boolean,
-    val forsørgerEktefelle: Boolean
+    val forsørgerEktefelle: Boolean,
+    val harFasteKostnader: Boolean
 )

@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
+import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -14,7 +15,8 @@ import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
 
 class EtAnnetStedSteg(
     private val institusjonsoppholdRepository: InstitusjonsoppholdRepository,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val etAnnetStedUtlederService: EtAnnetStedUtlederService
 ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -23,13 +25,17 @@ class EtAnnetStedSteg(
 
         val avklaringsbehov = mutableListOf<Definisjon>()
 
-        if (grunnlag?.opphold?.any { segment -> segment.verdi.type == Institusjonstype.FO } == true &&
-            avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SONINGSFORRHOLD) == null) {
-            avklaringsbehov.add(Definisjon.AVKLAR_SONINGSFORRHOLD)
+        val harBehovForAvklaringer = etAnnetStedUtlederService.harBehovForAvklaringer(kontekst.behandlingId)
+        if(harBehovForAvklaringer.harBehov()){
+            avklaringsbehov += harBehovForAvklaringer.avklaringsbehov()
         }
-        if (grunnlag?.opphold?.any { segment -> segment.verdi.type == Institusjonstype.HS } == true &&
-            avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_HELSEINSTITUSJON) == null) {
-            avklaringsbehov.add(Definisjon.AVKLAR_HELSEINSTITUSJON)
+
+        if(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_HELSEINSTITUSJON) != null){
+            avklaringsbehov.remove(Definisjon.AVKLAR_HELSEINSTITUSJON)
+        }
+
+        if(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SONINGSFORRHOLD) != null){
+            avklaringsbehov.remove(Definisjon.AVKLAR_SONINGSFORRHOLD)
         }
 
         return StegResultat(avklaringsbehov)
@@ -37,7 +43,7 @@ class EtAnnetStedSteg(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            return EtAnnetStedSteg(InstitusjonsoppholdRepository(connection), AvklaringsbehovRepositoryImpl(connection))
+            return EtAnnetStedSteg(InstitusjonsoppholdRepository(connection), AvklaringsbehovRepositoryImpl(connection), EtAnnetStedUtlederService(connection))
         }
 
         override fun type(): StegType {

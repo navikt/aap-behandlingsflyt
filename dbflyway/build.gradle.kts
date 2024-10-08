@@ -1,4 +1,4 @@
-val komponenterVersjon = "0.0.91"
+val komponenterVersjon = "1.0.8"
 
 plugins {
     id("behandlingsflyt.conventions")

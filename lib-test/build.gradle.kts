@@ -1,5 +1,5 @@
 val ktorVersion = "2.3.12"
-val komponenterVersjon = "0.0.91"
+val komponenterVersjon = "1.0.8"
 
 plugins {
     id("behandlingsflyt.conventions")
@@ -11,7 +11,7 @@ dependencies {
     implementation(project(":verdityper"))
     implementation(project(":integrasjon"))
     implementation(project(":app"))
-    implementation("no.nav.aap.tilgang:api-kontrakt:0.0.11")
+    implementation("no.nav.aap.tilgang:api-kontrakt:0.0.13")
     implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
     implementation("io.ktor:ktor-server-auth:$ktorVersion")
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
@@ -22,7 +22,7 @@ dependencies {
     implementation("io.ktor:ktor-server-cors:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
 
-    implementation("no.nav.aap.statistikk:api-kontrakt:0.0.10")
+    implementation("no.nav.aap.statistikk:api-kontrakt:0.0.12")
 
     implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.18.0")
@@ -32,7 +32,7 @@ dependencies {
 
     implementation("com.nimbusds:nimbus-jose-jwt:9.41.1")
 
-    implementation("org.junit.jupiter:junit-jupiter-api:5.11.0")
+    implementation("org.junit.jupiter:junit-jupiter-api:5.11.2")
 
     api(project(":dbtestdata"))
 }

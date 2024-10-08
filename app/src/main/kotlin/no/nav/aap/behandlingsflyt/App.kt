@@ -46,13 +46,15 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.server.exception.FlytOperasjonException
 import no.nav.aap.behandlingsflyt.server.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.server.prosessering.ProsesseringsJobber
-import no.nav.aap.komponenter.AZURE
-import no.nav.aap.komponenter.commonKtorModule
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbmigrering.Migrering
 import no.nav.aap.komponenter.httpklient.auth.Bruker
+import no.nav.aap.komponenter.httpklient.httpclient.error.IkkeFunnetException
+import no.nav.aap.komponenter.httpklient.httpclient.error.ManglerTilgangException
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureConfig
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
+import no.nav.aap.komponenter.server.AZURE
+import no.nav.aap.komponenter.server.commonKtorModule
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.api.motorApi
 import no.nav.aap.motor.retry.RetryService
@@ -94,6 +96,7 @@ internal fun Application.server(dbConfig: DbConfig) {
 
     install(StatusPages) {
         exception<Throwable> { call, cause ->
+            val logger = LoggerFactory.getLogger(App::class.java)
             when (cause) {
                 is ElementNotFoundException -> {
                     call.respondText(status = HttpStatusCode.NotFound, text = cause.message ?: "")
@@ -103,9 +106,18 @@ internal fun Application.server(dbConfig: DbConfig) {
                     call.respond(status = cause.status(), message = cause.body())
                 }
 
+                is ManglerTilgangException -> {
+                    logger.warn("Mangler tilgang til å vise route: '{}'", call.request.local.uri, cause)
+                    call.respondText(status = HttpStatusCode.Forbidden, text = "Forbidden")
+                }
+
+                is IkkeFunnetException -> {
+                    logger.warn("Fikk 404 fra ekstern integrasjon.", cause)
+                    call.respondText(status = HttpStatusCode.NotFound, text = "Ikke funnet")
+                }
+
                 else -> {
-                    LoggerFactory.getLogger(App::class.java)
-                        .warn("Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
+                    logger.warn("Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
                     call.respond(status = HttpStatusCode.InternalServerError, message = ErrorRespons(cause.message))
                 }
             }

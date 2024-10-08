@@ -11,10 +11,11 @@ import java.util.*
 data class Vurdering(
     private val vurderinger: EnumMap<Vilkårtype, Utfall> = EnumMap(Vilkårtype::class.java),
     private val meldepliktVurdering: MeldepliktVurdering? = null,
-    internal val aktivitetspliktVurdering: AktivitetspliktVurdering? = null,
+    internal val fraværFastsattAktivitetVurdering: FraværFastsattAktivitetVurdering? = null,
+    internal val reduksjonAktivitetspliktVurdering: ReduksjonAktivitetspliktVurdering? = null,
     private val gradering: Gradering? = null,
     private val grenseverdi: Prosent? = null,
-    private val institusjonVurdering: InstitusjonVurdering? = null,
+    internal val institusjonVurdering: InstitusjonVurdering? = null,
 ) {
 
     fun leggTilVurdering(vilkårtype: Vilkårtype, utfall: Utfall): Vurdering {
@@ -31,8 +32,12 @@ data class Vurdering(
         return copy(meldepliktVurdering = meldepliktVurdering)
     }
 
-    fun leggTilAktivitetspliktVurdering(aktivitetspliktVurdering: AktivitetspliktVurdering): Vurdering {
-        return copy(aktivitetspliktVurdering = aktivitetspliktVurdering)
+    fun leggTilBruddPåNærmereBestemteAktivitetsplikter(vurdering: ReduksjonAktivitetspliktVurdering): Vurdering {
+        return copy(reduksjonAktivitetspliktVurdering = vurdering)
+    }
+
+    fun leggTilAktivitetspliktVurdering(fraværFastsattAktivitetVurdering: FraværFastsattAktivitetVurdering): Vurdering {
+        return copy(fraværFastsattAktivitetVurdering = fraværFastsattAktivitetVurdering)
     }
 
     fun leggTilGrenseverdi(grenseverdi: Prosent): Vurdering {
@@ -132,7 +137,7 @@ data class Vurdering(
             harRett=${harRett()},
             meldeplikt=${meldepliktVurdering?.utfall ?: Utfall.IKKE_VURDERT}(${meldepliktVurdering?.årsak ?: "-"}),
             gradering=${ gradering?.gradering ?: Prosent( 0) },
-            bruddAktivitetsplikt=${aktivitetspliktVurdering}
+            bruddAktivitetsplikt=${fraværFastsattAktivitetVurdering}
             )""".trimIndent().replace("\n", "")
     }
 }

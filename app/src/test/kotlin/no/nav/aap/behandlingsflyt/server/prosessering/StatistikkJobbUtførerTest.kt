@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.server.prosessering
 
 import io.mockk.checkUnnecessaryStub
+import io.mockk.every
 import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
@@ -12,6 +13,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.hendelse.avløp.AvsluttetBehandlingHendelseDTO
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -24,8 +28,10 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.DefinisjonDTO
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.EndringDTO
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -37,6 +43,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.statistikk.api_kontrakt.AvklaringsbehovHendelse
 import no.nav.aap.statistikk.api_kontrakt.AvsluttetBehandlingDTO
+import no.nav.aap.statistikk.api_kontrakt.BehandlingStatus
 import no.nav.aap.statistikk.api_kontrakt.BehovType
 import no.nav.aap.statistikk.api_kontrakt.BeregningsgrunnlagDTO
 import no.nav.aap.statistikk.api_kontrakt.Endring
@@ -48,7 +55,9 @@ import no.nav.aap.statistikk.api_kontrakt.VilkårDTO
 import no.nav.aap.statistikk.api_kontrakt.VilkårsPeriodeDTO
 import no.nav.aap.statistikk.api_kontrakt.VilkårsResultatDTO
 import no.nav.aap.verdityper.GUnit
+import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.Ident
+import no.nav.aap.verdityper.sakogbehandling.SakId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -138,7 +147,8 @@ class StatistikkJobbUtførerTest {
                 behandlingRepository,
                 sakService,
                 TilkjentYtelseRepository(connection),
-                beregningsgrunnlagRepository
+                beregningsgrunnlagRepository,
+                MottattDokumentRepository(connection)
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
                     .medParameter("statistikk-type", StatistikkType.AvsluttetBehandling.toString())
@@ -186,13 +196,54 @@ class StatistikkJobbUtførerTest {
 
     @Test
     fun `prosesserings-kall avgir statistikk korrekt`(hendelser: List<StoppetBehandling>) {
+        val referanse = BehandlingReferanse()
+
         // Blir ikke kalt i denne metoden, så derfor bare mock
         val vilkårsResultatRepository = mockk<VilkårsresultatRepository>()
         val behandlingRepository = mockk<BehandlingRepository>()
+        val behandlingId = BehandlingId(0)
+        val sakId = SakId(1)
+        every {
+            behandlingRepository.hent(referanse)
+        }.returns(
+            Behandling(
+                id = behandlingId,
+                sakId = sakId,
+                typeBehandling = TypeBehandling.Klage,
+                versjon = 1,
+            )
+        )
+
         val tilkjentYtelseRepository = mockk<TilkjentYtelseRepository>()
         val beregningsgrunnlagRepository = mockk<BeregningsgrunnlagRepository>()
-        // Mock her siden dette er eneste eksterne kall
         val sakService = mockk<SakService>()
+        val dokumentRepository = mockk<MottattDokumentRepository>()
+
+        val nå = LocalDateTime.now()
+        val tidligsteMottattTid = nå.minusDays(3)
+        // Mottatt tid defineres som tidligste mottatt-tidspunkt på innsendte søknader.
+        every {
+            dokumentRepository.hentDokumenterAvType(sakId, Brevkode.SØKNAD)
+        }.returns(
+            setOf(
+                MottattDokument(
+                    referanse = MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, "xxx"),
+                    sakId = sakId,
+                    behandlingId = behandlingId,
+                    mottattTidspunkt = nå.minusDays(1),
+                    type = Brevkode.SØKNAD,
+                    strukturertDokument = null
+                ),
+                MottattDokument(
+                    referanse = MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, "xxx2"),
+                    sakId = sakId,
+                    behandlingId = behandlingId,
+                    mottattTidspunkt = tidligsteMottattTid,
+                    type = Brevkode.SØKNAD,
+                    strukturertDokument = null
+                )
+            )
+        )
 
         val utfører =
             StatistikkJobbUtfører(
@@ -202,6 +253,7 @@ class StatistikkJobbUtførerTest {
                 sakService,
                 tilkjentYtelseRepository,
                 beregningsgrunnlagRepository,
+                dokumentRepository
             )
 
         val avklaringsbehov = listOf(
@@ -219,7 +271,7 @@ class StatistikkJobbUtførerTest {
                 )
             )
         )
-        val referanse = BehandlingReferanse()
+
         val fødselsNummer = Ident("xxx").toString()
         val payload = BehandlingFlytStoppetHendelse(
             saksnummer = Saksnummer("456"),
@@ -249,7 +301,7 @@ class StatistikkJobbUtførerTest {
             StoppetBehandling(
                 saksnummer = "456",
                 behandlingReferanse = referanse.referanse,
-                status = Status.UTREDES.toString(),
+                status = BehandlingStatus.UTREDES,
                 behandlingType = no.nav.aap.statistikk.api_kontrakt.TypeBehandling.valueOf(TypeBehandling.Klage.toString()),
                 ident = fødselsNummer,
                 avklaringsbehov = avklaringsbehov.map { avklaringsbehovHendelseDto ->
@@ -271,7 +323,8 @@ class StatistikkJobbUtførerTest {
                     )
                 },
                 behandlingOpprettetTidspunkt = payload.opprettetTidspunkt,
-                versjon = ApplikasjonsVersjon.versjon
+                versjon = ApplikasjonsVersjon.versjon,
+                mottattTid = tidligsteMottattTid
             )
         )
 
@@ -280,7 +333,8 @@ class StatistikkJobbUtførerTest {
             beregningsgrunnlagRepository,
             tilkjentYtelseRepository,
             behandlingRepository,
-            vilkårsResultatRepository
+            vilkårsResultatRepository,
+            dokumentRepository
         )
     }
 }

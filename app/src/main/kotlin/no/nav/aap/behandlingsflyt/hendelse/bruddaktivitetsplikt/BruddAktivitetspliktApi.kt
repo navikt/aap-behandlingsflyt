@@ -12,7 +12,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.server.authenticate.innloggetNavIdent
-import no.nav.aap.behandlingsflyt.server.prosessering.HendelseMottattHåndteringOppgaveUtfører
+import no.nav.aap.behandlingsflyt.server.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.FlytJobbRepository
@@ -44,11 +44,12 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
 
                 val flytJobbRepository = FlytJobbRepository(connection)
                 flytJobbRepository.leggTil(
-                    HendelseMottattHåndteringOppgaveUtfører.nyJobb(
+                    HendelseMottattHåndteringJobbUtfører.nyJobb(
                         sakId = sak.id,
                         brevkode = Brevkode.AKTIVITETSKORT,
                         dokumentReferanse = dokumentReferanse,
                         periode = Periode(fom, tom),
+                        payload = innsendingId
                     )
                 )
             }

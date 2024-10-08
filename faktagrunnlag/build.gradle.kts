@@ -1,5 +1,5 @@
 val ktorVersion = "2.3.12"
-val komponenterVersjon = "0.0.91"
+val komponenterVersjon = "1.0.8"
 
 plugins {
     id("behandlingsflyt.conventions")
@@ -16,7 +16,7 @@ dependencies {
     implementation("no.nav.aap.kelvin:infrastructure:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:dbconnect:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:dbmigrering:$komponenterVersjon")
-    implementation("no.nav:ktor-openapi-generator:1.0.34")
+    implementation("no.nav:ktor-openapi-generator:1.0.42")
     implementation("io.ktor:ktor-http-jvm:$ktorVersion")
     implementation("com.zaxxer:HikariCP:5.1.0")
 
@@ -26,7 +26,7 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.5.8")
 
     testImplementation("no.nav.aap.kelvin:dbtest:$komponenterVersjon")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.0")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.2")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.11.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.1")
     testImplementation("org.assertj:assertj-core:3.26.3")

@@ -1,4 +1,4 @@
-name: Deploy saksbehandling
+name: Bygg og deploy behandlingsflyt
 
 on:
   push:
@@ -10,6 +10,7 @@ on:
 
 jobs:
   build:
+    name: Bygg og test og push
     runs-on: ubuntu-latest-8-cores
     permissions:
         contents: read
@@ -39,6 +40,8 @@ jobs:
 
       - uses: nais/docker-build-push@v0
         id: docker-push
+        env: # Workaround for rate limiting inntil denne er fikset: https://github.com/aquasecurity/trivy-action/issues/389
+            TRIVY_JAVA_DB_REPOSITORY: "public.ecr.aws/aquasecurity/trivy-java-db:1"
         with:
             team: aap # required
             project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }} # required, but is defined as an organization variable
@@ -67,6 +70,7 @@ jobs:
                 bump_each_commit_patch_pattern: ''
                 major_pattern: "(MAJOR)" # If major bump, include this in commit message
           - uses: actions/setup-java@v4
+            if: ${{ steps.tag.outputs.changed == 'true' }}
             with:
                 java-version: 23
                 distribution: 'temurin'

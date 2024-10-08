@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.RettTilBarnetillegg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tidslinje.JoinStyle
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.Tidslinje
@@ -13,32 +14,36 @@ import kotlin.math.roundToInt
 class InstitusjonRegel : UnderveisRegel {
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
         var institusjonTidslinje = konstruerTidslinje(input)
-        val friForReduksjonTidslinje = friForReduksjonTidslinje(institusjonTidslinje)
+        if (institusjonTidslinje.segmenter().size < 1) {
+            return resultat
+        }
+
         val barnetilleggTidslinje = barnetilleggTidslinje(input.barnetillegg)
-
-        institusjonTidslinje =
-            institusjonTidslinje.kombiner(friForReduksjonTidslinje,
-            JoinStyle.LEFT_JOIN { periode, venstreSegment, høyreSegment ->
-                val verdi = venstreSegment.verdi
-                if (høyreSegment != null) {
-                    Segment(periode, InstitusjonVurdering(
-                        skalReduseres = høyreSegment.verdi.skalReduseres,
-                        høyreSegment.verdi.begrunnelse,
-                        høyreSegment.verdi.årsak
-                        )
-                    )
-                } else {
-                    Segment(periode, verdi)
-                }
-            }
-        )
-
         institusjonTidslinje =
             institusjonTidslinje.kombiner(barnetilleggTidslinje,
                 JoinStyle.LEFT_JOIN { periode, venstreSegment, høyreSegment ->
                     val verdi = venstreSegment.verdi
                     if (høyreSegment != null) {
-                        Segment(periode, InstitusjonVurdering(skalReduseres = false, Årsak.BARNETILLEGG.toString(), Årsak.BARNETILLEGG ))
+                        Segment(periode, InstitusjonVurdering(skalReduseres = false, Årsak.BARNETILLEGG.toString(), Årsak.BARNETILLEGG, Prosent.`100_PROSENT`))
+                    } else {
+                        Segment(periode, verdi)
+                    }
+                }
+            )
+
+        val friForReduksjonTidslinje = friForReduksjonTidslinje(institusjonTidslinje)
+        institusjonTidslinje =
+            institusjonTidslinje.kombiner(friForReduksjonTidslinje,
+                JoinStyle.LEFT_JOIN { periode, venstreSegment, høyreSegment ->
+                    val verdi = venstreSegment.verdi
+                    if (høyreSegment != null) {
+                        Segment(periode, InstitusjonVurdering(
+                            skalReduseres = høyreSegment.verdi.skalReduseres,
+                            høyreSegment.verdi.begrunnelse,
+                            høyreSegment.verdi.årsak,
+                            Prosent.`100_PROSENT`
+                        )
+                        )
                     } else {
                         Segment(periode, verdi)
                     }
@@ -47,13 +52,13 @@ class InstitusjonRegel : UnderveisRegel {
 
         val endeligResultat = resultat.kombiner(institusjonTidslinje,
             JoinStyle.LEFT_JOIN { periode, venstreSegment, høyreSegment ->
-                val venstreVerdi = venstreSegment.verdi
+                var venstreVerdi = venstreSegment.verdi
                 if (høyreSegment?.verdi != null) {
-                    venstreVerdi.leggTilInstitusjonVurdering(høyreSegment.verdi)
+                    venstreVerdi = venstreVerdi.leggTilInstitusjonVurdering(høyreSegment.verdi)
                     val originalGradering = requireNotNull(venstreVerdi.gradering())
 
                     if (høyreSegment.verdi.skalReduseres) {
-                        venstreVerdi.leggTilGradering(
+                        venstreVerdi = venstreVerdi.leggTilGradering(
                             Gradering(
                                 originalGradering.totaltAntallTimer,
                                 originalGradering.andelArbeid,
@@ -83,20 +88,39 @@ class InstitusjonRegel : UnderveisRegel {
         )
     }
 
-    //TODO: Denne tar foreløpig ikke høyde for om medlemmet innen tre måneder etter utskrivelsen på nytt kommer i institusjon
+    // §11-25 avsnitt 2
     private fun friForReduksjonTidslinje(etAnnetStedTidslinje: Tidslinje<InstitusjonVurdering>): Tidslinje<InstitusjonVurdering> {
-        val resterendeMndPlussTre = etAnnetStedTidslinje.filter { segment ->
-            val reduksjonLimit = etAnnetStedTidslinje.minDato().plusMonths(3).with(TemporalAdjusters.lastDayOfMonth())
-
-            //TODO: Hva hvis fom periode og tom periode er på hver side?
-            segment.periode.fom > reduksjonLimit
-        }
-
-        return Tidslinje(
-            resterendeMndPlussTre.map {
-                Segment(it.periode, InstitusjonVurdering(skalReduseres = false, it.verdi.begrunnelse, årsak = Årsak.UTEN_REDUKSJON_TRE_MND))
+        val segmenter: List<Segment<InstitusjonVurdering>> = listOf()
+        val gyldigForReduksjon = etAnnetStedTidslinje.segmenter().fold(segmenter) { tidligereOpphold, detteOppholdet ->
+            val dagFørSegment = Periode(detteOppholdet.fom().minusDays(1), detteOppholdet.tom())
+            val erSammeOpphold = etAnnetStedTidslinje.segmenter().filter { it != detteOppholdet }.any{
+                it.periode.overlapper(dagFørSegment)
             }
-        )
+
+            val periodeTilbake = Periode(detteOppholdet.periode.fom.minusMonths(3), detteOppholdet.periode.fom)
+            val overlappTreMnd = tidligereOpphold.filter {
+                it.verdi.årsak != Årsak.FORSØRGER &&
+                it.verdi.årsak != Årsak.BARNETILLEGG &&
+                it.verdi.årsak != Årsak.FASTE_KOSTNADER
+                }.any{
+                it.periode.overlapper(periodeTilbake)
+            }
+
+            if (!overlappTreMnd) {
+                val kreativPeriodeTreMnd = Periode(detteOppholdet.fom(), detteOppholdet.fom().plusMonths(3).with(TemporalAdjusters.lastDayOfMonth()))
+                tidligereOpphold.plus(Segment(
+                    kreativPeriodeTreMnd, InstitusjonVurdering(false, detteOppholdet.verdi.begrunnelse, Årsak.UTEN_REDUKSJON_TRE_MND, Prosent.`100_PROSENT`))
+                )
+            } else if (!erSammeOpphold) {
+                val resterendeMnd = Periode(detteOppholdet.fom(), detteOppholdet.fom().with(TemporalAdjusters.lastDayOfMonth()))
+                tidligereOpphold.plus(Segment(
+                    resterendeMnd, InstitusjonVurdering(false, detteOppholdet.verdi.begrunnelse, Årsak.UTEN_REDUKSJON_RESTERENDE_MND, Prosent.`100_PROSENT`))
+                )
+            } else {
+                tidligereOpphold
+            }
+        }
+        return Tidslinje(gyldigForReduksjon)
     }
 
     private fun konstruerTidslinje(input: UnderveisInput): Tidslinje<InstitusjonVurdering> {
@@ -105,9 +129,13 @@ class InstitusjonRegel : UnderveisRegel {
                 it.institusjon.erPåInstitusjon
             }.map {
                 if (it.institusjon.forsørgerEktefelle) {
-                    Segment(it.periode, InstitusjonVurdering(skalReduseres = false, it.begrunnelse, Årsak.FORSØRGER))
-                } else {
-                    Segment(it.periode, InstitusjonVurdering(skalReduseres = true, it.begrunnelse, null))
+                    Segment(it.periode, InstitusjonVurdering(skalReduseres = false, it.begrunnelse, Årsak.FORSØRGER, Prosent.`100_PROSENT`))
+                }
+                else if(it.institusjon.harFasteKostnader) {
+                    Segment(it.periode, InstitusjonVurdering(skalReduseres = false, it.begrunnelse, Årsak.FASTE_KOSTNADER, Prosent.`100_PROSENT`))
+                }
+                else {
+                    Segment(it.periode, InstitusjonVurdering(skalReduseres = true, it.begrunnelse, Årsak.KOST_OG_LOSJI, Prosent.`50_PROSENT`))
                 }
             }
         )

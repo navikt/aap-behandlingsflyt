@@ -14,10 +14,11 @@ class BehovForAvklaringer(
         if (!harBehov()) {
             return emptyList()
         }
-        if(harUavklarteSoningsforhold) {
-
+        return when {
+            harUavklarteSoningsforhold && harUavklarteHelseinstitusjonsOpphold -> listOf(Definisjon.AVKLAR_SONINGSFORRHOLD, Definisjon.AVKLAR_HELSEINSTITUSJON)
+            harUavklarteSoningsforhold -> listOf(Definisjon.AVKLAR_SONINGSFORRHOLD)
+            else -> listOf(Definisjon.AVKLAR_HELSEINSTITUSJON)
         }
-        return emptyList()
     }
 
 }

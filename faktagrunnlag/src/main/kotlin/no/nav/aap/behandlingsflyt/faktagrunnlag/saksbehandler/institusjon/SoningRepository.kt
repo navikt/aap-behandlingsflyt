@@ -15,14 +15,17 @@ class SoningRepository(private val connection: DBConnection) {
             SONING_UTENFOR_FENGSEL,
              BEGRUNNELSE, 
              ARBEID_UTENFOR_ANSALT,
-             FORSTE_ARBEIDSDAG)
-             VALUES (?, ?, ?, ?, ?)""".trimMargin()) {
+             FORSTE_ARBEIDSDAG,
+             PERIODE
+            )
+             VALUES (?, ?, ?, ?, ?, ?::daterange)""".trimMargin()) {
             setParams {
                 setLong(1, behandlkingId.toLong())
                 setBoolean(2, soningsvurdering.soningUtenforFengsel)
                 setString(3, soningsvurdering.begrunnelse)
                 setBoolean(4, soningsvurdering.arbeidUtenforAnstalt)
                 setLocalDate(5, soningsvurdering.førsteArbeidsdag)
+                setPeriode(6, soningsvurdering.periode)
             }
         }
 
@@ -84,7 +87,8 @@ class SoningRepository(private val connection: DBConnection) {
             soningUtenforFengsel = row.getBoolean("SONING_UTENFOR_FENGSEL"),
             begrunnelse = row.getStringOrNull("BEGRUNNELSE"),
             arbeidUtenforAnstalt = row.getBooleanOrNull("ARBEID_UTENFOR_ANSALT"),
-            førsteArbeidsdag = row.getLocalDateOrNull("FORSTE_ARBEIDSDAG")
+            førsteArbeidsdag = row.getLocalDateOrNull("FORSTE_ARBEIDSDAG"),
+            periode = row.getPeriode("PERIODE")
         )
     }
 

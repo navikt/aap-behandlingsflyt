@@ -1,11 +1,10 @@
 package no.nav.aap.behandlingsflyt.behandling.barnetillegg.flate
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
-import no.nav.aap.verdityper.sakogbehandling.Ident
+import java.time.LocalDate
 
 class BarnetilleggDto(
-    val oppgitteBarn: List<Ident>,
+    val søknadstidspunkt: LocalDate,
     val folkeregisterbarn: List<IdentifiserteBarnDto>,
-    val vurderteBarn: List<VurdertBarn>,
+    val vurderteBarn: List<ExtendedVurdertBarnDto>,
     val barnSomTrengerVurdering: List<IdentifiserteBarnDto>
 )

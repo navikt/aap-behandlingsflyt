@@ -38,6 +38,7 @@ class SoningsServiceTest {
             emptyList(),
             soningUtenforFengsel = false,
             begrunnelse = "YOLO",
+            periode = Periode(fromDate, toDate)
         )
         every { institusjonRepository.hentHvisEksisterer(any()) } returns InstitusjonsoppholdGrunnlag(
             listOf(
@@ -56,7 +57,7 @@ class SoningsServiceTest {
         val actual = soningsService.samleSoningsGrunnlag(BehandlingReferanse())
 
         assertThat(actual.soningsvurdering)
-            .isEqualTo(SoningsvurderingDto(emptyList(), false, "YOLO"))
+            .isEqualTo(SoningsvurderingDto(emptyList(), false, "YOLO", null, null, Periode(fromDate, toDate)))
 
         assertThat(actual.soningsopphold).hasSize(1)
         assertThat(actual.soningsopphold[0]).isEqualTo(

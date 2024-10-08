@@ -106,7 +106,7 @@ class PipTest {
                 listOf(
                     VurdertBarn(
                         Ident("vurdertbarn"),
-                        listOf(VurderingAvForeldreAnsvar(periode, true, "fordi"))
+                        listOf(VurderingAvForeldreAnsvar(periode.fom, true, "fordi"))
                     )
                 )
             )
@@ -158,7 +158,7 @@ class PipTest {
                 listOf(
                     VurdertBarn(
                         Ident("vurdertbarn"),
-                        listOf(VurderingAvForeldreAnsvar(periode, true, "fordi"))
+                        listOf(VurderingAvForeldreAnsvar(periode.fom, true, "fordi"))
                     )
                 )
             )
@@ -178,7 +178,7 @@ class PipTest {
                 listOf(
                     VurdertBarn(
                         Ident("vurdertbar2"),
-                        listOf(VurderingAvForeldreAnsvar(periode, true, "fordi"))
+                        listOf(VurderingAvForeldreAnsvar(periode.fom, true, "fordi"))
                     )
                 )
             )
