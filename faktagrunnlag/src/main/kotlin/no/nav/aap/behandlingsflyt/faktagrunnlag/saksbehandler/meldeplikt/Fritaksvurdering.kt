@@ -20,15 +20,10 @@ data class Fritaksvurdering(
     }
 
     private fun valueEquals(other: Fritaksvurdering): Boolean {
-        return harFritak == other.harFritak &&
-                fraDato == other.fraDato &&
-                begrunnelse == other.begrunnelse
+        return harFritak == other.harFritak && begrunnelse == other.begrunnelse
     }
 
     override fun hashCode(): Int {
-        var result = harFritak.hashCode()
-        result = 31 * result + fraDato.hashCode()
-        result = 31 * result + begrunnelse.hashCode()
-        return result
+        return 31 * harFritak.hashCode() + begrunnelse.hashCode()
     }
 }

@@ -19,14 +19,22 @@ class Fritaksperioder private constructor(
         return Fritaksperioder(sorterteFritaksvurderinger, nyeFritaksvurderinger)
     }
 
+    //trenger kanskje ikke å mappe fraDato siden den komprimerer fra l->r uansett + fradato skal ikke kunne flyttes fremover, men tydeligere :shrug:
     fun gjeldendeFritaksvurderinger(): List<Fritaksvurdering> {
-        return tidslinje().komprimer().map { it.verdi.copy(fraDato = it.periode.fom) }
+        return tidslinje().komprimer().map { it.verdi.copy(fraDato = it.periode.fom) }.trimHead()
     }
 
     private fun tidslinje(): Tidslinje<Fritaksvurdering> {
         return sorterteFritaksvurderinger.drop(1).fold(sorterteFritaksvurderinger.first().tidslinje()) { acc, fritaksvurdering ->
             acc.kombiner(fritaksvurdering.tidslinje(), StandardSammenslåere.prioriterHøyreSideCrossJoin())
         }
+    }
+
+    private fun List<Fritaksvurdering>.trimHead(): List<Fritaksvurdering> {
+        if (isEmpty()) return emptyList()
+        if (first().harFritak) return this
+
+        return drop(1).trimHead()
     }
 
     private fun Fritaksvurdering.tidslinje(): Tidslinje<Fritaksvurdering> {
