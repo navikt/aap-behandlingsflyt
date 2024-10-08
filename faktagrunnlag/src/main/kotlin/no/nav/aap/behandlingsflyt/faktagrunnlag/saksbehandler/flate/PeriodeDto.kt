@@ -11,6 +11,4 @@ data class PeriodeDto(
     constructor(periode: Periode) : this(
         fom = periode.fom, tom = if (periode.tom == Tid.MAKS) null else periode.tom
     )
-
-    internal fun toPeriode() = Periode(fom, tom ?: Tid.MAKS)
 }

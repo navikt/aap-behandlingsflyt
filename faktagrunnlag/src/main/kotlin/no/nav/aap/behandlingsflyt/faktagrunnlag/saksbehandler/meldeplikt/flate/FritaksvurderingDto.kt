@@ -1,23 +1,18 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.flate.PeriodeDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 data class FritaksvurderingDto(
-    val fritaksPerioder: List<FritaksPeriodeDto>,
+    val harFritak: Boolean,
+    val fraDato: LocalDate,
     val begrunnelse: String,
 ) {
     fun toFritaksvurdering() = Fritaksvurdering(
-        fritaksPerioder.map(FritaksPeriodeDto::toFritaksPeriode), begrunnelse, LocalDateTime.now()
+        harFritak = harFritak,
+        fraDato = fraDato,
+        begrunnelse = begrunnelse,
+        opprettetTid = LocalDateTime.now()
     )
 }
-
-data class FritaksPeriodeDto(
-    val periode: PeriodeDto,
-    val harFritak: Boolean
-) {
-    internal fun toFritaksPeriode() = Fritaksperiode(periode.toPeriode(), harFritak)
-}
-

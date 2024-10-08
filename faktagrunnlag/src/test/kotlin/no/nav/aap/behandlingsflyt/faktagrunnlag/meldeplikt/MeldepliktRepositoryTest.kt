@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.dbtestdata.ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.arbeidsevne.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -44,15 +43,13 @@ class MeldepliktRepositoryTest {
             val behandling = behandling(connection, sak)
 
             val meldepliktRepository = MeldepliktRepository(connection)
-            val fritaksvurdering = Fritaksvurdering(
-                listOf(
-                    Fritaksperiode(Periode(13 august 2023, 25 august 2023), true),
-                    Fritaksperiode(Periode(26 august 2023, 31 august 2023), false)
-                ), "en begrunnelse", LocalDateTime.now()
+            val fritaksvurderinger = listOf(
+                Fritaksvurdering(true, 13 august 2023, "en begrunnelse", LocalDateTime.now()),
+                Fritaksvurdering(false, 26 august 2023, "annen begrunnelse", LocalDateTime.now())
             )
-            meldepliktRepository.lagre(behandling.id, listOf(fritaksvurdering))
+            meldepliktRepository.lagre(behandling.id, fritaksvurderinger)
             val meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling.id)
-            assertThat(meldepliktGrunnlag?.vurderinger).containsExactly(fritaksvurdering)
+            assertThat(meldepliktGrunnlag?.vurderinger).isEqualTo(fritaksvurderinger)
         }
     }
 
@@ -63,11 +60,7 @@ class MeldepliktRepositoryTest {
             val behandling = behandling(connection, sak)
 
             val meldepliktRepository = MeldepliktRepository(connection)
-            val fritaksvurdering = Fritaksvurdering(
-                listOf(
-                    Fritaksperiode(Periode(13 august 2023, 25 august 2023), true)
-                ), "en begrunnelse", LocalDateTime.now()
-            )
+            val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, "en begrunnelse", LocalDateTime.now())
 
             meldepliktRepository.lagre(behandling.id, listOf(fritaksvurdering))
             repeat(2) {
@@ -102,11 +95,7 @@ class MeldepliktRepositoryTest {
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
             val meldepliktRepository = MeldepliktRepository(connection)
-            val fritaksvurdering = Fritaksvurdering(
-                listOf(
-                    Fritaksperiode(Periode(13 august 2023, 25 august 2023), true)
-                ), "en begrunnelse", LocalDateTime.now()
-            )
+            val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, "en begrunnelse", LocalDateTime.now())
 
             meldepliktRepository.lagre(
                 behandling1.id,
@@ -140,11 +129,8 @@ class MeldepliktRepositoryTest {
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
             val meldepliktRepository = MeldepliktRepository(connection)
-            val fritaksvurdering = Fritaksvurdering(
-                listOf(
-                    Fritaksperiode(Periode(13 august 2023, 25 august 2023), true)
-                ), "en begrunnelse", LocalDateTime.now()
-            )
+            val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, "en begrunnelse", LocalDateTime.now())
+
             meldepliktRepository.lagre(
                 behandling1.id,
                 listOf(fritaksvurdering)
@@ -172,11 +158,7 @@ class MeldepliktRepositoryTest {
             val behandling = behandling(connection, sak)
             val meldepliktRepository = MeldepliktRepository(connection)
 
-            val fritaksvurdering = Fritaksvurdering(
-                listOf(
-                    Fritaksperiode(Periode(13 august 2023, 25 august 2023), true)
-                ), "en begrunnelse", LocalDateTime.now()
-            )
+            val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, "en begrunnelse", LocalDateTime.now())
 
             meldepliktRepository.lagre(
                 behandling.id,
@@ -195,7 +177,7 @@ class MeldepliktRepositoryTest {
             data class Opplysning(
                 val behandlingId: Long,
                 val aktiv: Boolean,
-                val periode: Periode,
+                val fraDato: LocalDate,
                 val begrunnelse: String,
                 val harFritak: Boolean
             )
@@ -203,12 +185,11 @@ class MeldepliktRepositoryTest {
             val opplysninger =
                 connection.queryList(
                     """
-                    SELECT g.BEHANDLING_ID, g.AKTIV, v.BEGRUNNELSE, p.PERIODE, p.HAR_FRITAK
+                    SELECT g.BEHANDLING_ID, g.AKTIV, v.BEGRUNNELSE, v.HAR_FRITAK, v.FRA_DATO
                     FROM BEHANDLING b
                     INNER JOIN MELDEPLIKT_FRITAK_GRUNNLAG g ON b.ID = g.BEHANDLING_ID
                     INNER JOIN MELDEPLIKT_FRITAK f ON g.MELDEPLIKT_ID = f.ID
                     INNER JOIN MELDEPLIKT_FRITAK_VURDERING v ON f.ID = v.MELDEPLIKT_ID
-                    INNER JOIN MELDEPLIKT_FRITAK_PERIODE p ON v.ID = p.VURDERING_ID
                     WHERE b.SAK_ID = ?
                     """.trimIndent()
                 ) {
@@ -219,7 +200,7 @@ class MeldepliktRepositoryTest {
                         Opplysning(
                             behandlingId = row.getLong("BEHANDLING_ID"),
                             aktiv = row.getBoolean("AKTIV"),
-                            periode = row.getPeriode("PERIODE"),
+                            fraDato = row.getLocalDate("FRA_DATO"),
                             begrunnelse = row.getString("BEGRUNNELSE"),
                             harFritak = row.getBoolean("HAR_FRITAK")
                         )
@@ -231,14 +212,14 @@ class MeldepliktRepositoryTest {
                     Opplysning(
                         behandlingId = behandling.id.toLong(),
                         aktiv = false,
-                        periode = Periode(13 august 2023, 25 august 2023),
+                        fraDato = 13 august 2023,
                         begrunnelse = "en begrunnelse",
                         harFritak = true
                     ),
                     Opplysning(
                         behandlingId = behandling.id.toLong(),
                         aktiv = true,
-                        periode = Periode(13 august 2023, 25 august 2023),
+                        fraDato = 13 august 2023,
                         begrunnelse = "annen begrunnelse",
                         harFritak = true
                     ),
@@ -253,11 +234,7 @@ class MeldepliktRepositoryTest {
             val behandling1 = behandling(connection, sak)
             val meldepliktRepository = MeldepliktRepository(connection)
 
-            val fritaksvurdering = Fritaksvurdering(
-                listOf(
-                    Fritaksperiode(Periode(13 august 2023, 25 august 2023), true)
-                ), "en begrunnelse", LocalDateTime.now()
-            )
+            val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, "en begrunnelse", LocalDateTime.now())
 
             meldepliktRepository.lagre(
                 behandling1.id,
@@ -277,7 +254,7 @@ class MeldepliktRepositoryTest {
             data class Opplysning(
                 val behandlingId: Long,
                 val aktiv: Boolean,
-                val periode: Periode,
+                val fraDato: LocalDate,
                 val begrunnelse: String,
                 val harFritak: Boolean
             )
@@ -287,12 +264,11 @@ class MeldepliktRepositoryTest {
             val opplysninger =
                 connection.queryList(
                     """
-                    SELECT b.ID AS BEHANDLING_ID, f.ID AS MELDEPLIKT_ID, g.AKTIV, v.BEGRUNNELSE, p.PERIODE, p.HAR_FRITAK
+                    SELECT b.ID AS BEHANDLING_ID, f.ID AS MELDEPLIKT_ID, g.AKTIV, v.BEGRUNNELSE, v.FRA_DATO, v.HAR_FRITAK
                     FROM BEHANDLING b
                     INNER JOIN MELDEPLIKT_FRITAK_GRUNNLAG g ON b.ID = g.BEHANDLING_ID
                     INNER JOIN MELDEPLIKT_FRITAK f ON g.MELDEPLIKT_ID = f.ID
                     INNER JOIN MELDEPLIKT_FRITAK_VURDERING v ON f.ID = v.MELDEPLIKT_ID
-                    INNER JOIN MELDEPLIKT_FRITAK_PERIODE p ON v.ID = p.VURDERING_ID
                     WHERE b.SAK_ID = ?
                     """.trimIndent()
                 ) {
@@ -305,7 +281,7 @@ class MeldepliktRepositoryTest {
                             opplysning = Opplysning(
                                 behandlingId = row.getLong("BEHANDLING_ID"),
                                 aktiv = row.getBoolean("AKTIV"),
-                                periode = row.getPeriode("PERIODE"),
+                                fraDato = row.getLocalDate("FRA_DATO"),
                                 begrunnelse = row.getString("BEGRUNNELSE"),
                                 harFritak = row.getBoolean("HAR_FRITAK")
                             )
@@ -320,21 +296,21 @@ class MeldepliktRepositoryTest {
                     Opplysning(
                         behandlingId = behandling1.id.toLong(),
                         aktiv = false,
-                        periode = Periode(13 august 2023, 25 august 2023),
+                        fraDato = 13 august 2023,
                         begrunnelse = "en begrunnelse",
                         harFritak = true
                     ),
                     Opplysning(
                         behandlingId = behandling1.id.toLong(),
                         aktiv = true,
-                        periode = Periode(13 august 2023, 25 august 2023),
+                        fraDato = 13 august 2023,
                         begrunnelse = "annen begrunnelse",
                         harFritak = true
                     ),
                     Opplysning(
                         behandlingId = behandling2.id.toLong(),
                         aktiv = true,
-                        periode = Periode(13 august 2023, 25 august 2023),
+                        fraDato = 13 august 2023,
                         begrunnelse = "annen begrunnelse",
                         harFritak = true
                     )
