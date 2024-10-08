@@ -25,7 +25,7 @@ class SoningRegelTest {
     @Test
     fun vurder() {
         val regel = SoningRegel()
-        val vurderingFraTidligereResultat = Vurdering(EnumMap(Vilkårtype::class.java), null, null, Gradering(TimerArbeid(BigDecimal(37.5)), Prosent(100), Prosent(100)))
+        val vurderingFraTidligereResultat = Vurdering(EnumMap(Vilkårtype::class.java), null, null, null, null, Gradering(TimerArbeid(BigDecimal(37.5)), Prosent(100), Prosent(100)), null, null )
 
         val formueUnderForvaltning = EtAnnetSted(Periode(LocalDate.of(2024, 1, 6), (LocalDate.of(2024, 1, 10))), soning = Soning(true, true, false, false), begrunnelse = "")
         val sonerIFengsel = EtAnnetSted(Periode(LocalDate.of(2024, 1, 11), (LocalDate.of(2024, 1, 15))), soning = Soning(true, false, false, false), begrunnelse = "")
@@ -36,7 +36,7 @@ class SoningRegelTest {
         val tidligereResultatTidslinje = Tidslinje(listOf( Segment(Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 1)), vurderingFraTidligereResultat)))
 
         val input = UnderveisInput(
-            Periode(LocalDate.now(), LocalDate.now()), listOf(), listOf(), listOf(), mapOf(), null, Kvote(Period.ofDays(1)), setOf(), soningOppholdet, BarnetilleggGrunnlag(1, listOf())
+            Periode(LocalDate.now(), LocalDate.now()), listOf(), listOf(), listOf(), mapOf(), null, Kvote(Period.ofDays(1)), Tidslinje(), soningOppholdet, BarnetilleggGrunnlag(1, listOf())
         )
 
         val resultat = regel.vurder(input, tidligereResultatTidslinje)
