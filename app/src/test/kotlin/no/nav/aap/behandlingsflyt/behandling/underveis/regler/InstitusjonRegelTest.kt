@@ -14,12 +14,12 @@ import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.Prosent
 import no.nav.aap.verdityper.TimerArbeid
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.Period
 import java.util.*
-import kotlin.test.assertEquals
 
 @Fakes
 class InstitusjonRegelTest {
@@ -30,12 +30,12 @@ class InstitusjonRegelTest {
 
         val vurderingFraTidligereResultat = Vurdering(EnumMap(Vilkårtype::class.java), null, null, null, null, Gradering(TimerArbeid(BigDecimal(37.5)), Prosent(100), Prosent(100)))
 
-        val innlagt = EtAnnetSted(Periode(LocalDate.of(2024, 1, 15), (LocalDate.of(2024, 7, 1))), Soning(false, false), Institusjon(true, false, false), "")
-        val forsørgerNoenMensInnlagt = EtAnnetSted(Periode(LocalDate.of(2024, 7, 2), (LocalDate.of(2024, 7, 5))), Soning(false, false), Institusjon(true, true, false), "")
-        val fasteKostnader = EtAnnetSted(Periode(LocalDate.of(2024, 7, 6), (LocalDate.of(2024, 7, 9))), Soning(false, false), Institusjon(true, false, true), "")
-        val innlagtMedReduksjon = EtAnnetSted(Periode(LocalDate.of(2024, 7, 10), (LocalDate.of(2024, 7, 15))), Soning(false, false), Institusjon(true, false, false), "")
-        val innlagtPåNytt = EtAnnetSted(Periode(LocalDate.of(2024, 7, 20), (LocalDate.of(2024, 9, 15))), Soning(false, false), Institusjon(true, false, false), "")
-        val innlagtPåNyttTreMndSenere = EtAnnetSted(Periode(LocalDate.of(2024, 12, 25), (LocalDate.of(2025, 1, 15))), Soning(false, false), Institusjon(true, false, false), "")
+        val innlagt = EtAnnetSted(Periode(LocalDate.of(2024, 1, 15), (LocalDate.of(2024, 7, 1))), institusjon = Institusjon(true, false, false),  begrunnelse = "")
+        val forsørgerNoenMensInnlagt = EtAnnetSted(Periode(LocalDate.of(2024, 7, 2), (LocalDate.of(2024, 7, 5))), institusjon = Institusjon(true, true, false), begrunnelse = "")
+        val fasteKostnader = EtAnnetSted(Periode(LocalDate.of(2024, 7, 6), (LocalDate.of(2024, 7, 9))), institusjon = Institusjon(true, false, true), begrunnelse = "")
+        val innlagtMedReduksjon = EtAnnetSted(Periode(LocalDate.of(2024, 7, 10), (LocalDate.of(2024, 7, 15))), institusjon = Institusjon(true, false, false), begrunnelse = "")
+        val innlagtPåNytt = EtAnnetSted(Periode(LocalDate.of(2024, 7, 20), (LocalDate.of(2024, 9, 15))), institusjon =  Institusjon(true, false, false), begrunnelse = "")
+        val innlagtPåNyttTreMndSenere = EtAnnetSted(Periode(LocalDate.of(2024, 12, 25), (LocalDate.of(2025, 1, 15))), institusjon = Institusjon(true, false, false), begrunnelse = "")
 
         val intitusjonsOppholdet = listOf(innlagt, forsørgerNoenMensInnlagt, innlagtMedReduksjon, fasteKostnader, innlagtPåNytt, innlagtPåNyttTreMndSenere)
         val barnetillegg = BarnetilleggGrunnlag(1, listOf(BarnetilleggPeriode(Periode(LocalDate.of(2024, 5, 1), LocalDate.of(2024, 6, 10)), setOf())))
