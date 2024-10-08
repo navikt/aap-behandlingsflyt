@@ -13,6 +13,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.SoningRepository
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tidslinje.Tidslinje
@@ -37,7 +39,9 @@ class UnderveisServiceTest {
                     PliktkortRepository(connection),
                     UnderveisRepository(connection),
                     BruddAktivitetspliktRepository(connection),
-                    BarnetilleggRepository(connection)
+                    BarnetilleggRepository(connection),
+                    SoningRepository(connection),
+                    HelseinstitusjonRepository(connection)
                 )
             val søknadsdato = LocalDate.now().minusDays(29)
             val periode = Periode(søknadsdato, søknadsdato.plusYears(3))

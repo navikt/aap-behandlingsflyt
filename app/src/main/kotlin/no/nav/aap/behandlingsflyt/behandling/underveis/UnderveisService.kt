@@ -1,5 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis
 
+import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetSted
+import no.nav.aap.behandlingsflyt.behandling.etannetsted.Institusjon
+import no.nav.aap.behandlingsflyt.behandling.etannetsted.Soning
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AktivtBidragRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.GraderingArbeidRegel
@@ -20,6 +23,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.SoningRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soningsvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.HelseinstitusjonVurdering
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
@@ -30,7 +37,9 @@ class UnderveisService(
     private val pliktkortRepository: PliktkortRepository,
     private val underveisRepository: UnderveisRepository,
     private val bruddAktivitetspliktRepository: BruddAktivitetspliktRepository,
-    private val barnetilleggRepository: BarnetilleggRepository
+    private val barnetilleggRepository: BarnetilleggRepository,
+    private val soningRepository: SoningRepository,
+    private val helseInstitusjonRepository: HelseinstitusjonRepository
 ) {
 
     private val kvoteService = KvoteService()
@@ -91,7 +100,11 @@ class UnderveisService(
         val pliktkort = pliktkortGrunnlag?.pliktkort() ?: listOf()
         val innsendingsTidspunkt = pliktkortGrunnlag?.innsendingsdatoPerMelding() ?: mapOf()
         val kvote = kvoteService.beregn(behandlingId)
-        //val annetStedGrunnlag = etAnnetStedRepository().hentHvisEksisterer(behandlingId) //TODO: Vent / Implementer denne
+
+        val soningVurdering = soningRepository.hentAktivSoningsvurderingHvisEksisterer(behandlingId)
+        val helseInstitusjonVurdering = helseInstitusjonRepository.hentAktivHelseinstitusjonVurderingHvisEksisterer(behandlingId)
+        val etAnnetSted = mapTilEtAnnetSted(soningVurdering, helseInstitusjonVurdering)
+
         val barnetilleggGrunnlag = requireNotNull(barnetilleggRepository.hentHvisEksisterer(behandlingId))
 
         return UnderveisInput(
@@ -102,7 +115,7 @@ class UnderveisService(
             innsendingsTidspunkt = innsendingsTidspunkt,
             kvote = kvote,
             bruddAktivitetsplikt = bruddAktivitetspliktsInput(behandlingId),
-            etAnnetSted = listOf(),
+            etAnnetSted = etAnnetSted,
             barnetillegg = barnetilleggGrunnlag
         )
     }
@@ -116,5 +129,31 @@ class UnderveisService(
                 ?.map { Segment(it.periode, it) }
                 ?: emptyList()
         )
+    }
+
+    private fun mapTilEtAnnetSted(soningVurdering: Soningsvurdering?, helseInstitusjon: HelseinstitusjonVurdering?): List<EtAnnetSted> {
+        //TODO: Kan foreløpig ikke vurdere om formueUnderForvaltning er sant, mangler data
+        val etAnnetStedList = mutableListOf<EtAnnetSted>()
+        soningVurdering?.let {
+            etAnnetStedList.add(
+                EtAnnetSted(
+                    it.periode,
+                    soning = Soning(true, false, soningUtenforFengsel = it.soningUtenforFengsel, arbeidUtenforAnstalt = it.arbeidUtenforAnstalt ?: false),
+                    begrunnelse = it.begrunnelse ?: ""
+                )
+            )
+        }
+
+        helseInstitusjon?.let {
+            etAnnetStedList.add(
+                EtAnnetSted(
+                    it.periode,
+                    institusjon = Institusjon(true, it.forsoergerEktefelle ?: false, it.harFasteUtgifter ?: false),
+                    begrunnelse = it.begrunnelse
+                )
+            )
+        }
+
+        return listOf()
     }
 }
