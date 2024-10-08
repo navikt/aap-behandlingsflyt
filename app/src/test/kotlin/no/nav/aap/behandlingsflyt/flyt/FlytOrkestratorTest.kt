@@ -37,7 +37,6 @@ import no.nav.aap.behandlingsflyt.faktasaksbehandler.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.flyt.flate.Venteinformasjon
 import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.TestHendelsesMottak
-import no.nav.aap.behandlingsflyt.flyt.internals.TestJobbRepository
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -61,6 +60,7 @@ import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.Motor
+import no.nav.aap.motor.testutil.TestUtil
 import no.nav.aap.statistikk.api_kontrakt.StoppetBehandling
 import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -73,14 +73,9 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import org.slf4j.LoggerFactory
-import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Year
-import kotlin.system.measureTimeMillis
-
-private val log = LoggerFactory.getLogger(FlytOrkestratorTest::class.java)
 
 @Fakes
 class FlytOrkestratorTest {
@@ -89,6 +84,7 @@ class FlytOrkestratorTest {
         private val dataSource = InitTestDatabase.dataSource
         private val motor = Motor(dataSource, 2, jobber = ProsesseringsJobber.alle())
         private val hendelsesMottak = TestHendelsesMottak(dataSource)
+        private val util = TestUtil(dataSource)
 
         @BeforeAll
         @JvmStatic
@@ -154,7 +150,7 @@ class FlytOrkestratorTest {
                 periode = periode
             )
         )
-        ventPåSvar()
+        util.ventPåSvar()
 
         val sak = hentSak(ident, periode)
         var behandling = hentBehandling(sak.id)
@@ -191,7 +187,7 @@ class FlytOrkestratorTest {
                 )
             )
         }
-        ventPåSvar(sak.id, behandling.id)
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
         behandling = hentBehandling(sak.id)
 
         dataSource.transaction {
@@ -211,7 +207,7 @@ class FlytOrkestratorTest {
                 )
             )
         }
-        ventPåSvar(sak.id, behandling.id)
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
         behandling = hentBehandling(sak.id)
 
         dataSource.transaction {
@@ -234,7 +230,7 @@ class FlytOrkestratorTest {
                 )
             )
         }
-        ventPåSvar(sak.id, behandling.id)
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
         behandling = hentBehandling(sak.id)
 
         // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
@@ -254,7 +250,7 @@ class FlytOrkestratorTest {
                 )
             )
         }
-        ventPåSvar(sak.id, behandling.id)
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
         behandling = hentBehandling(sak.id)
 
         dataSource.transaction { connection ->
@@ -281,7 +277,7 @@ class FlytOrkestratorTest {
                 )
             )
         }
-        ventPåSvar(sak.id, behandling.id)
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
         behandling = hentBehandling(sak.id)
 
         dataSource.transaction {
@@ -308,7 +304,7 @@ class FlytOrkestratorTest {
                 )
             )
         }
-        ventPåSvar(sak.id, behandling.id)
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
         behandling = hentBehandling(sak.id)
 
         dataSource.transaction {
@@ -328,7 +324,7 @@ class FlytOrkestratorTest {
                 )
             )
         }
-        ventPåSvar(sak.id, behandling.id)
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
         behandling = hentBehandling(sak.id)
         // Saken er tilbake til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
         dataSource.transaction { dbConnection ->
@@ -347,7 +343,7 @@ class FlytOrkestratorTest {
                 )
             )
         }
-        ventPåSvar(sak.id, behandling.id)
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
 
         // Saken står til To-trinnskontroll hos beslutter
         dataSource.transaction { connection ->
@@ -370,7 +366,7 @@ class FlytOrkestratorTest {
                 )
             )
         }
-        ventPåSvar(sak.id, behandling.id)
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
 
         behandling = hentBehandling(sak.id)
         assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
@@ -429,7 +425,7 @@ class FlytOrkestratorTest {
                 periode = periode
             )
         )
-        ventPåSvar()
+        util.ventPåSvar()
 
         val sak = hentSak(ident, periode)
         var behandling = hentBehandling(sak.id)
@@ -465,7 +461,7 @@ class FlytOrkestratorTest {
                 )
             )
         }
-        ventPåSvar(sak.id, behandling.id)
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
         behandling = hentBehandling(sak.id)
 
         dataSource.transaction {
@@ -485,7 +481,7 @@ class FlytOrkestratorTest {
                 )
             )
         }
-        ventPåSvar(sak.id, behandling.id)
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
         behandling = hentBehandling(sak.id)
 
         dataSource.transaction {
@@ -508,7 +504,7 @@ class FlytOrkestratorTest {
                 )
             )
         }
-        ventPåSvar(sak.id, behandling.id)
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
         behandling = hentBehandling(sak.id)
 
         dataSource.transaction {
@@ -527,7 +523,7 @@ class FlytOrkestratorTest {
                 )
             )
         }
-        ventPåSvar(sak.id, behandling.id)
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
         behandling = hentBehandling(sak.id)
 
         // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
@@ -547,7 +543,7 @@ class FlytOrkestratorTest {
                 )
             )
         }
-        ventPåSvar(sak.id, behandling.id)
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
 
         // Saken står til To-trinnskontroll hos beslutter
         dataSource.transaction { connection ->
@@ -570,7 +566,7 @@ class FlytOrkestratorTest {
                 )
             )
         }
-        ventPåSvar(sak.id, behandling.id)
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
 
         behandling = hentBehandling(sak.id)
         assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
@@ -639,7 +635,7 @@ class FlytOrkestratorTest {
                 periode = periode
             )
         )
-        ventPåSvar()
+        util.ventPåSvar()
         val sak = hentSak(ident, periode)
 
         assertThat(hendelser.first { it.saksnummer == sak.saksnummer.toString() }.saksnummer).isEqualTo(
@@ -680,7 +676,7 @@ class FlytOrkestratorTest {
                 periode = periode
             )
         )
-        ventPåSvar()
+        util.ventPåSvar()
 
         val sak = hentSak(ident, periode)
         var behandling = hentBehandling(sak.id)
@@ -713,7 +709,7 @@ class FlytOrkestratorTest {
                 )
             )
         }
-        ventPåSvar(sak.id, behandling.id)
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
         behandling = hentBehandling(sak.id)
 
         dataSource.transaction {
@@ -740,7 +736,7 @@ class FlytOrkestratorTest {
                 )
             )
         }
-        ventPåSvar(sak.id, behandling.id)
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
         behandling = hentBehandling(sak.id)
 
         dataSource.transaction {
@@ -760,7 +756,7 @@ class FlytOrkestratorTest {
                 )
             )
         }
-        ventPåSvar(sak.id, behandling.id)
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
         behandling = hentBehandling(sak.id)
 
         // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
@@ -792,7 +788,7 @@ class FlytOrkestratorTest {
                 )
             )
         }
-        ventPåSvar(sak.id, behandling.id)
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
         behandling = hentBehandling(sak.id)
 
         dataSource.transaction {
@@ -805,7 +801,7 @@ class FlytOrkestratorTest {
                 )
             )
         }
-        ventPåSvar(sak.id, behandling.id)
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
 
         // Saken står til To-trinnskontroll hos beslutter
         dataSource.transaction { connection ->
@@ -835,7 +831,7 @@ class FlytOrkestratorTest {
                 )
             )
         }
-        ventPåSvar(sak.id, behandling.id)
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
 
         behandling = hentBehandling(sak.id)
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
@@ -869,7 +865,7 @@ class FlytOrkestratorTest {
                 )
             )
         }
-        ventPåSvar(sak.id, behandling.id)
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
         behandling = hentBehandling(sak.id)
 
         // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
@@ -889,7 +885,7 @@ class FlytOrkestratorTest {
                 )
             )
         }
-        ventPåSvar(sak.id, behandling.id)
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
 
         // Saken står til To-trinnskontroll hos beslutter
         dataSource.transaction { connection ->
@@ -912,7 +908,7 @@ class FlytOrkestratorTest {
                 )
             )
         }
-        ventPåSvar(sak.id, behandling.id)
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
 
         //Henter vurder alder-vilkår
         //Assert utfall
@@ -956,19 +952,6 @@ class FlytOrkestratorTest {
         return AvklaringsbehovRepositoryImpl(connection).hentAvklaringsbehovene(behandlingId)
     }
 
-    private fun ventPåSvar(sakId: SakId? = null, behandlingId: BehandlingId? = null) {
-        val timeInMillis = measureTimeMillis {
-            dataSource.transaction(readOnly = true) {
-                val maxTid = LocalDateTime.now().plusSeconds(20)
-                val testJobbRepository = TestJobbRepository(it)
-                while ((testJobbRepository.harOppgaver(sakId, behandlingId)) && maxTid.isAfter(LocalDateTime.now())) {
-                    Thread.sleep(50L)
-                }
-            }
-        }
-        log.info("Ventet på at prosessering skulle fullføre, det tok {}", Duration.ofMillis(timeInMillis))
-    }
-
     @Test
     fun `Ikke oppfylt på grunn av alder på søknadstidspunkt`() {
         val ident = ident()
@@ -994,7 +977,7 @@ class FlytOrkestratorTest {
                 periode = periode
             )
         )
-        ventPåSvar()
+        util.ventPåSvar()
 
         val sak = hentSak(ident, periode)
         val behandling = requireNotNull(hentBehandling(sak.id))
@@ -1038,7 +1021,7 @@ class FlytOrkestratorTest {
                 periode = periode
             )
         )
-        ventPåSvar()
+        util.ventPåSvar()
 
         val sak = hentSak(ident, periode)
         var behandling = requireNotNull(hentBehandling(sak.id))
@@ -1080,7 +1063,7 @@ class FlytOrkestratorTest {
                 .anySatisfy { assertThat(it.erÅpent() && it.definisjon == Definisjon.MANUELT_SATT_PÅ_VENT).isTrue() }
                 .anySatisfy { assertThat(it.erÅpent() && it.definisjon == Definisjon.AVKLAR_SYKDOM).isTrue() }
         }
-        ventPåSvar(sak.id, behandling.id)
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
         hendelsesMottak.håndtere(
             ident, DokumentMottattPersonHendelse(
                 journalpost = JournalpostId("3"),
@@ -1092,7 +1075,7 @@ class FlytOrkestratorTest {
                 periode = periode
             )
         )
-        ventPåSvar(sak.id, behandling.id)
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
 
         behandling = hentBehandling(sak.id)
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
