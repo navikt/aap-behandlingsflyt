@@ -41,7 +41,7 @@ class FritaksperioderTest {
             fritaksvurdering(true, LocalDate.now().minusDays(2)),
         )
 
-        val fritaksperioder = Fritaksperioder(eksisterendeFritaksvurderinger) leggTil nyFritaksvurdering
+        val fritaksperioder = Fritaksperioder(eksisterendeFritaksvurderinger).leggTil(Fritaksperioder(nyFritaksvurdering))
 
         assertThat(fritaksperioder.gjeldendeFritaksvurderinger()).isEqualTo(nyFritaksvurdering)
     }

@@ -6,7 +6,7 @@ import no.nav.aap.tidslinje.Tidslinje
 class Fritaksperioder private constructor(private val tidslinje: Tidslinje<Fritaksvurdering>) {
 
     constructor(fritaksvurderinger: List<Fritaksvurdering>): this(
-        fritaksvurderinger.drop(1).fold(fritaksvurderinger.first().tidslinje()) { acc, fritaksvurdering ->
+        fritaksvurderinger.sortedBy { it.fraDato }.fold(Tidslinje()) { acc, fritaksvurdering ->
             acc.kombiner(fritaksvurdering.tidslinje(), StandardSammenslåere.prioriterHøyreSideCrossJoin())
         }
     )
