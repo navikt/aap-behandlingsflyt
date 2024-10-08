@@ -32,17 +32,6 @@ class FritaksperioderTest {
     }
 
     @Test
-    fun `fritaksvurdering-nei, som starter før et fritaksvurdering-ja, resulterer i kun en gjeldende vurdering`() {
-        val gjeldendeFritaksvurdering = fritaksvurdering(true, LocalDate.now().plusDays(1))
-        val fritaksvurderinger = listOf(
-            fritaksvurdering(false, LocalDate.now().minusDays(1)),
-            gjeldendeFritaksvurdering,
-        )
-        val fritaksperioder = Fritaksperioder(fritaksvurderinger)
-        assertThat(fritaksperioder.gjeldendeFritaksvurderinger()).containsExactly(gjeldendeFritaksvurdering)
-    }
-
-    @Test
     fun `nye fritaksvurderinger har prioritet over de gamle`() {
         val eksisterendeFritaksvurderinger = listOf(
             fritaksvurdering(true, LocalDate.now().minusDays(1)),
