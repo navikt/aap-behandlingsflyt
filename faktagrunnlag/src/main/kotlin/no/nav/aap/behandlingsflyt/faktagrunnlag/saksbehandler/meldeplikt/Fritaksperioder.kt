@@ -11,8 +11,13 @@ class Fritaksperioder private constructor(private val tidslinje: Tidslinje<Frita
         }
     )
 
-    fun leggTil(nyeFritaksperioder: Fritaksperioder): List<Fritaksvurdering> {
-        return tidslinje.kombiner(nyeFritaksperioder.tidslinje, StandardSammenslåere.prioriterHøyreSideCrossJoin())
-            .komprimer().map { it.verdi.copy(fraDato = it.periode.fom) }
+    fun leggTil(nyeFritaksperioder: Fritaksperioder): Fritaksperioder {
+        return Fritaksperioder(
+            tidslinje.kombiner(nyeFritaksperioder.tidslinje, StandardSammenslåere.prioriterHøyreSideCrossJoin())
+        )
+    }
+
+    fun gjeldendeFritaksvurderinger(): List<Fritaksvurdering> {
+        return tidslinje.komprimer().map { it.verdi.copy(fraDato = it.periode.fom) }
     }
 }
