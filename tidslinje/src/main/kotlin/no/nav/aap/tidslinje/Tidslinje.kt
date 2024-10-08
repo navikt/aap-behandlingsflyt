@@ -214,10 +214,9 @@ class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>> = TreeSet()) : Iterab
         return Tidslinje(segmenter)
     }
 
-    /* Knekker opp segmenterene i henhold til period fom startDato tom sluttDato. Hver periode
-     * blir en egen tidslinje.
-     */
-    fun splittOpp(
+    /* Knekker opp segmenterene i henhold til period fom startDato tom sluttDato, og grupperer
+     * alle segmentene innenfor periodene som tidslinjer. */
+    fun splittOppOgGrupper(
         startDato: LocalDate,
         sluttDato: LocalDate,
         period: Period,
@@ -248,10 +247,6 @@ class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>> = TreeSet()) : Iterab
         return Tidslinje(tidslinjer)
     }
 
-    fun splittOpp(periode: Periode, period: Period): Tidslinje<Tidslinje<T>> {
-        return splittOpp(periode.fom, periode.tom, period)
-    }
-
     fun <R> flatMap(mapper: (Segment<T>) -> Tidslinje<R>): Tidslinje<R> {
         return Tidslinje(segmenter().flatMap {
             mapper(it).segmenter()
@@ -263,7 +258,7 @@ class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>> = TreeSet()) : Iterab
         val førsteDagFørsteKalenderår = segmenter.first.periode.fom.withDayOfYear(1)
         val sisteDag = segmenter.last.periode.tom
         val sisteDagSisteKalenderår = sisteDag.withDayOfYear(sisteDag.lengthOfYear())
-        return splittOpp(førsteDagFørsteKalenderår, sisteDagSisteKalenderår, Period.ofYears(1))
+        return splittOppOgGrupper(førsteDagFørsteKalenderår, sisteDagSisteKalenderår, Period.ofYears(1))
     }
 
     /**
