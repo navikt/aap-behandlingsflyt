@@ -49,6 +49,7 @@ import no.nav.aap.behandlingsflyt.server.prosessering.ProsesseringsJobber
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbmigrering.Migrering
 import no.nav.aap.komponenter.httpklient.auth.Bruker
+import no.nav.aap.komponenter.httpklient.httpclient.error.IkkeFunnetException
 import no.nav.aap.komponenter.httpklient.httpclient.error.ManglerTilgangException
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureConfig
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
@@ -108,6 +109,11 @@ internal fun Application.server(dbConfig: DbConfig) {
                 is ManglerTilgangException -> {
                     logger.warn("Mangler tilgang til å vise route: '{}'", call.request.local.uri, cause)
                     call.respondText(status = HttpStatusCode.Forbidden, text = "Forbidden")
+                }
+
+                is IkkeFunnetException -> {
+                    logger.warn("Fikk 404 fra ekstern integrasjon.", cause)
+                    call.respondText(status = HttpStatusCode.NotFound, text = "Ikke funnet")
                 }
 
                 else -> {

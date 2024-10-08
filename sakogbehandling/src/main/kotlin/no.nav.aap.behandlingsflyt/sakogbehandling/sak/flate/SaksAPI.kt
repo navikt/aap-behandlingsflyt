@@ -4,9 +4,7 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
-import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
-import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
@@ -20,7 +18,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.token
-import no.nav.aap.komponenter.httpklient.httpclient.error.IkkeFunnetException
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tilgang.Ressurs
 import no.nav.aap.tilgang.RessursType
@@ -146,16 +143,13 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
 
                     val token = token()
                     val gateway = SafHentDokumentGateway.withDefaultRestClient()
-                    try {
-                        val dokumentRespons =
-                            gateway.hentDokument(JournalpostId(journalpostId), DokumentInfoId(dokumentInfoId), token)
-                        pipeline.context.response.headers.append(
-                            name = "Content-Disposition", value = "inline; filename=${dokumentRespons.filnavn}"
-                        )
-                        respond(DokumentResponsDTO(stream = dokumentRespons.dokument))
-                    } catch (e: IkkeFunnetException) {
-                        respondWithStatus(HttpStatusCode.NotFound)
-                    }
+
+                    val dokumentRespons =
+                        gateway.hentDokument(JournalpostId(journalpostId), DokumentInfoId(dokumentInfoId), token)
+                    pipeline.context.response.headers.append(
+                        name = "Content-Disposition", value = "inline; filename=${dokumentRespons.filnavn}"
+                    )
+                    respond(DokumentResponsDTO(stream = dokumentRespons.dokument))
                 }
             }
 
