@@ -3,6 +3,8 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 import no.nav.aap.behandlingsflyt.dbtestdata.ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_7
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_8
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_9
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Type.IKKE_AKTIVT_BIDRAG
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Type.IKKE_MØTT_TIL_BEHANDLING
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -45,14 +47,14 @@ class BruddAktivitetspliktRepositoryTest {
             val repo = BruddAktivitetspliktRepository(connection)
             nyeBrudd(connection, sak,
                 brudd = IKKE_MØTT_TIL_BEHANDLING,
-                paragraf = PARAGRAF_11_7,
+                paragraf = PARAGRAF_11_8,
                 begrunnelse = "Ville ikke",
                 perioder = listOf(Periode(LocalDate.now(), LocalDate.now().plusDays(5))),
             )
 
             nyeBrudd(connection, sak,
                 brudd = IKKE_MØTT_TIL_BEHANDLING,
-                paragraf = PARAGRAF_11_7,
+                paragraf = PARAGRAF_11_9,
                 begrunnelse = "Fant ikke fram",
                 perioder = listOf(Periode(LocalDate.now().plusDays(5), LocalDate.now().plusDays(10))),
             )
@@ -69,7 +71,7 @@ class BruddAktivitetspliktRepositoryTest {
             val repo = BruddAktivitetspliktRepository(connection)
             nyeBrudd(connection, sak,
                 brudd = IKKE_MØTT_TIL_BEHANDLING,
-                paragraf = PARAGRAF_11_7,
+                paragraf = PARAGRAF_11_8,
                 begrunnelse = "Dobbel periode uten oppmøte",
                 perioder = listOf(
                     Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
@@ -122,7 +124,7 @@ fun nyeBrudd(
     connection: DBConnection,
     sak: Sak,
     brudd: BruddAktivitetsplikt.Type = IKKE_MØTT_TIL_BEHANDLING,
-    paragraf: BruddAktivitetsplikt.Paragraf = PARAGRAF_11_7,
+    paragraf: BruddAktivitetsplikt.Paragraf = PARAGRAF_11_8,
     begrunnelse: String = "En begrunnnelse",
     perioder: List<Periode> = listOf(Periode(LocalDate.now(), LocalDate.now().plusDays(5)))
 ): List<BruddAktivitetsplikt> {

@@ -1,6 +1,9 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
 import com.fasterxml.jackson.annotation.JsonValue
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_7
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_8
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_9
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Type.IKKE_MØTT_TIL_ANNEN_AKTIVITET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Type.IKKE_MØTT_TIL_BEHANDLING
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Type.IKKE_MØTT_TIL_MØTE
@@ -56,14 +59,19 @@ data class BruddAktivitetsplikt(
     /* TODO: Legg på persistering når det er avklart. */
     val grunn: Grunn = Grunn.INGEN_GYLDIG_GRUNN,
 ) {
+    init {
+        require(paragraf in type.gyldigeParagrafer) {
+            "$paragraf kan ikke brukes ved aktivitetspliktbruddet $type"
+        }
+    }
 
-    enum class Type {
-        IKKE_MØTT_TIL_MØTE,
-        IKKE_MØTT_TIL_BEHANDLING,
-        IKKE_MØTT_TIL_TILTAK,
-        IKKE_MØTT_TIL_ANNEN_AKTIVITET,
-        IKKE_SENDT_INN_DOKUMENTASJON,
-        IKKE_AKTIVT_BIDRAG;
+    enum class Type(val gyldigeParagrafer: Collection<Paragraf>) {
+        IKKE_MØTT_TIL_MØTE(listOf(PARAGRAF_11_9)),
+        IKKE_MØTT_TIL_BEHANDLING(listOf(PARAGRAF_11_8, PARAGRAF_11_9)),
+        IKKE_MØTT_TIL_TILTAK(listOf(PARAGRAF_11_8, PARAGRAF_11_9)),
+        IKKE_MØTT_TIL_ANNEN_AKTIVITET(listOf(PARAGRAF_11_8)),
+        IKKE_SENDT_INN_DOKUMENTASJON(listOf(PARAGRAF_11_9)),
+        IKKE_AKTIVT_BIDRAG(listOf(PARAGRAF_11_7));
     }
 
     /** TODO: avklar behov for forskjellige grunner, og hvilke. */
