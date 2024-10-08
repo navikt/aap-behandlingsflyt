@@ -1,5 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ReduksjonAktivitetspliktVurdering.Vilkårsvurdering.IKKE_RELEVANT_BRUDD
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ReduksjonAktivitetspliktVurdering.Vilkårsvurdering.UNNTAK_RIMELIG_GRUNN
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ReduksjonAktivitetspliktVurdering.Vilkårsvurdering.VILKÅR_OPPFYLT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_9
 import no.nav.aap.tidslinje.JoinStyle
 import no.nav.aap.tidslinje.Segment
@@ -14,14 +17,30 @@ import no.nav.aap.tidslinje.Tidslinje
 class ReduksjonAktivitetspliktRegel : UnderveisRegel {
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
         val vurderinger = input.bruddAktivitetsplikt
-            .mapValue {
-                val kanReduseres = it.erBruddPåNærmereBestemteAktivitetsplikter && !it.harRimeligGrunn
-
-                ReduksjonAktivitetspliktVurdering(
-                    brudd = it,
-                    kanReduseres = kanReduseres,
-                    skalReduseres = kanReduseres && it.paragraf == PARAGRAF_11_9,
-                )
+            .mapValue { brudd ->
+                when {
+                    !brudd.erBruddPåNærmereBestemteAktivitetsplikter -> {
+                        return@mapValue ReduksjonAktivitetspliktVurdering(
+                            brudd = brudd,
+                            vilkårsvurdering = IKKE_RELEVANT_BRUDD,
+                            skalReduseres = false,
+                        )
+                    }
+                    brudd.harRimeligGrunn -> {
+                        return@mapValue ReduksjonAktivitetspliktVurdering(
+                            brudd = brudd,
+                            vilkårsvurdering = UNNTAK_RIMELIG_GRUNN,
+                            skalReduseres = false,
+                        )
+                    }
+                    else -> {
+                        return@mapValue ReduksjonAktivitetspliktVurdering(
+                            brudd = brudd,
+                            vilkårsvurdering = VILKÅR_OPPFYLT,
+                            skalReduseres = brudd.paragraf == PARAGRAF_11_9,
+                        )
+                    }
+                }
             }
 
         return vurderinger.kombiner(

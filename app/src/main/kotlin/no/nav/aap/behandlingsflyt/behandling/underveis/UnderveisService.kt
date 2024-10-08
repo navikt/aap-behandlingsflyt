@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AktivtBidragRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.GraderingArbeidRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.InstitusjonRegel
@@ -38,6 +39,7 @@ class UnderveisService(
         RettTilRegel(),
         InstitusjonRegel(),
         MeldepliktRegel(),
+        AktivtBidragRegel(),
         ReduksjonAktivitetspliktRegel(),
         FraværFastsattAktivitetRegel(),
         GraderingArbeidRegel(),

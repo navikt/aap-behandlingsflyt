@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.Kvote
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Grunn.INGEN_GYLDIG_GRUNN
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Grunn.STERKE_VELFERDSGRUNNER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_8
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Type.IKKE_MØTT_TIL_TILTAK
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktId
@@ -15,11 +14,10 @@ import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.sakogbehandling.NavIdent
 import no.nav.aap.verdityper.sakogbehandling.SakId
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.Period
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ReduksjonAktivitetspliktVurdering.Vilkårsvurdering.VILKÅR_OPPFYLT
 import no.nav.aap.tidslinje.Segment
 
 class ReduksjonFraværFastsattAktivitetRegelTest {
@@ -45,7 +43,7 @@ class ReduksjonFraværFastsattAktivitetRegelTest {
         assertEquals(1, vurderinger.segmenter().size)
         val vurdering = vurderinger.segment(dato(2020, 1, 1))!!.verdi
         /* Kan ikke sanksjonere med 11-8 på grunn av regelen om én dags fravær i meldeperioden. */
-        assertTrue(vurdering.kanReduseres)
+        assertEquals(VILKÅR_OPPFYLT, vurdering.vilkårsvurdering)
     }
 
     @Test
@@ -65,7 +63,7 @@ class ReduksjonFraværFastsattAktivitetRegelTest {
          * er nøyaktigt 3 måneder etter. */
         /* Kan ikke sanksjonere med 11-8 på grunn av regelen om én dags fravær i meldeperioden. */
         val vurdering = vurderinger.segment(dato(2020, 1, 1))!!.verdi
-        assertTrue(vurdering.kanReduseres)
+        assertEquals(VILKÅR_OPPFYLT ,vurdering.vilkårsvurdering)
     }
 
     private fun dato(år: Int, mnd: Int, dag: Int) = LocalDate.of(år, mnd, dag)

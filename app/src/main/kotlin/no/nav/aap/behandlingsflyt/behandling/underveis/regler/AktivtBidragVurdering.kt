@@ -1,4 +1,22 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-class AktivtBidragVurdering {
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt
+
+/** Den ferdige vurderingen av § 11-8 "Medlemmets aktivitetsplikt".
+ *
+ * Vurderingen kan være at det blir opphør av aap.
+ *
+ * Datoen/perioden som vurderingen gjelder for er implisitt, da typen brukes
+ * inne i konteksten av en [Tidslinje][no.nav.aap.tidslinje.Tidslinje].
+ *
+ * - [Folketrygdloven § 11-7](https://lovdata.no/lov/1997-02-28-19/§11-7)
+ */
+class AktivtBidragVurdering(
+    val brudd: BruddAktivitetsplikt,
+    val vilkårsvurdering: Vilkårsvurdering
+) {
+    enum class Vilkårsvurdering {
+        IKKE_RELEVANT_BRUDD,
+        VILKÅR_OPPFYLT,
+    }
 }

@@ -21,17 +21,17 @@ data class FraværFastsattAktivitetVurdering(
     val brudd: BruddAktivitetsplikt,
 
     /** Er vilkårene for stans etter § 11-8 oppfylt? */
-    val utfall: StansUtfall,
+    val vilkårsvurdering: Vilkårsvurdering,
 
     /** Er både maskinen og saksbehandler enig om at aap skal stanses? */
     val skalStanses: Boolean,
 ) {
-    enum class StansUtfall {
+    enum class Vilkårsvurdering {
         STANS_ANDRE_DAG,
         STANS_TI_DAGER_BRUKT_OPP,
         UNNTAK_INNTIL_EN_DAG,
         UNNTAK_STERKE_VELFERDSGRUNNER,
         UNNTAK_SYKDOM_ELLER_SKADE,
-        IKKE_RELEVANT,
+        IKKE_RELEVANT_BRUDD,
     }
 }

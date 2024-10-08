@@ -1,12 +1,12 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import java.time.Period
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.StansUtfall.IKKE_RELEVANT
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.StansUtfall.STANS_ANDRE_DAG
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.StansUtfall.STANS_TI_DAGER_BRUKT_OPP
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.StansUtfall.UNNTAK_INNTIL_EN_DAG
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.StansUtfall.UNNTAK_STERKE_VELFERDSGRUNNER
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.StansUtfall.UNNTAK_SYKDOM_ELLER_SKADE
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.IKKE_RELEVANT_BRUDD
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.STANS_ANDRE_DAG
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.STANS_TI_DAGER_BRUKT_OPP
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_INNTIL_EN_DAG
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_STERKE_VELFERDSGRUNNER
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_SYKDOM_ELLER_SKADE
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Grunn.INGEN_GYLDIG_GRUNN
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Grunn.RIMELIG_GRUNN
@@ -102,7 +102,7 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
                     vurderingSegment.periode,
                     FraværFastsattAktivitetVurdering(
                         brudd = brudd,
-                        utfall = IKKE_RELEVANT,
+                        vilkårsvurdering = IKKE_RELEVANT_BRUDD,
                         skalStanses = false,
                     )
                 )
@@ -115,7 +115,7 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
                     vurderingSegment.periode,
                     FraværFastsattAktivitetVurdering(
                         brudd = brudd,
-                        utfall = UNNTAK_INNTIL_EN_DAG,
+                        vilkårsvurdering = UNNTAK_INNTIL_EN_DAG,
                         skalStanses = false,
                     )
                 )
@@ -127,7 +127,7 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
                         vurderingSegment.periode,
                         FraværFastsattAktivitetVurdering(
                             brudd = brudd,
-                            utfall = UNNTAK_SYKDOM_ELLER_SKADE,
+                            vilkårsvurdering = UNNTAK_SYKDOM_ELLER_SKADE,
                             skalStanses = false,
                         )
                     )
@@ -151,7 +151,7 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
                                     it,
                                     FraværFastsattAktivitetVurdering(
                                         brudd = brudd,
-                                        utfall = if (it.fom >= stansDag) STANS_TI_DAGER_BRUKT_OPP else UNNTAK_STERKE_VELFERDSGRUNNER,
+                                        vilkårsvurdering = if (it.fom >= stansDag) STANS_TI_DAGER_BRUKT_OPP else UNNTAK_STERKE_VELFERDSGRUNNER,
                                         skalStanses = brudd.paragraf == PARAGRAF_11_8,
                                     )
                                 )
@@ -163,7 +163,7 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
                         vurderingSegment.periode,
                         FraværFastsattAktivitetVurdering(
                             brudd = brudd,
-                            utfall = UNNTAK_STERKE_VELFERDSGRUNNER,
+                            vilkårsvurdering = UNNTAK_STERKE_VELFERDSGRUNNER,
                             skalStanses = false,
                         )
                     )
@@ -175,7 +175,7 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
                         vurderingSegment.periode,
                         FraværFastsattAktivitetVurdering(
                             brudd = brudd,
-                            utfall = STANS_ANDRE_DAG,
+                            vilkårsvurdering = STANS_ANDRE_DAG,
                             skalStanses = brudd.paragraf == PARAGRAF_11_8,
                         )
                     )

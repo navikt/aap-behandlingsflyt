@@ -13,6 +13,7 @@ data class Vurdering(
     private val meldepliktVurdering: MeldepliktVurdering? = null,
     internal val fraværFastsattAktivitetVurdering: FraværFastsattAktivitetVurdering? = null,
     internal val reduksjonAktivitetspliktVurdering: ReduksjonAktivitetspliktVurdering? = null,
+    internal val aktivtBidragVurdering: AktivtBidragVurdering? = null,
     private val gradering: Gradering? = null,
     private val grenseverdi: Prosent? = null,
     internal val institusjonVurdering: InstitusjonVurdering? = null,
@@ -46,6 +47,10 @@ data class Vurdering(
 
     fun leggTilInstitusjonVurdering(vurdering: InstitusjonVurdering): Vurdering {
         return copy(institusjonVurdering = vurdering)
+    }
+
+    fun leggTilAktivtBidragVurdering(vurdering: AktivtBidragVurdering): Vurdering {
+        return copy(aktivtBidragVurdering = vurdering)
     }
 
     fun vurderinger(): Map<Vilkårtype, Utfall> {
@@ -140,4 +145,5 @@ data class Vurdering(
             bruddAktivitetsplikt=${fraværFastsattAktivitetVurdering}
             )""".trimIndent().replace("\n", "")
     }
+
 }
