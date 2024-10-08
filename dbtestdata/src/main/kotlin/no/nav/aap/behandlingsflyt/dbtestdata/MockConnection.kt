@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.dbtestdata
 
+import no.nav.aap.komponenter.dbconnect.DBConnection
 import java.sql.Blob
 import java.sql.CallableStatement
 import java.sql.Clob
@@ -230,5 +231,9 @@ class MockConnection : Connection {
 
     override fun getNetworkTimeout(): Int {
         TODO("Not yet implemented")
+    }
+
+    fun toDBConnection(): DBConnection {
+        return DBConnection::class.java.constructors[0].newInstance(this) as DBConnection
     }
 }

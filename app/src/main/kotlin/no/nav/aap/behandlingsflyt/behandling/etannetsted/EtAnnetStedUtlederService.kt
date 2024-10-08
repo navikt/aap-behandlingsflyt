@@ -20,7 +20,7 @@ class EtAnnetStedUtlederService(connection: DBConnection) {
         return utledBehov(input)
     }
 
-    private fun utledBehov(input: EtAnnetStedInput): BehovForAvklaringer {
+    internal fun utledBehov(input: EtAnnetStedInput): BehovForAvklaringer {
         val opphold = input.institusjonsOpphold
         val soningsOppgold = opphold.filter { segment -> segment.verdi.type == Institusjonstype.FO }
         val helseopphold = opphold.filter { segment -> segment.verdi.type == Institusjonstype.HS }
@@ -46,18 +46,18 @@ class EtAnnetStedUtlederService(connection: DBConnection) {
 
         //fjern perioder hvor bruker har barnetillegg gjennom hele helseinstitusjonsoppholdet
         val oppholdUtenBarnetillegg = Tidslinje(helseOppholdTidslinje.filter { segment ->
-            Tidslinje(segment.periode, false).kombiner(barnetilleggTidslinje,
-                JoinStyle.LEFT_JOIN { periode, helseSegment, barnetilleggSegment ->
-                    Segment(periode, barnetilleggSegment?.verdi == true)
-                }
-            ).map { seg -> seg.verdi.not() }.any()
+            barnetilleggTidslinje.segmenter().none { BarneSegment ->
+                val t = BarneSegment.periode.inneholder(segment.periode)
+                t
+            }
         })
+
 
         // Oppholdet må være lengre enn 3 måneder for å være aktuelt for avklaring og må ha vart i minimum 2 måneder for å være klar for avklaring
         if (oppholdUtenBarnetillegg.segmenter().filter { segment -> segment.verdi }.any(
                 { segment ->
                     val startTelling = LocalDate.of(segment.fom().year, segment.fom().month.plus(1).value,1)
-                    startTelling.plusMonths(3) < segment.periode.tom && startTelling.plusMonths(2) >= LocalDate.now()
+                    startTelling.plusMonths(3) < segment.periode.tom && startTelling.plusMonths(2) < LocalDate.now()
                 }
             )
         ) {
