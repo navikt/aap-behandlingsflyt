@@ -65,6 +65,9 @@ import no.nav.aap.yrkesskade.YrkesskadeRequest
 import no.nav.aap.yrkesskade.Yrkesskader
 import org.intellij.lang.annotations.Language
 import org.slf4j.LoggerFactory
+import tilgang.BehandlingTilgangRequest
+import tilgang.JournalpostTilgangRequest
+import tilgang.SakTilgangRequest
 import tilgang.TilgangResponse
 import java.io.ByteArrayInputStream
 import java.time.LocalDate
@@ -229,16 +232,19 @@ object FakeServers : AutoCloseable {
         }
         routing {
             post("/tilgang/sak") {
+                call.receive<SakTilgangRequest>()
                 call.respond(TilgangResponse(true))
             }
         }
         routing {
             post("/tilgang/behandling") {
+                call.receive<BehandlingTilgangRequest>()
                 call.respond(TilgangResponse(true))
             }
         }
         routing {
             post("/tilgang/journalpost") {
+                call.receive<JournalpostTilgangRequest>()
                 call.respond(TilgangResponse(true))
             }
         }
