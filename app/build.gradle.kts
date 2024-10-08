@@ -86,7 +86,7 @@ dependencies {
     testImplementation("no.nav.aap.kelvin:dbtest:$komponenterVersjon")
     testImplementation("no.nav.aap.kelvin:motor-test-utils:$komponenterVersjon")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.2")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.1")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.2")
     testImplementation("org.assertj:assertj-core:3.26.3")
     testImplementation("org.testcontainers:postgresql:1.20.2")
     testImplementation("io.mockk:mockk:1.13.12")
