@@ -7,23 +7,17 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 class ArbeidsevneRepository(private val connection: DBConnection) {
-    companion object {
-        private val ARBEIDSEVNE_QUERY = """
+    
+    fun hentHvisEksisterer(behandlingId: BehandlingId): ArbeidsevneGrunnlag? {
+        return connection.queryList(
+            """
             SELECT a.ID AS ARBEIDSEVNE_ID, v.BEGRUNNELSE, v.FRA_DATO, v.ARBEIDSEVNE, v.OPPRETTET_TID
             FROM ARBEIDSEVNE_GRUNNLAG g
             INNER JOIN ARBEIDSEVNE a ON g.ARBEIDSEVNE_ID = a.ID
             INNER JOIN ARBEIDSEVNE_VURDERING v ON a.ID = v.ARBEIDSEVNE_ID
             WHERE g.AKTIV AND g.BEHANDLING_ID = ?
             """.trimIndent()
-
-        private val INSERT_ARBEIDSEVNEVURDERING_QUERY = """
-            INSERT INTO ARBEIDSEVNE_VURDERING 
-            (ARBEIDSEVNE_ID, FRA_DATO, BEGRUNNELSE, ARBEIDSEVNE, OPPRETTET_TID) VALUES (?, ?, ?, ?, ?)
-            """.trimIndent()
-    }
-
-    fun hentHvisEksisterer(behandlingId: BehandlingId): ArbeidsevneGrunnlag? {
-        return connection.queryList(ARBEIDSEVNE_QUERY) {
+        ) {
             setParams { setLong(1, behandlingId.toLong()) }
             setRowMapper { row ->
                 ArbeidsevneInternal(
@@ -76,7 +70,10 @@ class ArbeidsevneRepository(private val connection: DBConnection) {
 
     private fun List<Arbeidsevnevurdering>.lagre(arbeidsevneId: Long) {
         connection.executeBatch(
-            INSERT_ARBEIDSEVNEVURDERING_QUERY,
+            """
+            INSERT INTO ARBEIDSEVNE_VURDERING 
+            (ARBEIDSEVNE_ID, FRA_DATO, BEGRUNNELSE, ARBEIDSEVNE, OPPRETTET_TID) VALUES (?, ?, ?, ?, ?)
+            """.trimIndent(),
             this
         ) {
             setParams {
