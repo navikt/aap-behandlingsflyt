@@ -32,7 +32,7 @@ data class Journalpost(
     val tittel: String?,
     val temanavn: String?,
     val behandlingstemanavn: String?,
-    val relevanteDatoer: List<RelevantDato>
+    val relevanteDatoer: List<RelevantDato>?
 )
 
 data class RelevantDato(

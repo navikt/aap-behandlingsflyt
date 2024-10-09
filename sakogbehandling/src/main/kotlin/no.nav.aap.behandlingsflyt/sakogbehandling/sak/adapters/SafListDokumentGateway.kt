@@ -15,7 +15,7 @@ import no.nav.aap.saf.Variantformat
 import org.slf4j.LoggerFactory
 import java.net.URI
 
-val log = LoggerFactory.getLogger(SafListDokumentGateway::class.java)
+private val log = LoggerFactory.getLogger(SafListDokumentGateway::class.java)
 
 object SafListDokumentGateway {
     private val graphqlUrl = URI.create(requiredConfigForKey("integrasjon.saf.url.graphql"))
@@ -42,6 +42,7 @@ object SafListDokumentGateway {
         val dokumentoversiktFagsak = response.data?.dokumentoversiktFagsak ?: return emptyList()
 
         return dokumentoversiktFagsak.journalposter.flatMap { journalpost ->
+            log.info("Original Journalpost:  $journalpost")
             journalpost.dokumenter.flatMap { dok ->
                 dok.dokumentvarianter
                     .filter { it.variantformat === Variantformat.ARKIV }
