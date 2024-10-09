@@ -493,8 +493,8 @@ object FakeServers : AutoCloseable {
                 val body = call.receive<String>()
 
                 if ("dokumentoversiktFagsak" in body) {
-                    call.respondText(
-                        """
+                    @Language("JSON")
+                    val expression = """
                             {
                               "data": {
                                 "dokumentoversiktFagsak": {
@@ -505,6 +505,7 @@ object FakeServers : AutoCloseable {
                                       "antallRetur": null,
                                       "kanal": "NAV_NO",
                                       "innsynsregelBeskrivelse": "Standardreglene avgjør om dokumentet vises",
+                                      "relevanteDatoer": [],
                                       "dokumenter": [
                                         {
                                           "dokumentInfoId": "454273798",
@@ -553,6 +554,7 @@ object FakeServers : AutoCloseable {
                                       "antallRetur": null,
                                       "kanal": "NAV_NO",
                                       "innsynsregelBeskrivelse": "Standardreglene avgjør om dokumentet vises",
+                                      "relevanteDatoer": [],
                                       "dokumenter": [
                                         {
                                           "dokumentInfoId": "454268545",
@@ -588,7 +590,9 @@ object FakeServers : AutoCloseable {
                                 }
                               }
                             }
-                """.trimIndent(),
+                """
+                    call.respondText(
+                        expression.trimIndent(),
                         contentType = ContentType.Application.Json
                     )
                 } else {

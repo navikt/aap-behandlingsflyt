@@ -142,6 +142,8 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
 
                     val dokumentRespons =
                         gateway.hentDokument(JournalpostId(journalpostId), DokumentInfoId(dokumentInfoId), token)
+
+                    logger.info("Dokument fra SAF: $dokumentRespons")
                     pipeline.context.response.headers.append(
                         name = "Content-Disposition", value = "inline; filename=${dokumentRespons.filnavn}"
                     )

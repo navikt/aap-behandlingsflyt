@@ -26,9 +26,23 @@ data class Dokument(
     val dokumentvarianter: List<Dokumentvariant>
 )
 
-data class Journalpost(val journalpostId: String, val dokumenter: List<Dokument>)
+data class Journalpost(
+    val journalpostId: String,
+    val dokumenter: List<Dokument>,
+    val tittel: String?,
+    val temanavn: String?,
+    val behandlingstemanavn: String?,
+    val relevanteDatoer: List<RelevantDato>
+)
+
+data class RelevantDato(
+    val dato: String,
+    val datotype: String
+)
+
 data class DokumentoversiktFagsak(val journalposter: List<Journalpost>)
 data class SafDokumentversiktFagsakData(val dokumentoversiktFagsak: DokumentoversiktFagsak?)
+
 enum class Variantformat {
     ARKIV, SLADDET, ORIGINAL
 }
