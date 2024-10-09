@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.flate.ArbeidsevneVurderingDto
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.Tidslinje
@@ -14,6 +15,10 @@ data class ArbeidsevneVurdering(
     val fraDato: LocalDate,
     val opprettetTid: LocalDateTime
 ) {
+    fun toDto(): ArbeidsevneVurderingDto {
+        return ArbeidsevneVurderingDto(begrunnelse, opprettetTid, arbeidsevne.prosentverdi(), fraDato)
+    }
+
     fun tidslinje(): Tidslinje<ArbeidsevneVurdering> {
         return Tidslinje(
             listOf(Segment(Periode(fraDato, Tid.MAKS), this))
