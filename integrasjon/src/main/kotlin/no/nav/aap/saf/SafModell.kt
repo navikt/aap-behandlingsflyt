@@ -2,7 +2,6 @@ package no.nav.aap.saf
 
 import no.nav.aap.pdl.GraphQLError
 import no.nav.aap.pdl.GraphQLExtensions
-import java.time.LocalDate
 
 data class SafRequest(val query: String, val variables: Variables) {
     data class Variables(val fagsakId: String)
@@ -24,8 +23,7 @@ data class Dokument(
     val dokumentInfoId: String,
     val tittel: String,
     val brevkode: String? /* TODO: enum */,
-    val dokumentvarianter: List<Dokumentvariant>,
-    val datoFerdigstilt: LocalDate
+    val dokumentvarianter: List<Dokumentvariant>
 )
 
 data class Journalpost(val journalpostId: String, val dokumenter: List<Dokument>)
