@@ -235,5 +235,6 @@ class FraværFastsattAktivitetRegelTest {
         periode = periode,
         opprettetTid = opprettet.atStartOfDay(),
         grunn = grunn,
+        erstatter = null,
     )
 }

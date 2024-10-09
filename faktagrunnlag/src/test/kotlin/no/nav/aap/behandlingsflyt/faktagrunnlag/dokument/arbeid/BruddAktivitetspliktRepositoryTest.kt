@@ -27,16 +27,61 @@ class BruddAktivitetspliktRepositoryTest {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = nySak(connection)
             val repo = BruddAktivitetspliktRepository(connection)
+            val periode = Periode(LocalDate.now(), LocalDate.now().plusDays(5))
 
             nyeBrudd(connection, sak,
                 brudd = IKKE_AKTIVT_BIDRAG,
                 paragraf = PARAGRAF_11_7,
                 begrunnelse = "Orket ikke",
-                perioder = listOf(Periode(LocalDate.now(), LocalDate.now().plusDays(5))),
+                perioder = listOf(periode),
             )
 
             val lagretHendelse = repo.hentBrudd(sak.id)
             assertEquals(1, lagretHendelse.size)
+            lagretHendelse[0].also {
+                assertEquals(IKKE_AKTIVT_BIDRAG, it.type)
+                assertEquals(PARAGRAF_11_7, it.paragraf)
+                assertEquals("Orket ikke", it.begrunnelse)
+                assertEquals(periode, it.periode)
+            }
+        }
+    }
+
+    @Test
+    fun `kan endre brudd på sak`() {
+        InitTestDatabase.dataSource.transaction { connection ->
+            val sak = nySak(connection)
+            val repo = BruddAktivitetspliktRepository(connection)
+            val fom = LocalDate.now()
+
+            val brudd = nyeBrudd(connection, sak,
+                brudd = IKKE_AKTIVT_BIDRAG,
+                paragraf = PARAGRAF_11_7,
+                begrunnelse = "Orket ikke",
+                perioder = listOf(Periode(fom, fom.plusDays(5)), Periode(fom.plusDays(8), fom.plusDays(8))),
+            )
+            nyeBrudd(connection, sak,
+                brudd = IKKE_MØTT_TIL_BEHANDLING,
+                paragraf = PARAGRAF_11_8,
+                begrunnelse = "hei",
+                perioder = listOf(Periode(fom, fom.plusDays(3))),
+                erstatter = brudd.find { it.periode.fom == fom }!!.id
+            )
+
+            val lagretHendelse = repo.hentBrudd(sak.id)
+            assertEquals(2, lagretHendelse.size)
+            lagretHendelse.find { it.periode.fom == fom }!!.apply {
+                assertEquals(IKKE_MØTT_TIL_BEHANDLING, type)
+                assertEquals(PARAGRAF_11_8, paragraf)
+                assertEquals("hei", begrunnelse)
+                assertEquals(Periode(fom, fom.plusDays(3)), periode)
+            }
+            lagretHendelse.find { it.periode.fom == fom.plusDays(8) }!!.apply {
+                assertEquals(IKKE_AKTIVT_BIDRAG, type)
+                assertEquals(PARAGRAF_11_7, paragraf)
+                assertEquals("Orket ikke", begrunnelse)
+                assertEquals(Periode(fom.plusDays(8), fom.plusDays(8)), periode)
+            }
         }
     }
 
@@ -91,11 +136,11 @@ class BruddAktivitetspliktRepositoryTest {
 
             val førsteBrudd = nyeBrudd(connection, sak).toSet()
             nyttGrunnlag(connection, behandling, førsteBrudd)
-            val førsteInnsendingId = førsteBrudd.first().innsendingId
+            val førsteInnsendingId = førsteBrudd.first().id
 
             val andreBrudd = nyeBrudd(connection, sak).toSet()
             nyttGrunnlag(connection, behandling, førsteBrudd + andreBrudd)
-            val andreInnsendingId = andreBrudd.first().innsendingId
+            val andreInnsendingId = andreBrudd.first().id
 
             val alleGrunnlag = BruddAktivitetspliktRepository(connection).hentAlleGrunnlagKunTestIkkeProd(behandling.id)
 
@@ -104,12 +149,10 @@ class BruddAktivitetspliktRepositoryTest {
                     setOf(førsteInnsendingId),
                     setOf(førsteInnsendingId, andreInnsendingId)
                 ),
-                alleGrunnlag.mapTo(HashSet()) { grunnlag ->
-                    grunnlag.bruddene.mapTo(HashSet()) { brudd -> brudd.innsendingId }
-                })
+                alleGrunnlag
+            )
         }
     }
-
 }
 
 fun nySak(connection: DBConnection): Sak {
@@ -126,7 +169,8 @@ fun nyeBrudd(
     brudd: BruddAktivitetsplikt.Type = IKKE_MØTT_TIL_BEHANDLING,
     paragraf: BruddAktivitetsplikt.Paragraf = PARAGRAF_11_8,
     begrunnelse: String = "En begrunnnelse",
-    perioder: List<Periode> = listOf(Periode(LocalDate.now(), LocalDate.now().plusDays(5)))
+    perioder: List<Periode> = listOf(Periode(LocalDate.now(), LocalDate.now().plusDays(5))),
+    erstatter: BruddAktivitetspliktId? = null,
 ): List<BruddAktivitetsplikt> {
     val repo = BruddAktivitetspliktRepository(connection)
     val innsendingId = repo.lagreBrudd(
@@ -138,6 +182,7 @@ fun nyeBrudd(
                 begrunnelse = begrunnelse,
                 periode = periode,
                 navIdent = NavIdent("Z000000"),
+                erstatter = erstatter,
             )
         }
     )

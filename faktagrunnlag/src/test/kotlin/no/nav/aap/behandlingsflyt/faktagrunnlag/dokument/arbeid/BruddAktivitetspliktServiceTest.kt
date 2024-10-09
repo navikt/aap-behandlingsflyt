@@ -5,7 +5,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferans
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_7
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_8
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Type.IKKE_AKTIVT_BIDRAG
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Type.IKKE_MØTT_TIL_ANNEN_AKTIVITET
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
@@ -26,18 +28,19 @@ class BruddAktivitetspliktServiceTest {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = nySak(connection)
             val behandling = BehandlingRepositoryImpl(connection).opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
-            val bruddAktivitetsplitService = BruddAktivitetspliktService.konstruer(connection)
+            val bruddAktivitetspliktService = BruddAktivitetspliktService.konstruer(connection)
             val flytKontekst = flytKontekstMedPerioder(behandling)
 
-            val brudd = nyeBrudd(
+            val orginaltBrudd = nyeBrudd(
                 connection, sak,
                 brudd = IKKE_AKTIVT_BIDRAG,
                 paragraf = PARAGRAF_11_7,
                 begrunnelse = "Orket ikke",
                 perioder = listOf(Periode(LocalDate.now(), LocalDate.now().plusDays(5))),
-            ).first()
+            ).first().also {
+                mottattDokument(connection, it, sak)
+            }
 
-            mottattDokument(connection, brudd, sak)
 
             // Før vi oppdaterer kravinformasjonen, så finnes det ingen grunnlag
             BruddAktivitetspliktRepository(connection).hentGrunnlagHvisEksisterer(behandling.id).also {
@@ -45,15 +48,49 @@ class BruddAktivitetspliktServiceTest {
             }
 
             // Etter første oppdatering av kravinformasjonen, skal bruddet vi la inn over dukke opp
-            bruddAktivitetsplitService.oppdater(flytKontekst)
+            bruddAktivitetspliktService.oppdater(flytKontekst)
             BruddAktivitetspliktRepository(connection).hentGrunnlagHvisEksisterer(behandling.id).also {
                 assertEquals(1, it?.bruddene?.size)
             }
 
-            // Når vi oppdatering av kravinformasjonen uten ny brudd, skal grunnlaget være uendret
+            // Ved oppdatering av kravinformasjonen uten ny brudd, skal grunnlaget være uendret
+            bruddAktivitetspliktService.oppdater(flytKontekst)
             BruddAktivitetspliktRepository(connection).hentGrunnlagHvisEksisterer(behandling.id).also {
                 assertEquals(1, it?.bruddene?.size)
             }
+
+            // Når vi endrer et brudd, så er det gamle grunnlaget uendret, kun det nye er endret.
+            val nyPeriode = Periode(LocalDate.now(), LocalDate.now().plusDays(5))
+            val endretBrudd = nyeBrudd(
+                connection, sak,
+                brudd = IKKE_MØTT_TIL_ANNEN_AKTIVITET,
+                paragraf = PARAGRAF_11_8,
+                begrunnelse = "Kunne ikke",
+                perioder = listOf(nyPeriode),
+                erstatter = orginaltBrudd.id,
+            ).first().also {
+                mottattDokument(connection, it, sak)
+            }
+
+            bruddAktivitetspliktService.oppdater(flytKontekst)
+            val endredeBrudd = BruddAktivitetspliktRepository(connection).hentGrunnlagHvisEksisterer(behandling.id)!!
+            assertEquals(1, endredeBrudd.bruddene.size)
+
+            endredeBrudd.bruddene.first().apply {
+                assertEquals(IKKE_MØTT_TIL_ANNEN_AKTIVITET, type)
+                assertEquals(PARAGRAF_11_8, paragraf)
+                assertEquals("Kunne ikke", begrunnelse)
+                assertEquals(nyPeriode, periode)
+            }
+
+            val alleGrunnlag = BruddAktivitetspliktRepository(connection).hentAlleGrunnlagKunTestIkkeProd(behandling.id)
+            assertEquals(
+                setOf(
+                    setOf(orginaltBrudd.id),
+                    setOf(endretBrudd.id)
+                ),
+                alleGrunnlag
+            )
         }
     }
 
