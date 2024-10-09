@@ -35,20 +35,20 @@ object StandardSammenslåere {
         }
     }
 
-    fun <T> kunVenstre(): JoinStyle.INNER_JOIN<T, Any?, T> {
+    fun <T, S> kunVenstre(): JoinStyle.INNER_JOIN<T, S, T> {
         return JoinStyle.INNER_JOIN { periode, venstreSegment, _ ->
             Segment(periode, venstreSegment.verdi)
         }
     }
 
-    fun <T> kunHøyreLeftJoin(): JoinStyle.LEFT_JOIN<Any?, T, T> {
+    fun <T, S> kunHøyreLeftJoin(): JoinStyle.LEFT_JOIN<S, T, T> {
         return JoinStyle.LEFT_JOIN { periode, _, høyreSegment ->
             if (høyreSegment == null) return@LEFT_JOIN null
             Segment(periode, høyreSegment.verdi)
         }
     }
 
-    fun <T> kunHøyreRightJoin(): JoinStyle.RIGHT_JOIN<Any?, T, T> {
+    fun <T, S> kunHøyreRightJoin(): JoinStyle.RIGHT_JOIN<S, T, T> {
         return JoinStyle.RIGHT_JOIN { periode, _, høyreSegment ->
             Segment(periode, høyreSegment.verdi)
         }
