@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettArbeidsevneLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevnePerioder
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.flate.ArbeidsevnevurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.flate.ArbeidsevneVurderingDto
 import no.nav.aap.komponenter.dbconnect.DBConnection
 
 class FastsettArbeidsevneLøser(connection: DBConnection) :
@@ -14,11 +14,11 @@ class FastsettArbeidsevneLøser(connection: DBConnection) :
     private val arbeidsevneRepository = ArbeidsevneRepository(connection)
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: FastsettArbeidsevneLøsning): LøsningsResultat {
-        val arbeidsevnevurderinger = løsning.arbeidsevneVurderinger.map(ArbeidsevnevurderingDto::toArbeidsevnevurdering)
+        val arbeidsevneVurderinger = løsning.arbeidsevneVurderinger.map(ArbeidsevneVurderingDto::toArbeidsevnevurdering)
         val eksisterendeArbeidsevnePerioder = ArbeidsevnePerioder(
             arbeidsevneRepository.hentHvisEksisterer(kontekst.behandlingId())?.vurderinger.orEmpty()
         )
-        val nyeArbeidsevnePerioder = eksisterendeArbeidsevnePerioder.leggTil(ArbeidsevnePerioder(arbeidsevnevurderinger))
+        val nyeArbeidsevnePerioder = eksisterendeArbeidsevnePerioder.leggTil(ArbeidsevnePerioder(arbeidsevneVurderinger))
 
         arbeidsevneRepository.lagre(kontekst.behandlingId(), nyeArbeidsevnePerioder.gjeldendeArbeidsevner())
 

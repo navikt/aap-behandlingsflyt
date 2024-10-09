@@ -6,14 +6,14 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.FastsettArbeidsevneLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.flate.ArbeidsevnevurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.flate.ArbeidsevneVurderingDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FASTSETT_ARBEIDSEVNE_KODE
 import no.nav.aap.komponenter.dbconnect.DBConnection
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = FASTSETT_ARBEIDSEVNE_KODE)
 class FastsettArbeidsevneLøsning(
-    @JsonProperty("arbeidsevneVurderinger", required = true) val arbeidsevneVurderinger: List<ArbeidsevnevurderingDto>,
+    @JsonProperty("arbeidsevneVurderinger", required = true) val arbeidsevneVurderinger: List<ArbeidsevneVurderingDto>,
     @JsonProperty(
         "behovstype",
         required = true,

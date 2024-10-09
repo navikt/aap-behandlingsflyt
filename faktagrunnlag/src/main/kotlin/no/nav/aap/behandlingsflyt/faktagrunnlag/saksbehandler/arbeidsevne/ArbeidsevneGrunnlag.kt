@@ -5,5 +5,5 @@ import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 data class ArbeidsevneGrunnlag(
     val arbeidsevneId: Long,
     val behandlingId: BehandlingId,
-    val vurderinger: List<Arbeidsevnevurdering>,
+    val vurderinger: List<ArbeidsevneVurdering>,
 )

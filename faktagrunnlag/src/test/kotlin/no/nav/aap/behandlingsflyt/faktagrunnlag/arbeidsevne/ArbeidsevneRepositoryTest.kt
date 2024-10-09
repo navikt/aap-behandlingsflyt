@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.dbtestdata.ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.Arbeidsevnevurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
@@ -41,7 +41,7 @@ class ArbeidsevneRepositoryTest {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
-            val arbeidsevne = Arbeidsevnevurdering("begrunnelse", Prosent(100), LocalDate.now(), LocalDateTime.now())
+            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), LocalDateTime.now())
 
             val arbeidsevneRepository = ArbeidsevneRepository(connection)
             arbeidsevneRepository.lagre(behandling.id, listOf(arbeidsevne))
@@ -56,7 +56,7 @@ class ArbeidsevneRepositoryTest {
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepository(connection)
-            val arbeidsevne = Arbeidsevnevurdering("begrunnelse", Prosent(100), LocalDate.now(), LocalDateTime.now())
+            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), LocalDateTime.now())
 
             arbeidsevneRepository.lagre(behandling.id, listOf(arbeidsevne))
 
@@ -91,7 +91,7 @@ class ArbeidsevneRepositoryTest {
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepository(connection)
-            val arbeidsevne = Arbeidsevnevurdering("begrunnelse", Prosent(100), LocalDate.now(), LocalDateTime.now())
+            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), LocalDateTime.now())
 
             arbeidsevneRepository.lagre(behandling1.id, listOf(arbeidsevne))
             connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
@@ -123,7 +123,7 @@ class ArbeidsevneRepositoryTest {
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepository(connection)
-            val arbeidsevne = Arbeidsevnevurdering("begrunnelse", Prosent(100), LocalDate.now(), LocalDateTime.now())
+            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), LocalDateTime.now())
             val arbeidsevne2 = arbeidsevne.copy(begrunnelse = "annen begrunnelse")
 
             arbeidsevneRepository.lagre(behandling1.id, listOf(arbeidsevne))
@@ -147,7 +147,7 @@ class ArbeidsevneRepositoryTest {
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepository(connection)
-            val arbeidsevne = Arbeidsevnevurdering("begrunnelse", Prosent(100), LocalDate.now(), LocalDateTime.now())
+            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), LocalDateTime.now())
             val arbeidsevne2 = arbeidsevne.copy("annen begrunnelse")
 
             arbeidsevneRepository.lagre(behandling.id, listOf(arbeidsevne))
@@ -202,7 +202,7 @@ class ArbeidsevneRepositoryTest {
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepository(connection)
-            val arbeidsevne = Arbeidsevnevurdering("begrunnelse", Prosent(100), LocalDate.now(), LocalDateTime.now())
+            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), LocalDateTime.now())
             val arbeidsevne2 = arbeidsevne.copy("annen begrunnelse")
 
             arbeidsevneRepository.lagre(behandling1.id, listOf(arbeidsevne))

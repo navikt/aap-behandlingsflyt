@@ -38,21 +38,21 @@ class ArbeidsevneRepository(private val connection: DBConnection) {
         val arbeidsevne: Prosent,
         val opprettetTid: LocalDateTime
     ) {
-        fun toArbeidsevnevurdering(): Arbeidsevnevurdering {
-            return Arbeidsevnevurdering(begrunnelse, arbeidsevne, fraDato, opprettetTid)
+        fun toArbeidsevnevurdering(): ArbeidsevneVurdering {
+            return ArbeidsevneVurdering(begrunnelse, arbeidsevne, fraDato, opprettetTid)
         }
     }
 
     private fun List<ArbeidsevneInternal>.toGrunnlag(behandlingId: BehandlingId): ArbeidsevneGrunnlag? {
         return groupBy(ArbeidsevneInternal::arbeidsevneId, ArbeidsevneInternal::toArbeidsevnevurdering)
-            .map { (arbeidsevneId, arbeidsevnevurderinger) -> ArbeidsevneGrunnlag(arbeidsevneId, behandlingId, arbeidsevnevurderinger) }
+            .map { (arbeidsevneId, arbeidsevneVurderinger) -> ArbeidsevneGrunnlag(arbeidsevneId, behandlingId, arbeidsevneVurderinger) }
             .takeIf { it.isNotEmpty() }?.single()
     }
 
-    fun lagre(behandlingId: BehandlingId, arbeidsevnevurderinger: List<Arbeidsevnevurdering>) {
+    fun lagre(behandlingId: BehandlingId, arbeidsevneVurderinger: List<ArbeidsevneVurdering>) {
         val eksisterendeArbeidsevneGrunnlag = hentHvisEksisterer(behandlingId)
 
-        if (eksisterendeArbeidsevneGrunnlag?.vurderinger == arbeidsevnevurderinger) return
+        if (eksisterendeArbeidsevneGrunnlag?.vurderinger == arbeidsevneVurderinger) return
 
         if (eksisterendeArbeidsevneGrunnlag != null) deaktiverEksisterende(behandlingId)
 
@@ -65,10 +65,10 @@ class ArbeidsevneRepository(private val connection: DBConnection) {
             }
         }
 
-        arbeidsevnevurderinger.lagre(arbeidsevneId)
+        arbeidsevneVurderinger.lagre(arbeidsevneId)
     }
 
-    private fun List<Arbeidsevnevurdering>.lagre(arbeidsevneId: Long) {
+    private fun List<ArbeidsevneVurdering>.lagre(arbeidsevneId: Long) {
         connection.executeBatch(
             """
             INSERT INTO ARBEIDSEVNE_VURDERING 

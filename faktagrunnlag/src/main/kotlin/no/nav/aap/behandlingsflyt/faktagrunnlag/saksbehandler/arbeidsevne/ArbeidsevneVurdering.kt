@@ -8,23 +8,23 @@ import no.nav.aap.verdityper.Tid
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-data class Arbeidsevnevurdering(
+data class ArbeidsevneVurdering(
     val begrunnelse: String,
     val arbeidsevne: Prosent,
     val fraDato: LocalDate,
     val opprettetTid: LocalDateTime
 ) {
-    fun tidslinje(): Tidslinje<Arbeidsevnevurdering> {
+    fun tidslinje(): Tidslinje<ArbeidsevneVurdering> {
         return Tidslinje(
             listOf(Segment(Periode(fraDato, Tid.MAKS), this))
         )
     }
 
     override fun equals(other: Any?): Boolean {
-        return this === other || (other is Arbeidsevnevurdering && this.valueEquals(other))
+        return this === other || (other is ArbeidsevneVurdering && this.valueEquals(other))
     }
 
-    private fun valueEquals(other: Arbeidsevnevurdering): Boolean {
+    private fun valueEquals(other: ArbeidsevneVurdering): Boolean {
         return begrunnelse == other.begrunnelse && arbeidsevne == other.arbeidsevne
     }
 
