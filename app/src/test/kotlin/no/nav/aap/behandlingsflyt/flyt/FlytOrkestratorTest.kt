@@ -38,7 +38,12 @@ import no.nav.aap.behandlingsflyt.flyt.flate.Venteinformasjon
 import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.TestHendelsesMottak
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_BISTANDSBEHOV_KODE
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_SYKDOM_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FATTE_VEDTAK_KODE
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FORESLÅ_VEDTAK_KODE
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.KVALITETSSIKRING_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -61,6 +66,7 @@ import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.testutil.TestUtil
+import no.nav.aap.statistikk.api_kontrakt.BehandlingStatus
 import no.nav.aap.statistikk.api_kontrakt.StoppetBehandling
 import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -139,7 +145,7 @@ class FlytOrkestratorTest {
 
 
         // Sender inn en søknad
-        hendelsesMottak.håndtere(
+        sendInnDokument(
             ident, DokumentMottattPersonHendelse(
                 journalpost = JournalpostId("20"),
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),
@@ -414,7 +420,7 @@ class FlytOrkestratorTest {
         )
 
         // Sender inn en søknad
-        hendelsesMottak.håndtere(
+        sendInnDokument(
             ident, DokumentMottattPersonHendelse(
                 journalpost = JournalpostId("10"),
                 mottattTidspunkt = LocalDateTime.now(),
@@ -643,6 +649,15 @@ class FlytOrkestratorTest {
         )
     }
 
+    private fun sendInnDokument(
+        ident: Ident,
+        dokumentMottattPersonHendelse: DokumentMottattPersonHendelse
+    ) {
+        hendelsesMottak.håndtere(
+            ident, dokumentMottattPersonHendelse
+        )
+    }
+
     @Test
     fun `to-trinn og ingen endring i gruppe etter sendt tilbake fra beslutter`() {
         val ident = ident()
@@ -662,7 +677,7 @@ class FlytOrkestratorTest {
         )
 
         // Sender inn en søknad
-        hendelsesMottak.håndtere(
+        sendInnDokument(
             ident, DokumentMottattPersonHendelse(
                 journalpost = JournalpostId("11"),
                 mottattTidspunkt = LocalDateTime.now(),
@@ -953,7 +968,7 @@ class FlytOrkestratorTest {
     }
 
     @Test
-    fun `Ikke oppfylt på grunn av alder på søknadstidspunkt`() {
+    fun `Ikke oppfylt på grunn av alder på søknadstidspunkt`(hendelser: List<StoppetBehandling>) {
         val ident = ident()
         hentPerson(ident)
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
@@ -980,7 +995,7 @@ class FlytOrkestratorTest {
         util.ventPåSvar()
 
         val sak = hentSak(ident, periode)
-        val behandling = requireNotNull(hentBehandling(sak.id))
+        val behandling = hentBehandling(sak.id)
         assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
 
         val stegHistorikk = behandling.stegHistorikk()
@@ -995,6 +1010,140 @@ class FlytOrkestratorTest {
         assertThat(aldersvilkår.vilkårsperioder())
             .hasSize(1)
             .noneMatch { vilkårsperiodeForAlder -> vilkårsperiodeForAlder.erOppfylt() }
+
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
+
+        val status = dataSource.transaction { BehandlingRepositoryImpl(it).hent(behandling.id).status() }
+        assertThat(status).isEqualTo(Status.UTREDES)
+
+        dataSource.transaction {
+            val behov = hentAvklaringsbehov(behandling.id, it)
+            assertThat(behov.åpne()).allSatisfy { assertThat(it.definisjon.kode).isEqualTo(AVKLAR_SYKDOM_KODE) }
+        }
+
+        dataSource.transaction {
+            AvklaringsbehovHendelseHåndterer(it).håndtere(
+                behandling.id,
+                LøsAvklaringsbehovBehandlingHendelse(
+                    løsning = AvklarSykdomLøsning(
+                        sykdomsvurdering = SykdomsvurderingDto(
+                            begrunnelse = "Er syk nok",
+                            dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
+                            harSkadeSykdomEllerLyte = false,
+                            erSkadeSykdomEllerLyteVesentligdel = false,
+                            erNedsettelseIArbeidsevneHøyereEnnNedreGrense = false,
+                            nedreGrense = NedreGrense.FEMTI,
+                            nedsattArbeidsevneDato = LocalDate.now(),
+                            erArbeidsevnenNedsatt = false,
+                            yrkesskadevurdering = YrkesskadevurderingDto(
+                                erÅrsakssammenheng = false
+                            )
+                        )
+                    ),
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
+                )
+            )
+        }
+
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
+
+        dataSource.transaction {
+            val behov = hentAvklaringsbehov(behandling.id, it)
+            assertThat(behov.åpne()).allSatisfy { assertThat(it.definisjon.kode).isEqualTo(AVKLAR_BISTANDSBEHOV_KODE) }
+        }
+
+        dataSource.transaction {
+            AvklaringsbehovHendelseHåndterer(it).håndtere(
+                behandling.id,
+                LøsAvklaringsbehovBehandlingHendelse(
+                    løsning = AvklarBistandsbehovLøsning(
+                        bistandsVurdering = BistandVurderingDto(
+                            begrunnelse = "Trenger ikke hjelp fra nav",
+                            erBehovForAktivBehandling = false,
+                            erBehovForArbeidsrettetTiltak = false,
+                            erBehovForAnnenOppfølging = false
+                        ),
+                    ),
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
+                )
+            )
+        }
+
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
+
+        dataSource.transaction {
+            val behov = hentAvklaringsbehov(behandling.id, it)
+            assertThat(behov.åpne()).allSatisfy { assertThat(it.definisjon.kode).isEqualTo(KVALITETSSIKRING_KODE) }
+        }
+
+        dataSource.transaction {
+            val avklaringsbehov = hentAvklaringsbehov(behandling.id, it)
+            AvklaringsbehovHendelseHåndterer(it).håndtere(
+                behandling.id,
+                LøsAvklaringsbehovBehandlingHendelse(
+                    løsning = KvalitetssikringLøsning(avklaringsbehov.alle()
+                        .filter { behov -> behov.erTotrinn() }
+                        .map { behov ->
+                            TotrinnsVurdering(
+                                behov.definisjon.kode,
+                                true,
+                                "begrunnelse",
+                                emptyList()
+                            )
+                        }),
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
+                )
+            )
+        }
+
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
+
+        dataSource.transaction {
+            AvklaringsbehovHendelseHåndterer(it).håndtere(
+                behandling.id,
+                LøsAvklaringsbehovBehandlingHendelse(
+                    løsning = ForeslåVedtakLøsning("Begrunnelse"),
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
+                )
+            )
+        }
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
+
+        dataSource.transaction {
+            val behov = hentAvklaringsbehov(behandling.id, it)
+            assertThat(behov.åpne()).allSatisfy { assertThat(it.definisjon.kode).isEqualTo(FATTE_VEDTAK_KODE) }
+        }
+
+
+        dataSource.transaction { connection ->
+            val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
+            AvklaringsbehovHendelseHåndterer(connection).håndtere(
+                behandling.id,
+                LøsAvklaringsbehovBehandlingHendelse(
+                    løsning = FatteVedtakLøsning(avklaringsbehov.alle()
+                        .filter { behov -> behov.erTotrinn() }
+                        .map { behov -> TotrinnsVurdering(behov.definisjon.kode, true, "begrunnelse", emptyList()) }),
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
+                )
+            )
+        }
+
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
+
+        dataSource.transaction {
+            val behov = hentAvklaringsbehov(behandling.id, it)
+            assertThat(behov.åpne()).allSatisfy { assertThat(it.definisjon.kode).isEqualTo(FATTE_VEDTAK_KODE) }
+        }
+
+        util.ventPåSvar()
+
+        assertThat(hentBehandling(sak.id).status()).isEqualTo(Status.AVSLUTTET)
+        assertThat(hendelser.last().status).isEqualTo(BehandlingStatus.AVSLUTTET)
     }
 
     private fun hentPerson(ident: Ident): Person {
