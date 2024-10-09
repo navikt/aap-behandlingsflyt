@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
 class ArbeidsevneGrunnlag(
-    val id: Long,
+    val arbeidsevneId: Long,
     val behandlingId: BehandlingId,
-    val vurdering: Arbeidsevne,
+    val vurderinger: List<Arbeidsevnevurdering>,
 )

@@ -43,16 +43,15 @@ class MeldepliktRepository(private val connection: DBConnection) {
         val fraDato: LocalDate,
         val begrunnelse: String,
         val vurderingOpprettet: LocalDateTime
-    )
-
-    private fun Iterable<MeldepliktInternal>.grupperOgMapTilGrunnlag(behandlingId: BehandlingId): List<MeldepliktGrunnlag> {
-        return groupBy(MeldepliktInternal::meldepliktId) { it.toFritaksvurdering() }
-            .map { (meldepliktId, fritaksvurderinger) -> MeldepliktGrunnlag(meldepliktId, behandlingId, fritaksvurderinger) }
+    ) {
+        fun toFritaksvurdering(): Fritaksvurdering {
+            return Fritaksvurdering(harFritak, fraDato, begrunnelse, vurderingOpprettet)
+        }
     }
 
-
-    private fun MeldepliktInternal.toFritaksvurdering(): Fritaksvurdering {
-        return Fritaksvurdering(harFritak, fraDato, begrunnelse, vurderingOpprettet)
+    private fun Iterable<MeldepliktInternal>.grupperOgMapTilGrunnlag(behandlingId: BehandlingId): List<MeldepliktGrunnlag> {
+        return groupBy(MeldepliktInternal::meldepliktId, MeldepliktInternal::toFritaksvurdering)
+            .map { (meldepliktId, fritaksvurderinger) -> MeldepliktGrunnlag(meldepliktId, behandlingId, fritaksvurderinger) }
     }
 
     fun lagre(behandlingId: BehandlingId, vurderinger: List<Fritaksvurdering>) {
