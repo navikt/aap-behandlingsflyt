@@ -14,6 +14,7 @@ import no.nav.aap.saf.SafResponseHandler
 import no.nav.aap.saf.Variantformat
 import org.slf4j.LoggerFactory
 import java.net.URI
+import java.time.LocalDate
 
 val log = LoggerFactory.getLogger(SafListDokumentGateway::class.java)
 
@@ -51,6 +52,7 @@ object SafListDokumentGateway {
                             dokumentInfoId = dok.dokumentInfoId,
                             tittel = dok.tittel,
                             brevkode = dok.brevkode,
+                            datoFerdigstilt = dok.datoFerdigstilt,
                             variantformat = it.variantformat
                         )
                     }
@@ -64,7 +66,8 @@ data class Dokument(
     val journalpostId: String,
     val brevkode: String?,
     val tittel: String,
-    val variantformat: Variantformat
+    val variantformat: Variantformat,
+    val datoFerdigstilt: LocalDate
 )
 
 fun String.asQuery() = this.replace("\n", "")
