@@ -108,6 +108,6 @@ class SamordningServiceTest {
     private fun opprettSakdata(connection: DBConnection): BehandlingId {
         val person = PersonRepository(connection).finnEllerOpprett(listOf(Ident("ident", true)))
         val sakId = SakRepositoryImpl(connection).finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusDays(5))).id
-        return BehandlingRepositoryImpl(connection).opprettBehandling(sakId, listOf(), TypeBehandling.Førstegangsbehandling).id
+        return BehandlingRepositoryImpl(connection).opprettBehandling(sakId, listOf(), TypeBehandling.Førstegangsbehandling, null).id
     }
 }

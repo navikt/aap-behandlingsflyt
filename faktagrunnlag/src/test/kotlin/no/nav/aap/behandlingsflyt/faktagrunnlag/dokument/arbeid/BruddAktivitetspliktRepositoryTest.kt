@@ -87,7 +87,7 @@ class BruddAktivitetspliktRepositoryTest {
     fun `nytt grunnlag endrer ikke gammelt grunnlag`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = nySak(connection)
-            val behandling = BehandlingRepositoryImpl(connection).opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling)
+            val behandling = BehandlingRepositoryImpl(connection).opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
 
             val førsteBrudd = nyeBrudd(connection, sak).toSet()
             nyttGrunnlag(connection, behandling, førsteBrudd)

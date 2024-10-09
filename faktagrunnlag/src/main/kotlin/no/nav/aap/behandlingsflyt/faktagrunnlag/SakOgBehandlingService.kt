@@ -25,18 +25,20 @@ class SakOgBehandlingService(connection: DBConnection) {
         if (sisteBehandlingForSak == null) {
             return BeriketBehandling(
                 behandling = behandlingRepository.opprettBehandling(
-                    sak.id,
-                    årsaker,
-                    TypeBehandling.Førstegangsbehandling
+                    sakId = sak.id,
+                    årsaker = årsaker,
+                    typeBehandling = TypeBehandling.Førstegangsbehandling,
+                    forrigeBehandlingId = null
                 ), tilstand = BehandlingTilstand.NY, sisteAvsluttedeBehandling = null
             )
 
         } else {
             if (sisteBehandlingForSak.status().erAvsluttet()) {
                 val nyBehandling = behandlingRepository.opprettBehandling(
-                    sak.id,
-                    årsaker,
-                    TypeBehandling.Revurdering
+                    sakId = sak.id,
+                    årsaker = årsaker,
+                    typeBehandling = TypeBehandling.Revurdering,
+                    forrigeBehandlingId = sisteBehandlingForSak.id
                 )
 
 

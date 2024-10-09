@@ -93,7 +93,8 @@ class StatistikkJobbUtførerTest {
             val opprettetBehandling = behandlingRepository.opprettBehandling(
                 sak.id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
-                årsaker = listOf()
+                årsaker = listOf(),
+                forrigeBehandlingId = null
             )
             beregningsgrunnlagRepository.lagre(
                 behandlingId = opprettetBehandling.id,
@@ -214,6 +215,7 @@ class StatistikkJobbUtførerTest {
                 sakId = sakId,
                 typeBehandling = TypeBehandling.Klage,
                 versjon = 1,
+                forrigeBehandlingId = null
             )
         )
 

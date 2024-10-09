@@ -7,6 +7,7 @@ import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import com.zaxxer.hikari.HikariDataSource
 import io.ktor.http.*
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -20,10 +21,39 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(dataSource: HikariDataSource) {
             val meldepliktGrunnlag = dataSource.transaction { connection ->
                 val behandling: Behandling =
                     BehandlingReferanseService(BehandlingRepositoryImpl(connection)).behandling(req)
-                MeldepliktRepository(connection).hentHvisEksisterer(behandling.id)
+                val meldepliktRepository = MeldepliktRepository(connection)
+                val nåTilstand = meldepliktRepository.hentHvisEksisterer(behandling.id)?.vurderinger
+
+                if (nåTilstand == null) {
+                    return@transaction null
+                }
+                val vedtatteVerdier =
+                    behandling.forrigeBehandlingId?.let { meldepliktRepository.hentHvisEksisterer(it) }?.vurderinger
+                        ?: emptyList()
+                val historikk = meldepliktRepository.hentAlleVurderinger(behandling.sakId)
+
+                FritakMeldepliktGrunnlagDto(
+                    historikk = historikk.map { tilDto(it) }.sortedBy { it.vurderingsTidspunkt }.toSet(),
+                    gjeldendeVedtatteVurderinger = vedtatteVerdier.map { tilDto(it) }
+                        .sortedBy { it.fraDato },
+                    vurderinger = nåTilstand.map { tilDto(it) }.sortedBy { it.fraDato }
+                )
             }
 
-            meldepliktGrunnlag?.let { respond(it.toDto()) } ?: respondWithStatus(HttpStatusCode.NoContent)
+            if (meldepliktGrunnlag != null) {
+                respond(meldepliktGrunnlag)
+            } else {
+                respondWithStatus(HttpStatusCode.NoContent)
+            }
         }
     }
+}
+
+private fun tilDto(fritaksvurdering: Fritaksvurdering): FritakMeldepliktVurderingDto {
+    return FritakMeldepliktVurderingDto(
+        fritaksvurdering.begrunnelse,
+        fritaksvurdering.opprettetTid,
+        fritaksvurdering.harFritak,
+        fritaksvurdering.fraDato
+    )
 }

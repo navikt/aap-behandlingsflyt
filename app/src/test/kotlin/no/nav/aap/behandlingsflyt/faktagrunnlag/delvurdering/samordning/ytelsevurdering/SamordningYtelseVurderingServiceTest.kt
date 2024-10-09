@@ -71,7 +71,7 @@ class SamordningYtelseVurderingServiceTest {
     private fun opprettSakdata(connection: DBConnection): FlytKontekstMedPerioder {
         val person = PersonRepository(connection).finnEllerOpprett(listOf(Ident("ident", true)))
         val sakId = SakRepositoryImpl(connection).finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusDays(5))).id
-        val behandlingId = BehandlingRepositoryImpl(connection).opprettBehandling(sakId, listOf(), TypeBehandling.Førstegangsbehandling).id
+        val behandlingId = BehandlingRepositoryImpl(connection).opprettBehandling(sakId, listOf(), TypeBehandling.Førstegangsbehandling, null).id
         return FlytKontekstMedPerioder(sakId, behandlingId, TypeBehandling.Førstegangsbehandling, setOf())
     }
 }

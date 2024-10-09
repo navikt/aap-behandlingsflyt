@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt
 
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
+import no.nav.aap.verdityper.sakogbehandling.SakId
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -37,22 +38,52 @@ class MeldepliktRepository(private val connection: DBConnection) {
         }.grupperOgMapTilGrunnlag(behandlingId).firstOrNull()
     }
 
+    fun hentAlleVurderinger(sakId: SakId): Set<Fritaksvurdering> {
+        val query = """
+            SELECT f.ID AS MELDEPLIKT_ID, v.HAR_FRITAK, v.FRA_DATO, v.BEGRUNNELSE, v.OPPRETTET_TID
+            FROM MELDEPLIKT_FRITAK_GRUNNLAG g
+            INNER JOIN MELDEPLIKT_FRITAK f ON g.MELDEPLIKT_ID = f.ID
+            INNER JOIN MELDEPLIKT_FRITAK_VURDERING v ON f.ID = v.MELDEPLIKT_ID
+            INNER JOIN BEHANDLING b ON b.ID = g.BEHANDLING_ID
+            WHERE g.AKTIV AND b.SAK_ID = ?
+            """.trimIndent()
+
+        return connection.queryList(query) {
+            setParams { setLong(1, sakId.toLong()) }
+            setRowMapper { row ->
+                MeldepliktInternal(
+                    meldepliktId = row.getLong("MELDEPLIKT_ID"),
+                    harFritak = row.getBoolean("HAR_FRITAK"),
+                    fraDato = row.getLocalDate("FRA_DATO"),
+                    begrunnelse = row.getString("BEGRUNNELSE"),
+                    vurderingOpprettet = row.getLocalDateTime("OPPRETTET_TID"),
+                )
+            }
+        }.map { it.toFritaksvurdering() }.toSet()
+    }
+
+
     private data class MeldepliktInternal(
         val meldepliktId: Long,
         val harFritak: Boolean,
         val fraDato: LocalDate,
         val begrunnelse: String,
         val vurderingOpprettet: LocalDateTime
-    )
+    ) {
+        fun toFritaksvurdering(): Fritaksvurdering {
+            return Fritaksvurdering(harFritak, fraDato, begrunnelse, vurderingOpprettet)
+        }
+    }
 
     private fun Iterable<MeldepliktInternal>.grupperOgMapTilGrunnlag(behandlingId: BehandlingId): List<MeldepliktGrunnlag> {
         return groupBy(MeldepliktInternal::meldepliktId) { it.toFritaksvurdering() }
-            .map { (meldepliktId, fritaksvurderinger) -> MeldepliktGrunnlag(meldepliktId, behandlingId, fritaksvurderinger) }
-    }
-
-
-    private fun MeldepliktInternal.toFritaksvurdering(): Fritaksvurdering {
-        return Fritaksvurdering(harFritak, fraDato, begrunnelse, vurderingOpprettet)
+            .map { (meldepliktId, fritaksvurderinger) ->
+                MeldepliktGrunnlag(
+                    meldepliktId,
+                    behandlingId,
+                    fritaksvurderinger
+                )
+            }
     }
 
     fun lagre(behandlingId: BehandlingId, vurderinger: List<Fritaksvurdering>) {

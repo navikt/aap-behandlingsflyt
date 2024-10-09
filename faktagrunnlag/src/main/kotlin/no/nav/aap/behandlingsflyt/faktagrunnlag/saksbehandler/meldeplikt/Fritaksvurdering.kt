@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.FritakMeldepliktVurderingDto
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.Tidslinje
@@ -14,10 +13,6 @@ data class Fritaksvurdering(
     val begrunnelse: String,
     val opprettetTid: LocalDateTime
 ) {
-
-    fun toDto(): FritakMeldepliktVurderingDto {
-        return FritakMeldepliktVurderingDto(begrunnelse, opprettetTid, harFritak, fraDato)
-    }
 
     fun tidslinje(): Tidslinje<Fritaksvurdering> {
         return Tidslinje(
