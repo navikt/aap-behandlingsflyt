@@ -45,13 +45,13 @@ class UnderveisService(
     private val regelset = listOf(
         RettTilRegel(),
         InstitusjonRegel(),
+        SoningRegel(),
         MeldepliktRegel(),
         AktivtBidragRegel(),
         ReduksjonAktivitetspliktRegel(),
         FraværFastsattAktivitetRegel(),
         GraderingArbeidRegel(),
         VarighetRegel(),
-        SoningRegel()
     )
 
     fun vurder(behandlingId: BehandlingId): Tidslinje<Vurdering> {
