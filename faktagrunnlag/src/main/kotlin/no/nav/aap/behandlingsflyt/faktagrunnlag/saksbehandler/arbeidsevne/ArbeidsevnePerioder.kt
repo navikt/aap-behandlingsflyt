@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne
 import no.nav.aap.tidslinje.StandardSammenslåere
 import no.nav.aap.tidslinje.Tidslinje
 
-class Arbeidsevneperioder private constructor(private val tidslinje: Tidslinje<Arbeidsevnevurdering>) {
+class ArbeidsevnePerioder private constructor(private val tidslinje: Tidslinje<Arbeidsevnevurdering>) {
 
     constructor(fritaksvurderinger: List<Arbeidsevnevurdering>): this(
         fritaksvurderinger.sortedBy { it.fraDato }.fold(Tidslinje()) { acc, arbeidsevnevurdering ->
@@ -11,8 +11,8 @@ class Arbeidsevneperioder private constructor(private val tidslinje: Tidslinje<A
         }
     )
 
-    fun leggTil(nyeFritaksperioder: Arbeidsevneperioder): Arbeidsevneperioder {
-        return Arbeidsevneperioder(
+    fun leggTil(nyeFritaksperioder: ArbeidsevnePerioder): ArbeidsevnePerioder {
+        return ArbeidsevnePerioder(
             tidslinje.kombiner(nyeFritaksperioder.tidslinje, StandardSammenslåere.prioriterHøyreSideCrossJoin())
         )
     }
