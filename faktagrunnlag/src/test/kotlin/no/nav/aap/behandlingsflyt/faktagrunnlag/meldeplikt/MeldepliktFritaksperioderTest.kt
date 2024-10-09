@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.meldeplikt
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksperioder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktFritaksperioder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -8,7 +8,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
-class FritaksperioderTest {
+class MeldepliktFritaksperioderTest {
     @Test
     fun `rekkefølge som fritaksvurderinger er i lista har ingenting å si`() {
         val fritaksvurderinger = listOf(
@@ -17,8 +17,8 @@ class FritaksperioderTest {
         )
 
         val fritaksvurderingerReversed = fritaksvurderinger.reversed()
-        val fritaksperioder = Fritaksperioder(fritaksvurderinger)
-        assertThat(fritaksperioder.gjeldendeFritaksvurderinger()).isEqualTo(Fritaksperioder(fritaksvurderingerReversed).gjeldendeFritaksvurderinger())
+        val fritaksperioder = MeldepliktFritaksperioder(fritaksvurderinger)
+        assertThat(fritaksperioder.gjeldendeFritaksvurderinger()).isEqualTo(MeldepliktFritaksperioder(fritaksvurderingerReversed).gjeldendeFritaksvurderinger())
     }
 
     @Test
@@ -27,7 +27,7 @@ class FritaksperioderTest {
             fritaksvurdering(true, LocalDate.now().minusDays(1)),
             fritaksvurdering(false, LocalDate.now().plusDays(1)),
         )
-        val fritaksperioder = Fritaksperioder(fritaksvurderinger)
+        val fritaksperioder = MeldepliktFritaksperioder(fritaksvurderinger)
         assertThat(fritaksperioder.gjeldendeFritaksvurderinger()).isEqualTo(fritaksvurderinger)
     }
 
@@ -41,7 +41,7 @@ class FritaksperioderTest {
             fritaksvurdering(true, LocalDate.now().minusDays(2)),
         )
 
-        val fritaksperioder = Fritaksperioder(eksisterendeFritaksvurderinger).leggTil(Fritaksperioder(nyFritaksvurdering))
+        val fritaksperioder = MeldepliktFritaksperioder(eksisterendeFritaksvurderinger).leggTil(MeldepliktFritaksperioder(nyFritaksvurdering))
 
         assertThat(fritaksperioder.gjeldendeFritaksvurderinger()).isEqualTo(nyFritaksvurdering)
     }
@@ -51,7 +51,7 @@ class FritaksperioderTest {
         val fritaksvurdering = fritaksvurdering(true, LocalDate.now().minusDays(1))
         val fritaksvurderinger = listOf(fritaksvurdering, fritaksvurdering.copy(fraDato = LocalDate.now()))
 
-        val fritaksperioder = Fritaksperioder(fritaksvurderinger)
+        val fritaksperioder = MeldepliktFritaksperioder(fritaksvurderinger)
         assertThat(fritaksperioder.gjeldendeFritaksvurderinger()).containsExactly(fritaksvurdering)
     }
 

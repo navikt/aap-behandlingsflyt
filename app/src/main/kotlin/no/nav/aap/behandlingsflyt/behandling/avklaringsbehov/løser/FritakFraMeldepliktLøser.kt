@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FritakMeldepliktLøsning
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksperioder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktFritaksperioder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.FritaksvurderingDto
@@ -18,9 +18,9 @@ class FritakFraMeldepliktLøser(val connection: DBConnection) : Avklaringsbehovs
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: FritakMeldepliktLøsning): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
         val fritaksvurderinger = løsning.fritaksvurderinger.map(FritaksvurderingDto::toFritaksvurdering)
-        val eksisterendeFritaksperioder = Fritaksperioder(meldepliktRepository.hentHvisEksisterer(behandling.id)?.vurderinger.orEmpty())
+        val eksisterendeFritaksperioder = MeldepliktFritaksperioder(meldepliktRepository.hentHvisEksisterer(behandling.id)?.vurderinger.orEmpty())
 
-        val nyeFritaksperioder = eksisterendeFritaksperioder.leggTil(Fritaksperioder(fritaksvurderinger))
+        val nyeFritaksperioder = eksisterendeFritaksperioder.leggTil(MeldepliktFritaksperioder(fritaksvurderinger))
 
 
         meldepliktRepository.lagre(
