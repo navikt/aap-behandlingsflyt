@@ -161,13 +161,13 @@ class ArbeidsevneRepositoryTest {
             data class Opplysning(
                 val aktiv: Boolean,
                 val begrunnelse: String,
-                val andelNedsattArbeidsevne: Prosent
+                val andelArbeidsevne: Prosent
             )
 
             val opplysninger =
                 connection.queryList(
                     """
-                    SELECT g.AKTIV, v.BEGRUNNELSE, v.ARBEIDSEVNE
+                    SELECT g.AKTIV, v.BEGRUNNELSE, v.ANDEL_ARBEIDSEVNE
                     FROM BEHANDLING b
                     INNER JOIN ARBEIDSEVNE_GRUNNLAG g ON b.ID = g.BEHANDLING_ID
                     INNER JOIN ARBEIDSEVNE a ON g.ARBEIDSEVNE_ID = a.ID
@@ -182,15 +182,15 @@ class ArbeidsevneRepositoryTest {
                         Opplysning(
                             aktiv = row.getBoolean("AKTIV"),
                             begrunnelse = row.getString("BEGRUNNELSE"),
-                            andelNedsattArbeidsevne = Prosent(row.getInt("ARBEIDSEVNE"))
+                            andelArbeidsevne = Prosent(row.getInt("ANDEL_ARBEIDSEVNE"))
                         )
                     }
                 }
             assertThat(opplysninger)
                 .hasSize(2)
                 .containsExactly(
-                    Opplysning(aktiv = false, begrunnelse = "begrunnelse", andelNedsattArbeidsevne = Prosent(100)),
-                    Opplysning(aktiv = true, begrunnelse = "annen begrunnelse", andelNedsattArbeidsevne = Prosent(100))
+                    Opplysning(aktiv = false, begrunnelse = "begrunnelse", andelArbeidsevne = Prosent(100)),
+                    Opplysning(aktiv = true, begrunnelse = "annen begrunnelse", andelArbeidsevne = Prosent(100))
                 )
         }
     }
@@ -218,7 +218,7 @@ class ArbeidsevneRepositoryTest {
                 val behandlingId: Long,
                 val aktiv: Boolean,
                 val begrunnelse: String,
-                val andelNedsattArbeidsevne: Prosent
+                val andelArbeidsevne: Prosent
             )
 
             data class Grunnlag(val arbeidsevneId: Long, val opplysning: Opplysning)
@@ -226,7 +226,7 @@ class ArbeidsevneRepositoryTest {
             val opplysninger =
                 connection.queryList(
                     """
-                    SELECT b.ID AS BEHANDLING_ID, a.ID AS ARBEIDSEVNE_ID, g.AKTIV, v.BEGRUNNELSE, v.ARBEIDSEVNE
+                    SELECT b.ID AS BEHANDLING_ID, a.ID AS ARBEIDSEVNE_ID, g.AKTIV, v.BEGRUNNELSE, v.ANDEL_ARBEIDSEVNE
                     FROM BEHANDLING b
                     INNER JOIN ARBEIDSEVNE_GRUNNLAG g ON b.ID = g.BEHANDLING_ID
                     INNER JOIN ARBEIDSEVNE a ON g.ARBEIDSEVNE_ID = a.ID
@@ -244,7 +244,7 @@ class ArbeidsevneRepositoryTest {
                                 behandlingId = row.getLong("BEHANDLING_ID"),
                                 aktiv = row.getBoolean("AKTIV"),
                                 begrunnelse = row.getString("BEGRUNNELSE"),
-                                andelNedsattArbeidsevne = Prosent(row.getInt("ARBEIDSEVNE"))
+                                andelArbeidsevne = Prosent(row.getInt("ANDEL_ARBEIDSEVNE"))
                             )
                         )
                     }
@@ -258,19 +258,19 @@ class ArbeidsevneRepositoryTest {
                         behandlingId = behandling1.id.toLong(),
                         aktiv = false,
                         begrunnelse = arbeidsevne.begrunnelse,
-                        andelNedsattArbeidsevne = Prosent(100)
+                        andelArbeidsevne = Prosent(100)
                     ),
                     Opplysning(
                         behandlingId = behandling1.id.toLong(),
                         aktiv = true,
                         begrunnelse = arbeidsevne2.begrunnelse,
-                        andelNedsattArbeidsevne = Prosent(100)
+                        andelArbeidsevne = Prosent(100)
                     ),
                     Opplysning(
                         behandlingId = behandling2.id.toLong(),
                         aktiv = true,
                         begrunnelse = arbeidsevne2.begrunnelse,
-                        andelNedsattArbeidsevne = Prosent(100)
+                        andelArbeidsevne = Prosent(100)
                     )
                 )
         }

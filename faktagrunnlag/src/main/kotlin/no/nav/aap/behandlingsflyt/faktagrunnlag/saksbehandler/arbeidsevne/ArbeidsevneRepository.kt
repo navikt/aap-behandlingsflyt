@@ -11,7 +11,7 @@ class ArbeidsevneRepository(private val connection: DBConnection) {
     fun hentHvisEksisterer(behandlingId: BehandlingId): ArbeidsevneGrunnlag? {
         return connection.queryList(
             """
-            SELECT a.ID AS ARBEIDSEVNE_ID, v.BEGRUNNELSE, v.FRA_DATO, v.ARBEIDSEVNE, v.OPPRETTET_TID
+            SELECT a.ID AS ARBEIDSEVNE_ID, v.BEGRUNNELSE, v.FRA_DATO, v.ANDEL_ARBEIDSEVNE, v.OPPRETTET_TID
             FROM ARBEIDSEVNE_GRUNNLAG g
             INNER JOIN ARBEIDSEVNE a ON g.ARBEIDSEVNE_ID = a.ID
             INNER JOIN ARBEIDSEVNE_VURDERING v ON a.ID = v.ARBEIDSEVNE_ID
@@ -24,7 +24,7 @@ class ArbeidsevneRepository(private val connection: DBConnection) {
                     row.getLong("ARBEIDSEVNE_ID"),
                     row.getString("BEGRUNNELSE"),
                     row.getLocalDate("FRA_DATO"),
-                    Prosent(row.getInt("ARBEIDSEVNE")),
+                    Prosent(row.getInt("ANDEL_ARBEIDSEVNE")),
                     row.getLocalDateTime("OPPRETTET_TID")
                 )
             }
@@ -72,7 +72,7 @@ class ArbeidsevneRepository(private val connection: DBConnection) {
         connection.executeBatch(
             """
             INSERT INTO ARBEIDSEVNE_VURDERING 
-            (ARBEIDSEVNE_ID, FRA_DATO, BEGRUNNELSE, ARBEIDSEVNE, OPPRETTET_TID) VALUES (?, ?, ?, ?, ?)
+            (ARBEIDSEVNE_ID, FRA_DATO, BEGRUNNELSE, ANDEL_ARBEIDSEVNE, OPPRETTET_TID) VALUES (?, ?, ?, ?, ?)
             """.trimIndent(),
             this
         ) {
