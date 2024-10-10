@@ -20,6 +20,8 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneId
 
 class BruddAktivitetspliktServiceTest {
     @Test
@@ -69,7 +71,7 @@ class BruddAktivitetspliktServiceTest {
         MottaDokumentService(MottattDokumentRepository(connection)).mottattDokument(
             MottattDokumentReferanse(brudd.innsendingId),
             sak.id,
-            brudd.opprettetTid,
+            LocalDateTime.ofInstant(brudd.opprettetTid, ZoneId.of("Europe/Oslo")),
             dokument.brevkode,
             dokument
         )

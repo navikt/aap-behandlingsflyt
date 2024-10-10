@@ -7,7 +7,6 @@ import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.NavIdent
 import no.nav.aap.verdityper.sakogbehandling.SakId
 import org.jetbrains.annotations.TestOnly
-import java.time.LocalDateTime
 
 class BruddAktivitetspliktRepository(private val connection: DBConnection) {
     class LagreBruddInput(
@@ -23,7 +22,7 @@ class BruddAktivitetspliktRepository(private val connection: DBConnection) {
         val query = """
             INSERT INTO BRUDD_AKTIVITETSPLIKT
             (SAK_ID, BRUDD, PERIODE, BEGRUNNELSE, PARAGRAF, NAV_IDENT, OPPRETTET_TID, HENDELSE_ID, INNSENDING_ID ) 
-            VALUES (?, ?, ?::daterange, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?::daterange, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?)
             """.trimIndent()
 
         val innsendingId = InnsendingId.ny()
@@ -36,9 +35,8 @@ class BruddAktivitetspliktRepository(private val connection: DBConnection) {
                 setString(4, request.begrunnelse)
                 setEnumName(5, request.paragraf)
                 setString(6, request.navIdent.navIdent)
-                setLocalDateTime(7, LocalDateTime.now())
-                setUUID(8, HendelseId.ny().id)
-                setUUID(9, innsendingId.value)
+                setUUID(7, HendelseId.ny().id)
+                setUUID(8, innsendingId.value)
             }
         }
         return innsendingId
@@ -158,7 +156,7 @@ class BruddAktivitetspliktRepository(private val connection: DBConnection) {
             navIdent = NavIdent(row.getString("NAV_IDENT")),
             hendelseId = HendelseId(row.getUUID("HENDELSE_ID")),
             innsendingId = InnsendingId(row.getUUID("INNSENDING_ID")),
-            opprettetTid = row.getLocalDateTime("OPPRETTET_TID"),
+            opprettetTid = row.getInstant("OPPRETTET_TID"),
         )
     }
 

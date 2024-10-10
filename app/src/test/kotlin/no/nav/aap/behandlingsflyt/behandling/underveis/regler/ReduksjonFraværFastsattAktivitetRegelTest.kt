@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.Period
+import java.time.ZoneId
 
 class ReduksjonFraværFastsattAktivitetRegelTest {
     @Test
@@ -104,7 +105,7 @@ class ReduksjonFraværFastsattAktivitetRegelTest {
         paragraf = paragraf,
         begrunnelse = "Informasjon fra tiltaksarrangør",
         periode = periode,
-        opprettetTid = opprettet.atStartOfDay(),
+        opprettetTid = opprettet.atStartOfDay(ZoneId.of("Europe/Oslo")).toInstant(),
         grunn = grunn,
     )
 }
