@@ -1,13 +1,10 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import java.time.LocalDate
-import java.time.Period
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvote
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.STANS_ANDRE_DAG
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.STANS_TI_DAGER_BRUKT_OPP
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_INNTIL_EN_DAG
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_STERKE_VELFERDSGRUNNER
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Grunn.INGEN_GYLDIG_GRUNN
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Grunn.STERKE_VELFERDSGRUNNER
@@ -23,6 +20,8 @@ import no.nav.aap.verdityper.sakogbehandling.NavIdent
 import no.nav.aap.verdityper.sakogbehandling.SakId
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
+import java.time.Period
 
 class FraværFastsattAktivitetRegelTest {
     @Test
@@ -203,18 +202,11 @@ class FraværFastsattAktivitetRegelTest {
     private fun underveisInput(
         rettighetsperiode: Periode,
         bruddAktivitetsplikt: Set<BruddAktivitetsplikt> = setOf(),
-    ) = UnderveisInput(
+    ) = tomUnderveisInput.copy(
         rettighetsperiode = rettighetsperiode,
-        relevanteVilkår = listOf(),
-        opptrappingPerioder = listOf(),
-        pliktkort = listOf(),
-        innsendingsTidspunkt = mapOf(),
-        dødsdato = null,
         kvote = Kvote(Period.ofYears(365 * 3)),
         bruddAktivitetsplikt = Tidslinje(bruddAktivitetsplikt.sortedBy { it.periode.fom }
             .map { Segment(it.periode, it) }),
-        etAnnetSted = listOf(),
-        barnetillegg = BarnetilleggGrunnlag(1, listOf()),
     )
 
     private fun brudd(

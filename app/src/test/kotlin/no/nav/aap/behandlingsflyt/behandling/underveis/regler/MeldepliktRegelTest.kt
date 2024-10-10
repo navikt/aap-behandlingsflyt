@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvote
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.komponenter.type.Periode
@@ -21,20 +20,14 @@ class MeldepliktRegelTest {
     fun `Meldeplikt overholdt ved innsendt på fastsatt dag`() {
         val fom = LocalDate.now().minusMonths(3)
         val rettighetsperiode = Periode(fom, fom.plusWeeks(6).minusDays(1))
-        val input = UnderveisInput(
+        val input = tomUnderveisInput.copy(
             rettighetsperiode = rettighetsperiode,
-            relevanteVilkår = listOf(),
-            opptrappingPerioder = listOf(),
-            pliktkort = listOf(),
             innsendingsTidspunkt = mapOf(
                 Pair(fom.plusDays(13), JournalpostId("1")),
                 Pair(fom.plusDays(27), JournalpostId("2")),
                 Pair(fom.plusDays(41), JournalpostId("3"))
             ),
             kvote = kvote,
-            bruddAktivitetsplikt = Tidslinje(),
-            etAnnetSted = listOf(),
-            barnetillegg = BarnetilleggGrunnlag(1, listOf())
         )
 
         val vurdertTidslinje = regel.vurder(input, Tidslinje())
@@ -46,16 +39,9 @@ class MeldepliktRegelTest {
     fun `Skal starte med full utbetalingsplan`() {
         val fom = LocalDate.now()
         val rettighetsperiode = Periode(fom, fom.plusYears(1))
-        val input = UnderveisInput(
+        val input = tomUnderveisInput.copy(
             rettighetsperiode = rettighetsperiode,
-            relevanteVilkår = listOf(),
-            opptrappingPerioder = listOf(),
-            pliktkort = listOf(),
-            innsendingsTidspunkt = mapOf(),
             kvote = kvote,
-            bruddAktivitetsplikt = Tidslinje(),
-            etAnnetSted = listOf(),
-            barnetillegg = BarnetilleggGrunnlag(1, listOf())
         )
 
         val vurdertTidslinje = regel.vurder(input, Tidslinje())
@@ -67,19 +53,13 @@ class MeldepliktRegelTest {
     fun `Meldeplikt skal være stanset etter at man ikke har meldt seg og fristen utløpt`() {
         val fom = LocalDate.now().minusMonths(6)
         val rettighetsperiode = Periode(fom, fom.plusWeeks(12).minusDays(1))
-        val input = UnderveisInput(
+        val input = tomUnderveisInput.copy(
             rettighetsperiode = rettighetsperiode,
-            relevanteVilkår = listOf(),
-            opptrappingPerioder = listOf(),
-            pliktkort = listOf(),
             innsendingsTidspunkt = mapOf(
                 Pair(fom.plusDays(27), JournalpostId("1")),
                 Pair(fom.plusDays(60), JournalpostId("2"))
             ),
             kvote = kvote,
-            bruddAktivitetsplikt = Tidslinje(),
-            etAnnetSted = listOf(),
-            barnetillegg = BarnetilleggGrunnlag(1, listOf())
         )
 
         val vurdertTidslinje = regel.vurder(input, Tidslinje())
@@ -95,19 +75,13 @@ class MeldepliktRegelTest {
     fun `Meldeplikt ikke overholdt ved innsendt på fastsatt dag`() {
         val fom = LocalDate.now().minusMonths(3)
         val rettighetsperiode = Periode(fom, fom.plusWeeks(6).minusDays(1))
-        val input = UnderveisInput(
+        val input = tomUnderveisInput.copy(
             rettighetsperiode = rettighetsperiode,
-            relevanteVilkår = listOf(),
-            opptrappingPerioder = listOf(),
-            pliktkort = listOf(),
             innsendingsTidspunkt = mapOf(
                 Pair(fom.plusDays(13), JournalpostId("1")),
                 Pair(fom.plusDays(33), JournalpostId("2"))
             ),
             kvote = kvote,
-            bruddAktivitetsplikt = Tidslinje(),
-            etAnnetSted = listOf(),
-            barnetillegg = BarnetilleggGrunnlag(1, listOf())
         )
 
         val vurdertTidslinje = regel.vurder(input, Tidslinje())

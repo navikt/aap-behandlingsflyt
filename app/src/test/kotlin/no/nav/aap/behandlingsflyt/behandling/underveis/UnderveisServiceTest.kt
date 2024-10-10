@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UnderveisInput
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.tomUnderveisInput
 import no.nav.aap.behandlingsflyt.dbtestdata.MockDataSource
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
@@ -17,7 +17,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Helsei
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.SoningRepository
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.tidslinje.Tidslinje
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -94,15 +93,11 @@ class UnderveisServiceTest {
                     )
                 )
             val relevanteVilkår = listOf(aldersVilkåret, bistandVilkåret, medlemskapVilkåret, sykdomsVilkåret)
-            val input = UnderveisInput(
+            val input = tomUnderveisInput.copy(
                 rettighetsperiode = periode,
                 relevanteVilkår = relevanteVilkår,
                 opptrappingPerioder = listOf(Periode(søknadsdato.plusYears(2), søknadsdato.plusYears(3))),
-                pliktkort = listOf(),
-                innsendingsTidspunkt = mapOf(),
                 kvote = kvote,
-                bruddAktivitetsplikt = Tidslinje(),
-                etAnnetSted = listOf(),
                 barnetillegg = BarnetilleggGrunnlag(1, listOf())
             )
 

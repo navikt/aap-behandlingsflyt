@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvote
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
@@ -72,16 +71,10 @@ class RettTilRegelTest {
                 )
             )
 
-        val input = UnderveisInput(
+        val input = tomUnderveisInput.copy(
             rettighetsperiode = periode,
             relevanteVilkår = listOf(aldersVilkåret, sykdomsVilkåret, medlemskapVilkåret, bistandVilkåret),
-            opptrappingPerioder = listOf(),
-            pliktkort = listOf(),
-            innsendingsTidspunkt = mapOf(),
             kvote = kvote,
-            bruddAktivitetsplikt = Tidslinje(),
-            etAnnetSted = listOf(),
-            barnetillegg = BarnetilleggGrunnlag(1, listOf())
         )
         val grunnleggendeRettTidslinje = regel.vurder(input = input, Tidslinje())
 
@@ -154,16 +147,10 @@ class RettTilRegelTest {
                 )
             )
 
-        val input = UnderveisInput(
+        val input = tomUnderveisInput.copy(
             rettighetsperiode = periode,
             relevanteVilkår = listOf(aldersVilkåret, sykdomsVilkåret, medlemskapVilkåret, bistandVilkåret),
-            opptrappingPerioder = listOf(),
-            pliktkort = listOf(),
-            innsendingsTidspunkt = mapOf(),
             kvote = kvote,
-            bruddAktivitetsplikt = Tidslinje(),
-            etAnnetSted = listOf(),
-            barnetillegg = BarnetilleggGrunnlag(1, listOf())
         )
         val grunnleggendeRettTidslinje = regel.vurder(input = input, Tidslinje())
 

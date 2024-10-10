@@ -2,8 +2,6 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetSted
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.Institusjon
-import no.nav.aap.behandlingsflyt.behandling.etannetsted.Soning
-import no.nav.aap.behandlingsflyt.behandling.underveis.Kvote
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
@@ -18,7 +16,6 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
-import java.time.Period
 import java.util.*
 
 @Fakes
@@ -39,8 +36,9 @@ class InstitusjonRegelTest {
 
         val intitusjonsOppholdet = listOf(innlagt, forsørgerNoenMensInnlagt, innlagtMedReduksjon, fasteKostnader, innlagtPåNytt, innlagtPåNyttTreMndSenere)
         val barnetillegg = BarnetilleggGrunnlag(1, listOf(BarnetilleggPeriode(Periode(LocalDate.of(2024, 5, 1), LocalDate.of(2024, 6, 10)), setOf())))
-        val input = UnderveisInput(
-            Periode(LocalDate.now(), LocalDate.now()), listOf(), listOf(), listOf(), mapOf(), null, Kvote(Period.ofDays(1)), Tidslinje(), intitusjonsOppholdet, barnetillegg
+        val input = tomUnderveisInput.copy(
+            etAnnetSted = intitusjonsOppholdet,
+            barnetillegg = barnetillegg
         )
 
         val tidligereResultatTidslinje = Tidslinje(listOf( Segment(Periode(LocalDate.of(2024, 1, 5), LocalDate.of(2025, 5, 1)), vurderingFraTidligereResultat)))

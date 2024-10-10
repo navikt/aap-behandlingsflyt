@@ -2,8 +2,6 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetSted
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.Soning
-import no.nav.aap.behandlingsflyt.behandling.underveis.Kvote
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.test.Fakes
@@ -16,7 +14,6 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
-import java.time.Period
 import java.util.*
 
 @Fakes
@@ -35,8 +32,8 @@ class SoningRegelTest {
         val soningOppholdet = listOf(formueUnderForvaltning, sonerIFengsel, arbeidUtenforAnstalt, sonerUtenforFengsel)
         val tidligereResultatTidslinje = Tidslinje(listOf( Segment(Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 1)), vurderingFraTidligereResultat)))
 
-        val input = UnderveisInput(
-            Periode(LocalDate.now(), LocalDate.now()), listOf(), listOf(), listOf(), mapOf(), null, Kvote(Period.ofDays(1)), Tidslinje(), soningOppholdet, BarnetilleggGrunnlag(1, listOf())
+        val input = tomUnderveisInput.copy(
+            etAnnetSted = soningOppholdet,
         )
 
         val resultat = regel.vurder(input, tidligereResultatTidslinje)
