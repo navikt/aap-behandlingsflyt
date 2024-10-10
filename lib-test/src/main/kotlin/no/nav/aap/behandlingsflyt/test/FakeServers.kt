@@ -505,6 +505,7 @@ object FakeServers : AutoCloseable {
                                       "antallRetur": null,
                                       "kanal": "NAV_NO",
                                       "innsynsregelBeskrivelse": "Standardreglene avgjør om dokumentet vises",
+                                      "datoOpprettet": "2024-10-07T12:39:27",
                                       "relevanteDatoer": [],
                                       "dokumenter": [
                                         {
@@ -554,6 +555,7 @@ object FakeServers : AutoCloseable {
                                       "antallRetur": null,
                                       "kanal": "NAV_NO",
                                       "innsynsregelBeskrivelse": "Standardreglene avgjør om dokumentet vises",
+                                      "datoOpprettet": "2024-10-07T12:39:27",
                                       "relevanteDatoer": [],
                                       "dokumenter": [
                                         {

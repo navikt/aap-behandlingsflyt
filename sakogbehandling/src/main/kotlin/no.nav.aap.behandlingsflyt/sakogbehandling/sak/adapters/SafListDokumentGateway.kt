@@ -8,12 +8,14 @@ import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.OnBehalfOfTokenProvider
+import no.nav.aap.saf.Journalposttype
 import no.nav.aap.saf.SafDokumentoversiktFagsakDataResponse
 import no.nav.aap.saf.SafRequest
 import no.nav.aap.saf.SafResponseHandler
 import no.nav.aap.saf.Variantformat
 import org.slf4j.LoggerFactory
 import java.net.URI
+import java.time.LocalDateTime
 
 private val log = LoggerFactory.getLogger(SafListDokumentGateway::class.java)
 
@@ -52,7 +54,9 @@ object SafListDokumentGateway {
                             dokumentInfoId = dok.dokumentInfoId,
                             tittel = dok.tittel,
                             brevkode = dok.brevkode,
-                            variantformat = it.variantformat
+                            variantformat = it.variantformat,
+                            erUtgående = journalpost.journalposttype == Journalposttype.U,
+                            datoOpprettet = journalpost.datoOpprettet
                         )
                     }
             }
@@ -65,12 +69,15 @@ data class Dokument(
     val journalpostId: String,
     val brevkode: String?,
     val tittel: String,
+    val erUtgående: Boolean,
+    val datoOpprettet: LocalDateTime,
     val variantformat: Variantformat
 )
 
 fun String.asQuery() = this.replace("\n", "")
 
 private const val fagsakId = "\$fagsakId"
+
 // Skjema her: https://github.com/navikt/saf/blob/master/app/src/main/resources/schemas/saf.graphqls
 private val dokumentOversiktQuery = """
 query ($fagsakId: String!)
@@ -85,7 +92,12 @@ query ($fagsakId: String!)
   ) {
     journalposter {
       journalpostId
+      journalposttype
       behandlingstema
+      relevanteDatoer {
+        dato
+        datotype
+      }
       antallRetur
       kanal
       innsynsregelBeskrivelse
