@@ -21,6 +21,10 @@ class MeldepliktRepository(private val connection: DBConnection) {
             INSERT INTO MELDEPLIKT_FRITAK_VURDERING 
             (MELDEPLIKT_ID, BEGRUNNELSE, HAR_FRITAK, FRA_DATO, OPPRETTET_TID) VALUES (?, ?, ?, ?, ?)
             """.trimIndent()
+        private val INSERT_NYE_FRITAKSVURDERING_QUERY = """
+            INSERT INTO MELDEPLIKT_FRITAK_VURDERING 
+            (MELDEPLIKT_ID, BEGRUNNELSE, HAR_FRITAK, FRA_DATO) VALUES (?, ?, ?, ?)
+            """.trimIndent()
     }
 
     fun hentHvisEksisterer(behandlingId: BehandlingId): MeldepliktGrunnlag? {
@@ -102,13 +106,23 @@ class MeldepliktRepository(private val connection: DBConnection) {
             }
         }
 
-        vurderinger.lagre(meldepliktId)
-    }
+        val nyeVurderinger = vurderinger.filter { it.opprettetTid == null }
 
-    private fun List<Fritaksvurdering>.lagre(meldepliktId: Long) {
+        connection.executeBatch(
+            INSERT_NYE_FRITAKSVURDERING_QUERY,
+            nyeVurderinger
+        ) {
+            setParams {
+                setLong(1, meldepliktId)
+                setString(2, it.begrunnelse)
+                setBoolean(3, it.harFritak)
+                setLocalDate(4, it.fraDato)
+            }
+        }
+
         connection.executeBatch(
             INSERT_FRITAKSVURDERING_QUERY,
-            this
+            vurderinger.filter { it.opprettetTid != null }
         ) {
             setParams {
                 setLong(1, meldepliktId)

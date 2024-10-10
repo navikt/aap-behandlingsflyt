@@ -11,24 +11,18 @@ data class Fritaksvurdering(
     val harFritak: Boolean,
     val fraDato: LocalDate,
     val begrunnelse: String,
-    val opprettetTid: LocalDateTime
+    val opprettetTid: LocalDateTime?
 ) {
 
-    fun tidslinje(): Tidslinje<Fritaksvurdering> {
+    fun tidslinje(): Tidslinje<FritaksvurderingData> {
         return Tidslinje(
-            listOf(Segment(Periode(fraDato, Tid.MAKS), this))
+            listOf(Segment(Periode(fraDato, Tid.MAKS), FritaksvurderingData(harFritak, begrunnelse, opprettetTid)))
         )
     }
 
-    override fun equals(other: Any?): Boolean {
-        return this === other || (other is Fritaksvurdering && this.valueEquals(other))
-    }
-
-    private fun valueEquals(other: Fritaksvurdering): Boolean {
-        return harFritak == other.harFritak && begrunnelse == other.begrunnelse
-    }
-
-    override fun hashCode(): Int {
-        return 31 * harFritak.hashCode() + begrunnelse.hashCode()
-    }
+    data class FritaksvurderingData(
+        val harFritak: Boolean,
+        val begrunnelse: String,
+        val opprettetTid: LocalDateTime?
+    )
 }

@@ -10,6 +10,12 @@ data class FritakMeldepliktGrunnlagDto(
     val vurderinger: List<FritakMeldepliktVurderingDto>
 )
 
+data class SimulerFritakMeldepliktDto(val fritaksvurderinger: List<FritaksvurderingDto>)
+
+data class SimulertFritakMeldepliktDto(
+    val gjeldendeVedtatteVurderinger: List<FritakMeldepliktVurderingDto>
+)
+
 data class FritakMeldepliktVurderingDto(
     val begrunnelse: String,
     val vurderingsTidspunkt: LocalDateTime,

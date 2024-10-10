@@ -2,11 +2,13 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
+import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import com.zaxxer.hikari.HikariDataSource
 import io.ktor.http.*
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksperioder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -36,7 +38,8 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(dataSource: HikariDataSource) {
                     historikk = historikk.map { tilDto(it) }.sortedBy { it.vurderingsTidspunkt }.toSet(),
                     gjeldendeVedtatteVurderinger = vedtatteVerdier.map { tilDto(it) }
                         .sortedBy { it.fraDato },
-                    vurderinger = nåTilstand.map { tilDto(it) }.sortedBy { it.fraDato }
+                    vurderinger = nåTilstand.filterNot { vedtatteVerdier.contains(it) }.map { tilDto(it) }
+                        .sortedBy { it.fraDato }
                 )
             }
 
@@ -47,12 +50,33 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(dataSource: HikariDataSource) {
             }
         }
     }
+    route("/api/behandling/{referanse}/grunnlag/fritak-meldeplikt/simulering") {
+        post<BehandlingReferanse, SimulertFritakMeldepliktDto, SimulerFritakMeldepliktDto> { req, dto ->
+            val meldepliktGrunnlag = dataSource.transaction { connection ->
+                val behandling: Behandling =
+                    BehandlingReferanseService(BehandlingRepositoryImpl(connection)).behandling(req)
+                val meldepliktRepository = MeldepliktRepository(connection)
+
+                val vedtatteVerdier =
+                    behandling.forrigeBehandlingId?.let { meldepliktRepository.hentHvisEksisterer(it) }?.vurderinger
+                        ?: emptyList()
+
+                val eksisterendeFritak = Fritaksperioder(vedtatteVerdier)
+                val simulertFritak =
+                    eksisterendeFritak.leggTil(Fritaksperioder(dto.fritaksvurderinger.map { it.toFritaksvurdering() }))
+
+                SimulertFritakMeldepliktDto(simulertFritak.gjeldendeFritaksvurderinger().map { tilDto(it) })
+            }
+
+            respond(meldepliktGrunnlag)
+        }
+    }
 }
 
 private fun tilDto(fritaksvurdering: Fritaksvurdering): FritakMeldepliktVurderingDto {
     return FritakMeldepliktVurderingDto(
         fritaksvurdering.begrunnelse,
-        fritaksvurdering.opprettetTid,
+        requireNotNull(fritaksvurdering.opprettetTid),
         fritaksvurdering.harFritak,
         fritaksvurdering.fraDato
     )
