@@ -34,12 +34,12 @@ data class Journalpost(
     val journalposttype: Journalposttype?,
     val temanavn: String?,
     val behandlingstemanavn: String?,
-    val datoOpprettet: LocalDateTime,
+    val datoOpprettet: LocalDateTime?,
     val relevanteDatoer: List<RelevantDato>?
 )
 
 data class RelevantDato(
-    val dato: String,
+    val dato: LocalDateTime,
     val datotype: String
 )
 

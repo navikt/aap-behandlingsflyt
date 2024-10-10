@@ -56,7 +56,11 @@ object SafListDokumentGateway {
                             brevkode = dok.brevkode,
                             variantformat = it.variantformat,
                             erUtgående = journalpost.journalposttype == Journalposttype.U,
-                            datoOpprettet = journalpost.datoOpprettet
+                            datoOpprettet = if (journalpost.datoOpprettet != null) {
+                                journalpost.datoOpprettet
+                            } else {
+                                journalpost.relevanteDatoer?.first { it.datotype == "DATO_JOURNALFOERT" }?.dato
+                            }!!
                         )
                     }
             }
