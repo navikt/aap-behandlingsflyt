@@ -7,8 +7,8 @@ import no.nav.aap.tidslinje.Tidslinje
 data class BruddAktivitetspliktGrunnlag(
     val bruddene: Set<BruddAktivitetsplikt>,
 ) {
-    fun lagTidslinje(): Tidslinje<BruddAktivitetsplikt> {
-        return bruddene
+    val tidslinje: Tidslinje<BruddAktivitetsplikt> by lazy {
+        bruddene
             .asSequence()
             .map { Tidslinje(it.periode, it) }
             .fold(Tidslinje()) { bruddtidslinje1, bruddtidslinje2 ->
@@ -19,19 +19,10 @@ data class BruddAktivitetspliktGrunnlag(
     }
 
     companion object {
-        fun merge(brudd1: BruddAktivitetsplikt?, brudd2: BruddAktivitetsplikt?): BruddAktivitetsplikt {
-            if (brudd1 == null || brudd2 == null) {
-                return brudd1 ?: brudd2 ?: error("outer join hvor begge sider er null")
-            }
-
-            return when {
-                brudd1.opprettetTid < brudd2.opprettetTid -> brudd1
-                brudd1.opprettetTid > brudd2.opprettetTid -> brudd2
-                else -> {
-                    /* TODO: Avklar om det er greit å returnere en av dem. */
-                    error("Begge bruddene ble meldt nøyaktig samtidig, på nanosekundet. What to do? Velge en tilfeldig?")
-                }
-            }
+        private fun merge(brudd1: BruddAktivitetsplikt?, brudd2: BruddAktivitetsplikt?) = when {
+            brudd1 == null || brudd2 == null -> brudd1 ?: brudd2 ?: error("outer join hvor begge sider er null")
+            brudd1.opprettetTid < brudd2.opprettetTid -> brudd2
+            else -> brudd2
         }
     }
 }

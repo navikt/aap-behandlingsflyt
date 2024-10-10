@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonRepository
@@ -105,9 +106,8 @@ class UnderveisService(
         val etAnnetSted = mapTilEtAnnetSted(soningVurdering, helseInstitusjonVurdering)
 
         val barnetilleggGrunnlag = requireNotNull(barnetilleggRepository.hentHvisEksisterer(behandlingId))
-        val bruddAktivitetsplikt = bruddAktivitetspliktRepository.hentGrunnlagHvisEksisterer(behandlingId)
-            ?.lagTidslinje()
-            ?: Tidslinje()
+        val bruddAktivitetspliktGrunnlag = bruddAktivitetspliktRepository.hentGrunnlagHvisEksisterer(behandlingId)
+            ?: BruddAktivitetspliktGrunnlag(bruddene = setOf())
 
         return UnderveisInput(
             rettighetsperiode = sak.rettighetsperiode,
@@ -116,7 +116,7 @@ class UnderveisService(
             pliktkort = pliktkort,
             innsendingsTidspunkt = innsendingsTidspunkt,
             kvote = kvote,
-            bruddAktivitetsplikt = bruddAktivitetsplikt,
+            bruddAktivitetspliktGrunnlag = bruddAktivitetspliktGrunnlag,
             etAnnetSted = etAnnetSted,
             barnetillegg = barnetilleggGrunnlag
         )

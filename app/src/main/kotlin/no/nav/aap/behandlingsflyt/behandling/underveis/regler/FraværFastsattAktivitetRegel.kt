@@ -30,7 +30,7 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
         /* TODO: § 11-8 stans til ... vilkårene igjen er oppfylt */
 
         val bruddtidslinjeGruppertPåMeldeperiode = resultat.kombiner(
-            input.bruddAktivitetsplikt,
+            input.bruddAktivitetspliktGrunnlag.tidslinje,
             JoinStyle.RIGHT_JOIN { periode, vurdering, brudd ->
                 val meldeperiode = requireNotNull(vurdering?.verdi?.meldeperiode(), {
                     // Kan være fristende å bruke INNER_JOIN, men da forsvinner brudd fra tidslinja

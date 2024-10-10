@@ -2,10 +2,12 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvote
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ReduksjonAktivitetspliktVurdering.Vilkårsvurdering.VILKÅR_OPPFYLT
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Grunn.INGEN_GYLDIG_GRUNN
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_8
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Type.IKKE_MØTT_TIL_TILTAK
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.HendelseId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.InnsendingId
@@ -85,8 +87,7 @@ class ReduksjonFraværFastsattAktivitetRegelTest {
         bruddAktivitetsplikt: Set<BruddAktivitetsplikt> = setOf(),
     ) = tomUnderveisInput.copy(
         rettighetsperiode = rettighetsperiode,
-        kvote = Kvote(Period.ofYears(365 * 3)),
-        bruddAktivitetsplikt = Tidslinje(bruddAktivitetsplikt.sortedBy { it.periode.fom }.map { Segment(it.periode, it) }),
+        bruddAktivitetspliktGrunnlag = BruddAktivitetspliktGrunnlag(bruddAktivitetsplikt),
     )
 
     private fun brudd(

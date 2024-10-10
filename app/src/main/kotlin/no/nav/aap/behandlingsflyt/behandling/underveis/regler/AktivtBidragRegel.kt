@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_7
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Type.IKKE_AKTIVT_BIDRAG
 import no.nav.aap.tidslinje.JoinStyle
@@ -13,7 +12,8 @@ import no.nav.aap.tidslinje.Tidslinje
  */
 class AktivtBidragRegel : UnderveisRegel {
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
-        val vurderinger = input.bruddAktivitetsplikt
+        val vurderinger = input.bruddAktivitetspliktGrunnlag
+            .tidslinje
             .mapValue { brudd ->
                 when {
                     brudd.type == IKKE_AKTIVT_BIDRAG -> {
