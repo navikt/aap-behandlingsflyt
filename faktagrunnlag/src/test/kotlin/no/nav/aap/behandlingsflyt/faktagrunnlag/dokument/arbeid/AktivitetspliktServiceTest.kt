@@ -23,13 +23,13 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 
-class BruddAktivitetspliktServiceTest {
+class AktivitetspliktServiceTest {
     @Test
     fun `detekterer nye dokumenter og legger dem til i grunnlaget`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = nySak(connection)
             val behandling = BehandlingRepositoryImpl(connection).opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
-            val bruddAktivitetspliktService = BruddAktivitetspliktService.konstruer(connection)
+            val aktivitetspliktService = AktivitetspliktService.konstruer(connection)
             val flytKontekst = flytKontekstMedPerioder(behandling)
 
             nyeBrudd(
@@ -44,19 +44,19 @@ class BruddAktivitetspliktServiceTest {
 
 
             // Før vi oppdaterer kravinformasjonen, så finnes det ingen grunnlag
-            BruddAktivitetspliktRepository(connection).hentGrunnlagHvisEksisterer(behandling.id).also {
+            AktivitetspliktRepository(connection).hentGrunnlagHvisEksisterer(behandling.id).also {
                 assertNull(it)
             }
 
             // Etter første oppdatering av kravinformasjonen, skal bruddet vi la inn over dukke opp
-            bruddAktivitetspliktService.oppdater(flytKontekst)
-            BruddAktivitetspliktRepository(connection).hentGrunnlagHvisEksisterer(behandling.id).also {
+            aktivitetspliktService.oppdater(flytKontekst)
+            AktivitetspliktRepository(connection).hentGrunnlagHvisEksisterer(behandling.id).also {
                 assertEquals(1, it?.bruddene?.size)
             }
 
             // Ved oppdatering av kravinformasjonen uten ny brudd, skal grunnlaget være uendret
-            bruddAktivitetspliktService.oppdater(flytKontekst)
-            BruddAktivitetspliktRepository(connection).hentGrunnlagHvisEksisterer(behandling.id).also {
+            aktivitetspliktService.oppdater(flytKontekst)
+            AktivitetspliktRepository(connection).hentGrunnlagHvisEksisterer(behandling.id).also {
                 assertEquals(1, it?.bruddene?.size)
             }
         }

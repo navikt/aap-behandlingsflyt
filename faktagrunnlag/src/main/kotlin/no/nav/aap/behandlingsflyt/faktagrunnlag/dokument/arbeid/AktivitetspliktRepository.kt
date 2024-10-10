@@ -8,7 +8,7 @@ import no.nav.aap.verdityper.sakogbehandling.NavIdent
 import no.nav.aap.verdityper.sakogbehandling.SakId
 import org.jetbrains.annotations.TestOnly
 
-class BruddAktivitetspliktRepository(private val connection: DBConnection) {
+class AktivitetspliktRepository(private val connection: DBConnection) {
     class LagreBruddInput(
         val sakId: SakId,
         val navIdent: NavIdent,
@@ -74,7 +74,7 @@ class BruddAktivitetspliktRepository(private val connection: DBConnection) {
         }
     }
 
-    fun hentGrunnlagHvisEksisterer(behandlingId: BehandlingId): BruddAktivitetspliktGrunnlag? {
+    fun hentGrunnlagHvisEksisterer(behandlingId: BehandlingId): AktivitetspliktGrunnlag? {
         val grunnlagId = finnGrunnlagId(behandlingId) ?: return null
 
         val query = """
@@ -89,7 +89,7 @@ class BruddAktivitetspliktRepository(private val connection: DBConnection) {
             }
             setRowMapper(::mapBruddAktivitetsplikt)
         }
-        return BruddAktivitetspliktGrunnlag(
+        return AktivitetspliktGrunnlag(
             bruddene = bruddene,
         )
     }

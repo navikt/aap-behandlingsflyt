@@ -10,9 +10,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReposito
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
 
-class BruddAktivitetspliktService (
+class AktivitetspliktService (
     private val mottaDokumentService: MottaDokumentService,
-    private val bruddAktivitetspliktRepository: BruddAktivitetspliktRepository,
+    private val aktivitetspliktRepository: AktivitetspliktRepository,
 ) : Informasjonskrav {
 
     companion object : Informasjonskravkonstruktør {
@@ -20,10 +20,10 @@ class BruddAktivitetspliktService (
             return true
         }
 
-        override fun konstruer(connection: DBConnection): BruddAktivitetspliktService {
-            return BruddAktivitetspliktService(
+        override fun konstruer(connection: DBConnection): AktivitetspliktService {
+            return AktivitetspliktService(
                 MottaDokumentService(MottattDokumentRepository(connection)),
-                BruddAktivitetspliktRepository(connection)
+                AktivitetspliktRepository(connection)
             )
         }
     }
@@ -34,14 +34,14 @@ class BruddAktivitetspliktService (
             return IKKE_ENDRET
         }
 
-        val eksisterendeBrudd = bruddAktivitetspliktRepository.hentGrunnlagHvisEksisterer(kontekst.behandlingId)
+        val eksisterendeBrudd = aktivitetspliktRepository.hentGrunnlagHvisEksisterer(kontekst.behandlingId)
             ?.bruddene
             ?: emptyList()
 
         val alleBrudd = HashSet<BruddAktivitetsplikt>(eksisterendeBrudd)
 
         for (ubehandletInnsendingId in aktivitetskortSomIkkeErBehandlet) {
-            val nyeBrudd = bruddAktivitetspliktRepository.hentBruddForInnsending(ubehandletInnsendingId)
+            val nyeBrudd = aktivitetspliktRepository.hentBruddForInnsending(ubehandletInnsendingId)
             alleBrudd.addAll(nyeBrudd)
             mottaDokumentService.knyttTilBehandling(
                 sakId = kontekst.sakId,
@@ -50,7 +50,7 @@ class BruddAktivitetspliktService (
             )
         }
 
-        bruddAktivitetspliktRepository.nyttGrunnlag(behandlingId = kontekst.behandlingId, brudd = alleBrudd)
+        aktivitetspliktRepository.nyttGrunnlag(behandlingId = kontekst.behandlingId, brudd = alleBrudd)
         return ENDRET
     }
 

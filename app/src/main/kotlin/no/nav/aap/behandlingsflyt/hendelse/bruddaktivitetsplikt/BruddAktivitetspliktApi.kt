@@ -7,7 +7,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -25,9 +25,9 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
                 val navIdent = innloggetNavIdent()
                 val sak = SakService(connection).hent(Saksnummer(req.saksnummer))
 
-                val repository = BruddAktivitetspliktRepository(connection)
+                val repository = AktivitetspliktRepository(connection)
                 val bruddAktivitetsplikt = req.perioder.map { periode ->
-                    BruddAktivitetspliktRepository.LagreBruddInput(
+                    AktivitetspliktRepository.LagreBruddInput(
                         sakId = sak.id,
                         brudd = req.brudd,
                         paragraf = req.paragraf,
@@ -58,7 +58,7 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
 
         route("/{saksnummer}").get<HentHendelseDto, BruddAktivitetspliktResponse> { req ->
             val response = dataSource.transaction { connection ->
-                val repository = BruddAktivitetspliktRepository(connection)
+                val repository = AktivitetspliktRepository(connection)
                 val sak = SakService(connection).hent(Saksnummer(req.saksnummer))
                 val alleBrudd = repository.hentBrudd(sak.id)
                     .map {
@@ -77,7 +77,7 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
 
         route("/slett").post<Unit, String, String> { _, req ->
             dataSource.transaction { connection ->
-                val repository = BruddAktivitetspliktRepository(connection)
+                val repository = AktivitetspliktRepository(connection)
                 repository.deleteAll()
             }
             respond("{}", HttpStatusCode.Accepted)

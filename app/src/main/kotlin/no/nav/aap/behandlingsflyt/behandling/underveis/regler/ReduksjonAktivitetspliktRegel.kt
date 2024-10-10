@@ -15,7 +15,7 @@ import no.nav.aap.tidslinje.Tidslinje
  */
 class ReduksjonAktivitetspliktRegel : UnderveisRegel {
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
-        val vurderinger = input.bruddAktivitetspliktGrunnlag
+        val vurderinger = input.aktivitetspliktGrunnlag
             .tidslinje
             .mapValue { brudd ->
                 when {

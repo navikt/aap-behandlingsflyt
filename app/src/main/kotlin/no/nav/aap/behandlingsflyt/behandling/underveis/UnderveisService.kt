@@ -20,8 +20,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.SoningRepository
@@ -35,7 +35,7 @@ class UnderveisService(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val pliktkortRepository: PliktkortRepository,
     private val underveisRepository: UnderveisRepository,
-    private val bruddAktivitetspliktRepository: BruddAktivitetspliktRepository,
+    private val aktivitetspliktRepository: AktivitetspliktRepository,
     private val barnetilleggRepository: BarnetilleggRepository,
     private val soningRepository: SoningRepository,
     private val helseInstitusjonRepository: HelseinstitusjonRepository
@@ -106,8 +106,8 @@ class UnderveisService(
         val etAnnetSted = mapTilEtAnnetSted(soningVurdering, helseInstitusjonVurdering)
 
         val barnetilleggGrunnlag = requireNotNull(barnetilleggRepository.hentHvisEksisterer(behandlingId))
-        val bruddAktivitetspliktGrunnlag = bruddAktivitetspliktRepository.hentGrunnlagHvisEksisterer(behandlingId)
-            ?: BruddAktivitetspliktGrunnlag(bruddene = setOf())
+        val aktivitetspliktGrunnlag = aktivitetspliktRepository.hentGrunnlagHvisEksisterer(behandlingId)
+            ?: AktivitetspliktGrunnlag(bruddene = setOf())
 
         return UnderveisInput(
             rettighetsperiode = sak.rettighetsperiode,
@@ -116,7 +116,7 @@ class UnderveisService(
             pliktkort = pliktkort,
             innsendingsTidspunkt = innsendingsTidspunkt,
             kvote = kvote,
-            bruddAktivitetspliktGrunnlag = bruddAktivitetspliktGrunnlag,
+            aktivitetspliktGrunnlag = aktivitetspliktGrunnlag,
             etAnnetSted = etAnnetSted,
             barnetillegg = barnetilleggGrunnlag
         )

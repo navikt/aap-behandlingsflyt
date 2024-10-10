@@ -4,7 +4,7 @@ import no.nav.aap.tidslinje.JoinStyle
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.Tidslinje
 
-data class BruddAktivitetspliktGrunnlag(
+data class AktivitetspliktGrunnlag(
     val bruddene: Set<BruddAktivitetsplikt>,
 ) {
     val tidslinje: Tidslinje<BruddAktivitetsplikt> by lazy {
