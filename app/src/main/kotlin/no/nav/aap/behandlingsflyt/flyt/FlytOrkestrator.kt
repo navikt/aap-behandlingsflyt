@@ -195,7 +195,7 @@ class FlytOrkestrator(
                 behandlingHendelseService.stoppet(oppdatertBehandling, avklaringsbehovene)
                 return
             } else {
-                prometheus.stegFullførtTeller(behandling.referanse.referanse).increment()
+                prometheus.stegFullførtTeller(neste.type().name).increment()
             }
             gjeldendeSteg = neste
         }

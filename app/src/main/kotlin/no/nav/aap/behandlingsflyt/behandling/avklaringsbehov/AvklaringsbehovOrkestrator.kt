@@ -147,6 +147,6 @@ class AvklaringsbehovOrkestrator(
         avklaringsbehovene.validerPlassering(behandling = behandling)
         behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
 
-        prometheus.behandlingSattPåVentTeller(behandling.referanse.referanse).increment()
+        prometheus.behandlingSattPåVentTeller().increment()
     }
 }
