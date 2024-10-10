@@ -48,44 +48,6 @@ class BruddAktivitetspliktRepositoryTest {
     }
 
     @Test
-    fun `kan endre brudd på sak`() {
-        InitTestDatabase.dataSource.transaction { connection ->
-            val sak = nySak(connection)
-            val repo = BruddAktivitetspliktRepository(connection)
-            val fom = LocalDate.now()
-
-            val brudd = nyeBrudd(connection, sak,
-                brudd = IKKE_AKTIVT_BIDRAG,
-                paragraf = PARAGRAF_11_7,
-                begrunnelse = "Orket ikke",
-                perioder = listOf(Periode(fom, fom.plusDays(5)), Periode(fom.plusDays(8), fom.plusDays(8))),
-            )
-            nyeBrudd(connection, sak,
-                brudd = IKKE_MØTT_TIL_BEHANDLING,
-                paragraf = PARAGRAF_11_8,
-                begrunnelse = "hei",
-                perioder = listOf(Periode(fom, fom.plusDays(3))),
-                erstatter = brudd.find { it.periode.fom == fom }!!.id
-            )
-
-            val lagretHendelse = repo.hentBrudd(sak.id)
-            assertEquals(2, lagretHendelse.size)
-            lagretHendelse.find { it.periode.fom == fom }!!.apply {
-                assertEquals(IKKE_MØTT_TIL_BEHANDLING, type)
-                assertEquals(PARAGRAF_11_8, paragraf)
-                assertEquals("hei", begrunnelse)
-                assertEquals(Periode(fom, fom.plusDays(3)), periode)
-            }
-            lagretHendelse.find { it.periode.fom == fom.plusDays(8) }!!.apply {
-                assertEquals(IKKE_AKTIVT_BIDRAG, type)
-                assertEquals(PARAGRAF_11_7, paragraf)
-                assertEquals("Orket ikke", begrunnelse)
-                assertEquals(Periode(fom.plusDays(8), fom.plusDays(8)), periode)
-            }
-        }
-    }
-
-    @Test
     fun `kan lagre flere hendelser på samme sak hver for seg`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = nySak(connection)
@@ -170,7 +132,6 @@ fun nyeBrudd(
     paragraf: BruddAktivitetsplikt.Paragraf = PARAGRAF_11_8,
     begrunnelse: String = "En begrunnnelse",
     perioder: List<Periode> = listOf(Periode(LocalDate.now(), LocalDate.now().plusDays(5))),
-    erstatter: BruddAktivitetspliktId? = null,
 ): List<BruddAktivitetsplikt> {
     val repo = BruddAktivitetspliktRepository(connection)
     val innsendingId = repo.lagreBrudd(
@@ -182,7 +143,6 @@ fun nyeBrudd(
                 begrunnelse = begrunnelse,
                 periode = periode,
                 navIdent = NavIdent("Z000000"),
-                erstatter = erstatter,
             )
         }
     )

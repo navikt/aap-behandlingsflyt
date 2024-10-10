@@ -55,8 +55,6 @@ data class BruddAktivitetsplikt(
     val periode: Periode,
     val opprettetTid: LocalDateTime,
 
-    val erstatter: BruddAktivitetspliktId?,
-
     /* TODO: Fjern default når det er avklart hvilke grunner vi skal ha. */
     /* TODO: Legg på persistering når det er avklart. */
     val grunn: Grunn = Grunn.INGEN_GYLDIG_GRUNN,

@@ -17,14 +17,13 @@ class BruddAktivitetspliktRepository(private val connection: DBConnection) {
         val paragraf: BruddAktivitetsplikt.Paragraf,
         val begrunnelse: String,
         val periode: Periode,
-        val erstatter: BruddAktivitetspliktId? = null,
     )
 
     fun lagreBrudd(brudd: List<LagreBruddInput>): InnsendingId {
         val query = """
             INSERT INTO BRUDD_AKTIVITETSPLIKT
-            (SAK_ID, BRUDD, PERIODE, BEGRUNNELSE, PARAGRAF, NAV_IDENT, OPPRETTET_TID, HENDELSE_ID, INNSENDING_ID, ERSTATTER) 
-            VALUES (?, ?, ?::daterange, ?, ?, ?, ?, ?, ?, ?)
+            (SAK_ID, BRUDD, PERIODE, BEGRUNNELSE, PARAGRAF, NAV_IDENT, OPPRETTET_TID, HENDELSE_ID, INNSENDING_ID ) 
+            VALUES (?, ?, ?::daterange, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
 
         val innsendingId = InnsendingId.ny()
@@ -40,7 +39,6 @@ class BruddAktivitetspliktRepository(private val connection: DBConnection) {
                 setLocalDateTime(7, LocalDateTime.now())
                 setUUID(8, HendelseId.ny().id)
                 setUUID(9, innsendingId.value)
-                setLong(10, request.erstatter?.id)
             }
         }
         return innsendingId
@@ -113,18 +111,10 @@ class BruddAktivitetspliktRepository(private val connection: DBConnection) {
         }
 
     fun hentBrudd(sakId: SakId): List<BruddAktivitetsplikt> {
-        val query = """
-            WITH ERSTATTEDE_BRUDD AS (
-                SELECT ERSTATTER FROM BRUDD_AKTIVITETSPLIKT WHERE SAK_ID = ? AND ERSTATTER IS NOT NULL
-            )
-            SELECT *
-            FROM BRUDD_AKTIVITETSPLIKT brudd
-            WHERE SAK_ID = ? AND ID NOT IN (SELECT ERSTATTER FROM ERSTATTEDE_BRUDD)
-        """.trimIndent()
+        val query = """SELECT * FROM BRUDD_AKTIVITETSPLIKT brudd WHERE SAK_ID = ?"""
         return connection.queryList(query) {
             setParams {
                 setLong(1, sakId.toLong())
-                setLong(2, sakId.toLong())
             }
             setRowMapper(::mapBruddAktivitetsplikt)
         }
@@ -169,7 +159,6 @@ class BruddAktivitetspliktRepository(private val connection: DBConnection) {
             hendelseId = HendelseId(row.getUUID("HENDELSE_ID")),
             innsendingId = InnsendingId(row.getUUID("INNSENDING_ID")),
             opprettetTid = row.getLocalDateTime("OPPRETTET_TID"),
-            erstatter = row.getLongOrNull("ERSTATTER")?.let(::BruddAktivitetspliktId)
         )
     }
 
