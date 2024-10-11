@@ -49,7 +49,7 @@ class MeldepliktRepository(private val connection: DBConnection) {
             INNER JOIN MELDEPLIKT_FRITAK f ON g.MELDEPLIKT_ID = f.ID
             INNER JOIN MELDEPLIKT_FRITAK_VURDERING v ON f.ID = v.MELDEPLIKT_ID
             JOIN BEHANDLING b ON b.ID = g.BEHANDLING_ID
-            WHERE g.AKTIV AND b.SAK_ID = ? AND b.opprettet_tid <= (SELECT a.opprettet_tid from behandling a where id = ?)
+            WHERE g.AKTIV AND b.SAK_ID = ? AND b.opprettet_tid < (SELECT a.opprettet_tid from behandling a where id = ?)
             """.trimIndent()
 
         return connection.queryList(query) {
