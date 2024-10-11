@@ -79,10 +79,13 @@ fun main() {
         SECURE_LOGGER.error("Uhåndtert feil", e)
         prometheus.uhåndtertExceptionTeller(e::class.java.name).increment()
     }
-    embeddedServer(Netty, port = 8080, configure = {
+    embeddedServer(Netty, configure = {
         connectionGroupSize = 8
         workerGroupSize = 8
         callGroupSize = 16
+        connector {
+            port = 8080
+        }
     }) { server(DbConfig()) }.start(wait = true)
 }
 
@@ -181,10 +184,10 @@ fun Application.module(dataSource: DataSource): Motor {
         RetryService(dbConnection).enable()
     }
 
-    environment.monitor.subscribe(ApplicationStarted) {
+    monitor.subscribe(ApplicationStarted) {
         motor.start()
     }
-    environment.monitor.subscribe(ApplicationStopped) { application ->
+    monitor.subscribe(ApplicationStopped) { application ->
         application.environment.log.info("Server har stoppet")
         motor.stop()
         // Release resources and unsubscribe from events
