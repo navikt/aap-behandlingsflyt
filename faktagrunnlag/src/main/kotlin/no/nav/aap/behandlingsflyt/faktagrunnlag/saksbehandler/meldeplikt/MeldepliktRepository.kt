@@ -42,18 +42,21 @@ class MeldepliktRepository(private val connection: DBConnection) {
         }.grupperOgMapTilGrunnlag(behandlingId).firstOrNull()
     }
 
-    fun hentAlleVurderinger(sakId: SakId): Set<Fritaksvurdering> {
+    fun hentAlleVurderinger(sakId: SakId, behandlingId: BehandlingId): Set<Fritaksvurdering> {
         val query = """
             SELECT f.ID AS MELDEPLIKT_ID, v.HAR_FRITAK, v.FRA_DATO, v.BEGRUNNELSE, v.OPPRETTET_TID
             FROM MELDEPLIKT_FRITAK_GRUNNLAG g
             INNER JOIN MELDEPLIKT_FRITAK f ON g.MELDEPLIKT_ID = f.ID
             INNER JOIN MELDEPLIKT_FRITAK_VURDERING v ON f.ID = v.MELDEPLIKT_ID
-            INNER JOIN BEHANDLING b ON b.ID = g.BEHANDLING_ID
-            WHERE g.AKTIV AND b.SAK_ID = ?
+            JOIN BEHANDLING b ON b.ID = g.BEHANDLING_ID
+            WHERE g.AKTIV AND b.SAK_ID = ? AND b.opprettet_tid <= (SELECT a.opprettet_tid from behandling a where id = ?)
             """.trimIndent()
 
         return connection.queryList(query) {
-            setParams { setLong(1, sakId.toLong()) }
+            setParams {
+                setLong(1, sakId.toLong())
+                setLong(2, behandlingId.toLong())
+            }
             setRowMapper { row ->
                 MeldepliktInternal(
                     meldepliktId = row.getLong("MELDEPLIKT_ID"),

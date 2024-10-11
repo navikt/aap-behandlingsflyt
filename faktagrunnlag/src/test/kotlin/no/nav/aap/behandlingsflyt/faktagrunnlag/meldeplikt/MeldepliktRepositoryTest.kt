@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRep
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -89,7 +90,8 @@ class MeldepliktRepositoryTest {
 
     @Test
     fun `Kopierer fritaksvurderinger fra en behandling til en annen der fraBehandlingen har to versjoner av opplysningene`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        val dataSource = InitTestDatabase.dataSource
+        val behandling1 = dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
             val meldepliktRepository = MeldepliktRepository(connection)
@@ -108,10 +110,21 @@ class MeldepliktRepositoryTest {
                     setLong(1, behandling1.id.toLong())
                 }
             }
+            behandling1
+        }
+        dataSource.transaction { connection ->
+            val meldepliktRepository = MeldepliktRepository(connection)
+            val sak = SakOgBehandlingService(connection).hentSakFor(behandling1.id)
             val behandling2 = behandling(connection, sak)
+            assertThat(behandling1.id).isNotEqualTo(behandling2.id)
+            assertThat(behandling1.opprettetTidspunkt).isBefore(behandling2.opprettetTidspunkt)
 
             val meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling2.id)
             assertThat(meldepliktGrunnlag?.vurderinger).hasSize(1)
+
+            val alleVurderingerFørBehandling = meldepliktRepository.hentAlleVurderinger(behandling2.sakId, behandling2.id)
+
+            assertThat(alleVurderingerFørBehandling).hasSize(1)
         }
     }
 
@@ -188,6 +201,10 @@ class MeldepliktRepositoryTest {
                         harFritak = true
                     ),
                 )
+
+            val alleVurderingerFørBehandling = meldepliktRepository.hentAlleVurderinger(behandling.sakId, behandling.id)
+
+            assertThat(alleVurderingerFørBehandling).isEmpty()
         }
     }
 
@@ -291,9 +308,10 @@ class MeldepliktRepositoryTest {
     }
 
     private fun behandling(connection: DBConnection, sak: Sak): Behandling {
-        return SakOgBehandlingService(connection).finnEllerOpprettBehandling(
+        val behandling = SakOgBehandlingService(connection).finnEllerOpprettBehandling(
             sak.saksnummer,
             listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
         ).behandling
+        return BehandlingRepositoryImpl(connection).hent(behandling.id)
     }
 }

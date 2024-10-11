@@ -33,7 +33,7 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(dataSource: HikariDataSource) {
                 val vedtatteVerdier =
                     behandling.forrigeBehandlingId?.let { meldepliktRepository.hentHvisEksisterer(it) }?.vurderinger
                         ?: emptyList()
-                val historikk = meldepliktRepository.hentAlleVurderinger(behandling.sakId)
+                val historikk = meldepliktRepository.hentAlleVurderinger(behandling.sakId, behandling.id)
 
                 FritakMeldepliktGrunnlagDto(
                     historikk = historikk.map { tilDto(it) }.sortedBy { it.vurderingsTidspunkt }.toSet(),
