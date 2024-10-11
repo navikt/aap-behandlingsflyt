@@ -93,7 +93,7 @@ class ApiTest {
         @BeforeAll
         fun beforeall() {
             server.start()
-            port = runBlocking { server.resolvedConnectors().filter { it.type == ConnectorType.HTTP }.first().port }
+            port = runBlocking { server.engine.resolvedConnectors().filter { it.type == ConnectorType.HTTP }.first().port }
         }
 
         @JvmStatic

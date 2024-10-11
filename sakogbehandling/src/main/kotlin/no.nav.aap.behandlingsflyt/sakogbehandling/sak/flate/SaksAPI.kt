@@ -143,13 +143,13 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                     val dokumentRespons =
                         gateway.hentDokument(JournalpostId(journalpostId), DokumentInfoId(dokumentInfoId), token)
 
-                    pipeline.context.response.headers.append(
+                    pipeline.call.response.headers.append(
                         name = "Content-Disposition", value = "inline; filename=${dokumentRespons.filnavn}"
                     )
                     respond(DokumentResponsDTO(stream = dokumentRespons.dokument))
                 }
             }
-            
+
             route("/{saksnummer}/personinformasjon") {
                 authorizedGet<HentSakDTO, SakPersoninfoDTO>(
                     SakPathParam("saksnummer")

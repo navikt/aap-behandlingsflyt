@@ -66,7 +66,7 @@ class PipTest {
         @BeforeAll
         fun beforeall() {
             server.start()
-            port = runBlocking { server.resolvedConnectors().first { it.type == ConnectorType.HTTP }.port }
+            port = runBlocking { server.engine.resolvedConnectors().first { it.type == ConnectorType.HTTP }.port }
         }
 
         @JvmStatic

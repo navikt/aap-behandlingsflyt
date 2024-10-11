@@ -2,11 +2,11 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.gradle.kotlin.dsl.processResources
 import java.io.ByteArrayOutputStream
 
-val ktorVersion = "2.3.12"
+val ktorVersion = "3.0.0"
 
 plugins {
     id("behandlingsflyt.conventions")
-    id("io.ktor.plugin") version "2.3.12"
+    id("io.ktor.plugin") version "3.0.0"
 }
 
 application {
@@ -18,7 +18,6 @@ tasks {
         destinationFile = layout.buildDirectory.file("version.properties")
         // Define property.
         property("project.version", getCheckedOutGitCommitHash())
-        property("swagger-ui.version", "5.17.14")
     }
 
     processResources {
@@ -50,7 +49,7 @@ fun getCheckedOutGitCommitHash(): String {
 }
 
 
-val komponenterVersjon = "1.0.11"
+val komponenterVersjon = "1.0.16"
 
 dependencies {
     implementation("io.ktor:ktor-server-cors:$ktorVersion")
