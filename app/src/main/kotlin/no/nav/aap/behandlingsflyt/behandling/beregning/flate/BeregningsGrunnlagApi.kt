@@ -177,8 +177,8 @@ private fun yrkesskadeGrunnlagDTO(
         antattÅrligInntektIGYrkesskadeTidspunktet = beregning.yrkesskadeinntektIG().verdi(),
         justertTilMaks6G = beregning.yrkesskadeinntektIG()
             .verdi(), // TODO: Skal YS reduseres til maks 6G?
-        andelGangerInntekt = beregning.antattÅrligInntektYrkesskadeTidspunktet().multiplisert(beregning.andelYrkesskade().prosentverdi()).verdi(),
-        andelGangerInntektIG = beregning.yrkesskadeinntektIG().multiplisert(beregning.andelYrkesskade().prosentverdi()).verdi()
+        andelGangerInntekt = beregning.antattÅrligInntektYrkesskadeTidspunktet().multiplisert(beregning.andelYrkesskade()).verdi(),
+        andelGangerInntektIG = beregning.yrkesskadeinntektIG().multiplisert(beregning.andelYrkesskade()).verdi()
     ),
     standardBeregning = StandardBeregningDTO(
         prosentVekting = beregning.andelYrkesskade().komplement().prosentverdi(),
