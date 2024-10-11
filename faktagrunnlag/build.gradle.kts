@@ -1,4 +1,4 @@
-val ktorVersion = "2.3.12"
+val ktorVersion = "3.0.0"
 val komponenterVersjon = "1.0.11"
 
 plugins {
@@ -16,7 +16,7 @@ dependencies {
     implementation("no.nav.aap.kelvin:infrastructure:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:dbconnect:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:dbmigrering:$komponenterVersjon")
-    implementation("no.nav:ktor-openapi-generator:1.0.42")
+    implementation("no.nav:ktor-openapi-generator:1.0.46")
     implementation("io.ktor:ktor-http-jvm:$ktorVersion")
     implementation("com.zaxxer:HikariCP:6.0.0")
 

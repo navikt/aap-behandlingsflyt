@@ -8,13 +8,12 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.Application
-import io.ktor.server.application.call
 import io.ktor.server.application.install
 import io.ktor.server.application.log
 import io.ktor.server.engine.ConnectorType
+import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
-import io.ktor.server.netty.NettyApplicationEngine
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.request.header
@@ -1029,10 +1028,12 @@ object FakeServers : AutoCloseable {
     }
 }
 
-private fun NettyApplicationEngine.port(): Int =
-    runBlocking { resolvedConnectors() }
-        .first { it.type == ConnectorType.HTTP }
+private fun EmbeddedServer<*, *>.port(): Int {
+    return runBlocking {
+        this@port.engine.resolvedConnectors()
+    }.first { it.type == ConnectorType.HTTP }
         .port
+}
 
 object AzurePortHolder {
     private val azurePort = AtomicInteger(0)

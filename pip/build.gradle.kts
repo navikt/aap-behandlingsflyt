@@ -1,4 +1,4 @@
-val ktorVersion = "2.3.12"
+val ktorVersion = "3.0.0"
 val komponenterVersjon = "1.0.11"
 val tilgangVersjon = "0.0.16"
 
@@ -16,7 +16,7 @@ dependencies {
     implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:infrastructure:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:dbconnect:$komponenterVersjon")
-    implementation("no.nav:ktor-openapi-generator:1.0.42")
+    implementation("no.nav:ktor-openapi-generator:1.0.46")
     implementation("io.ktor:ktor-http-jvm:$ktorVersion")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.2")
