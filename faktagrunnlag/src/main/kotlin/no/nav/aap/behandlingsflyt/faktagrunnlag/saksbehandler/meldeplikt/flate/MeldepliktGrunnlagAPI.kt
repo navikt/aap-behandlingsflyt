@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
+import java.time.LocalDateTime
 
 fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(dataSource: HikariDataSource) {
     route("/api/behandling/{referanse}/grunnlag/fritak-meldeplikt") {
@@ -76,7 +77,7 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(dataSource: HikariDataSource) {
 private fun tilDto(fritaksvurdering: Fritaksvurdering): FritakMeldepliktVurderingDto {
     return FritakMeldepliktVurderingDto(
         fritaksvurdering.begrunnelse,
-        requireNotNull(fritaksvurdering.opprettetTid),
+        fritaksvurdering.opprettetTid ?: LocalDateTime.now(),
         fritaksvurdering.harFritak,
         fritaksvurdering.fraDato
     )
