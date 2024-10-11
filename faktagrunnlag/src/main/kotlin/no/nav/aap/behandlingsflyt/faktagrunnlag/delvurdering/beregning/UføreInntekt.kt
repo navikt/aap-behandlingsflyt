@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning
 
 import no.nav.aap.verdityper.Beløp
+import no.nav.aap.verdityper.GUnit
 import no.nav.aap.verdityper.Prosent
 import java.time.Year
 
@@ -14,9 +15,12 @@ import java.time.Year
 class UføreInntekt(
     val år: Year,
     val inntektIKroner: Beløp,
+    val inntektIG: GUnit,
     val uføregrad: Prosent,
     val arbeidsgrad: Prosent,
-    val inntektJustertForUføregrad: Beløp
+    val inntektJustertForUføregrad: Beløp,
+    val inntektIGJustertForUføregrad: GUnit,
+    val grunnbeløp: Beløp
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

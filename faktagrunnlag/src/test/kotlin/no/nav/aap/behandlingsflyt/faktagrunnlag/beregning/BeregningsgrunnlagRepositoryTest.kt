@@ -403,7 +403,10 @@ class BeregningsgrunnlagRepositoryTest {
                 inntektIKroner = inntektIKroner.multiplisert(uføregrad.komplement()),
                 uføregrad = uføregrad,
                 arbeidsgrad = uføregrad.komplement(),
-                inntektJustertForUføregrad = inntektIKroner
+                inntektJustertForUføregrad = inntektIKroner,
+                inntektIG = inntektIG,
+                inntektIGJustertForUføregrad = inntektIG.multiplisert(uføregrad.komplement()),
+                grunnbeløp = grunnbeløp
             ),
             GrunnlagInntekt(
                 år = Year.of(år),

@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.verdityper.GUnit
+import java.time.Year
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.beregningsGrunnlagApi(dataSource: DataSource) {
@@ -106,7 +107,8 @@ private fun grunnlag11_19_to_DTO(grunnlag: Grunnlag11_19): Grunnlag11_19DTO {
         inntekter = inntekter,
         gjennomsnittligInntektSiste3år = grunnlag.gjennomsnittligInntektIG().verdi(),
         inntektSisteÅr = inntekter.maxBy(InntektDTO::år),
-        grunnlag = grunnlag.grunnlaget().verdi()
+        grunnlag = grunnlag.grunnlaget().verdi(),
+        årstall = grunnlag.inntekter().maxOf { inntekt -> inntekt.år }.plusYears(1).value.toString()
     )
 }
 
@@ -131,10 +133,11 @@ private fun inntekterTilUføreDTO(uføreInntekt: UføreInntekt, grunnlagInntekt:
     return UføreInntektDTO(
         år = uføreInntekt.år.value.toString(),
         inntektIKroner = uføreInntekt.inntektIKroner.verdi(),
-        inntektIG = grunnlagInntekt.inntektIG.verdi(),
+        inntektIG = uføreInntekt.inntektIG.verdi(),
         justertTilMaks6G = grunnlagInntekt.inntekt6GBegrenset.verdi(),
         justertForUføreGrad = grunnlagInntekt.inntektIKroner.verdi(),
-        uføreGrad = uføreInntekt.uføregrad.prosentverdi()
+        justertForUføreGradiG = grunnlagInntekt.inntektIG.verdi(),
+        uføreGrad = uføreInntekt.uføregrad.prosentverdi(),
     )
 }
 
@@ -156,7 +159,8 @@ private fun uføreGrunnlagDTO(grunnlag: GrunnlagUføre): UføreGrunnlagDTO {
         gjennomsnittligInntektSiste3årUfør =
         grunnlag.underliggendeYtterligereNedsatt().gjennomsnittligInntektIG().verdi(),
         inntektSisteÅrUfør = uføreInntekter.maxBy(UføreInntektDTO::år),
-        grunnlag = grunnlag.grunnlaget().verdi()
+        grunnlag = grunnlag.grunnlaget().verdi(),
+        nedsattArbeidsevneÅr = grunnlag.uføreYtterligereNedsattArbeidsevneÅr().value.toString()
     )
 }
 

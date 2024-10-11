@@ -3,7 +3,9 @@ package no.nav.aap.behandlingsflyt.behandling.beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.UføreInntekt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
+import no.nav.aap.verdityper.GUnit
 import no.nav.aap.verdityper.Prosent
 import java.time.Year
 
@@ -55,7 +57,10 @@ class UføreBeregning(
                 inntektIKroner = inntekt.beløp,
                 uføregrad = uføregrad,
                 arbeidsgrad = arbeidsgrad,
-                inntektJustertForUføregrad = inntekt.beløp.dividert(arbeidsgrad)
+                inntektJustertForUføregrad = inntekt.beløp.dividert(arbeidsgrad),
+                inntektIG = inntekt.gUnit().gUnit.dividert(arbeidsgrad),
+                grunnbeløp = inntekt.gUnit().beløp,
+                inntektIGJustertForUføregrad = inntekt.gUnit().gUnit.dividert(arbeidsgrad)
             )
         }
     }

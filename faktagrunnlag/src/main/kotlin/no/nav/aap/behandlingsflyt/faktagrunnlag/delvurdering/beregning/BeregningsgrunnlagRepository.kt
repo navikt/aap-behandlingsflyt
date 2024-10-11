@@ -112,7 +112,7 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
     private fun hentUføreInntekt(beregningsId: Long): List<UføreInntekt> {
         return connection.queryList(
             """
-                SELECT ARSTALL, INNTEKT_I_KRONER, UFOREGRAD, ARBEIDSGRAD, INNTEKT_JUSTERT_FOR_UFOREGRAD
+                SELECT ARSTALL, INNTEKT_I_KRONER, UFOREGRAD, ARBEIDSGRAD, INNTEKT_JUSTERT_FOR_UFOREGRAD, INNTEKT_I_G, GRUNNBELOP, inntekt_justert_ufore_g
                 FROM BEREGNING_UFORE_INNTEKT
                 WHERE BEREGNING_UFORE_ID = ?
             """.trimIndent()
@@ -122,9 +122,12 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
                 UføreInntekt(
                     år = Year.of(row.getInt("ARSTALL")),
                     inntektIKroner = Beløp(verdi = row.getBigDecimal("INNTEKT_I_KRONER")),
+                    inntektIG = GUnit(row.getBigDecimal("INNTEKT_I_G")),
                     uføregrad = Prosent(row.getInt("UFOREGRAD")),
                     arbeidsgrad = Prosent(row.getInt("ARBEIDSGRAD")),
-                    inntektJustertForUføregrad = Beløp(row.getBigDecimal("INNTEKT_JUSTERT_FOR_UFOREGRAD"))
+                    inntektJustertForUføregrad = Beløp(row.getBigDecimal("INNTEKT_JUSTERT_FOR_UFOREGRAD")),
+                    inntektIGJustertForUføregrad = GUnit(row.getBigDecimal("inntekt_justert_ufore_g")),
+                    grunnbeløp = Beløp(row.getBigDecimal("GRUNNBELOP"))
                 )
             }
         }
@@ -325,8 +328,8 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
     private fun lagreUføreInntekt(uføreId: Long, inntekter: List<UføreInntekt>) {
         connection.executeBatch(
             """INSERT INTO BEREGNING_UFORE_INNTEKT
-                     (BEREGNING_UFORE_ID, ARSTALL, INNTEKT_I_KRONER, UFOREGRAD, ARBEIDSGRAD, INNTEKT_JUSTERT_FOR_UFOREGRAD)
-                     VALUES (?, ?, ?, ?, ?, ?)
+                     (BEREGNING_UFORE_ID, ARSTALL, INNTEKT_I_KRONER, UFOREGRAD, ARBEIDSGRAD, INNTEKT_JUSTERT_FOR_UFOREGRAD, INNTEKT_I_G, GRUNNBELOP, inntekt_justert_ufore_g)
+                     VALUES (?, ?, ?, ?, ?, ?,?, ?, ?)
         """,
             inntekter
         ) {
@@ -337,6 +340,9 @@ class BeregningsgrunnlagRepository(private val connection: DBConnection) {
                 setInt(4, it.uføregrad.prosentverdi())
                 setInt(5, it.arbeidsgrad.prosentverdi())
                 setBigDecimal(6, it.inntektJustertForUføregrad.verdi())
+                setBigDecimal(7, it.inntektIG.verdi())
+                setBigDecimal(8, it.grunnbeløp.verdi())
+                setBigDecimal(9, it.inntektIGJustertForUføregrad.verdi())
             }
         }
     }

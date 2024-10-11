@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning.flate
 
+import no.nav.aap.verdityper.GUnit
 import java.math.BigDecimal
+import java.time.Year
 
 enum class BeregningstypeDTO {
     STANDARD,
@@ -18,6 +20,7 @@ class BeregningDTO(
 )
 
 class Grunnlag11_19DTO(
+    val årstall: String, //Når fikk innbygger nedsatt arbeidsevnen
     val inntekter: List<InntektDTO>,
     val gjennomsnittligInntektSiste3år: BigDecimal,
     val inntektSisteÅr: InntektDTO,
@@ -55,6 +58,7 @@ class StandardBeregningDTO(
 )
 
 class UføreGrunnlagDTO(
+    val nedsattArbeidsevneÅr: String,
     val inntekter: List<InntektDTO>,
     val gjennomsnittligInntektSiste3år: BigDecimal,
     val inntektSisteÅr: InntektDTO,
@@ -68,8 +72,9 @@ class UføreInntektDTO(
     val år: String,
     val inntektIKroner: BigDecimal,
     val inntektIG: BigDecimal,
-    val justertTilMaks6G: BigDecimal,
+    val justertTilMaks6G: BigDecimal, // Denne er feil
     val justertForUføreGrad: BigDecimal,
+    val justertForUføreGradiG: BigDecimal, //samme som over bare i g¢
     val uføreGrad: Int
 )
 
