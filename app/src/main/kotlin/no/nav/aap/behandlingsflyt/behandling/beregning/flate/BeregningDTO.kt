@@ -1,8 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning.flate
 
-import no.nav.aap.verdityper.GUnit
 import java.math.BigDecimal
-import java.time.Year
 
 enum class BeregningstypeDTO {
     STANDARD,
@@ -38,6 +36,7 @@ class YrkesskadeGrunnlagDTO(
     val inntekter: List<InntektDTO>,
     val yrkesskadeinntekt: YrkesskadeInntektDTO,
     val standardBeregning: StandardBeregningDTO,
+    val standardYrkesskade: StandardYrkesskadeDTO,
     val gjennomsnittligInntektSiste3år: BigDecimal,
     val inntektSisteÅr: InntektDTO,
     val yrkesskadeGrunnlag: BigDecimal,
@@ -47,6 +46,8 @@ class YrkesskadeGrunnlagDTO(
 class YrkesskadeInntektDTO(
     val prosentVekting: Int,
     val antattÅrligInntektIKronerYrkesskadeTidspunktet: BigDecimal,
+    val andelGangerInntekt: BigDecimal,
+    val andelGangerInntektIG: BigDecimal,
     val antattÅrligInntektIGYrkesskadeTidspunktet: BigDecimal,
     val justertTilMaks6G: BigDecimal
 )
@@ -54,8 +55,17 @@ class YrkesskadeInntektDTO(
 class StandardBeregningDTO(
     val prosentVekting: Int,
     val inntektIG: BigDecimal,
-    val justertTilMaks6G: BigDecimal// Boolean?
+    val andelGangerInntekt: BigDecimal,
+    val andelGangerInntektIG: BigDecimal,
 )
+
+class StandardYrkesskadeDTO(
+    val prosentVekting: Int,
+    val inntektIG: BigDecimal,
+    val andelGangerInntekt: BigDecimal,
+    val andelGangerInntektIG: BigDecimal,
+)
+
 
 class UføreGrunnlagDTO(
     val nedsattArbeidsevneÅr: String,

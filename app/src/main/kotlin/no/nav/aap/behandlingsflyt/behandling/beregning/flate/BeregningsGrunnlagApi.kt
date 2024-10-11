@@ -19,7 +19,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.verdityper.GUnit
-import java.time.Year
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.beregningsGrunnlagApi(dataSource: DataSource) {
@@ -177,12 +176,21 @@ private fun yrkesskadeGrunnlagDTO(
             .verdi(),
         antattÅrligInntektIGYrkesskadeTidspunktet = beregning.yrkesskadeinntektIG().verdi(),
         justertTilMaks6G = beregning.yrkesskadeinntektIG()
-            .verdi() // TODO: Skal YS reduseres til maks 6G?
+            .verdi(), // TODO: Skal YS reduseres til maks 6G?
+        andelGangerInntekt = beregning.antattÅrligInntektYrkesskadeTidspunktet().multiplisert(beregning.andelYrkesskade().prosentverdi()).verdi(),
+        andelGangerInntektIG = beregning.yrkesskadeinntektIG().multiplisert(beregning.andelYrkesskade().prosentverdi()).verdi()
     ),
     standardBeregning = StandardBeregningDTO(
         prosentVekting = beregning.andelYrkesskade().komplement().prosentverdi(),
         inntektIG = underliggende.grunnlaget().verdi(),
-        justertTilMaks6G = underliggende.grunnlaget().verdi()
+        andelGangerInntekt = underliggende.grunnlaget().multiplisert(beregning.andelYrkesskade().komplement()).verdi(),
+        andelGangerInntektIG = underliggende.grunnlaget().multiplisert(beregning.andelYrkesskade().komplement()).verdi(),
+    ),
+    standardYrkesskade = StandardYrkesskadeDTO(
+        prosentVekting = beregning.andelYrkesskade().prosentverdi(),
+        inntektIG = underliggende.grunnlaget().verdi(),
+        andelGangerInntekt = underliggende.grunnlaget().multiplisert(beregning.andelYrkesskade()).verdi(),
+        andelGangerInntektIG = underliggende.grunnlaget().multiplisert(beregning.andelYrkesskade()).verdi(),
     ),
     gjennomsnittligInntektSiste3år = gjennomsnittligInntektIG.verdi(),
     inntektSisteÅr = inntekter.maxBy(InntektDTO::år),
