@@ -61,7 +61,7 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.5.8")
     implementation("net.logstash.logback:logstash-logback-encoder:8.0")
 
-    implementation("no.nav.aap.brev:kontrakt:0.0.5")
+    implementation("no.nav.aap.brev:kontrakt:0.0.8")
     implementation("no.nav.aap.statistikk:api-kontrakt:0.0.15")
     implementation("no.nav.aap.kelvin:motor:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:dbconnect:$komponenterVersjon")

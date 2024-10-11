@@ -3,12 +3,14 @@ package no.nav.aap.behandlingsflyt.behandling.brev.bestilling
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.brev.kontrakt.BestillBrevRequest
 import no.nav.aap.brev.kontrakt.BestillBrevResponse
+import no.nav.aap.brev.kontrakt.BrevbestillingResponse
 import no.nav.aap.brev.kontrakt.Brevtype
 import no.nav.aap.brev.kontrakt.Språk
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
+import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
@@ -55,8 +57,33 @@ class BrevGateway : BrevbestillingGateway {
         return response.referanse
     }
 
+    override fun hentBestillingStatus(referanse: UUID): Status {
+        val url = baseUri.resolve("/api/bestilling/$referanse")
+        val request = GetRequest(
+            additionalHeaders = listOf(
+                Header("Nav-Consumer-Id", "aap-behandlingsflyt"),
+                Header("Accept", "application/json")
+            )
+        )
+        val response: BrevbestillingResponse = requireNotNull(
+            client.get(
+                uri = url, request = request, mapper = { body, _ ->
+                    DefaultJsonMapper.fromJson(body)
+                })
+        )
+
+        return mapStatus(response.status)
+    }
+
     private fun mapTypeBrev(typeBrev: TypeBrev): Brevtype = when (typeBrev) {
         TypeBrev.VEDTAK_AVSLAG -> Brevtype.AVSLAG
         TypeBrev.VEDTAK_INNVILGELSE -> Brevtype.INNVILGELSE
+    }
+
+    private fun mapStatus(status: no.nav.aap.brev.kontrakt.Status): Status = when (status) {
+        no.nav.aap.brev.kontrakt.Status.REGISTRERT -> Status.SENDT
+        no.nav.aap.brev.kontrakt.Status.UNDER_ARBEID -> Status.FORHÅNDSVISNING_KLAR
+        no.nav.aap.brev.kontrakt.Status.FERDIGSTILT -> Status.FULLFØRT
+        no.nav.aap.brev.kontrakt.Status.BESTILT -> Status.FULLFØRT
     }
 }

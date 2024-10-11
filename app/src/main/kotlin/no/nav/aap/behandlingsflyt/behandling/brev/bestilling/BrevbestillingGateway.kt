@@ -8,4 +8,6 @@ interface BrevbestillingGateway {
         behandlingReferanse: BehandlingReferanse,
         typeBrev: TypeBrev,
     ): UUID
+
+    fun hentBestillingStatus(referanse: UUID): Status
 }
