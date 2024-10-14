@@ -18,7 +18,7 @@ class BeregningDTO(
 )
 
 class Grunnlag11_19DTO(
-    val årstall: String, //Når fikk innbygger nedsatt arbeidsevnen
+    val nedsattArbeidsevneÅr: String,
     val inntekter: List<InntektDTO>,
     val gjennomsnittligInntektSiste3år: BigDecimal,
     val inntektSisteÅr: InntektDTO,
@@ -39,6 +39,7 @@ class YrkesskadeGrunnlagDTO(
     val standardYrkesskade: StandardYrkesskadeDTO,
     val gjennomsnittligInntektSiste3år: BigDecimal,
     val inntektSisteÅr: InntektDTO,
+    val nedsattArbeidsevneÅr: String,
     val yrkesskadeTidspunkt: String,
     val yrkesskadeGrunnlag: BigDecimal,
     val grunnlag: BigDecimal
@@ -70,6 +71,7 @@ class StandardYrkesskadeDTO(
 
 class UføreGrunnlagDTO(
     val nedsattArbeidsevneÅr: String,
+    val ytterligereNedsattArbeidsevneÅr: String,
     val inntekter: List<InntektDTO>,
     val gjennomsnittligInntektSiste3år: BigDecimal,
     val inntektSisteÅr: InntektDTO,

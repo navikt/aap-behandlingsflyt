@@ -210,7 +210,7 @@ class ApiTest {
             """{
   "beregningstypeDTO": "STANDARD",
   "grunnlag11_19": {
-    "årstall": "2024",
+    "nedsattArbeidsevneÅr": "2024",
     "inntekter": [
       {
         "år": "2023",

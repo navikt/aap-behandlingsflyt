@@ -53,7 +53,7 @@ internal fun beregningDTO(beregning: Beregningsgrunnlag): BeregningDTO {
         is GrunnlagYrkesskade -> {
             when (val underliggende = beregning.underliggende()) {
                 is GrunnlagUføre -> {
-                    val inntekter = inntekterTilDTO(underliggende.underliggende().inntekter())
+                    val inntekter = underliggende.underliggende().inntekter()
                     val gjennomsnittligInntektIG = underliggende.underliggende().gjennomsnittligInntektIG()
                     val uføre = uføreGrunnlagDTO(underliggende)
                     val yrkesskade =
@@ -69,7 +69,7 @@ internal fun beregningDTO(beregning: Beregningsgrunnlag): BeregningDTO {
                 }
 
                 is Grunnlag11_19 -> {
-                    val inntekter = inntekterTilDTO(underliggende.inntekter())
+                    val inntekter = underliggende.inntekter()
                     val gjennomsnittligInntektIG = underliggende.gjennomsnittligInntektIG()
                     BeregningDTO(
                         beregningstypeDTO = BeregningstypeDTO.YRKESSKADE,
@@ -110,7 +110,8 @@ private fun grunnlag11_19_to_DTO(grunnlag: Grunnlag11_19): Grunnlag11_19DTO {
         gjennomsnittligInntektSiste3år = grunnlag.gjennomsnittligInntektIG().verdi(),
         inntektSisteÅr = inntekter.maxBy(InntektDTO::år),
         grunnlag = grunnlag.grunnlaget().verdi(),
-        årstall = grunnlag.inntekter().maxOf { inntekt -> inntekt.år }.plusYears(1).format(årFormatter)
+        nedsattArbeidsevneÅr =
+        grunnlag.inntekter().maxOf { inntekt -> inntekt.år }.plusYears(1).format(årFormatter)
     )
 }
 
@@ -162,42 +163,52 @@ private fun uføreGrunnlagDTO(grunnlag: GrunnlagUføre): UføreGrunnlagDTO {
         grunnlag.underliggendeYtterligereNedsatt().gjennomsnittligInntektIG().verdi(),
         inntektSisteÅrUfør = uføreInntekter.maxBy(UføreInntektDTO::år),
         grunnlag = grunnlag.grunnlaget().verdi(),
-        nedsattArbeidsevneÅr = grunnlag.uføreYtterligereNedsattArbeidsevneÅr().format(årFormatter)
+        nedsattArbeidsevneÅr =
+        grunnlag.underliggende().inntekter().maxOf { inntekt -> inntekt.år }.plusYears(1).format(årFormatter),
+        ytterligereNedsattArbeidsevneÅr = grunnlag.uføreYtterligereNedsattArbeidsevneÅr().format(årFormatter)
     )
 }
 
 private fun yrkesskadeGrunnlagDTO(
-    inntekter: List<InntektDTO>,
+    inntekter: List<GrunnlagInntekt>,
     beregning: GrunnlagYrkesskade,
     underliggende: Beregningsgrunnlag,
     gjennomsnittligInntektIG: GUnit
-) = YrkesskadeGrunnlagDTO(
-    inntekter = inntekter,
-    yrkesskadeinntekt = YrkesskadeInntektDTO(
-        prosentVekting = beregning.andelYrkesskade().prosentverdi(),
-        antattÅrligInntektIKronerYrkesskadeTidspunktet = beregning.antattÅrligInntektYrkesskadeTidspunktet()
-            .verdi(),
-        antattÅrligInntektIGYrkesskadeTidspunktet = beregning.yrkesskadeinntektIG().verdi(),
-        justertTilMaks6G = beregning.yrkesskadeinntektIG()
-            .verdi(), // TODO: Skal YS reduseres til maks 6G?
-        andelGangerInntekt = beregning.antattÅrligInntektYrkesskadeTidspunktet().multiplisert(beregning.andelYrkesskade()).verdi(),
-        andelGangerInntektIG = beregning.yrkesskadeinntektIG().multiplisert(beregning.andelYrkesskade()).verdi()
-    ),
-    standardBeregning = StandardBeregningDTO(
-        prosentVekting = beregning.andelYrkesskade().komplement().prosentverdi(),
-        inntektIG = underliggende.grunnlaget().verdi(),
-        andelGangerInntekt = underliggende.grunnlaget().multiplisert(beregning.andelYrkesskade().komplement()).verdi(),
-        andelGangerInntektIG = underliggende.grunnlaget().multiplisert(beregning.andelYrkesskade().komplement()).verdi(),
-    ),
-    standardYrkesskade = StandardYrkesskadeDTO(
-        prosentVekting = beregning.andelYrkesskade().prosentverdi(),
-        inntektIG = underliggende.grunnlaget().verdi(),
-        andelGangerInntekt = underliggende.grunnlaget().multiplisert(beregning.andelYrkesskade()).verdi(),
-        andelGangerInntektIG = underliggende.grunnlaget().multiplisert(beregning.andelYrkesskade()).verdi(),
-    ),
-    gjennomsnittligInntektSiste3år = gjennomsnittligInntektIG.verdi(),
-    inntektSisteÅr = inntekter.maxBy(InntektDTO::år),
-    yrkesskadeTidspunkt = beregning.yrkesskadeTidspunkt().format(årFormatter),
-    yrkesskadeGrunnlag = beregning.grunnlaget().verdi(),
-    grunnlag = beregning.grunnlaget().verdi()
-)
+): YrkesskadeGrunnlagDTO {
+    val inntekterDTO = inntekterTilDTO(inntekter)
+    return YrkesskadeGrunnlagDTO(
+        inntekter = inntekterDTO,
+        yrkesskadeinntekt = YrkesskadeInntektDTO(
+            prosentVekting = beregning.andelYrkesskade().prosentverdi(),
+            antattÅrligInntektIKronerYrkesskadeTidspunktet = beregning.antattÅrligInntektYrkesskadeTidspunktet()
+                .verdi(),
+            antattÅrligInntektIGYrkesskadeTidspunktet = beregning.yrkesskadeinntektIG().verdi(),
+            justertTilMaks6G = beregning.yrkesskadeinntektIG()
+                .verdi(), // TODO: Skal YS reduseres til maks 6G?
+            andelGangerInntekt = beregning.antattÅrligInntektYrkesskadeTidspunktet()
+                .multiplisert(beregning.andelYrkesskade()).verdi(),
+            andelGangerInntektIG = beregning.yrkesskadeinntektIG().multiplisert(beregning.andelYrkesskade()).verdi()
+        ),
+        standardBeregning = StandardBeregningDTO(
+            prosentVekting = beregning.andelYrkesskade().komplement().prosentverdi(),
+            inntektIG = underliggende.grunnlaget().verdi(),
+            andelGangerInntekt = underliggende.grunnlaget().multiplisert(beregning.andelYrkesskade().komplement())
+                .verdi(),
+            andelGangerInntektIG = underliggende.grunnlaget().multiplisert(beregning.andelYrkesskade().komplement())
+                .verdi(),
+        ),
+        standardYrkesskade = StandardYrkesskadeDTO(
+            prosentVekting = beregning.andelYrkesskade().prosentverdi(),
+            inntektIG = underliggende.grunnlaget().verdi(),
+            andelGangerInntekt = underliggende.grunnlaget().multiplisert(beregning.andelYrkesskade()).verdi(),
+            andelGangerInntektIG = underliggende.grunnlaget().multiplisert(beregning.andelYrkesskade()).verdi(),
+        ),
+        gjennomsnittligInntektSiste3år = gjennomsnittligInntektIG.verdi(),
+        inntektSisteÅr = inntekterDTO.maxBy(InntektDTO::år),
+        nedsattArbeidsevneÅr =
+        inntekter.maxOf { inntekt -> inntekt.år }.plusYears(1).format(årFormatter),
+        yrkesskadeTidspunkt = beregning.yrkesskadeTidspunkt().format(årFormatter),
+        yrkesskadeGrunnlag = beregning.grunnlaget().verdi(),
+        grunnlag = beregning.grunnlaget().verdi()
+    )
+}
