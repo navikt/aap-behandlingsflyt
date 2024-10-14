@@ -34,7 +34,7 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
             JoinStyle.RIGHT_JOIN { periode, vurdering, brudd ->
                 val meldeperiode = requireNotNull(vurdering?.verdi?.meldeperiode(), {
                     // Kan være fristende å bruke INNER_JOIN, men da forsvinner brudd fra tidslinja
-                    "meldeperiode må eksistere for å kunne gruppere brudd på meldeperiode"
+                    "meldeperiode eksisterer ikke for $periode. må eksistere for å kunne gruppere brudd på meldeperiode"
                 })
                 Segment(periode, meldeperiode to brudd.verdi)
             }
