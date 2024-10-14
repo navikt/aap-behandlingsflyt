@@ -19,7 +19,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.verdityper.GUnit
+import java.time.format.DateTimeFormatter
 import javax.sql.DataSource
+
+private val årFormatter = DateTimeFormatter.ofPattern("yyyy")
 
 fun NormalOpenAPIRoute.beregningsGrunnlagApi(dataSource: DataSource) {
     route("/api/beregning") {
@@ -107,7 +110,7 @@ private fun grunnlag11_19_to_DTO(grunnlag: Grunnlag11_19): Grunnlag11_19DTO {
         gjennomsnittligInntektSiste3år = grunnlag.gjennomsnittligInntektIG().verdi(),
         inntektSisteÅr = inntekter.maxBy(InntektDTO::år),
         grunnlag = grunnlag.grunnlaget().verdi(),
-        årstall = grunnlag.inntekter().maxOf { inntekt -> inntekt.år }.plusYears(1).value.toString()
+        årstall = grunnlag.inntekter().maxOf { inntekt -> inntekt.år }.plusYears(1).format(årFormatter)
     )
 }
 
@@ -117,7 +120,7 @@ private fun inntekterTilDTO(inntekter: List<GrunnlagInntekt>): List<InntektDTO> 
 
 private fun inntekterTilDTO(inntekt: GrunnlagInntekt): InntektDTO {
     return InntektDTO(
-        år = inntekt.år.value.toString(),
+        år = inntekt.år.format(årFormatter),
         inntektIKroner = inntekt.inntektIKroner.verdi(),
         inntektIG = inntekt.inntektIG.verdi(),
         justertTilMaks6G = inntekt.inntekt6GBegrenset.verdi()
@@ -130,7 +133,7 @@ private fun inntekterTilUføreDTO(inntekter: List<Pair<UføreInntekt, GrunnlagIn
 
 private fun inntekterTilUføreDTO(uføreInntekt: UføreInntekt, grunnlagInntekt: GrunnlagInntekt): UføreInntektDTO {
     return UføreInntektDTO(
-        år = uføreInntekt.år.value.toString(),
+        år = uføreInntekt.år.format(årFormatter),
         inntektIKroner = uføreInntekt.inntektIKroner.verdi(),
         inntektIG = uføreInntekt.inntektIG.verdi(),
         justertTilMaks6G = grunnlagInntekt.inntekt6GBegrenset.verdi(),
@@ -159,7 +162,7 @@ private fun uføreGrunnlagDTO(grunnlag: GrunnlagUføre): UføreGrunnlagDTO {
         grunnlag.underliggendeYtterligereNedsatt().gjennomsnittligInntektIG().verdi(),
         inntektSisteÅrUfør = uføreInntekter.maxBy(UføreInntektDTO::år),
         grunnlag = grunnlag.grunnlaget().verdi(),
-        nedsattArbeidsevneÅr = grunnlag.uføreYtterligereNedsattArbeidsevneÅr().value.toString()
+        nedsattArbeidsevneÅr = grunnlag.uføreYtterligereNedsattArbeidsevneÅr().format(årFormatter)
     )
 }
 
@@ -194,6 +197,7 @@ private fun yrkesskadeGrunnlagDTO(
     ),
     gjennomsnittligInntektSiste3år = gjennomsnittligInntektIG.verdi(),
     inntektSisteÅr = inntekter.maxBy(InntektDTO::år),
+    yrkesskadeTidspunkt = beregning.yrkesskadeTidspunkt().format(årFormatter),
     yrkesskadeGrunnlag = beregning.grunnlaget().verdi(),
     grunnlag = beregning.grunnlaget().verdi()
 )

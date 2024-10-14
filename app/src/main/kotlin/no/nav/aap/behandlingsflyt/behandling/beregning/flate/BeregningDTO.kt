@@ -39,6 +39,7 @@ class YrkesskadeGrunnlagDTO(
     val standardYrkesskade: StandardYrkesskadeDTO,
     val gjennomsnittligInntektSiste3år: BigDecimal,
     val inntektSisteÅr: InntektDTO,
+    val yrkesskadeTidspunkt: String,
     val yrkesskadeGrunnlag: BigDecimal,
     val grunnlag: BigDecimal
 )
