@@ -39,6 +39,7 @@ class AktivitetspliktRepositoryTest {
             val lagretHendelse = repo.hentBrudd(sak.id)
             assertEquals(1, lagretHendelse.size)
             lagretHendelse[0].also {
+                it as BruddAktivitetsplikt
                 assertEquals(IKKE_AKTIVT_BIDRAG, it.type)
                 assertEquals(PARAGRAF_11_7, it.paragraf)
                 assertEquals("Orket ikke", it.begrunnelse)
@@ -132,7 +133,7 @@ fun nyeBrudd(
     paragraf: BruddAktivitetsplikt.Paragraf = PARAGRAF_11_8,
     begrunnelse: String = "En begrunnnelse",
     perioder: List<Periode> = listOf(Periode(LocalDate.now(), LocalDate.now().plusDays(5))),
-): List<BruddAktivitetsplikt> {
+): List<Aktivitetspliktdokument> {
     val repo = AktivitetspliktRepository(connection)
     val innsendingId = repo.lagreBrudd(
         perioder.map { periode ->
@@ -149,7 +150,7 @@ fun nyeBrudd(
     return repo.hentBruddForInnsending(innsendingId)
 }
 
-fun nyttGrunnlag(connection: DBConnection, behandling: Behandling, brudd: Set<BruddAktivitetsplikt>): AktivitetspliktGrunnlag {
+fun nyttGrunnlag(connection: DBConnection, behandling: Behandling, brudd: Set<Aktivitetspliktdokument>): AktivitetspliktGrunnlag {
     val repo = AktivitetspliktRepository(connection)
     repo.nyttGrunnlag(behandling.id, brudd)
     return repo.hentGrunnlagHvisEksisterer(behandling.id)!!

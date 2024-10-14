@@ -4,62 +4,61 @@ import com.fasterxml.jackson.annotation.JsonValue
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_7
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_8
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_9
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Type.IKKE_MØTT_TIL_ANNEN_AKTIVITET
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Type.IKKE_MØTT_TIL_BEHANDLING
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Type.IKKE_MØTT_TIL_MØTE
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Type.IKKE_MØTT_TIL_TILTAK
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Type.IKKE_SENDT_INN_DOKUMENTASJON
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.sakogbehandling.NavIdent
 import no.nav.aap.verdityper.sakogbehandling.SakId
 import java.time.Instant
-import java.time.LocalDateTime
 import java.util.*
 
-data class BruddAktivitetspliktId(internal val id: Long)
+sealed interface Aktivitetspliktdokument {
+    /** Intern id brukt i databasen. Skal ikke deles utenfor appen. */
+    val id: BruddAktivitetspliktId
 
-data class InnsendingId(@JsonValue val value: UUID) {
-    val asString get() = value.toString()
+    /** Ekstern id. Skal brukes hvis entiteten sendes ut av appen. */
+    val hendelseId: HendelseId
 
-    constructor(value: String) : this(UUID.fromString(value))
+    /** Knytter sammen flere brudd som ble rapportert inn av saksbehandler som én handling. */
+    val innsendingId: InnsendingId
 
-    companion object {
-        fun ny() = InnsendingId(UUID.randomUUID())
-    }
+    /** Saksbehandler som sendte inn dokumentet. */
+    val navIdent: NavIdent
+
+    /** Tidspunktet dokumentet ble mottatt. */
+    val opprettetTid: Instant
+
+    val sakId: SakId
+
+    /** De dagene hvor det har vært et brudd. */
+    val periode: Periode
 }
 
-data class HendelseId(val id: UUID) {
-    override fun toString() = id.toString()
-
-    companion object {
-        fun ny() = HendelseId(UUID.randomUUID())
-    }
-}
+data class FeilregistrertBrudd(
+    override val id: BruddAktivitetspliktId,
+    override val hendelseId: HendelseId,
+    override val innsendingId: InnsendingId,
+    override val navIdent: NavIdent,
+    override val sakId: SakId,
+    override val opprettetTid: Instant,
+    override val periode: Periode
+): Aktivitetspliktdokument
 
 /** Representerer fakta om ett enkelt brudd (§§ 11-7 til 11-9) for én periode. */
 data class BruddAktivitetsplikt(
-    /** Intern id brukt i databasen. Skal ikke deles utenfor appen. */
-    val id: BruddAktivitetspliktId,
-
-    /** Ekstern id. Skal brukes hvis entiteten sendes ut av appen. */
-    val hendelseId: HendelseId,
-
-    /** Knytter sammen flere brudd som ble rapportert inn av saksbehandler som én handling. */
-    val innsendingId: InnsendingId,
-
-    val navIdent: NavIdent,
-
-    val sakId: SakId,
+    override val id: BruddAktivitetspliktId,
+    override val hendelseId: HendelseId,
+    override val innsendingId: InnsendingId,
+    override val navIdent: NavIdent,
+    override val sakId: SakId,
+    override val periode: Periode,
+    override val opprettetTid: Instant,
     val type: Type,
     val paragraf: Paragraf,
     val begrunnelse: String,
-    val periode: Periode,
-    val opprettetTid: Instant,
 
     /* TODO: Fjern default når det er avklart hvilke grunner vi skal ha. */
     /* TODO: Legg på persistering når det er avklart. */
     val grunn: Grunn = Grunn.INGEN_GYLDIG_GRUNN,
-) {
+): Aktivitetspliktdokument {
     init {
         require(paragraf in type.gyldigeParagrafer) {
             "$paragraf kan ikke brukes ved aktivitetspliktbruddet $type"
@@ -88,42 +87,25 @@ data class BruddAktivitetsplikt(
         PARAGRAF_11_8,
         PARAGRAF_11_9
     }
+}
 
-    val erFraværFraFastsattAktivitet: Boolean
-        get() = this.type in bruddTyperRelevantFor_11_8
+data class BruddAktivitetspliktId(internal val id: Long)
 
-    val harRimeligGrunn: Boolean
-        get() = this.grunn in gyldigeGrunnerFor_11_9
+data class InnsendingId(@JsonValue val value: UUID) {
+    val asString get() = value.toString()
 
-    val erBruddPåNærmereBestemteAktivitetsplikter: Boolean
-        get() = this.type in bruddTyperRelevantFor_11_9
+    constructor(value: String) : this(UUID.fromString(value))
 
     companion object {
-        private val bruddTyperRelevantFor_11_8 = listOf(
-            IKKE_MØTT_TIL_BEHANDLING,
-            IKKE_MØTT_TIL_TILTAK,
-            IKKE_MØTT_TIL_ANNEN_AKTIVITET,
-        )
-
-        private val gyldigeGrunnerFor_11_8 = listOf(
-            Grunn.SYKDOM_ELLER_SKADE,
-            Grunn.STERKE_VELFERDSGRUNNER,
-        )
-
-
-        private val bruddTyperRelevantFor_11_9 = listOf(
-            IKKE_MØTT_TIL_MØTE,
-            IKKE_MØTT_TIL_BEHANDLING,
-            IKKE_MØTT_TIL_TILTAK,
-            IKKE_SENDT_INN_DOKUMENTASJON,
-        )
-
-        private val gyldigeGrunnerFor_11_9 = listOf(
-            Grunn.SYKDOM_ELLER_SKADE,
-            Grunn.STERKE_VELFERDSGRUNNER,
-            Grunn.RIMELIG_GRUNN,
-        )
+        fun ny() = InnsendingId(UUID.randomUUID())
     }
 }
 
+data class HendelseId(val id: UUID) {
+    override fun toString() = id.toString()
+
+    companion object {
+        fun ny() = HendelseId(UUID.randomUUID())
+    }
+}
 

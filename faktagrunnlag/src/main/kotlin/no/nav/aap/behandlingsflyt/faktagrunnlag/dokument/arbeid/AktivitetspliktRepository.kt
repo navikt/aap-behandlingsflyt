@@ -21,7 +21,7 @@ class AktivitetspliktRepository(private val connection: DBConnection) {
     fun lagreBrudd(brudd: List<LagreBruddInput>): InnsendingId {
         val query = """
             INSERT INTO BRUDD_AKTIVITETSPLIKT
-            (SAK_ID, BRUDD, PERIODE, BEGRUNNELSE, PARAGRAF, NAV_IDENT, OPPRETTET_TID, HENDELSE_ID, INNSENDING_ID ) 
+            (SAK_ID, BRUDD, PERIODE, BEGRUNNELSE, PARAGRAF, NAV_IDENT, OPPRETTET_TID, HENDELSE_ID, INNSENDING_ID)
             VALUES (?, ?, ?::daterange, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?)
             """.trimIndent()
 
@@ -42,7 +42,7 @@ class AktivitetspliktRepository(private val connection: DBConnection) {
         return innsendingId
     }
 
-    fun nyttGrunnlag(behandlingId: BehandlingId, brudd: Set<BruddAktivitetsplikt>) {
+    fun nyttGrunnlag(behandlingId: BehandlingId, brudd: Set<Aktivitetspliktdokument>) {
         val eksisterendeGrunnlag = this.hentGrunnlagHvisEksisterer(behandlingId)
         val eksisterendeBrudd = eksisterendeGrunnlag?.bruddene ?: emptyList()
 
@@ -108,7 +108,7 @@ class AktivitetspliktRepository(private val connection: DBConnection) {
             }
         }
 
-    fun hentBrudd(sakId: SakId): List<BruddAktivitetsplikt> {
+    fun hentBrudd(sakId: SakId): List<Aktivitetspliktdokument> {
         val query = """SELECT * FROM BRUDD_AKTIVITETSPLIKT brudd WHERE SAK_ID = ?"""
         return connection.queryList(query) {
             setParams {
@@ -118,7 +118,7 @@ class AktivitetspliktRepository(private val connection: DBConnection) {
         }
     }
 
-    fun hentBruddForInnsending(innsendingId: InnsendingId): List<BruddAktivitetsplikt> {
+    fun hentBruddForInnsending(innsendingId: InnsendingId): List<Aktivitetspliktdokument> {
         val query = """
             SELECT *
             FROM BRUDD_AKTIVITETSPLIKT brudd
@@ -145,7 +145,7 @@ class AktivitetspliktRepository(private val connection: DBConnection) {
         ) {}
     }
 
-    private fun mapBruddAktivitetsplikt(row: Row): BruddAktivitetsplikt {
+    private fun mapBruddAktivitetsplikt(row: Row): Aktivitetspliktdokument {
         return BruddAktivitetsplikt(
             id = BruddAktivitetspliktId(row.getLong("ID")),
             type = row.getEnum("BRUDD"),

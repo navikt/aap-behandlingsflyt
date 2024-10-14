@@ -8,6 +8,8 @@ import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.FeilregistrertBrudd
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -61,21 +63,27 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
                 val repository = AktivitetspliktRepository(connection)
                 val sak = SakService(connection).hent(Saksnummer(req.saksnummer))
                 val alleBrudd = repository.hentBrudd(sak.id)
-                    .map {
-                        BruddAktivitetspliktHendelseDto(
-                            brudd = it.type,
-                            paragraf = it.paragraf,
-                            periode = it.periode,
-                            begrunnelse = it.begrunnelse,
-                            hendelseId = it.hendelseId.toString(),
-                        )
+                    .mapNotNull { dokument ->
+                        when (dokument) {
+                            is FeilregistrertBrudd ->
+                                /* Fortelle frontend? */
+                                null
+                            is BruddAktivitetsplikt ->
+                                BruddAktivitetspliktHendelseDto(
+                                    brudd = dokument.type,
+                                    paragraf = dokument.paragraf,
+                                    periode = dokument.periode,
+                                    begrunnelse = dokument.begrunnelse,
+                                    hendelseId = dokument.hendelseId.toString(),
+                                )
+                        }
                     }
                 BruddAktivitetspliktResponse(alleBrudd)
             }
             respond(response)
         }
 
-        route("/slett").post<Unit, String, String> { _, req ->
+        route("/slett").post<Unit, String, String> { _, _ ->
             dataSource.transaction { connection ->
                 val repository = AktivitetspliktRepository(connection)
                 repository.deleteAll()

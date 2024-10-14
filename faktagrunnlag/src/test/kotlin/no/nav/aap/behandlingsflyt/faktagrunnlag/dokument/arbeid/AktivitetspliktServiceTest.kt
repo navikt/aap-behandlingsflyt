@@ -64,7 +64,7 @@ class AktivitetspliktServiceTest {
 
     private fun mottattDokument(
         connection: DBConnection,
-        brudd: BruddAktivitetsplikt,
+        brudd: Aktivitetspliktdokument,
         sak: Sak
     ) {
         val dokument = StrukturertDokument(brudd.innsendingId, Brevkode.AKTIVITETSKORT)
@@ -84,5 +84,4 @@ class AktivitetspliktServiceTest {
             behandlingType = TypeBehandling.Førstegangsbehandling,
             perioderTilVurdering = setOf(),
         )
-
 }

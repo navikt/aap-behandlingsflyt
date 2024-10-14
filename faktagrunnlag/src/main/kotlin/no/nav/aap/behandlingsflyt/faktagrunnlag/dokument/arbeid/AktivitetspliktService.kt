@@ -38,7 +38,7 @@ class AktivitetspliktService (
             ?.bruddene
             ?: emptyList()
 
-        val alleBrudd = HashSet<BruddAktivitetsplikt>(eksisterendeBrudd)
+        val alleBrudd = HashSet<Aktivitetspliktdokument>(eksisterendeBrudd)
 
         for (ubehandletInnsendingId in aktivitetskortSomIkkeErBehandlet) {
             val nyeBrudd = aktivitetspliktRepository.hentBruddForInnsending(ubehandletInnsendingId)

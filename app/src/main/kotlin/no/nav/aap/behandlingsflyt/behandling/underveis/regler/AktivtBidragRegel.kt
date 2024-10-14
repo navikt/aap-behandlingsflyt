@@ -1,7 +1,12 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AktivtBidragVurdering.Vilkårsvurdering.FEILREGISTRERT
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AktivtBidragVurdering.Vilkårsvurdering.IKKE_RELEVANT_BRUDD
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AktivtBidragVurdering.Vilkårsvurdering.VILKÅR_OPPFYLT
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_7
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Type.IKKE_AKTIVT_BIDRAG
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.FeilregistrertBrudd
 import no.nav.aap.tidslinje.JoinStyle
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.Tidslinje
@@ -14,19 +19,25 @@ class AktivtBidragRegel : UnderveisRegel {
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
         val vurderinger = input.aktivitetspliktGrunnlag
             .tidslinje
-            .mapValue { brudd ->
-                when {
-                    brudd.type == IKKE_AKTIVT_BIDRAG -> {
-                        assert(brudd.paragraf == PARAGRAF_11_7)
-                        return@mapValue AktivtBidragVurdering(
-                            brudd = brudd,
-                            vilkårsvurdering = AktivtBidragVurdering.Vilkårsvurdering.VILKÅR_OPPFYLT,
-                        )
-                    }
-                    else -> {
-                        return@mapValue AktivtBidragVurdering(
-                            brudd = brudd,
-                            vilkårsvurdering = AktivtBidragVurdering.Vilkårsvurdering.IKKE_RELEVANT_BRUDD
+            .mapValue { dokument ->
+                when (dokument) {
+                    is FeilregistrertBrudd -> AktivtBidragVurdering(
+                        dokument = dokument,
+                        vilkårsvurdering = FEILREGISTRERT,
+                    )
+
+                    is BruddAktivitetsplikt -> when {
+                        dokument.type == IKKE_AKTIVT_BIDRAG -> {
+                            assert(dokument.paragraf == PARAGRAF_11_7)
+                            AktivtBidragVurdering(
+                                dokument = dokument,
+                                vilkårsvurdering = VILKÅR_OPPFYLT,
+                            )
+                        }
+
+                        else -> AktivtBidragVurdering(
+                            dokument = dokument,
+                            vilkårsvurdering = IKKE_RELEVANT_BRUDD
                         )
                     }
                 }

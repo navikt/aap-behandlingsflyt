@@ -5,9 +5,9 @@ import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.Tidslinje
 
 data class AktivitetspliktGrunnlag(
-    val bruddene: Set<BruddAktivitetsplikt>,
+    val bruddene: Set<Aktivitetspliktdokument>,
 ) {
-    val tidslinje: Tidslinje<BruddAktivitetsplikt> by lazy {
+    val tidslinje: Tidslinje<Aktivitetspliktdokument> by lazy {
         bruddene
             .asSequence()
             .map { Tidslinje(it.periode, it) }
@@ -19,10 +19,10 @@ data class AktivitetspliktGrunnlag(
     }
 
     companion object {
-        private fun merge(brudd1: BruddAktivitetsplikt?, brudd2: BruddAktivitetsplikt?) = when {
-            brudd1 == null || brudd2 == null -> brudd1 ?: brudd2 ?: error("outer join hvor begge sider er null")
-            brudd1.opprettetTid < brudd2.opprettetTid -> brudd2
-            else -> brudd2
+        private fun merge(dokument1: Aktivitetspliktdokument?, dokument2: Aktivitetspliktdokument?) = when {
+            dokument1 == null || dokument2 == null -> dokument1 ?: dokument2 ?: error("outer join hvor begge sider er null")
+            dokument1.opprettetTid < dokument2.opprettetTid -> dokument2
+            else -> dokument2
         }
     }
 }

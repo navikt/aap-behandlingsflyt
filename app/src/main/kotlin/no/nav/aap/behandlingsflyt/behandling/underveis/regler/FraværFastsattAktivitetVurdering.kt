@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Aktivitetspliktdokument
 
 /* TODO: Er det avklart om § 11-8 kan føre til opphør? Første versjon av koden
  * er skrevet med antagelse om at det kun er stans. Så sjekk om noe må endres.
@@ -18,7 +18,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsp
  */
 data class FraværFastsattAktivitetVurdering(
     /* TODO: Det kan være flere brudd som ligger til grunn for hvorfor vi kan stanse etter § 11-8. */
-    val brudd: BruddAktivitetsplikt,
+    val dokument: Aktivitetspliktdokument,
 
     /** Er vilkårene for stans etter § 11-8 oppfylt? */
     val vilkårsvurdering: Vilkårsvurdering,
@@ -33,5 +33,6 @@ data class FraværFastsattAktivitetVurdering(
         UNNTAK_STERKE_VELFERDSGRUNNER,
         UNNTAK_SYKDOM_ELLER_SKADE,
         IKKE_RELEVANT_BRUDD,
+        FEILREGISTRERT_BRUDD,
     }
 }
