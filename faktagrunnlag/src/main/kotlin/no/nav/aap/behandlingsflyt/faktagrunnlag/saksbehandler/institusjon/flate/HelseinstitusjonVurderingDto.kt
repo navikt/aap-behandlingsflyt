@@ -1,6 +1,7 @@
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.HelseinstitusjonVurdering
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
+import java.time.LocalDate
 
 data class HelseinstitusjonVurderingDto(
     val dokumenterBruktIVurdering: List<JournalpostId>,
@@ -8,7 +9,6 @@ data class HelseinstitusjonVurderingDto(
     val faarFriKostOgLosji: Boolean,
     val forsoergerEktefelle: Boolean? = null,
     val harFasteUtgifter: Boolean? = null,
-    val periode: Periode,
 ) {
 
     fun tilDomeneobjekt() = HelseinstitusjonVurdering(
@@ -17,7 +17,7 @@ data class HelseinstitusjonVurderingDto(
         faarFriKostOgLosji = faarFriKostOgLosji,
         forsoergerEktefelle = forsoergerEktefelle,
         harFasteUtgifter = harFasteUtgifter,
-        periode = periode
+        periode = Periode(LocalDate.now(), LocalDate.now())
     )
 
     companion object {
@@ -27,7 +27,6 @@ data class HelseinstitusjonVurderingDto(
             faarFriKostOgLosji = helseinstitusjonVurdering.faarFriKostOgLosji,
             forsoergerEktefelle = helseinstitusjonVurdering.forsoergerEktefelle,
             harFasteUtgifter = helseinstitusjonVurdering.harFasteUtgifter,
-            periode = helseinstitusjonVurdering.periode
         ) else null
     }
 }
