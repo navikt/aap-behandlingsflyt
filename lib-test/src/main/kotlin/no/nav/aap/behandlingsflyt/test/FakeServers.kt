@@ -13,6 +13,8 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
+import io.ktor.server.routing.put
+import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import kotlinx.coroutines.runBlocking
 import no.nav.aap.Inntekt.InntektRequest
@@ -25,6 +27,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adap
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.IDENT_QUERY
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoGateway
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
+import no.nav.aap.brev.kontrakt.BestillBrevResponse
+import no.nav.aap.brev.kontrakt.Brev
+import no.nav.aap.brev.kontrakt.BrevbestillingResponse
+import no.nav.aap.brev.kontrakt.Brevtype
+import no.nav.aap.brev.kontrakt.Språk
+import no.nav.aap.brev.kontrakt.Status
 import no.nav.aap.pdl.HentPerson
 import no.nav.aap.pdl.HentPersonBolkResult
 import no.nav.aap.pdl.PDLDødsfall
@@ -58,6 +66,7 @@ import tilgang.SakTilgangRequest
 import tilgang.TilgangResponse
 import java.io.ByteArrayInputStream
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.Year
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
@@ -66,8 +75,8 @@ import java.util.concurrent.atomic.AtomicInteger
 private val logger = LoggerFactory.getLogger(FakesExtension::class.java)
 
 object FakeServers : AutoCloseable {
-    private val azure =
-        embeddedServer(Netty, port = AzurePortHolder.getPort(), module = { azureFake() })
+    private val azure = embeddedServer(Netty, port = AzurePortHolder.getPort(), module = { azureFake() })
+    private val brev = embeddedServer(Netty, port = 0, module = { brevFake() })
     private val pdl = embeddedServer(Netty, port = 0, module = { pdlFake() })
     private val yrkesskade = embeddedServer(Netty, port = 0, module = { yrkesskadeFake() })
     private val inntekt = embeddedServer(Netty, port = 0, module = { poppFake() })
@@ -900,6 +909,45 @@ object FakeServers : AutoCloseable {
         }
     }
 
+    private fun Application.brevFake() {
+        install(ContentNegotiation) {
+            jackson()
+        }
+        install(StatusPages) {
+            exception<Throwable> { call, cause ->
+                this@brevFake.log.info("BREV :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
+                call.respond(
+                    status = HttpStatusCode.Companion.InternalServerError,
+                    message = ErrorRespons(cause.message)
+                )
+            }
+        }
+        routing {
+            route("/api") {
+                post("/bestill") {
+                    call.respond(status = HttpStatusCode.Created, BestillBrevResponse(UUID.randomUUID()))
+                }
+                route("/bestilling/{referanse}") { ->
+                    get {
+                        BrevbestillingResponse(
+                            referanse = UUID.fromString(call.pathParameters.get("referanse"))!!,
+                            brev = Brev(overskrift = "Overskrift", tekstbolker = emptyList()),
+                            opprettet = LocalDateTime.now(),
+                            oppdatert = LocalDateTime.now(),
+                            behandlingReferanse = UUID.randomUUID(),
+                            brevtype = Brevtype.INNVILGELSE,
+                            språk = Språk.NB,
+                            status = Status.REGISTRERT,
+                        )
+                    }
+                    put("/oppdater") {
+                        call.respond(HttpStatusCode.NoContent, Unit)
+                    }
+                }
+            }
+        }
+    }
+
     @Suppress("PropertyName")
     internal data class TestToken(
         val access_token: String,
@@ -917,6 +965,7 @@ object FakeServers : AutoCloseable {
         }
 
         azure.start()
+        brev.start()
         yrkesskade.start()
         pdl.start()
         inntekt.start()
@@ -944,6 +993,11 @@ object FakeServers : AutoCloseable {
         System.setProperty("azure.app.client.secret", "")
         System.setProperty("azure.openid.config.jwks.uri", "http://localhost:${azure.port()}/jwks")
         System.setProperty("azure.openid.config.issuer", "behandlingsflyt")
+
+        // Tilgang
+        System.setProperty("integrasjon.brev.url", "http://localhost:${brev.port()}")
+        System.setProperty("integrasjon.brev.scope", "brev")
+        System.setProperty("integrasjon.brev.azp", "azp")
 
         // Pdl
         System.setProperty("integrasjon.pdl.url", "http://localhost:${pdl.port()}")
@@ -1008,6 +1062,7 @@ object FakeServers : AutoCloseable {
         yrkesskade.stop(0L, 0L)
         pdl.stop(0L, 0L)
         azure.stop(0L, 0L)
+        brev.stop(0L, 0L)
         inntekt.stop(0L, 0L)
         oppgavestyring.stop(0L, 0L)
         saf.stop(0L, 0L)

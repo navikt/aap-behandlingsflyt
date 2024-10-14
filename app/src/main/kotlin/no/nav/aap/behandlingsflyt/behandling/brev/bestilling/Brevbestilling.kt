@@ -1,0 +1,11 @@
+package no.nav.aap.behandlingsflyt.behandling.brev.bestilling
+
+import no.nav.aap.verdityper.sakogbehandling.BehandlingId
+import java.util.UUID
+
+class Brevbestilling(
+    val behandlingId: BehandlingId,
+    val typeBrev: TypeBrev,
+    val referanse: UUID,
+    val status: Status,
+)
