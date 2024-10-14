@@ -14,28 +14,34 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.verdityper.dokument.JournalpostId
+import org.slf4j.MDC
 import java.time.LocalDate
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.søknadApi(dataSource: DataSource) {
     route("/api/soknad") {
         route("/send").post<Unit, String, SøknadSendDto> { _, dto ->
-            dataSource.transaction { connection ->
-                val sakService = SakService(connection)
+            MDC.putCloseable("saksnummer", dto.saksnummer).use {
+                dataSource.transaction { connection ->
+                    val sakService = SakService(connection)
 
-                val sak = sakService.hent(Saksnummer(dto.saksnummer))
+                    val sak = sakService.hent(Saksnummer(dto.saksnummer))
 
-                val flytJobbRepository = FlytJobbRepository(connection)
-                val dokumentReferanse = MottattDokumentReferanse(JournalpostId(dto.journalpostId))
-                flytJobbRepository.leggTil(
-                    HendelseMottattHåndteringJobbUtfører.nyJobb(
-                        sakId = sak.id,
-                        dokumentReferanse = dokumentReferanse,
-                        brevkode = Brevkode.SØKNAD,
-                        periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3)), // TODO: Sette innsendingsdato
-                        payload = dto.søknad,
+                    val flytJobbRepository = FlytJobbRepository(connection)
+                    val dokumentReferanse = MottattDokumentReferanse(JournalpostId(dto.journalpostId))
+                    flytJobbRepository.leggTil(
+                        HendelseMottattHåndteringJobbUtfører.nyJobb(
+                            sakId = sak.id,
+                            dokumentReferanse = dokumentReferanse,
+                            brevkode = Brevkode.SØKNAD,
+                            periode = Periode(
+                                LocalDate.now(),
+                                LocalDate.now().plusYears(3)
+                            ), // TODO: Sette innsendingsdato
+                            payload = dto.søknad,
+                        )
                     )
-                )
+                }
             }
             // Må ha String-respons på grunn av Accept-header. Denne må returnere json
             respond("{}", HttpStatusCode.Accepted)
