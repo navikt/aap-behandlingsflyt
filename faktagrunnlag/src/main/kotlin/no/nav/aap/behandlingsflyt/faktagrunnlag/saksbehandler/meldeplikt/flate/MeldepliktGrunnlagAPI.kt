@@ -8,8 +8,8 @@ import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import com.zaxxer.hikari.HikariDataSource
 import io.ktor.http.*
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksperioder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktFritaksperioder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -62,9 +62,9 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(dataSource: HikariDataSource) {
                     behandling.forrigeBehandlingId?.let { meldepliktRepository.hentHvisEksisterer(it) }?.vurderinger
                         ?: emptyList()
 
-                val eksisterendeFritak = Fritaksperioder(vedtatteVerdier)
+                val eksisterendeFritak = MeldepliktFritaksperioder(vedtatteVerdier)
                 val simulertFritak =
-                    eksisterendeFritak.leggTil(Fritaksperioder(dto.fritaksvurderinger.map { it.toFritaksvurdering() }))
+                    eksisterendeFritak.leggTil(MeldepliktFritaksperioder(dto.fritaksvurderinger.map { it.toFritaksvurdering() }))
 
                 SimulertFritakMeldepliktDto(simulertFritak.gjeldendeFritaksvurderinger().map { tilDto(it) })
             }
