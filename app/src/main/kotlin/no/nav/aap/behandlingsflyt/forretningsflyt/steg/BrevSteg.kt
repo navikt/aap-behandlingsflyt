@@ -45,7 +45,7 @@ class BrevSteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            return BrevSteg(BrevUtlederService(), BrevbestillingService.konstruer(connection))
+            return BrevSteg(BrevUtlederService.konstruer(connection), BrevbestillingService.konstruer(connection))
         }
 
         override fun type(): StegType {
