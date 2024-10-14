@@ -119,7 +119,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
 
                 val response = HashMap<String, String>()
                 val personinfo = PdlPersoninfoBulkGateway.hentPersoninfoForIdenter(identer.map { Ident(it.ident) })
-                personinfo.forEach { personinfo -> response[personinfo.ident.identifikator] = personinfo.fultNavn() }
+                personinfo.forEach { personinfo -> response[personinfo.ident.identifikator] = personinfo.fulltNavn() }
 
                 respond(
                     BehandlingPersoninfo(response)

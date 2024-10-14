@@ -4,11 +4,11 @@ import no.nav.aap.verdityper.sakogbehandling.Ident
 
 class Personinfo(val ident: Ident, val fornavn: String?, val mellomnavn: String?, val etternavn: String?) {
 
-    fun fultNavn(): String {
+    fun fulltNavn(): String {
         return listOfNotNull(
             fornavn,
             mellomnavn,
             etternavn
-        ).filter { it.isNotBlank() }.joinToString(" ")
+        ).filter { it.isNotBlank() }.ifEmpty { listOf("Ukjent") }.joinToString(" ")
     }
 }

@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters
 
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 import no.nav.aap.pdl.PdlPersonNavnDataResponse
+import no.nav.aap.verdityper.sakogbehandling.Ident
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
@@ -15,5 +16,17 @@ class PersoninfoTest {
         val respons = DefaultJsonMapper.fromJson<PdlPersonNavnDataResponse>(json)
 
         assertThat(respons).isNotNull
+    }
+
+    @Test
+    fun `når navn er null er fullt navn Ukjent`() {
+        val info = Personinfo(
+            Ident("1234"),
+            fornavn = null,
+            mellomnavn = null,
+            etternavn = null,
+        )
+
+        assertThat(info.fulltNavn()).isEqualTo("Ukjent")
     }
 }
