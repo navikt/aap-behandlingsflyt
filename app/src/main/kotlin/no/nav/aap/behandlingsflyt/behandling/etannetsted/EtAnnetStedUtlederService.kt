@@ -4,8 +4,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.Barnet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.tidslinje.JoinStyle
 import no.nav.aap.tidslinje.Segment
+import no.nav.aap.tidslinje.StandardSammenslåere
 import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import java.time.LocalDate
@@ -26,55 +26,57 @@ class EtAnnetStedUtlederService(connection: DBConnection) {
         val helseopphold = opphold.filter { segment -> segment.verdi.type == Institusjonstype.HS }
         val barnetillegg = input.barnetillegg
 
-        if(soningsOppgold.isNotEmpty()){
+        if (soningsOppgold.isNotEmpty()) {
             return BehovForAvklaringer(true, false)
         }
 
-        val helseOppholdTidslinje = Tidslinje(helseopphold.map { segment ->
+        val helseOppholdTidslinje = opprettTidslinje(helseopphold)
+
+        val barnetilleggTidslinje = opprettTidslinje(barnetillegg.map { segment ->
             Segment(
                 segment.periode,
                 true
             )
-        }).komprimer()
-
-        val barnetilleggTidslinje = Tidslinje(barnetillegg.map { segment ->
-            Segment(
-                segment.periode,
-                true
-            )
-        }).komprimer()
-
-        //fjern perioder hvor bruker har barnetillegg gjennom hele helseinstitusjonsoppholdet
-        val oppholdUtenBarnetillegg = Tidslinje(helseOppholdTidslinje.filter { segment ->
-            barnetilleggTidslinje.segmenter().none { BarneSegment ->
-                val t = BarneSegment.periode.inneholder(segment.periode)
-                t
-            }
         })
 
+        //fjern perioder hvor bruker har barnetillegg gjennom hele helseinstitusjonsoppholdet
+        val oppholdUtenBarnetillegg =
+            helseOppholdTidslinje.disjoint(barnetilleggTidslinje) { p, v -> Segment(p, v.verdi) }
 
         // Oppholdet må være lengre enn 3 måneder for å være aktuelt for avklaring og må ha vart i minimum 2 måneder for å være klar for avklaring
-        if (oppholdUtenBarnetillegg.segmenter().filter { segment -> segment.verdi }.any(
-                { segment ->
-                    val startTelling = LocalDate.of(segment.fom().year, segment.fom().month.plus(1).value,1)
+        if (oppholdUtenBarnetillegg.segmenter()
+                .filter { segment -> segment.verdi }
+                .any { segment ->
+                    val startTelling = LocalDate.of(segment.fom().year, segment.fom().month.plus(1).value, 1)
                     startTelling.plusMonths(3) < segment.periode.tom && startTelling.plusMonths(2) < LocalDate.now()
                 }
-            )
         ) {
             return BehovForAvklaringer(false, true)
         }
 
         // Hvis det er mindre en 3 måneder siden sist opphold og bruker er nå innlagt
-        if(oppholdUtenBarnetillegg.segmenter().filter { segment -> segment.verdi }.any(
-                { segment ->
-                    segment.periode.tom >= LocalDate.now() && oppholdUtenBarnetillegg.segmenter().any { segment.periode.fom.minusMonths(3) <= it.periode.tom }
+        if (oppholdUtenBarnetillegg.segmenter()
+                .filter { segment -> segment.verdi }
+                .any { segment ->
+                    segment.periode.tom >= LocalDate.now() && oppholdUtenBarnetillegg.segmenter()
+                        .any { segment.periode.fom.minusMonths(3) <= it.periode.tom }
                 }
-            )
         ) {
             return BehovForAvklaringer(false, true)
         }
 
         return BehovForAvklaringer(false, false)
+    }
+
+    private fun <T> opprettTidslinje(segmenter: List<Segment<T>>): Tidslinje<Boolean> {
+        return segmenter.sortedBy { it.fom() }.map { segment ->
+            Tidslinje(
+                segment.periode,
+                true
+            )
+        }.fold(Tidslinje<Boolean>()) { acc, fritaksvurdering ->
+            acc.kombiner(fritaksvurdering, StandardSammenslåere.prioriterHøyreSideCrossJoin())
+        }.komprimer()
     }
 
     private fun konstruerInput(behandlingId: BehandlingId): EtAnnetStedInput {
