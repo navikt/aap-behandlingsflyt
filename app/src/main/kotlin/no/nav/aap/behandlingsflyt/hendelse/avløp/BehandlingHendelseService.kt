@@ -75,7 +75,7 @@ class BehandlingHendelseService(
 
         val payload = DefaultJsonMapper.toJson(hendelse)
 
-        log.info("Legger til flytjobber til statistikk og stoppethendels for behandling: ${behandling.id}")
+        log.info("Legger til flytjobber til statistikk og stoppethendelse for behandling: ${behandling.id}")
         flytJobbRepository.leggTil(
             JobbInput(jobb = StoppetHendelseJobbUtfører).medPayload(payload)
         )

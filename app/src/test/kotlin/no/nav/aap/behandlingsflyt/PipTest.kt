@@ -66,7 +66,7 @@ class PipTest {
         @BeforeAll
         fun beforeall() {
             server.start()
-            port = runBlocking { server.resolvedConnectors().first { it.type == ConnectorType.HTTP }.port }
+            port = runBlocking { server.engine.resolvedConnectors().first { it.type == ConnectorType.HTTP }.port }
         }
 
         @JvmStatic
@@ -94,7 +94,7 @@ class PipTest {
             val behandling = BehandlingRepositoryImpl(connection).opprettBehandling(
                 sak.id,
                 listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD, periode)),
-                TypeBehandling.Førstegangsbehandling
+                TypeBehandling.Førstegangsbehandling, null
             )
 
             val barnRepository = BarnRepository(connection)
@@ -146,7 +146,7 @@ class PipTest {
             val behandling = BehandlingRepositoryImpl(connection).opprettBehandling(
                 sak.id,
                 listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD, periode)),
-                TypeBehandling.Førstegangsbehandling
+                TypeBehandling.Førstegangsbehandling, null
             )
 
             val barnRepository = BarnRepository(connection)
@@ -168,7 +168,7 @@ class PipTest {
             val behandling2 = BehandlingRepositoryImpl(connection).opprettBehandling(
                 sak.id,
                 listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD, periode2)),
-                TypeBehandling.Førstegangsbehandling
+                TypeBehandling.Førstegangsbehandling, null
             )
 
             barnRepository.lagreRegisterBarn(behandling2.id, setOf(Ident("regbar2")))

@@ -55,7 +55,10 @@ class UføreBeregning(
                 inntektIKroner = inntekt.beløp,
                 uføregrad = uføregrad,
                 arbeidsgrad = arbeidsgrad,
-                inntektJustertForUføregrad = inntekt.beløp.dividert(arbeidsgrad)
+                inntektJustertForUføregrad = inntekt.beløp.dividert(arbeidsgrad),
+                inntektIG = inntekt.gUnit().gUnit,
+                grunnbeløp = inntekt.gUnit().beløp,
+                inntektIGJustertForUføregrad = inntekt.gUnit().gUnit.dividert(arbeidsgrad)
             )
         }
     }

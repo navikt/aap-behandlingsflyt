@@ -26,7 +26,8 @@ class BehandlingRepositoryImplTest {
             repo.opprettBehandling(
                 sakId = sak.id,
                 årsaker = listOf(Årsak(type = ÅrsakTilBehandling.MOTTATT_SØKNAD)),
-                typeBehandling = TypeBehandling.Førstegangsbehandling
+                typeBehandling = TypeBehandling.Førstegangsbehandling,
+                forrigeBehandlingId = null
             )
         }
 
@@ -56,7 +57,8 @@ class BehandlingRepositoryImplTest {
             repo.opprettBehandling(
                 sakId = sak.id,
                 årsaker = listOf(Årsak(type = ÅrsakTilBehandling.MOTTATT_SØKNAD)),
-                typeBehandling = TypeBehandling.Førstegangsbehandling
+                typeBehandling = TypeBehandling.Førstegangsbehandling,
+                forrigeBehandlingId = null
             )
         }
 

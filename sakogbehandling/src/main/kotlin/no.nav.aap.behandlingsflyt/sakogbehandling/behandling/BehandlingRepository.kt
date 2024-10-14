@@ -8,7 +8,7 @@ import no.nav.aap.verdityper.sakogbehandling.SakId
 
 interface BehandlingRepository {
 
-    fun opprettBehandling(sakId: SakId, årsaker: List<Årsak>, typeBehandling: TypeBehandling): Behandling
+    fun opprettBehandling(sakId: SakId, årsaker: List<Årsak>, typeBehandling: TypeBehandling, orginalBehandling: BehandlingId?): Behandling
 
     fun finnSisteBehandlingFor(sakId: SakId): Behandling?
 

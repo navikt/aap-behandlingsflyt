@@ -93,7 +93,7 @@ class ApiTest {
         @BeforeAll
         fun beforeall() {
             server.start()
-            port = runBlocking { server.resolvedConnectors().filter { it.type == ConnectorType.HTTP }.first().port }
+            port = runBlocking { server.engine.resolvedConnectors().filter { it.type == ConnectorType.HTTP }.first().port }
         }
 
         @JvmStatic
@@ -117,7 +117,7 @@ class ApiTest {
             val behandling = behandlingRepo.opprettBehandling(
                 sak.id,
                 listOf(Årsak(type = ÅrsakTilBehandling.MOTTATT_SØKNAD)),
-                TypeBehandling.Førstegangsbehandling
+                TypeBehandling.Førstegangsbehandling, null
             )
             val medlRepo = MedlemskapRepository(connection)
             medlRepo.lagreUnntakMedlemskap(
@@ -161,7 +161,7 @@ class ApiTest {
             val behandling = behandlingRepo.opprettBehandling(
                 sak.id,
                 listOf(Årsak(type = ÅrsakTilBehandling.MOTTATT_SØKNAD)),
-                TypeBehandling.Førstegangsbehandling
+                TypeBehandling.Førstegangsbehandling, null
             )
             val beregningsgrunnlagRepository = BeregningsgrunnlagRepository(connection)
             beregningsgrunnlagRepository.lagre(
@@ -210,6 +210,7 @@ class ApiTest {
             """{
   "beregningstypeDTO": "STANDARD",
   "grunnlag11_19": {
+    "årstall": "2024",
     "inntekter": [
       {
         "år": "2023",

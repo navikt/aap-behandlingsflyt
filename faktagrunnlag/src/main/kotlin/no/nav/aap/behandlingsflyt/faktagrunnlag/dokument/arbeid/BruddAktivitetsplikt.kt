@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsp
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.sakogbehandling.NavIdent
 import no.nav.aap.verdityper.sakogbehandling.SakId
+import java.time.Instant
 import java.time.LocalDateTime
 import java.util.*
 
@@ -53,7 +54,7 @@ data class BruddAktivitetsplikt(
     val paragraf: Paragraf,
     val begrunnelse: String,
     val periode: Periode,
-    val opprettetTid: LocalDateTime,
+    val opprettetTid: Instant,
 
     /* TODO: Fjern default når det er avklart hvilke grunner vi skal ha. */
     /* TODO: Legg på persistering når det er avklart. */

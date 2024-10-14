@@ -64,6 +64,7 @@ spec:
   accessPolicy:
     inbound:
       rules:
+        - application: brev
         - application: saksbehandling
         - application: tilgang
         - application: postmottak-backend
@@ -76,10 +77,10 @@ spec:
         - host: pensjon-popp-q2.dev-fss-pub.nais.io
         - host: fpabakus.dev-fss-pub.nais.io
       rules:
+        - application: brev
         - application: tilgang
         - application: yrkesskade-saker
           namespace: yrkesskade
-        - application: oppgavestyring
         - application: oppgave
         - application: statistikk
         - application: spokelse
@@ -140,3 +141,9 @@ spec:
       value: http://spokelse.tbd
     - name: INTEGRASJON_SYKEPENGER_SCOPE
       value: api://dev-gcp.tbd.spokelse/.default
+    - name: INTEGRASJON_BREV_URL
+      value: http://brev
+    - name: INTEGRASJON_BREV_SCOPE
+      value: api://dev-gcp.aap.brev/.default
+    - name: INTEGRASJON_BREV_AZP
+      value: dev-gcp:aap:brev

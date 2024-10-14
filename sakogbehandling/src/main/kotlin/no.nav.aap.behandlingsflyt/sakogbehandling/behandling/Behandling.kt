@@ -12,6 +12,7 @@ import java.time.LocalDateTime
 
 class Behandling(
     val id: BehandlingId,
+    val forrigeBehandlingId: BehandlingId?,
     val referanse: BehandlingReferanse = BehandlingReferanse(),
     val sakId: SakId,
     private val typeBehandling: TypeBehandling,

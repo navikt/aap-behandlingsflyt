@@ -8,13 +8,12 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.Application
-import io.ktor.server.application.call
 import io.ktor.server.application.install
 import io.ktor.server.application.log
 import io.ktor.server.engine.ConnectorType
+import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
-import io.ktor.server.netty.NettyApplicationEngine
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.request.header
@@ -65,7 +64,9 @@ import no.nav.aap.yrkesskade.YrkesskadeRequest
 import no.nav.aap.yrkesskade.Yrkesskader
 import org.intellij.lang.annotations.Language
 import org.slf4j.LoggerFactory
-import tilgang.TilgangRequest
+import tilgang.BehandlingTilgangRequest
+import tilgang.JournalpostTilgangRequest
+import tilgang.SakTilgangRequest
 import tilgang.TilgangResponse
 import java.io.ByteArrayInputStream
 import java.time.LocalDate
@@ -229,8 +230,20 @@ object FakeServers : AutoCloseable {
             }
         }
         routing {
-            post("/tilgang") {
-                call.receive<TilgangRequest>()
+            post("/tilgang/sak") {
+                call.receive<SakTilgangRequest>()
+                call.respond(TilgangResponse(true))
+            }
+        }
+        routing {
+            post("/tilgang/behandling") {
+                call.receive<BehandlingTilgangRequest>()
+                call.respond(TilgangResponse(true))
+            }
+        }
+        routing {
+            post("/tilgang/journalpost") {
+                call.receive<JournalpostTilgangRequest>()
                 call.respond(TilgangResponse(true))
             }
         }
@@ -479,8 +492,8 @@ object FakeServers : AutoCloseable {
                 val body = call.receive<String>()
 
                 if ("dokumentoversiktFagsak" in body) {
-                    call.respondText(
-                        """
+                    @Language("JSON")
+                    val expression = """
                             {
                               "data": {
                                 "dokumentoversiktFagsak": {
@@ -491,6 +504,8 @@ object FakeServers : AutoCloseable {
                                       "antallRetur": null,
                                       "kanal": "NAV_NO",
                                       "innsynsregelBeskrivelse": "Standardreglene avgjør om dokumentet vises",
+                                      "datoOpprettet": "2024-10-07T12:39:27",
+                                      "relevanteDatoer": [],
                                       "dokumenter": [
                                         {
                                           "dokumentInfoId": "454273798",
@@ -539,6 +554,8 @@ object FakeServers : AutoCloseable {
                                       "antallRetur": null,
                                       "kanal": "NAV_NO",
                                       "innsynsregelBeskrivelse": "Standardreglene avgjør om dokumentet vises",
+                                      "datoOpprettet": "2024-10-07T12:39:27",
+                                      "relevanteDatoer": [],
                                       "dokumenter": [
                                         {
                                           "dokumentInfoId": "454268545",
@@ -574,7 +591,9 @@ object FakeServers : AutoCloseable {
                                 }
                               }
                             }
-                """.trimIndent(),
+                """
+                    call.respondText(
+                        expression.trimIndent(),
                         contentType = ContentType.Application.Json
                     )
                 } else {
@@ -1009,10 +1028,12 @@ object FakeServers : AutoCloseable {
     }
 }
 
-private fun NettyApplicationEngine.port(): Int =
-    runBlocking { resolvedConnectors() }
-        .first { it.type == ConnectorType.HTTP }
+private fun EmbeddedServer<*, *>.port(): Int {
+    return runBlocking {
+        this@port.engine.resolvedConnectors()
+    }.first { it.type == ConnectorType.HTTP }
         .port
+}
 
 object AzurePortHolder {
     private val azurePort = AtomicInteger(0)

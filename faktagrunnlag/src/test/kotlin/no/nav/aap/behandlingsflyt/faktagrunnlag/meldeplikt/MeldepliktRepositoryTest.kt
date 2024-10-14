@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRep
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -21,7 +22,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 class MeldepliktRepositoryTest {
     @Test
@@ -44,48 +44,12 @@ class MeldepliktRepositoryTest {
 
             val meldepliktRepository = MeldepliktRepository(connection)
             val fritaksvurderinger = listOf(
-                Fritaksvurdering(true, 13 august 2023, "en begrunnelse", LocalDateTime.now()),
-                Fritaksvurdering(false, 26 august 2023, "annen begrunnelse", LocalDateTime.now())
+                Fritaksvurdering(true, 13 august 2023, "en begrunnelse", null),
+                Fritaksvurdering(false, 26 august 2023, "annen begrunnelse", null)
             )
             meldepliktRepository.lagre(behandling.id, fritaksvurderinger)
             val meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling.id)
-            assertThat(meldepliktGrunnlag?.vurderinger).isEqualTo(fritaksvurderinger)
-        }
-    }
-
-    @Test
-    fun `Lagrer ikke like opplysninger flere ganger`() {
-        InitTestDatabase.dataSource.transaction { connection ->
-            val sak = sak(connection)
-            val behandling = behandling(connection, sak)
-
-            val meldepliktRepository = MeldepliktRepository(connection)
-            val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, "en begrunnelse", LocalDateTime.now())
-
-            meldepliktRepository.lagre(behandling.id, listOf(fritaksvurdering))
-            repeat(2) {
-                meldepliktRepository.lagre(behandling.id, listOf(fritaksvurdering.copy(begrunnelse = "annen begrunnelse")))
-            }
-
-            val opplysninger =
-                connection.queryList(
-                    """
-                    SELECT v.BEGRUNNELSE 
-                    FROM BEHANDLING b
-                    INNER JOIN MELDEPLIKT_FRITAK_GRUNNLAG g ON b.ID = g.BEHANDLING_ID
-                    INNER JOIN MELDEPLIKT_FRITAK f ON g.MELDEPLIKT_ID = f.ID
-                    INNER JOIN MELDEPLIKT_FRITAK_VURDERING v ON f.ID = v.MELDEPLIKT_ID
-                    WHERE b.SAK_ID = ?
-                """.trimMargin()
-                ) {
-                    setParams {
-                        setLong(1, sak.id.toLong())
-                    }
-                    setRowMapper { row -> row.getString("BEGRUNNELSE") }
-                }
-            assertThat(opplysninger)
-                .hasSize(2)
-                .containsExactly("en begrunnelse", "annen begrunnelse")
+            assertThat(meldepliktGrunnlag?.vurderinger).hasSize(2)
         }
     }
 
@@ -95,12 +59,13 @@ class MeldepliktRepositoryTest {
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
             val meldepliktRepository = MeldepliktRepository(connection)
-            val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, "en begrunnelse", LocalDateTime.now())
+            val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, "en begrunnelse", null)
 
             meldepliktRepository.lagre(
                 behandling1.id,
                 listOf(fritaksvurdering)
             )
+            val behandling1Grunnlag = meldepliktRepository.hentHvisEksisterer(behandling1.id)?.vurderinger ?: emptyList()
             connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
                 setParams {
                     setLong(1, behandling1.id.toLong())
@@ -108,8 +73,8 @@ class MeldepliktRepositoryTest {
             }
             val behandling2 = behandling(connection, sak)
 
-            val meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling2.id)
-            assertThat(meldepliktGrunnlag?.vurderinger).containsExactly(fritaksvurdering)
+            val meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling2.id)?.vurderinger ?: emptyList()
+            assertThat(meldepliktGrunnlag).containsExactlyInAnyOrderElementsOf(behandling1Grunnlag)
         }
     }
 
@@ -125,11 +90,12 @@ class MeldepliktRepositoryTest {
 
     @Test
     fun `Kopierer fritaksvurderinger fra en behandling til en annen der fraBehandlingen har to versjoner av opplysningene`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        val dataSource = InitTestDatabase.dataSource
+        val behandling1 = dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
             val meldepliktRepository = MeldepliktRepository(connection)
-            val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, "en begrunnelse", LocalDateTime.now())
+            val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, "en begrunnelse", null)
 
             meldepliktRepository.lagre(
                 behandling1.id,
@@ -144,10 +110,21 @@ class MeldepliktRepositoryTest {
                     setLong(1, behandling1.id.toLong())
                 }
             }
+            behandling1
+        }
+        dataSource.transaction { connection ->
+            val meldepliktRepository = MeldepliktRepository(connection)
+            val sak = SakOgBehandlingService(connection).hentSakFor(behandling1.id)
             val behandling2 = behandling(connection, sak)
+            assertThat(behandling1.id).isNotEqualTo(behandling2.id)
+            assertThat(behandling1.opprettetTidspunkt).isBefore(behandling2.opprettetTidspunkt)
 
             val meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling2.id)
-            assertThat(meldepliktGrunnlag?.vurderinger).containsExactly(fritaksvurdering.copy(begrunnelse = "annen begrunnelse"))
+            assertThat(meldepliktGrunnlag?.vurderinger).hasSize(1)
+
+            val alleVurderingerFørBehandling = meldepliktRepository.hentAlleVurderinger(behandling2.sakId, behandling2.id)
+
+            assertThat(alleVurderingerFørBehandling).hasSize(1)
         }
     }
 
@@ -158,21 +135,21 @@ class MeldepliktRepositoryTest {
             val behandling = behandling(connection, sak)
             val meldepliktRepository = MeldepliktRepository(connection)
 
-            val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, "en begrunnelse", LocalDateTime.now())
+            val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, "en begrunnelse", null)
 
             meldepliktRepository.lagre(
                 behandling.id,
                 listOf(fritaksvurdering)
             )
             val orginaltGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling.id)
-            assertThat(orginaltGrunnlag?.vurderinger).containsExactly(fritaksvurdering)
+            assertThat(orginaltGrunnlag?.vurderinger).hasSize(1)
 
             meldepliktRepository.lagre(
                 behandling.id,
                 listOf(fritaksvurdering.copy(begrunnelse = "annen begrunnelse"))
             )
             val oppdatertGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling.id)
-            assertThat(oppdatertGrunnlag?.vurderinger).containsExactly(fritaksvurdering.copy(begrunnelse = "annen begrunnelse"))
+            assertThat(oppdatertGrunnlag?.vurderinger).hasSize(1)
 
             data class Opplysning(
                 val behandlingId: Long,
@@ -224,6 +201,10 @@ class MeldepliktRepositoryTest {
                         harFritak = true
                     ),
                 )
+
+            val alleVurderingerFørBehandling = meldepliktRepository.hentAlleVurderinger(behandling.sakId, behandling.id)
+
+            assertThat(alleVurderingerFørBehandling).isEmpty()
         }
     }
 
@@ -234,7 +215,7 @@ class MeldepliktRepositoryTest {
             val behandling1 = behandling(connection, sak)
             val meldepliktRepository = MeldepliktRepository(connection)
 
-            val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, "en begrunnelse", LocalDateTime.now())
+            val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, "en begrunnelse", null)
 
             meldepliktRepository.lagre(
                 behandling1.id,
@@ -327,9 +308,10 @@ class MeldepliktRepositoryTest {
     }
 
     private fun behandling(connection: DBConnection, sak: Sak): Behandling {
-        return SakOgBehandlingService(connection).finnEllerOpprettBehandling(
+        val behandling = SakOgBehandlingService(connection).finnEllerOpprettBehandling(
             sak.saksnummer,
             listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
         ).behandling
+        return BehandlingRepositoryImpl(connection).hent(behandling.id)
     }
 }

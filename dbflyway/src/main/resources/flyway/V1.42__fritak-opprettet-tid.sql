@@ -1,0 +1,1 @@
+ALTER TABLE meldeplikt_fritak_vurdering ALTER COLUMN opprettet_tid set default CURRENT_TIMESTAMP;

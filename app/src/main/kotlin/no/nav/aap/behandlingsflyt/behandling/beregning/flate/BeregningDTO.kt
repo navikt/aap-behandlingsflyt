@@ -18,6 +18,7 @@ class BeregningDTO(
 )
 
 class Grunnlag11_19DTO(
+    val årstall: String, //Når fikk innbygger nedsatt arbeidsevnen
     val inntekter: List<InntektDTO>,
     val gjennomsnittligInntektSiste3år: BigDecimal,
     val inntektSisteÅr: InntektDTO,
@@ -35,6 +36,7 @@ class YrkesskadeGrunnlagDTO(
     val inntekter: List<InntektDTO>,
     val yrkesskadeinntekt: YrkesskadeInntektDTO,
     val standardBeregning: StandardBeregningDTO,
+    val standardYrkesskade: StandardYrkesskadeDTO,
     val gjennomsnittligInntektSiste3år: BigDecimal,
     val inntektSisteÅr: InntektDTO,
     val yrkesskadeGrunnlag: BigDecimal,
@@ -44,6 +46,8 @@ class YrkesskadeGrunnlagDTO(
 class YrkesskadeInntektDTO(
     val prosentVekting: Int,
     val antattÅrligInntektIKronerYrkesskadeTidspunktet: BigDecimal,
+    val andelGangerInntekt: BigDecimal,
+    val andelGangerInntektIG: BigDecimal,
     val antattÅrligInntektIGYrkesskadeTidspunktet: BigDecimal,
     val justertTilMaks6G: BigDecimal
 )
@@ -51,10 +55,20 @@ class YrkesskadeInntektDTO(
 class StandardBeregningDTO(
     val prosentVekting: Int,
     val inntektIG: BigDecimal,
-    val justertTilMaks6G: BigDecimal// Boolean?
+    val andelGangerInntekt: BigDecimal,
+    val andelGangerInntektIG: BigDecimal,
 )
 
+class StandardYrkesskadeDTO(
+    val prosentVekting: Int,
+    val inntektIG: BigDecimal,
+    val andelGangerInntekt: BigDecimal,
+    val andelGangerInntektIG: BigDecimal,
+)
+
+
 class UføreGrunnlagDTO(
+    val nedsattArbeidsevneÅr: String,
     val inntekter: List<InntektDTO>,
     val gjennomsnittligInntektSiste3år: BigDecimal,
     val inntektSisteÅr: InntektDTO,
@@ -68,8 +82,9 @@ class UføreInntektDTO(
     val år: String,
     val inntektIKroner: BigDecimal,
     val inntektIG: BigDecimal,
-    val justertTilMaks6G: BigDecimal,
+    val justertTilMaks6G: BigDecimal, // Denne er feil
     val justertForUføreGrad: BigDecimal,
+    val justertForUføreGradiG: BigDecimal, //samme som over bare i g¢
     val uføreGrad: Int
 )
 

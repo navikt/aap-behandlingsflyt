@@ -185,15 +185,17 @@ class FlytOrkestrator(
                     )
                     validerAtAvklaringsBehovErLukkede(avklaringsbehovene)
                     log.info("Behandlingen har nådd slutten, avslutter behandling")
-                    behandlingHendelseService.avsluttet(behandling)
+                    val avsluttetBehandling = behandlingRepository.hent(behandling.id)
+                    behandlingHendelseService.avsluttet(avsluttetBehandling)
                 } else {
                     // Prosessen har stoppet opp, slipp ut hendelse om at den har stoppet opp og hvorfor?
                     loggStopp(behandling, avklaringsbehovene)
                 }
-                behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
+                val oppdatertBehandling = behandlingRepository.hent(behandling.id)
+                behandlingHendelseService.stoppet(oppdatertBehandling, avklaringsbehovene)
                 return
             } else {
-                prometheus.stegFullførtTeller(behandling.referanse.referanse).increment()
+                prometheus.stegFullførtTeller(neste.type().name).increment()
             }
             gjeldendeSteg = neste
         }

@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import java.time.Period
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.IKKE_RELEVANT_BRUDD
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.STANS_ANDRE_DAG
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.STANS_TI_DAGER_BRUKT_OPP
@@ -30,9 +29,30 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
         /* TODO: § 11-8 stans til ... vilkårene igjen er oppfylt */
 
+        val bruddtidslinjeGruppertPåMeldeperiode = resultat.kombiner(
+            input.aktivitetspliktGrunnlag.tidslinje,
+            JoinStyle.RIGHT_JOIN { periode, vurdering, brudd ->
+                val meldeperiode = requireNotNull(vurdering?.verdi?.meldeperiode(), {
+                    // Kan være fristende å bruke INNER_JOIN, men da forsvinner brudd fra tidslinja
+                    "meldeperiode må eksistere for å kunne gruppere brudd på meldeperiode"
+                })
+                Segment(periode, meldeperiode to brudd.verdi)
+            }
+        )
+            .segmenter()
+            .groupBy(
+                { it.verdi.first },
+                { Segment(it.periode, it.verdi.second) }
+            )
+            .map { (meldeperiode, bruddIMeldeperioden) ->
+                Segment(
+                    meldeperiode,
+                    Tidslinje(bruddIMeldeperioden.sortedBy { it.fom() })
+            )}
+            .let { Tidslinje(it) }
+
         val bruddTidslinjeMedFørsteFraværIdentifisert: Tidslinje<BruddVurderingSteg1> =
-            input.bruddAktivitetsplikt
-                .splittOpp(input.rettighetsperiode, Period.ofDays(14))
+            bruddtidslinjeGruppertPåMeldeperiode
                 .flatMap { meldeperiodenSegment ->
                     val meldeperioden = meldeperiodenSegment.verdi
                     meldeperioden.flatMap { bruddSegment ->

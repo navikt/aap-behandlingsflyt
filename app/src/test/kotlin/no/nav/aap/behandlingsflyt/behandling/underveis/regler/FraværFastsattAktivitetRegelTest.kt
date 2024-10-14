@@ -1,11 +1,10 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.Kvote
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_INNTIL_EN_DAG
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_STERKE_VELFERDSGRUNNER
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.STANS_ANDRE_DAG
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.STANS_TI_DAGER_BRUKT_OPP
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_INNTIL_EN_DAG
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_STERKE_VELFERDSGRUNNER
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Grunn.INGEN_GYLDIG_GRUNN
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Grunn.STERKE_VELFERDSGRUNNER
@@ -15,14 +14,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.HendelseId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.InnsendingId
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.sakogbehandling.NavIdent
 import no.nav.aap.verdityper.sakogbehandling.SakId
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import java.time.Period
-import no.nav.aap.tidslinje.Segment
+import java.time.ZoneId
 
 class FraværFastsattAktivitetRegelTest {
     @Test
@@ -61,8 +60,6 @@ class FraværFastsattAktivitetRegelTest {
             ),
         )
 
-        /* Kan sanksjonere med 11-9 fordi 2020-04-01 ikke er senere enn tre månder fra 2020-01-01, men
-         * er nøyaktigt 3 måneder etter. */
         val vurdering = vurderinger.segment(dato(2020, 1, 2))!!.verdi
         assertEquals(STANS_ANDRE_DAG, vurdering.vilkårsvurdering)
     }
@@ -165,7 +162,7 @@ class FraværFastsattAktivitetRegelTest {
         }
 
         /* Neste 10 dager i 2021 gir ikke stans pga ti dager fravær per kalenderår. */
-        for (dag in (startMeldeperiode2021 + 1)..< startMeldeperiode2021 + 11) {
+        for (dag in (startMeldeperiode2021 + 1)..<startMeldeperiode2021 + 11) {
             val kanStanses = vurderinger.segment(dato(2021, 1, dag))!!.verdi.vilkårsvurdering
             assertEquals(UNNTAK_STERKE_VELFERDSGRUNNER, kanStanses)
         }
@@ -178,6 +175,10 @@ class FraværFastsattAktivitetRegelTest {
 
     private fun dato(år: Int, mnd: Int, dag: Int) = LocalDate.of(år, mnd, dag)
 
+    /* Avhengig av meldeperiodene, som settes av `MeldeplitRegel`. */
+    private val meldepliktRegel = MeldepliktRegel()
+    private val regel = FraværFastsattAktivitetRegel()
+
     private fun vurder(
         rettighetsperiode: Periode,
         vararg bruddAktivitetsplikt: BruddAktivitetsplikt,
@@ -186,24 +187,24 @@ class FraværFastsattAktivitetRegelTest {
             rettighetsperiode = rettighetsperiode,
             bruddAktivitetsplikt = bruddAktivitetsplikt.toSet(),
         )
-        val vurdering = FraværFastsattAktivitetRegel().vurder(input, Tidslinje())
-        return vurdering.mapValue { it.fraværFastsattAktivitetVurdering!! }
+        val vurdering = regel.vurder(input, meldepliktRegel.vurder(input, Tidslinje()))
+        return Tidslinje(
+            vurdering.mapNotNull { segment ->
+                segment.verdi.fraværFastsattAktivitetVurdering?.let { vurdering ->
+                    Segment(
+                        segment.periode,
+                        vurdering
+                    )
+                }
+            })
     }
 
     private fun underveisInput(
         rettighetsperiode: Periode,
         bruddAktivitetsplikt: Set<BruddAktivitetsplikt> = setOf(),
-    ) = UnderveisInput(
+    ) = tomUnderveisInput.copy(
         rettighetsperiode = rettighetsperiode,
-        relevanteVilkår = listOf(),
-        opptrappingPerioder = listOf(),
-        pliktkort = listOf(),
-        innsendingsTidspunkt = mapOf(),
-        dødsdato = null,
-        kvote = Kvote(Period.ofYears(365 * 3)),
-        bruddAktivitetsplikt = Tidslinje(bruddAktivitetsplikt.sortedBy { it.periode.fom }.map { Segment(it.periode, it) }),
-        etAnnetSted = listOf(),
-        barnetillegg = BarnetilleggGrunnlag(1, listOf()),
+        aktivitetspliktGrunnlag = AktivitetspliktGrunnlag(bruddAktivitetsplikt),
     )
 
     private fun brudd(
@@ -222,7 +223,7 @@ class FraværFastsattAktivitetRegelTest {
         paragraf = paragraf,
         begrunnelse = "Informasjon fra tiltaksarrangør",
         periode = periode,
-        opprettetTid = opprettet.atStartOfDay(),
+        opprettetTid = opprettet.atStartOfDay(ZoneId.of("Europe/Oslo")).toInstant(),
         grunn = grunn,
     )
 }

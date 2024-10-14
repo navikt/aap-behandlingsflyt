@@ -1,5 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis
 
+import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetSted
+import no.nav.aap.behandlingsflyt.behandling.etannetsted.Institusjon
+import no.nav.aap.behandlingsflyt.behandling.etannetsted.Soning
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AktivtBidragRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.GraderingArbeidRegel
@@ -17,10 +20,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortRepository
-import no.nav.aap.tidslinje.Segment
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.SoningRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soningsvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.HelseinstitusjonVurdering
 import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
@@ -29,8 +35,10 @@ class UnderveisService(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val pliktkortRepository: PliktkortRepository,
     private val underveisRepository: UnderveisRepository,
-    private val bruddAktivitetspliktRepository: BruddAktivitetspliktRepository,
-    private val barnetilleggRepository: BarnetilleggRepository
+    private val aktivitetspliktRepository: AktivitetspliktRepository,
+    private val barnetilleggRepository: BarnetilleggRepository,
+    private val soningRepository: SoningRepository,
+    private val helseInstitusjonRepository: HelseinstitusjonRepository
 ) {
 
     private val kvoteService = KvoteService()
@@ -38,13 +46,13 @@ class UnderveisService(
     private val regelset = listOf(
         RettTilRegel(),
         InstitusjonRegel(),
+        SoningRegel(),
         MeldepliktRegel(),
         AktivtBidragRegel(),
         ReduksjonAktivitetspliktRegel(),
         FraværFastsattAktivitetRegel(),
         GraderingArbeidRegel(),
         VarighetRegel(),
-        SoningRegel()
     )
 
     fun vurder(behandlingId: BehandlingId): Tidslinje<Vurdering> {
@@ -91,8 +99,15 @@ class UnderveisService(
         val pliktkort = pliktkortGrunnlag?.pliktkort() ?: listOf()
         val innsendingsTidspunkt = pliktkortGrunnlag?.innsendingsdatoPerMelding() ?: mapOf()
         val kvote = kvoteService.beregn(behandlingId)
-        //val annetStedGrunnlag = etAnnetStedRepository().hentHvisEksisterer(behandlingId) //TODO: Vent / Implementer denne
+
+        val soningVurdering = soningRepository.hentAktivSoningsvurderingHvisEksisterer(behandlingId)
+        val helseInstitusjonVurdering =
+            helseInstitusjonRepository.hentAktivHelseinstitusjonVurderingHvisEksisterer(behandlingId)
+        val etAnnetSted = mapTilEtAnnetSted(soningVurdering, helseInstitusjonVurdering)
+
         val barnetilleggGrunnlag = requireNotNull(barnetilleggRepository.hentHvisEksisterer(behandlingId))
+        val aktivitetspliktGrunnlag = aktivitetspliktRepository.hentGrunnlagHvisEksisterer(behandlingId)
+            ?: AktivitetspliktGrunnlag(bruddene = setOf())
 
         return UnderveisInput(
             rettighetsperiode = sak.rettighetsperiode,
@@ -101,20 +116,43 @@ class UnderveisService(
             pliktkort = pliktkort,
             innsendingsTidspunkt = innsendingsTidspunkt,
             kvote = kvote,
-            bruddAktivitetsplikt = bruddAktivitetspliktsInput(behandlingId),
-            etAnnetSted = listOf(),
+            aktivitetspliktGrunnlag = aktivitetspliktGrunnlag,
+            etAnnetSted = etAnnetSted,
             barnetillegg = barnetilleggGrunnlag
         )
     }
 
-    private fun bruddAktivitetspliktsInput(behandlingId: BehandlingId): Tidslinje<BruddAktivitetsplikt> {
-        /* TODO: Dette krasjer hvis det er overlapp mellom brudd. */
-        return Tidslinje(
-            bruddAktivitetspliktRepository.hentGrunnlagHvisEksisterer(behandlingId)
-                ?.bruddene
-                ?.sortedBy { it.periode.fom }
-                ?.map { Segment(it.periode, it) }
-                ?: emptyList()
-        )
+    private fun mapTilEtAnnetSted(
+        soningVurdering: Soningsvurdering?,
+        helseInstitusjon: HelseinstitusjonVurdering?
+    ): List<EtAnnetSted> {
+        //TODO: Kan foreløpig ikke vurdere om formueUnderForvaltning er sant, mangler data
+        val etAnnetStedList = mutableListOf<EtAnnetSted>()
+        soningVurdering?.let {
+            etAnnetStedList.add(
+                EtAnnetSted(
+                    it.periode,
+                    soning = Soning(
+                        true,
+                        false,
+                        soningUtenforFengsel = it.soningUtenforFengsel,
+                        arbeidUtenforAnstalt = it.arbeidUtenforAnstalt ?: false
+                    ),
+                    begrunnelse = it.begrunnelse ?: ""
+                )
+            )
+        }
+
+        helseInstitusjon?.let {
+            etAnnetStedList.add(
+                EtAnnetSted(
+                    it.periode,
+                    institusjon = Institusjon(true, it.forsoergerEktefelle ?: false, it.harFasteUtgifter ?: false),
+                    begrunnelse = it.begrunnelse
+                )
+            )
+        }
+
+        return listOf()
     }
 }

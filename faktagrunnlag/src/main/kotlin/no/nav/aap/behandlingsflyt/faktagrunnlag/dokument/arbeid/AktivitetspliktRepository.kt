@@ -7,9 +7,8 @@ import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.NavIdent
 import no.nav.aap.verdityper.sakogbehandling.SakId
 import org.jetbrains.annotations.TestOnly
-import java.time.LocalDateTime
 
-class BruddAktivitetspliktRepository(private val connection: DBConnection) {
+class AktivitetspliktRepository(private val connection: DBConnection) {
     class LagreBruddInput(
         val sakId: SakId,
         val navIdent: NavIdent,
@@ -22,8 +21,8 @@ class BruddAktivitetspliktRepository(private val connection: DBConnection) {
     fun lagreBrudd(brudd: List<LagreBruddInput>): InnsendingId {
         val query = """
             INSERT INTO BRUDD_AKTIVITETSPLIKT
-            (SAK_ID, BRUDD, PERIODE, BEGRUNNELSE, PARAGRAF, NAV_IDENT, OPPRETTET_TID, HENDELSE_ID, INNSENDING_ID) 
-            VALUES (?, ?, ?::daterange, ?, ?, ?, ?, ?, ?)
+            (SAK_ID, BRUDD, PERIODE, BEGRUNNELSE, PARAGRAF, NAV_IDENT, OPPRETTET_TID, HENDELSE_ID, INNSENDING_ID ) 
+            VALUES (?, ?, ?::daterange, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?)
             """.trimIndent()
 
         val innsendingId = InnsendingId.ny()
@@ -36,9 +35,8 @@ class BruddAktivitetspliktRepository(private val connection: DBConnection) {
                 setString(4, request.begrunnelse)
                 setEnumName(5, request.paragraf)
                 setString(6, request.navIdent.navIdent)
-                setLocalDateTime(7, LocalDateTime.now())
-                setUUID(8, HendelseId.ny().id)
-                setUUID(9, innsendingId.value)
+                setUUID(7, HendelseId.ny().id)
+                setUUID(8, innsendingId.value)
             }
         }
         return innsendingId
@@ -71,12 +69,12 @@ class BruddAktivitetspliktRepository(private val connection: DBConnection) {
         connection.executeBatch(insertAktivitetskorteneQuery, brudd) {
             setParams {
                 setLong(1, grunnlagId)
-                setLong(2, it.id!!.id)
+                setLong(2, it.id.id)
             }
         }
     }
 
-    fun hentGrunnlagHvisEksisterer(behandlingId: BehandlingId): BruddAktivitetspliktGrunnlag? {
+    fun hentGrunnlagHvisEksisterer(behandlingId: BehandlingId): AktivitetspliktGrunnlag? {
         val grunnlagId = finnGrunnlagId(behandlingId) ?: return null
 
         val query = """
@@ -91,7 +89,7 @@ class BruddAktivitetspliktRepository(private val connection: DBConnection) {
             }
             setRowMapper(::mapBruddAktivitetsplikt)
         }
-        return BruddAktivitetspliktGrunnlag(
+        return AktivitetspliktGrunnlag(
             bruddene = bruddene,
         )
     }
@@ -111,11 +109,7 @@ class BruddAktivitetspliktRepository(private val connection: DBConnection) {
         }
 
     fun hentBrudd(sakId: SakId): List<BruddAktivitetsplikt> {
-        val query = """
-            SELECT *
-            FROM BRUDD_AKTIVITETSPLIKT brudd
-            WHERE sak_id = ?
-        """.trimIndent()
+        val query = """SELECT * FROM BRUDD_AKTIVITETSPLIKT brudd WHERE SAK_ID = ?"""
         return connection.queryList(query) {
             setParams {
                 setLong(1, sakId.toLong())
@@ -162,7 +156,7 @@ class BruddAktivitetspliktRepository(private val connection: DBConnection) {
             navIdent = NavIdent(row.getString("NAV_IDENT")),
             hendelseId = HendelseId(row.getUUID("HENDELSE_ID")),
             innsendingId = InnsendingId(row.getUUID("INNSENDING_ID")),
-            opprettetTid = row.getLocalDateTime("OPPRETTET_TID"),
+            opprettetTid = row.getInstant("OPPRETTET_TID"),
         )
     }
 
@@ -178,7 +172,7 @@ class BruddAktivitetspliktRepository(private val connection: DBConnection) {
     }
 
     @TestOnly
-    internal fun hentAlleGrunnlagKunTestIkkeProd(behandlingId: BehandlingId): List<BruddAktivitetspliktGrunnlag> {
+    internal fun hentAlleGrunnlagKunTestIkkeProd(behandlingId: BehandlingId): Set<Set<BruddAktivitetspliktId>> {
         val grunnlagIder = connection.queryList(
             """
             SELECT id FROM BRUDD_AKTIVITETSPLIKT_GRUNNLAG where behandling_id = ?
@@ -207,9 +201,7 @@ class BruddAktivitetspliktRepository(private val connection: DBConnection) {
                     mapBruddAktivitetsplikt(it)
                 }
             }
-            BruddAktivitetspliktGrunnlag(
-                bruddene = bruddene,
-            )
-        }
+            bruddene.map { it.id }.toSet()
+        }.toSet()
     }
 }

@@ -38,7 +38,7 @@ class BehandlingHendelseServiceTest {
             BehandlingHendelseService(flytJobbRepository, sakService)
 
         val behandling = Behandling(
-            BehandlingId(0), sakId = SakId(1), typeBehandling = TypeBehandling.Førstegangsbehandling, versjon = 1
+            BehandlingId(0), sakId = SakId(1), typeBehandling = TypeBehandling.Førstegangsbehandling, forrigeBehandlingId = null, versjon = 1
         )
 
         every { sakService.hent(SakId(1)) } returns Sak(

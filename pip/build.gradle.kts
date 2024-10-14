@@ -1,6 +1,6 @@
-val ktorVersion = "2.3.12"
-val komponenterVersjon = "1.0.8"
-val tilgangVersjon = "0.0.13"
+val ktorVersion = "3.0.0"
+val komponenterVersjon = "1.0.16"
+val tilgangVersjon = "0.0.18"
 
 plugins {
     id("behandlingsflyt.conventions")
@@ -16,11 +16,11 @@ dependencies {
     implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:infrastructure:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:dbconnect:$komponenterVersjon")
-    implementation("no.nav:ktor-openapi-generator:1.0.42")
+    implementation("no.nav:ktor-openapi-generator:1.0.46")
     implementation("io.ktor:ktor-http-jvm:$ktorVersion")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.2")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.1")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.2")
     testImplementation("org.assertj:assertj-core:3.26.3")
     testImplementation(project(":lib-test"))
 }

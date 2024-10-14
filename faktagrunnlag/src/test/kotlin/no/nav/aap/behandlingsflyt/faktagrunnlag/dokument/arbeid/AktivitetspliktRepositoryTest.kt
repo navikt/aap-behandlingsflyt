@@ -21,22 +21,29 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class BruddAktivitetspliktRepositoryTest {
+class AktivitetspliktRepositoryTest {
     @Test
     fun `kan lagre brudd på sak`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = nySak(connection)
-            val repo = BruddAktivitetspliktRepository(connection)
+            val repo = AktivitetspliktRepository(connection)
+            val periode = Periode(LocalDate.now(), LocalDate.now().plusDays(5))
 
             nyeBrudd(connection, sak,
                 brudd = IKKE_AKTIVT_BIDRAG,
                 paragraf = PARAGRAF_11_7,
                 begrunnelse = "Orket ikke",
-                perioder = listOf(Periode(LocalDate.now(), LocalDate.now().plusDays(5))),
+                perioder = listOf(periode),
             )
 
             val lagretHendelse = repo.hentBrudd(sak.id)
             assertEquals(1, lagretHendelse.size)
+            lagretHendelse[0].also {
+                assertEquals(IKKE_AKTIVT_BIDRAG, it.type)
+                assertEquals(PARAGRAF_11_7, it.paragraf)
+                assertEquals("Orket ikke", it.begrunnelse)
+                assertEquals(periode, it.periode)
+            }
         }
     }
 
@@ -44,7 +51,7 @@ class BruddAktivitetspliktRepositoryTest {
     fun `kan lagre flere hendelser på samme sak hver for seg`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = nySak(connection)
-            val repo = BruddAktivitetspliktRepository(connection)
+            val repo = AktivitetspliktRepository(connection)
             nyeBrudd(connection, sak,
                 brudd = IKKE_MØTT_TIL_BEHANDLING,
                 paragraf = PARAGRAF_11_8,
@@ -68,7 +75,7 @@ class BruddAktivitetspliktRepositoryTest {
     fun `kan lagre flere hendelser på samme sak samtidig`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = nySak(connection)
-            val repo = BruddAktivitetspliktRepository(connection)
+            val repo = AktivitetspliktRepository(connection)
             nyeBrudd(connection, sak,
                 brudd = IKKE_MØTT_TIL_BEHANDLING,
                 paragraf = PARAGRAF_11_8,
@@ -87,29 +94,27 @@ class BruddAktivitetspliktRepositoryTest {
     fun `nytt grunnlag endrer ikke gammelt grunnlag`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = nySak(connection)
-            val behandling = BehandlingRepositoryImpl(connection).opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling)
+            val behandling = BehandlingRepositoryImpl(connection).opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
 
             val førsteBrudd = nyeBrudd(connection, sak).toSet()
             nyttGrunnlag(connection, behandling, førsteBrudd)
-            val førsteInnsendingId = førsteBrudd.first().innsendingId
+            val førsteInnsendingId = førsteBrudd.first().id
 
             val andreBrudd = nyeBrudd(connection, sak).toSet()
             nyttGrunnlag(connection, behandling, førsteBrudd + andreBrudd)
-            val andreInnsendingId = andreBrudd.first().innsendingId
+            val andreInnsendingId = andreBrudd.first().id
 
-            val alleGrunnlag = BruddAktivitetspliktRepository(connection).hentAlleGrunnlagKunTestIkkeProd(behandling.id)
+            val alleGrunnlag = AktivitetspliktRepository(connection).hentAlleGrunnlagKunTestIkkeProd(behandling.id)
 
             assertEquals(
                 setOf(
                     setOf(førsteInnsendingId),
                     setOf(førsteInnsendingId, andreInnsendingId)
                 ),
-                alleGrunnlag.mapTo(HashSet()) { grunnlag ->
-                    grunnlag.bruddene.mapTo(HashSet()) { brudd -> brudd.innsendingId }
-                })
+                alleGrunnlag
+            )
         }
     }
-
 }
 
 fun nySak(connection: DBConnection): Sak {
@@ -126,12 +131,12 @@ fun nyeBrudd(
     brudd: BruddAktivitetsplikt.Type = IKKE_MØTT_TIL_BEHANDLING,
     paragraf: BruddAktivitetsplikt.Paragraf = PARAGRAF_11_8,
     begrunnelse: String = "En begrunnnelse",
-    perioder: List<Periode> = listOf(Periode(LocalDate.now(), LocalDate.now().plusDays(5)))
+    perioder: List<Periode> = listOf(Periode(LocalDate.now(), LocalDate.now().plusDays(5))),
 ): List<BruddAktivitetsplikt> {
-    val repo = BruddAktivitetspliktRepository(connection)
+    val repo = AktivitetspliktRepository(connection)
     val innsendingId = repo.lagreBrudd(
         perioder.map { periode ->
-            BruddAktivitetspliktRepository.LagreBruddInput(
+            AktivitetspliktRepository.LagreBruddInput(
                 sakId = sak.id,
                 brudd = brudd,
                 paragraf = paragraf,
@@ -144,8 +149,8 @@ fun nyeBrudd(
     return repo.hentBruddForInnsending(innsendingId)
 }
 
-fun nyttGrunnlag(connection: DBConnection, behandling: Behandling, brudd: Set<BruddAktivitetsplikt>): BruddAktivitetspliktGrunnlag {
-    val repo = BruddAktivitetspliktRepository(connection)
+fun nyttGrunnlag(connection: DBConnection, behandling: Behandling, brudd: Set<BruddAktivitetsplikt>): AktivitetspliktGrunnlag {
+    val repo = AktivitetspliktRepository(connection)
     repo.nyttGrunnlag(behandling.id, brudd)
     return repo.hentGrunnlagHvisEksisterer(behandling.id)!!
 }

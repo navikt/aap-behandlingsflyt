@@ -2,11 +2,11 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.gradle.kotlin.dsl.processResources
 import java.io.ByteArrayOutputStream
 
-val ktorVersion = "2.3.12"
+val ktorVersion = "3.0.0"
 
 plugins {
     id("behandlingsflyt.conventions")
-    id("io.ktor.plugin") version "2.3.12"
+    id("io.ktor.plugin") version "3.0.0"
 }
 
 application {
@@ -18,7 +18,6 @@ tasks {
         destinationFile = layout.buildDirectory.file("version.properties")
         // Define property.
         property("project.version", getCheckedOutGitCommitHash())
-        property("swagger-ui.version", "5.17.14")
     }
 
     processResources {
@@ -50,7 +49,7 @@ fun getCheckedOutGitCommitHash(): String {
 }
 
 
-val komponenterVersjon = "1.0.8"
+val komponenterVersjon = "1.0.16"
 
 dependencies {
     implementation("io.ktor:ktor-server-cors:$ktorVersion")
@@ -61,7 +60,8 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.5.8")
     implementation("net.logstash.logback:logstash-logback-encoder:8.0")
 
-    implementation("no.nav.aap.statistikk:api-kontrakt:0.0.12")
+    implementation("no.nav.aap.brev:kontrakt:0.0.8")
+    implementation("no.nav.aap.statistikk:api-kontrakt:0.0.15")
     implementation("no.nav.aap.kelvin:motor:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:dbconnect:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:dbmigrering:$komponenterVersjon")
@@ -77,7 +77,7 @@ dependencies {
     implementation(project(":tidslinje"))
     implementation(project(":dbflyway"))
     implementation(project(":pip"))
-    implementation("com.zaxxer:HikariCP:5.1.0")
+    implementation("com.zaxxer:HikariCP:6.0.0")
     implementation("org.flywaydb:flyway-database-postgresql:10.18.2")
     runtimeOnly("org.postgresql:postgresql:42.7.4")
 
@@ -86,7 +86,7 @@ dependencies {
     testImplementation("no.nav.aap.kelvin:dbtest:$komponenterVersjon")
     testImplementation("no.nav.aap.kelvin:motor-test-utils:$komponenterVersjon")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.2")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.1")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.2")
     testImplementation("org.assertj:assertj-core:3.26.3")
     testImplementation("org.testcontainers:postgresql:1.20.2")
     testImplementation("io.mockk:mockk:1.13.12")

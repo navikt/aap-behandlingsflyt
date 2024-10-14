@@ -15,11 +15,11 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
 
     private val sakRepository = SakRepositoryImpl(connection)
 
-    override fun opprettBehandling(sakId: SakId, årsaker: List<Årsak>, typeBehandling: TypeBehandling): Behandling {
+    override fun opprettBehandling(sakId: SakId, årsaker: List<Årsak>, typeBehandling: TypeBehandling, forrigeBehandlingId: BehandlingId?): Behandling {
 
         val query = """
-            INSERT INTO BEHANDLING (sak_id, referanse, status, type)
-                 VALUES (?, ?, ?, ?)
+            INSERT INTO BEHANDLING (sak_id, referanse, status, type, forrige_id)
+                 VALUES (?, ?, ?, ?, ?)
             """.trimIndent()
         val behandlingsreferanse = BehandlingReferanse()
 
@@ -29,6 +29,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                 setUUID(2, behandlingsreferanse.referanse)
                 setEnumName(3, Status.OPPRETTET)
                 setString(4, typeBehandling.identifikator())
+                setLong(5, forrigeBehandlingId?.toLong())
             }
         }
 
@@ -73,6 +74,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             versjon = row.getLong("versjon"),
             årsaker = hentÅrsaker(behandlingId),
             opprettetTidspunkt = row.getLocalDateTime("opprettet_tid"),
+            forrigeBehandlingId = row.getLongOrNull("forrige_id")?.let { BehandlingId(it) }
         )
     }
 

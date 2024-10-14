@@ -1,0 +1,89 @@
+package no.nav.aap.behandlingsflyt.behandling.brev.bestilling
+
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.brev.kontrakt.BestillBrevRequest
+import no.nav.aap.brev.kontrakt.BestillBrevResponse
+import no.nav.aap.brev.kontrakt.BrevbestillingResponse
+import no.nav.aap.brev.kontrakt.Brevtype
+import no.nav.aap.brev.kontrakt.Språk
+import no.nav.aap.komponenter.config.requiredConfigForKey
+import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
+import no.nav.aap.komponenter.httpklient.httpclient.Header
+import no.nav.aap.komponenter.httpklient.httpclient.RestClient
+import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
+import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
+import java.net.URI
+import java.util.UUID
+
+class BrevGateway : BrevbestillingGateway {
+
+    private val baseUri = URI.create(requiredConfigForKey("integrasjon.brev.url"))
+    val config = ClientConfig(
+        scope = requiredConfigForKey("integrasjon.brev.scope"),
+    )
+
+    private val client = RestClient.withDefaultResponseHandler(
+        config = config,
+        tokenProvider = ClientCredentialsTokenProvider,
+    )
+
+    override fun bestillBrev(
+        behandlingReferanse: BehandlingReferanse,
+        typeBrev: TypeBrev,
+    ): UUID {
+        // TODO språk
+        val request = BestillBrevRequest(behandlingReferanse.referanse, mapTypeBrev(typeBrev), Språk.NB)
+
+        val httpRequest = PostRequest<BestillBrevRequest>(
+            body = request,
+            additionalHeaders = listOf(
+                Header("Accept", "application/json")
+            )
+        )
+
+        val url = baseUri.resolve("/api/bestill")
+
+        val response: BestillBrevResponse = requireNotNull(
+            client.post(
+                uri = url,
+                request = httpRequest,
+                mapper = { body, _ ->
+                    DefaultJsonMapper.fromJson(body)
+                })
+        )
+
+        return response.referanse
+    }
+
+    override fun hentBestillingStatus(referanse: UUID): Status {
+        val url = baseUri.resolve("/api/bestilling/$referanse")
+        val request = GetRequest(
+            additionalHeaders = listOf(
+                Header("Nav-Consumer-Id", "aap-behandlingsflyt"),
+                Header("Accept", "application/json")
+            )
+        )
+        val response: BrevbestillingResponse = requireNotNull(
+            client.get(
+                uri = url, request = request, mapper = { body, _ ->
+                    DefaultJsonMapper.fromJson(body)
+                })
+        )
+
+        return mapStatus(response.status)
+    }
+
+    private fun mapTypeBrev(typeBrev: TypeBrev): Brevtype = when (typeBrev) {
+        TypeBrev.VEDTAK_AVSLAG -> Brevtype.AVSLAG
+        TypeBrev.VEDTAK_INNVILGELSE -> Brevtype.INNVILGELSE
+    }
+
+    private fun mapStatus(status: no.nav.aap.brev.kontrakt.Status): Status = when (status) {
+        no.nav.aap.brev.kontrakt.Status.REGISTRERT -> Status.SENDT
+        no.nav.aap.brev.kontrakt.Status.UNDER_ARBEID -> Status.FORHÅNDSVISNING_KLAR
+        no.nav.aap.brev.kontrakt.Status.FERDIGSTILT -> Status.FULLFØRT
+        no.nav.aap.brev.kontrakt.Status.BESTILT -> Status.FULLFØRT
+    }
+}

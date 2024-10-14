@@ -50,7 +50,7 @@ class InstitusjonRegel : UnderveisRegel {
                 }
             )
 
-        val endeligResultat = resultat.kombiner(institusjonTidslinje,
+        return resultat.kombiner(institusjonTidslinje,
             JoinStyle.LEFT_JOIN { periode, venstreSegment, høyreSegment ->
                 var venstreVerdi = venstreSegment.verdi
                 if (høyreSegment?.verdi != null) {
@@ -67,12 +67,9 @@ class InstitusjonRegel : UnderveisRegel {
                         )
                     }
                 }
-
                 Segment(periode, venstreVerdi)
-                }
-            )
-
-        return endeligResultat
+            }
+        )
     }
 
     private fun barnetilleggTidslinje(barnetilleggGrunnlag: BarnetilleggGrunnlag): Tidslinje<RettTilBarnetillegg> {

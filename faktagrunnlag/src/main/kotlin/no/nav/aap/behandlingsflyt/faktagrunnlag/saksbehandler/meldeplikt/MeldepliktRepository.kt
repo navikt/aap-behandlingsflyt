@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt
 
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
+import no.nav.aap.verdityper.sakogbehandling.SakId
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -20,6 +21,10 @@ class MeldepliktRepository(private val connection: DBConnection) {
             INSERT INTO MELDEPLIKT_FRITAK_VURDERING 
             (MELDEPLIKT_ID, BEGRUNNELSE, HAR_FRITAK, FRA_DATO, OPPRETTET_TID) VALUES (?, ?, ?, ?, ?)
             """.trimIndent()
+        private val INSERT_NYE_FRITAKSVURDERING_QUERY = """
+            INSERT INTO MELDEPLIKT_FRITAK_VURDERING 
+            (MELDEPLIKT_ID, BEGRUNNELSE, HAR_FRITAK, FRA_DATO) VALUES (?, ?, ?, ?)
+            """.trimIndent()
     }
 
     fun hentHvisEksisterer(behandlingId: BehandlingId): MeldepliktGrunnlag? {
@@ -37,6 +42,34 @@ class MeldepliktRepository(private val connection: DBConnection) {
         }.grupperOgMapTilGrunnlag(behandlingId).firstOrNull()
     }
 
+    fun hentAlleVurderinger(sakId: SakId, behandlingId: BehandlingId): Set<Fritaksvurdering> {
+        val query = """
+            SELECT f.ID AS MELDEPLIKT_ID, v.HAR_FRITAK, v.FRA_DATO, v.BEGRUNNELSE, v.OPPRETTET_TID
+            FROM MELDEPLIKT_FRITAK_GRUNNLAG g
+            INNER JOIN MELDEPLIKT_FRITAK f ON g.MELDEPLIKT_ID = f.ID
+            INNER JOIN MELDEPLIKT_FRITAK_VURDERING v ON f.ID = v.MELDEPLIKT_ID
+            JOIN BEHANDLING b ON b.ID = g.BEHANDLING_ID
+            WHERE g.AKTIV AND b.SAK_ID = ? AND b.opprettet_tid < (SELECT a.opprettet_tid from behandling a where id = ?)
+            """.trimIndent()
+
+        return connection.queryList(query) {
+            setParams {
+                setLong(1, sakId.toLong())
+                setLong(2, behandlingId.toLong())
+            }
+            setRowMapper { row ->
+                MeldepliktInternal(
+                    meldepliktId = row.getLong("MELDEPLIKT_ID"),
+                    harFritak = row.getBoolean("HAR_FRITAK"),
+                    fraDato = row.getLocalDate("FRA_DATO"),
+                    begrunnelse = row.getString("BEGRUNNELSE"),
+                    vurderingOpprettet = row.getLocalDateTime("OPPRETTET_TID"),
+                )
+            }
+        }.map { it.toFritaksvurdering() }.toSet()
+    }
+
+
     private data class MeldepliktInternal(
         val meldepliktId: Long,
         val harFritak: Boolean,
@@ -50,8 +83,14 @@ class MeldepliktRepository(private val connection: DBConnection) {
     }
 
     private fun Iterable<MeldepliktInternal>.grupperOgMapTilGrunnlag(behandlingId: BehandlingId): List<MeldepliktGrunnlag> {
-        return groupBy(MeldepliktInternal::meldepliktId, MeldepliktInternal::toFritaksvurdering)
-            .map { (meldepliktId, fritaksvurderinger) -> MeldepliktGrunnlag(meldepliktId, behandlingId, fritaksvurderinger) }
+        return groupBy(MeldepliktInternal::meldepliktId) { it.toFritaksvurdering() }
+            .map { (meldepliktId, fritaksvurderinger) ->
+                MeldepliktGrunnlag(
+                    meldepliktId,
+                    behandlingId,
+                    fritaksvurderinger
+                )
+            }
     }
 
     fun lagre(behandlingId: BehandlingId, vurderinger: List<Fritaksvurdering>) {
@@ -70,13 +109,23 @@ class MeldepliktRepository(private val connection: DBConnection) {
             }
         }
 
-        vurderinger.lagre(meldepliktId)
-    }
+        val nyeVurderinger = vurderinger.filter { it.opprettetTid == null }
 
-    private fun List<Fritaksvurdering>.lagre(meldepliktId: Long) {
+        connection.executeBatch(
+            INSERT_NYE_FRITAKSVURDERING_QUERY,
+            nyeVurderinger
+        ) {
+            setParams {
+                setLong(1, meldepliktId)
+                setString(2, it.begrunnelse)
+                setBoolean(3, it.harFritak)
+                setLocalDate(4, it.fraDato)
+            }
+        }
+
         connection.executeBatch(
             INSERT_FRITAKSVURDERING_QUERY,
-            this
+            vurderinger.filter { it.opprettetTid != null }
         ) {
             setParams {
                 setLong(1, meldepliktId)

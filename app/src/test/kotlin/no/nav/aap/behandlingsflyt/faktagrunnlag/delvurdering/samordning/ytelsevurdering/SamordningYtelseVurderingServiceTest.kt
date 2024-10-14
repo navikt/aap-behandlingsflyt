@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering
 
-import net.bytebuddy.asm.Advice.Local
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
@@ -15,9 +14,9 @@ import no.nav.aap.verdityper.Prosent
 import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.Ident
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import kotlin.test.assertEquals
 
 @Fakes
 class SamordningYtelseVurderingServiceTest {
@@ -72,7 +71,7 @@ class SamordningYtelseVurderingServiceTest {
     private fun opprettSakdata(connection: DBConnection): FlytKontekstMedPerioder {
         val person = PersonRepository(connection).finnEllerOpprett(listOf(Ident("ident", true)))
         val sakId = SakRepositoryImpl(connection).finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusDays(5))).id
-        val behandlingId = BehandlingRepositoryImpl(connection).opprettBehandling(sakId, listOf(), TypeBehandling.Førstegangsbehandling).id
+        val behandlingId = BehandlingRepositoryImpl(connection).opprettBehandling(sakId, listOf(), TypeBehandling.Førstegangsbehandling, null).id
         return FlytKontekstMedPerioder(sakId, behandlingId, TypeBehandling.Førstegangsbehandling, setOf())
     }
 }

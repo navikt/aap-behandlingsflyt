@@ -18,9 +18,9 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.Prosent
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.Ident
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import kotlin.test.assertEquals
 
 @Fakes
 class SamordningServiceTest {
@@ -108,6 +108,6 @@ class SamordningServiceTest {
     private fun opprettSakdata(connection: DBConnection): BehandlingId {
         val person = PersonRepository(connection).finnEllerOpprett(listOf(Ident("ident", true)))
         val sakId = SakRepositoryImpl(connection).finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusDays(5))).id
-        return BehandlingRepositoryImpl(connection).opprettBehandling(sakId, listOf(), TypeBehandling.Førstegangsbehandling).id
+        return BehandlingRepositoryImpl(connection).opprettBehandling(sakId, listOf(), TypeBehandling.Førstegangsbehandling, null).id
     }
 }
