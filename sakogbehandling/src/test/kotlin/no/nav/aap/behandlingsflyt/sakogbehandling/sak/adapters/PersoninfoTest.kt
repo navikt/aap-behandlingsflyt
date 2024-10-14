@@ -19,6 +19,18 @@ class PersoninfoTest {
     }
 
     @Test
+    fun `konkatenerer navn riktig`() {
+        val info = Personinfo(
+            Ident("1234"),
+            fornavn = "Leonardo",
+            mellomnavn = "Igorsson",
+            etternavn = "da Vinci",
+        )
+
+        assertThat(info.fulltNavn()).isEqualTo("Leonardo Igorsson da Vinci")
+    }
+
+    @Test
     fun `når navn er null er fullt navn Ukjent`() {
         val info = Personinfo(
             Ident("1234"),
