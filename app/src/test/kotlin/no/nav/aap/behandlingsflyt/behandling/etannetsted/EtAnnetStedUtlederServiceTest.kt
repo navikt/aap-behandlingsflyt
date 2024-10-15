@@ -3,7 +3,9 @@ package no.nav.aap.behandlingsflyt.behandling.etannetsted
 
 import no.nav.aap.behandlingsflyt.dbtestdata.MockConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.komponenter.type.Periode
@@ -15,7 +17,12 @@ import java.time.LocalDate
 import kotlin.test.assertFalse
 
 class EtAnnetStedUtlederServiceTest {
-    val utlederService = EtAnnetStedUtlederService(MockConnection().toDBConnection())
+    val connection = MockConnection().toDBConnection()
+    val repository = MockConnection().toDBConnection()
+    val utlederService = EtAnnetStedUtlederService(
+        BarnetilleggRepository(connection),
+        InstitusjonsoppholdRepository(repository)
+    )
 
     @Test
     fun `Oppholder seg på inst mellom søknads tidspunkt og behandlingstidspunkt`() {

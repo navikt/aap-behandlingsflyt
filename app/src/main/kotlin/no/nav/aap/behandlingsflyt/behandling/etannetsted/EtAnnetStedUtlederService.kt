@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.behandling.etannetsted
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.komponenter.type.Periode
@@ -11,14 +10,18 @@ import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.StandardSammenslåere
 import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import kotlin.time.Duration
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
-class EtAnnetStedUtlederService(connection: DBConnection) {
-    private val barnetilleggRepository = BarnetilleggRepository(connection)
-    private val institusjonsoppholdRepository = InstitusjonsoppholdRepository(connection)
+private val log = LoggerFactory.getLogger(EtAnnetStedUtlederService::class.java)
+
+class EtAnnetStedUtlederService(
+    private val barnetilleggRepository: BarnetilleggRepository,
+    private val institusjonsoppholdRepository: InstitusjonsoppholdRepository
+) {
 
     fun harBehovForAvklaringer(behandlingId: BehandlingId): BehovForAvklaringer {
         val input = konstruerInput(behandlingId)
@@ -39,12 +42,13 @@ class EtAnnetStedUtlederService(connection: DBConnection) {
         val helseOpphold = opprettTidslinje(helseopphold)
         val helseOppholdTidslinje = regnUtHelseinstitusjonsopphold(helseOpphold)
 
-        val barnetilleggTidslinje = opprettTidslinje(barnetillegg.filter { it.personIdenter.isNotEmpty() }.map { segment ->
-            Segment(
-                segment.periode,
-                true
-            )
-        })
+        val barnetilleggTidslinje =
+            opprettTidslinje(barnetillegg.filter { it.personIdenter.isNotEmpty() }.map { segment ->
+                Segment(
+                    segment.periode,
+                    true
+                )
+            })
 
         //fjern perioder hvor bruker har barnetillegg gjennom hele helseinstitusjonsoppholdet
         val oppholdUtenBarnetillegg =
@@ -53,6 +57,9 @@ class EtAnnetStedUtlederService(connection: DBConnection) {
         // Oppholdet må være lengre enn 3 måneder for å være aktuelt for avklaring og må ha vart i minimum 2 måneder for å være klar for avklaring
         val tremåneder = (3 * 30).toDuration(DurationUnit.DAYS)
         val oppholdSomKanGiReduksjon = harOppholdSomKreverAvklaring(oppholdUtenBarnetillegg, tremåneder)
+
+        log.info("${helseOppholdTidslinje}")
+
         if (oppholdSomKanGiReduksjon.segmenter().isNotEmpty()) {
             return BehovForAvklaringer(false, true)
         }

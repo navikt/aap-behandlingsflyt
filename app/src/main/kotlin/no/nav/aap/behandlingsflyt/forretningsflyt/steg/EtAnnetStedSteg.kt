@@ -3,8 +3,8 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
@@ -43,7 +43,12 @@ class EtAnnetStedSteg(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            return EtAnnetStedSteg(InstitusjonsoppholdRepository(connection), AvklaringsbehovRepositoryImpl(connection), EtAnnetStedUtlederService(connection))
+            val institusjonsoppholdRepository = InstitusjonsoppholdRepository(connection)
+            return EtAnnetStedSteg(
+                institusjonsoppholdRepository, AvklaringsbehovRepositoryImpl(connection), EtAnnetStedUtlederService(
+                BarnetilleggRepository(connection),
+                    institusjonsoppholdRepository
+            ))
         }
 
         override fun type(): StegType {
