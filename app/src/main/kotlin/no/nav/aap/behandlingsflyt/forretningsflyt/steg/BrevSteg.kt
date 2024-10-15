@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.AVVENTER_BREV_BESTILLING
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.SKRIV_BREV
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
@@ -35,7 +36,7 @@ class BrevSteg private constructor(
                 // hvis ikke gå på vent
                 Status.SENDT -> StegResultat(listOf(AVVENTER_BREV_BESTILLING))
                 // hvis klar gi avklaringsbehov for brevskriving
-                Status.FORHÅNDSVISNING_KLAR -> StegResultat() // TODO StegResultat(listOf(SKRIV_BREV)) ?
+                Status.FORHÅNDSVISNING_KLAR -> StegResultat(listOf(SKRIV_BREV))
                 // er brevet fullført, iverksett og gå videre til avslutting av behandling
                 Status.FULLFØRT -> StegResultat()
             }

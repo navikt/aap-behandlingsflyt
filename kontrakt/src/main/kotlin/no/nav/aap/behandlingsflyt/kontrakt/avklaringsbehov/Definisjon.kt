@@ -46,6 +46,12 @@ enum class Definisjon(
         type = BehovType.VENTEPUNKT,
         defaultFrist = Period.ofWeeks(3),
     ),
+    SKRIV_BREV(
+        kode = AVVENTER_BREV_BESTILLING_KODE,
+        løsesISteg = StegType.BREV,
+        type = BehovType.MANUELT_PÅKREVD,
+        defaultFrist = Period.ofWeeks(3),
+    ),
     AVKLAR_STUDENT(
         kode = AVKLAR_STUDENT_KODE,
         type = BehovType.MANUELT_PÅKREVD,
