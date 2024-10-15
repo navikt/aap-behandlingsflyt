@@ -25,6 +25,7 @@ const val AVKLAR_SAMORDNING_GRADERING_KODE = "5012"
 const val KVALITETSSIKRING_KODE = "5097"
 const val FORESLÅ_VEDTAK_KODE = "5098"
 const val FATTE_VEDTAK_KODE = "5099"
+const val SKRIV_BREV_KODE = "5050"
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 enum class Definisjon(
@@ -44,13 +45,12 @@ enum class Definisjon(
         kode = AVVENTER_BREV_BESTILLING_KODE,
         løsesISteg = StegType.BREV,
         type = BehovType.VENTEPUNKT,
-        defaultFrist = Period.ofWeeks(3),
+        defaultFrist = Period.ofDays(1),
     ),
     SKRIV_BREV(
-        kode = AVVENTER_BREV_BESTILLING_KODE,
+        kode = SKRIV_BREV_KODE,
         løsesISteg = StegType.BREV,
         type = BehovType.MANUELT_PÅKREVD,
-        defaultFrist = Period.ofWeeks(3),
     ),
     AVKLAR_STUDENT(
         kode = AVKLAR_STUDENT_KODE,
