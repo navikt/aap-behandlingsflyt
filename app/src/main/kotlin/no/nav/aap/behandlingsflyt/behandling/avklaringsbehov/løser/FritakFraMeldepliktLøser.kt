@@ -18,7 +18,7 @@ class FritakFraMeldepliktLøser(val connection: DBConnection) : Avklaringsbehovs
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: FritakMeldepliktLøsning): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
         val fritaksvurderinger = løsning.fritaksvurderinger.map(FritaksvurderingDto::toFritaksvurdering)
-        val eksisterendeFritaksperioder = MedlepliktFritaksperioder(
+        val eksisterendeFritaksperioder = MeldepliktFritaksperioder(
             behandling.forrigeBehandlingId?.let { meldepliktRepository.hentHvisEksisterer(it) }?.vurderinger
                 ?: emptyList()
         )

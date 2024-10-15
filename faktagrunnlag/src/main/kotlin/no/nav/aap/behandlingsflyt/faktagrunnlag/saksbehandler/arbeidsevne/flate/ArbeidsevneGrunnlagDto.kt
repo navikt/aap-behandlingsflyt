@@ -4,12 +4,14 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 data class ArbeidsevneGrunnlagDto(
-    val vurderinger: List<ArbeidsevneVurderingDto>
+    val vurderinger: List<ArbeidsevneVurderingDto>,
+    val gjeldendeVedtatteVurderinger: List<ArbeidsevneVurderingDto>,
+    val historikk: Set<ArbeidsevneVurderingDto>
 )
 
 data class ArbeidsevneVurderingDto(
     val begrunnelse: String,
-    val vurderingsdato: LocalDateTime,
+    val vurderingsTidspunkt: LocalDateTime,
     val arbeidsevne: Int,
     val fraDato: LocalDate
 )

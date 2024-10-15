@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.flate
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
-import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import com.zaxxer.hikari.HikariDataSource
@@ -20,9 +19,21 @@ fun NormalOpenAPIRoute.arbeidsevneGrunnlagApi(dataSource: HikariDataSource) {
             val arbeidsevneGrunnlag = dataSource.transaction { connection ->
                 val behandling: Behandling =
                     BehandlingReferanseService(BehandlingRepositoryImpl(connection)).behandling(req)
-                ArbeidsevneRepository(connection).hentHvisEksisterer(behandling.id)
+                val arbeidsevneRepository = ArbeidsevneRepository(connection)
+
+                val nåTilstand = arbeidsevneRepository.hentHvisEksisterer(behandling.id)?.vurderinger ?: return@transaction null
+                val vedtatteVerdier =
+                    behandling.forrigeBehandlingId?.let { arbeidsevneRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
+                val historikk = arbeidsevneRepository.hentAlleVurderinger(behandling.sakId, behandling.id)
+
+                ArbeidsevneGrunnlagDto(
+                    historikk = historikk.map { it.toDto() }.sortedBy { it.vurderingsTidspunkt }.toSet(),
+                    vurderinger = nåTilstand.filterNot { vedtatteVerdier.contains(it) }.map { it.toDto() }.sortedBy { it.fraDato },
+                    gjeldendeVedtatteVurderinger = vedtatteVerdier.map { it.toDto() }.sortedBy { it.fraDato }
+                )
             }
-            arbeidsevneGrunnlag?.let { respond(it.toDto()) } ?: respondWithStatus(HttpStatusCode.NoContent)
+
+            arbeidsevneGrunnlag ?: respondWithStatus(HttpStatusCode.NoContent)
         }
     }
 }

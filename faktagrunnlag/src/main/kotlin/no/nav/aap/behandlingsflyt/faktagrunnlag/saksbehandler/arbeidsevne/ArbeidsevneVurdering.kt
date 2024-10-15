@@ -13,27 +13,15 @@ data class ArbeidsevneVurdering(
     val begrunnelse: String,
     val arbeidsevne: Prosent,
     val fraDato: LocalDate,
-    val opprettetTid: LocalDateTime
+    val opprettetTid: LocalDateTime?
 ) {
     fun toDto(): ArbeidsevneVurderingDto {
-        return ArbeidsevneVurderingDto(begrunnelse, opprettetTid, arbeidsevne.prosentverdi(), fraDato)
+        return ArbeidsevneVurderingDto(begrunnelse, opprettetTid ?: LocalDateTime.now(), arbeidsevne.prosentverdi(), fraDato)
     }
 
     fun tidslinje(): Tidslinje<ArbeidsevneVurdering> {
         return Tidslinje(
             listOf(Segment(Periode(fraDato, Tid.MAKS), this))
         )
-    }
-
-    override fun equals(other: Any?): Boolean {
-        return this === other || (other is ArbeidsevneVurdering && this.valueEquals(other))
-    }
-
-    private fun valueEquals(other: ArbeidsevneVurdering): Boolean {
-        return begrunnelse == other.begrunnelse && arbeidsevne == other.arbeidsevne
-    }
-
-    override fun hashCode(): Int {
-        return 31 * begrunnelse.hashCode() + arbeidsevne.hashCode()
     }
 }
