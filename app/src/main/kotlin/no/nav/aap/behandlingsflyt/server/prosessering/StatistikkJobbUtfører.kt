@@ -8,9 +8,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagU
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
-import no.nav.aap.behandlingsflyt.hendelse.avløp.AvsluttetBehandlingHendelseDTO
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.EndringDTO
@@ -49,9 +49,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status as BehandlingStatus
 
 private val log = LoggerFactory.getLogger(StatistikkJobbUtfører::class.java)
 
-enum class StatistikkType {
-    BehandlingStoppet, AvsluttetBehandling
-}
 
 class StatistikkJobbUtfører(
     private val statistikkGateway: StatistikkGateway,
@@ -66,13 +63,7 @@ class StatistikkJobbUtfører(
         log.info("Utfører jobbinput statistikk: $input")
         val payload = input.payload()
 
-        val type = StatistikkType.valueOf(input.parameter("statistikk-type"))
-
-        when (type) {
-            StatistikkType.BehandlingStoppet -> håndterBehandlingStoppet(payload)
-            StatistikkType.AvsluttetBehandling -> håndterAvsluttetBehandling(payload)
-        }
-
+        håndterBehandlingStoppet(payload)
     }
 
     private fun håndterBehandlingStoppet(payload: String) {
@@ -80,9 +71,12 @@ class StatistikkJobbUtfører(
 
         val statistikkHendelse = oversettHendelseTilKontrakt(hendelse)
 
-        statistikkGateway.avgiStatistikk(
-            statistikkHendelse
-        )
+        if (hendelse.status == AVSLUTTET) {
+            val avsluttetBehandlingDTO = hentAvsluttetBehandlingDTO(hendelse)
+            statistikkGateway.avgiStatistikk(statistikkHendelse.copy(avsluttetBehandling = avsluttetBehandlingDTO))
+        } else {
+            statistikkGateway.avgiStatistikk(statistikkHendelse)
+        }
     }
 
     private fun oversettHendelseTilKontrakt(hendelse: BehandlingFlytStoppetHendelse): StoppetBehandling {
@@ -144,7 +138,7 @@ class StatistikkJobbUtfører(
             no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.OPPRETTET -> no.nav.aap.statistikk.api_kontrakt.BehandlingStatus.OPPRETTET
             no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.UTREDES -> no.nav.aap.statistikk.api_kontrakt.BehandlingStatus.UTREDES
             no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.IVERKSETTES -> no.nav.aap.statistikk.api_kontrakt.BehandlingStatus.IVERKSETTES
-            no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET -> no.nav.aap.statistikk.api_kontrakt.BehandlingStatus.AVSLUTTET
+            AVSLUTTET -> no.nav.aap.statistikk.api_kontrakt.BehandlingStatus.AVSLUTTET
         }
 
     private fun endringStatusTilStatistikkKontrakt(endring: EndringDTO): EndringStatus = when (endring.status) {
@@ -185,14 +179,12 @@ class StatistikkJobbUtfører(
      * Skal kalles når en behandling er avsluttet for å levere statistikk til statistikk-appen.
      * Payload er JSON siden dette kommer fra en jobb.
      */
-    private fun håndterAvsluttetBehandling(payload: String) {
-        val hendelse = DefaultJsonMapper.fromJson<AvsluttetBehandlingHendelseDTO>(payload)
-
-        val behandling = behandlingRepository.hent(hendelse.behandlingId)
-        val vilkårsresultat = vilkårsresultatRepository.hent(hendelse.behandlingId)
+    private fun hentAvsluttetBehandlingDTO(hendelse: BehandlingFlytStoppetHendelse): AvsluttetBehandlingDTO {
+        val behandling = behandlingRepository.hent(hendelse.referanse)
+        val vilkårsresultat = vilkårsresultatRepository.hent(behandling.id)
         val sak = sakService.hent(behandling.sakId)
 
-        if (behandling.status() != BehandlingStatus.AVSLUTTET) {
+        if (behandling.status() != AVSLUTTET) {
             log.warn("Kjører statistikkjobb for behandling som ikke er avsluttet. Behandling-ref: ${behandling.referanse.referanse}. Sak: ${sak.saksnummer}")
         }
 
@@ -212,40 +204,40 @@ class StatistikkJobbUtfører(
         }
 
         val grunnlag =
-            beregningsgrunnlagRepository.hentHvisEksisterer(hendelse.behandlingId)
+            beregningsgrunnlagRepository.hentHvisEksisterer(behandling.id)
 
         val beregningsGrunnlagDTO: BeregningsgrunnlagDTO? =
             if (grunnlag == null) null else beregningsgrunnlagDTO(grunnlag)
 
         log.info("Kaller aap-statistikk for sak ${sak.saksnummer}.")
 
-        statistikkGateway.avsluttetBehandling(
-            AvsluttetBehandlingDTO(
-                behandlingsReferanse = behandling.referanse.referanse,
-                saksnummer = sak.saksnummer.toString(),
-                vilkårsResultat = VilkårsResultatDTO(
-                    typeBehandling = behandling.typeBehandling().toString(),
-                    vilkår = vilkårsresultat.alle().map { res ->
-                        VilkårDTO(
-                            vilkårType = Vilkårtype.valueOf(res.type.toString()),
-                            perioder = res.vilkårsperioder().map { periode ->
-                                VilkårsPeriodeDTO(
-                                    fraDato = periode.periode.fom,
-                                    tilDato = periode.periode.tom,
-                                    utfall = Utfall.valueOf(periode.utfall.toString()),
-                                    manuellVurdering = periode.manuellVurdering,
-                                    innvilgelsesårsak = periode.innvilgelsesårsak.toString(),
-                                    avslagsårsak = periode.avslagsårsak.toString()
-                                )
-                            }
-                        )
-                    }
-                ),
-                tilkjentYtelse = tilkjentYtelseDTO,
-                beregningsGrunnlag = beregningsGrunnlagDTO,
-                hendelsesTidspunkt = hendelse.hendelseTidspunkt
-            )
+        val avsluttetBehandlingDTO = AvsluttetBehandlingDTO(
+            behandlingsReferanse = behandling.referanse.referanse,
+            saksnummer = sak.saksnummer.toString(),
+            vilkårsResultat = VilkårsResultatDTO(
+                typeBehandling = behandling.typeBehandling().toString(),
+                vilkår = vilkårsresultat.alle().map { res ->
+                    VilkårDTO(
+                        vilkårType = Vilkårtype.valueOf(res.type.toString()),
+                        perioder = res.vilkårsperioder().map { periode ->
+                            VilkårsPeriodeDTO(
+                                fraDato = periode.periode.fom,
+                                tilDato = periode.periode.tom,
+                                utfall = Utfall.valueOf(periode.utfall.toString()),
+                                manuellVurdering = periode.manuellVurdering,
+                                innvilgelsesårsak = periode.innvilgelsesårsak.toString(),
+                                avslagsårsak = periode.avslagsårsak.toString()
+                            )
+                        }
+                    )
+                }
+            ),
+            tilkjentYtelse = tilkjentYtelseDTO,
+            beregningsGrunnlag = beregningsGrunnlagDTO,
+            hendelsesTidspunkt = hendelse.hendelsesTidspunkt
         )
+        statistikkGateway.avsluttetBehandling(avsluttetBehandlingDTO)
+        return avsluttetBehandlingDTO
     }
 
     private fun beregningsgrunnlagDTO(

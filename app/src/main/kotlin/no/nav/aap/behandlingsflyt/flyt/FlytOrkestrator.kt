@@ -185,8 +185,6 @@ class FlytOrkestrator(
                     )
                     validerAtAvklaringsBehovErLukkede(avklaringsbehovene)
                     log.info("Behandlingen har nådd slutten, avslutter behandling")
-                    val avsluttetBehandling = behandlingRepository.hent(behandling.id)
-                    behandlingHendelseService.avsluttet(avsluttetBehandling)
                 } else {
                     // Prosessen har stoppet opp, slipp ut hendelse om at den har stoppet opp og hvorfor?
                     loggStopp(behandling, avklaringsbehovene)

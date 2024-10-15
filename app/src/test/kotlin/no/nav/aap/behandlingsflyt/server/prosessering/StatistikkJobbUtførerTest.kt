@@ -16,7 +16,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
-import no.nav.aap.behandlingsflyt.hendelse.avløp.AvsluttetBehandlingHendelseDTO
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -70,7 +69,7 @@ import java.time.LocalDateTime
 class StatistikkJobbUtførerTest {
     @Test
     fun `statistikk-jobb avgir avsluttet behandling-data korrekt`(mottatteVilkårsresultat: List<AvsluttetBehandlingDTO>) {
-        val (behandling, sak) = InitTestDatabase.dataSource.transaction { connection ->
+        val (behandling, sak, ident) = InitTestDatabase.dataSource.transaction { connection ->
             val vilkårsResultatRepository = VilkårsresultatRepository(connection = connection)
             val behandlingRepository = BehandlingRepositoryImpl(connection)
 
@@ -131,14 +130,37 @@ class StatistikkJobbUtførerTest {
                 opprettetBehandling.id, vilkårsresultat
             )
 
-            Pair(opprettetBehandling, sak)
+            MottattDokumentRepository(connection).lagre(
+                MottattDokument(
+                    referanse = MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, "xxx"),
+                    sakId = sak.id,
+                    behandlingId = opprettetBehandling.id,
+                    mottattTidspunkt = LocalDateTime.now().minusDays(1),
+                    type = Brevkode.SØKNAD,
+                    strukturertDokument = null
+                )
+            )
+
+            behandlingRepository.oppdaterBehandlingStatus(opprettetBehandling.id, Status.AVSLUTTET)
+
+            val oppdatertBehandling = behandlingRepository.hent(opprettetBehandling.id)
+
+            Triple(oppdatertBehandling, sak, ident)
         }
 
         val hendelseTidspunkt = LocalDateTime.now()
-        val payload = AvsluttetBehandlingHendelseDTO(
-            behandlingId = behandling.id,
-            hendelseTidspunkt = hendelseTidspunkt
+        val payload = BehandlingFlytStoppetHendelse(
+            personIdent = ident.identifikator,
+            saksnummer = sak.saksnummer,
+            referanse = behandling.referanse,
+            behandlingType = behandling.typeBehandling(),
+            status = behandling.status(),
+            avklaringsbehov = listOf(),
+            opprettetTidspunkt = LocalDateTime.now(),
+            hendelsesTidspunkt = hendelseTidspunkt,
+            versjon = "123"
         )
+
         val hendelse2 = DefaultJsonMapper.toJson(payload)
 
         // Act
@@ -159,7 +181,6 @@ class StatistikkJobbUtførerTest {
                 MottattDokumentRepository(connection)
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
-                    .medParameter("statistikk-type", StatistikkType.AvsluttetBehandling.toString())
             )
         }
 
@@ -310,7 +331,6 @@ class StatistikkJobbUtførerTest {
         // Act
         utfører.utfør(
             JobbInput(StatistikkJobbUtfører).medPayload(hendelse)
-                .medParameter("statistikk-type", StatistikkType.BehandlingStoppet.toString())
         )
 
         // Assert
