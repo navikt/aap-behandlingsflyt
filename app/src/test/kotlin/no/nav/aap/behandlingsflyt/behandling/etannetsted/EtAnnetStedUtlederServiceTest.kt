@@ -48,7 +48,7 @@ class EtAnnetStedUtlederServiceTest {
                 Segment(
                     Periode(
                         LocalDate.now().minusMonths(5),
-                        LocalDate.now()
+                        LocalDate.now().plusMonths(1)
                     ),
                     Institusjon(
                         Institusjonstype.HS,
