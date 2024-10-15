@@ -10,5 +10,5 @@ data class FastsettArbeidsevneDto(
     val arbeidsevne: Int,
     val fraDato: LocalDate
 ) {
-    fun toArbeidsevnevurdering() = ArbeidsevneVurdering(begrunnelse, Prosent(arbeidsevne), fraDato, LocalDateTime.now())
+    fun toArbeidsevnevurdering() = ArbeidsevneVurdering(begrunnelse, Prosent(arbeidsevne), fraDato, null)
 }

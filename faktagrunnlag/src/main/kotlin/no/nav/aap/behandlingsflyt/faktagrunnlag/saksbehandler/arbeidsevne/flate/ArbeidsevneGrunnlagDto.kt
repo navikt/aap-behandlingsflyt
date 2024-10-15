@@ -15,3 +15,9 @@ data class ArbeidsevneVurderingDto(
     val arbeidsevne: Int,
     val fraDato: LocalDate
 )
+
+data class SimulerArbeidsevneDto(val vurderinger: List<FastsettArbeidsevneDto>)
+
+data class SimulertArbeidsevneResultatDto(
+    val gjeldendeVedtatteVurderinger: List<ArbeidsevneVurderingDto>
+)
