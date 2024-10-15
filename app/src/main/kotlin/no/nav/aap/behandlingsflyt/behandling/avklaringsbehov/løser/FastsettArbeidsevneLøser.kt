@@ -8,13 +8,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.Arbeid
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.flate.FastsettArbeidsevneDto
 import no.nav.aap.komponenter.dbconnect.DBConnection
 
-class FastsettArbeidsevneLøser(connection: DBConnection) :
-    AvklaringsbehovsLøser<FastsettArbeidsevneLøsning> {
+class FastsettArbeidsevneLøser(connection: DBConnection) : AvklaringsbehovsLøser<FastsettArbeidsevneLøsning> {
 
     private val arbeidsevneRepository = ArbeidsevneRepository(connection)
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: FastsettArbeidsevneLøsning): LøsningsResultat {
-        val arbeidsevneVurderinger = løsning.arbeidsevneVurderinger.map(FastsettArbeidsevneDto::toArbeidsevnevurdering)
+        val arbeidsevneVurderinger = løsning.arbeidsevneVurderinger.map { it.toArbeidsevnevurdering() }
         val eksisterendeArbeidsevnePerioder = ArbeidsevnePerioder(
             arbeidsevneRepository.hentHvisEksisterer(kontekst.behandlingId())?.vurderinger.orEmpty()
         )

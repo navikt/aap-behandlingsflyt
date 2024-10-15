@@ -102,7 +102,7 @@ class ArbeidsevneRepository(private val connection: DBConnection) {
         connection.executeBatch(
             """
             INSERT INTO ARBEIDSEVNE_VURDERING 
-            (ARBEIDSEVNE_ID, FRA_DATO, BEGRUNNELSE, ANDEL_ARBEIDSEVNE, OPPRETTET_TID) VALUES (?, ?, ?, ?)
+            (ARBEIDSEVNE_ID, FRA_DATO, BEGRUNNELSE, ANDEL_ARBEIDSEVNE) VALUES (?, ?, ?, ?)
             """.trimIndent(),
             nyeVurderinger
         ) {

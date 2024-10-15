@@ -14,11 +14,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 @JsonTypeName(value = FASTSETT_ARBEIDSEVNE_KODE)
 class FastsettArbeidsevneLøsning(
     @JsonProperty("arbeidsevneVurderinger", required = true) val arbeidsevneVurderinger: List<FastsettArbeidsevneDto>,
-    @JsonProperty(
-        "behovstype",
-        required = true,
-        defaultValue = FASTSETT_ARBEIDSEVNE_KODE
-    ) val behovstype: String = FASTSETT_ARBEIDSEVNE_KODE
+    @JsonProperty("behovstype", required = true, defaultValue = FASTSETT_ARBEIDSEVNE_KODE) val behovstype: String = FASTSETT_ARBEIDSEVNE_KODE
 ) : AvklaringsbehovLøsning {
     override fun løs(connection: DBConnection, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
         return FastsettArbeidsevneLøser(connection).løs(kontekst, this)

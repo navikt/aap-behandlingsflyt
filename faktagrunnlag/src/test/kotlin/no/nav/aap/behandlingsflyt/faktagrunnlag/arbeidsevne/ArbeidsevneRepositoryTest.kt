@@ -41,12 +41,13 @@ class ArbeidsevneRepositoryTest {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
-            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), LocalDateTime.now())
+            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null)
 
             val arbeidsevneRepository = ArbeidsevneRepository(connection)
             arbeidsevneRepository.lagre(behandling.id, listOf(arbeidsevne))
-            val arbeidsevneGrunnlag = arbeidsevneRepository.hentHvisEksisterer(behandling.id)
-            assertThat(arbeidsevneGrunnlag?.vurderinger).containsExactly(arbeidsevne)
+            val vurderinger = arbeidsevneRepository.hentHvisEksisterer(behandling.id)?.vurderinger
+            assertThat(vurderinger).hasSize(1)
+            assertThat(vurderinger).containsExactly(arbeidsevne.copy(opprettetTid = vurderinger?.first()?.opprettetTid))
         }
     }
 

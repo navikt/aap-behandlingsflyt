@@ -19,9 +19,20 @@ data class ArbeidsevneVurdering(
         return ArbeidsevneVurderingDto(begrunnelse, opprettetTid ?: LocalDateTime.now(), arbeidsevne.prosentverdi(), fraDato)
     }
 
-    fun tidslinje(): Tidslinje<ArbeidsevneVurdering> {
+    fun tidslinje(): Tidslinje<ArbeidsevneVurderingData> {
         return Tidslinje(
-            listOf(Segment(Periode(fraDato, Tid.MAKS), this))
+            listOf(Segment(Periode(fraDato, Tid.MAKS), ArbeidsevneVurderingData(begrunnelse, arbeidsevne, opprettetTid)))
         )
     }
+
+    data class ArbeidsevneVurderingData(
+        val begrunnelse: String,
+        val arbeidsevne: Prosent,
+        val opprettetTid: LocalDateTime?
+    ) {
+        fun toArbeidsevneVurdering(fraDato: LocalDate): ArbeidsevneVurdering {
+            return ArbeidsevneVurdering(begrunnelse, arbeidsevne, fraDato, opprettetTid)
+        }
+    }
+
 }

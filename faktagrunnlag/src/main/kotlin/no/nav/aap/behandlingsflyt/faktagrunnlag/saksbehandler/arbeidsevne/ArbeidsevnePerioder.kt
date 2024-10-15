@@ -2,8 +2,9 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne
 
 import no.nav.aap.tidslinje.StandardSammenslåere
 import no.nav.aap.tidslinje.Tidslinje
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneVurdering.ArbeidsevneVurderingData
 
-class ArbeidsevnePerioder private constructor(private val tidslinje: Tidslinje<ArbeidsevneVurdering>) {
+class ArbeidsevnePerioder private constructor(private val tidslinje: Tidslinje<ArbeidsevneVurderingData>) {
 
     constructor(fritaksvurderinger: List<ArbeidsevneVurdering>): this(
         fritaksvurderinger.sortedBy { it.fraDato }.fold(Tidslinje()) { acc, arbeidsevneVurdering ->
@@ -18,6 +19,6 @@ class ArbeidsevnePerioder private constructor(private val tidslinje: Tidslinje<A
     }
 
     fun gjeldendeArbeidsevner(): List<ArbeidsevneVurdering> {
-        return tidslinje.komprimer().map { it.verdi.copy(fraDato = it.periode.fom) }
+        return tidslinje.komprimer().map { it.verdi.toArbeidsevneVurdering(it.periode.fom) }
     }
 }
