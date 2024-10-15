@@ -21,8 +21,8 @@ class BrevbestillingService(
         }
     }
 
-    fun eksisterendeBestilling(behandlingId: BehandlingId): Brevbestilling? {
-        return brevbestillingRepository.hent(behandlingId)
+    fun eksisterendeBestilling(behandlingId: BehandlingId, typeBrev: TypeBrev): Brevbestilling? {
+        return brevbestillingRepository.hent(behandlingId, typeBrev)
     }
 
     fun bestill(behandlingId: BehandlingId, typeBrev: TypeBrev) {
@@ -34,15 +34,5 @@ class BrevbestillingService(
             bestillingReferanse,
             Status.SENDT,
         )
-    }
-
-    fun oppdaterStatus(behandlingId: BehandlingId): Status {
-        val bestilling = brevbestillingRepository.hent(behandlingId)
-        if (bestilling == null) {
-            throw IllegalStateException("Fant ikke brevbestilling")
-        }
-        val status = brevbestillingGateway.hentBestillingStatus(bestilling.referanse)
-        brevbestillingRepository.oppdaterStatus(behandlingId, status)
-        return status
     }
 }

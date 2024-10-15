@@ -6,17 +6,19 @@ import java.util.UUID
 
 class BrevbestillingRepository(private val connection: DBConnection) {
 
-    fun hent(behandlingId: BehandlingId): Brevbestilling? {
+    fun hent(behandlingId: BehandlingId, typeBrev: TypeBrev): Brevbestilling? {
         val query =
             """
                 SELECT *
                 FROM BREVBESTILLING
                 WHERE BEHANDLING_ID = ?
+                AND TYPE_BREV = ?
             """.trimIndent()
 
         return connection.queryFirstOrNull(query) {
             setParams {
                 setLong(1, behandlingId.toLong())
+                setEnumName(2, typeBrev)
             }
             setRowMapper {
                 Brevbestilling(

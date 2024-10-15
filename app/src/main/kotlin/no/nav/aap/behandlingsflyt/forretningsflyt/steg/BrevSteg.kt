@@ -21,18 +21,17 @@ class BrevSteg private constructor(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val brevBehov = brevUtlederService.utledBrevbehov(kontekst.behandlingId)
         if (brevBehov.harBehovForBrev()) {
+            val typeBrev = brevBehov.typeBrev!!
             val eksisterendeBestilling =
-                brevbestillingService.eksisterendeBestilling(kontekst.behandlingId)
+                brevbestillingService.eksisterendeBestilling(kontekst.behandlingId, typeBrev)
             if (eksisterendeBestilling == null) {
                 // Bestill hvis ikke bestilt allerede
-                brevbestillingService.bestill(kontekst.behandlingId, brevBehov.typeBrev!!)
+                brevbestillingService.bestill(kontekst.behandlingId, typeBrev)
                 return StegResultat(listOf(AVVENTER_BREV_BESTILLING))
             }
 
-            val status = brevbestillingService.oppdaterStatus(kontekst.behandlingId)
-
             // Er bestilling klar for visning
-            return when (status) {
+            return when (eksisterendeBestilling.status) {
                 // hvis ikke gå på vent
                 Status.SENDT -> StegResultat(listOf(AVVENTER_BREV_BESTILLING))
                 // hvis klar gi avklaringsbehov for brevskriving
