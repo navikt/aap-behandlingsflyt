@@ -125,7 +125,8 @@ class StatistikkJobbUtfører(
             behandlingOpprettetTidspunkt = hendelse.opprettetTidspunkt,
             versjon = hendelse.versjon,
             mottattTid = mottattTidspunkt,
-            sakStatus = behandlingflytSakStatusTilStatistikk(sak.status())
+            sakStatus = behandlingflytSakStatusTilStatistikk(sak.status()),
+            hendelsesTidspunkt = hendelse.hendelsesTidspunkt
         )
         return statistikkHendelse
     }
@@ -241,7 +242,8 @@ class StatistikkJobbUtfører(
                     }
                 ),
                 tilkjentYtelse = tilkjentYtelseDTO,
-                beregningsGrunnlag = beregningsGrunnlagDTO
+                beregningsGrunnlag = beregningsGrunnlagDTO,
+                hendelsesTidspunkt = hendelse.hendelseTidspunkt
             )
         )
     }

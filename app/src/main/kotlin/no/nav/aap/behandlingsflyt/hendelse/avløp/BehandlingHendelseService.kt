@@ -30,7 +30,10 @@ class BehandlingHendelseService(
      */
     fun avsluttet(behandling: Behandling) {
         val vilkårsResultatDTO =
-            AvsluttetBehandlingHendelseDTO(behandling.id)
+            AvsluttetBehandlingHendelseDTO(
+                behandling.id,
+                hendelseTidspunkt = LocalDateTime.now()
+            )
 
         val payload = DefaultJsonMapper.toJson(vilkårsResultatDTO)
 

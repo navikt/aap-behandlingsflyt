@@ -134,7 +134,11 @@ class StatistikkJobbUtførerTest {
             Pair(opprettetBehandling, sak)
         }
 
-        val payload = AvsluttetBehandlingHendelseDTO(behandlingId = behandling.id)
+        val hendelseTidspunkt = LocalDateTime.now()
+        val payload = AvsluttetBehandlingHendelseDTO(
+            behandlingId = behandling.id,
+            hendelseTidspunkt = hendelseTidspunkt
+        )
         val hendelse2 = DefaultJsonMapper.toJson(payload)
 
         // Act
@@ -193,7 +197,8 @@ class StatistikkJobbUtførerTest {
                             )
                         )
                     )
-                )
+                ),
+                hendelsesTidspunkt = hendelseTidspunkt
             ).toString()
         )
     }
@@ -287,6 +292,7 @@ class StatistikkJobbUtførerTest {
         )
 
         val fødselsNummer = Ident("xxx").toString()
+        val hendelsesTidspunkt = LocalDateTime.now()
         val payload = BehandlingFlytStoppetHendelse(
             saksnummer = Saksnummer.valueOf(sakId.id),
             personIdent = fødselsNummer,
@@ -295,7 +301,7 @@ class StatistikkJobbUtførerTest {
             referanse = referanse,
             opprettetTidspunkt = LocalDateTime.now(),
             avklaringsbehov = avklaringsbehov,
-            hendelsesTidspunkt = LocalDateTime.now(),
+            hendelsesTidspunkt = hendelsesTidspunkt,
             versjon = ApplikasjonsVersjon.versjon
         )
 
@@ -340,6 +346,7 @@ class StatistikkJobbUtførerTest {
                 versjon = ApplikasjonsVersjon.versjon,
                 mottattTid = tidligsteMottattTid,
                 sakStatus = SakStatus.UTREDES,
+                hendelsesTidspunkt = hendelsesTidspunkt
             )
         )
 
