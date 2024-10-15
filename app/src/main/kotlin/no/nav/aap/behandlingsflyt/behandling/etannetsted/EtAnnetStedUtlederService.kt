@@ -39,7 +39,7 @@ class EtAnnetStedUtlederService(connection: DBConnection) {
         val helseOpphold = opprettTidslinje(helseopphold)
         val helseOppholdTidslinje = regnUtHelseinstitusjonsopphold(helseOpphold)
 
-        val barnetilleggTidslinje = opprettTidslinje(barnetillegg.map { segment ->
+        val barnetilleggTidslinje = opprettTidslinje(barnetillegg.filter { it.personIdenter.isNotEmpty() }.map { segment ->
             Segment(
                 segment.periode,
                 true
