@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.test
 
-import no.nav.aap.statistikk.api_kontrakt.AvsluttetBehandlingDTO
 import no.nav.aap.statistikk.api_kontrakt.StoppetBehandling
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
@@ -26,7 +25,6 @@ internal class FakesExtension() : BeforeAllCallback, ParameterResolver,
 
     override fun beforeEach(context: ExtensionContext?) {
         FakeServers.statistikkHendelser.clear()
-        FakeServers.mottatteVilkårsResult.clear()
     }
 
     override fun supportsParameter(
@@ -40,7 +38,7 @@ internal class FakesExtension() : BeforeAllCallback, ParameterResolver,
             val firstParamType = parameterizedType.actualTypeArguments[0]
             return when (firstParamType) {
                 is Class<*> -> {
-                    firstParamType == StoppetBehandling::class.java || firstParamType == AvsluttetBehandlingDTO::class.java
+                    firstParamType == StoppetBehandling::class.java
                 }
 
                 else -> {
@@ -64,9 +62,6 @@ internal class FakesExtension() : BeforeAllCallback, ParameterResolver,
                 val firstArg = parameterizedType.actualTypeArguments[0]
                 if (firstArg == StoppetBehandling::class.java) {
                     return FakeServers.statistikkHendelser
-                }
-                if (firstArg == AvsluttetBehandlingDTO::class.java) {
-                    return FakeServers.mottatteVilkårsResult
                 }
             }
         }

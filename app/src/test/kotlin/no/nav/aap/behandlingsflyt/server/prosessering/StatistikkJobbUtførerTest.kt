@@ -68,7 +68,7 @@ import java.time.LocalDateTime
 @Fakes
 class StatistikkJobbUtførerTest {
     @Test
-    fun `statistikk-jobb avgir avsluttet behandling-data korrekt`(mottatteVilkårsresultat: List<AvsluttetBehandlingDTO>) {
+    fun `statistikk-jobb avgir avsluttet behandling-data korrekt`(hendelser: List<StoppetBehandling>) {
         val (behandling, sak, ident) = InitTestDatabase.dataSource.transaction { connection ->
             val vilkårsResultatRepository = VilkårsresultatRepository(connection = connection)
             val behandlingRepository = BehandlingRepositoryImpl(connection)
@@ -186,8 +186,8 @@ class StatistikkJobbUtførerTest {
 
         // Assert
 
-        assertThat(mottatteVilkårsresultat).isNotEmpty()
-        assertThat(mottatteVilkårsresultat.first().toString()).isEqualTo(
+        assertThat(hendelser).isNotEmpty()
+        assertThat(hendelser.first().avsluttetBehandling.toString()).isEqualTo(
             AvsluttetBehandlingDTO(
                 behandlingsReferanse = behandling.referanse.referanse,
                 saksnummer = sak.saksnummer.toString(),
