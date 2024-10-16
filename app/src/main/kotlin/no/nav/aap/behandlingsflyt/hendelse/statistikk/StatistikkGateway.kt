@@ -6,9 +6,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
-import no.nav.aap.statistikk.api_kontrakt.AvsluttetBehandlingDTO
 import no.nav.aap.statistikk.api_kontrakt.StoppetBehandling
-import org.slf4j.LoggerFactory
 import java.io.InputStream
 import java.net.URI
 
@@ -22,14 +20,11 @@ class StatistikkGateway(restClient: RestClient<String>? = null) {
     private val uri = URI.create(requiredConfigForKey("integrasjon.statistikk.url"))
 
     fun avgiStatistikk(hendelse: StoppetBehandling) {
-        restClient.post<_, Unit>(uri = uri.resolve("/stoppetBehandling"), request = PostRequest(body = hendelse), mapper = { body, _ ->
-            DefaultJsonMapper.fromJson(body as InputStream)
-        })
-    }
-
-    fun avsluttetBehandling(hendelse: AvsluttetBehandlingDTO) {
-        restClient.post<_, Unit>(uri = uri.resolve("/avsluttetBehandling"), request = PostRequest(body = hendelse), mapper = { body, _ ->
-            DefaultJsonMapper.fromJson(body as InputStream)
-        })
+        restClient.post<_, Unit>(
+            uri = uri.resolve("/stoppetBehandling"),
+            request = PostRequest(body = hendelse),
+            mapper = { body, _ ->
+                DefaultJsonMapper.fromJson(body as InputStream)
+            })
     }
 }

@@ -236,7 +236,6 @@ class StatistikkJobbUtfører(
             beregningsGrunnlag = beregningsGrunnlagDTO,
             hendelsesTidspunkt = hendelse.hendelsesTidspunkt
         )
-        statistikkGateway.avsluttetBehandling(avsluttetBehandlingDTO)
         return avsluttetBehandlingDTO
     }
 
