@@ -1,0 +1,24 @@
+package no.nav.aap.behandlingsflyt.flyt.flate.visning
+
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegGruppe
+import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.verdityper.sakogbehandling.BehandlingId
+
+class BarnetilleggVisningUtleder(connection: DBConnection) : StegGruppeVisningUtleder {
+
+    private val barnRepository = BarnRepository(connection)
+
+    override fun skalVises(behandlingId: BehandlingId): Boolean {
+        val harRegsiterBarn =
+            barnRepository.hentHvisEksisterer(behandlingId)?.registerbarn?.identer?.isNotEmpty() == true
+        if (harRegsiterBarn) {
+            return true
+        }
+        return barnRepository.hentHvisEksisterer(behandlingId)?.oppgitteBarn?.identer?.isNotEmpty() == true
+    }
+
+    override fun gruppe(): StegGruppe {
+        return StegGruppe.BARNETILLEGG
+    }
+}
