@@ -89,6 +89,11 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.2")
     testImplementation("org.assertj:assertj-core:3.26.3")
     testImplementation("org.testcontainers:postgresql:1.20.2")
+    constraints {
+        implementation("org.apache.commons:commons-compress:1.27.1") {
+            because("https://github.com/advisories/GHSA-4g9r-vxhx-9pgx")
+        }
+    }
     testImplementation("io.mockk:mockk:1.13.13")
     testImplementation(kotlin("test"))
 }
