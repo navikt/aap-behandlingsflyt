@@ -4,6 +4,7 @@ import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import java.util.UUID
 
 class Brevbestilling(
+    val id: Long,
     val behandlingId: BehandlingId,
     val typeBrev: TypeBrev,
     val referanse: UUID,

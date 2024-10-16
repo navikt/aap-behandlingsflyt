@@ -22,6 +22,7 @@ class BrevbestillingRepository(private val connection: DBConnection) {
             }
             setRowMapper {
                 Brevbestilling(
+                    id = it.getLong("id"),
                     behandlingId = BehandlingId(it.getLong("behandling_id")),
                     typeBrev = it.getEnum("type_brev"),
                     referanse = it.getUUID("referanse"),
