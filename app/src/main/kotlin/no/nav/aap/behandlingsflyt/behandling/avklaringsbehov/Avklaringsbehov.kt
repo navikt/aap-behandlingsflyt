@@ -67,7 +67,7 @@ class Avklaringsbehov(
         vurdertAv: String,
         årsakTilRetur: List<ÅrsakTilRetur>,
     ) {
-        require(definisjon.kreverToTrinn)
+        require(definisjon.kvalitetssikres)
         val status = if (godkjent) {
             Status.KVALITETSSIKRET
         } else {
