@@ -8,8 +8,8 @@ import java.time.LocalDateTime
 
 class MeldepliktRepository(private val connection: DBConnection) {
 
-    companion object {
-        private val FRITAK_QUERY = """
+    fun hentHvisEksisterer(behandlingId: BehandlingId): MeldepliktGrunnlag? {
+        val query = """
             SELECT f.ID AS MELDEPLIKT_ID, v.HAR_FRITAK, v.FRA_DATO, v.BEGRUNNELSE, v.OPPRETTET_TID
             FROM MELDEPLIKT_FRITAK_GRUNNLAG g
             INNER JOIN MELDEPLIKT_FRITAK f ON g.MELDEPLIKT_ID = f.ID
@@ -17,18 +17,7 @@ class MeldepliktRepository(private val connection: DBConnection) {
             WHERE g.AKTIV AND g.BEHANDLING_ID = ?
             """.trimIndent()
 
-        private val INSERT_FRITAKSVURDERING_QUERY = """
-            INSERT INTO MELDEPLIKT_FRITAK_VURDERING 
-            (MELDEPLIKT_ID, BEGRUNNELSE, HAR_FRITAK, FRA_DATO, OPPRETTET_TID) VALUES (?, ?, ?, ?, ?)
-            """.trimIndent()
-        private val INSERT_NYE_FRITAKSVURDERING_QUERY = """
-            INSERT INTO MELDEPLIKT_FRITAK_VURDERING 
-            (MELDEPLIKT_ID, BEGRUNNELSE, HAR_FRITAK, FRA_DATO) VALUES (?, ?, ?, ?)
-            """.trimIndent()
-    }
-
-    fun hentHvisEksisterer(behandlingId: BehandlingId): MeldepliktGrunnlag? {
-        return connection.queryList(FRITAK_QUERY) {
+        return connection.queryList(query) {
             setParams { setLong(1, behandlingId.toLong()) }
             setRowMapper { row ->
                 MeldepliktInternal(
@@ -112,7 +101,10 @@ class MeldepliktRepository(private val connection: DBConnection) {
         val nyeVurderinger = vurderinger.filter { it.opprettetTid == null }
 
         connection.executeBatch(
-            INSERT_NYE_FRITAKSVURDERING_QUERY,
+            """
+            INSERT INTO MELDEPLIKT_FRITAK_VURDERING 
+            (MELDEPLIKT_ID, BEGRUNNELSE, HAR_FRITAK, FRA_DATO) VALUES (?, ?, ?, ?)
+            """.trimIndent(),
             nyeVurderinger
         ) {
             setParams {
@@ -124,7 +116,10 @@ class MeldepliktRepository(private val connection: DBConnection) {
         }
 
         connection.executeBatch(
-            INSERT_FRITAKSVURDERING_QUERY,
+            """
+            INSERT INTO MELDEPLIKT_FRITAK_VURDERING 
+            (MELDEPLIKT_ID, BEGRUNNELSE, HAR_FRITAK, FRA_DATO, OPPRETTET_TID) VALUES (?, ?, ?, ?, ?)
+            """.trimIndent(),
             vurderinger.filter { it.opprettetTid != null }
         ) {
             setParams {
