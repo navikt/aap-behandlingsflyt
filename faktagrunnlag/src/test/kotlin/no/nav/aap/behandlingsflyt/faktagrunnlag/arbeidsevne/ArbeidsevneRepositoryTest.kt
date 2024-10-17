@@ -1,12 +1,12 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.arbeidsevne
 
 import no.nav.aap.behandlingsflyt.dbtestdata.ident
+import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.Arbeidsevne
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -16,11 +16,11 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.Prosent
 import no.nav.aap.verdityper.flyt.ÅrsakTilBehandling
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
-import no.nav.aap.verdityper.sakogbehandling.Ident
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class ArbeidsevneRepositoryTest {
 
@@ -41,42 +41,13 @@ class ArbeidsevneRepositoryTest {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
+            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null)
 
             val arbeidsevneRepository = ArbeidsevneRepository(connection)
-            arbeidsevneRepository.lagre(behandling.id, Arbeidsevne("begrunnelse", Prosent(100)))
-            val arbeidsevneGrunnlag = arbeidsevneRepository.hentHvisEksisterer(behandling.id)
-            assertThat(arbeidsevneGrunnlag?.vurdering).isEqualTo(Arbeidsevne("begrunnelse", Prosent(100)))
-        }
-    }
-
-    @Test
-    fun `Lagrer ikke like arbeidsevner flere ganger`() {
-        InitTestDatabase.dataSource.transaction { connection ->
-            val sak = sak(connection)
-            val behandling = behandling(connection, sak)
-
-            val arbeidsevneRepository = ArbeidsevneRepository(connection)
-            arbeidsevneRepository.lagre(behandling.id, Arbeidsevne("en begrunnelse", Prosent(100)))
-            arbeidsevneRepository.lagre(behandling.id, Arbeidsevne("annen begrunnelse", Prosent(100)))
-            arbeidsevneRepository.lagre(behandling.id, Arbeidsevne("annen begrunnelse", Prosent(100)))
-
-            val opplysninger = connection.queryList(
-                """
-                    SELECT a.BEGRUNNELSE
-                    FROM BEHANDLING b
-                    INNER JOIN ARBEIDSEVNE_GRUNNLAG g ON b.ID = g.BEHANDLING_ID
-                    INNER JOIN ARBEIDSEVNE a ON g.ARBEIDSEVNE_ID = a.ID
-                    WHERE b.SAK_ID = ?
-                    """.trimIndent()
-            ) {
-                setParams {
-                    setLong(1, sak.id.toLong())
-                }
-                setRowMapper { row -> row.getString("BEGRUNNELSE") }
-            }
-            assertThat(opplysninger)
-                .hasSize(2)
-                .containsExactly("en begrunnelse", "annen begrunnelse")
+            arbeidsevneRepository.lagre(behandling.id, listOf(arbeidsevne))
+            val vurderinger = arbeidsevneRepository.hentHvisEksisterer(behandling.id)?.vurderinger
+            assertThat(vurderinger).hasSize(1)
+            assertThat(vurderinger).containsExactly(arbeidsevne.copy(opprettetTid = vurderinger?.first()?.opprettetTid))
         }
     }
 
@@ -86,7 +57,9 @@ class ArbeidsevneRepositoryTest {
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepository(connection)
-            arbeidsevneRepository.lagre(behandling1.id, Arbeidsevne("begrunnelse", Prosent(100)))
+            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null)
+
+            arbeidsevneRepository.lagre(behandling1.id, listOf(arbeidsevne))
             connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
                 setParams {
                     setLong(1, behandling1.id.toLong())
@@ -95,8 +68,9 @@ class ArbeidsevneRepositoryTest {
 
             val behandling2 = behandling(connection, sak)
 
-            val arbeidsevneGrunnlag = arbeidsevneRepository.hentHvisEksisterer(behandling2.id)
-            assertThat(arbeidsevneGrunnlag?.vurdering).isEqualTo(Arbeidsevne("begrunnelse", Prosent(100)))
+            val vurderinger = arbeidsevneRepository.hentHvisEksisterer(behandling2.id)?.vurderinger
+            assertThat(vurderinger).hasSize(1)
+            assertThat(vurderinger).containsExactly(arbeidsevne.copy(opprettetTid = vurderinger?.first()?.opprettetTid))
         }
     }
 
@@ -116,8 +90,11 @@ class ArbeidsevneRepositoryTest {
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepository(connection)
-            arbeidsevneRepository.lagre(behandling1.id, Arbeidsevne("en begrunnelse", Prosent(100)))
-            arbeidsevneRepository.lagre(behandling1.id, Arbeidsevne("annen begrunnelse", Prosent(100)))
+            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null)
+            val arbeidsevne2 = arbeidsevne.copy(begrunnelse = "annen begrunnelse")
+
+            arbeidsevneRepository.lagre(behandling1.id, listOf(arbeidsevne))
+            arbeidsevneRepository.lagre(behandling1.id, listOf(arbeidsevne2))
             connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
                 setParams {
                     setLong(1, behandling1.id.toLong())
@@ -126,8 +103,9 @@ class ArbeidsevneRepositoryTest {
 
             val behandling2 = behandling(connection, sak)
 
-            val arbeidsevneGrunnlag = arbeidsevneRepository.hentHvisEksisterer(behandling2.id)
-            assertThat(arbeidsevneGrunnlag?.vurdering).isEqualTo(Arbeidsevne("annen begrunnelse", Prosent(100)))
+            val vurderinger = arbeidsevneRepository.hentHvisEksisterer(behandling2.id)?.vurderinger
+            assertThat(vurderinger).hasSize(1)
+            assertThat(vurderinger).containsExactly(arbeidsevne2.copy(opprettetTid = vurderinger?.first()?.opprettetTid))
         }
     }
 
@@ -137,28 +115,38 @@ class ArbeidsevneRepositoryTest {
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepository(connection)
+            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null)
+            val arbeidsevne2 = arbeidsevne.copy("annen begrunnelse")
 
-            arbeidsevneRepository.lagre(behandling.id, Arbeidsevne("en begrunnelse", Prosent(100)))
-            val orginaltGrunnlag = arbeidsevneRepository.hentHvisEksisterer(behandling.id)
-            assertThat(orginaltGrunnlag?.vurdering).isEqualTo(Arbeidsevne("en begrunnelse", Prosent(100)))
+            arbeidsevneRepository.lagre(behandling.id, listOf(arbeidsevne))
+            val originaleVurderinger = arbeidsevneRepository.hentHvisEksisterer(behandling.id)?.vurderinger
 
-            arbeidsevneRepository.lagre(behandling.id, Arbeidsevne("annen begrunnelse", Prosent(100)))
-            val oppdatertGrunnlag = arbeidsevneRepository.hentHvisEksisterer(behandling.id)
-            assertThat(oppdatertGrunnlag?.vurdering).isEqualTo(Arbeidsevne("annen begrunnelse", Prosent(100)))
+            assertThat(originaleVurderinger).hasSize(1)
+            assertThat(originaleVurderinger).containsExactly(
+                arbeidsevne.copy(opprettetTid = originaleVurderinger?.first()?.opprettetTid)
+            )
+
+            arbeidsevneRepository.lagre(behandling.id, listOf(arbeidsevne2))
+            val oppdaterteVurderinger = arbeidsevneRepository.hentHvisEksisterer(behandling.id)?.vurderinger
+            assertThat(oppdaterteVurderinger).hasSize(1)
+            assertThat(oppdaterteVurderinger).containsExactly(
+                arbeidsevne2.copy(opprettetTid = oppdaterteVurderinger?.first()?.opprettetTid)
+            )
 
             data class Opplysning(
                 val aktiv: Boolean,
                 val begrunnelse: String,
-                val andelNedsattArbeidsevne: Prosent
+                val andelArbeidsevne: Prosent
             )
 
             val opplysninger =
                 connection.queryList(
                     """
-                    SELECT g.AKTIV, a.BEGRUNNELSE, a.ANDEL_AV_NEDSETTELSE
+                    SELECT g.AKTIV, v.BEGRUNNELSE, v.ANDEL_ARBEIDSEVNE
                     FROM BEHANDLING b
                     INNER JOIN ARBEIDSEVNE_GRUNNLAG g ON b.ID = g.BEHANDLING_ID
                     INNER JOIN ARBEIDSEVNE a ON g.ARBEIDSEVNE_ID = a.ID
+                    INNER JOIN ARBEIDSEVNE_VURDERING v ON a.ID = v.ARBEIDSEVNE_ID
                     WHERE b.SAK_ID = ?
                     """.trimIndent()
                 ) {
@@ -169,15 +157,15 @@ class ArbeidsevneRepositoryTest {
                         Opplysning(
                             aktiv = row.getBoolean("AKTIV"),
                             begrunnelse = row.getString("BEGRUNNELSE"),
-                            andelNedsattArbeidsevne = Prosent(row.getInt("ANDEL_AV_NEDSETTELSE"))
+                            andelArbeidsevne = Prosent(row.getInt("ANDEL_ARBEIDSEVNE"))
                         )
                     }
                 }
             assertThat(opplysninger)
                 .hasSize(2)
                 .containsExactly(
-                    Opplysning(aktiv = false, begrunnelse = "en begrunnelse", andelNedsattArbeidsevne = Prosent(100)),
-                    Opplysning(aktiv = true, begrunnelse = "annen begrunnelse", andelNedsattArbeidsevne = Prosent(100))
+                    Opplysning(aktiv = false, begrunnelse = "begrunnelse", andelArbeidsevne = Prosent(100)),
+                    Opplysning(aktiv = true, begrunnelse = "annen begrunnelse", andelArbeidsevne = Prosent(100))
                 )
         }
     }
@@ -189,8 +177,11 @@ class ArbeidsevneRepositoryTest {
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepository(connection)
-            arbeidsevneRepository.lagre(behandling1.id, Arbeidsevne("en begrunnelse", Prosent(100)))
-            arbeidsevneRepository.lagre(behandling1.id, Arbeidsevne("annen begrunnelse", Prosent(100)))
+            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), LocalDateTime.now())
+            val arbeidsevne2 = arbeidsevne.copy("annen begrunnelse")
+
+            arbeidsevneRepository.lagre(behandling1.id, listOf(arbeidsevne))
+            arbeidsevneRepository.lagre(behandling1.id, listOf(arbeidsevne2))
             connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
                 setParams {
                     setLong(1, behandling1.id.toLong())
@@ -202,7 +193,7 @@ class ArbeidsevneRepositoryTest {
                 val behandlingId: Long,
                 val aktiv: Boolean,
                 val begrunnelse: String,
-                val andelNedsattArbeidsevne: Prosent
+                val andelArbeidsevne: Prosent
             )
 
             data class Grunnlag(val arbeidsevneId: Long, val opplysning: Opplysning)
@@ -210,10 +201,11 @@ class ArbeidsevneRepositoryTest {
             val opplysninger =
                 connection.queryList(
                     """
-                    SELECT b.ID AS BEHANDLING_ID, a.ID AS ARBEIDSEVNE_ID, g.AKTIV, a.BEGRUNNELSE, a.ANDEL_AV_NEDSETTELSE
+                    SELECT b.ID AS BEHANDLING_ID, a.ID AS ARBEIDSEVNE_ID, g.AKTIV, v.BEGRUNNELSE, v.ANDEL_ARBEIDSEVNE
                     FROM BEHANDLING b
                     INNER JOIN ARBEIDSEVNE_GRUNNLAG g ON b.ID = g.BEHANDLING_ID
                     INNER JOIN ARBEIDSEVNE a ON g.ARBEIDSEVNE_ID = a.ID
+                    INNER JOIN ARBEIDSEVNE_VURDERING v ON a.ID = v.ARBEIDSEVNE_ID
                     WHERE b.SAK_ID = ?
                     """.trimIndent()
                 ) {
@@ -227,7 +219,7 @@ class ArbeidsevneRepositoryTest {
                                 behandlingId = row.getLong("BEHANDLING_ID"),
                                 aktiv = row.getBoolean("AKTIV"),
                                 begrunnelse = row.getString("BEGRUNNELSE"),
-                                andelNedsattArbeidsevne = Prosent(row.getInt("ANDEL_AV_NEDSETTELSE"))
+                                andelArbeidsevne = Prosent(row.getInt("ANDEL_ARBEIDSEVNE"))
                             )
                         )
                     }
@@ -240,20 +232,20 @@ class ArbeidsevneRepositoryTest {
                     Opplysning(
                         behandlingId = behandling1.id.toLong(),
                         aktiv = false,
-                        begrunnelse = "en begrunnelse",
-                        andelNedsattArbeidsevne = Prosent(100)
+                        begrunnelse = arbeidsevne.begrunnelse,
+                        andelArbeidsevne = Prosent(100)
                     ),
                     Opplysning(
                         behandlingId = behandling1.id.toLong(),
                         aktiv = true,
-                        begrunnelse = "annen begrunnelse",
-                        andelNedsattArbeidsevne = Prosent(100)
+                        begrunnelse = arbeidsevne2.begrunnelse,
+                        andelArbeidsevne = Prosent(100)
                     ),
                     Opplysning(
                         behandlingId = behandling2.id.toLong(),
                         aktiv = true,
-                        begrunnelse = "annen begrunnelse",
-                        andelNedsattArbeidsevne = Prosent(100)
+                        begrunnelse = arbeidsevne2.begrunnelse,
+                        andelArbeidsevne = Prosent(100)
                     )
                 )
         }
@@ -272,11 +264,5 @@ class ArbeidsevneRepositoryTest {
             sak.saksnummer,
             listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
         ).behandling
-    }
-}
-
-object FakePdlGateway : IdentGateway {
-    override fun hentAlleIdenterForPerson(ident: Ident): List<Ident> {
-        return listOf(ident)
     }
 }

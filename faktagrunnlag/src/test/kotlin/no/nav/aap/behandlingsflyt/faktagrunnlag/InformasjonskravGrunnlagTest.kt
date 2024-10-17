@@ -112,9 +112,3 @@ class InformasjonskravGrunnlagTest {
         return ident to FlytKontekstMedPerioder(flytKontekst.sakId, flytKontekst.behandlingId, behandling.typeBehandling(), emptySet())
     }
 }
-
-object FakePdlGateway : IdentGateway {
-    override fun hentAlleIdenterForPerson(ident: Ident): List<Ident> {
-        return listOf(ident)
-    }
-}

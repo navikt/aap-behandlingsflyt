@@ -6,7 +6,6 @@ import java.time.LocalDateTime
 data class FritakMeldepliktGrunnlagDto(
     val historikk: Set<FritakMeldepliktVurderingDto>,
     val gjeldendeVedtatteVurderinger: List<FritakMeldepliktVurderingDto>,
-
     val vurderinger: List<FritakMeldepliktVurderingDto>
 )
 

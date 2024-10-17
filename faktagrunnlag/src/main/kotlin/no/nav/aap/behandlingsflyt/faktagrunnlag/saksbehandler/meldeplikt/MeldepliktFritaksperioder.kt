@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaks
 import no.nav.aap.tidslinje.StandardSammenslåere
 import no.nav.aap.tidslinje.Tidslinje
 
-class Fritaksperioder private constructor(private val tidslinje: Tidslinje<FritaksvurderingData>) {
+class MeldepliktFritaksperioder private constructor(private val tidslinje: Tidslinje<FritaksvurderingData>) {
 
     constructor(fritaksvurderinger: List<Fritaksvurdering>) : this(
         fritaksvurderinger.sortedBy { it.fraDato }
@@ -13,8 +13,8 @@ class Fritaksperioder private constructor(private val tidslinje: Tidslinje<Frita
             }
     )
 
-    fun leggTil(nyeFritaksperioder: Fritaksperioder): Fritaksperioder {
-        return Fritaksperioder(
+    fun leggTil(nyeFritaksperioder: MeldepliktFritaksperioder): MeldepliktFritaksperioder {
+        return MeldepliktFritaksperioder(
             tidslinje.kombiner(nyeFritaksperioder.tidslinje, StandardSammenslåere.prioriterHøyreSideCrossJoin())
         )
     }

@@ -27,6 +27,7 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.flate.beregningsGrunnlagA
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.flate.tilkjentYtelseAPI
 import no.nav.aap.behandlingsflyt.behandling.vilkår.alder.flate.aldersGrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.flate.arbeidsevneGrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.flate.beregningVurderingAPI
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.bistandsgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.helseinstitusjonVurderingAPI
@@ -150,6 +151,7 @@ internal fun Application.server(dbConfig: DbConfig) {
                 kvalitetssikringApi(dataSource)
                 bistandsgrunnlagApi(dataSource)
                 meldepliktsgrunnlagApi(dataSource)
+                arbeidsevneGrunnlagApi(dataSource)
                 medlemskapsgrunnlagApi(dataSource)
                 studentgrunnlagApi(dataSource)
                 sykdomsgrunnlagApi(dataSource)
