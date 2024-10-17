@@ -10,7 +10,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.EndringDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.server.prosessering.StatistikkJobbUtfører
-import no.nav.aap.behandlingsflyt.server.prosessering.StatistikkType
 import no.nav.aap.behandlingsflyt.server.prosessering.StoppetHendelseJobbUtfører
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 import no.nav.aap.motor.FlytJobbRepository
@@ -24,21 +23,6 @@ class BehandlingHendelseService(
     private val flytJobbRepository: FlytJobbRepository,
     private val sakService: SakService
 ) {
-
-    /**
-     * Kjøres når en behandling er avsluttet. For statistikkformål.
-     */
-    fun avsluttet(behandling: Behandling) {
-        val vilkårsResultatDTO =
-            AvsluttetBehandlingHendelseDTO(behandling.id)
-
-        val payload = DefaultJsonMapper.toJson(vilkårsResultatDTO)
-
-        flytJobbRepository.leggTil(
-            JobbInput(jobb = StatistikkJobbUtfører).medPayload(payload)
-                .medParameter("statistikk-type", StatistikkType.AvsluttetBehandling.toString())
-        )
-    }
 
     fun stoppet(behandling: Behandling, avklaringsbehovene: Avklaringsbehovene) {
         val sak = sakService.hent(behandling.sakId)
@@ -81,7 +65,6 @@ class BehandlingHendelseService(
         )
         flytJobbRepository.leggTil(
             JobbInput(jobb = StatistikkJobbUtfører).medPayload(payload)
-                .medParameter("statistikk-type", StatistikkType.BehandlingStoppet.toString())
         )
     }
 }

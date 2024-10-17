@@ -49,7 +49,7 @@ fun getCheckedOutGitCommitHash(): String {
 }
 
 
-val komponenterVersjon = "1.0.16"
+val komponenterVersjon = "1.0.19"
 
 dependencies {
     implementation("io.ktor:ktor-server-cors:$ktorVersion")
@@ -61,7 +61,7 @@ dependencies {
     implementation("net.logstash.logback:logstash-logback-encoder:8.0")
 
     implementation("no.nav.aap.brev:kontrakt:0.0.8")
-    implementation("no.nav.aap.statistikk:api-kontrakt:0.0.15")
+    implementation("no.nav.aap.statistikk:api-kontrakt:0.0.18")
     implementation("no.nav.aap.kelvin:motor:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:dbconnect:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:dbmigrering:$komponenterVersjon")
@@ -89,6 +89,11 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.2")
     testImplementation("org.assertj:assertj-core:3.26.3")
     testImplementation("org.testcontainers:postgresql:1.20.2")
-    testImplementation("io.mockk:mockk:1.13.12")
+    constraints {
+        implementation("org.apache.commons:commons-compress:1.27.1") {
+            because("https://github.com/advisories/GHSA-4g9r-vxhx-9pgx")
+        }
+    }
+    testImplementation("io.mockk:mockk:1.13.13")
     testImplementation(kotlin("test"))
 }

@@ -9,6 +9,7 @@ import java.time.LocalDateTime
 /**
  * @param status Status på behandlingen.
  * @param opprettetTidspunkt Når behandlingen ble opprettet.
+ * @param hendelsesTidspunkt Når denne hendelsen ble opprettet i Behandlingsflyt.
  */
 class BehandlingFlytStoppetHendelse(
     val personIdent: String,

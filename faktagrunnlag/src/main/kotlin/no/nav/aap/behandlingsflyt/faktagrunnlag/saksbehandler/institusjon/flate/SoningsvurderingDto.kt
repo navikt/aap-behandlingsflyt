@@ -10,8 +10,8 @@ data class SoningsvurderingDto(
     val soningUtenforFengsel: Boolean,
     val begrunnelse: String?,
     val arbeidUtenforAnstalt: Boolean? = null,
-    val førsteArbeidsdag: LocalDate? = null,
-    val periode: Periode) {
+    val førsteArbeidsdag: LocalDate? = null
+) {
 
     fun tilDomeneobjekt() = Soningsvurdering(
         dokumenterBruktIVurdering = listOf(),
@@ -19,7 +19,7 @@ data class SoningsvurderingDto(
         begrunnelse = begrunnelse,
         arbeidUtenforAnstalt = arbeidUtenforAnstalt,
         førsteArbeidsdag = førsteArbeidsdag,
-        periode = periode
+        periode = Periode(LocalDate.now(), LocalDate.now())
     )
 
     companion object {
@@ -28,8 +28,7 @@ data class SoningsvurderingDto(
             arbeidUtenforAnstalt = soningsvurdering.arbeidUtenforAnstalt,
             begrunnelse = soningsvurdering.begrunnelse,
             soningUtenforFengsel = soningsvurdering.soningUtenforFengsel,
-            førsteArbeidsdag = soningsvurdering.førsteArbeidsdag,
-            periode = soningsvurdering.periode
+            førsteArbeidsdag = soningsvurdering.førsteArbeidsdag
         ) else null
     }
 }

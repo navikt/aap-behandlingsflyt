@@ -16,6 +16,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tidslinje.JoinStyle
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.Tidslinje
+import org.slf4j.LoggerFactory
 
 private const val KVOTE_KALENDERÅR = 10
 
@@ -26,16 +27,18 @@ private const val KVOTE_KALENDERÅR = 10
  * - [Forskriftens § 3](https://lovdata.no/forskrift/2017-12-13-2100/§3)
  */
 class FraværFastsattAktivitetRegel : UnderveisRegel {
+    private val log = LoggerFactory.getLogger(this::class.qualifiedName)!!
+
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
         /* TODO: § 11-8 stans til ... vilkårene igjen er oppfylt */
 
         val bruddtidslinjeGruppertPåMeldeperiode = resultat.kombiner(
             input.aktivitetspliktGrunnlag.tidslinje,
             JoinStyle.RIGHT_JOIN { periode, vurdering, brudd ->
-                val meldeperiode = requireNotNull(vurdering?.verdi?.meldeperiode(), {
+                val meldeperiode = /* requireNotNull( */ vurdering?.verdi?.meldeperiode() /*, {
                     // Kan være fristende å bruke INNER_JOIN, men da forsvinner brudd fra tidslinja
-                    "meldeperiode må eksistere for å kunne gruppere brudd på meldeperiode"
-                })
+                    "meldeperiode eksisterer ikke for $periode. må eksistere for å kunne gruppere brudd på meldeperiode"
+                }) */
                 Segment(periode, meldeperiode to brudd.verdi)
             }
         )
@@ -44,11 +47,14 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
                 { it.verdi.first },
                 { Segment(it.periode, it.verdi.second) }
             )
-            .map { (meldeperiode, bruddIMeldeperioden) ->
-                Segment(
-                    meldeperiode,
-                    Tidslinje(bruddIMeldeperioden.sortedBy { it.fom() })
-            )}
+            .mapNotNull { (meldeperiode, bruddIMeldeperioden) ->
+                if (meldeperiode == null) {
+                    log.warn("meldeperiode manger, ignorerer brudd")
+                    null
+                }
+                else
+                    Segment(meldeperiode, Tidslinje(bruddIMeldeperioden.sortedBy { it.fom() }))
+            }
             .let { Tidslinje(it) }
 
         val bruddTidslinjeMedFørsteFraværIdentifisert: Tidslinje<BruddVurderingSteg1> =

@@ -1,5 +1,5 @@
 val ktorVersion = "3.0.0"
-val komponenterVersjon = "1.0.16"
+val komponenterVersjon = "1.0.19"
 val tilgangVersjon = "0.0.18"
 
 plugins {
@@ -23,7 +23,7 @@ dependencies {
     implementation("io.ktor:ktor-server-cors:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
 
-    implementation("no.nav.aap.statistikk:api-kontrakt:0.0.15")
+    implementation("no.nav.aap.statistikk:api-kontrakt:0.0.18")
 
     implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.18.0")

@@ -93,7 +93,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
                     val lås = taSkriveLåsRepository.lås(req.referanse)
                     val behandling = behandling(connection, req)
                     val flytJobbRepository = FlytJobbRepository(connection)
-                    if (flytJobbRepository.hentJobberForBehandling(behandling.id.toLong()).isEmpty()) {
+                    if (!behandling.status().erAvsluttet() &&  flytJobbRepository.hentJobberForBehandling(behandling.id.toLong()).isEmpty()) {
                         flytJobbRepository.leggTil(
                             JobbInput(ProsesserBehandlingJobbUtfører).forBehandling(
                                 behandling.sakId.toLong(),
@@ -119,7 +119,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
 
                 val response = HashMap<String, String>()
                 val personinfo = PdlPersoninfoBulkGateway.hentPersoninfoForIdenter(identer.map { Ident(it.ident) })
-                personinfo.forEach { personinfo -> response[personinfo.ident.identifikator] = personinfo.fultNavn() }
+                personinfo.forEach { personinfo -> response[personinfo.ident.identifikator] = personinfo.fulltNavn() }
 
                 respond(
                     BehandlingPersoninfo(response)

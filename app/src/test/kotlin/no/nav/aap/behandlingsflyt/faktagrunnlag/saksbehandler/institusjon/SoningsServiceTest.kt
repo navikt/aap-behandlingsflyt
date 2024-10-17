@@ -57,7 +57,7 @@ class SoningsServiceTest {
         val actual = soningsService.samleSoningsGrunnlag(BehandlingReferanse())
 
         assertThat(actual.soningsvurdering)
-            .isEqualTo(SoningsvurderingDto(emptyList(), false, "YOLO", null, null, Periode(fromDate, toDate)))
+            .isEqualTo(SoningsvurderingDto(emptyList(), false, "YOLO", null, null))
 
         assertThat(actual.soningsopphold).hasSize(1)
         assertThat(actual.soningsopphold[0]).isEqualTo(

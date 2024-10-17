@@ -2,26 +2,15 @@ package no.nav.aap.behandlingsflyt.test
 
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import io.ktor.http.ContentDisposition
-import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpStatusCode
-import io.ktor.serialization.jackson.jackson
-import io.ktor.server.application.Application
-import io.ktor.server.application.install
-import io.ktor.server.application.log
-import io.ktor.server.engine.ConnectorType
-import io.ktor.server.engine.EmbeddedServer
-import io.ktor.server.engine.embeddedServer
-import io.ktor.server.netty.Netty
-import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.server.plugins.statuspages.StatusPages
-import io.ktor.server.request.header
-import io.ktor.server.request.receive
-import io.ktor.server.response.header
-import io.ktor.server.response.respond
-import io.ktor.server.response.respondOutputStream
-import io.ktor.server.response.respondText
+import io.ktor.http.*
+import io.ktor.serialization.jackson.*
+import io.ktor.server.application.*
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
+import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
@@ -55,7 +44,6 @@ import no.nav.aap.pdl.PdlRelasjon
 import no.nav.aap.pdl.PdlRelasjonData
 import no.nav.aap.pdl.PdlRelasjonDataResponse
 import no.nav.aap.pdl.PdlRequest
-import no.nav.aap.statistikk.api_kontrakt.AvsluttetBehandlingDTO
 import no.nav.aap.statistikk.api_kontrakt.StoppetBehandling
 import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.sakogbehandling.Ident
@@ -71,7 +59,7 @@ import tilgang.TilgangResponse
 import java.io.ByteArrayInputStream
 import java.time.LocalDate
 import java.time.Year
-import java.util.Base64
+import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -94,7 +82,6 @@ object FakeServers : AutoCloseable {
     private val statistikk = embeddedServer(Netty, port = 0, module = { statistikkFake() })
 
     internal val statistikkHendelser = mutableListOf<StoppetBehandling>()
-    internal val mottatteVilkårsResult = mutableListOf<AvsluttetBehandlingDTO>()
 
     private val started = AtomicBoolean(false)
 
@@ -272,14 +259,6 @@ object FakeServers : AutoCloseable {
             post("/stoppetBehandling") {
                 val receive = call.receive<StoppetBehandling>()
                 statistikkHendelser.add(receive)
-                call.respond(status = HttpStatusCode.Companion.Accepted, message = "{}")
-            }
-            post("/avsluttetBehandling") {
-                val receive = call.receive<AvsluttetBehandlingDTO>()
-                this@statistikkFake.log.info("Statistikk mottok: {}", receive)
-                synchronized(mottatteVilkårsResult) {
-                    mottatteVilkårsResult.add(receive)
-                }
                 call.respond(status = HttpStatusCode.Companion.Accepted, message = "{}")
             }
         }

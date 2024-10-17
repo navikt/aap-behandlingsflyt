@@ -63,7 +63,7 @@ object PdlPersoninfoBulkGateway {
     private fun mapPersoninformasjon(data: PdlNavnData): Personinfo {
         val navn = data.navn?.firstOrNull()
 
-        if(navn == null) {
+        if (navn == null) {
             return Personinfo(Ident(data.ident!!), "Ukjent", null, null)
         }
 

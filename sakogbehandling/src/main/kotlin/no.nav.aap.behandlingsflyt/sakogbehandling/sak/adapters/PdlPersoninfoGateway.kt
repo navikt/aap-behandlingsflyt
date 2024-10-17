@@ -67,7 +67,7 @@ object PdlPersoninfoGateway : PersoninfoGateway {
     override fun hentPersoninfoForIdent(ident: Ident, currentToken: OidcToken): Personinfo {
         val request = PdlRequest(PERSONINFO_QUERY, IdentVariables(ident.identifikator))
         val response: PdlPersonNavnDataResponse = query(request, currentToken)
-        val navn = response.data?.hentPerson?.navn?.first()
+        val navn = response.data?.hentPerson?.navn?.firstOrNull()
         return Personinfo(ident, navn?.fornavn, navn?.mellomnavn, navn?.etternavn)
     }
 

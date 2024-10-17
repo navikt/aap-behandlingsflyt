@@ -167,7 +167,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                     respond(
                         SakPersoninfoDTO(
                             fnr = personinfo.ident.identifikator,
-                            navn = personinfo.fultNavn(),
+                            navn = personinfo.fulltNavn(),
                         )
                     )
                 }

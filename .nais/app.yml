@@ -83,6 +83,7 @@ spec:
           namespace: yrkesskade
         - application: oppgave
         - application: statistikk
+        - application: integrasjonportal
         - application: spokelse
           namespace: tbd
 
