@@ -1,10 +1,28 @@
 package no.nav.aap.behandlingsflyt.behandling.brev.bestilling
 
+import no.nav.aap.behandlingsflyt.kontrakt.brev.Status
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import java.util.UUID
 
 class BrevbestillingRepository(private val connection: DBConnection) {
+
+    fun hent(referanse: UUID): Brevbestilling {
+        val query =
+            """
+                SELECT *
+                FROM BREVBESTILLING
+                WHERE REFERANSE = ?
+            """.trimIndent()
+
+        return connection.queryFirst(query) {
+            setParams {
+                setUUID(1, referanse)
+            }
+            setRowMapper { rowMapper(it) }
+        }
+    }
 
     fun hent(behandlingId: BehandlingId, typeBrev: TypeBrev): Brevbestilling? {
         val query =
@@ -20,16 +38,18 @@ class BrevbestillingRepository(private val connection: DBConnection) {
                 setLong(1, behandlingId.toLong())
                 setEnumName(2, typeBrev)
             }
-            setRowMapper {
-                Brevbestilling(
-                    id = it.getLong("id"),
-                    behandlingId = BehandlingId(it.getLong("behandling_id")),
-                    typeBrev = it.getEnum("type_brev"),
-                    referanse = it.getUUID("referanse"),
-                    status = it.getEnum("status"),
-                )
-            }
+            setRowMapper { rowMapper(it) }
         }
+    }
+
+    private fun rowMapper(row: Row): Brevbestilling {
+        return Brevbestilling(
+            id = row.getLong("id"),
+            behandlingId = BehandlingId(row.getLong("behandling_id")),
+            typeBrev = row.getEnum("type_brev"),
+            referanse = row.getUUID("referanse"),
+            status = row.getEnum("status"),
+        )
     }
 
     fun lagre(
@@ -54,16 +74,16 @@ class BrevbestillingRepository(private val connection: DBConnection) {
         }
     }
 
-    fun oppdaterStatus(behandlingId: BehandlingId, status: Status) {
+    fun oppdaterStatus(referanse: UUID, status: Status) {
         val query =
             """
-                UPDATE BREVBESTILLING SET STATUS = ? WHERE BEHANDLING_ID = ?
+                UPDATE BREVBESTILLING SET STATUS = ? WHERE REFERANSE = ?
             """.trimIndent()
 
         connection.execute(query) {
             setParams {
                 setEnumName(1, status)
-                setLong(1, behandlingId.toLong())
+                setUUID(1, referanse)
             }
             setResultValidator {
                 require(1 == it)

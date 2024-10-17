@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.brev.bestilling
 
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.brev.Status
 import no.nav.aap.brev.kontrakt.BestillBrevRequest
 import no.nav.aap.brev.kontrakt.BestillBrevResponse
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse

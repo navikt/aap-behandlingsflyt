@@ -1,9 +1,11 @@
 package no.nav.aap.behandlingsflyt.behandling.brev.bestilling
 
+import no.nav.aap.behandlingsflyt.kontrakt.brev.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
+import java.util.UUID
 
 class BrevbestillingService(
     private val brevbestillingGateway: BrevbestillingGateway,
@@ -34,5 +36,9 @@ class BrevbestillingService(
             bestillingReferanse,
             Status.SENDT,
         )
+    }
+
+    fun oppdaterStatus(referanse: UUID, status: Status) {
+        brevbestillingRepository.oppdaterStatus(referanse, status)
     }
 }

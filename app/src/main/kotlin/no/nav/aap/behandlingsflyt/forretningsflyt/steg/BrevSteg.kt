@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevUtlederService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
+import no.nav.aap.behandlingsflyt.kontrakt.brev.Status
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
