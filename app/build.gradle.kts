@@ -32,6 +32,11 @@ tasks {
     }
 }
 
+tasks.register<JavaExec>("runTestApp") {
+    classpath = sourceSets.test.get().runtimeClasspath
+    mainClass.set("no.nav.aap.behandlingsflyt.TestAppKt")
+}
+
 fun runCommand(command: String): String {
     val byteOut = ByteArrayOutputStream()
     project.exec {

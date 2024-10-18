@@ -27,24 +27,12 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.sakogbehandling.Ident
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
-
-class TestApp {
-    @Test
-    @EnabledIfEnvironmentVariable(named = "TEST_APP", matches = "RUN")
-    fun `kjør test-app`() {
-        // For å kjøre test-app fra kommandolinjen, kjør
-        // cd app && TEST_APP=RUN ../gradlew test --tests TestApp --info
-        main()
-    }
-}
 
 // Kjøres opp for å få logback i console uten json
 fun main() {
