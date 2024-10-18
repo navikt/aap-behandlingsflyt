@@ -76,7 +76,7 @@ class StatistikkJobbUtførerTest {
             val behandlingRepository = BehandlingRepositoryImpl(connection)
 
             val ident = Ident(
-                identifikator = "123",
+                identifikator = "456",
                 aktivIdent = true
             )
             val identGateway = object : IdentGateway {
