@@ -80,6 +80,7 @@ class StatistikkJobbUtfører(
     }
 
     private fun oversettHendelseTilKontrakt(hendelse: BehandlingFlytStoppetHendelse): StoppetBehandling {
+        log.info("Oversetter hendelse for behandling ${hendelse.referanse} og saksnr ${hendelse.saksnummer}")
         val behandling = behandlingRepository.hent(hendelse.referanse)
         val hentDokumenterAvType = dokumentRepository.hentDokumenterAvType(
             behandling.sakId,
