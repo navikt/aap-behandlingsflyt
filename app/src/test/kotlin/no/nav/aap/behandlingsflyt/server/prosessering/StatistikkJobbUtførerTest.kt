@@ -64,9 +64,108 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 
 @Fakes
 class StatistikkJobbUtførerTest {
+
+    @Test
+    fun `mottatt tidspunkt er korrekt når revurdering`(hendelser: List<StoppetBehandling>) {
+        var opprettetTidspunkt: LocalDateTime? = null
+        val (behandling, sak, ident) = InitTestDatabase.dataSource.transaction { connection ->
+            val behandlingRepository = BehandlingRepositoryImpl(connection)
+
+            val ident = Ident(
+                identifikator = "123",
+                aktivIdent = true
+            )
+            val identGateway = object : IdentGateway {
+                override fun hentAlleIdenterForPerson(ident: Ident): List<Ident> {
+                    return listOf(ident)
+                }
+            }
+
+            val sak = PersonOgSakService(connection, identGateway).finnEllerOpprett(
+                ident, periode = Periode(LocalDate.now().minusDays(10), LocalDate.now().plusDays(1))
+            )
+
+            val opprettetBehandling = behandlingRepository.opprettBehandling(
+                sak.id,
+                typeBehandling = TypeBehandling.Førstegangsbehandling,
+                årsaker = listOf(),
+                forrigeBehandlingId = null
+            )
+
+            val revurdering = behandlingRepository.opprettBehandling(
+                sak.id,
+                typeBehandling = TypeBehandling.Revurdering,
+                årsaker = listOf(),
+                forrigeBehandlingId = opprettetBehandling.id
+            )
+
+            opprettetTidspunkt = revurdering.opprettetTidspunkt
+
+            MottattDokumentRepository(connection).lagre(
+                MottattDokument(
+                    referanse = MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, "xxx"),
+                    sakId = sak.id,
+                    behandlingId = opprettetBehandling.id,
+                    mottattTidspunkt = LocalDateTime.now().minusDays(23),
+                    type = Brevkode.SØKNAD,
+                    strukturertDokument = null
+                )
+            )
+
+            Triple(revurdering, sak, ident)
+        }
+
+        val hendelseTidspunkt = LocalDateTime.now()
+        val payload = BehandlingFlytStoppetHendelse(
+            personIdent = ident.identifikator,
+            saksnummer = sak.saksnummer,
+            referanse = behandling.referanse,
+            behandlingType = behandling.typeBehandling(),
+            status = behandling.status(),
+            avklaringsbehov = listOf(),
+            opprettetTidspunkt = opprettetTidspunkt!!,
+            hendelsesTidspunkt = hendelseTidspunkt,
+            versjon = "123"
+        )
+
+        val hendelse2 = DefaultJsonMapper.toJson(payload)
+
+        // Act
+
+        InitTestDatabase.dataSource.transaction { connection ->
+            val sakService = SakService(connection)
+            val vilkårsResultatRepository = VilkårsresultatRepository(connection = connection)
+            val behandlingRepository = BehandlingRepositoryImpl(connection)
+            val beregningsgrunnlagRepository = BeregningsgrunnlagRepository(connection)
+
+            StatistikkJobbUtfører(
+                StatistikkGateway(),
+                vilkårsResultatRepository,
+                behandlingRepository,
+                sakService,
+                TilkjentYtelseRepository(connection),
+                beregningsgrunnlagRepository,
+                MottattDokumentRepository(connection)
+            ).utfør(
+                JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
+            )
+        }
+
+        // Assert
+
+        assertThat(hendelser).isNotEmpty()
+        assertThat(hendelser.size).isEqualTo(1)
+        assertThat(hendelser.first().mottattTid.truncatedTo(ChronoUnit.SECONDS)).isEqualTo(
+            opprettetTidspunkt!!.truncatedTo(
+                ChronoUnit.SECONDS
+            )
+        )
+    }
+
     @Test
     fun `statistikk-jobb avgir avsluttet behandling-data korrekt`(hendelser: List<StoppetBehandling>) {
         val (behandling, sak, ident) = InitTestDatabase.dataSource.transaction { connection ->

@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.EndringDTO
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
@@ -45,6 +46,7 @@ import no.nav.aap.statistikk.api_kontrakt.VilkårsPeriodeDTO
 import no.nav.aap.statistikk.api_kontrakt.VilkårsResultatDTO
 import no.nav.aap.statistikk.api_kontrakt.Vilkårtype
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status as BehandlingStatus
 
 private val log = LoggerFactory.getLogger(StatistikkJobbUtfører::class.java)
@@ -82,16 +84,9 @@ class StatistikkJobbUtfører(
     private fun oversettHendelseTilKontrakt(hendelse: BehandlingFlytStoppetHendelse): StoppetBehandling {
         log.info("Oversetter hendelse for behandling ${hendelse.referanse} og saksnr ${hendelse.saksnummer}")
         val behandling = behandlingRepository.hent(hendelse.referanse)
-        val hentDokumenterAvType = dokumentRepository.hentDokumenterAvType(
-            behandling.sakId,
-            Brevkode.SØKNAD
-        )
+        val mottattTidspunkt = utledMottattTidspunkt(behandling)
 
         val sak = sakService.hent(hendelse.saksnummer)
-
-        val mottattTidspunkt = hentDokumenterAvType
-            .filter { it.behandlingId == behandling.id }
-            .minOf { it.mottattTidspunkt }
 
         val statistikkHendelse = StoppetBehandling(
             saksnummer = hendelse.saksnummer.toString(),
@@ -124,6 +119,23 @@ class StatistikkJobbUtfører(
             hendelsesTidspunkt = hendelse.hendelsesTidspunkt
         )
         return statistikkHendelse
+    }
+
+    private fun utledMottattTidspunkt(behandling: Behandling): LocalDateTime {
+        val hentDokumenterAvType = dokumentRepository.hentDokumenterAvType(
+            behandling.sakId,
+            Brevkode.SØKNAD
+        )
+
+        val mottattTidspunkt = hentDokumenterAvType
+            .filter { it.behandlingId == behandling.id }
+            .minOfOrNull { it.mottattTidspunkt }
+
+        if (mottattTidspunkt == null) {
+            log.info("Ingen søknader funnet for behandling ${behandling.referanse} av type ${behandling.typeBehandling()}.")
+            return behandling.opprettetTidspunkt
+        }
+        return mottattTidspunkt
     }
 
     private fun behandlingflytSakStatusTilStatistikk(sakStatus: no.nav.aap.behandlingsflyt.sakogbehandling.sak.Status): SakStatus =
