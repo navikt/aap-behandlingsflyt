@@ -199,8 +199,8 @@ fun Application.module(dataSource: DataSource): Motor {
         application.environment.log.info("Server har stoppet")
         motor.stop()
         // Release resources and unsubscribe from events
-        application.environment.monitor.unsubscribe(ApplicationStarted) {}
-        application.environment.monitor.unsubscribe(ApplicationStopped) {}
+        application.monitor.unsubscribe(ApplicationStarted) {}
+        application.monitor.unsubscribe(ApplicationStopped) {}
     }
 
     return motor
