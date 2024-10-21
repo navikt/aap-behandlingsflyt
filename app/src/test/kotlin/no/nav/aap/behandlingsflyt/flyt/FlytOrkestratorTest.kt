@@ -11,11 +11,14 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSet
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvventBrevbestillingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBeregningstidspunktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.ÅrsakTilRetur
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.dbtestdata.ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
@@ -45,6 +48,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FATTE_VEDTAK_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.KVALITETSSIKRING_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.BrevbestillingStatusDto
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
@@ -371,6 +375,61 @@ class FlytOrkestratorTest {
                 )
             )
         }
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
+
+        behandling = hentBehandling(sak.id)
+
+        dataSource.transaction { connection ->
+            val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
+
+            // Det er bestilt vedtaksbrev
+            assertThat(avklaringsbehov.alle()).anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.UTFØR_BREV_BESTILLING) }
+            assertThat(behandling.status()).isEqualTo(Status.IVERKSETTES)
+
+            val brevbestilling = BrevbestillingRepository(connection).hent(behandling.id, TypeBrev.VEDTAK_INNVILGELSE)!!
+            AvklaringsbehovHendelseHåndterer(connection).håndtere(
+                behandling.id,
+                LøsAvklaringsbehovBehandlingHendelse(
+                    løsning = AvventBrevbestillingLøsning(
+                        BrevbestillingStatusDto(
+                            brevbestilling.referanse,
+                            no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.Status.UNDER_ARBEID
+                        )
+                    ),
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("Brevløsning")
+                )
+            )
+            // Brevet er klar for forhåndsvisning og editering
+            assertThat(BrevbestillingRepository(connection).hent(brevbestilling.referanse).status)
+                .isEqualTo(no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.Status.UNDER_ARBEID)
+        }
+
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
+
+        behandling = hentBehandling(sak.id)
+
+        dataSource.transaction { connection ->
+            val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
+
+            // Venter på at brevet skal fullføres
+            assertThat(avklaringsbehov.alle()).anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.UTFØR_BREV_BESTILLING) }
+
+            val brevbestilling = BrevbestillingRepository(connection).hent(behandling.id, TypeBrev.VEDTAK_INNVILGELSE)!!
+            AvklaringsbehovHendelseHåndterer(connection).håndtere(
+                behandling.id,
+                LøsAvklaringsbehovBehandlingHendelse(
+                    løsning = AvventBrevbestillingLøsning(BrevbestillingStatusDto(brevbestilling.referanse, no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.Status.FULLFØRT)),
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
+                )
+            )
+
+            // Brevet er fullført
+            assertThat(BrevbestillingRepository(connection).hent(brevbestilling.referanse).status)
+                .isEqualTo(no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.Status.FULLFØRT)
+        }
+
         util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
 
         behandling = hentBehandling(sak.id)

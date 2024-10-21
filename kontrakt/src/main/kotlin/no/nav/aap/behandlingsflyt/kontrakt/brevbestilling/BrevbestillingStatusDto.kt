@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.kontrakt.brev
+package no.nav.aap.behandlingsflyt.kontrakt.brevbestilling
 
 import java.util.UUID
 

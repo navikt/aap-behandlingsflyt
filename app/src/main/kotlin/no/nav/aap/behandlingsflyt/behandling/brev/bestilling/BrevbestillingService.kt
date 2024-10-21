@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.brev.bestilling
 
-import no.nav.aap.behandlingsflyt.kontrakt.brev.Status
+import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection

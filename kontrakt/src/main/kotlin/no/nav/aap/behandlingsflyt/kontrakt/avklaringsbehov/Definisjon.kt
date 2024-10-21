@@ -10,7 +10,7 @@ import java.util.*
 import java.util.stream.Collectors
 
 const val MANUELT_SATT_PÅ_VENT_KODE = "9001"
-const val AVVENTER_BREV_BESTILLING_KODE = "9002"
+const val UTFØR_BREV_BESTILLING_KODE = "9002"
 const val AVKLAR_STUDENT_KODE = "5001"
 const val AVKLAR_SYKDOM_KODE = "5003"
 const val FASTSETT_ARBEIDSEVNE_KODE = "5004"
@@ -25,7 +25,6 @@ const val AVKLAR_SAMORDNING_GRADERING_KODE = "5012"
 const val KVALITETSSIKRING_KODE = "5097"
 const val FORESLÅ_VEDTAK_KODE = "5098"
 const val FATTE_VEDTAK_KODE = "5099"
-const val SKRIV_BREV_KODE = "5050"
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 enum class Definisjon(
@@ -41,16 +40,11 @@ enum class Definisjon(
         type = BehovType.VENTEPUNKT,
         defaultFrist = Period.ofWeeks(3),
     ),
-    AVVENTER_BREV_BESTILLING(
-        kode = AVVENTER_BREV_BESTILLING_KODE,
+    UTFØR_BREV_BESTILLING(
+        kode = UTFØR_BREV_BESTILLING_KODE,
         løsesISteg = StegType.BREV,
         type = BehovType.VENTEPUNKT,
         defaultFrist = Period.ofDays(1),
-    ),
-    SKRIV_BREV(
-        kode = SKRIV_BREV_KODE,
-        løsesISteg = StegType.BREV,
-        type = BehovType.MANUELT_PÅKREVD,
     ),
     AVKLAR_STUDENT(
         kode = AVKLAR_STUDENT_KODE,

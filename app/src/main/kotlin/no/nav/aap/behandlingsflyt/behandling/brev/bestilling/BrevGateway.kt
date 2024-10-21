@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.brev.bestilling
 
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
-import no.nav.aap.behandlingsflyt.kontrakt.brev.Status
+import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.Status
 import no.nav.aap.brev.kontrakt.BestillBrevRequest
 import no.nav.aap.brev.kontrakt.BestillBrevResponse
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
@@ -83,7 +83,7 @@ class BrevGateway : BrevbestillingGateway {
 
     private fun mapStatus(status: no.nav.aap.brev.kontrakt.Status): Status = when (status) {
         no.nav.aap.brev.kontrakt.Status.REGISTRERT -> Status.SENDT
-        no.nav.aap.brev.kontrakt.Status.UNDER_ARBEID -> Status.FORHÅNDSVISNING_KLAR
+        no.nav.aap.brev.kontrakt.Status.UNDER_ARBEID -> Status.UNDER_ARBEID
         no.nav.aap.brev.kontrakt.Status.FERDIGSTILT -> Status.FULLFØRT
     }
 }

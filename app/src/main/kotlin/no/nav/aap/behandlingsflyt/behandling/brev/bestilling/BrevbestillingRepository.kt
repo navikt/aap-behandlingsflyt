@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.brev.bestilling
 
-import no.nav.aap.behandlingsflyt.kontrakt.brev.Status
+import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.Status
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
@@ -83,7 +83,7 @@ class BrevbestillingRepository(private val connection: DBConnection) {
         connection.execute(query) {
             setParams {
                 setEnumName(1, status)
-                setUUID(1, referanse)
+                setUUID(2, referanse)
             }
             setResultValidator {
                 require(1 == it)
