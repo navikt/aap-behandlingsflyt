@@ -49,4 +49,4 @@ jobs:
                     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             -   run: gh workflow run deploy-dev.yaml --ref main
                 env:
-                    GITHUB_TOKEN: ${{ secrets.GH_WF_TOKEN }}
+                    GH_TOKEN: ${{ secrets.GH_WF_TOKEN }}
