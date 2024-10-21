@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository.DokumentType.BRUDD
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository.DokumentType.FEILREGISTRERING
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.type.Periode
@@ -9,20 +11,38 @@ import no.nav.aap.verdityper.sakogbehandling.SakId
 import org.jetbrains.annotations.TestOnly
 
 class AktivitetspliktRepository(private val connection: DBConnection) {
+    private enum class DokumentType {
+        BRUDD,
+        FEILREGISTRERING,
+    }
+
+    sealed interface LagreDokumentInput {
+        val sakId: SakId
+        val innsender: NavIdent
+        val periode: Periode
+    }
+
     class LagreBruddInput(
-        val sakId: SakId,
-        val navIdent: NavIdent,
+        override val sakId: SakId,
+        override val innsender: NavIdent,
+        override val periode: Periode,
         val brudd: BruddAktivitetsplikt.Type,
         val paragraf: BruddAktivitetsplikt.Paragraf,
         val begrunnelse: String,
-        val periode: Periode,
-    )
+    ): LagreDokumentInput
 
-    fun lagreBrudd(brudd: List<LagreBruddInput>): InnsendingId {
+    /* TODO: hvor mye skal vi ha med i en feilregistreringen? */
+    class LagreFeilregistreringInput(
+        override val sakId: SakId,
+        override val innsender: NavIdent,
+        override val periode: Periode,
+    ): LagreDokumentInput
+
+    fun lagreBrudd(brudd: List<LagreDokumentInput>): InnsendingId {
         val query = """
             INSERT INTO BRUDD_AKTIVITETSPLIKT
-            (SAK_ID, BRUDD, PERIODE, BEGRUNNELSE, PARAGRAF, NAV_IDENT, OPPRETTET_TID, HENDELSE_ID, INNSENDING_ID)
-            VALUES (?, ?, ?::daterange, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?)
+            (SAK_ID, PERIODE, NAV_IDENT, OPPRETTET_TID, HENDELSE_ID, INNSENDING_ID, DOKUMENT_TYPE, BRUDD, BEGRUNNELSE, PARAGRAF)
+            VALUES (?, ?::daterange, ?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
 
         val innsendingId = InnsendingId.ny()
@@ -30,13 +50,24 @@ class AktivitetspliktRepository(private val connection: DBConnection) {
         connection.executeBatch(query, brudd) {
             setParams { request ->
                 setLong(1, request.sakId.toLong())
-                setEnumName(2, request.brudd)
-                setPeriode(3, request.periode)
-                setString(4, request.begrunnelse)
-                setEnumName(5, request.paragraf)
-                setString(6, request.navIdent.navIdent)
-                setUUID(7, HendelseId.ny().id)
-                setUUID(8, innsendingId.value)
+                setPeriode(2, request.periode)
+                setString(3, request.innsender.navIdent)
+                setUUID(4, HendelseId.ny().id)
+                setUUID(5, innsendingId.value)
+                when (request) {
+                    is LagreBruddInput -> {
+                        setEnumName(6, BRUDD)
+                        setEnumName(7, request.brudd)
+                        setString(8, request.begrunnelse)
+                        setEnumName(9, request.paragraf)
+                    }
+                    is LagreFeilregistreringInput -> {
+                        setEnumName(6, FEILREGISTRERING)
+                        setEnumName(7, null)
+                        setString(8, null)
+                        setEnumName(9, null)
+                    }
+                }
             }
         }
         return innsendingId
@@ -146,18 +177,41 @@ class AktivitetspliktRepository(private val connection: DBConnection) {
     }
 
     private fun mapBruddAktivitetsplikt(row: Row): Aktivitetspliktdokument {
-        return BruddAktivitetsplikt(
-            id = BruddAktivitetspliktId(row.getLong("ID")),
-            type = row.getEnum("BRUDD"),
-            paragraf = row.getEnum("PARAGRAF"),
-            periode = row.getPeriode("PERIODE"),
-            begrunnelse = row.getString("BEGRUNNELSE"),
-            sakId = SakId(row.getLong("SAK_ID")),
-            navIdent = NavIdent(row.getString("NAV_IDENT")),
-            hendelseId = HendelseId(row.getUUID("HENDELSE_ID")),
-            innsendingId = InnsendingId(row.getUUID("INNSENDING_ID")),
-            opprettetTid = row.getInstant("OPPRETTET_TID"),
-        )
+        val id = BruddAktivitetspliktId(row.getLong("ID"))
+        val periode = row.getPeriode("PERIODE")
+        val opprettetTid = row.getInstant("OPPRETTET_TID")
+        val sakId = SakId(row.getLong("SAK_ID"))
+        val navIdent = NavIdent(row.getString("NAV_IDENT"))
+        val hendelseId = HendelseId(row.getUUID("HENDELSE_ID"))
+        val innsendingId = InnsendingId(row.getUUID("INNSENDING_ID"))
+
+        /* TODO fjern OrNull når database er migrert */
+        return when (row.getEnumOrNull("DOKUMENT_TYPE") ?: BRUDD) {
+            BRUDD ->
+                BruddAktivitetsplikt(
+                    id = id,
+                    periode = periode,
+                    sakId = sakId,
+                    innsender = navIdent,
+                    hendelseId = hendelseId,
+                    innsendingId = innsendingId,
+                    opprettetTid = opprettetTid,
+                    type = row.getEnum("BRUDD"),
+                    paragraf = row.getEnum("PARAGRAF"),
+                    begrunnelse = row.getString("BEGRUNNELSE"),
+                )
+
+            FEILREGISTRERING ->
+                FeilregistrertBrudd(
+                    id = id,
+                    periode = periode,
+                    sakId = sakId,
+                    innsender = navIdent,
+                    hendelseId = hendelseId,
+                    innsendingId = innsendingId,
+                    opprettetTid = opprettetTid,
+                )
+        }
     }
 
     private fun deaktiverGrunnlag(behandlingId: BehandlingId) {

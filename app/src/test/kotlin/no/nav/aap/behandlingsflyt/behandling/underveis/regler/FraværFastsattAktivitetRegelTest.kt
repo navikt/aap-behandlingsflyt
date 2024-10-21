@@ -217,7 +217,7 @@ class FraværFastsattAktivitetRegelTest {
         id = BruddAktivitetspliktId(0),
         hendelseId = HendelseId.ny(),
         innsendingId = InnsendingId.ny(),
-        navIdent = NavIdent(""),
+        innsender = NavIdent(""),
         sakId = SakId(1),
         type = aktivitetsType,
         paragraf = paragraf,

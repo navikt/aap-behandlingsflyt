@@ -35,7 +35,7 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
                         paragraf = req.paragraf,
                         begrunnelse = req.begrunnelse,
                         periode = periode,
-                        navIdent = navIdent,
+                        innsender = navIdent,
                     )
                 }
                 val innsendingId = repository.lagreBrudd(bruddAktivitetsplikt)

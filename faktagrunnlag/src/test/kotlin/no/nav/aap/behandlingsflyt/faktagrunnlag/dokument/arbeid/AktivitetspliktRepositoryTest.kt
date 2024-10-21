@@ -143,7 +143,7 @@ fun nyeBrudd(
                 paragraf = paragraf,
                 begrunnelse = begrunnelse,
                 periode = periode,
-                navIdent = NavIdent("Z000000"),
+                innsender = NavIdent("Z000000"),
             )
         }
     )

@@ -21,7 +21,7 @@ sealed interface Aktivitetspliktdokument {
     val innsendingId: InnsendingId
 
     /** Saksbehandler som sendte inn dokumentet. */
-    val navIdent: NavIdent
+    val innsender: NavIdent
 
     /** Tidspunktet dokumentet ble mottatt. */
     val opprettetTid: Instant
@@ -36,7 +36,7 @@ data class FeilregistrertBrudd(
     override val id: BruddAktivitetspliktId,
     override val hendelseId: HendelseId,
     override val innsendingId: InnsendingId,
-    override val navIdent: NavIdent,
+    override val innsender: NavIdent,
     override val sakId: SakId,
     override val opprettetTid: Instant,
     override val periode: Periode
@@ -47,7 +47,7 @@ data class BruddAktivitetsplikt(
     override val id: BruddAktivitetspliktId,
     override val hendelseId: HendelseId,
     override val innsendingId: InnsendingId,
-    override val navIdent: NavIdent,
+    override val innsender: NavIdent,
     override val sakId: SakId,
     override val periode: Periode,
     override val opprettetTid: Instant,
