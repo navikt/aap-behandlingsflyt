@@ -73,18 +73,16 @@ class StatistikkJobbUtfører(
 
         val statistikkHendelse = oversettHendelseTilKontrakt(hendelse)
 
-        if (hendelse.status == AVSLUTTET) {
-            val avsluttetBehandlingDTO = hentAvsluttetBehandlingDTO(hendelse)
-            statistikkGateway.avgiStatistikk(statistikkHendelse.copy(avsluttetBehandling = avsluttetBehandlingDTO))
-        } else {
-            statistikkGateway.avgiStatistikk(statistikkHendelse)
-        }
+        statistikkGateway.avgiStatistikk(statistikkHendelse)
     }
 
     private fun oversettHendelseTilKontrakt(hendelse: BehandlingFlytStoppetHendelse): StoppetBehandling {
         log.info("Oversetter hendelse for behandling ${hendelse.referanse} og saksnr ${hendelse.saksnummer}")
         val behandling = behandlingRepository.hent(hendelse.referanse)
         val mottattTidspunkt = utledMottattTidspunkt(behandling)
+
+        val forrigeBehandling =
+            if (behandling.forrigeBehandlingId != null) behandlingRepository.hent(behandling.forrigeBehandlingId!!) else null
 
         val sak = sakService.hent(hendelse.saksnummer)
 
@@ -112,11 +110,13 @@ class StatistikkJobbUtfører(
                 )
             },
             behandlingReferanse = hendelse.referanse.referanse,
+            relatertBehandling = forrigeBehandling?.referanse?.referanse,
             behandlingOpprettetTidspunkt = hendelse.opprettetTidspunkt,
             versjon = hendelse.versjon,
             mottattTid = mottattTidspunkt,
             sakStatus = behandlingflytSakStatusTilStatistikk(sak.status()),
-            hendelsesTidspunkt = hendelse.hendelsesTidspunkt
+            hendelsesTidspunkt = hendelse.hendelsesTidspunkt,
+            avsluttetBehandling = if (hendelse.status.erAvsluttet()) hentAvsluttetBehandlingDTO(hendelse) else null,
         )
         return statistikkHendelse
     }

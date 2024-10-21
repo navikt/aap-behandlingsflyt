@@ -66,7 +66,7 @@ dependencies {
     implementation("net.logstash.logback:logstash-logback-encoder:8.0")
 
     implementation("no.nav.aap.brev:kontrakt:0.0.8")
-    implementation("no.nav.aap.statistikk:api-kontrakt:0.0.18")
+    implementation("no.nav.aap.statistikk:api-kontrakt:0.0.21")
     implementation("no.nav.aap.kelvin:motor:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:dbconnect:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:dbmigrering:$komponenterVersjon")

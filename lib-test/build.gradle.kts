@@ -23,7 +23,7 @@ dependencies {
     implementation("io.ktor:ktor-server-cors:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
 
-    implementation("no.nav.aap.statistikk:api-kontrakt:0.0.18")
+    implementation("no.nav.aap.statistikk:api-kontrakt:0.0.21")
 
     implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.18.0")
