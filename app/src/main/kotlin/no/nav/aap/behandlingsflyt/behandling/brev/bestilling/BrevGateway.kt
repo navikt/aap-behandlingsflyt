@@ -83,7 +83,7 @@ class BrevGateway : BrevbestillingGateway {
 
     private fun mapStatus(status: no.nav.aap.brev.kontrakt.Status): Status = when (status) {
         no.nav.aap.brev.kontrakt.Status.REGISTRERT -> Status.SENDT
-        no.nav.aap.brev.kontrakt.Status.UNDER_ARBEID -> Status.UNDER_ARBEID
+        no.nav.aap.brev.kontrakt.Status.UNDER_ARBEID -> Status.FORHÅNDSVISNING_KLAR
         no.nav.aap.brev.kontrakt.Status.FERDIGSTILT -> Status.FULLFØRT
     }
 }

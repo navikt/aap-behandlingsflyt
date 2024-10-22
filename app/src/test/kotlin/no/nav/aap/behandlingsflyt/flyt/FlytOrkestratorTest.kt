@@ -383,7 +383,7 @@ class FlytOrkestratorTest {
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
 
             // Det er bestilt vedtaksbrev
-            assertThat(avklaringsbehov.alle()).anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.UTFØR_BREV_BESTILLING) }
+            assertThat(avklaringsbehov.alle()).anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.AVVENTER_BREV_BESTILLING) }
             assertThat(behandling.status()).isEqualTo(Status.IVERKSETTES)
 
             val brevbestilling = BrevbestillingRepository(connection).hent(behandling.id, TypeBrev.VEDTAK_INNVILGELSE)!!
@@ -393,7 +393,7 @@ class FlytOrkestratorTest {
                     løsning = AvventBrevbestillingLøsning(
                         BrevbestillingStatusDto(
                             brevbestilling.referanse,
-                            no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.Status.UNDER_ARBEID
+                            no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.Status.FORHÅNDSVISNING_KLAR
                         )
                     ),
                     behandlingVersjon = behandling.versjon,
@@ -402,7 +402,7 @@ class FlytOrkestratorTest {
             )
             // Brevet er klar for forhåndsvisning og editering
             assertThat(BrevbestillingRepository(connection).hent(brevbestilling.referanse).status)
-                .isEqualTo(no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.Status.UNDER_ARBEID)
+                .isEqualTo(no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.Status.FORHÅNDSVISNING_KLAR)
         }
 
         util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
@@ -413,7 +413,7 @@ class FlytOrkestratorTest {
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
 
             // Venter på at brevet skal fullføres
-            assertThat(avklaringsbehov.alle()).anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.UTFØR_BREV_BESTILLING) }
+            assertThat(avklaringsbehov.alle()).anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.AVVENTER_BREV_BESTILLING) }
 
             val brevbestilling = BrevbestillingRepository(connection).hent(behandling.id, TypeBrev.VEDTAK_INNVILGELSE)!!
             AvklaringsbehovHendelseHåndterer(connection).håndtere(
