@@ -11,7 +11,7 @@ dependencies {
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.0")
  
-    implementation("ch.qos.logback:logback-classic:1.5.8")
+    implementation("ch.qos.logback:logback-classic:1.5.11")
     implementation("no.nav:ktor-openapi-generator:1.0.46")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.2")
