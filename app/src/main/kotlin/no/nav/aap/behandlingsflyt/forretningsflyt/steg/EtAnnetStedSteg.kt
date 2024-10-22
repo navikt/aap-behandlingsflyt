@@ -14,27 +14,25 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
 
 class EtAnnetStedSteg(
-    private val institusjonsoppholdRepository: InstitusjonsoppholdRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val etAnnetStedUtlederService: EtAnnetStedUtlederService
 ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        val grunnlag = institusjonsoppholdRepository.hentHvisEksisterer(kontekst.behandlingId)
 
         val avklaringsbehov = mutableListOf<Definisjon>()
 
-        val harBehovForAvklaringer = etAnnetStedUtlederService.harBehovForAvklaringer(kontekst.behandlingId)
-        if(harBehovForAvklaringer.harBehov()){
+        val harBehovForAvklaringer = etAnnetStedUtlederService.utled(kontekst.behandlingId)
+        if (harBehovForAvklaringer.harBehovForAvklaring()) {
             avklaringsbehov += harBehovForAvklaringer.avklaringsbehov()
         }
 
-        if(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_HELSEINSTITUSJON) != null){
+        if (avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_HELSEINSTITUSJON) != null) {
             avklaringsbehov.remove(Definisjon.AVKLAR_HELSEINSTITUSJON)
         }
 
-        if(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SONINGSFORRHOLD) != null){
+        if (avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SONINGSFORRHOLD) != null) {
             avklaringsbehov.remove(Definisjon.AVKLAR_SONINGSFORRHOLD)
         }
 
@@ -45,10 +43,11 @@ class EtAnnetStedSteg(
         override fun konstruer(connection: DBConnection): BehandlingSteg {
             val institusjonsoppholdRepository = InstitusjonsoppholdRepository(connection)
             return EtAnnetStedSteg(
-                institusjonsoppholdRepository, AvklaringsbehovRepositoryImpl(connection), EtAnnetStedUtlederService(
-                BarnetilleggRepository(connection),
+                AvklaringsbehovRepositoryImpl(connection), EtAnnetStedUtlederService(
+                    BarnetilleggRepository(connection),
                     institusjonsoppholdRepository
-            ))
+                )
+            )
         }
 
         override fun type(): StegType {

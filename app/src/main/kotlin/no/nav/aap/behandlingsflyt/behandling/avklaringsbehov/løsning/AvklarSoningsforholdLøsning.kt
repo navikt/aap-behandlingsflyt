@@ -3,17 +3,17 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeName
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_SONINGSFORRHOLD_KODE
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarSoningsforholdLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.SoningsvurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.SoningsvurderingerDto
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_SONINGSFORRHOLD_KODE
 import no.nav.aap.komponenter.dbconnect.DBConnection
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = AVKLAR_SONINGSFORRHOLD_KODE)
 class AvklarSoningsforholdLøsning(
-    @JsonProperty("soningsvurdering", required = true) val soningsvurdering: SoningsvurderingDto,
+    @JsonProperty("soningsvurdering", required = true) val soningsvurdering: SoningsvurderingerDto,
     @JsonProperty(
         "behovstype",
         required = true,

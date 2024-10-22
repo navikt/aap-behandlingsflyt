@@ -46,8 +46,13 @@ class Prosent private constructor(verdi: BigDecimal) : Comparable<Prosent> {
         return `100_PROSENT`.minus(this)
     }
 
-    fun minus(subtrahend: Prosent): Prosent {
-        return Prosent(this.verdi - subtrahend.verdi)
+    fun minus(subtrahend: Prosent, minimumsverdi: Prosent = `0_PROSENT`): Prosent {
+        val verdi = this.verdi - subtrahend.verdi
+        if (verdi < minimumsverdi.verdi) {
+            return minimumsverdi
+        }
+
+        return Prosent(verdi)
     }
 
     internal fun multiplisert(faktor: BigDecimal): BigDecimal {

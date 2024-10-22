@@ -24,14 +24,13 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.kvalitetssikr
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.utledSubtypes
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.flate.barnetilleggApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.flate.beregningsGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.etannetsted.institusjonAPI
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.flate.tilkjentYtelseAPI
 import no.nav.aap.behandlingsflyt.behandling.vilkår.alder.flate.aldersGrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.flate.arbeidsevneGrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.flate.beregningVurderingAPI
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.bistandsgrunnlagApi
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.helseinstitusjonVurderingAPI
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.soningVurderingAPI
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.medlemskap.flate.medlemskapsgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.meldepliktsgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.flate.studentgrunnlagApi
@@ -162,8 +161,7 @@ internal fun Application.server(dbConfig: DbConfig) {
                 studentgrunnlagApi(dataSource)
                 sykdomsgrunnlagApi(dataSource)
                 sykepengerGrunnlagApi(dataSource)
-                soningVurderingAPI(dataSource)
-                helseinstitusjonVurderingAPI(dataSource)
+                institusjonAPI(dataSource)
                 avklaringsbehovApi(dataSource)
                 tilkjentYtelseAPI(dataSource)
                 beregningVurderingAPI(dataSource)

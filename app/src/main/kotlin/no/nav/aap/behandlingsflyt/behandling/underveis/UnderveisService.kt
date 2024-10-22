@@ -1,12 +1,11 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis
 
-import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetSted
-import no.nav.aap.behandlingsflyt.behandling.etannetsted.Institusjon
-import no.nav.aap.behandlingsflyt.behandling.etannetsted.Soning
+import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AktivtBidragRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.GraderingArbeidRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.InstitusjonRegel
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MapInstitusjonoppholdTilRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ReduksjonAktivitetspliktRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.RettTilRegel
@@ -15,7 +14,6 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UnderveisInput
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Vurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
@@ -23,10 +21,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.SoningRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soningsvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.HelseinstitusjonVurdering
 import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
@@ -36,9 +30,7 @@ class UnderveisService(
     private val pliktkortRepository: PliktkortRepository,
     private val underveisRepository: UnderveisRepository,
     private val aktivitetspliktRepository: AktivitetspliktRepository,
-    private val barnetilleggRepository: BarnetilleggRepository,
-    private val soningRepository: SoningRepository,
-    private val helseInstitusjonRepository: HelseinstitusjonRepository
+    private val etAnnetStedUtlederService: EtAnnetStedUtlederService
 ) {
 
     private val kvoteService = KvoteService()
@@ -99,13 +91,10 @@ class UnderveisService(
         val pliktkort = pliktkortGrunnlag?.pliktkort() ?: listOf()
         val innsendingsTidspunkt = pliktkortGrunnlag?.innsendingsdatoPerMelding() ?: mapOf()
         val kvote = kvoteService.beregn(behandlingId)
+        val utlederResultat = etAnnetStedUtlederService.utled(behandlingId)
 
-        val soningVurdering = soningRepository.hentAktivSoningsvurderingHvisEksisterer(behandlingId)
-        val helseInstitusjonVurdering =
-            helseInstitusjonRepository.hentAktivHelseinstitusjonVurderingHvisEksisterer(behandlingId)
-        val etAnnetSted = mapTilEtAnnetSted(soningVurdering, helseInstitusjonVurdering)
+        val etAnnetSted = MapInstitusjonoppholdTilRegel.map(utlederResultat)
 
-        val barnetilleggGrunnlag = requireNotNull(barnetilleggRepository.hentHvisEksisterer(behandlingId))
         val aktivitetspliktGrunnlag = aktivitetspliktRepository.hentGrunnlagHvisEksisterer(behandlingId)
             ?: AktivitetspliktGrunnlag(bruddene = setOf())
 
@@ -118,41 +107,6 @@ class UnderveisService(
             kvote = kvote,
             aktivitetspliktGrunnlag = aktivitetspliktGrunnlag,
             etAnnetSted = etAnnetSted,
-            barnetillegg = barnetilleggGrunnlag
         )
-    }
-
-    private fun mapTilEtAnnetSted(
-        soningVurdering: Soningsvurdering?,
-        helseInstitusjon: HelseinstitusjonVurdering?
-    ): List<EtAnnetSted> {
-        //TODO: Kan foreløpig ikke vurdere om formueUnderForvaltning er sant, mangler data
-        val etAnnetStedList = mutableListOf<EtAnnetSted>()
-        soningVurdering?.let {
-            etAnnetStedList.add(
-                EtAnnetSted(
-                    it.periode,
-                    soning = Soning(
-                        true,
-                        false,
-                        soningUtenforFengsel = it.soningUtenforFengsel,
-                        arbeidUtenforAnstalt = it.arbeidUtenforAnstalt ?: false
-                    ),
-                    begrunnelse = it.begrunnelse ?: ""
-                )
-            )
-        }
-
-        helseInstitusjon?.let {
-            etAnnetStedList.add(
-                EtAnnetSted(
-                    it.periode,
-                    institusjon = Institusjon(true, it.forsoergerEktefelle ?: false, it.harFasteUtgifter ?: false),
-                    begrunnelse = it.begrunnelse
-                )
-            )
-        }
-
-        return listOf()
     }
 }

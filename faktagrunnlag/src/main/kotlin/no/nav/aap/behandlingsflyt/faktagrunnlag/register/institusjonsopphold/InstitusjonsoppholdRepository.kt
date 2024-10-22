@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soningsvurdering
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
@@ -62,7 +64,7 @@ class InstitusjonsoppholdRepository(private val connection: DBConnection) {
     }
 
     fun lagreOpphold(behandlingId: BehandlingId, institusjonsopphold: List<Institusjonsopphold>) {
-        if(hentHvisEksisterer(behandlingId) != null) {
+        if (hentHvisEksisterer(behandlingId) != null) {
             deaktiverEksisterendeGrunnlag(behandlingId)
         }
         val oppholdPersonId = connection.executeReturnKey(
@@ -98,7 +100,13 @@ class InstitusjonsoppholdRepository(private val connection: DBConnection) {
                 }
             }
         }
+    }
 
+    fun lagreSoningsVurdering(behandlingId: BehandlingId, soningsvurderinger: List<Soningsvurdering>) {
+
+    }
+
+    fun lagreHelseVurdering(behandlingId: BehandlingId, helseinstitusjonVurderinger: List<HelseinstitusjonVurdering>) {
 
     }
 

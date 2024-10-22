@@ -4,20 +4,17 @@ import no.nav.aap.komponenter.type.Periode
 
 data class EtAnnetSted (
     val periode: Periode,
-    val soning: Soning = Soning(),
-    val institusjon: Institusjon = Institusjon(),
-    val begrunnelse: String
+    val soning: Soning? = null,
+    val institusjon: Institusjon? = null,
 )
 
 data class Soning(
-    val soner: Boolean = false,
-    val formueUnderForvaltning: Boolean = false,
-    val soningUtenforFengsel: Boolean = false,
-    val arbeidUtenforAnstalt: Boolean = false,
+    val soner: Boolean,
+    val girOpphør: Boolean,
 )
 
 data class Institusjon(
-    val erPåInstitusjon: Boolean = false,
-    val forsørgerEktefelle: Boolean = false,
-    val harFasteKostnader: Boolean = false
+    val erPåInstitusjon: Boolean,
+    val skalGiReduksjon: Boolean,
+    val skalGiUmiddelbarReduksjon: Boolean
 )

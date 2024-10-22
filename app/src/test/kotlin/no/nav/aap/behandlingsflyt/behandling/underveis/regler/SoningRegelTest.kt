@@ -1,9 +1,18 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetSted
-import no.nav.aap.behandlingsflyt.behandling.etannetsted.Soning
+import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedInput
+import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederService
+import no.nav.aap.behandlingsflyt.dbtestdata.MockConnection
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soningsvurdering
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tidslinje.Segment
@@ -19,18 +28,64 @@ import java.util.*
 @Fakes
 class SoningRegelTest {
 
+    private val mockConnection = MockConnection().toDBConnection()
+    val utlederService = EtAnnetStedUtlederService(
+        BarnetilleggRepository(mockConnection),
+        InstitusjonsoppholdRepository(mockConnection)
+    )
+
+    val regel = SoningRegel()
+
+
     @Test
     fun vurder() {
-        val regel = SoningRegel()
-        val vurderingFraTidligereResultat = Vurdering(EnumMap(Vilkårtype::class.java), null, null, null, null, Gradering(TimerArbeid(BigDecimal(37.5)), Prosent(100), Prosent(100)), null, null )
+        val periode = Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 1))
+        val vurderingFraTidligereResultat = Vurdering(
+            EnumMap(Vilkårtype::class.java), MeldepliktVurdering(
+                null, periode,
+                Utfall.OPPFYLT
+            ), null, null, null, Gradering(TimerArbeid(BigDecimal.ZERO), Prosent(0), Prosent(100)), grenseverdi = Prosent(60)
+        ).leggTilVurdering(Vilkårtype.ALDERSVILKÅRET, Utfall.OPPFYLT)
+        val tidligereResultatTidslinje = Tidslinje(listOf( Segment(periode, vurderingFraTidligereResultat)))
 
-        val formueUnderForvaltning = EtAnnetSted(Periode(LocalDate.of(2024, 1, 6), (LocalDate.of(2024, 1, 10))), soning = Soning(true, true, false, false), begrunnelse = "")
-        val sonerIFengsel = EtAnnetSted(Periode(LocalDate.of(2024, 1, 11), (LocalDate.of(2024, 1, 15))), soning = Soning(true, false, false, false), begrunnelse = "")
-        val arbeidUtenforAnstalt = EtAnnetSted(Periode(LocalDate.of(2024, 1, 16), (LocalDate.of(2024, 2, 5))), soning = Soning(true, false, false, true), begrunnelse = "")
-        val sonerUtenforFengsel = EtAnnetSted(Periode(LocalDate.of(2024, 2, 6), (LocalDate.of(2024, 2, 15))), soning = Soning(true, false, true, false), begrunnelse = "")
+        val utlederInput = EtAnnetStedInput(
+            institusjonsOpphold = listOf(
+                Segment(
+                    Periode(LocalDate.of(2024, 1, 6), (LocalDate.of(2024, 2, 15))),
+                    Institusjon(
+                        Institusjonstype.FO,
+                        Oppholdstype.S,
+                        "123123123",
+                        "test fengsel"
+                    )
+                )
+            ),
+            soningsvurderinger = listOf(
+                Soningsvurdering(
+                    skalOpphøre = true,
+                    begrunnelse = "Formue under forvaring",
+                    fraDato = LocalDate.of(2024, 1, 6)
+                ),Soningsvurdering(
+                    skalOpphøre = true,
+                    begrunnelse = "Soner i fengsel",
+                    fraDato = LocalDate.of(2024, 1, 11)
+                ),Soningsvurdering(
+                    skalOpphøre = false,
+                    begrunnelse = "Jobber utenfor anstalten",
+                    fraDato = LocalDate.of(2024, 1, 16)
+                ),Soningsvurdering(
+                    skalOpphøre = false,
+                    begrunnelse = "Fotlenke",
+                    fraDato = LocalDate.of(2024, 2, 6)
+                ),
+            ),
+            barnetillegg = emptyList(),
+            helsevurderinger = emptyList()
+        )
 
-        val soningOppholdet = listOf(formueUnderForvaltning, sonerIFengsel, arbeidUtenforAnstalt, sonerUtenforFengsel)
-        val tidligereResultatTidslinje = Tidslinje(listOf( Segment(Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 1)), vurderingFraTidligereResultat)))
+        val delresultat = utlederService.utledBehov(utlederInput)
+
+        val soningOppholdet = MapInstitusjonoppholdTilRegel.map(delresultat)
 
         val input = tomUnderveisInput.copy(
             etAnnetSted = soningOppholdet,
@@ -38,36 +93,21 @@ class SoningRegelTest {
 
         val resultat = regel.vurder(input, tidligereResultatTidslinje)
 
-        assertEquals(6, resultat.count())
+        assertEquals(3, resultat.count())
 
         //Soner ikke
         assertEquals(Periode(LocalDate.of(2024, 1, 1), (LocalDate.of(2024, 1, 5))), resultat.segmenter().elementAt(0).periode)
         assertEquals(Prosent.`100_PROSENT`, resultat.segmenter().elementAt(0).verdi.gradering()?.gradering)
-        assertEquals(null, resultat.segmenter().elementAt(0).verdi.institusjonVurdering?.årsak)
+        assertEquals(null, resultat.segmenter().elementAt(0).verdi.avslagsårsak())
 
-        //Formue under forvaltning
-        assertEquals(Periode(LocalDate.of(2024, 1, 6), (LocalDate.of(2024, 1, 10))), resultat.segmenter().elementAt(1).periode)
+        //Formue under forvaltning og soner i fengsel
+        assertEquals(Periode(LocalDate.of(2024, 1, 6), (LocalDate.of(2024, 1, 15))), resultat.segmenter().elementAt(1).periode)
         assertEquals(Prosent.`0_PROSENT`, resultat.segmenter().elementAt(1).verdi.gradering()?.gradering)
-        assertEquals(Årsak.FORMUE_UNDER_FORVALTNING, resultat.segmenter().elementAt(1).verdi.institusjonVurdering?.årsak)
+        assertEquals(UnderveisÅrsak.SONER_STRAFF, resultat.segmenter().elementAt(1).verdi.avslagsårsak())
 
-        //Soner i fengsel
-        assertEquals(Periode(LocalDate.of(2024, 1, 11), (LocalDate.of(2024, 1, 15))), resultat.segmenter().elementAt(2).periode)
-        assertEquals(Prosent.`0_PROSENT`, resultat.segmenter().elementAt(2).verdi.gradering()?.gradering)
-        assertEquals(Årsak.SONER_I_FENGSEL, resultat.segmenter().elementAt(2).verdi.institusjonVurdering?.årsak)
+        // Arbeider utenfor anstalten og soner i ved frigang
+        assertEquals(Periode(LocalDate.of(2024, 1, 16), (LocalDate.of(2024, 12, 1))), resultat.segmenter().elementAt(2).periode)
+        assertEquals(Prosent.`100_PROSENT`, resultat.segmenter().elementAt(2).verdi.gradering()?.gradering)
 
-        //Arbeid utenfor anstalt
-        assertEquals(Periode(LocalDate.of(2024, 1, 16), (LocalDate.of(2024, 2, 5))), resultat.segmenter().elementAt(3).periode)
-        assertEquals(Prosent.`100_PROSENT`, resultat.segmenter().elementAt(3).verdi.gradering()?.gradering)
-        assertEquals(Årsak.ARBEID_UTENFOR_ANSTALT, resultat.segmenter().elementAt(3).verdi.institusjonVurdering?.årsak)
-
-        //Soner utenfor fengsel
-        assertEquals(Periode(LocalDate.of(2024, 2, 6), (LocalDate.of(2024, 2, 15))), resultat.segmenter().elementAt(4).periode)
-        assertEquals(Prosent.`100_PROSENT`, resultat.segmenter().elementAt(4).verdi.gradering()?.gradering)
-        assertEquals(Årsak.SONER_UTENFOR_FENGSEL, resultat.segmenter().elementAt(4).verdi.institusjonVurdering?.årsak)
-
-        //Soner ikke
-        assertEquals(Periode(LocalDate.of(2024, 2, 16), (LocalDate.of(2024, 12, 1))), resultat.segmenter().elementAt(5).periode)
-        assertEquals(Prosent.`100_PROSENT`, resultat.segmenter().elementAt(5).verdi.gradering()?.gradering)
-        assertEquals(null, resultat.segmenter().elementAt(5).verdi.institusjonVurdering?.årsak)
     }
 }

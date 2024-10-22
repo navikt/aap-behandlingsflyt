@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetSted
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvote
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Pliktkort
@@ -20,5 +19,4 @@ data class UnderveisInput(
     val kvote: Kvote,
     val aktivitetspliktGrunnlag: AktivitetspliktGrunnlag,
     val etAnnetSted: List<EtAnnetSted>,
-    val barnetillegg: BarnetilleggGrunnlag
 )

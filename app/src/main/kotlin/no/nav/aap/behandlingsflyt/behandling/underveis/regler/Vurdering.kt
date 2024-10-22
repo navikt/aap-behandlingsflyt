@@ -17,6 +17,7 @@ data class Vurdering(
     private val gradering: Gradering? = null,
     private val grenseverdi: Prosent? = null,
     internal val institusjonVurdering: InstitusjonVurdering? = null,
+    internal val soningsVurdering: SoningVurdering? = null,
 ) {
 
     fun leggTilVurdering(vilkårtype: Vilkårtype, utfall: Utfall): Vurdering {
@@ -49,6 +50,10 @@ data class Vurdering(
         return copy(institusjonVurdering = vurdering)
     }
 
+    fun leggTilSoningsVurdering(vurdering: SoningVurdering): Vurdering {
+        return copy(soningsVurdering = vurdering)
+    }
+
     fun leggTilAktivtBidragVurdering(vurdering: AktivtBidragVurdering): Vurdering {
         return copy(aktivtBidragVurdering = vurdering)
     }
@@ -58,7 +63,14 @@ data class Vurdering(
     }
 
     fun harRett(): Boolean {
-        return ingenVilkårErAvslått() && arbeiderMindreEnnGrenseverdi() && harOverholdtMeldeplikten()
+        return ingenVilkårErAvslått() && arbeiderMindreEnnGrenseverdi() && harOverholdtMeldeplikten() && sonerIkke()
+    }
+
+    private fun sonerIkke(): Boolean {
+        if (soningsVurdering == null) {
+            return true
+        }
+        return !soningsVurdering.girOpphør
     }
 
     private fun harOverholdtMeldeplikten(): Boolean {
@@ -78,7 +90,27 @@ data class Vurdering(
     }
 
     fun gradering(): Gradering? {
-        return gradering
+        if (gradering == null) {
+            return null
+        }
+        if (harRett()) {
+            if (institusjonVurdering?.skalReduseres == true) {
+                return Gradering(
+                    totaltAntallTimer = gradering.totaltAntallTimer,
+                    andelArbeid = gradering.andelArbeid,
+                    gradering = gradering.gradering.minus(
+                        Prosent.`50_PROSENT`
+                    )
+                )
+            }
+            return gradering
+        } else {
+            return Gradering(
+                totaltAntallTimer = gradering.totaltAntallTimer,
+                andelArbeid = gradering.andelArbeid,
+                gradering = Prosent.`0_PROSENT`
+            )
+        }
     }
 
     fun utfall(): Utfall {
@@ -96,6 +128,8 @@ data class Vurdering(
 
         if (!ingenVilkårErAvslått()) {
             return UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT
+        } else if (!sonerIkke()) {
+            return UnderveisÅrsak.SONER_STRAFF
         } else if (!arbeiderMindreEnnGrenseverdi()) {
             return UnderveisÅrsak.ARBEIDER_MER_ENN_GRENSEVERDI
         } else if (!harOverholdtMeldeplikten()) {
@@ -116,33 +150,15 @@ data class Vurdering(
         return meldepliktVurdering?.meldeperiode
     }
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as Vurdering
-
-        if (vurderinger != other.vurderinger) return false
-        if (gradering != other.gradering) return false
-        if (meldepliktVurdering != other.meldepliktVurdering) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = vurderinger.hashCode()
-        result = 31 * result + (gradering?.hashCode() ?: 0)
-        result = 31 * result + (meldepliktVurdering?.hashCode() ?: 0)
-        return result
-    }
-
     override fun toString(): String {
         return """
             Vurdering(
             harRett=${harRett()},
             meldeplikt=${meldepliktVurdering?.utfall ?: Utfall.IKKE_VURDERT}(${meldepliktVurdering?.årsak ?: "-"}),
-            gradering=${ gradering?.gradering ?: Prosent( 0) },
+            gradering=${gradering?.gradering ?: Prosent(0)},
             bruddAktivitetsplikt=${fraværFastsattAktivitetVurdering}
+            institusjonVurdering=${institusjonVurdering}
+            grenseverdi=${grenseverdi}
             )""".trimIndent().replace("\n", "")
     }
 

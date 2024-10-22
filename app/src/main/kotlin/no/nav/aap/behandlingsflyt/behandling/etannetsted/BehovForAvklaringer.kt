@@ -1,24 +1,25 @@
 package no.nav.aap.behandlingsflyt.behandling.etannetsted
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.OppholdVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.tidslinje.Tidslinje
 
 class BehovForAvklaringer(
-    private val harUavklarteSoningsforhold: Boolean,
-    private val harUavklarteHelseinstitusjonsOpphold: Boolean
+    val perioderTilVurdering: Tidslinje<InstitusjonsOpphold>
 ) {
-    fun harBehov(): Boolean {
-        return harUavklarteSoningsforhold || harUavklarteHelseinstitusjonsOpphold
+
+    fun harBehovForAvklaring(): Boolean {
+        return perioderTilVurdering.segmenter().filter { it.verdi.harNoeUavklart() }.isNotEmpty()
     }
 
     fun avklaringsbehov(): List<Definisjon> {
-        if (!harBehov()) {
+        if (!harBehovForAvklaring()) {
             return emptyList()
         }
-        return when {
-            harUavklarteSoningsforhold && harUavklarteHelseinstitusjonsOpphold -> listOf(Definisjon.AVKLAR_SONINGSFORRHOLD, Definisjon.AVKLAR_HELSEINSTITUSJON)
-            harUavklarteSoningsforhold -> listOf(Definisjon.AVKLAR_SONINGSFORRHOLD)
-            else -> listOf(Definisjon.AVKLAR_HELSEINSTITUSJON)
+        if (perioderTilVurdering.segmenter().any { it.verdi.soning?.vurdering == OppholdVurdering.UAVKLART }) {
+            return listOf(Definisjon.AVKLAR_SONINGSFORRHOLD)
         }
+        return listOf(Definisjon.AVKLAR_HELSEINSTITUSJON)
     }
 
 }

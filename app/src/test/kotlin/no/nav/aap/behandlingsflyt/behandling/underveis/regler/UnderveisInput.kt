@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvote
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktGrunnlag
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
@@ -16,5 +15,4 @@ val tomUnderveisInput = UnderveisInput(
     kvote = Kvote(Period.ZERO),
     aktivitetspliktGrunnlag = AktivitetspliktGrunnlag(emptySet()),
     etAnnetSted = listOf(),
-    barnetillegg = BarnetilleggGrunnlag(0, listOf()),
 )

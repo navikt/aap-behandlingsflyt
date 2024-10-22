@@ -1,11 +1,17 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetSted
-import no.nav.aap.behandlingsflyt.behandling.etannetsted.Institusjon
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggPeriode
+import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedInput
+import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederService
+import no.nav.aap.behandlingsflyt.dbtestdata.MockConnection
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tidslinje.Segment
@@ -20,96 +26,151 @@ import java.util.*
 
 @Fakes
 class InstitusjonRegelTest {
+    private val mockConnection = MockConnection().toDBConnection()
+    val utlederService = EtAnnetStedUtlederService(
+        BarnetilleggRepository(mockConnection),
+        InstitusjonsoppholdRepository(mockConnection)
+    )
+
+    val regel = InstitusjonRegel()
 
     @Test
     fun vurder() {
-        val regel = InstitusjonRegel()
+        val periode = Periode(LocalDate.of(2024, 1, 5), LocalDate.of(2025, 5, 1))
+        val vurderingFraTidligereResultat = Vurdering(
+            EnumMap(Vilkårtype::class.java),
+            MeldepliktVurdering(
+                null, periode,
+                Utfall.OPPFYLT
+            ),
+            null,
+            null,
+            null,
+            Gradering(TimerArbeid(BigDecimal.ZERO), Prosent(0), Prosent(100)),
+            grenseverdi = Prosent(60)
+        ).leggTilVurdering(Vilkårtype.ALDERSVILKÅRET, Utfall.OPPFYLT)
 
-        val vurderingFraTidligereResultat = Vurdering(EnumMap(Vilkårtype::class.java), null, null, null, null, Gradering(TimerArbeid(BigDecimal(37.5)), Prosent(100), Prosent(100)))
-
-        val innlagt = EtAnnetSted(Periode(LocalDate.of(2024, 1, 15), (LocalDate.of(2024, 7, 1))), institusjon = Institusjon(true, false, false),  begrunnelse = "")
-        val forsørgerNoenMensInnlagt = EtAnnetSted(Periode(LocalDate.of(2024, 7, 2), (LocalDate.of(2024, 7, 5))), institusjon = Institusjon(true, true, false), begrunnelse = "")
-        val fasteKostnader = EtAnnetSted(Periode(LocalDate.of(2024, 7, 6), (LocalDate.of(2024, 7, 9))), institusjon = Institusjon(true, false, true), begrunnelse = "")
-        val innlagtMedReduksjon = EtAnnetSted(Periode(LocalDate.of(2024, 7, 10), (LocalDate.of(2024, 7, 15))), institusjon = Institusjon(true, false, false), begrunnelse = "")
-        val innlagtPåNytt = EtAnnetSted(Periode(LocalDate.of(2024, 7, 20), (LocalDate.of(2024, 9, 15))), institusjon =  Institusjon(true, false, false), begrunnelse = "")
-        val innlagtPåNyttTreMndSenere = EtAnnetSted(Periode(LocalDate.of(2024, 12, 25), (LocalDate.of(2025, 1, 15))), institusjon = Institusjon(true, false, false), begrunnelse = "")
-
-        val intitusjonsOppholdet = listOf(innlagt, forsørgerNoenMensInnlagt, innlagtMedReduksjon, fasteKostnader, innlagtPåNytt, innlagtPåNyttTreMndSenere)
-        val barnetillegg = BarnetilleggGrunnlag(1, listOf(BarnetilleggPeriode(Periode(LocalDate.of(2024, 5, 1), LocalDate.of(2024, 6, 10)), setOf())))
-        val input = tomUnderveisInput.copy(
-            etAnnetSted = intitusjonsOppholdet,
-            barnetillegg = barnetillegg
+        val utlederInput = EtAnnetStedInput(
+            institusjonsOpphold = listOf(
+                Segment(
+                    Periode(LocalDate.of(2024, 1, 15), (LocalDate.of(2024, 7, 15))),
+                    Institusjon(
+                        Institusjonstype.HS,
+                        Oppholdstype.D,
+                        "123",
+                        "test"
+                    )
+                ),
+                Segment(
+                    Periode(LocalDate.of(2024, 7, 20), (LocalDate.of(2024, 9, 15))),
+                    Institusjon(
+                        Institusjonstype.HS,
+                        Oppholdstype.D,
+                        "123",
+                        "test"
+                    )
+                ),
+                Segment(
+                    Periode(LocalDate.of(2024, 12, 14), (LocalDate.of(2025, 1, 15))),
+                    Institusjon(
+                        Institusjonstype.HS,
+                        Oppholdstype.D,
+                        "123",
+                        "test"
+                    )
+                )
+            ),
+            soningsvurderinger = emptyList(),
+            barnetillegg = emptyList(),
+            helsevurderinger = listOf(
+                HelseinstitusjonVurdering(
+                    periode = Periode(LocalDate.of(2024, 1, 15), (LocalDate.of(2024, 7, 15))),
+                    begrunnelse = "lagt inn med kost og losji men forsørger",
+                    faarFriKostOgLosji = true,
+                    forsoergerEktefelle = false,
+                    harFasteUtgifter = false
+                ),
+                HelseinstitusjonVurdering(
+                    periode = Periode(LocalDate.of(2024, 7, 20), (LocalDate.of(2024, 9, 15))),
+                    begrunnelse = "lagt inn med kost og losji",
+                    faarFriKostOgLosji = true,
+                    forsoergerEktefelle = false,
+                    harFasteUtgifter = false
+                ),
+                HelseinstitusjonVurdering(
+                    periode = Periode(LocalDate.of(2024, 12, 14), (LocalDate.of(2025, 1, 15))),
+                    begrunnelse = "lagt inn med kost og losji",
+                    faarFriKostOgLosji = true,
+                    forsoergerEktefelle = true,
+                    harFasteUtgifter = false
+                ),
+            )
         )
 
-        val tidligereResultatTidslinje = Tidslinje(listOf( Segment(Periode(LocalDate.of(2024, 1, 5), LocalDate.of(2025, 5, 1)), vurderingFraTidligereResultat)))
+        val behovForAvklaringer = utlederService.utledBehov(utlederInput)
+        val intitusjonsOppholdet = MapInstitusjonoppholdTilRegel.map(behovForAvklaringer)
+
+        val input = tomUnderveisInput.copy(
+            etAnnetSted = intitusjonsOppholdet,
+        )
+
+        val tidligereResultatTidslinje = Tidslinje(listOf(Segment(periode, vurderingFraTidligereResultat)))
 
         val resultat = regel.vurder(input, tidligereResultatTidslinje)
 
-        assertEquals(13, resultat.count())
+        assertEquals(6, resultat.count())
 
-        //Ikke innlagt
-        assertEquals(Periode(LocalDate.of(2024, 1, 5), LocalDate.of(2024, 1, 14)), resultat.segmenter().elementAt(0).periode)
+        // Blir lagt inn i løpet av januar men får ingen reduksjon før 1/2
+        assertEquals(
+            Periode(LocalDate.of(2024, 1, 5), LocalDate.of(2024, 1, 31)),
+            resultat.segmenter().elementAt(0).periode
+        )
         assertEquals(Prosent.`100_PROSENT`, resultat.segmenter().elementAt(0).verdi.gradering()?.gradering)
         assertEquals(null, resultat.segmenter().elementAt(0).verdi.institusjonVurdering?.årsak)
 
-        //Friperiode 3mnd
-        assertEquals(Periode(LocalDate.of(2024, 1, 15), LocalDate.of(2024, 4, 30)), resultat.segmenter().elementAt(1).periode)
+        // Innlagt i mer enn 3 måneder ingen reduksjon
+        assertEquals(
+            Periode(LocalDate.of(2024, 2, 1), LocalDate.of(2024, 4, 30)),
+            resultat.segmenter().elementAt(1).periode
+        )
         assertEquals(Prosent.`100_PROSENT`, resultat.segmenter().elementAt(1).verdi.gradering()?.gradering)
-        assertEquals(Årsak.UTEN_REDUKSJON_TRE_MND, resultat.segmenter().elementAt(1).verdi.institusjonVurdering?.årsak)
+        assertEquals(
+            Årsak.UTEN_REDUKSJON_TRE_MND,
+            resultat.segmenter().elementAt(1).verdi.institusjonVurdering?.årsak
+        )
+        // Innlagt fra 20/7, som er innen for 3 måneder fra forrige innleggese. reduksjon fra 1/8
+        assertEquals(
+            Periode(LocalDate.of(2024, 5, 1), (LocalDate.of(2024, 7, 15))),
+            resultat.segmenter().elementAt(2).periode
+        )
+        assertEquals(Prosent.`50_PROSENT`, resultat.segmenter().elementAt(2).verdi.gradering()?.gradering)
+        assertEquals(Årsak.KOST_OG_LOSJI, resultat.segmenter().elementAt(2).verdi.institusjonVurdering?.årsak)
 
-        //Barneperiode
-        assertEquals(Periode(LocalDate.of(2024, 5, 1), LocalDate.of(2024, 6, 10)), resultat.segmenter().elementAt(2).periode)
-        assertEquals(Prosent.`100_PROSENT`, resultat.segmenter().elementAt(2).verdi.gradering()?.gradering)
-        assertEquals(Årsak.BARNETILLEGG, resultat.segmenter().elementAt(2).verdi.institusjonVurdering?.årsak)
+        // Innlagt fra 20/7, som er innen for 3 måneder fra forrige innleggese. reduksjon fra 1/8
+        assertEquals(
+            Periode(LocalDate.of(2024, 7, 16), (LocalDate.of(2024, 7, 31))),
+            resultat.segmenter().elementAt(3).periode
+        )
+        assertEquals(Prosent.`100_PROSENT`, resultat.segmenter().elementAt(3).verdi.gradering()?.gradering)
+        assertEquals(null, resultat.segmenter().elementAt(3).verdi.institusjonVurdering?.årsak)
 
-        //Reduksjon
-        assertEquals(Periode(LocalDate.of(2024, 6, 11), LocalDate.of(2024, 7, 1)), resultat.segmenter().elementAt(3).periode)
-        assertEquals(Prosent.`50_PROSENT`, resultat.segmenter().elementAt(3).verdi.gradering()?.gradering)
-        assertEquals(Årsak.KOST_OG_LOSJI, resultat.segmenter().elementAt(3).verdi.institusjonVurdering?.årsak)
+        // Reduksjon basert på vurdering
+        assertEquals(
+            Periode(LocalDate.of(2024, 8, 1), (LocalDate.of(2024, 9, 15))),
+            resultat.segmenter().elementAt(4).periode
+        )
+        assertEquals(Prosent.`50_PROSENT`, resultat.segmenter().elementAt(4).verdi.gradering()?.gradering)
+        assertEquals(
+            Årsak.KOST_OG_LOSJI,
+            resultat.segmenter().elementAt(4).verdi.institusjonVurdering?.årsak
+        )
 
-        //Forsørger noen, utover 3mnd
-        assertEquals(Periode(LocalDate.of(2024, 7, 2), (LocalDate.of(2024, 7, 5))), resultat.segmenter().elementAt(4).periode)
-        assertEquals(Prosent.`100_PROSENT`, resultat.segmenter().elementAt(4).verdi.gradering()?.gradering)
-        assertEquals(Årsak.FORSØRGER, resultat.segmenter().elementAt(4).verdi.institusjonVurdering?.årsak)
-
-        //Har faste kostnader
-        assertEquals(Periode(LocalDate.of(2024, 7, 6), (LocalDate.of(2024, 7, 9))), resultat.segmenter().elementAt(5).periode)
+        // Ingen reduksjon da datoen ikke er passert (TODO: gjør testene relativ til dagens dato)
+        assertEquals(
+            Periode(LocalDate.of(2024, 9, 16), LocalDate.of(2025, 5, 1)),
+            resultat.segmenter().elementAt(5).periode
+        )
         assertEquals(Prosent.`100_PROSENT`, resultat.segmenter().elementAt(5).verdi.gradering()?.gradering)
-        assertEquals(Årsak.FASTE_KOSTNADER, resultat.segmenter().elementAt(5).verdi.institusjonVurdering?.årsak)
-
-        //Reduksjon
-        assertEquals(Periode(LocalDate.of(2024, 7, 10), (LocalDate.of(2024, 7, 15))), resultat.segmenter().elementAt(6).periode)
-        assertEquals(Prosent.`50_PROSENT`, resultat.segmenter().elementAt(6).verdi.gradering()?.gradering)
-        assertEquals(Årsak.KOST_OG_LOSJI, resultat.segmenter().elementAt(6).verdi.institusjonVurdering?.årsak)
-
-        //Ikke innlagt
-        assertEquals(Periode(LocalDate.of(2024, 7, 16),  LocalDate.of(2024, 7, 19)), resultat.segmenter().elementAt(7).periode)
-        assertEquals(Prosent.`100_PROSENT`, resultat.segmenter().elementAt(7).verdi.gradering()?.gradering)
-        assertEquals(null, resultat.segmenter().elementAt(7).verdi.institusjonVurdering?.årsak)
-
-        //Friperiode resterende mnd
-        assertEquals(Periode(LocalDate.of(2024, 7, 20), LocalDate.of(2024, 7, 31)), resultat.segmenter().elementAt(8).periode)
-        assertEquals(Prosent.`100_PROSENT`, resultat.segmenter().elementAt(8).verdi.gradering()?.gradering)
-        assertEquals(Årsak.UTEN_REDUKSJON_RESTERENDE_MND, resultat.segmenter().elementAt(8).verdi.institusjonVurdering?.årsak)
-
-        //Reduksjon
-        assertEquals(Periode(LocalDate.of(2024, 8, 1), (LocalDate.of(2024, 9, 15))), resultat.segmenter().elementAt(9).periode)
-        assertEquals(Prosent.`50_PROSENT`, resultat.segmenter().elementAt(9).verdi.gradering()?.gradering)
-        assertEquals(Årsak.KOST_OG_LOSJI, resultat.segmenter().elementAt(9).verdi.institusjonVurdering?.årsak)
-
-        //Ikke innlagt
-        assertEquals(Periode(LocalDate.of(2024, 9, 16), LocalDate.of(2024, 12, 24)), resultat.segmenter().elementAt(10).periode)
-        assertEquals(Prosent.`100_PROSENT`, resultat.segmenter().elementAt(10).verdi.gradering()?.gradering)
-        assertEquals(null, resultat.segmenter().elementAt(10).verdi.institusjonVurdering?.årsak)
-
-        //Friperiode 3mnd
-        assertEquals(Periode(LocalDate.of(2024, 12, 25), LocalDate.of(2025, 1, 15)), resultat.segmenter().elementAt(11).periode)
-        assertEquals(Prosent.`100_PROSENT`, resultat.segmenter().elementAt(11).verdi.gradering()?.gradering)
-        assertEquals(Årsak.UTEN_REDUKSJON_TRE_MND, resultat.segmenter().elementAt(11).verdi.institusjonVurdering?.årsak)
-
-        //Ikke innlagt
-        assertEquals(Periode(LocalDate.of(2025, 1, 16), LocalDate.of(2025, 5, 1)), resultat.segmenter().elementAt(12).periode)
-        assertEquals(Prosent.`100_PROSENT`, resultat.segmenter().elementAt(12).verdi.gradering()?.gradering)
-        assertEquals(null, resultat.segmenter().elementAt(12).verdi.institusjonVurdering?.årsak)
+        assertEquals(null, resultat.segmenter().elementAt(5).verdi.institusjonVurdering?.årsak)
     }
 }

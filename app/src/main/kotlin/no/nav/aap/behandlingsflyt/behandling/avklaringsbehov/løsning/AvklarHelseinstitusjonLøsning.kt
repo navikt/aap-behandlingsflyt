@@ -1,14 +1,14 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning
 
-import HelseinstitusjonVurderingDto
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeName
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_HELSEINSTITUSJON_KODE
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_SONINGSFORRHOLD_KODE
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarHelseinstitusjonLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.HelseinstitusjonVurderingerDto
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_HELSEINSTITUSJON_KODE
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_SONINGSFORRHOLD_KODE
 import no.nav.aap.komponenter.dbconnect.DBConnection
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -17,7 +17,7 @@ class AvklarHelseinstitusjonLøsning(
     @JsonProperty(
         "helseinstitusjonVurdering",
         required = true
-    ) val helseinstitusjonVurdering: HelseinstitusjonVurderingDto,
+    ) val helseinstitusjonVurdering: HelseinstitusjonVurderingerDto,
     @JsonProperty(
         "behovstype",
         required = true,
