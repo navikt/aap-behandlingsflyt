@@ -9,10 +9,7 @@ data class InstitusjonVurdering (
 )
 
 enum class Årsak {
-    BARNETILLEGG,
     FORSØRGER_ELLER_HAR_FASTEKOSTNADER,
-    UTEN_REDUKSJON_TRE_MND,
-    UTEN_REDUKSJON_RESTERENDE_MND,
+    UTEN_REDUKSJON,
     KOST_OG_LOSJI,
-    FASTE_KOSTNADER,
 }

@@ -118,11 +118,11 @@ class InstitusjonRegelTest {
 
         val resultat = regel.vurder(input, tidligereResultatTidslinje)
 
-        assertEquals(6, resultat.count())
+        assertEquals(7, resultat.count())
 
         // Blir lagt inn i løpet av januar men får ingen reduksjon før 1/2
         assertEquals(
-            Periode(LocalDate.of(2024, 1, 5), LocalDate.of(2024, 1, 31)),
+            Periode(LocalDate.of(2024, 1, 5), LocalDate.of(2024, 1, 14)),
             resultat.segmenter().elementAt(0).periode
         )
         assertEquals(Prosent.`100_PROSENT`, resultat.segmenter().elementAt(0).verdi.gradering()?.gradering)
@@ -130,12 +130,12 @@ class InstitusjonRegelTest {
 
         // Innlagt i mer enn 3 måneder ingen reduksjon
         assertEquals(
-            Periode(LocalDate.of(2024, 2, 1), LocalDate.of(2024, 4, 30)),
+            Periode(LocalDate.of(2024, 1, 15), LocalDate.of(2024, 4, 30)),
             resultat.segmenter().elementAt(1).periode
         )
         assertEquals(Prosent.`100_PROSENT`, resultat.segmenter().elementAt(1).verdi.gradering()?.gradering)
         assertEquals(
-            Årsak.UTEN_REDUKSJON_TRE_MND,
+            Årsak.UTEN_REDUKSJON,
             resultat.segmenter().elementAt(1).verdi.institusjonVurdering?.årsak
         )
         // Innlagt fra 20/7, som er innen for 3 måneder fra forrige innleggese. reduksjon fra 1/8
@@ -148,29 +148,35 @@ class InstitusjonRegelTest {
 
         // Innlagt fra 20/7, som er innen for 3 måneder fra forrige innleggese. reduksjon fra 1/8
         assertEquals(
-            Periode(LocalDate.of(2024, 7, 16), (LocalDate.of(2024, 7, 31))),
+            Periode(LocalDate.of(2024, 7, 16), (LocalDate.of(2024, 7, 19))),
             resultat.segmenter().elementAt(3).periode
         )
         assertEquals(Prosent.`100_PROSENT`, resultat.segmenter().elementAt(3).verdi.gradering()?.gradering)
         assertEquals(null, resultat.segmenter().elementAt(3).verdi.institusjonVurdering?.årsak)
+        assertEquals(
+            Periode(LocalDate.of(2024, 7, 20), (LocalDate.of(2024, 7, 31))),
+            resultat.segmenter().elementAt(4).periode
+        )
+        assertEquals(Prosent.`100_PROSENT`, resultat.segmenter().elementAt(4).verdi.gradering()?.gradering)
+        assertEquals(Årsak.UTEN_REDUKSJON, resultat.segmenter().elementAt(4).verdi.institusjonVurdering?.årsak)
 
         // Reduksjon basert på vurdering
         assertEquals(
             Periode(LocalDate.of(2024, 8, 1), (LocalDate.of(2024, 9, 15))),
-            resultat.segmenter().elementAt(4).periode
+            resultat.segmenter().elementAt(5).periode
         )
-        assertEquals(Prosent.`50_PROSENT`, resultat.segmenter().elementAt(4).verdi.gradering()?.gradering)
+        assertEquals(Prosent.`50_PROSENT`, resultat.segmenter().elementAt(5).verdi.gradering()?.gradering)
         assertEquals(
             Årsak.KOST_OG_LOSJI,
-            resultat.segmenter().elementAt(4).verdi.institusjonVurdering?.årsak
+            resultat.segmenter().elementAt(5).verdi.institusjonVurdering?.årsak
         )
 
         // Ingen reduksjon da datoen ikke er passert (TODO: gjør testene relativ til dagens dato)
         assertEquals(
             Periode(LocalDate.of(2024, 9, 16), LocalDate.of(2025, 5, 1)),
-            resultat.segmenter().elementAt(5).periode
+            resultat.segmenter().elementAt(6).periode
         )
-        assertEquals(Prosent.`100_PROSENT`, resultat.segmenter().elementAt(5).verdi.gradering()?.gradering)
-        assertEquals(null, resultat.segmenter().elementAt(5).verdi.institusjonVurdering?.årsak)
+        assertEquals(Prosent.`100_PROSENT`, resultat.segmenter().elementAt(6).verdi.gradering()?.gradering)
+        assertEquals(null, resultat.segmenter().elementAt(6).verdi.institusjonVurdering?.årsak)
     }
 }

@@ -58,7 +58,7 @@ class InstitusjonRegel : UnderveisRegel {
             return null
         }
         return if (skalReduseres == true) {
-            Årsak.UTEN_REDUKSJON_TRE_MND
+            Årsak.UTEN_REDUKSJON
         } else {
             null
         }
@@ -107,8 +107,8 @@ class InstitusjonRegel : UnderveisRegel {
 
     private fun utledMuligReduksjonsPeriode(periode: Periode, skalgiUmiddelbarReduksjon: Boolean): Periode {
         if (skalgiUmiddelbarReduksjon) {
-            return periode
+            return Periode(periode.fom.withDayOfMonth(1).plusMonths(1), periode.tom)
         }
-        return Periode(periode.fom.plusMonths(3), periode.tom)
+        return Periode(periode.fom.withDayOfMonth(1).plusMonths(1).plusMonths(3), periode.tom)
     }
 }

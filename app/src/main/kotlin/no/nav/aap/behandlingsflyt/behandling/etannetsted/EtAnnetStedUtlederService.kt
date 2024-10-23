@@ -61,7 +61,6 @@ class EtAnnetStedUtlederService(
                 })
 
         val helseOpphold = opprettTidslinje(helseopphold)
-        val helseOppholdTidslinje = regnUtHelseinstitusjonsopphold(helseOpphold)
 
         val barnetilleggTidslinje =
             opprettTidslinje(barnetillegg.filter { it.personIdenter.isNotEmpty() }.map { segment ->
@@ -73,7 +72,7 @@ class EtAnnetStedUtlederService(
 
         //fjern perioder hvor bruker har barnetillegg gjennom hele helseinstitusjonsoppholdet
         val oppholdUtenBarnetillegg =
-            helseOppholdTidslinje.disjoint(barnetilleggTidslinje) { p, v -> Segment(p, v.verdi) }
+            helseOpphold.disjoint(barnetilleggTidslinje) { p, v -> Segment(p, v.verdi) }
 
         // Oppholdet må være lengre enn 3 måneder for å være aktuelt for avklaring og må ha vart i minimum 2 måneder for å være klar for avklaring
         val oppholdSomKanGiReduksjon = harOppholdSomKreverAvklaring(oppholdUtenBarnetillegg, grenseverdi)
@@ -93,7 +92,8 @@ class EtAnnetStedUtlederService(
         }.komprimer()
 
         val oppholdSomLiggerMindreEnnTreMånederFraForrigeSomGaReduksjon =
-            regnUtTidslinjeOverOppholdSomErMindreEnnTreMånederFraForrigeSomGaReduksjon(perioderSomTrengerVurdering,
+            regnUtTidslinjeOverOppholdSomErMindreEnnTreMånederFraForrigeSomGaReduksjon(
+                perioderSomTrengerVurdering,
                 helseoppholdUtenBarnetillegg, helsevurderingerTidslinje
             )
 
@@ -125,13 +125,16 @@ class EtAnnetStedUtlederService(
     ): Tidslinje<InstitusjonsOpphold> {
         var result = Tidslinje<InstitusjonsOpphold>()
         // Kjører gjennom noen ganger for å ta med per vi får med et og et nytt opphold basert på den dumme regelen her
-        IntStream.range(0, max(helseoppholdUtenBarnetillegg.segmenter().size-1, 0)).forEach { i ->
+        IntStream.range(0, max(helseoppholdUtenBarnetillegg.segmenter().size - 1, 0)).forEach { i ->
             val oppholdSomKanGiReduksjon = Tidslinje(
                 oppholdSomLiggerMindreEnnTreMånederFraForrigeSomGaReduksjon(
                     helseoppholdUtenBarnetillegg, perioderSomTrengerVurdering
-                ).map { segment -> justerForInnleggelsesMåned(segment) }
-                    .filterNotNull()
-                    .map {
+                ).map {
+                    val fom = it.fom().withDayOfMonth(1).plusMonths(1)
+
+                    if (fom.isAfter(it.tom())) {
+                        null
+                    } else {
                         Segment(
                             it.periode, InstitusjonsOpphold(
                                 helse = HelseOpphold(
@@ -140,7 +143,9 @@ class EtAnnetStedUtlederService(
                                 )
                             )
                         )
-                    }).kombiner(helsevurderingerTidslinje, helsevurderingSammenslåer())
+                    }
+                }.filterNotNull()
+            ).kombiner(helsevurderingerTidslinje, helsevurderingSammenslåer())
 
             result = result.kombiner(oppholdSomKanGiReduksjon, sammenslåer())
         }
@@ -268,28 +273,14 @@ class EtAnnetStedUtlederService(
         segment: Segment<Boolean>,
         femMåneder: Duration
     ): Boolean {
-        val lengde = segment.periode.antallDager().toDuration(DurationUnit.DAYS)
-        return femMåneder < lengde && (segment.fom().plusMonths(2) < LocalDate.now() || Miljø.er() == MiljøKode.DEV)
-    }
-
-    private fun regnUtHelseinstitusjonsopphold(helseOpphold: Tidslinje<Boolean>): Tidslinje<Boolean> {
-
-        // Fjerne innleggelsesmåneden, dvs første måned i hvert "opphold"
-        val helseOppholdTidslinje = Tidslinje(
-            helseOpphold.segmenter()
-                .map { segment -> justerForInnleggelsesMåned(segment) }
-                .filterNotNull()
-        )
-        return helseOppholdTidslinje
-    }
-
-    private fun justerForInnleggelsesMåned(segment: Segment<Boolean>): Segment<Boolean>? {
         val fom = segment.fom().withDayOfMonth(1).plusMonths(1)
 
         if (fom.isAfter(segment.tom())) {
-            return null
+            return false
         }
-        return Segment(Periode(fom, segment.tom()), segment.verdi)
+        val justertPeriode = Periode(fom, segment.tom())
+        val lengde = justertPeriode.antallDager().toDuration(DurationUnit.DAYS)
+        return femMåneder < lengde && (fom.plusMonths(2) < LocalDate.now() || Miljø.er() == MiljøKode.DEV)
     }
 
     private fun <T> opprettTidslinje(segmenter: List<Segment<T>>): Tidslinje<Boolean> {
