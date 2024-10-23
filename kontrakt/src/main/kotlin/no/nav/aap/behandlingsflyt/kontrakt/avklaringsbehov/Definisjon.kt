@@ -44,18 +44,18 @@ enum class Definisjon(
     ),
     BESTILL_BREV(
         kode = BESTILL_BREV_KODE,
-        løsesISteg = StegType.BESTILL_BREV,
+        løsesISteg = StegType.BREV,
         type = BehovType.VENTEPUNKT,
         defaultFrist = Period.ofDays(1),
     ),
     SKRIV_BREV(
         kode = SKRIV_BREV_KODE,
-        løsesISteg = StegType.SKRIV_BREV,
+        løsesISteg = StegType.BREV,
         type = BehovType.MANUELT_PÅKREVD,
     ),
     FERDIGSTILL_BREV(
         kode = FERDIGSTILL_BREV_KODE,
-        løsesISteg = StegType.FERDIGSTILL_BREV,
+        løsesISteg = StegType.BREV,
         type = BehovType.VENTEPUNKT,
     ),
     AVKLAR_STUDENT(

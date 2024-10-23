@@ -95,17 +95,9 @@ enum class StegType(
         gruppe = StegGruppe.FATTE_VEDTAK,
         status = Status.UTREDES
     ),
-    BESTILL_BREV(
+    BREV(
         gruppe = StegGruppe.BREV,
-        status = Status.UTREDES,
-    ),
-    SKRIV_BREV(
-        gruppe = StegGruppe.BREV,
-        status = Status.UTREDES,
-    ),
-    FERDIGSTILL_BREV(
-        gruppe = StegGruppe.BREV,
-        status = Status.UTREDES,
+        status = Status.IVERKSETTES,
     ),
     IVERKSETT_VEDTAK(
         gruppe = StegGruppe.IVERKSETT_VEDTAK,
