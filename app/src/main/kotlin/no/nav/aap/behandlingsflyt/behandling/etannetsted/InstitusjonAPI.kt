@@ -32,18 +32,19 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: HikariDataSource) {
                     val behov = utlederService.utled(behandling.id)
 
                     // Hent ut rå fakta fra grunnlaget
-                    val soningsopphold = institusjonsoppholdRepository.hentHvisEksisterer(behandling.id)
+                    val grunnlag = institusjonsoppholdRepository.hentHvisEksisterer(behandling.id)
                     val soningsforholdInfo =
-                        byggTidslinjeAvType(soningsopphold, Institusjonstype.FO)
+                        byggTidslinjeAvType(grunnlag, Institusjonstype.FO)
 
                     val perioderMedSoning = behov.perioderTilVurdering.mapValue { it.soning }.komprimer()
+                    val vurderinger = grunnlag?.soningsVurderinger?.tilTidslinje() ?: Tidslinje()
 
                     val manglendePerioder = perioderMedSoning.segmenter()
                         .filterNot { it.verdi == null }
                         .map {
                             Soningsforhold(
                                 vurderingsdato = it.periode.fom,
-                                vurdering = null, // TODO: hente ut vurdering for perioden
+                                vurdering = vurderinger.segment(it.periode.fom)?.verdi,
                                 status = it.verdi!!.vurdering
                             )
                         }
@@ -72,6 +73,6 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: HikariDataSource) {
 private fun byggTidslinjeAvType(
     soningsopphold: InstitusjonsoppholdGrunnlag?, institusjonstype: Institusjonstype
 ): Tidslinje<Institusjon> {
-    return Tidslinje(soningsopphold?.opphold?.filter { it.verdi.type == institusjonstype }
+    return Tidslinje(soningsopphold?.oppholdene?.opphold?.filter { it.verdi.type == institusjonstype }
         ?: emptyList())
 }

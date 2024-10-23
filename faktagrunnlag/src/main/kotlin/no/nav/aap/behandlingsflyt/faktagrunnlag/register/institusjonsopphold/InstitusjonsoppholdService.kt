@@ -37,7 +37,7 @@ class InstitusjonsoppholdService private constructor(
         eksisterendeGrunnlag: InstitusjonsoppholdGrunnlag?,
         institusjonsopphold: InstitusjonsoppholdGrunnlag?
     ): Boolean {
-        return eksisterendeGrunnlag?.opphold == institusjonsopphold?.opphold
+        return eksisterendeGrunnlag?.oppholdene == institusjonsopphold?.oppholdene
     }
 
     fun hentHvisEksisterer(behandlingId: BehandlingId): InstitusjonsoppholdGrunnlag? {

@@ -307,8 +307,9 @@ class EtAnnetStedUtlederService(
         val grunnlag = institusjonsoppholdRepository.hentHvisEksisterer(behandlingId)
         val barnetillegg = barnetilleggRepository.hentHvisEksisterer(behandlingId)?.perioder ?: emptyList()
 
-        val opphold = grunnlag?.opphold ?: emptyList()
+        val opphold = grunnlag?.oppholdene?.opphold ?: emptyList()
+        val soningsvurderinger = grunnlag?.soningsVurderinger?.vurderinger ?: emptyList()
 
-        return EtAnnetStedInput(opphold, emptyList(), barnetillegg, emptyList())
+        return EtAnnetStedInput(opphold, soningsvurderinger, barnetillegg, emptyList())
     }
 }

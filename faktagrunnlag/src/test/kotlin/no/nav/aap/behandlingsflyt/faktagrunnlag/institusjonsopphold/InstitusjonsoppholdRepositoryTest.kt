@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold
 
 import no.nav.aap.behandlingsflyt.dbtestdata.ident
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
@@ -49,7 +49,7 @@ class InstitusjonsoppholdRepositoryTest {
             institusjonsoppholdRepository.lagreOpphold(behandling.id, institusjonsopphold)
 
 
-            val institusjonsoppholdTidslinje = institusjonsoppholdRepository.hent(behandling.id)
+            val institusjonsoppholdTidslinje = requireNotNull(institusjonsoppholdRepository.hent(behandling.id).oppholdene?.opphold)
             assertThat(institusjonsoppholdTidslinje).hasSize(1)
             assertThat(institusjonsoppholdTidslinje.first().verdi).isEqualTo(
                 Institusjon(
@@ -79,7 +79,7 @@ class InstitusjonsoppholdRepositoryTest {
 
             institusjonsoppholdRepository.kopier(behandling.id, behandling2.id)
 
-            val institusjonsoppholdTidslinje2 = institusjonsoppholdRepository.hent(behandling2.id)
+            val institusjonsoppholdTidslinje2 = requireNotNull(institusjonsoppholdRepository.hent(behandling2.id).oppholdene?.opphold)
             assertThat(institusjonsoppholdTidslinje2).hasSize(1)
             assertThat(institusjonsoppholdTidslinje2.first().verdi).isEqualTo(
                 Institusjon(
