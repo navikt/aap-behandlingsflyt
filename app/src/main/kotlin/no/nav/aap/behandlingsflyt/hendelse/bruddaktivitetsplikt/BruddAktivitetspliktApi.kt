@@ -8,8 +8,7 @@ import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.FeilregistrertBrudd
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Dokumenttype.BRUDD
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -29,13 +28,14 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
 
                 val repository = AktivitetspliktRepository(connection)
                 val bruddAktivitetsplikt = req.perioder.map { periode ->
-                    AktivitetspliktRepository.LagreBruddInput(
+                    AktivitetspliktRepository.DokumentInput(
                         sakId = sak.id,
                         brudd = req.brudd,
                         paragraf = req.paragraf,
                         begrunnelse = req.begrunnelse,
                         periode = periode,
                         innsender = navIdent,
+                        dokumenttype = BRUDD,
                     )
                 }
                 val innsendingId = repository.lagreBrudd(bruddAktivitetsplikt)
@@ -63,20 +63,14 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
                 val repository = AktivitetspliktRepository(connection)
                 val sak = SakService(connection).hent(Saksnummer(req.saksnummer))
                 val alleBrudd = repository.hentBrudd(sak.id)
-                    .mapNotNull { dokument ->
-                        when (dokument) {
-                            is FeilregistrertBrudd ->
-                                /* Fortelle frontend? */
-                                null
-                            is BruddAktivitetsplikt ->
-                                BruddAktivitetspliktHendelseDto(
-                                    brudd = dokument.type,
-                                    paragraf = dokument.paragraf,
-                                    periode = dokument.periode,
-                                    begrunnelse = dokument.begrunnelse,
-                                    hendelseId = dokument.hendelseId.toString(),
-                                )
-                        }
+                    .map { dokument ->
+                        BruddAktivitetspliktHendelseDto(
+                            brudd = dokument.brudd,
+                            paragraf = dokument.paragraf,
+                            periode = dokument.periode,
+                            begrunnelse = dokument.begrunnelse,
+                            hendelseId = dokument.hendelseId.toString(),
+                        )
                     }
                 BruddAktivitetspliktResponse(alleBrudd)
             }

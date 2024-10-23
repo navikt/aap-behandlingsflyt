@@ -1,17 +1,14 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ReduksjonAktivitetspliktVurdering.Vilkårsvurdering.FEILREGISTRERT
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ReduksjonAktivitetspliktVurdering.Vilkårsvurdering.IKKE_RELEVANT_BRUDD
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ReduksjonAktivitetspliktVurdering.Vilkårsvurdering.UNNTAK_RIMELIG_GRUNN
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ReduksjonAktivitetspliktVurdering.Vilkårsvurdering.VILKÅR_OPPFYLT
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Brudd.IKKE_MØTT_TIL_BEHANDLING
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Brudd.IKKE_MØTT_TIL_MØTE
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Brudd.IKKE_MØTT_TIL_TILTAK
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Brudd.IKKE_SENDT_INN_DOKUMENTASJON
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Grunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_9
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Type.IKKE_MØTT_TIL_BEHANDLING
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Type.IKKE_MØTT_TIL_MØTE
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Type.IKKE_MØTT_TIL_TILTAK
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Type.IKKE_SENDT_INN_DOKUMENTASJON
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.FeilregistrertBrudd
 import no.nav.aap.tidslinje.JoinStyle
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.Tidslinje
@@ -41,41 +38,39 @@ class ReduksjonAktivitetspliktRegel : UnderveisRegel {
         val vurderinger = input.aktivitetspliktGrunnlag
             .tidslinje
             .mapValue { dokument ->
-                when (dokument) {
-                    is FeilregistrertBrudd -> {
+//                when (dokument) {
+//                    is FeilregistrertBrudd -> {
+//                        ReduksjonAktivitetspliktVurdering(
+//                            dokument = dokument,
+//                            vilkårsvurdering = FEILREGISTRERT,
+//                            skalReduseres = false,
+//                        )
+//                    }
+//
+
+                when {
+                    dokument.brudd !in relevanteBrudd -> {
                         ReduksjonAktivitetspliktVurdering(
                             dokument = dokument,
-                            vilkårsvurdering = FEILREGISTRERT,
+                            vilkårsvurdering = IKKE_RELEVANT_BRUDD,
                             skalReduseres = false,
                         )
                     }
 
-                    is BruddAktivitetsplikt -> {
-                        when {
-                            dokument.type !in relevanteBrudd -> {
-                                ReduksjonAktivitetspliktVurdering(
-                                    dokument = dokument,
-                                    vilkårsvurdering = IKKE_RELEVANT_BRUDD,
-                                    skalReduseres = false,
-                                )
-                            }
+                    dokument.grunn in gyldigeGrunner -> {
+                        ReduksjonAktivitetspliktVurdering(
+                            dokument = dokument,
+                            vilkårsvurdering = UNNTAK_RIMELIG_GRUNN,
+                            skalReduseres = false,
+                        )
+                    }
 
-                            dokument.grunn in gyldigeGrunner -> {
-                                ReduksjonAktivitetspliktVurdering(
-                                    dokument = dokument,
-                                    vilkårsvurdering = UNNTAK_RIMELIG_GRUNN,
-                                    skalReduseres = false,
-                                )
-                            }
-
-                            else -> {
-                                ReduksjonAktivitetspliktVurdering(
-                                    dokument = dokument,
-                                    vilkårsvurdering = VILKÅR_OPPFYLT,
-                                    skalReduseres = dokument.paragraf == PARAGRAF_11_9,
-                                )
-                            }
-                        }
+                    else -> {
+                        ReduksjonAktivitetspliktVurdering(
+                            dokument = dokument,
+                            vilkårsvurdering = VILKÅR_OPPFYLT,
+                            skalReduseres = dokument.paragraf == PARAGRAF_11_9,
+                        )
                     }
                 }
             }

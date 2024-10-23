@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktG
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Grunn.INGEN_GYLDIG_GRUNN
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_8
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Type.IKKE_MØTT_TIL_TILTAK
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Brudd.IKKE_MØTT_TIL_TILTAK
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.HendelseId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.InnsendingId
@@ -32,7 +32,7 @@ class ReduksjonFraværFastsattAktivitetRegelTest {
         val vurderinger = vurder(
             rettighetsperiode = Periode(fom = dato(2020, 1, 1), tom = dato(2022, 12, 31)),
             brudd(
-                aktivitetsType = IKKE_MØTT_TIL_TILTAK,
+                aktivitetsBrudd = IKKE_MØTT_TIL_TILTAK,
                 paragraf = PARAGRAF_11_8,
                 periode = Periode(dato(2020, 1, 1), dato(2020, 1, 1)),
                 opprettet = dato(2020, 1, 2)
@@ -49,7 +49,7 @@ class ReduksjonFraværFastsattAktivitetRegelTest {
         val vurderinger = vurder(
             rettighetsperiode = Periode(fom = dato(2020, 1, 1), tom = dato(2022, 12, 31)),
             brudd(
-                aktivitetsType = IKKE_MØTT_TIL_TILTAK,
+                aktivitetsBrudd = IKKE_MØTT_TIL_TILTAK,
                 paragraf = PARAGRAF_11_8,
                 periode = Periode(dato(2020, 1, 1), dato(2020, 1, 1)),
                 opprettet = dato(2020, 4, 1),
@@ -87,7 +87,7 @@ class ReduksjonFraværFastsattAktivitetRegelTest {
     )
 
     private fun brudd(
-        aktivitetsType: BruddAktivitetsplikt.Type,
+        aktivitetsBrudd: BruddAktivitetsplikt.Brudd,
         paragraf: BruddAktivitetsplikt.Paragraf,
         periode: Periode,
         opprettet: LocalDate = periode.tom.plusMonths(4),
@@ -98,11 +98,12 @@ class ReduksjonFraværFastsattAktivitetRegelTest {
         innsendingId = InnsendingId.ny(),
         innsender = NavIdent(""),
         sakId = SakId(1),
-        type = aktivitetsType,
+        brudd = aktivitetsBrudd,
         paragraf = paragraf,
         begrunnelse = "Informasjon fra tiltaksarrangør",
         periode = periode,
         opprettetTid = opprettet.atStartOfDay(ZoneId.of("Europe/Oslo")).toInstant(),
         grunn = grunn,
+        dokumenttype = BruddAktivitetsplikt.Dokumenttype.BRUDD
     )
 }

@@ -6,7 +6,7 @@ import no.nav.aap.komponenter.type.Periode
 
 data class BruddAktivitetspliktRequest(
     val saksnummer: String,
-    val brudd: BruddAktivitetsplikt.Type,
+    val brudd: BruddAktivitetsplikt.Brudd,
     val paragraf: BruddAktivitetsplikt.Paragraf,
     val begrunnelse: String,
     val perioder: List<Periode>
@@ -19,7 +19,7 @@ data class BruddAktivitetspliktResponse(
 data class HentHendelseDto(@PathParam("saksnummer") val saksnummer: String)
 
 data class BruddAktivitetspliktHendelseDto(
-    val brudd: BruddAktivitetsplikt.Type,
+    val brudd: BruddAktivitetsplikt.Brudd,
     val paragraf: BruddAktivitetsplikt.Paragraf,
     val periode: Periode,
     val begrunnelse: String,

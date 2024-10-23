@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Grunn.INGEN_GYLDIG_GRUNN
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Grunn.STERKE_VELFERDSGRUNNER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_8
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Type.IKKE_MØTT_TIL_TILTAK
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Brudd.IKKE_MØTT_TIL_TILTAK
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.HendelseId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.InnsendingId
@@ -37,7 +37,7 @@ class FraværFastsattAktivitetRegelTest {
         val vurderinger = vurder(
             rettighetsperiode = Periode(fom = dato(2020, 1, 1), tom = dato(2022, 12, 31)),
             brudd(
-                aktivitetsType = IKKE_MØTT_TIL_TILTAK,
+                aktivitetsBrudd = IKKE_MØTT_TIL_TILTAK,
                 paragraf = PARAGRAF_11_8,
                 periode = Periode(dato(2020, 1, 1), dato(2020, 1, 1)),
                 opprettet = dato(2020, 1, 2)
@@ -53,7 +53,7 @@ class FraværFastsattAktivitetRegelTest {
         val vurderinger = vurder(
             rettighetsperiode = Periode(fom = dato(2020, 1, 1), tom = dato(2022, 12, 31)),
             brudd(
-                aktivitetsType = IKKE_MØTT_TIL_TILTAK,
+                aktivitetsBrudd = IKKE_MØTT_TIL_TILTAK,
                 paragraf = PARAGRAF_11_8,
                 periode = Periode(dato(2020, 1, 1), dato(2020, 1, 2)),
                 opprettet = dato(2020, 4, 1),
@@ -69,7 +69,7 @@ class FraværFastsattAktivitetRegelTest {
         val vurdering = vurder(
             rettighetsperiode = Periode(fom = dato(2020, 1, 1), tom = dato(2022, 12, 31)),
             brudd(
-                aktivitetsType = IKKE_MØTT_TIL_TILTAK,
+                aktivitetsBrudd = IKKE_MØTT_TIL_TILTAK,
                 paragraf = PARAGRAF_11_8,
                 periode = Periode(dato(2020, 1, 1), dato(2020, 1, 2)),
                 opprettet = dato(2020, 4, 1),
@@ -84,13 +84,13 @@ class FraværFastsattAktivitetRegelTest {
         val vurdering = vurder(
             rettighetsperiode = Periode(fom = dato(2020, 1, 1), tom = dato(2022, 12, 31)),
             brudd(
-                aktivitetsType = IKKE_MØTT_TIL_TILTAK,
+                aktivitetsBrudd = IKKE_MØTT_TIL_TILTAK,
                 paragraf = PARAGRAF_11_8,
                 periode = Periode(dato(2020, 1, 1), dato(2020, 1, 1)),
                 opprettet = dato(2020, 4, 1),
             ),
             brudd(
-                aktivitetsType = IKKE_MØTT_TIL_TILTAK,
+                aktivitetsBrudd = IKKE_MØTT_TIL_TILTAK,
                 paragraf = PARAGRAF_11_8,
                 periode = Periode(dato(2020, 1, 15), dato(2020, 1, 15)),
                 opprettet = dato(2020, 4, 1),
@@ -105,7 +105,7 @@ class FraværFastsattAktivitetRegelTest {
         val vurderinger = vurder(
             rettighetsperiode = Periode(fom = dato(2020, 1, 1), tom = dato(2022, 12, 31)),
             brudd(
-                aktivitetsType = IKKE_MØTT_TIL_TILTAK,
+                aktivitetsBrudd = IKKE_MØTT_TIL_TILTAK,
                 paragraf = PARAGRAF_11_8,
                 periode = Periode(dato(2020, 1, 1), dato(2020, 1, 12)),
                 opprettet = dato(2020, 4, 1),
@@ -137,7 +137,7 @@ class FraværFastsattAktivitetRegelTest {
             rettighetsperiode = Periode(fom = dato(2020, 1, 1), tom = dato(2022, 12, 31)),
             /* Fem brudd det første året (2020), hvorav fire teller mot kvoten. */
             brudd(
-                aktivitetsType = IKKE_MØTT_TIL_TILTAK,
+                aktivitetsBrudd = IKKE_MØTT_TIL_TILTAK,
                 paragraf = PARAGRAF_11_8,
                 periode = Periode(dato(2020, 1, 1), dato(2020, 1, 5)),
                 opprettet = dato(2020, 4, 1),
@@ -145,7 +145,7 @@ class FraværFastsattAktivitetRegelTest {
             ),
             /* Tolv brudd i første meldeperiode (2021). Meldeperioden starter den 6. januar. */
             brudd(
-                aktivitetsType = IKKE_MØTT_TIL_TILTAK,
+                aktivitetsBrudd = IKKE_MØTT_TIL_TILTAK,
                 paragraf = PARAGRAF_11_8,
                 periode = Periode(
                     fom = dato(2021, 1, startMeldeperiode2021),
@@ -208,7 +208,7 @@ class FraværFastsattAktivitetRegelTest {
     )
 
     private fun brudd(
-        aktivitetsType: BruddAktivitetsplikt.Type,
+        aktivitetsBrudd: BruddAktivitetsplikt.Brudd,
         paragraf: BruddAktivitetsplikt.Paragraf,
         periode: Periode,
         opprettet: LocalDate = periode.tom.plusMonths(4),
@@ -219,11 +219,12 @@ class FraværFastsattAktivitetRegelTest {
         innsendingId = InnsendingId.ny(),
         innsender = NavIdent(""),
         sakId = SakId(1),
-        type = aktivitetsType,
+        brudd = aktivitetsBrudd,
         paragraf = paragraf,
         begrunnelse = "Informasjon fra tiltaksarrangør",
         periode = periode,
         opprettetTid = opprettet.atStartOfDay(ZoneId.of("Europe/Oslo")).toInstant(),
         grunn = grunn,
+        dokumenttype = BruddAktivitetsplikt.Dokumenttype.BRUDD
     )
 }

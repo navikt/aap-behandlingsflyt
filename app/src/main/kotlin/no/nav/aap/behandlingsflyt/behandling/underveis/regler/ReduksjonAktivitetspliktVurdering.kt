@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Aktivitetspliktdokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt
 
 /**
@@ -17,7 +16,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsp
  * - [Forkskriftens § 4](https://lovdata.no/forskrift/2017-12-13-2100/§4)
 */
 class ReduksjonAktivitetspliktVurdering(
-    val dokument: Aktivitetspliktdokument,
+    val dokument: BruddAktivitetsplikt,
 
     /** Er vilkårene for å reduksjon etter § 11-9 oppfylt? */
     val vilkårsvurdering: Vilkårsvurdering,

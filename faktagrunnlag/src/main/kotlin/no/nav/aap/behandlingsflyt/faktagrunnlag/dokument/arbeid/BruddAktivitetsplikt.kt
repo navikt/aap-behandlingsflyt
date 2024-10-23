@@ -1,71 +1,57 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
 import com.fasterxml.jackson.annotation.JsonValue
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_7
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_8
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_9
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.*
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.sakogbehandling.NavIdent
 import no.nav.aap.verdityper.sakogbehandling.SakId
 import java.time.Instant
 import java.util.*
 
-sealed interface Aktivitetspliktdokument {
+/** Representerer fakta om ett enkelt brudd (§§ 11-7 til 11-9) for én periode. */
+class BruddAktivitetsplikt(
+    val dokumenttype: Dokumenttype,
+
     /** Intern id brukt i databasen. Skal ikke deles utenfor appen. */
-    val id: BruddAktivitetspliktId
+    val id: BruddAktivitetspliktId,
 
     /** Ekstern id. Skal brukes hvis entiteten sendes ut av appen. */
-    val hendelseId: HendelseId
+    val hendelseId: HendelseId,
 
     /** Knytter sammen flere brudd som ble rapportert inn av saksbehandler som én handling. */
-    val innsendingId: InnsendingId
+    val innsendingId: InnsendingId,
 
-    /** Saksbehandler som sendte inn dokumentet. */
-    val innsender: NavIdent
+    val sakId: SakId,
+
+    /** Saksbehandler/veileder som sendte inn dokumentet. */
+    val innsender: NavIdent,
 
     /** Tidspunktet dokumentet ble mottatt. */
-    val opprettetTid: Instant
-
-    val sakId: SakId
+    val opprettetTid: Instant,
 
     /** De dagene hvor det har vært et brudd. */
-    val periode: Periode
-}
+    val periode: Periode,
 
-data class FeilregistrertBrudd(
-    override val id: BruddAktivitetspliktId,
-    override val hendelseId: HendelseId,
-    override val innsendingId: InnsendingId,
-    override val innsender: NavIdent,
-    override val sakId: SakId,
-    override val opprettetTid: Instant,
-    override val periode: Periode
-): Aktivitetspliktdokument
+    val brudd: Brudd,
 
-/** Representerer fakta om ett enkelt brudd (§§ 11-7 til 11-9) for én periode. */
-data class BruddAktivitetsplikt(
-    override val id: BruddAktivitetspliktId,
-    override val hendelseId: HendelseId,
-    override val innsendingId: InnsendingId,
-    override val innsender: NavIdent,
-    override val sakId: SakId,
-    override val periode: Periode,
-    override val opprettetTid: Instant,
-    val type: Type,
     val paragraf: Paragraf,
+
     val begrunnelse: String,
 
-    /* TODO: Fjern default når det er avklart hvilke grunner vi skal ha. */
-    /* TODO: Legg på persistering når det er avklart. */
-    val grunn: Grunn = Grunn.INGEN_GYLDIG_GRUNN,
-): Aktivitetspliktdokument {
+    val grunn: Grunn,
+) {
     init {
-        require(paragraf in type.gyldigeParagrafer) {
-            "$paragraf kan ikke brukes ved aktivitetspliktbruddet $type"
+        require(paragraf in brudd.gyldigeParagrafer) {
+            "$paragraf kan ikke brukes ved aktivitetspliktbruddet $brudd"
         }
     }
 
-    enum class Type(val gyldigeParagrafer: Collection<Paragraf>) {
+    enum class Dokumenttype {
+        BRUDD,
+        FEILREGISTRERING,
+    }
+
+    enum class Brudd(val gyldigeParagrafer: Collection<Paragraf>) {
         IKKE_MØTT_TIL_MØTE(listOf(PARAGRAF_11_9)),
         IKKE_MØTT_TIL_BEHANDLING(listOf(PARAGRAF_11_8, PARAGRAF_11_9)),
         IKKE_MØTT_TIL_TILTAK(listOf(PARAGRAF_11_8, PARAGRAF_11_9)),
@@ -74,7 +60,6 @@ data class BruddAktivitetsplikt(
         IKKE_AKTIVT_BIDRAG(listOf(PARAGRAF_11_7));
     }
 
-    /** TODO: avklar behov for forskjellige grunner, og hvilke. */
     enum class Grunn {
         SYKDOM_ELLER_SKADE,
         STERKE_VELFERDSGRUNNER,

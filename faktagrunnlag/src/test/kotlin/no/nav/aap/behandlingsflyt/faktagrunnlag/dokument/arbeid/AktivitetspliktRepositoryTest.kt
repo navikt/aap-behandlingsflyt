@@ -5,8 +5,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_7
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_8
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_9
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Type.IKKE_AKTIVT_BIDRAG
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Type.IKKE_MØTT_TIL_BEHANDLING
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Brudd.IKKE_AKTIVT_BIDRAG
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Brudd.IKKE_MØTT_TIL_BEHANDLING
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
@@ -40,7 +40,7 @@ class AktivitetspliktRepositoryTest {
             assertEquals(1, lagretHendelse.size)
             lagretHendelse[0].also {
                 it as BruddAktivitetsplikt
-                assertEquals(IKKE_AKTIVT_BIDRAG, it.type)
+                assertEquals(IKKE_AKTIVT_BIDRAG, it.brudd)
                 assertEquals(PARAGRAF_11_7, it.paragraf)
                 assertEquals("Orket ikke", it.begrunnelse)
                 assertEquals(periode, it.periode)
@@ -129,28 +129,29 @@ fun nySak(connection: DBConnection): Sak {
 fun nyeBrudd(
     connection: DBConnection,
     sak: Sak,
-    brudd: BruddAktivitetsplikt.Type = IKKE_MØTT_TIL_BEHANDLING,
+    brudd: BruddAktivitetsplikt.Brudd = IKKE_MØTT_TIL_BEHANDLING,
     paragraf: BruddAktivitetsplikt.Paragraf = PARAGRAF_11_8,
     begrunnelse: String = "En begrunnnelse",
     perioder: List<Periode> = listOf(Periode(LocalDate.now(), LocalDate.now().plusDays(5))),
-): List<Aktivitetspliktdokument> {
+): List<BruddAktivitetsplikt> {
     val repo = AktivitetspliktRepository(connection)
     val innsendingId = repo.lagreBrudd(
         perioder.map { periode ->
-            AktivitetspliktRepository.LagreBruddInput(
+            AktivitetspliktRepository.DokumentInput(
                 sakId = sak.id,
                 brudd = brudd,
                 paragraf = paragraf,
                 begrunnelse = begrunnelse,
                 periode = periode,
                 innsender = NavIdent("Z000000"),
+                dokumenttype = BruddAktivitetsplikt.Dokumenttype.BRUDD
             )
         }
     )
     return repo.hentBruddForInnsending(innsendingId)
 }
 
-fun nyttGrunnlag(connection: DBConnection, behandling: Behandling, brudd: Set<Aktivitetspliktdokument>): AktivitetspliktGrunnlag {
+fun nyttGrunnlag(connection: DBConnection, behandling: Behandling, brudd: Set<BruddAktivitetsplikt>): AktivitetspliktGrunnlag {
     val repo = AktivitetspliktRepository(connection)
     repo.nyttGrunnlag(behandling.id, brudd)
     return repo.hentGrunnlagHvisEksisterer(behandling.id)!!

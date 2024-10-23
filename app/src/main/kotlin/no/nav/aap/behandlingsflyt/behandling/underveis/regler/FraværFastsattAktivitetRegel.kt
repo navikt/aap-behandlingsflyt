@@ -1,23 +1,20 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.FEILREGISTRERT_BRUDD
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.IKKE_RELEVANT_BRUDD
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.STANS_ANDRE_DAG
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.STANS_TI_DAGER_BRUKT_OPP
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_INNTIL_EN_DAG
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_STERKE_VELFERDSGRUNNER
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_SYKDOM_ELLER_SKADE
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Aktivitetspliktdokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Brudd.IKKE_MØTT_TIL_ANNEN_AKTIVITET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Brudd.IKKE_MØTT_TIL_BEHANDLING
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Brudd.IKKE_MØTT_TIL_TILTAK
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Grunn.INGEN_GYLDIG_GRUNN
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Grunn.RIMELIG_GRUNN
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Grunn.STERKE_VELFERDSGRUNNER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Grunn.SYKDOM_ELLER_SKADE
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_8
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Type.IKKE_MØTT_TIL_ANNEN_AKTIVITET
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Type.IKKE_MØTT_TIL_BEHANDLING
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Type.IKKE_MØTT_TIL_TILTAK
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.FeilregistrertBrudd
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tidslinje.JoinStyle
 import no.nav.aap.tidslinje.Segment
@@ -100,9 +97,9 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
     }
 
     private fun vurderMeldeperiode(
-        meldeperioden: Tidslinje<Aktivitetspliktdokument>,
+        meldeperioden: Tidslinje<BruddAktivitetsplikt>,
         periode: Periode,
-        dokument: Aktivitetspliktdokument,
+        dokument: BruddAktivitetsplikt,
     ): Tidslinje<AktivitetspliktSteg1> {
         val førsteBrudd = meldeperioden.segmenter()
             .first { (it.verdi as? BruddAktivitetsplikt)?.paragraf == PARAGRAF_11_8 }
@@ -139,110 +136,104 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
 
         return kalenderår.flatMap { vurderingSegment ->
             val vurdering = vurderingSegment.verdi
-            when (val dokument = vurdering.dokument) {
-                is FeilregistrertBrudd -> {
+            val dokument = vurdering.dokument
+//                    Tidslinje(
+//                        vurderingSegment.periode,
+//                        FraværFastsattAktivitetVurdering(
+//                            dokument = dokument,
+//                            vilkårsvurdering = FEILREGISTRERT_BRUDD,
+//                            skalStanses = false,
+//                        )
+//                    )
+            if (dokument.brudd !in relevanteBrudd) {
+                return@flatMap Tidslinje(
+                    vurderingSegment.periode,
+                    FraværFastsattAktivitetVurdering(
+                        dokument = dokument,
+                        vilkårsvurdering = IKKE_RELEVANT_BRUDD,
+                        skalStanses = false,
+                    )
+                )
+            }
+
+            if (vurdering.førsteFraværIMeldeperioden) {
+                assert(vurderingSegment.periode.antallDager() == 1)
+                return@flatMap Tidslinje(
+                    vurderingSegment.periode,
+                    FraværFastsattAktivitetVurdering(
+                        dokument = dokument,
+                        vilkårsvurdering = UNNTAK_INNTIL_EN_DAG,
+                        skalStanses = false,
+                    )
+                )
+            }
+
+            when (dokument.grunn) {
+                SYKDOM_ELLER_SKADE ->
                     Tidslinje(
                         vurderingSegment.periode,
                         FraværFastsattAktivitetVurdering(
                             dokument = dokument,
-                            vilkårsvurdering = FEILREGISTRERT_BRUDD,
+                            vilkårsvurdering = UNNTAK_SYKDOM_ELLER_SKADE,
+                            skalStanses = false,
+                        )
+                    )
+
+                STERKE_VELFERDSGRUNNER -> {
+                    val bruddetsPosisjonKalenderår = nestePosisjonKalenderår
+                    nestePosisjonKalenderår += vurderingSegment.periode.antallDager()
+                    val kvoteBruktOppDennePerioden =
+                        (KVOTE_KALENDERÅR + 1) in (bruddetsPosisjonKalenderår..<nestePosisjonKalenderår)
+
+                    if (kvoteBruktOppDennePerioden) {
+                        val stansInnenforPeriodeOffset = (KVOTE_KALENDERÅR + 1) - bruddetsPosisjonKalenderår
+                        val stansDag =
+                            vurderingSegment.periode.fom.plusDays(stansInnenforPeriodeOffset.toLong())
+                        val stansPeriode = Periode(stansDag, stansDag)
+                        val utenfor = vurderingSegment.periode.minus(stansPeriode)
+                        val perioder = (utenfor + stansPeriode).toList().sortedBy { it.fom }
+
+                        return@flatMap Tidslinje(
+                            perioder.map {
+                                Segment(
+                                    it,
+                                    FraværFastsattAktivitetVurdering(
+                                        dokument = dokument,
+                                        vilkårsvurdering = if (it.fom >= stansDag) STANS_TI_DAGER_BRUKT_OPP else UNNTAK_STERKE_VELFERDSGRUNNER,
+                                        skalStanses = dokument.paragraf == PARAGRAF_11_8,
+                                    )
+                                )
+                            }
+                        )
+                    }
+
+                    Tidslinje(
+                        vurderingSegment.periode,
+                        FraværFastsattAktivitetVurdering(
+                            dokument = dokument,
+                            vilkårsvurdering = UNNTAK_STERKE_VELFERDSGRUNNER,
                             skalStanses = false,
                         )
                     )
                 }
 
-                is BruddAktivitetsplikt -> {
-                    if (dokument.type !in relevanteBrudd) {
-                        return@flatMap Tidslinje(
-                            vurderingSegment.periode,
-                            FraværFastsattAktivitetVurdering(
-                                dokument = dokument,
-                                vilkårsvurdering = IKKE_RELEVANT_BRUDD,
-                                skalStanses = false,
-                            )
+                RIMELIG_GRUNN,
+                INGEN_GYLDIG_GRUNN ->
+                    Tidslinje(
+                        vurderingSegment.periode,
+                        FraværFastsattAktivitetVurdering(
+                            dokument = dokument,
+                            vilkårsvurdering = STANS_ANDRE_DAG,
+                            skalStanses = dokument.paragraf == PARAGRAF_11_8,
                         )
-                    }
-
-                    if (vurdering.førsteFraværIMeldeperioden) {
-                        assert(vurderingSegment.periode.antallDager() == 1)
-                        return@flatMap Tidslinje(
-                            vurderingSegment.periode,
-                            FraværFastsattAktivitetVurdering(
-                                dokument = dokument,
-                                vilkårsvurdering = UNNTAK_INNTIL_EN_DAG,
-                                skalStanses = false,
-                            )
-                        )
-                    }
-
-                    when (dokument.grunn) {
-                        SYKDOM_ELLER_SKADE ->
-                            Tidslinje(
-                                vurderingSegment.periode,
-                                FraværFastsattAktivitetVurdering(
-                                    dokument = dokument,
-                                    vilkårsvurdering = UNNTAK_SYKDOM_ELLER_SKADE,
-                                    skalStanses = false,
-                                )
-                            )
-
-                        STERKE_VELFERDSGRUNNER -> {
-                            val bruddetsPosisjonKalenderår = nestePosisjonKalenderår
-                            nestePosisjonKalenderår += vurderingSegment.periode.antallDager()
-                            val kvoteBruktOppDennePerioden =
-                                (KVOTE_KALENDERÅR + 1) in (bruddetsPosisjonKalenderår..<nestePosisjonKalenderår)
-
-                            if (kvoteBruktOppDennePerioden) {
-                                val stansInnenforPeriodeOffset = (KVOTE_KALENDERÅR + 1) - bruddetsPosisjonKalenderår
-                                val stansDag =
-                                    vurderingSegment.periode.fom.plusDays(stansInnenforPeriodeOffset.toLong())
-                                val stansPeriode = Periode(stansDag, stansDag)
-                                val utenfor = vurderingSegment.periode.minus(stansPeriode)
-                                val perioder = (utenfor + stansPeriode).toList().sortedBy { it.fom }
-
-                                return@flatMap Tidslinje(
-                                    perioder.map {
-                                        Segment(
-                                            it,
-                                            FraværFastsattAktivitetVurdering(
-                                                dokument = dokument,
-                                                vilkårsvurdering = if (it.fom >= stansDag) STANS_TI_DAGER_BRUKT_OPP else UNNTAK_STERKE_VELFERDSGRUNNER,
-                                                skalStanses = dokument.paragraf == PARAGRAF_11_8,
-                                            )
-                                        )
-                                    }
-                                )
-                            }
-
-                            Tidslinje(
-                                vurderingSegment.periode,
-                                FraværFastsattAktivitetVurdering(
-                                    dokument = dokument,
-                                    vilkårsvurdering = UNNTAK_STERKE_VELFERDSGRUNNER,
-                                    skalStanses = false,
-                                )
-                            )
-                        }
-
-                        RIMELIG_GRUNN,
-                        INGEN_GYLDIG_GRUNN ->
-                            Tidslinje(
-                                vurderingSegment.periode,
-                                FraværFastsattAktivitetVurdering(
-                                    dokument = dokument,
-                                    vilkårsvurdering = STANS_ANDRE_DAG,
-                                    skalStanses = dokument.paragraf == PARAGRAF_11_8,
-                                )
-                            )
-                    }
-                }
+                    )
             }
         }
     }
 
 
     class AktivitetspliktSteg1(
-        val dokument: Aktivitetspliktdokument,
+        val dokument: BruddAktivitetsplikt,
         val førsteFraværIMeldeperioden: Boolean,
     )
 }

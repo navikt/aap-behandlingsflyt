@@ -1,7 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository.DokumentType.BRUDD
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository.DokumentType.FEILREGISTRERING
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.type.Periode
@@ -11,34 +9,17 @@ import no.nav.aap.verdityper.sakogbehandling.SakId
 import org.jetbrains.annotations.TestOnly
 
 class AktivitetspliktRepository(private val connection: DBConnection) {
-    private enum class DokumentType {
-        BRUDD,
-        FEILREGISTRERING,
-    }
-
-    sealed interface LagreDokumentInput {
-        val sakId: SakId
-        val innsender: NavIdent
-        val periode: Periode
-    }
-
-    class LagreBruddInput(
-        override val sakId: SakId,
-        override val innsender: NavIdent,
-        override val periode: Periode,
-        val brudd: BruddAktivitetsplikt.Type,
+    class DokumentInput(
+        val sakId: SakId,
+        val dokumenttype: BruddAktivitetsplikt.Dokumenttype,
+        val innsender: NavIdent,
+        val periode: Periode,
+        val brudd: BruddAktivitetsplikt.Brudd,
         val paragraf: BruddAktivitetsplikt.Paragraf,
         val begrunnelse: String,
-    ): LagreDokumentInput
+    )
 
-    /* TODO: hvor mye skal vi ha med i en feilregistreringen? */
-    class LagreFeilregistreringInput(
-        override val sakId: SakId,
-        override val innsender: NavIdent,
-        override val periode: Periode,
-    ): LagreDokumentInput
-
-    fun lagreBrudd(brudd: List<LagreDokumentInput>): InnsendingId {
+    fun lagreBrudd(brudd: List<DokumentInput>): InnsendingId {
         val query = """
             INSERT INTO BRUDD_AKTIVITETSPLIKT
             (SAK_ID, PERIODE, NAV_IDENT, OPPRETTET_TID, HENDELSE_ID, INNSENDING_ID, DOKUMENT_TYPE, BRUDD, BEGRUNNELSE, PARAGRAF)
@@ -54,26 +35,16 @@ class AktivitetspliktRepository(private val connection: DBConnection) {
                 setString(3, request.innsender.navIdent)
                 setUUID(4, HendelseId.ny().id)
                 setUUID(5, innsendingId.value)
-                when (request) {
-                    is LagreBruddInput -> {
-                        setEnumName(6, BRUDD)
-                        setEnumName(7, request.brudd)
-                        setString(8, request.begrunnelse)
-                        setEnumName(9, request.paragraf)
-                    }
-                    is LagreFeilregistreringInput -> {
-                        setEnumName(6, FEILREGISTRERING)
-                        setEnumName(7, null)
-                        setString(8, null)
-                        setEnumName(9, null)
-                    }
-                }
+                setEnumName(6, request.dokumenttype)
+                setEnumName(7, request.brudd)
+                setString(8, request.begrunnelse)
+                setEnumName(9, request.paragraf)
             }
         }
         return innsendingId
     }
 
-    fun nyttGrunnlag(behandlingId: BehandlingId, brudd: Set<Aktivitetspliktdokument>) {
+    fun nyttGrunnlag(behandlingId: BehandlingId, brudd: Set<BruddAktivitetsplikt>) {
         val eksisterendeGrunnlag = this.hentGrunnlagHvisEksisterer(behandlingId)
         val eksisterendeBrudd = eksisterendeGrunnlag?.bruddene ?: emptyList()
 
@@ -139,7 +110,7 @@ class AktivitetspliktRepository(private val connection: DBConnection) {
             }
         }
 
-    fun hentBrudd(sakId: SakId): List<Aktivitetspliktdokument> {
+    fun hentBrudd(sakId: SakId): List<BruddAktivitetsplikt> {
         val query = """SELECT * FROM BRUDD_AKTIVITETSPLIKT brudd WHERE SAK_ID = ?"""
         return connection.queryList(query) {
             setParams {
@@ -149,7 +120,7 @@ class AktivitetspliktRepository(private val connection: DBConnection) {
         }
     }
 
-    fun hentBruddForInnsending(innsendingId: InnsendingId): List<Aktivitetspliktdokument> {
+    fun hentBruddForInnsending(innsendingId: InnsendingId): List<BruddAktivitetsplikt> {
         val query = """
             SELECT *
             FROM BRUDD_AKTIVITETSPLIKT brudd
@@ -176,7 +147,7 @@ class AktivitetspliktRepository(private val connection: DBConnection) {
         ) {}
     }
 
-    private fun mapBruddAktivitetsplikt(row: Row): Aktivitetspliktdokument {
+    private fun mapBruddAktivitetsplikt(row: Row): BruddAktivitetsplikt {
         val id = BruddAktivitetspliktId(row.getLong("ID"))
         val periode = row.getPeriode("PERIODE")
         val opprettetTid = row.getInstant("OPPRETTET_TID")
@@ -185,33 +156,21 @@ class AktivitetspliktRepository(private val connection: DBConnection) {
         val hendelseId = HendelseId(row.getUUID("HENDELSE_ID"))
         val innsendingId = InnsendingId(row.getUUID("INNSENDING_ID"))
 
-        /* TODO fjern OrNull når database er migrert */
-        return when (row.getEnumOrNull("DOKUMENT_TYPE") ?: BRUDD) {
-            BRUDD ->
-                BruddAktivitetsplikt(
-                    id = id,
-                    periode = periode,
-                    sakId = sakId,
-                    innsender = navIdent,
-                    hendelseId = hendelseId,
-                    innsendingId = innsendingId,
-                    opprettetTid = opprettetTid,
-                    type = row.getEnum("BRUDD"),
-                    paragraf = row.getEnum("PARAGRAF"),
-                    begrunnelse = row.getString("BEGRUNNELSE"),
-                )
-
-            FEILREGISTRERING ->
-                FeilregistrertBrudd(
-                    id = id,
-                    periode = periode,
-                    sakId = sakId,
-                    innsender = navIdent,
-                    hendelseId = hendelseId,
-                    innsendingId = innsendingId,
-                    opprettetTid = opprettetTid,
-                )
-        }
+        val x = row.getEnumOrNull("DOKUMENT_TYPE") ?: BruddAktivitetsplikt.Dokumenttype.BRUDD
+        return BruddAktivitetsplikt(
+            id = id,
+            periode = periode,
+            sakId = sakId,
+            innsender = navIdent,
+            hendelseId = hendelseId,
+            innsendingId = innsendingId,
+            opprettetTid = opprettetTid,
+            brudd = row.getEnum("BRUDD"),
+            paragraf = row.getEnum("PARAGRAF"),
+            begrunnelse = row.getString("BEGRUNNELSE"),
+            dokumenttype = x,
+            grunn = BruddAktivitetsplikt.Grunn.INGEN_GYLDIG_GRUNN
+        )
     }
 
     private fun deaktiverGrunnlag(behandlingId: BehandlingId) {
