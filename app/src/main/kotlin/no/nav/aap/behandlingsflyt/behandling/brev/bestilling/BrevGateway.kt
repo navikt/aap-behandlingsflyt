@@ -76,6 +76,10 @@ class BrevGateway : BrevbestillingGateway {
         return mapStatus(response.status)
     }
 
+    override fun ferdigstill(referanse: UUID): Status {
+        TODO("Not yet implemented")
+    }
+
     private fun mapTypeBrev(typeBrev: TypeBrev): Brevtype = when (typeBrev) {
         TypeBrev.VEDTAK_AVSLAG -> Brevtype.AVSLAG
         TypeBrev.VEDTAK_INNVILGELSE -> Brevtype.INNVILGELSE

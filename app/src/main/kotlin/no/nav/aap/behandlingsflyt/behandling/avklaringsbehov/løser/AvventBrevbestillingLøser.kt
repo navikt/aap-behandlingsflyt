@@ -22,6 +22,6 @@ class AvventBrevbestillingLøser(val connection: DBConnection) : Avklaringsbehov
     }
 
     override fun forBehov(): Definisjon {
-        return Definisjon.AVVENTER_BREV_BESTILLING
+        return Definisjon.BESTILL_BREV
     }
 }

@@ -41,4 +41,10 @@ class BrevbestillingService(
     fun oppdaterStatus(referanse: UUID, status: Status) {
         brevbestillingRepository.oppdaterStatus(referanse, status)
     }
+
+    fun ferdigstill(referanse: UUID): Boolean {
+        brevbestillingGateway.ferdigstill(referanse)
+        // TODO: Return false hvis validering feiler
+        return true
+    }
 }
