@@ -11,7 +11,6 @@ import java.util.stream.Collectors
 
 const val MANUELT_SATT_PÅ_VENT_KODE = "9001"
 const val BESTILL_BREV_KODE = "9002"
-const val FERDIGSTILL_BREV_KODE = "9003"
 const val AVKLAR_STUDENT_KODE = "5001"
 const val AVKLAR_SYKDOM_KODE = "5003"
 const val FASTSETT_ARBEIDSEVNE_KODE = "5004"
@@ -52,11 +51,6 @@ enum class Definisjon(
         kode = SKRIV_BREV_KODE,
         løsesISteg = StegType.BREV,
         type = BehovType.MANUELT_PÅKREVD,
-    ),
-    FERDIGSTILL_BREV(
-        kode = FERDIGSTILL_BREV_KODE,
-        løsesISteg = StegType.BREV,
-        type = BehovType.VENTEPUNKT,
     ),
     AVKLAR_STUDENT(
         kode = AVKLAR_STUDENT_KODE,
