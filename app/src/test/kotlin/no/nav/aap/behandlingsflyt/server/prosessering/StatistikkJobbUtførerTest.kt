@@ -448,7 +448,7 @@ class StatistikkJobbUtførerTest {
                         definisjon = no.nav.aap.statistikk.api_kontrakt.Definisjon(
                             type = avklaringsbehovHendelseDto.definisjon.type,
                             behovType = BehovType.valueOf(avklaringsbehovHendelseDto.definisjon.behovType.toString()),
-                            løsesISteg = avklaringsbehovHendelseDto.definisjon.løsesISteg.toString()
+                            løsesISteg = no.nav.aap.statistikk.api_kontrakt.StegType.FATTE_VEDTAK
                         ),
                         status = EndringStatus.valueOf(avklaringsbehovHendelseDto.status.toString()),
                         endringer = avklaringsbehovHendelseDto.endringer.map { endring ->

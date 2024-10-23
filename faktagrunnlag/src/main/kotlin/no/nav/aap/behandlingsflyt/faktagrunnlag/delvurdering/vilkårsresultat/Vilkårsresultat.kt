@@ -33,4 +33,8 @@ class Vilkårsresultat(
     override fun hashCode(): Int {
         return vilkår.hashCode()
     }
+
+    override fun toString(): String {
+        return "Vilkårsresultat(id=$id, vilkår=$vilkår)"
+    }
 }
