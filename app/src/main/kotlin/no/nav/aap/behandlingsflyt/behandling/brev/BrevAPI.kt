@@ -6,7 +6,7 @@ import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.HttpStatusCode
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovHendelseHåndterer
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehovBehandlingHendelse
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvventBrevbestillingLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.BrevbestillingLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.BrevbestillingStatusDto
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
@@ -18,10 +18,11 @@ import no.nav.aap.tilgang.authorizedPostWithApprovedList
 import org.slf4j.MDC
 import javax.sql.DataSource
 
+val BREV_SYSTEMBRUKER = Bruker("Brevløsning")
+
 fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
 
     val brevAzp = requiredConfigForKey("integrasjon.brev.azp")
-    val bruker = Bruker("Brevløsning")
 
     route("/api/brev") {
         route("/oppdater-status") {
@@ -37,9 +38,9 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                             AvklaringsbehovHendelseHåndterer(connection).håndtere(
                                 key = brevbestilling.behandlingId,
                                 hendelse = LøsAvklaringsbehovBehandlingHendelse(
-                                    løsning = AvventBrevbestillingLøsning(request),
+                                    løsning = BrevbestillingLøsning(request),
                                     behandlingVersjon = behandling.versjon,
-                                    bruker = bruker,
+                                    bruker = BREV_SYSTEMBRUKER,
                                 )
                             )
 

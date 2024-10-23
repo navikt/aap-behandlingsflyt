@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSet
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvventBrevbestillingLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.BrevbestillingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBeregningstidspunktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
@@ -390,7 +390,7 @@ class FlytOrkestratorTest {
             AvklaringsbehovHendelseHåndterer(connection).håndtere(
                 behandling.id,
                 LøsAvklaringsbehovBehandlingHendelse(
-                    løsning = AvventBrevbestillingLøsning(
+                    løsning = BrevbestillingLøsning(
                         BrevbestillingStatusDto(
                             brevbestilling.referanse,
                             no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.Status.FORHÅNDSVISNING_KLAR
@@ -419,7 +419,7 @@ class FlytOrkestratorTest {
             AvklaringsbehovHendelseHåndterer(connection).håndtere(
                 behandling.id,
                 LøsAvklaringsbehovBehandlingHendelse(
-                    løsning = AvventBrevbestillingLøsning(BrevbestillingStatusDto(brevbestilling.referanse, no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.Status.FULLFØRT)),
+                    løsning = BrevbestillingLøsning(BrevbestillingStatusDto(brevbestilling.referanse, no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.Status.FULLFØRT)),
                     behandlingVersjon = behandling.versjon,
                     bruker = Bruker("SAKSBEHANDLER")
                 )

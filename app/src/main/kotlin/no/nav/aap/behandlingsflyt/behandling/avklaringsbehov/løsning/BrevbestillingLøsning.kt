@@ -3,14 +3,14 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeName
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvventBrevbestillingLøser
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.BrevbestillingLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.BESTILL_BREV_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.BrevbestillingStatusDto
 import no.nav.aap.komponenter.dbconnect.DBConnection
 
 @JsonTypeName(value = BESTILL_BREV_KODE)
-class AvventBrevbestillingLøsning(
+class BrevbestillingLøsning(
     @JsonProperty("status", required = true) val brevbestillingStatus: BrevbestillingStatusDto,
     @JsonProperty(
         "behovstype",
@@ -19,6 +19,6 @@ class AvventBrevbestillingLøsning(
     ) val behovstype: String = BESTILL_BREV_KODE
 ) : AvklaringsbehovLøsning {
     override fun løs(connection: DBConnection, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
-        return AvventBrevbestillingLøser(connection).løs(kontekst, this)
+        return BrevbestillingLøser(connection).løs(kontekst, this)
     }
 }

@@ -38,11 +38,17 @@ class BrevSteg private constructor(
                 Status.FORHÅNDSVISNING_KLAR -> StegResultat(listOf(SKRIV_BREV))
                 // er brevet fullført, iverksett og gå videre til avslutting av behandling
                 Status.FULLFØRT -> {
-                    if (brevbestillingService.ferdigstill(bestilling.referanse)) {
-                        StegResultat()
-                    } else {
+                    val ferdigstilt = brevbestillingService.ferdigstill(bestilling.referanse)
+                    if (!ferdigstilt) {
                         // Validering har feilet så saksbehandler må gjøre endringer
+                        brevbestillingService.oppdaterStatus(
+                            behandlingId = kontekst.behandlingId,
+                            referanse = bestilling.referanse,
+                            status = Status.FORHÅNDSVISNING_KLAR
+                        )
                         StegResultat(listOf(SKRIV_BREV))
+                    } else {
+                        StegResultat()
                     }
                 }
             }

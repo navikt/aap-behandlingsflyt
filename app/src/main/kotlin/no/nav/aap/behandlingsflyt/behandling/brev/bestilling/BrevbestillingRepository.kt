@@ -74,16 +74,17 @@ class BrevbestillingRepository(private val connection: DBConnection) {
         }
     }
 
-    fun oppdaterStatus(referanse: UUID, status: Status) {
+    fun oppdaterStatus(behandlingId: BehandlingId, referanse: UUID, status: Status) {
         val query =
             """
-                UPDATE BREVBESTILLING SET STATUS = ? WHERE REFERANSE = ?
+                UPDATE BREVBESTILLING SET STATUS = ? WHERE REFERANSE = ? AND BEHANDLING_ID = ?
             """.trimIndent()
 
         connection.execute(query) {
             setParams {
                 setEnumName(1, status)
                 setUUID(2, referanse)
+                setLong(3, behandlingId.toLong())
             }
             setResultValidator {
                 require(1 == it)

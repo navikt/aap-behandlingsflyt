@@ -38,13 +38,11 @@ class BrevbestillingService(
         )
     }
 
-    fun oppdaterStatus(referanse: UUID, status: Status) {
-        brevbestillingRepository.oppdaterStatus(referanse, status)
+    fun oppdaterStatus(behandlingId: BehandlingId, referanse: UUID, status: Status) {
+        brevbestillingRepository.oppdaterStatus(behandlingId, referanse, status)
     }
 
     fun ferdigstill(referanse: UUID): Boolean {
-        brevbestillingGateway.ferdigstill(referanse)
-        // TODO: Return false hvis validering feiler
-        return true
+        return brevbestillingGateway.ferdigstill(referanse)
     }
 }

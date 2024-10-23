@@ -12,5 +12,5 @@ interface BrevbestillingGateway {
 
     fun hentBestillingStatus(referanse: UUID): Status
 
-    fun ferdigstill(referanse: UUID): Status
+    fun ferdigstill(referanse: UUID): Boolean
 }
