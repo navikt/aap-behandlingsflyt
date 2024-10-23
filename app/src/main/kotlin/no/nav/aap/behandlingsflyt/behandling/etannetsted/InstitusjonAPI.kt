@@ -18,7 +18,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tidslinje.Tidslinje
 
 fun NormalOpenAPIRoute.institusjonAPI(dataSource: HikariDataSource) {
@@ -44,13 +43,15 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: HikariDataSource) {
                         .map {
                             Soningsforhold(
                                 vurderingsdato = it.periode.fom,
-                                info = finnInfoOmOpphold(it.periode, soningsforholdInfo),
                                 vurdering = null, // TODO: hente ut vurdering for perioden
                                 status = it.verdi!!.vurdering
                             )
                         }
 
-                    SoningsGrunnlag(manglendePerioder)
+                    SoningsGrunnlag(
+                        soningsforholdInfo.segmenter().map { InstitusjonsoppholdDto.institusjonToDto(it) },
+                        manglendePerioder
+                    )
                 }
                 respond(soningsgrunnlag)
             }
@@ -73,11 +74,4 @@ private fun byggTidslinjeAvType(
 ): Tidslinje<Institusjon> {
     return Tidslinje(soningsopphold?.opphold?.filter { it.verdi.type == institusjonstype }
         ?: emptyList())
-}
-
-private fun finnInfoOmOpphold(
-    periode: Periode,
-    tidslinje: Tidslinje<no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon>
-): InstitusjonsoppholdDto {
-    return InstitusjonsoppholdDto.institusjonToDto(tidslinje.kryss(periode).segmenter().single())
 }

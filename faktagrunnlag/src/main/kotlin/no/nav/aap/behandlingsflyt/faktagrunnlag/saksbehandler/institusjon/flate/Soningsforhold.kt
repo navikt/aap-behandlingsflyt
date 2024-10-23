@@ -5,7 +5,6 @@ import java.time.LocalDate
 
 data class Soningsforhold(
     val vurderingsdato: LocalDate,
-    val info: InstitusjonsoppholdDto,
     val vurdering: Soningsvurdering?,
     val status: OppholdVurdering
 )
