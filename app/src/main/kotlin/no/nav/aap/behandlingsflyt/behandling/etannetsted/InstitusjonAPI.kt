@@ -10,7 +10,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Ins
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.HelseinstitusjonGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.Helseopphold
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.InstitusjonsoppholdDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.SoningsGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.Soningsforhold
@@ -24,7 +26,7 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: HikariDataSource) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/institusjon/soning") {
             get<BehandlingReferanse, SoningsGrunnlag> { req ->
-                val soningsgrunnlag = dataSource.transaction { connection ->
+                val soningsgrunnlag = dataSource.transaction(readOnly = true) { connection ->
                     val behandling = BehandlingReferanseService(BehandlingRepositoryImpl(connection)).behandling(req)
                     val institusjonsoppholdRepository = InstitusjonsoppholdRepository(connection)
                     val utlederService =
@@ -61,10 +63,38 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: HikariDataSource) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/institusjon/helse") {
             get<BehandlingReferanse, HelseinstitusjonGrunnlag> { req ->
-                val soningsgrunnlag = dataSource.transaction { connection ->
-                    HelseinstitusjonGrunnlag(false)
+                val grunnlagDto = dataSource.transaction(readOnly = true) { connection ->
+                    val behandling = BehandlingReferanseService(BehandlingRepositoryImpl(connection)).behandling(req)
+                    val institusjonsoppholdRepository = InstitusjonsoppholdRepository(connection)
+                    val utlederService =
+                        EtAnnetStedUtlederService(BarnetilleggRepository(connection), institusjonsoppholdRepository)
+                    val behov = utlederService.utled(behandling.id)
+
+                    // Hent ut rå fakta fra grunnlaget
+                    val grunnlag = institusjonsoppholdRepository.hentHvisEksisterer(behandling.id)
+                    val oppholdInfo =
+                        byggTidslinjeAvType(grunnlag, Institusjonstype.HS)
+
+                    val perioderMedHelseopphold = behov.perioderTilVurdering.mapValue { it.helse }.komprimer()
+                    val vurderinger = Tidslinje<HelseinstitusjonVurdering>()
+
+                    val manglendePerioder = perioderMedHelseopphold.segmenter()
+                        .filterNot { it.verdi == null }
+                        .map {
+                            Helseopphold(
+                                periode = it.periode,
+                                vurderinger = vurderinger.kryss(it.periode).segmenter().map { it.verdi },
+                                status = it.verdi!!.vurdering
+                            )
+                        }
+
+
+                    HelseinstitusjonGrunnlag(
+                        opphold = oppholdInfo.segmenter().map { InstitusjonsoppholdDto.institusjonToDto(it) },
+                        vurderinger = manglendePerioder
+                    )
                 }
-                respond(soningsgrunnlag)
+                respond(grunnlagDto)
             }
         }
     }
