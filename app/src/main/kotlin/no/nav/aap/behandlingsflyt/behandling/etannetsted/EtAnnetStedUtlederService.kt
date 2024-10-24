@@ -300,7 +300,8 @@ class EtAnnetStedUtlederService(
 
         val opphold = grunnlag?.oppholdene?.opphold ?: emptyList()
         val soningsvurderinger = grunnlag?.soningsVurderinger?.vurderinger ?: emptyList()
+        val helsevurderinger = grunnlag?.helseoppholdvurderinger?.vurderinger ?: emptyList()
 
-        return EtAnnetStedInput(opphold, soningsvurderinger, barnetillegg, emptyList())
+        return EtAnnetStedInput(opphold, soningsvurderinger, barnetillegg, helsevurderinger)
     }
 }
