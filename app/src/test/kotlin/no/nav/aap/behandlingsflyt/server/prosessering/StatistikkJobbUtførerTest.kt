@@ -42,6 +42,7 @@ import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.JobbInput
+import no.nav.aap.pip.PipRepository
 import no.nav.aap.statistikk.api_kontrakt.AvklaringsbehovHendelse
 import no.nav.aap.statistikk.api_kontrakt.AvsluttetBehandlingDTO
 import no.nav.aap.statistikk.api_kontrakt.BehandlingStatus
@@ -149,7 +150,8 @@ class StatistikkJobbUtførerTest {
                 sakService,
                 TilkjentYtelseRepository(connection),
                 beregningsgrunnlagRepository,
-                MottattDokumentRepository(connection)
+                dokumentRepository = MottattDokumentRepository(connection),
+                pipRepository = PipRepository(connection)
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
             )
@@ -277,6 +279,7 @@ class StatistikkJobbUtførerTest {
                 sakService,
                 TilkjentYtelseRepository(connection),
                 beregningsgrunnlagRepository,
+                PipRepository(connection),
                 MottattDokumentRepository(connection)
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
@@ -384,6 +387,14 @@ class StatistikkJobbUtførerTest {
             )
         )
 
+        val pipRepository = mockk<PipRepository>()
+        every { pipRepository.finnIdenterPåSak(any()) } returns listOf(
+            PipRepository.IdentPåSak(
+                ident = "123",
+                opprinnelse = PipRepository.IdentPåSak.Opprinnelse.PERSON
+            )
+        )
+
         val utfører =
             StatistikkJobbUtfører(
                 StatistikkGateway(),
@@ -392,6 +403,7 @@ class StatistikkJobbUtførerTest {
                 sakService,
                 tilkjentYtelseRepository,
                 beregningsgrunnlagRepository,
+                pipRepository,
                 dokumentRepository
             )
 
@@ -465,7 +477,8 @@ class StatistikkJobbUtførerTest {
                 versjon = ApplikasjonsVersjon.versjon,
                 mottattTid = tidligsteMottattTid,
                 sakStatus = SakStatus.UTREDES,
-                hendelsesTidspunkt = hendelsesTidspunkt
+                hendelsesTidspunkt = hendelsesTidspunkt,
+                identerForSak = listOf("123")
             )
         )
 

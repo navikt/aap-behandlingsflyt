@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.EndringDTO
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -25,6 +26,7 @@ import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
+import no.nav.aap.pip.PipRepository
 import no.nav.aap.statistikk.api_kontrakt.AvklaringsbehovHendelse
 import no.nav.aap.statistikk.api_kontrakt.AvsluttetBehandlingDTO
 import no.nav.aap.statistikk.api_kontrakt.BehovType
@@ -60,6 +62,7 @@ class StatistikkJobbUtfører(
     private val sakService: SakService,
     private val tilkjentYtelseRepository: TilkjentYtelseRepository,
     private val beregningsgrunnlagRepository: BeregningsgrunnlagRepository,
+    private val pipRepository: PipRepository,
     private val dokumentRepository: MottattDokumentRepository,
 ) : JobbUtfører {
     override fun utfør(input: JobbInput) {
@@ -118,8 +121,13 @@ class StatistikkJobbUtfører(
             sakStatus = behandlingflytSakStatusTilStatistikk(sak.status()),
             hendelsesTidspunkt = hendelse.hendelsesTidspunkt,
             avsluttetBehandling = if (hendelse.status.erAvsluttet()) hentAvsluttetBehandlingDTO(hendelse) else null,
+            identerForSak = hentIdenterPåSak(sak.saksnummer)
         )
         return statistikkHendelse
+    }
+
+    private fun hentIdenterPåSak(saksnummer: Saksnummer): List<String> {
+        return pipRepository.finnIdenterPåSak(saksnummer).map { it.ident }
     }
 
     private fun utledMottattTidspunkt(behandling: Behandling): LocalDateTime {
@@ -252,7 +260,7 @@ class StatistikkJobbUtfører(
         )
         return avsluttetBehandlingDTO
     }
-    
+
     private fun stegTypeTilStatistikkKontrakt(stegType: StegType): no.nav.aap.statistikk.api_kontrakt.StegType {
         return when (stegType) {
             StegType.START_BEHANDLING -> no.nav.aap.statistikk.api_kontrakt.StegType.AVKLAR_SYKDOM
@@ -350,6 +358,7 @@ class StatistikkJobbUtfører(
                 sakService,
                 TilkjentYtelseRepository(connection),
                 BeregningsgrunnlagRepository(connection),
+                pipRepository = PipRepository(connection),
                 dokumentRepository = MottattDokumentRepository(connection)
             )
         }
