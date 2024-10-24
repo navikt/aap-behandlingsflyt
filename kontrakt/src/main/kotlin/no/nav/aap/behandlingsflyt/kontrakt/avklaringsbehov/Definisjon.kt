@@ -106,12 +106,14 @@ enum class Definisjon(
     AVKLAR_SONINGSFORRHOLD(
         kode = AVKLAR_SONINGSFORRHOLD_KODE,
         type = BehovType.MANUELT_PÅKREVD,
-        løsesISteg = StegType.DU_ER_ET_ANNET_STED
+        løsesISteg = StegType.DU_ER_ET_ANNET_STED,
+        kreverToTrinn = true
     ),
     AVKLAR_HELSEINSTITUSJON(
         kode = AVKLAR_HELSEINSTITUSJON_KODE,
         type = BehovType.MANUELT_PÅKREVD,
-        løsesISteg = StegType.DU_ER_ET_ANNET_STED
+        løsesISteg = StegType.DU_ER_ET_ANNET_STED,
+        kreverToTrinn = true
     ),
     AVKLAR_SAMORDNING_GRADERING(
         kode = AVKLAR_SAMORDNING_GRADERING_KODE,
