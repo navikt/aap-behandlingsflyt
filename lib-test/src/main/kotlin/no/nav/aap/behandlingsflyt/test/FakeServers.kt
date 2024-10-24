@@ -944,6 +944,9 @@ object FakeServers : AutoCloseable {
                         call.respond(HttpStatusCode.NoContent, Unit)
                     }
                 }
+                post("/ferdigstill") {
+                    call.respond(HttpStatusCode.Accepted, Unit)
+                }
             }
         }
     }

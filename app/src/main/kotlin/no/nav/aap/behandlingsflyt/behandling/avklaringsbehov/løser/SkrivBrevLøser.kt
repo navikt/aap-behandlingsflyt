@@ -15,7 +15,7 @@ class SkrivBrevLøser (val connection: DBConnection) : AvklaringsbehovsLøser<Sk
         val brevbestillingService = BrevbestillingService.konstruer(connection = connection)
 
         brevbestillingService.oppdaterStatus(
-            behandlingId = kontekst.kontekst.behandlingId,
+            behandlingId = kontekst.behandlingId(),
             referanse = løsning.brevbestillingReferanse,
             status = Status.FULLFØRT
         )

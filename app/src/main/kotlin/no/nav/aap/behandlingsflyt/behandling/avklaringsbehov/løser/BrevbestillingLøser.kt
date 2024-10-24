@@ -19,7 +19,7 @@ class BrevbestillingLøser(val connection: DBConnection) : AvklaringsbehovsLøse
         val brevbestillingService = BrevbestillingService.konstruer(connection = connection)
 
         brevbestillingService.oppdaterStatus(
-            behandlingId = kontekst.kontekst.behandlingId,
+            behandlingId = kontekst.behandlingId(),
             referanse = løsning.brevbestillingStatus.referanse,
             status = Status.FORHÅNDSVISNING_KLAR
         )

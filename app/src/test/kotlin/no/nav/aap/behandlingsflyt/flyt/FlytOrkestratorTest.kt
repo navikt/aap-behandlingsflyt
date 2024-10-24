@@ -16,7 +16,9 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBe
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.ÅrsakTilRetur
+import no.nav.aap.behandlingsflyt.behandling.brev.BREV_SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.dbtestdata.ident
@@ -396,7 +398,7 @@ class FlytOrkestratorTest {
                         )
                     ),
                     behandlingVersjon = behandling.versjon,
-                    bruker = Bruker("Brevløsning")
+                    bruker = BREV_SYSTEMBRUKER
                 )
             )
             // Brevet er klar for forhåndsvisning og editering
@@ -412,13 +414,13 @@ class FlytOrkestratorTest {
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
 
             // Venter på at brevet skal fullføres
-            assertThat(avklaringsbehov.alle()).anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.BESTILL_BREV) }
+            assertThat(avklaringsbehov.alle()).anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.SKRIV_BREV) }
 
             val brevbestilling = BrevbestillingRepository(connection).hent(behandling.id, TypeBrev.VEDTAK_INNVILGELSE)!!
             AvklaringsbehovHendelseHåndterer(connection).håndtere(
                 behandling.id,
                 LøsAvklaringsbehovBehandlingHendelse(
-                    løsning = BrevbestillingLøsning(LøsBrevbestillingDto(brevbestilling.referanse)),
+                    løsning = SkrivBrevLøsning(brevbestillingReferanse = brevbestilling.referanse),
                     behandlingVersjon = behandling.versjon,
                     bruker = Bruker("SAKSBEHANDLER")
                 )
@@ -629,6 +631,60 @@ class FlytOrkestratorTest {
                 )
             )
         }
+
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
+        behandling = hentBehandling(sak.id)
+
+        dataSource.transaction { connection ->
+            val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
+
+            // Det er bestilt vedtaksbrev
+            assertThat(avklaringsbehov.alle()).anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.BESTILL_BREV) }
+            assertThat(behandling.status()).isEqualTo(Status.IVERKSETTES)
+
+            val brevbestilling = BrevbestillingRepository(connection).hent(behandling.id, TypeBrev.VEDTAK_INNVILGELSE)!!
+            AvklaringsbehovHendelseHåndterer(connection).håndtere(
+                behandling.id,
+                LøsAvklaringsbehovBehandlingHendelse(
+                    løsning = BrevbestillingLøsning(
+                        LøsBrevbestillingDto(
+                            brevbestilling.referanse,
+                        )
+                    ),
+                    behandlingVersjon = behandling.versjon,
+                    bruker = BREV_SYSTEMBRUKER
+                )
+            )
+            // Brevet er klar for forhåndsvisning og editering
+            assertThat(BrevbestillingRepository(connection).hent(brevbestilling.referanse).status)
+                .isEqualTo(no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FORHÅNDSVISNING_KLAR)
+        }
+
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
+
+        behandling = hentBehandling(sak.id)
+
+        dataSource.transaction { connection ->
+            val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
+
+            // Venter på at brevet skal fullføres
+            assertThat(avklaringsbehov.alle()).anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.SKRIV_BREV) }
+
+            val brevbestilling = BrevbestillingRepository(connection).hent(behandling.id, TypeBrev.VEDTAK_INNVILGELSE)!!
+            AvklaringsbehovHendelseHåndterer(connection).håndtere(
+                behandling.id,
+                LøsAvklaringsbehovBehandlingHendelse(
+                    løsning = SkrivBrevLøsning(brevbestillingReferanse = brevbestilling.referanse),
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
+                )
+            )
+
+            // Brevet er fullført
+            assertThat(BrevbestillingRepository(connection).hent(brevbestilling.referanse).status)
+                .isEqualTo(no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FULLFØRT)
+        }
+
         util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
 
         behandling = hentBehandling(sak.id)
@@ -1184,6 +1240,38 @@ class FlytOrkestratorTest {
                     løsning = FatteVedtakLøsning(avklaringsbehov.alle()
                         .filter { behov -> behov.erTotrinn() }
                         .map { behov -> TotrinnsVurdering(behov.definisjon.kode, true, "begrunnelse", emptyList()) }),
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
+                )
+            )
+        }
+
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
+
+        dataSource.transaction { connection ->
+            val brevbestilling = BrevbestillingRepository(connection).hent(behandling.id, TypeBrev.VEDTAK_AVSLAG)!!
+            AvklaringsbehovHendelseHåndterer(connection).håndtere(
+                behandling.id,
+                LøsAvklaringsbehovBehandlingHendelse(
+                    løsning = BrevbestillingLøsning(
+                        LøsBrevbestillingDto(
+                            brevbestilling.referanse,
+                        )
+                    ),
+                    behandlingVersjon = behandling.versjon,
+                    bruker = BREV_SYSTEMBRUKER
+                )
+            )
+        }
+
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
+
+        dataSource.transaction { connection ->
+            val brevbestilling = BrevbestillingRepository(connection).hent(behandling.id, TypeBrev.VEDTAK_AVSLAG)!!
+            AvklaringsbehovHendelseHåndterer(connection).håndtere(
+                behandling.id,
+                LøsAvklaringsbehovBehandlingHendelse(
+                    løsning = SkrivBrevLøsning(brevbestillingReferanse = brevbestilling.referanse),
                     behandlingVersjon = behandling.versjon,
                     bruker = Bruker("SAKSBEHANDLER")
                 )
