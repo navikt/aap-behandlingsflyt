@@ -2,23 +2,94 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarHelseinstitusjonLøsning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.HelseinstitusjonVurderingDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.tidslinje.StandardSammenslåere
+import no.nav.aap.tidslinje.Tidslinje
 
 class AvklarHelseinstitusjonLøser(connection: DBConnection) : AvklaringsbehovsLøser<AvklarHelseinstitusjonLøsning> {
 
     private val helseinstitusjonRepository = InstitusjonsoppholdRepository(connection)
+    private val behandlingRepository = BehandlingRepositoryImpl(connection)
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarHelseinstitusjonLøsning): LøsningsResultat {
-        // TODO Kombiner i tidslinje basert på forrige vedtatte verdier
-        helseinstitusjonRepository.lagreHelseVurdering(
-            kontekst.kontekst.behandlingId,
-            løsning.helseinstitusjonVurdering.vurderinger.map { it.tilDomeneobjekt() })
+        val behandling = behandlingRepository.hent(kontekst.behandlingId())
+
+        val vedtatteVurderinger =
+            behandling.forrigeBehandlingId?.let { helseinstitusjonRepository.hentHvisEksisterer(it) }
+
+        val oppdaterteVurderinger =
+            slåSammenMedNyeVurderinger(vedtatteVurderinger, løsning.helseinstitusjonVurdering.vurderinger)
+
+        helseinstitusjonRepository.lagreHelseVurdering(kontekst.kontekst.behandlingId, oppdaterteVurderinger)
+
         return LøsningsResultat(løsning.helseinstitusjonVurdering.vurderinger.map { it.begrunnelse }.joinToString(" "))
+    }
+
+    private fun slåSammenMedNyeVurderinger(
+        grunnlag: InstitusjonsoppholdGrunnlag?,
+        nyeVurderinger: List<HelseinstitusjonVurderingDto>
+    ): List<HelseinstitusjonVurdering> {
+        val eksisterendeTidslinje = byggTidslinjeForSoningsvurderinger(grunnlag)
+
+        val nyeVurderingerTidslinje = nyeVurderinger.sortedBy { it.periode }
+            .map {
+                Tidslinje(
+                    it.periode,
+                    HelseoppholdVurderingData(
+                        it.begrunnelse,
+                        it.faarFriKostOgLosji,
+                        it.forsoergerEktefelle,
+                        it.harFasteUtgifter
+                    )
+                )
+            }
+            .fold(Tidslinje<HelseoppholdVurderingData>()) { acc, tidslinje ->
+                acc.kombiner(tidslinje, StandardSammenslåere.prioriterHøyreSideCrossJoin())
+            }.komprimer()
+
+        return eksisterendeTidslinje.kombiner(
+            nyeVurderingerTidslinje,
+            StandardSammenslåere.prioriterHøyreSideCrossJoin()
+        ).segmenter().map {
+            HelseinstitusjonVurdering(
+                begrunnelse = it.verdi.begrunnelse,
+                faarFriKostOgLosji = it.verdi.faarFriKostOgLosji,
+                forsoergerEktefelle = it.verdi.forsoergerEktefelle,
+                harFasteUtgifter = it.verdi.harFasteUtgifter,
+                periode = it.periode
+            )
+        }
+    }
+
+    private fun byggTidslinjeForSoningsvurderinger(grunnlag: InstitusjonsoppholdGrunnlag?): Tidslinje<HelseoppholdVurderingData> {
+        if (grunnlag == null) {
+            return Tidslinje()
+        }
+        return grunnlag.helseoppholdvurderinger?.tilTidslinje()
+            ?.mapValue {
+                HelseoppholdVurderingData(
+                    it.begrunnelse,
+                    it.faarFriKostOgLosji,
+                    it.forsoergerEktefelle,
+                    it.harFasteUtgifter
+                )
+            } ?: Tidslinje()
     }
 
     override fun forBehov(): Definisjon {
         return Definisjon.AVKLAR_HELSEINSTITUSJON
     }
+
+    internal data class HelseoppholdVurderingData(
+        val begrunnelse: String,
+        val faarFriKostOgLosji: Boolean,
+        val forsoergerEktefelle: Boolean? = null,
+        val harFasteUtgifter: Boolean? = null,
+    )
 }

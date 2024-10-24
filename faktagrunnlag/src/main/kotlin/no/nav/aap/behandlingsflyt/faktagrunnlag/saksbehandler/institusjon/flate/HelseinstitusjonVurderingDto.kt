@@ -2,9 +2,9 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
 import no.nav.aap.komponenter.type.Periode
-import java.time.LocalDate
 
 data class HelseinstitusjonVurderingDto(
+    val periode: Periode,
     val begrunnelse: String,
     val faarFriKostOgLosji: Boolean,
     val forsoergerEktefelle: Boolean? = null,
@@ -16,6 +16,6 @@ data class HelseinstitusjonVurderingDto(
         faarFriKostOgLosji = faarFriKostOgLosji,
         forsoergerEktefelle = forsoergerEktefelle,
         harFasteUtgifter = harFasteUtgifter,
-        periode = Periode(LocalDate.now(), LocalDate.now())
+        periode = periode
     )
 }

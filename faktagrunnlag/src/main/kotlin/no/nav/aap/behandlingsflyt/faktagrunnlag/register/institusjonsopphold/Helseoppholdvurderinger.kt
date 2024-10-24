@@ -1,0 +1,11 @@
+package no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold
+
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
+import no.nav.aap.tidslinje.Segment
+import no.nav.aap.tidslinje.Tidslinje
+
+data class Helseoppholdvurderinger(internal val id: Long?, val vurderinger: List<HelseinstitusjonVurdering>) {
+    fun tilTidslinje(): Tidslinje<HelseinstitusjonVurdering> {
+        return Tidslinje(vurderinger.map { Segment(it.periode, it) })
+    }
+}
