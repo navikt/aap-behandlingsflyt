@@ -48,7 +48,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FATTE_VEDTAK_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.KVALITETSSIKRING_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.BrevbestillingStatusDto
+import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.LøsBrevbestillingDto
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
@@ -391,9 +391,8 @@ class FlytOrkestratorTest {
                 behandling.id,
                 LøsAvklaringsbehovBehandlingHendelse(
                     løsning = BrevbestillingLøsning(
-                        BrevbestillingStatusDto(
+                        LøsBrevbestillingDto(
                             brevbestilling.referanse,
-                            no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.Status.FORHÅNDSVISNING_KLAR
                         )
                     ),
                     behandlingVersjon = behandling.versjon,
@@ -402,7 +401,7 @@ class FlytOrkestratorTest {
             )
             // Brevet er klar for forhåndsvisning og editering
             assertThat(BrevbestillingRepository(connection).hent(brevbestilling.referanse).status)
-                .isEqualTo(no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.Status.FORHÅNDSVISNING_KLAR)
+                .isEqualTo(no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FORHÅNDSVISNING_KLAR)
         }
 
         util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
@@ -419,7 +418,7 @@ class FlytOrkestratorTest {
             AvklaringsbehovHendelseHåndterer(connection).håndtere(
                 behandling.id,
                 LøsAvklaringsbehovBehandlingHendelse(
-                    løsning = BrevbestillingLøsning(BrevbestillingStatusDto(brevbestilling.referanse, no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.Status.FULLFØRT)),
+                    løsning = BrevbestillingLøsning(LøsBrevbestillingDto(brevbestilling.referanse)),
                     behandlingVersjon = behandling.versjon,
                     bruker = Bruker("SAKSBEHANDLER")
                 )
@@ -427,7 +426,7 @@ class FlytOrkestratorTest {
 
             // Brevet er fullført
             assertThat(BrevbestillingRepository(connection).hent(brevbestilling.referanse).status)
-                .isEqualTo(no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.Status.FULLFØRT)
+                .isEqualTo(no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FULLFØRT)
         }
 
         util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())

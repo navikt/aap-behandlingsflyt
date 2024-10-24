@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.kontrakt.brevbestilling
+package no.nav.aap.behandlingsflyt.behandling.brev.bestilling
 
 enum class Status {
     SENDT,

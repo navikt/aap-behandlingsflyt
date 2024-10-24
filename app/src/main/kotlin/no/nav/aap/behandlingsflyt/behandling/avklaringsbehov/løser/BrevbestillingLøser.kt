@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.BREV_SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 
 class BrevbestillingLøser(val connection: DBConnection) : AvklaringsbehovsLøser<BrevbestillingLøsning> {
     override fun løs(
@@ -13,14 +14,14 @@ class BrevbestillingLøser(val connection: DBConnection) : AvklaringsbehovsLøse
         løsning: BrevbestillingLøsning
     ): LøsningsResultat {
 
-        require(kontekst.bruker == BREV_SYSTEMBRUKER){ "${kontekst.bruker} kan ikke løse brevbestilling." }
+        require(kontekst.bruker == BREV_SYSTEMBRUKER){ "Bruker kan ikke løse brevbestilling." }
 
         val brevbestillingService = BrevbestillingService.konstruer(connection = connection)
 
         brevbestillingService.oppdaterStatus(
             behandlingId = kontekst.kontekst.behandlingId,
             referanse = løsning.brevbestillingStatus.referanse,
-            status = løsning.brevbestillingStatus.status
+            status = Status.FORHÅNDSVISNING_KLAR
         )
 
         return LøsningsResultat("Oppdatert brevbestilling")

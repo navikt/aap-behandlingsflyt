@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.Status
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.komponenter.dbconnect.DBConnection
 
 class SkrivBrevLøser (val connection: DBConnection) : AvklaringsbehovsLøser<SkrivBrevLøsning> {

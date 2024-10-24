@@ -6,12 +6,12 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.BrevbestillingLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.BESTILL_BREV_KODE
-import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.BrevbestillingStatusDto
+import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.LøsBrevbestillingDto
 import no.nav.aap.komponenter.dbconnect.DBConnection
 
 @JsonTypeName(value = BESTILL_BREV_KODE)
 class BrevbestillingLøsning(
-    @JsonProperty("status", required = true) val brevbestillingStatus: BrevbestillingStatusDto,
+    @JsonProperty("status", required = true) val brevbestillingStatus: LøsBrevbestillingDto,
     @JsonProperty(
         "behovstype",
         required = true,

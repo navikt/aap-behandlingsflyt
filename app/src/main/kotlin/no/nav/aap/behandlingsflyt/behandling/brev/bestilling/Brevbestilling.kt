@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.brev.bestilling
 
-import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.Status
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import java.util.UUID
 

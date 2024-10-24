@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovHend
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehovBehandlingHendelse
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.BrevbestillingLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
-import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.BrevbestillingStatusDto
+import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.LøsBrevbestillingDto
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.komponenter.config.requiredConfigForKey
@@ -25,8 +25,8 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
     val brevAzp = requiredConfigForKey("integrasjon.brev.azp")
 
     route("/api/brev") {
-        route("/oppdater-status") {
-            authorizedPostWithApprovedList<Unit, Unit, BrevbestillingStatusDto>(brevAzp) { _, request ->
+        route("/løs-bestilling") {
+            authorizedPostWithApprovedList<Unit, Unit, LøsBrevbestillingDto>(brevAzp) { _, request ->
                 dataSource.transaction { connection ->
                     val taSkriveLåsRepository = TaSkriveLåsRepository(connection)
                     val lås = taSkriveLåsRepository.lås(request.referanse)
