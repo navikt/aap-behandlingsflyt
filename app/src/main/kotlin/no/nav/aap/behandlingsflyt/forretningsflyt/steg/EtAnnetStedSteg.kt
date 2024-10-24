@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
@@ -28,15 +29,23 @@ class EtAnnetStedSteg(
             avklaringsbehov += harBehovForAvklaringer.avklaringsbehov()
         }
 
-        if (avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_HELSEINSTITUSJON) != null) {
-            avklaringsbehov.remove(Definisjon.AVKLAR_HELSEINSTITUSJON)
+        if (!avklaringsbehov.contains(Definisjon.AVKLAR_HELSEINSTITUSJON)) {
+            avbrytHvisFinnesOgIkkeTrengs(avklaringsbehovene, Definisjon.AVKLAR_HELSEINSTITUSJON)
         }
 
-        if (avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SONINGSFORRHOLD) != null) {
-            avklaringsbehov.remove(Definisjon.AVKLAR_SONINGSFORRHOLD)
+        if (!avklaringsbehov.contains(Definisjon.AVKLAR_SONINGSFORRHOLD)) {
+            avbrytHvisFinnesOgIkkeTrengs(avklaringsbehovene, Definisjon.AVKLAR_SONINGSFORRHOLD)
         }
 
         return StegResultat(avklaringsbehov)
+    }
+
+    private fun avbrytHvisFinnesOgIkkeTrengs(avklaringsbehovene: Avklaringsbehovene, definisjon: Definisjon) {
+        val eksisterendeBehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
+
+        if (eksisterendeBehov?.erÅpent() == true) {
+            avklaringsbehovene.avbryt(definisjon)
+        }
     }
 
     companion object : FlytSteg {
