@@ -17,13 +17,14 @@ class AktivitetspliktRepository(private val connection: DBConnection) {
         val brudd: BruddAktivitetsplikt.Brudd,
         val paragraf: BruddAktivitetsplikt.Paragraf,
         val begrunnelse: String,
+        val grunn: BruddAktivitetsplikt.Grunn
     )
 
     fun lagreBrudd(brudd: List<DokumentInput>): InnsendingId {
         val query = """
             INSERT INTO BRUDD_AKTIVITETSPLIKT
-            (SAK_ID, PERIODE, NAV_IDENT, OPPRETTET_TID, HENDELSE_ID, INNSENDING_ID, DOKUMENT_TYPE, BRUDD, BEGRUNNELSE, PARAGRAF)
-            VALUES (?, ?::daterange, ?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?)
+            (SAK_ID, PERIODE, NAV_IDENT, OPPRETTET_TID, HENDELSE_ID, INNSENDING_ID, DOKUMENT_TYPE, BRUDD, BEGRUNNELSE, PARAGRAF, GRUNN)
+            VALUES (?, ?::daterange, ?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
 
         val innsendingId = InnsendingId.ny()
@@ -39,6 +40,7 @@ class AktivitetspliktRepository(private val connection: DBConnection) {
                 setEnumName(7, request.brudd)
                 setString(8, request.begrunnelse)
                 setEnumName(9, request.paragraf)
+                setEnumName(10, request.grunn)
             }
         }
         return innsendingId
@@ -156,7 +158,6 @@ class AktivitetspliktRepository(private val connection: DBConnection) {
         val hendelseId = HendelseId(row.getUUID("HENDELSE_ID"))
         val innsendingId = InnsendingId(row.getUUID("INNSENDING_ID"))
 
-        val x = row.getEnumOrNull("DOKUMENT_TYPE") ?: BruddAktivitetsplikt.Dokumenttype.BRUDD
         return BruddAktivitetsplikt(
             id = id,
             periode = periode,
@@ -168,8 +169,8 @@ class AktivitetspliktRepository(private val connection: DBConnection) {
             brudd = row.getEnum("BRUDD"),
             paragraf = row.getEnum("PARAGRAF"),
             begrunnelse = row.getString("BEGRUNNELSE"),
-            dokumenttype = x,
-            grunn = BruddAktivitetsplikt.Grunn.INGEN_GYLDIG_GRUNN
+            dokumenttype = row.getEnumOrNull("DOKUMENT_TYPE") ?: BruddAktivitetsplikt.Dokumenttype.BRUDD,
+            grunn = row.getEnum("GRUNN")
         )
     }
 

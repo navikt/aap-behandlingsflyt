@@ -9,6 +9,7 @@ data class BruddAktivitetspliktRequest(
     val brudd: BruddAktivitetsplikt.Brudd,
     val paragraf: BruddAktivitetsplikt.Paragraf,
     val begrunnelse: String,
+    val grunn: BruddAktivitetsplikt.Grunn?,
     val perioder: List<Periode>
 )
 

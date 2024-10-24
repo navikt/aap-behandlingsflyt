@@ -8,6 +8,7 @@ import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Dokumenttype.BRUDD
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
@@ -36,6 +37,7 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
                         periode = periode,
                         innsender = navIdent,
                         dokumenttype = BRUDD,
+                        grunn = req.grunn ?: BruddAktivitetsplikt.Grunn.INGEN_GYLDIG_GRUNN
                     )
                 }
                 val innsendingId = repository.lagreBrudd(bruddAktivitetsplikt)

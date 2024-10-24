@@ -131,6 +131,7 @@ fun nyeBrudd(
     sak: Sak,
     brudd: BruddAktivitetsplikt.Brudd = IKKE_MØTT_TIL_BEHANDLING,
     paragraf: BruddAktivitetsplikt.Paragraf = PARAGRAF_11_8,
+    grunn: BruddAktivitetsplikt.Grunn = BruddAktivitetsplikt.Grunn.INGEN_GYLDIG_GRUNN,
     begrunnelse: String = "En begrunnnelse",
     perioder: List<Periode> = listOf(Periode(LocalDate.now(), LocalDate.now().plusDays(5))),
 ): List<BruddAktivitetsplikt> {
@@ -144,7 +145,8 @@ fun nyeBrudd(
                 begrunnelse = begrunnelse,
                 periode = periode,
                 innsender = NavIdent("Z000000"),
-                dokumenttype = BruddAktivitetsplikt.Dokumenttype.BRUDD
+                dokumenttype = BruddAktivitetsplikt.Dokumenttype.BRUDD,
+                grunn = grunn
             )
         }
     )
