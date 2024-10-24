@@ -28,6 +28,14 @@ class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>> = TreeSet()) : Iterab
         }
     }
 
+    fun isEmpty(): Boolean {
+        return segmenter.isEmpty()
+    }
+
+    fun isNotEmpty(): Boolean {
+        return segmenter.isNotEmpty()
+    }
+
     fun segmenter(): NavigableSet<Segment<T>> {
         return TreeSet(segmenter)
     }

@@ -8,7 +8,7 @@ import no.nav.aap.tidslinje.Tidslinje
 class SoningRegel : UnderveisRegel {
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
         val soningTidslinje = konstruerTidslinje(input)
-        if (soningTidslinje.segmenter().size < 1) {
+        if (soningTidslinje.isEmpty()) {
             return resultat
         }
 

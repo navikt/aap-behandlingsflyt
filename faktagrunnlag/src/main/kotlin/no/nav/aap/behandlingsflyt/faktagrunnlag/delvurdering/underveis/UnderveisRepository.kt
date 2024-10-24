@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Faktagrunnlag
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.verdityper.Prosent
@@ -68,7 +70,11 @@ class UnderveisRepository(private val connection: DBConnection) {
     }
 
 
-    fun lagre(behandlingId: BehandlingId, underveisperioder: List<Underveisperiode>) {
+    fun lagre(
+        behandlingId: BehandlingId,
+        underveisperioder: List<Underveisperiode>,
+        input: Faktagrunnlag
+    ) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         val eksisterendePerioder = eksisterendeGrunnlag?.perioder ?: emptySet()
 
@@ -77,11 +83,15 @@ class UnderveisRepository(private val connection: DBConnection) {
                 deaktiverGrunnlag(behandlingId)
             }
 
-            lagreNyttGrunnlag(behandlingId, underveisperioder)
+            lagreNyttGrunnlag(behandlingId, underveisperioder, input)
         }
     }
 
-    private fun lagreNyttGrunnlag(behandlingId: BehandlingId, underveisperioder: List<Underveisperiode>) {
+    private fun lagreNyttGrunnlag(
+        behandlingId: BehandlingId,
+        underveisperioder: List<Underveisperiode>,
+        input: Faktagrunnlag
+    ) {
         val pliktkorteneQuery = """
             INSERT INTO UNDERVEIS_PERIODER DEFAULT VALUES
             """.trimIndent()
@@ -103,13 +113,24 @@ class UnderveisRepository(private val connection: DBConnection) {
             }
         }
 
+        val sporingQuery = """
+            INSERT INTO UNDERVEIS_SPORING (FAKTAGRUNNLAG, VERSJON) VALUES (?, ?)
+            """.trimIndent()
+        val sporingId = connection.executeReturnKey(sporingQuery) {
+            setParams {
+                setString(1, input.hent())
+                setString(2, ApplikasjonsVersjon.versjon)
+            }
+        }
+
         val grunnlagQuery = """
-            INSERT INTO UNDERVEIS_GRUNNLAG (behandling_id, perioder_id) VALUES (?, ?)
+            INSERT INTO UNDERVEIS_GRUNNLAG (behandling_id, perioder_id, sporing_id) VALUES (?, ?, ?)
         """.trimIndent()
         connection.execute(grunnlagQuery) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, perioderId)
+                setLong(3, sporingId)
             }
         }
     }
@@ -129,7 +150,7 @@ class UnderveisRepository(private val connection: DBConnection) {
             return
         }
         val query = """
-            INSERT INTO UNDERVEIS_GRUNNLAG (behandling_id, perioder_id) SELECT ?, perioder_id from UNDERVEIS_GRUNNLAG where behandling_id = ? and aktiv
+            INSERT INTO UNDERVEIS_GRUNNLAG (behandling_id, perioder_id, sporing_id) SELECT ?, perioder_id, sporing_id from UNDERVEIS_GRUNNLAG where behandling_id = ? and aktiv
         """.trimIndent()
 
         connection.execute(query) {

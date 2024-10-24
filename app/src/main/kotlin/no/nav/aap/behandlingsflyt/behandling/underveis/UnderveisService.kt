@@ -63,7 +63,9 @@ class UnderveisService(
                         it.verdi.grenseverdi(),
                         it.verdi.gradering(),
                     )
-                })
+                },
+            input
+        )
         return vurderRegler
     }
 

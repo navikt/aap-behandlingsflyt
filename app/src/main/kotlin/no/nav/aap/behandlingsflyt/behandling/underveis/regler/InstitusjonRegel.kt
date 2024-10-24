@@ -18,7 +18,7 @@ class InstitusjonRegel : UnderveisRegel {
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
 
         var institusjonTidslinje = konstruerTidslinje(input)
-        if (institusjonTidslinje.segmenter().isEmpty()) {
+        if (institusjonTidslinje.isEmpty()) {
             return resultat
         }
         val reduksjonsTidslinje = utledTidslinjeHvorDetKanGisReduksjon(input)
