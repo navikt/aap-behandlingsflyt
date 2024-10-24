@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevLøsning
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -12,9 +12,9 @@ class SkrivBrevLøser (val connection: DBConnection) : AvklaringsbehovsLøser<Sk
         kontekst: AvklaringsbehovKontekst,
         løsning: SkrivBrevLøsning
     ): LøsningsResultat {
-        val brevbestillingService = BrevbestillingService.konstruer(connection = connection)
+        val brevbestillingRepository = BrevbestillingRepository(connection)
 
-        brevbestillingService.oppdaterStatus(
+        brevbestillingRepository.oppdaterStatus(
             behandlingId = kontekst.behandlingId(),
             referanse = løsning.brevbestillingReferanse,
             status = Status.FULLFØRT
