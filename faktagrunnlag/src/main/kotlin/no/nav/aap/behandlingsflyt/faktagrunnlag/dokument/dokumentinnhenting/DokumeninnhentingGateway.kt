@@ -50,7 +50,7 @@ class DokumeninnhentingGateway {
         try {
             return requireNotNull(client.get(uri = URI.create("$syfoUri/status/{$sakId}"), request = request, mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }))
         } catch (e: Exception) {
-            throw RuntimeException("Feil ved bestilling av status til legeerklæring i aap-dokumentinnhenting: ${e.message}")
+            throw RuntimeException("Feil ved innhentning av status til legeerklæring i aap-dokumentinnhenting: ${e.message}")
         }
     }
 }
