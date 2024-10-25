@@ -53,7 +53,7 @@ object PdlPersonopplysningGateway : PersonopplysningGateway {
         return Personopplysning(
             id = 0, // Setter no bs her for å få det gjennom
             fødselsdato = Fødselsdato.parse(foedselsdato),
-            dødsdato = response.data?.hentPerson?.doedsfall?.first()?.doedsdato?.let { Dødsdato.parse(it) }
+            dødsdato = response.data?.hentPerson?.doedsfall?.firstOrNull()?.doedsdato?.let { Dødsdato.parse(it) }
         )
     }
 }
