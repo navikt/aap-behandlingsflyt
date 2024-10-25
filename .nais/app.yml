@@ -148,3 +148,7 @@ spec:
       value: api://dev-gcp.aap.brev/.default
     - name: INTEGRASJON_BREV_AZP
       value: dev-gcp:aap:brev
+    - name: INTEGRASJON_DOKUMENTINNHENTING_URL
+      value: http://dokumentinnhenting
+    - name: INTEGRASJON_DOKUMENTINNHENTING_SCOPE
+      value: api://dev-gcp.aap.dokumentinnhenting/.default
