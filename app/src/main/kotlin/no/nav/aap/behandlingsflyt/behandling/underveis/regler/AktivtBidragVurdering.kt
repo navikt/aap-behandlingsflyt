@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktDokument
 
 /** Den ferdige vurderingen av § 11-8 "Medlemmets aktivitetsplikt".
  *
@@ -12,7 +12,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsp
  * - [Folketrygdloven § 11-7](https://lovdata.no/lov/1997-02-28-19/§11-7)
  */
 class AktivtBidragVurdering(
-    val dokument: BruddAktivitetsplikt,
+    val dokument: AktivitetspliktDokument,
     val vilkårsvurdering: Vilkårsvurdering
 ) {
     enum class Vilkårsvurdering {

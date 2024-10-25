@@ -5,12 +5,16 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAkt
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_INNTIL_EN_DAG
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_STERKE_VELFERDSGRUNNER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Grunn.INGEN_GYLDIG_GRUNN
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Grunn.STERKE_VELFERDSGRUNNER
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_8
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Brudd.IKKE_MØTT_TIL_TILTAK
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktDokument
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRegistrering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn.INGEN_GYLDIG_GRUNN
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn.STERKE_VELFERDSGRUNNER
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.PARAGRAF_11_8
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_MØTT_TIL_TILTAK
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktId
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.HendelseId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.InnsendingId
 import no.nav.aap.komponenter.type.Periode
@@ -37,7 +41,7 @@ class FraværFastsattAktivitetRegelTest {
         val vurderinger = vurder(
             rettighetsperiode = Periode(fom = dato(2020, 1, 1), tom = dato(2022, 12, 31)),
             brudd(
-                aktivitetsBrudd = IKKE_MØTT_TIL_TILTAK,
+                bruddType = IKKE_MØTT_TIL_TILTAK,
                 paragraf = PARAGRAF_11_8,
                 periode = Periode(dato(2020, 1, 1), dato(2020, 1, 1)),
                 opprettet = dato(2020, 1, 2)
@@ -53,7 +57,7 @@ class FraværFastsattAktivitetRegelTest {
         val vurderinger = vurder(
             rettighetsperiode = Periode(fom = dato(2020, 1, 1), tom = dato(2022, 12, 31)),
             brudd(
-                aktivitetsBrudd = IKKE_MØTT_TIL_TILTAK,
+                bruddType = IKKE_MØTT_TIL_TILTAK,
                 paragraf = PARAGRAF_11_8,
                 periode = Periode(dato(2020, 1, 1), dato(2020, 1, 2)),
                 opprettet = dato(2020, 4, 1),
@@ -69,7 +73,7 @@ class FraværFastsattAktivitetRegelTest {
         val vurdering = vurder(
             rettighetsperiode = Periode(fom = dato(2020, 1, 1), tom = dato(2022, 12, 31)),
             brudd(
-                aktivitetsBrudd = IKKE_MØTT_TIL_TILTAK,
+                bruddType = IKKE_MØTT_TIL_TILTAK,
                 paragraf = PARAGRAF_11_8,
                 periode = Periode(dato(2020, 1, 1), dato(2020, 1, 2)),
                 opprettet = dato(2020, 4, 1),
@@ -84,13 +88,13 @@ class FraværFastsattAktivitetRegelTest {
         val vurdering = vurder(
             rettighetsperiode = Periode(fom = dato(2020, 1, 1), tom = dato(2022, 12, 31)),
             brudd(
-                aktivitetsBrudd = IKKE_MØTT_TIL_TILTAK,
+                bruddType = IKKE_MØTT_TIL_TILTAK,
                 paragraf = PARAGRAF_11_8,
                 periode = Periode(dato(2020, 1, 1), dato(2020, 1, 1)),
                 opprettet = dato(2020, 4, 1),
             ),
             brudd(
-                aktivitetsBrudd = IKKE_MØTT_TIL_TILTAK,
+                bruddType = IKKE_MØTT_TIL_TILTAK,
                 paragraf = PARAGRAF_11_8,
                 periode = Periode(dato(2020, 1, 15), dato(2020, 1, 15)),
                 opprettet = dato(2020, 4, 1),
@@ -105,7 +109,7 @@ class FraværFastsattAktivitetRegelTest {
         val vurderinger = vurder(
             rettighetsperiode = Periode(fom = dato(2020, 1, 1), tom = dato(2022, 12, 31)),
             brudd(
-                aktivitetsBrudd = IKKE_MØTT_TIL_TILTAK,
+                bruddType = IKKE_MØTT_TIL_TILTAK,
                 paragraf = PARAGRAF_11_8,
                 periode = Periode(dato(2020, 1, 1), dato(2020, 1, 12)),
                 opprettet = dato(2020, 4, 1),
@@ -137,7 +141,7 @@ class FraværFastsattAktivitetRegelTest {
             rettighetsperiode = Periode(fom = dato(2020, 1, 1), tom = dato(2022, 12, 31)),
             /* Fem brudd det første året (2020), hvorav fire teller mot kvoten. */
             brudd(
-                aktivitetsBrudd = IKKE_MØTT_TIL_TILTAK,
+                bruddType = IKKE_MØTT_TIL_TILTAK,
                 paragraf = PARAGRAF_11_8,
                 periode = Periode(dato(2020, 1, 1), dato(2020, 1, 5)),
                 opprettet = dato(2020, 4, 1),
@@ -145,7 +149,7 @@ class FraværFastsattAktivitetRegelTest {
             ),
             /* Tolv brudd i første meldeperiode (2021). Meldeperioden starter den 6. januar. */
             brudd(
-                aktivitetsBrudd = IKKE_MØTT_TIL_TILTAK,
+                bruddType = IKKE_MØTT_TIL_TILTAK,
                 paragraf = PARAGRAF_11_8,
                 periode = Periode(
                     fom = dato(2021, 1, startMeldeperiode2021),
@@ -181,11 +185,11 @@ class FraværFastsattAktivitetRegelTest {
 
     private fun vurder(
         rettighetsperiode: Periode,
-        vararg bruddAktivitetsplikt: BruddAktivitetsplikt,
+        vararg aktivitetspliktDokument: AktivitetspliktDokument,
     ): Tidslinje<FraværFastsattAktivitetVurdering> {
         val input = underveisInput(
             rettighetsperiode = rettighetsperiode,
-            bruddAktivitetsplikt = bruddAktivitetsplikt.toSet(),
+            aktivitetspliktDokument = aktivitetspliktDokument.toSet(),
         )
         val vurdering = regel.vurder(input, meldepliktRegel.vurder(input, Tidslinje()))
         return Tidslinje(
@@ -201,30 +205,33 @@ class FraværFastsattAktivitetRegelTest {
 
     private fun underveisInput(
         rettighetsperiode: Periode,
-        bruddAktivitetsplikt: Set<BruddAktivitetsplikt> = setOf(),
+        aktivitetspliktDokument: Set<AktivitetspliktDokument> = setOf(),
     ) = tomUnderveisInput.copy(
         rettighetsperiode = rettighetsperiode,
-        aktivitetspliktGrunnlag = AktivitetspliktGrunnlag(bruddAktivitetsplikt),
+        aktivitetspliktGrunnlag = AktivitetspliktGrunnlag(aktivitetspliktDokument),
     )
 
     private fun brudd(
-        aktivitetsBrudd: BruddAktivitetsplikt.Brudd,
-        paragraf: BruddAktivitetsplikt.Paragraf,
+        bruddType: BruddType,
+        paragraf: Brudd.Paragraf,
         periode: Periode,
         opprettet: LocalDate = periode.tom.plusMonths(4),
-        grunn: BruddAktivitetsplikt.Grunn = INGEN_GYLDIG_GRUNN,
-    ) = BruddAktivitetsplikt(
-        id = BruddAktivitetspliktId(0),
-        hendelseId = HendelseId.ny(),
-        innsendingId = InnsendingId.ny(),
-        innsender = NavIdent(""),
-        sakId = SakId(1),
-        brudd = aktivitetsBrudd,
-        paragraf = paragraf,
+        grunn: Grunn = INGEN_GYLDIG_GRUNN,
+    ) = AktivitetspliktRegistrering(
+        brudd = Brudd(
+            sakId = SakId(1),
+            periode = periode,
+            bruddType = bruddType,
+            paragraf = paragraf,
+        ),
+        metadata = AktivitetspliktDokument.Metadata(
+            id = BruddAktivitetspliktId(0),
+            hendelseId = HendelseId.ny(),
+            innsendingId = InnsendingId.ny(),
+            innsender = NavIdent(""),
+            opprettetTid = opprettet.atStartOfDay(ZoneId.of("Europe/Oslo")).toInstant(),
+        ),
         begrunnelse = "Informasjon fra tiltaksarrangør",
-        periode = periode,
-        opprettetTid = opprettet.atStartOfDay(ZoneId.of("Europe/Oslo")).toInstant(),
         grunn = grunn,
-        dokumenttype = BruddAktivitetsplikt.Dokumenttype.BRUDD
     )
 }

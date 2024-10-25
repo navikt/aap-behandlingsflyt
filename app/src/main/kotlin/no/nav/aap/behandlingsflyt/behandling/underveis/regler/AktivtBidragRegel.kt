@@ -2,8 +2,8 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AktivtBidragVurdering.Vilkårsvurdering.IKKE_RELEVANT_BRUDD
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AktivtBidragVurdering.Vilkårsvurdering.VILKÅR_OPPFYLT
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Brudd.IKKE_AKTIVT_BIDRAG
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_7
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.PARAGRAF_11_7
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType
 import no.nav.aap.tidslinje.JoinStyle
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.Tidslinje
@@ -18,8 +18,8 @@ class AktivtBidragRegel : UnderveisRegel {
             .tidslinje
             .mapValue { dokument ->
                 when {
-                    dokument.brudd == IKKE_AKTIVT_BIDRAG -> {
-                        assert(dokument.paragraf == PARAGRAF_11_7)
+                    dokument.brudd.bruddType == BruddType.IKKE_AKTIVT_BIDRAG -> {
+                        assert(dokument.brudd.paragraf == PARAGRAF_11_7)
                         AktivtBidragVurdering(
                             dokument = dokument,
                             vilkårsvurdering = VILKÅR_OPPFYLT,

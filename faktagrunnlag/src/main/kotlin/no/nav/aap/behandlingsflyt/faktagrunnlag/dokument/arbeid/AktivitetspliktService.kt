@@ -1,57 +1,23 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
-import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
-
-class AktivitetspliktService (
-    private val mottaDokumentService: MottaDokumentService,
-    private val aktivitetspliktRepository: AktivitetspliktRepository,
-) : Informasjonskrav {
-
-    companion object : Informasjonskravkonstruktør {
-        override fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
-            return true
+class AktivitetspliktService(
+    private val repository: AktivitetspliktRepository,
+) {
+    fun registrerBrudd(
+        bruddAktivitetsplikt: List<AktivitetspliktRepository.DokumentInput>
+    ): InnsendingId {
+        for (dokument in bruddAktivitetsplikt) {
+            if (dokument is AktivitetspliktRepository.FeilregistreringInput) {
+                val eksisterendeBrudd = repository.hentBrudd(dokument.brudd)
+                require(eksisterendeBrudd.any { it is AktivitetspliktRegistrering}) {
+                    """
+                        |Kan ikke feilregistrere brudd som ikke overlapper nøyaktig med eksisterende brudd.
+                        |Ved behov kan dette støttes.
+                    """.trimMargin()
+                }
+            }
         }
 
-        override fun konstruer(connection: DBConnection): AktivitetspliktService {
-            return AktivitetspliktService(
-                MottaDokumentService(MottattDokumentRepository(connection)),
-                AktivitetspliktRepository(connection)
-            )
-        }
+        return repository.lagreBrudd(bruddAktivitetsplikt)
     }
-
-    override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
-        val aktivitetskortSomIkkeErBehandlet = mottaDokumentService.aktivitetskortSomIkkeErBehandlet(kontekst.sakId)
-        if (aktivitetskortSomIkkeErBehandlet.isEmpty()) {
-            return IKKE_ENDRET
-        }
-
-        val eksisterendeBrudd = aktivitetspliktRepository.hentGrunnlagHvisEksisterer(kontekst.behandlingId)
-            ?.bruddene
-            ?: emptyList()
-
-        val alleBrudd = HashSet<BruddAktivitetsplikt>(eksisterendeBrudd)
-
-        for (ubehandletInnsendingId in aktivitetskortSomIkkeErBehandlet) {
-            val nyeBrudd = aktivitetspliktRepository.hentBruddForInnsending(ubehandletInnsendingId)
-            alleBrudd.addAll(nyeBrudd)
-            mottaDokumentService.knyttTilBehandling(
-                sakId = kontekst.sakId,
-                behandlingId = kontekst.behandlingId,
-                referanse = MottattDokumentReferanse(ubehandletInnsendingId),
-            )
-        }
-
-        aktivitetspliktRepository.nyttGrunnlag(behandlingId = kontekst.behandlingId, brudd = alleBrudd)
-        return ENDRET
-    }
-
 }

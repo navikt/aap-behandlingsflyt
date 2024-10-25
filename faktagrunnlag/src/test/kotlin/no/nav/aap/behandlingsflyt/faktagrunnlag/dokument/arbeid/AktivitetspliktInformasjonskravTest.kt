@@ -4,8 +4,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_7
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Brudd.IKKE_AKTIVT_BIDRAG
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.PARAGRAF_11_7
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_AKTIVT_BIDRAG
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
@@ -23,18 +23,18 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 
-class AktivitetspliktServiceTest {
+class AktivitetspliktInformasjonskravTest {
     @Test
     fun `detekterer nye dokumenter og legger dem til i grunnlaget`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = nySak(connection)
             val behandling = BehandlingRepositoryImpl(connection).opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
-            val aktivitetspliktService = AktivitetspliktService.konstruer(connection)
+            val aktivitetspliktInformasjonskrav = AktivitetspliktInformasjonskrav.konstruer(connection)
             val flytKontekst = flytKontekstMedPerioder(behandling)
 
             nyeBrudd(
                 connection, sak,
-                brudd = IKKE_AKTIVT_BIDRAG,
+                bruddType = IKKE_AKTIVT_BIDRAG,
                 paragraf = PARAGRAF_11_7,
                 begrunnelse = "Orket ikke",
                 perioder = listOf(Periode(LocalDate.now(), LocalDate.now().plusDays(5))),
@@ -49,13 +49,13 @@ class AktivitetspliktServiceTest {
             }
 
             // Etter første oppdatering av kravinformasjonen, skal bruddet vi la inn over dukke opp
-            aktivitetspliktService.oppdater(flytKontekst)
+            aktivitetspliktInformasjonskrav.oppdater(flytKontekst)
             AktivitetspliktRepository(connection).hentGrunnlagHvisEksisterer(behandling.id).also {
                 assertEquals(1, it?.bruddene?.size)
             }
 
             // Ved oppdatering av kravinformasjonen uten ny brudd, skal grunnlaget være uendret
-            aktivitetspliktService.oppdater(flytKontekst)
+            aktivitetspliktInformasjonskrav.oppdater(flytKontekst)
             AktivitetspliktRepository(connection).hentGrunnlagHvisEksisterer(behandling.id).also {
                 assertEquals(1, it?.bruddene?.size)
             }
@@ -64,14 +64,14 @@ class AktivitetspliktServiceTest {
 
     private fun mottattDokument(
         connection: DBConnection,
-        brudd: BruddAktivitetsplikt,
+        brudd: AktivitetspliktDokument,
         sak: Sak
     ) {
-        val dokument = StrukturertDokument(brudd.innsendingId, Brevkode.AKTIVITETSKORT)
+        val dokument = StrukturertDokument(brudd.metadata.innsendingId, Brevkode.AKTIVITETSKORT)
         MottaDokumentService(MottattDokumentRepository(connection)).mottattDokument(
-            MottattDokumentReferanse(brudd.innsendingId),
+            MottattDokumentReferanse(brudd.metadata.innsendingId),
             sak.id,
-            LocalDateTime.ofInstant(brudd.opprettetTid, ZoneId.of("Europe/Oslo")),
+            LocalDateTime.ofInstant(brudd.metadata.opprettetTid, ZoneId.of("Europe/Oslo")),
             dokument.brevkode,
             dokument
         )

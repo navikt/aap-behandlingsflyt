@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktDokument
 
 /**
  * Den ferdige vurderingen av om medlemmet kan sanksjoneres etter ftrl § 11-9 "Reduksjon av
@@ -16,7 +16,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsp
  * - [Forkskriftens § 4](https://lovdata.no/forskrift/2017-12-13-2100/§4)
 */
 class ReduksjonAktivitetspliktVurdering(
-    val dokument: BruddAktivitetsplikt,
+    val dokument: AktivitetspliktDokument,
 
     /** Er vilkårene for å reduksjon etter § 11-9 oppfylt? */
     val vilkårsvurdering: Vilkårsvurdering,

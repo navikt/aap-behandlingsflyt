@@ -2,11 +2,11 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
 import no.nav.aap.behandlingsflyt.dbtestdata.ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_7
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_8
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_9
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Brudd.IKKE_AKTIVT_BIDRAG
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Brudd.IKKE_MØTT_TIL_BEHANDLING
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.PARAGRAF_11_7
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.PARAGRAF_11_8
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.PARAGRAF_11_9
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_AKTIVT_BIDRAG
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_MØTT_TIL_BEHANDLING
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
@@ -30,7 +30,7 @@ class AktivitetspliktRepositoryTest {
             val periode = Periode(LocalDate.now(), LocalDate.now().plusDays(5))
 
             nyeBrudd(connection, sak,
-                brudd = IKKE_AKTIVT_BIDRAG,
+                bruddType = IKKE_AKTIVT_BIDRAG,
                 paragraf = PARAGRAF_11_7,
                 begrunnelse = "Orket ikke",
                 perioder = listOf(periode),
@@ -39,11 +39,11 @@ class AktivitetspliktRepositoryTest {
             val lagretHendelse = repo.hentBrudd(sak.id)
             assertEquals(1, lagretHendelse.size)
             lagretHendelse[0].also {
-                it as BruddAktivitetsplikt
-                assertEquals(IKKE_AKTIVT_BIDRAG, it.brudd)
-                assertEquals(PARAGRAF_11_7, it.paragraf)
+                it as AktivitetspliktRegistrering
+                assertEquals(IKKE_AKTIVT_BIDRAG, it.brudd.bruddType)
+                assertEquals(PARAGRAF_11_7, it.brudd.paragraf)
                 assertEquals("Orket ikke", it.begrunnelse)
-                assertEquals(periode, it.periode)
+                assertEquals(periode, it.brudd.periode)
             }
         }
     }
@@ -54,14 +54,14 @@ class AktivitetspliktRepositoryTest {
             val sak = nySak(connection)
             val repo = AktivitetspliktRepository(connection)
             nyeBrudd(connection, sak,
-                brudd = IKKE_MØTT_TIL_BEHANDLING,
+                bruddType = IKKE_MØTT_TIL_BEHANDLING,
                 paragraf = PARAGRAF_11_8,
                 begrunnelse = "Ville ikke",
                 perioder = listOf(Periode(LocalDate.now(), LocalDate.now().plusDays(5))),
             )
 
             nyeBrudd(connection, sak,
-                brudd = IKKE_MØTT_TIL_BEHANDLING,
+                bruddType = IKKE_MØTT_TIL_BEHANDLING,
                 paragraf = PARAGRAF_11_9,
                 begrunnelse = "Fant ikke fram",
                 perioder = listOf(Periode(LocalDate.now().plusDays(5), LocalDate.now().plusDays(10))),
@@ -78,7 +78,7 @@ class AktivitetspliktRepositoryTest {
             val sak = nySak(connection)
             val repo = AktivitetspliktRepository(connection)
             nyeBrudd(connection, sak,
-                brudd = IKKE_MØTT_TIL_BEHANDLING,
+                bruddType = IKKE_MØTT_TIL_BEHANDLING,
                 paragraf = PARAGRAF_11_8,
                 begrunnelse = "Dobbel periode uten oppmøte",
                 perioder = listOf(
@@ -99,11 +99,11 @@ class AktivitetspliktRepositoryTest {
 
             val førsteBrudd = nyeBrudd(connection, sak).toSet()
             nyttGrunnlag(connection, behandling, førsteBrudd)
-            val førsteInnsendingId = førsteBrudd.first().id
+            val førsteInnsendingId = førsteBrudd.first().metadata.id
 
             val andreBrudd = nyeBrudd(connection, sak).toSet()
             nyttGrunnlag(connection, behandling, førsteBrudd + andreBrudd)
-            val andreInnsendingId = andreBrudd.first().id
+            val andreInnsendingId = andreBrudd.first().metadata.id
 
             val alleGrunnlag = AktivitetspliktRepository(connection).hentAlleGrunnlagKunTestIkkeProd(behandling.id)
 
@@ -129,23 +129,24 @@ fun nySak(connection: DBConnection): Sak {
 fun nyeBrudd(
     connection: DBConnection,
     sak: Sak,
-    brudd: BruddAktivitetsplikt.Brudd = IKKE_MØTT_TIL_BEHANDLING,
-    paragraf: BruddAktivitetsplikt.Paragraf = PARAGRAF_11_8,
-    grunn: BruddAktivitetsplikt.Grunn = BruddAktivitetsplikt.Grunn.INGEN_GYLDIG_GRUNN,
+    bruddType: BruddType = IKKE_MØTT_TIL_BEHANDLING,
+    paragraf: Brudd.Paragraf = PARAGRAF_11_8,
+    grunn: Grunn = Grunn.INGEN_GYLDIG_GRUNN,
     begrunnelse: String = "En begrunnnelse",
     perioder: List<Periode> = listOf(Periode(LocalDate.now(), LocalDate.now().plusDays(5))),
-): List<BruddAktivitetsplikt> {
+): List<AktivitetspliktDokument> {
     val repo = AktivitetspliktRepository(connection)
     val innsendingId = repo.lagreBrudd(
         perioder.map { periode ->
-            AktivitetspliktRepository.DokumentInput(
-                sakId = sak.id,
-                brudd = brudd,
-                paragraf = paragraf,
+            AktivitetspliktRepository.RegistreringInput(
+                brudd = Brudd(
+                    sakId = sak.id,
+                    bruddType = bruddType,
+                    paragraf = paragraf,
+                    periode = periode,
+                ),
                 begrunnelse = begrunnelse,
-                periode = periode,
                 innsender = NavIdent("Z000000"),
-                dokumenttype = BruddAktivitetsplikt.Dokumenttype.BRUDD,
                 grunn = grunn
             )
         }
@@ -153,7 +154,7 @@ fun nyeBrudd(
     return repo.hentBruddForInnsending(innsendingId)
 }
 
-fun nyttGrunnlag(connection: DBConnection, behandling: Behandling, brudd: Set<BruddAktivitetsplikt>): AktivitetspliktGrunnlag {
+fun nyttGrunnlag(connection: DBConnection, behandling: Behandling, brudd: Set<AktivitetspliktDokument>): AktivitetspliktGrunnlag {
     val repo = AktivitetspliktRepository(connection)
     repo.nyttGrunnlag(behandling.id, brudd)
     return repo.hentGrunnlagHvisEksisterer(behandling.id)!!

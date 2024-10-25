@@ -6,15 +6,15 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAkt
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_INNTIL_EN_DAG
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_STERKE_VELFERDSGRUNNER
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_SYKDOM_ELLER_SKADE
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Brudd.IKKE_MØTT_TIL_ANNEN_AKTIVITET
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Brudd.IKKE_MØTT_TIL_BEHANDLING
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Brudd.IKKE_MØTT_TIL_TILTAK
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Grunn.INGEN_GYLDIG_GRUNN
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Grunn.RIMELIG_GRUNN
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Grunn.STERKE_VELFERDSGRUNNER
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Grunn.SYKDOM_ELLER_SKADE
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_8
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRegistrering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.PARAGRAF_11_8
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_MØTT_TIL_ANNEN_AKTIVITET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_MØTT_TIL_BEHANDLING
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_MØTT_TIL_TILTAK
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn.INGEN_GYLDIG_GRUNN
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn.RIMELIG_GRUNN
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn.STERKE_VELFERDSGRUNNER
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn.SYKDOM_ELLER_SKADE
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tidslinje.JoinStyle
 import no.nav.aap.tidslinje.Segment
@@ -97,15 +97,15 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
     }
 
     private fun vurderMeldeperiode(
-        meldeperioden: Tidslinje<BruddAktivitetsplikt>,
+        meldeperioden: Tidslinje<AktivitetspliktRegistrering>,
         periode: Periode,
-        dokument: BruddAktivitetsplikt,
+        dokument: AktivitetspliktRegistrering,
     ): Tidslinje<AktivitetspliktSteg1> {
         val førsteBrudd = meldeperioden.segmenter()
-            .first { (it.verdi as? BruddAktivitetsplikt)?.paragraf == PARAGRAF_11_8 }
+            .first { it.verdi.brudd.paragraf == PARAGRAF_11_8 }
             .verdi
 
-        val erFørsteBruddMeldeperioden = førsteBrudd.id == dokument.id
+        val erFørsteBruddMeldeperioden = førsteBrudd.metadata.id == dokument.metadata.id
         return if (erFørsteBruddMeldeperioden) {
             val førsteFravær = Periode(periode.fom, periode.fom)
             val periodene = listOf(førsteFravær) + periode.minus(førsteFravær)
@@ -145,7 +145,7 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
 //                            skalStanses = false,
 //                        )
 //                    )
-            if (dokument.brudd !in relevanteBrudd) {
+            if (dokument.brudd.bruddType !in relevanteBrudd) {
                 return@flatMap Tidslinje(
                     vurderingSegment.periode,
                     FraværFastsattAktivitetVurdering(
@@ -200,7 +200,7 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
                                     FraværFastsattAktivitetVurdering(
                                         dokument = dokument,
                                         vilkårsvurdering = if (it.fom >= stansDag) STANS_TI_DAGER_BRUKT_OPP else UNNTAK_STERKE_VELFERDSGRUNNER,
-                                        skalStanses = dokument.paragraf == PARAGRAF_11_8,
+                                        skalStanses = dokument.brudd.paragraf == PARAGRAF_11_8,
                                     )
                                 )
                             }
@@ -224,7 +224,7 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
                         FraværFastsattAktivitetVurdering(
                             dokument = dokument,
                             vilkårsvurdering = STANS_ANDRE_DAG,
-                            skalStanses = dokument.paragraf == PARAGRAF_11_8,
+                            skalStanses = dokument.brudd.paragraf == PARAGRAF_11_8,
                         )
                     )
             }
@@ -233,7 +233,7 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
 
 
     class AktivitetspliktSteg1(
-        val dokument: BruddAktivitetsplikt,
+        val dokument: AktivitetspliktRegistrering,
         val førsteFraværIMeldeperioden: Boolean,
     )
 }

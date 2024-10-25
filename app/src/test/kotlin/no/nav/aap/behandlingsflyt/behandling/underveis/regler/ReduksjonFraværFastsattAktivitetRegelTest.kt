@@ -2,11 +2,15 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ReduksjonAktivitetspliktVurdering.Vilkårsvurdering.VILKÅR_OPPFYLT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Grunn.INGEN_GYLDIG_GRUNN
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Paragraf.PARAGRAF_11_8
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Brudd.IKKE_MØTT_TIL_TILTAK
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktDokument
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRegistrering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn.INGEN_GYLDIG_GRUNN
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.PARAGRAF_11_8
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_MØTT_TIL_TILTAK
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktId
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.HendelseId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.InnsendingId
 import no.nav.aap.komponenter.type.Periode
@@ -32,7 +36,7 @@ class ReduksjonFraværFastsattAktivitetRegelTest {
         val vurderinger = vurder(
             rettighetsperiode = Periode(fom = dato(2020, 1, 1), tom = dato(2022, 12, 31)),
             brudd(
-                aktivitetsBrudd = IKKE_MØTT_TIL_TILTAK,
+                bruddType = IKKE_MØTT_TIL_TILTAK,
                 paragraf = PARAGRAF_11_8,
                 periode = Periode(dato(2020, 1, 1), dato(2020, 1, 1)),
                 opprettet = dato(2020, 1, 2)
@@ -49,7 +53,7 @@ class ReduksjonFraværFastsattAktivitetRegelTest {
         val vurderinger = vurder(
             rettighetsperiode = Periode(fom = dato(2020, 1, 1), tom = dato(2022, 12, 31)),
             brudd(
-                aktivitetsBrudd = IKKE_MØTT_TIL_TILTAK,
+                bruddType = IKKE_MØTT_TIL_TILTAK,
                 paragraf = PARAGRAF_11_8,
                 periode = Periode(dato(2020, 1, 1), dato(2020, 1, 1)),
                 opprettet = dato(2020, 4, 1),
@@ -68,11 +72,11 @@ class ReduksjonFraværFastsattAktivitetRegelTest {
 
     private fun vurder(
         rettighetsperiode: Periode,
-        vararg bruddAktivitetsplikt: BruddAktivitetsplikt,
+        vararg aktivitetspliktDokument: AktivitetspliktDokument,
     ): Tidslinje<ReduksjonAktivitetspliktVurdering> {
         val input = underveisInput(
             rettighetsperiode = rettighetsperiode,
-            bruddAktivitetsplikt = bruddAktivitetsplikt.toSet(),
+            aktivitetspliktDokument = aktivitetspliktDokument.toSet(),
         )
         val vurdering = ReduksjonAktivitetspliktRegel().vurder(input, Tidslinje())
         return vurdering.mapValue { it.reduksjonAktivitetspliktVurdering!! }
@@ -80,30 +84,33 @@ class ReduksjonFraværFastsattAktivitetRegelTest {
 
     private fun underveisInput(
         rettighetsperiode: Periode,
-        bruddAktivitetsplikt: Set<BruddAktivitetsplikt> = setOf(),
+        aktivitetspliktDokument: Set<AktivitetspliktDokument> = setOf(),
     ) = tomUnderveisInput.copy(
         rettighetsperiode = rettighetsperiode,
-        aktivitetspliktGrunnlag = AktivitetspliktGrunnlag(bruddAktivitetsplikt),
+        aktivitetspliktGrunnlag = AktivitetspliktGrunnlag(aktivitetspliktDokument),
     )
 
     private fun brudd(
-        aktivitetsBrudd: BruddAktivitetsplikt.Brudd,
-        paragraf: BruddAktivitetsplikt.Paragraf,
+        bruddType: BruddType,
+        paragraf: Brudd.Paragraf,
         periode: Periode,
         opprettet: LocalDate = periode.tom.plusMonths(4),
-        grunn: BruddAktivitetsplikt.Grunn = INGEN_GYLDIG_GRUNN,
-    ) = BruddAktivitetsplikt(
-        id = BruddAktivitetspliktId(0),
-        hendelseId = HendelseId.ny(),
-        innsendingId = InnsendingId.ny(),
-        innsender = NavIdent(""),
-        sakId = SakId(1),
-        brudd = aktivitetsBrudd,
-        paragraf = paragraf,
+        grunn: Grunn = INGEN_GYLDIG_GRUNN,
+    ) = AktivitetspliktRegistrering(
+        brudd = Brudd(
+            sakId = SakId(1),
+            bruddType = bruddType,
+            paragraf = paragraf,
+            periode = periode,
+        ),
+        metadata = AktivitetspliktDokument.Metadata(
+            id = BruddAktivitetspliktId(0),
+            hendelseId = HendelseId.ny(),
+            innsendingId = InnsendingId.ny(),
+            innsender = NavIdent(""),
+            opprettetTid = opprettet.atStartOfDay(ZoneId.of("Europe/Oslo")).toInstant(),
+        ),
         begrunnelse = "Informasjon fra tiltaksarrangør",
-        periode = periode,
-        opprettetTid = opprettet.atStartOfDay(ZoneId.of("Europe/Oslo")).toInstant(),
         grunn = grunn,
-        dokumenttype = BruddAktivitetsplikt.Dokumenttype.BRUDD
     )
 }
