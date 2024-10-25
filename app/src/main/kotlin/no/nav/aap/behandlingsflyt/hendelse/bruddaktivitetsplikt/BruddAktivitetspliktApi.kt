@@ -9,7 +9,6 @@ import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetsplikt.Dokumenttype.BRUDD
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -32,11 +31,11 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
                     AktivitetspliktRepository.DokumentInput(
                         sakId = sak.id,
                         brudd = req.brudd,
-                        paragraf = req.paragraf,
+                        paragraf = req.brudd.paragraf(req.paragraf?.somDomene),
                         begrunnelse = req.begrunnelse,
                         periode = periode,
                         innsender = navIdent,
-                        dokumenttype = BRUDD,
+                        dokumenttype = req.dokumenttype,
                         grunn = req.grunn ?: BruddAktivitetsplikt.Grunn.INGEN_GYLDIG_GRUNN
                     )
                 }
@@ -70,8 +69,7 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
                             brudd = dokument.brudd,
                             paragraf = dokument.paragraf,
                             periode = dokument.periode,
-                            begrunnelse = dokument.begrunnelse,
-                            hendelseId = dokument.hendelseId.toString(),
+                            grunn = dokument.grunn,
                         )
                     }
                 BruddAktivitetspliktResponse(alleBrudd)

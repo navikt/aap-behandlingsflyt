@@ -58,6 +58,17 @@ class BruddAktivitetsplikt(
         IKKE_MØTT_TIL_ANNEN_AKTIVITET(listOf(PARAGRAF_11_8)),
         IKKE_SENDT_INN_DOKUMENTASJON(listOf(PARAGRAF_11_9)),
         IKKE_AKTIVT_BIDRAG(listOf(PARAGRAF_11_7));
+
+
+        fun paragraf(paragraf: Paragraf?): Paragraf {
+            return when (paragraf) {
+                null -> requireNotNull(this.gyldigeParagrafer.singleOrNull()) {
+                    "$this er ikke knyttet til entydig paragraf"
+                }
+                in this.gyldigeParagrafer -> paragraf
+                else -> error("$paragraf er ikke gydlig for $this")
+            }
+        }
     }
 
     enum class Grunn {
