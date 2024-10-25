@@ -36,12 +36,12 @@ class InstitusjonRegel : UnderveisRegel {
     }
 
     private fun sammenslåer(): JoinStyle<InstitusjonVurdering, Boolean, InstitusjonVurdering> {
-        return JoinStyle.OUTER_JOIN { periode, venstreSegment, høyreSegment ->
-            val venstreVerdi = venstreSegment?.verdi
+        return JoinStyle.LEFT_JOIN { periode, venstreSegment, høyreSegment ->
+            val venstreVerdi = venstreSegment.verdi
             val høyreVerdi = høyreSegment?.verdi
 
-            val skalRedusere = venstreVerdi?.skalReduseres == true && høyreVerdi == true
-            var årsak: Årsak? = utledÅrsak(venstreVerdi?.skalReduseres)
+            val skalRedusere = venstreVerdi.skalReduseres && høyreVerdi == true
+            var årsak: Årsak? = utledÅrsak(venstreVerdi.skalReduseres)
             var grad = Prosent.`100_PROSENT`
             if (skalRedusere) {
                 årsak = requireNotNull(venstreVerdi.årsak)

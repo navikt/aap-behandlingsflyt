@@ -74,7 +74,8 @@ data class Vurdering(
     }
 
     private fun harOverholdtMeldeplikten(): Boolean {
-        return meldepliktVurdering?.utfall == Utfall.OPPFYLT
+        val utfall = meldepliktVurdering?.utfall
+        return utfall == null || utfall == Utfall.OPPFYLT
     }
 
     internal fun ingenVilkårErAvslått(): Boolean {
