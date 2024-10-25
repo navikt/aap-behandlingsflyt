@@ -12,11 +12,10 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.server.prosessering.ProsesserBehandlingJobbUtfører
+import no.nav.aap.behandlingsflyt.server.prosessering.ProsesserBehandlingService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.motor.FlytJobbRepository
-import no.nav.aap.motor.JobbInput
 import no.nav.aap.verdityper.flyt.FlytKontekst
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import org.slf4j.LoggerFactory
@@ -27,7 +26,7 @@ class AvklaringsbehovOrkestrator(
 
     private val avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection)
     private val behandlingRepository = BehandlingRepositoryImpl(connection)
-    private val flytJobbRepository = FlytJobbRepository(connection)
+    private val prosesserBehandling = ProsesserBehandlingService(FlytJobbRepository(connection))
 
     private val log = LoggerFactory.getLogger(AvklaringsbehovOrkestrator::class.java)
 
@@ -68,11 +67,7 @@ class AvklaringsbehovOrkestrator(
     }
 
     private fun fortsettProsessering(kontekst: FlytKontekst) {
-        flytJobbRepository.leggTil(
-            JobbInput(jobb = ProsesserBehandlingJobbUtfører).forBehandling(
-                kontekst.sakId.toLong(), kontekst.behandlingId.toLong()
-            ).medCallId()
-        )
+        prosesserBehandling.triggProsesserBehandling(kontekst.sakId, kontekst.behandlingId)
     }
 
     private fun markerAvklaringsbehovISammeGruppeForLøst(

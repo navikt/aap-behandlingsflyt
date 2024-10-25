@@ -5,11 +5,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.server.prosessering.ProsesserBehandlingJobbUtfører
+import no.nav.aap.behandlingsflyt.server.prosessering.ProsesserBehandlingService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.FlytJobbRepository
-import no.nav.aap.motor.JobbInput
 import no.nav.aap.verdityper.flyt.ÅrsakTilBehandling
 import no.nav.aap.verdityper.sakogbehandling.SakId
 
@@ -18,7 +17,7 @@ class HåndterMottattDokumentService(connection: DBConnection) {
     private val sakService = SakService(connection)
     private val sakOgBehandlingService = SakOgBehandlingService(connection)
     private val låsRepository = TaSkriveLåsRepository(connection)
-    private val flytJobbRepository = FlytJobbRepository(connection)
+    private val prosesserBehandling = ProsesserBehandlingService(FlytJobbRepository(connection))
 
     fun håndterMottatteDokumenter(sakId: SakId, brevkode: Brevkode, periode: Periode?) {
 
@@ -29,12 +28,10 @@ class HåndterMottattDokumentService(connection: DBConnection) {
 
         val behandlingSkrivelås = låsRepository.låsBehandling(beriketBehandling.behandling.id)
 
-        // Skal da planlegge ny jobb
-        flytJobbRepository.leggTil(
-            JobbInput(jobb = ProsesserBehandlingJobbUtfører).forBehandling(
-                sakId.toLong(),
-                beriketBehandling.behandling.id.toLong()
-            ).medParameter("trigger", element.type.name).medCallId()
+        prosesserBehandling.triggProsesserBehandling(
+            sakId,
+            beriketBehandling.behandling.id,
+            listOf("trigger" to element.type.name)
         )
 
         låsRepository.verifiserSkrivelås(behandlingSkrivelås)
