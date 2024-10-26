@@ -46,7 +46,7 @@ object PdlPersonopplysningGateway : PersonopplysningGateway {
             .data
             ?.hentPerson
             ?.foedselsdato
-            ?.first()
+            ?.firstOrNull()
             ?.foedselsdato
             ?: return null
 
