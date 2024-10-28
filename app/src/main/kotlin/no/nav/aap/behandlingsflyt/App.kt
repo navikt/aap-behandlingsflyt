@@ -24,6 +24,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.kvalitetssikr
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.utledSubtypes
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.flate.barnetilleggApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.flate.beregningsGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.dokumentinnhentingAPI
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.institusjonAPI
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.flate.tilkjentYtelseAPI
 import no.nav.aap.behandlingsflyt.behandling.vilkår.alder.flate.aldersGrunnlagApi
@@ -171,6 +172,7 @@ internal fun Application.server(dbConfig: DbConfig) {
                 motorApi(dataSource)
                 behandlingsflytPip(dataSource)
                 aktivitetspliktApi(dataSource)
+                dokumentinnhentingAPI(dataSource)
             }
         }
         actuator(prometheus, motor)

@@ -5,12 +5,10 @@ import java.util.*
 data class LegeerklæringBestillingRequest (
     val behandlerRef: String,
     val personIdent: String,
-    val dialogmeldingType: DialogmeldingType,
-    val dialogmeldingKodeverk: DialogmeldingKodeverk,
-    val dialogmeldingKode: Int,
     val dialogmeldingTekst: String,
-    val dialogmeldingVedlegg: ByteArray?,
-    val sakId: String
+    val sakId: String,
+    val dokumentasjonType: DokumentasjonType,
+    val dialogmeldingVedlegg: ByteArray?
 )
 
 data class LegeerklæringBestillingResponse(
@@ -25,15 +23,10 @@ data class LegeerklæringStatusResponse(
     val sakId: String,
 )
 
+enum class DokumentasjonType {
+    L40, L8, L120, MELDING_FRA_NAV, RETUR_LEGEERKLÆRING
+}
+
 enum class MeldingStatusType {
     BESTILT, SENDT, OK, AVVIST
-}
-
-
-enum class DialogmeldingType {
-    DIALOG_FORESPORSEL, DIALOG_NOTAT
-}
-
-enum class DialogmeldingKodeverk {
-    HENVENDELSE, FORESPORSEL
 }
