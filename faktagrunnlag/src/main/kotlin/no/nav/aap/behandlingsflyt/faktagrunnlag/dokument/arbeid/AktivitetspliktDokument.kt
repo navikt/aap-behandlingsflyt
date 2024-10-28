@@ -42,7 +42,7 @@ data class Brudd(
 /** Former for brudd beskrevet i §§ 11-7 til 11-9. */
 enum class BruddType(val gyldigeParagrafer: Collection<Brudd.Paragraf>) {
     IKKE_MØTT_TIL_MØTE(listOf(PARAGRAF_11_9)),
-    IKKE_MØTT_TIL_BEHANDLING(listOf(PARAGRAF_11_8, PARAGRAF_11_9)),
+    IKKE_MØTT_TIL_BEHANDLING_ELLER_UTREDNING(listOf(PARAGRAF_11_8, PARAGRAF_11_9)),
     IKKE_MØTT_TIL_TILTAK(listOf(PARAGRAF_11_8, PARAGRAF_11_9)),
     IKKE_MØTT_TIL_ANNEN_AKTIVITET(listOf(PARAGRAF_11_8)),
     IKKE_SENDT_INN_DOKUMENTASJON(listOf(PARAGRAF_11_9)),

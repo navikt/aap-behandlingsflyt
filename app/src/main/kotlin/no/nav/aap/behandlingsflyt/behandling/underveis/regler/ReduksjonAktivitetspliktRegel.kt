@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ReduksjonAktivitet
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ReduksjonAktivitetspliktVurdering.Vilkårsvurdering.UNNTAK_RIMELIG_GRUNN
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ReduksjonAktivitetspliktVurdering.Vilkårsvurdering.VILKÅR_OPPFYLT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.PARAGRAF_11_9
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_MØTT_TIL_BEHANDLING
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_MØTT_TIL_BEHANDLING_ELLER_UTREDNING
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_MØTT_TIL_MØTE
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_MØTT_TIL_TILTAK
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_SENDT_INN_DOKUMENTASJON
@@ -22,7 +22,7 @@ class ReduksjonAktivitetspliktRegel : UnderveisRegel {
     companion object {
         val relevanteBrudd = listOf(
             IKKE_MØTT_TIL_MØTE,
-            IKKE_MØTT_TIL_BEHANDLING,
+            IKKE_MØTT_TIL_BEHANDLING_ELLER_UTREDNING,
             IKKE_MØTT_TIL_TILTAK,
             IKKE_SENDT_INN_DOKUMENTASJON,
         )

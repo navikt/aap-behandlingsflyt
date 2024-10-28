@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.P
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.PARAGRAF_11_8
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.PARAGRAF_11_9
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_AKTIVT_BIDRAG
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_MØTT_TIL_BEHANDLING
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_MØTT_TIL_BEHANDLING_ELLER_UTREDNING
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
@@ -54,14 +54,14 @@ class AktivitetspliktRepositoryTest {
             val sak = nySak(connection)
             val repo = AktivitetspliktRepository(connection)
             nyeBrudd(connection, sak,
-                bruddType = IKKE_MØTT_TIL_BEHANDLING,
+                bruddType = IKKE_MØTT_TIL_BEHANDLING_ELLER_UTREDNING,
                 paragraf = PARAGRAF_11_8,
                 begrunnelse = "Ville ikke",
                 perioder = listOf(Periode(LocalDate.now(), LocalDate.now().plusDays(5))),
             )
 
             nyeBrudd(connection, sak,
-                bruddType = IKKE_MØTT_TIL_BEHANDLING,
+                bruddType = IKKE_MØTT_TIL_BEHANDLING_ELLER_UTREDNING,
                 paragraf = PARAGRAF_11_9,
                 begrunnelse = "Fant ikke fram",
                 perioder = listOf(Periode(LocalDate.now().plusDays(5), LocalDate.now().plusDays(10))),
@@ -78,7 +78,7 @@ class AktivitetspliktRepositoryTest {
             val sak = nySak(connection)
             val repo = AktivitetspliktRepository(connection)
             nyeBrudd(connection, sak,
-                bruddType = IKKE_MØTT_TIL_BEHANDLING,
+                bruddType = IKKE_MØTT_TIL_BEHANDLING_ELLER_UTREDNING,
                 paragraf = PARAGRAF_11_8,
                 begrunnelse = "Dobbel periode uten oppmøte",
                 perioder = listOf(
@@ -129,7 +129,7 @@ fun nySak(connection: DBConnection): Sak {
 fun nyeBrudd(
     connection: DBConnection,
     sak: Sak,
-    bruddType: BruddType = IKKE_MØTT_TIL_BEHANDLING,
+    bruddType: BruddType = IKKE_MØTT_TIL_BEHANDLING_ELLER_UTREDNING,
     paragraf: Brudd.Paragraf = PARAGRAF_11_8,
     grunn: Grunn = Grunn.INGEN_GYLDIG_GRUNN,
     begrunnelse: String = "En begrunnnelse",

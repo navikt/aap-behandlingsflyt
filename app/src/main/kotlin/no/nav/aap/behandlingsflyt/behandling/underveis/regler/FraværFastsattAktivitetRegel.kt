@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAkt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRegistrering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.PARAGRAF_11_8
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_MØTT_TIL_ANNEN_AKTIVITET
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_MØTT_TIL_BEHANDLING
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_MØTT_TIL_BEHANDLING_ELLER_UTREDNING
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_MØTT_TIL_TILTAK
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn.INGEN_GYLDIG_GRUNN
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn.RIMELIG_GRUNN
@@ -35,7 +35,7 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
 
     companion object {
         private val relevanteBrudd = listOf(
-            IKKE_MØTT_TIL_BEHANDLING,
+            IKKE_MØTT_TIL_BEHANDLING_ELLER_UTREDNING,
             IKKE_MØTT_TIL_TILTAK,
             IKKE_MØTT_TIL_ANNEN_AKTIVITET,
         )
