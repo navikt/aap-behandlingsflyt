@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
-import io.ktor.util.reflect.*
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
@@ -23,7 +22,7 @@ class AktivitetspliktRepository(private val connection: DBConnection) {
         override val begrunnelse: String,
         val grunn: Grunn
     ): DokumentInput {
-        override val dokumentType = DokumentType.BRUDD
+        override val dokumentType = DokumentType.REGISTRERING
     }
 
     class FeilregistreringInput(
@@ -35,7 +34,7 @@ class AktivitetspliktRepository(private val connection: DBConnection) {
     }
 
     enum class DokumentType {
-        BRUDD,
+        REGISTRERING,
         FEILREGISTRERING,
     }
 
@@ -213,9 +212,9 @@ class AktivitetspliktRepository(private val connection: DBConnection) {
         )
         val begrunnelse = row.getString("BEGRUNNELSE")
 
-        val dokumentType = row.getEnumOrNull("DOKUMENT_TYPE") ?: DokumentType.BRUDD
+        val dokumentType = row.getEnumOrNull("DOKUMENT_TYPE") ?: DokumentType.REGISTRERING
         return when (dokumentType) {
-            DokumentType.BRUDD -> AktivitetspliktRegistrering(
+            DokumentType.REGISTRERING -> AktivitetspliktRegistrering(
                 brudd = brudd,
                 metadata = metadata,
                 begrunnelse = begrunnelse,
