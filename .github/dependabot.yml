@@ -8,13 +8,11 @@ registries:
         password: PAT
 
 updates:
-
     - package-ecosystem: github-actions
       directory: /
       schedule:
           interval: daily
       open-pull-requests-limit: 1
-
     - package-ecosystem: gradle
       directory: /
       schedule:
@@ -22,7 +20,6 @@ updates:
       open-pull-requests-limit: 1
       registries:
           - maven-github
-
     - package-ecosystem: docker
       directory: /
       schedule:
