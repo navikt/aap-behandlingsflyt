@@ -11,7 +11,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 
 @JsonTypeName(value = BESTILL_BREV_KODE)
 class BrevbestillingLøsning(
-    @JsonProperty("status", required = true) val brevbestillingStatus: LøsBrevbestillingDto,
+    @JsonProperty("oppdatertStatusForBestilling", required = true) val oppdatertStatusForBestilling: LøsBrevbestillingDto,
     @JsonProperty(
         "behovstype",
         required = true,

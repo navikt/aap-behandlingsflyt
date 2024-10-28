@@ -50,6 +50,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FATTE_VEDTAK_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.KVALITETSSIKRING_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.BrevbestillingLøsningStatus
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.LøsBrevbestillingDto
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -395,6 +396,7 @@ class FlytOrkestratorTest {
                     løsning = BrevbestillingLøsning(
                         LøsBrevbestillingDto(
                             brevbestilling.referanse,
+                            BrevbestillingLøsningStatus.KLAR_FOR_EDITERING
                         )
                     ),
                     behandlingVersjon = behandling.versjon,
@@ -649,6 +651,7 @@ class FlytOrkestratorTest {
                     løsning = BrevbestillingLøsning(
                         LøsBrevbestillingDto(
                             brevbestilling.referanse,
+                            BrevbestillingLøsningStatus.KLAR_FOR_EDITERING
                         )
                     ),
                     behandlingVersjon = behandling.versjon,
@@ -1256,6 +1259,7 @@ class FlytOrkestratorTest {
                     løsning = BrevbestillingLøsning(
                         LøsBrevbestillingDto(
                             brevbestilling.referanse,
+                            BrevbestillingLøsningStatus.KLAR_FOR_EDITERING
                         )
                     ),
                     behandlingVersjon = behandling.versjon,
