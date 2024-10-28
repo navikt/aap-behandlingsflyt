@@ -11,11 +11,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktD
  *
  * - [Folketrygdloven § 11-7](https://lovdata.no/lov/1997-02-28-19/§11-7)
  */
-class AktivtBidragVurdering(
+class AktivitetspliktVurdering(
     val dokument: AktivitetspliktDokument,
     val vilkårsvurdering: Vilkårsvurdering
 ) {
     enum class Vilkårsvurdering {
-        VILKÅR_OPPFYLT,
+        AKTIVT_BIDRAG_IKKE_OPPFYLT,
     }
 }

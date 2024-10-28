@@ -150,7 +150,6 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
                         FraværFastsattAktivitetVurdering(
                             dokument = dokument,
                             vilkårsvurdering = UNNTAK_SYKDOM_ELLER_SKADE,
-                            skalStanses = false,
                         )
                     )
 
@@ -175,7 +174,6 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
                                     FraværFastsattAktivitetVurdering(
                                         dokument = dokument,
                                         vilkårsvurdering = if (it.fom >= stansDag) STANS_TI_DAGER_BRUKT_OPP else UNNTAK_STERKE_VELFERDSGRUNNER,
-                                        skalStanses = true,
                                     )
                                 )
                             }
@@ -187,7 +185,6 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
                         FraværFastsattAktivitetVurdering(
                             dokument = dokument,
                             vilkårsvurdering = UNNTAK_STERKE_VELFERDSGRUNNER,
-                            skalStanses = false,
                         )
                     )
                 }
@@ -199,7 +196,6 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
                         FraværFastsattAktivitetVurdering(
                             dokument = dokument,
                             vilkårsvurdering = if (vurdering.inntilEnDagUnntak) UNNTAK_INNTIL_EN_DAG else STANS_ANDRE_DAG,
-                            skalStanses = !vurdering.inntilEnDagUnntak,
                         )
                     )
             }

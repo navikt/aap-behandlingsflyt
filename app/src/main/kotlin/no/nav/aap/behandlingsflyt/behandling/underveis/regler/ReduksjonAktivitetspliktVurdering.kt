@@ -20,9 +20,6 @@ class ReduksjonAktivitetspliktVurdering(
 
     /** Er vilkårene for å reduksjon etter § 11-9 oppfylt? */
     val vilkårsvurdering: Vilkårsvurdering,
-
-    /** Er både maskinen og saksbehandler enig om at aap skal reduseres? */
-    val skalReduseres: Boolean,
 ) {
     enum class Vilkårsvurdering {
         UNNTAK_RIMELIG_GRUNN,

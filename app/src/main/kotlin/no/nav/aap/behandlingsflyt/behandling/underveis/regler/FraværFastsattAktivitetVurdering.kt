@@ -1,5 +1,12 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Utfall.STANS
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Utfall.UNNTAK
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.STANS_ANDRE_DAG
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.STANS_TI_DAGER_BRUKT_OPP
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_INNTIL_EN_DAG
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_STERKE_VELFERDSGRUNNER
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_SYKDOM_ELLER_SKADE
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktDokument
 
 /* TODO: Er det avklart om § 11-8 kan føre til opphør? Første versjon av koden
@@ -22,10 +29,18 @@ data class FraværFastsattAktivitetVurdering(
 
     /** Er vilkårene for stans etter § 11-8 oppfylt? */
     val vilkårsvurdering: Vilkårsvurdering,
-
-    /** Er både maskinen og saksbehandler enig om at aap skal stanses? */
-    val skalStanses: Boolean,
 ) {
+    enum class Utfall {
+        STANS,
+        UNNTAK
+    }
+
+    val utfall: Utfall
+        get() = when (vilkårsvurdering) {
+            STANS_ANDRE_DAG, STANS_TI_DAGER_BRUKT_OPP -> STANS
+            UNNTAK_INNTIL_EN_DAG, UNNTAK_STERKE_VELFERDSGRUNNER, UNNTAK_SYKDOM_ELLER_SKADE -> UNNTAK
+        }
+
     enum class Vilkårsvurdering {
         STANS_ANDRE_DAG,
         STANS_TI_DAGER_BRUKT_OPP,

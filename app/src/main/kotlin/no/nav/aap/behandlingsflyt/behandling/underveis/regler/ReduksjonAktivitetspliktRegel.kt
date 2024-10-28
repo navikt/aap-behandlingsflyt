@@ -41,7 +41,6 @@ class ReduksjonAktivitetspliktRegel : UnderveisRegel {
                 ReduksjonAktivitetspliktVurdering(
                     dokument = dokument,
                     vilkårsvurdering = if (dokument.grunn in gyldigeGrunner) UNNTAK_RIMELIG_GRUNN else VILKÅR_FOR_REDUKSJON_OPPFYLT,
-                    skalReduseres = dokument.grunn !in gyldigeGrunner,
                 )
             }
 

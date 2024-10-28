@@ -1,5 +1,9 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AktivitetspliktVurdering.Vilkårsvurdering.AKTIVT_BIDRAG_IKKE_OPPFYLT
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Utfall.STANS
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Utfall.UNNTAK
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ReduksjonAktivitetspliktVurdering.Vilkårsvurdering.VILKÅR_FOR_REDUKSJON_OPPFYLT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
@@ -16,7 +20,7 @@ data class Vurdering(
     private val meldepliktVurdering: MeldepliktVurdering? = null,
     internal val fraværFastsattAktivitetVurdering: FraværFastsattAktivitetVurdering? = null,
     internal val reduksjonAktivitetspliktVurdering: ReduksjonAktivitetspliktVurdering? = null,
-    internal val aktivtBidragVurdering: AktivtBidragVurdering? = null,
+    internal val aktivitetspliktVurdering: AktivitetspliktVurdering? = null,
     private val gradering: Gradering? = null,
     private val grenseverdi: Prosent? = null,
     internal val institusjonVurdering: InstitusjonVurdering? = null,
@@ -57,16 +61,24 @@ data class Vurdering(
         return copy(soningsVurdering = vurdering)
     }
 
-    fun leggTilAktivtBidragVurdering(vurdering: AktivtBidragVurdering): Vurdering {
-        return copy(aktivtBidragVurdering = vurdering)
+    fun leggTilAktivtBidragVurdering(vurdering: AktivitetspliktVurdering): Vurdering {
+        return copy(aktivitetspliktVurdering = vurdering)
     }
 
     fun vurderinger(): Map<Vilkårtype, Utfall> {
         return vurderinger.toMap()
     }
 
+    private fun bryterAktivitetsplikt(): Boolean {
+        return aktivitetspliktVurdering?.vilkårsvurdering == AKTIVT_BIDRAG_IKKE_OPPFYLT
+    }
+
+    private fun fraværFastsattAktivitet(): Boolean {
+        return fraværFastsattAktivitetVurdering?.utfall == STANS
+    }
+
     fun harRett(): Boolean {
-        return ingenVilkårErAvslått() && arbeiderMindreEnnGrenseverdi() && harOverholdtMeldeplikten() && sonerIkke()
+        return ingenVilkårErAvslått() && arbeiderMindreEnnGrenseverdi() && harOverholdtMeldeplikten() && sonerIkke() && !bryterAktivitetsplikt() && !fraværFastsattAktivitet()
     }
 
     private fun sonerIkke(): Boolean {
@@ -134,6 +146,10 @@ data class Vurdering(
             return UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT
         } else if (!sonerIkke()) {
             return UnderveisÅrsak.SONER_STRAFF
+        } else if (bryterAktivitetsplikt()) {
+            return UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT
+        } else if (fraværFastsattAktivitet()) {
+            return UnderveisÅrsak.FRAVÆR_FASTSATT_AKTIVITET
         } else if (!arbeiderMindreEnnGrenseverdi()) {
             return UnderveisÅrsak.ARBEIDER_MER_ENN_GRENSEVERDI
         } else if (!harOverholdtMeldeplikten()) {
@@ -152,6 +168,13 @@ data class Vurdering(
 
     fun meldeperiode(): Periode? {
         return meldepliktVurdering?.meldeperiode
+    }
+
+    fun skalReduseresDagsatser(): Boolean {
+        if (!harRett() || fraværFastsattAktivitetVurdering?.utfall == UNNTAK) {
+            return false
+        }
+        return reduksjonAktivitetspliktVurdering?.vilkårsvurdering == VILKÅR_FOR_REDUKSJON_OPPFYLT
     }
 
     override fun toString(): String {
