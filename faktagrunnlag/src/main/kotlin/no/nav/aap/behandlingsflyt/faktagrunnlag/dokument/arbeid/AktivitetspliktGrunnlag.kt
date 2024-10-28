@@ -20,6 +20,20 @@ data class AktivitetspliktGrunnlag(
             }
     }
 
+    fun tidslinje(paragraf: Brudd.Paragraf): Tidslinje<AktivitetspliktRegistrering> {
+        return bruddene
+            .asSequence()
+            .filter { it.brudd.paragraf == paragraf }
+            .map { Tidslinje(it.brudd.periode, it) }
+            .fold(Tidslinje()) { bruddtidslinje1, bruddtidslinje2 ->
+                bruddtidslinje1.kombiner(bruddtidslinje2, JoinStyle.OUTER_JOIN { periode, brudd1, brudd2 ->
+                    merge(brudd1?.verdi, brudd2?.verdi)?.let {
+                        Segment(periode, it)
+                    }
+                })
+            }
+    }
+
     companion object {
         private fun merge(
             dokument1: AktivitetspliktDokument?,
@@ -30,7 +44,7 @@ data class AktivitetspliktGrunnlag(
                 ?: error("outer join hvor begge sider er null")
 
                 dokument1.metadata.opprettetTid < dokument2.metadata.opprettetTid -> dokument2
-                else -> dokument2
+                else -> dokument1
             }
             return when (nyesteDokument) {
                 is AktivitetspliktFeilregistrering -> null

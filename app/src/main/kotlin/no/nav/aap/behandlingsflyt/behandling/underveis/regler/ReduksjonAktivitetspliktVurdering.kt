@@ -25,9 +25,7 @@ class ReduksjonAktivitetspliktVurdering(
     val skalReduseres: Boolean,
 ) {
     enum class Vilkårsvurdering {
-        IKKE_RELEVANT_BRUDD,
         UNNTAK_RIMELIG_GRUNN,
-        VILKÅR_OPPFYLT,
-        FEILREGISTRERT,
+        VILKÅR_FOR_REDUKSJON_OPPFYLT,
     }
 }

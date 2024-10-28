@@ -1,15 +1,18 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ReduksjonAktivitetspliktVurdering.Vilkårsvurdering.VILKÅR_OPPFYLT
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ReduksjonAktivitetspliktVurdering.Vilkårsvurdering.VILKÅR_FOR_REDUKSJON_OPPFYLT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRegistrering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.PARAGRAF_11_7
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn.INGEN_GYLDIG_GRUNN
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.PARAGRAF_11_8
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.PARAGRAF_11_9
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_MØTT_TIL_TILTAK
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_AKTIVT_BIDRAG
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.HendelseId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.InnsendingId
@@ -32,7 +35,7 @@ class ReduksjonFraværFastsattAktivitetRegelTest {
     }
 
     @Test
-    fun `ett fravær fra tiltak, kun 11-9 kan brukes`() {
+    fun `vurderinger fra paragraf 11_8 og 11_7 blir ikke med`() {
         val vurderinger = vurder(
             rettighetsperiode = Periode(fom = dato(2020, 1, 1), tom = dato(2022, 12, 31)),
             brudd(
@@ -41,20 +44,23 @@ class ReduksjonFraværFastsattAktivitetRegelTest {
                 periode = Periode(dato(2020, 1, 1), dato(2020, 1, 1)),
                 opprettet = dato(2020, 1, 2)
             ),
+            brudd(
+                bruddType = IKKE_AKTIVT_BIDRAG,
+                paragraf = PARAGRAF_11_7,
+                periode = Periode(dato(2021, 1, 1), dato(2021, 1, 1)),
+                opprettet = dato(2020, 1, 2)
+            ),
         )
-        assertEquals(1, vurderinger.segmenter().size)
-        val vurdering = vurderinger.segment(dato(2020, 1, 1))!!.verdi
-        /* Kan ikke sanksjonere med 11-8 på grunn av regelen om én dags fravær i meldeperioden. */
-        assertEquals(VILKÅR_OPPFYLT, vurdering.vilkårsvurdering)
+        assertEquals(0, vurderinger.segmenter().size)
     }
 
     @Test
-    fun `ett fravær fra tiltak uten grunn, kan ikke sanksjoneres etter tre måneder`() {
+    fun `brudd uten gyldig grunn blir sanksjonert`() {
         val vurderinger = vurder(
             rettighetsperiode = Periode(fom = dato(2020, 1, 1), tom = dato(2022, 12, 31)),
             brudd(
                 bruddType = IKKE_MØTT_TIL_TILTAK,
-                paragraf = PARAGRAF_11_8,
+                paragraf = PARAGRAF_11_9,
                 periode = Periode(dato(2020, 1, 1), dato(2020, 1, 1)),
                 opprettet = dato(2020, 4, 1),
             ),
@@ -65,7 +71,7 @@ class ReduksjonFraværFastsattAktivitetRegelTest {
          * er nøyaktigt 3 måneder etter. */
         /* Kan ikke sanksjonere med 11-8 på grunn av regelen om én dags fravær i meldeperioden. */
         val vurdering = vurderinger.segment(dato(2020, 1, 1))!!.verdi
-        assertEquals(VILKÅR_OPPFYLT ,vurdering.vilkårsvurdering)
+        assertEquals(VILKÅR_FOR_REDUKSJON_OPPFYLT ,vurdering.vilkårsvurdering)
     }
 
     private fun dato(år: Int, mnd: Int, dag: Int) = LocalDate.of(år, mnd, dag)

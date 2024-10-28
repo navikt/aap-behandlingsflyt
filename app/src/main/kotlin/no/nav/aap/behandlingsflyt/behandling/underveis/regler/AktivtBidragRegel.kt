@@ -1,11 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AktivtBidragVurdering.Vilkårsvurdering.IKKE_RELEVANT_BRUDD
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AktivtBidragVurdering.Vilkårsvurdering.VILKÅR_OPPFYLT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.PARAGRAF_11_7
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType
-import no.nav.aap.tidslinje.JoinStyle
-import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.Tidslinje
 
 /**
@@ -15,33 +12,17 @@ import no.nav.aap.tidslinje.Tidslinje
 class AktivtBidragRegel : UnderveisRegel {
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
         val vurderinger = input.aktivitetspliktGrunnlag
-            .tidslinje
+            .tidslinje(PARAGRAF_11_7)
             .mapValue { dokument ->
-                when {
-                    dokument.brudd.bruddType == BruddType.IKKE_AKTIVT_BIDRAG -> {
-                        assert(dokument.brudd.paragraf == PARAGRAF_11_7)
-                        AktivtBidragVurdering(
-                            dokument = dokument,
-                            vilkårsvurdering = VILKÅR_OPPFYLT,
-                        )
-                    }
-
-                    else -> AktivtBidragVurdering(
-                        dokument = dokument,
-                        vilkårsvurdering = IKKE_RELEVANT_BRUDD
-                    )
+                require(dokument.brudd.bruddType == BruddType.IKKE_AKTIVT_BIDRAG) {
+                    "Paragraf 11-7 har kun mulighet til å registrere med IKKE_AKTIVT_BIDRAG, men fikk ${dokument.brudd.bruddType}"
                 }
+                AktivtBidragVurdering(
+                    dokument = dokument,
+                    vilkårsvurdering = VILKÅR_OPPFYLT,
+                )
             }
 
-        return vurderinger.kombiner(
-            resultat,
-            JoinStyle.OUTER_JOIN
-            { periode, bruddSegment, vurderingSegment ->
-                if (bruddSegment == null) return@OUTER_JOIN vurderingSegment
-                val vurdering = (vurderingSegment?.verdi ?: Vurdering())
-                    .leggTilAktivtBidragVurdering(bruddSegment.verdi)
-                Segment(periode, vurdering)
-            },
-        )
+        return resultat.leggTilVurderinger(vurderinger, Vurdering::leggTilAktivtBidragVurdering)
     }
 }

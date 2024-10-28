@@ -5,6 +5,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.tidslinje.JoinStyle
+import no.nav.aap.tidslinje.Segment
+import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.Prosent
 import java.util.*
 
@@ -163,4 +166,18 @@ data class Vurdering(
             )""".trimIndent().replace("\n", "")
     }
 
+}
+
+fun <T> Tidslinje<Vurdering>.leggTilVurderinger(
+    vurderinger: Tidslinje<T>, utvidVurdering: (Vurdering, T) -> Vurdering
+): Tidslinje<Vurdering> {
+    return vurderinger.kombiner(
+        this,
+        JoinStyle.OUTER_JOIN
+        { periode, nyVurdering, foreløpigVurdering ->
+            if (nyVurdering == null) return@OUTER_JOIN foreløpigVurdering
+            val vurdering = utvidVurdering(foreløpigVurdering?.verdi ?: Vurdering(), nyVurdering.verdi)
+            Segment(periode, vurdering)
+        },
+    )
 }

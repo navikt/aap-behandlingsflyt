@@ -16,8 +16,6 @@ class AktivtBidragVurdering(
     val vilkårsvurdering: Vilkårsvurdering
 ) {
     enum class Vilkårsvurdering {
-        IKKE_RELEVANT_BRUDD,
-        FEILREGISTRERT,
         VILKÅR_OPPFYLT,
     }
 }

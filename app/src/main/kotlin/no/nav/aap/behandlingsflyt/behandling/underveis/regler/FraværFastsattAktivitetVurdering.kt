@@ -32,7 +32,5 @@ data class FraværFastsattAktivitetVurdering(
         UNNTAK_INNTIL_EN_DAG,
         UNNTAK_STERKE_VELFERDSGRUNNER,
         UNNTAK_SYKDOM_ELLER_SKADE,
-        IKKE_RELEVANT_BRUDD,
-        FEILREGISTRERT_BRUDD,
     }
 }
