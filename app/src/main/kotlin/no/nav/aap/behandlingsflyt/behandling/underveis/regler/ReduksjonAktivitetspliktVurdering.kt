@@ -15,7 +15,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktD
  * - [Folketrygdloven § 11-9](]https://lovdata.no/lov/1997-02-28-19/§11-9)
  * - [Forkskriftens § 4](https://lovdata.no/forskrift/2017-12-13-2100/§4)
 */
-class ReduksjonAktivitetspliktVurdering(
+data class ReduksjonAktivitetspliktVurdering(
     val dokument: AktivitetspliktDokument,
 
     /** Er vilkårene for å reduksjon etter § 11-9 oppfylt? */
@@ -23,6 +23,7 @@ class ReduksjonAktivitetspliktVurdering(
 ) {
     enum class Vilkårsvurdering {
         UNNTAK_RIMELIG_GRUNN,
+        FORELDET,
         VILKÅR_FOR_REDUKSJON_OPPFYLT,
     }
 }

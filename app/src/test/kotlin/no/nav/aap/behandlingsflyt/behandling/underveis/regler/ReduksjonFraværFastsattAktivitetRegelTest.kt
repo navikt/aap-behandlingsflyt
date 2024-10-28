@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ReduksjonAktivitetspliktVurdering.Vilkårsvurdering.FORELDET
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ReduksjonAktivitetspliktVurdering.Vilkårsvurdering.VILKÅR_FOR_REDUKSJON_OPPFYLT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktDokument
@@ -55,7 +56,7 @@ class ReduksjonFraværFastsattAktivitetRegelTest {
     }
 
     @Test
-    fun `brudd uten gyldig grunn blir sanksjonert`() {
+    fun `foreldede brudd uten gyldig grunn blir ikke sanksjonert`() {
         val vurderinger = vurder(
             rettighetsperiode = Periode(fom = dato(2020, 1, 1), tom = dato(2022, 12, 31)),
             brudd(
@@ -67,11 +68,67 @@ class ReduksjonFraværFastsattAktivitetRegelTest {
         )
         assertEquals(1, vurderinger.segmenter().size)
 
-        /* Kan sanksjonere med 11-9 fordi 2020-04-01 ikke er senere enn tre månder fra 2020-01-01, men
-         * er nøyaktigt 3 måneder etter. */
-        /* Kan ikke sanksjonere med 11-8 på grunn av regelen om én dags fravær i meldeperioden. */
+        /* Kan ikke sanksjonere med 11-9 fordi 2020-04-01 er senere enn tre månder fra 2020-01-01, men
+         * er en dag mer enn 3 måneder etter. */
         val vurdering = vurderinger.segment(dato(2020, 1, 1))!!.verdi
-        assertEquals(VILKÅR_FOR_REDUKSJON_OPPFYLT ,vurdering.vilkårsvurdering)
+        assertEquals(FORELDET,vurdering.vilkårsvurdering)
+    }
+
+    @Test
+    fun `nye brudd uten gyldig grunn blir sanksjonert`() {
+        val vurderinger = vurder(
+            rettighetsperiode = Periode(fom = dato(2020, 1, 1), tom = dato(2022, 12, 31)),
+            brudd(
+                bruddType = IKKE_MØTT_TIL_TILTAK,
+                paragraf = PARAGRAF_11_9,
+                periode = Periode(dato(2020, 1, 1), dato(2020, 1, 1)),
+                opprettet = dato(2020, 3, 31),
+            ),
+        )
+        assertEquals(1, vurderinger.segmenter().size)
+
+        /* Kan sanksjonere med 11-9 fordi 2020-03-31 ikke er senere enn tre månder fra 2020-01-01, men
+         * er nøyaktigt 3 måneder etter. */
+        val vurdering = vurderinger.segment(dato(2020, 1, 1))!!.verdi
+        assertEquals(VILKÅR_FOR_REDUKSJON_OPPFYLT,vurdering.vilkårsvurdering)
+    }
+
+
+    @Test
+    fun `periode med både foreldede og ikke-foreldede brudd blir håndtert`() {
+        val vurderinger = vurder(
+            rettighetsperiode = Periode(fom = dato(2020, 1, 1), tom = dato(2022, 12, 31)),
+            brudd(
+                bruddType = IKKE_MØTT_TIL_TILTAK,
+                paragraf = PARAGRAF_11_9,
+                periode = Periode(dato(2020, 1, 1), dato(2020, 1, 2)),
+                opprettet = dato(2020, 4, 1),
+            ),
+        )
+        assertEquals(2, vurderinger.segmenter().size)
+
+        /* Kan ikke sanksjonere med 11-9 fordi 2020-04-01 er senere enn tre månder fra 2020-01-01, men
+         * er en dag mer enn 3 måneder etter. */
+        vurderinger.segment(dato(2020, 1, 1))!!.verdi.also {
+            assertEquals(FORELDET, it.vilkårsvurdering)
+        }
+        vurderinger.segment(dato(2020, 1, 2))!!.verdi.also {
+            assertEquals(VILKÅR_FOR_REDUKSJON_OPPFYLT, it.vilkårsvurdering)
+        }
+    }
+
+    @Test
+    fun `like vurderinger bli komprimert`() {
+        val vurderinger = vurder(
+            rettighetsperiode = Periode(fom = dato(2020, 1, 1), tom = dato(2022, 12, 31)),
+            brudd(
+                bruddType = IKKE_MØTT_TIL_TILTAK,
+                paragraf = PARAGRAF_11_9,
+                periode = Periode(dato(2020, 1, 1), dato(2020, 1, 2)),
+                opprettet = dato(2020, 3, 31),
+            ),
+        )
+        assertEquals(1, vurderinger.segmenter().size)
     }
 
     private fun dato(år: Int, mnd: Int, dag: Int) = LocalDate.of(år, mnd, dag)
