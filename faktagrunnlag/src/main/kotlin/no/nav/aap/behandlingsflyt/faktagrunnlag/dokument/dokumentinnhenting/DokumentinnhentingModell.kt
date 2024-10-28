@@ -5,8 +5,8 @@ import java.util.*
 data class LegeerklæringBestillingRequest (
     val behandlerRef: String,
     val personIdent: String,
-    val dialogmeldingType: String,
-    val dialogmeldingKodeverk: String,
+    val dialogmeldingType: DialogmeldingType,
+    val dialogmeldingKodeverk: DialogmeldingKodeverk,
     val dialogmeldingKode: Int,
     val dialogmeldingTekst: String,
     val dialogmeldingVedlegg: ByteArray?,
@@ -27,4 +27,13 @@ data class LegeerklæringStatusResponse(
 
 enum class MeldingStatusType {
     BESTILT, SENDT, OK, AVVIST
+}
+
+
+enum class DialogmeldingType {
+    DIALOG_FORESPORSEL, DIALOG_NOTAT
+}
+
+enum class DialogmeldingKodeverk {
+    HENVENDELSE, FORESPORSEL
 }
