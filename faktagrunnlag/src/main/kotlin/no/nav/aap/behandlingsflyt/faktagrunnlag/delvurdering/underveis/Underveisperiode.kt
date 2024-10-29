@@ -2,7 +2,9 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.verdityper.Dagsatser
 import no.nav.aap.verdityper.Prosent
+import java.util.*
 
 class Underveisperiode(
     val periode: Periode,
@@ -10,7 +12,8 @@ class Underveisperiode(
     val utfall: Utfall,
     val avslagsårsak: UnderveisÅrsak?,
     val grenseverdi: Prosent,
-    val gradering: Gradering?
+    val gradering: Gradering?,
+    val trekk: Dagsatser
 ) : Comparable<Underveisperiode> {
 
     fun utbetalingsgrad(): Prosent {
@@ -37,22 +40,17 @@ class Underveisperiode(
         if (avslagsårsak != other.avslagsårsak) return false
         if (grenseverdi != other.grenseverdi) return false
         if (gradering != other.gradering) return false
+        if (trekk != other.trekk) return false
 
         return true
     }
 
     override fun hashCode(): Int {
-        var result = periode.hashCode()
-        result = 31 * result + (meldePeriode?.hashCode() ?: 0)
-        result = 31 * result + utfall.hashCode()
-        result = 31 * result + (avslagsårsak?.hashCode() ?: 0)
-        result = 31 * result + grenseverdi.hashCode()
-        result = 31 * result + (gradering?.hashCode() ?: 0)
-        return result
+        return Objects.hash(periode, meldePeriode, utfall, avslagsårsak, grenseverdi, gradering, trekk)
     }
 
     override fun toString(): String {
-        return "Underveisperiode(periode=$periode, utfall=$utfall, utbetalingsgrad=${utbetalingsgrad()}, avslagsårsak=$avslagsårsak, grenseverdi=$grenseverdi, gradering=$gradering)"
+        return "Underveisperiode(periode=$periode, utfall=$utfall, utbetalingsgrad=${utbetalingsgrad()}, avslagsårsak=$avslagsårsak, grenseverdi=$grenseverdi, gradering=$gradering, trekk=$trekk)"
     }
 
 }

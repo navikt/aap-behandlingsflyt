@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktG
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortRepository
 import no.nav.aap.tidslinje.Tidslinje
+import no.nav.aap.verdityper.Dagsatser
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
 class UnderveisService(
@@ -56,12 +57,13 @@ class UnderveisService(
             vurderRegler.segmenter()
                 .map {
                     Underveisperiode(
-                        it.periode,
-                        it.verdi.meldeperiode(),
-                        it.verdi.utfall(),
-                        it.verdi.avslagsårsak(),
-                        it.verdi.grenseverdi(),
-                        it.verdi.gradering(),
+                        periode = it.periode,
+                        meldePeriode = it.verdi.meldeperiode(),
+                        utfall = it.verdi.utfall(),
+                        avslagsårsak = it.verdi.avslagsårsak(),
+                        grenseverdi = it.verdi.grenseverdi(),
+                        gradering = it.verdi.gradering(),
+                        trekk = if (it.verdi.skalReduseresDagsatser()) Dagsatser(it.periode.antallDager()) else Dagsatser(0)
                     )
                 },
             input

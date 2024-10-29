@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fød
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.verdityper.Beløp
+import no.nav.aap.verdityper.Dagsatser
 import no.nav.aap.verdityper.GUnit
 import no.nav.aap.verdityper.Prosent
 import no.nav.aap.verdityper.sakogbehandling.Ident
@@ -37,7 +38,8 @@ class BeregnTilkjentYtelseServiceTest {
                     utfall = Utfall.OPPFYLT,
                     avslagsårsak = null,
                     grenseverdi = Prosent.`100_PROSENT`,
-                    gradering = null
+                    gradering = null,
+                    trekk = Dagsatser(0)
                 )
             )
         )
@@ -98,7 +100,8 @@ class BeregnTilkjentYtelseServiceTest {
                     utfall = Utfall.OPPFYLT,
                     avslagsårsak = null,
                     grenseverdi = Prosent.`100_PROSENT`,
-                    gradering = null
+                    gradering = null,
+                    trekk = Dagsatser(0)
                 )
             )
         )
@@ -154,7 +157,8 @@ class BeregnTilkjentYtelseServiceTest {
                     utfall = Utfall.OPPFYLT,
                     avslagsårsak = null,
                     grenseverdi = Prosent.`100_PROSENT`,
-                    gradering = null
+                    gradering = null,
+                    trekk = Dagsatser(0)
                 )
             )
         )
@@ -228,7 +232,8 @@ class BeregnTilkjentYtelseServiceTest {
                     utfall = Utfall.OPPFYLT,
                     avslagsårsak = null,
                     grenseverdi = Prosent.`100_PROSENT`,
-                    gradering = null
+                    gradering = null,
+                    trekk = Dagsatser(0)
                 )
             )
         )
@@ -289,7 +294,8 @@ class BeregnTilkjentYtelseServiceTest {
                     utfall = Utfall.OPPFYLT,
                     avslagsårsak = null,
                     grenseverdi = Prosent.`100_PROSENT`,
-                    gradering = null
+                    gradering = null,
+                    trekk = Dagsatser(0)
                 )
             )
         )
