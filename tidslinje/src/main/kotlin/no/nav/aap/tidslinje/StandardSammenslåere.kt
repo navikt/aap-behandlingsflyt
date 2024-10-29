@@ -106,6 +106,26 @@ object StandardSammenslåere {
     }
 
     /**
+     *             venstre høyre  minus
+     * 2020-01-01  +---+          +------------+
+     *             | x |          | x          |
+     * 2020-01-02  |   |   +---+  +------------+
+     *             |   |   | 1 |
+     * 2020-01-03  +---+   |   |
+     *                     |   |
+     * 2020-01-04          +---+
+     *
+     * 2020-01-05  +---+          +------------+
+     *             | y |          | y          |
+     * 2020-01-06  +---+          +------------+
+     */
+    fun <T, S> minus(): JoinStyle.LEFT_JOIN<T, S, T> {
+        return JoinStyle.LEFT_JOIN { p, l, r ->
+            if (r == null) Segment(p, l.verdi) else null
+        }
+    }
+
+    /**
      * ```
      *             venstre høyre  kunHøyreLeftJoin
      * 2020-01-01  +---+

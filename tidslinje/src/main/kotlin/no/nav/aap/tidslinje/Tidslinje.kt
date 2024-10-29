@@ -110,6 +110,11 @@ class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>> = TreeSet()) : Iterab
         return kombiner(other, StandardSammenslåere.kunVenstre())
     }
 
+    fun filter(predikat: (Segment<T>) -> Boolean): Tidslinje<T> {
+        if (isEmpty()) return this
+        return Tidslinje(segmenter.filter(predikat))
+    }
+
     /**
      * Komprimerer tidslinjen
      * - Slår sammen segmenter hvor verdien er identisk (benytter equals for sjekk)

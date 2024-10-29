@@ -42,8 +42,8 @@ class UnderveisService(
         SoningRegel(),
         MeldepliktRegel(),
         AktivitetspliktRegel(),
-        ReduksjonAktivitetspliktRegel(),
-        FraværFastsattAktivitetRegel(),
+        FraværFastsattAktivitetRegel(), /* Vurdering av 11-8 forutsetter at 11-7 allerede er vurdert [AktivitetspliktRegel] */
+        ReduksjonAktivitetspliktRegel(), /* Vurdering av 11-9 fortsetter at 11-8 allerede er vurdert [FraværFastsattAktivitetRegel] */
         GraderingArbeidRegel(),
         VarighetRegel(),
     )

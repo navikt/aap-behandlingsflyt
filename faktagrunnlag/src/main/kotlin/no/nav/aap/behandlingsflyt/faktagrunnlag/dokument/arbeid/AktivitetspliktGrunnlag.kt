@@ -7,19 +7,6 @@ import no.nav.aap.tidslinje.Tidslinje
 data class AktivitetspliktGrunnlag(
     val bruddene: Set<AktivitetspliktDokument>,
 ) {
-    val tidslinje: Tidslinje<AktivitetspliktRegistrering> by lazy {
-        bruddene
-            .asSequence()
-            .map { Tidslinje(it.brudd.periode, it) }
-            .fold(Tidslinje()) { bruddtidslinje1, bruddtidslinje2 ->
-                bruddtidslinje1.kombiner(bruddtidslinje2, JoinStyle.OUTER_JOIN { periode, brudd1, brudd2 ->
-                    merge(brudd1?.verdi, brudd2?.verdi)?.let {
-                        Segment(periode, it)
-                    }
-                })
-            }
-    }
-
     fun tidslinje(paragraf: Brudd.Paragraf): Tidslinje<AktivitetspliktRegistrering> {
         return bruddene
             .asSequence()

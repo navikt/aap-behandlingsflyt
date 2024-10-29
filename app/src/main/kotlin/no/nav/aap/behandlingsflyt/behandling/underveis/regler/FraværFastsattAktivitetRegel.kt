@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn.SYKDOM_ELL
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tidslinje.JoinStyle
 import no.nav.aap.tidslinje.Segment
+import no.nav.aap.tidslinje.StandardSammenslåere
 import no.nav.aap.tidslinje.Tidslinje
 import org.slf4j.LoggerFactory
 
@@ -45,22 +46,26 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
     }
 
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
+        val høyerePrioritertVurdering = resultat.filter { it.verdi.aktivitetspliktVurdering != null }
         val tidslinje = input.aktivitetspliktGrunnlag.tidslinje(PARAGRAF_11_8)
+            .kombiner(høyerePrioritertVurdering, StandardSammenslåere.minus())
+
+
         require(tidslinje.segmenter().all { it.verdi.brudd.bruddType in relevanteBrudd }) {
             "11-8 kan bare registreres med bruddtyper ${relevanteBrudd.joinToString(", ")}"
         }
-        
+
         //Første brudd i meldeperioden teller ikke i årskvote
         //Deler opp på meldeperiode først for å finne første i meldeperioden
         //Dette brukes for å regne ut antall brudd per kalenderår
         val bruddTidslinjeMedFørsteFraværIdentifisert: Tidslinje<AktivitetspliktSteg1> =
             tidslinjeMedFørsteFraværIdentifisert(resultat, tidslinje)
-        
+
         val ferdigVurdert = bruddTidslinjeMedFørsteFraværIdentifisert.splittOppKalenderår()
             .flatMap { kalenderårSegment ->
                 vurderKalenderår(kalenderårSegment.verdi)
             }
-        
+
         return resultat.leggTilVurderinger(ferdigVurdert, Vurdering::leggTilAktivitetspliktVurdering)
     }
 
@@ -106,12 +111,12 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
         periode: Periode,
         dokument: AktivitetspliktRegistrering,
     ): Tidslinje<AktivitetspliktSteg1> {
-        val ikkeSanksjonertBrudd = meldeperioden.segmenter().firstOrNull {
+        val inntilEnDagUnntak = meldeperioden.segmenter().firstOrNull {
             it.verdi.grunn !in gyldigeGrunner
         }?.verdi
 
-        val erFørsteBruddMeldeperioden = ikkeSanksjonertBrudd?.metadata?.id == dokument.metadata.id
-        return if (erFørsteBruddMeldeperioden) {
+        val harInntilEnDagUnntak = inntilEnDagUnntak?.metadata?.id == dokument.metadata.id
+        return if (harInntilEnDagUnntak) {
             val førsteFravær = Periode(periode.fom, periode.fom)
             val periodene = listOf(førsteFravær) + periode.minus(førsteFravær)
             Tidslinje(
@@ -137,7 +142,7 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
     }
 
     private fun vurderKalenderår(kalenderår: Tidslinje<AktivitetspliktSteg1>): Tidslinje<FraværFastsattAktivitetVurdering> {
-        var nestePosisjonKalenderår = 1
+        var kalenderårskvote = 0
 
         return kalenderår.flatMap { vurderingSegment ->
             val vurdering = vurderingSegment.verdi
@@ -154,39 +159,20 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
                     )
 
                 STERKE_VELFERDSGRUNNER -> {
-                    val bruddetsPosisjonKalenderår = nestePosisjonKalenderår
-                    nestePosisjonKalenderår += vurderingSegment.periode.antallDager()
-                    val kvoteBruktOppDennePerioden =
-                        (KVOTE_KALENDERÅR + 1) in (bruddetsPosisjonKalenderår..<nestePosisjonKalenderår)
-
-                    if (kvoteBruktOppDennePerioden) {
-                        val stansInnenforPeriodeOffset = (KVOTE_KALENDERÅR + 1) - bruddetsPosisjonKalenderår
-                        val stansDag =
-                            vurderingSegment.periode.fom.plusDays(stansInnenforPeriodeOffset.toLong())
-                        val stansPeriode = Periode(stansDag, stansDag)
-                        val utenfor = vurderingSegment.periode.minus(stansPeriode)
-                        val perioder = (utenfor + stansPeriode).toList().sortedBy { it.fom }
-
-                        return@flatMap Tidslinje(
-                            perioder.map {
-                                Segment(
-                                    it,
-                                    FraværFastsattAktivitetVurdering(
-                                        dokument = dokument,
-                                        vilkårsvurdering = if (it.fom >= stansDag) STANS_TI_DAGER_BRUKT_OPP else UNNTAK_STERKE_VELFERDSGRUNNER,
-                                    )
-                                )
-                            }
+                    (0..<vurderingSegment.periode.antallDager()).map { periodeOffset ->
+                        kalenderårskvote += 1
+                        val dag = vurderingSegment.periode.fom.plusDays(periodeOffset.toLong())
+                        val periode = Periode(dag, dag)
+                        Segment(
+                            periode,
+                            FraværFastsattAktivitetVurdering(
+                                dokument = dokument,
+                                vilkårsvurdering = if (kalenderårskvote > KVOTE_KALENDERÅR) STANS_TI_DAGER_BRUKT_OPP else UNNTAK_STERKE_VELFERDSGRUNNER,
+                            )
                         )
                     }
-
-                    Tidslinje(
-                        vurderingSegment.periode,
-                        FraværFastsattAktivitetVurdering(
-                            dokument = dokument,
-                            vilkårsvurdering = UNNTAK_STERKE_VELFERDSGRUNNER,
-                        )
-                    )
+                        .let { Tidslinje(it) }
+                        .komprimer()
                 }
 
                 RIMELIG_GRUNN,

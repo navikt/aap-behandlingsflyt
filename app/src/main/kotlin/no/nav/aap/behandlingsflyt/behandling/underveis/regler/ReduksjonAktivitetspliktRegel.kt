@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_S
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tidslinje.Segment
+import no.nav.aap.tidslinje.StandardSammenslåere
 import no.nav.aap.tidslinje.Tidslinje
 import java.time.LocalDate
 import java.time.Period
@@ -38,8 +39,12 @@ class ReduksjonAktivitetspliktRegel : UnderveisRegel {
     }
 
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
-        val vurderinger = input.aktivitetspliktGrunnlag
-            .tidslinje(PARAGRAF_11_9)
+        val høyerePrioritertVurdering = resultat.filter {
+            it.verdi.aktivitetspliktVurdering != null || it.verdi.fraværFastsattAktivitetVurdering != null
+        }
+
+        val vurderinger = input.aktivitetspliktGrunnlag.tidslinje(PARAGRAF_11_9)
+            .kombiner(høyerePrioritertVurdering, StandardSammenslåere.minus())
             .splittOppEtter(Period.ofDays(1))
             .map { dokumentSegment ->
                 val dokument = dokumentSegment.verdi
