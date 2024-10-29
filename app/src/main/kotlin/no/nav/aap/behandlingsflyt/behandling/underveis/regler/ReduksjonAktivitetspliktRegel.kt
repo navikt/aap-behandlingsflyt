@@ -44,6 +44,9 @@ class ReduksjonAktivitetspliktRegel : UnderveisRegel {
             .map { dokumentSegment ->
                 val dokument = dokumentSegment.verdi
 
+                require(dokumentSegment.periode.antallDager() == 1) {
+                    "Koden er skrevet under antagelsen om at brudd-perioden er splittet opp i enkeltdager"
+                }
                 require(dokument.brudd.bruddType in relevanteBrudd) {
                     "Bruddtype for paragraf 11_9 må være en av ${relevanteBrudd.joinToString(", ")}, men var ${dokument.brudd.bruddType}"
                 }
