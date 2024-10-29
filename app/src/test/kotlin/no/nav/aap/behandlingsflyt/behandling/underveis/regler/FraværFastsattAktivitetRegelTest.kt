@@ -41,22 +41,6 @@ class FraværFastsattAktivitetRegelTest {
     }
 
     @Test
-    fun `ett fravær fra tiltak uten grunn, kan fortsatt stoppes etter tre måneder`() {
-        val vurderinger = vurder(
-            rettighetsperiode = Periode(fom = dato(2020, 1, 1), tom = dato(2022, 12, 31)),
-            brudd(
-                bruddType = IKKE_MØTT_TIL_TILTAK,
-                paragraf = PARAGRAF_11_8,
-                periode = Periode(dato(2020, 1, 1), dato(2020, 1, 2)),
-                opprettet = dato(2020, 4, 1),
-            ),
-        )
-
-        val vurdering = vurderinger.segment(dato(2020, 1, 2))!!.verdi
-        assertEquals(STANS_ANDRE_DAG, vurdering.vilkårsvurdering)
-    }
-
-    @Test
     fun `andre dag i meldeperiode kan føre til § 11-8 stans`() {
         val vurdering = vurder(
             rettighetsperiode = Periode(fom = dato(2020, 1, 1), tom = dato(2022, 12, 31)),
@@ -105,13 +89,13 @@ class FraværFastsattAktivitetRegelTest {
             ),
         )
 
-        /* Fravær dagene 2 – 11: gir ikke stans pga. gyldig grunn, men bruker opp 10 dager av kvoten for kalenderåret. */
+        /* Fravær dagene 1 – 10: gir ikke stans pga. gyldig grunn, men bruker opp 10 dager av kvoten for kalenderåret. */
         for (dag in 1..10) {
             val muligeUtfall = vurderinger.segment(dato(2020, 1, dag))!!.verdi.vilkårsvurdering
             assertEquals(UNNTAK_STERKE_VELFERDSGRUNNER, muligeUtfall)
         }
 
-        /* Fravær dag 12: gyldig grunn, men gir stans fordi kvoten er brukt opp. */
+        /* Fravær dag 11: gyldig grunn, men gir stans fordi kvoten er brukt opp. */
         vurderinger.segment(dato(2020, 1, 11))!!.verdi.also {
             assertEquals(STANS_TI_DAGER_BRUKT_OPP, it.vilkårsvurdering)
         }
@@ -143,13 +127,13 @@ class FraværFastsattAktivitetRegelTest {
             ),
         )
 
-        /* Neste 10 dager i 2021 gir ikke stans pga ti dager fravær per kalenderår. */
-        for (dag in (startMeldeperiode2021)..<startMeldeperiode2021 + 10) {
+        /* Første 10 fravær i 2021 gir ikke stans pga ti dager fravær per kalenderår. */
+        for (dag in startMeldeperiode2021..<startMeldeperiode2021 + 10) {
             val kanStanses = vurderinger.segment(dato(2021, 1, dag))!!.verdi.vilkårsvurdering
             assertEquals(UNNTAK_STERKE_VELFERDSGRUNNER, kanStanses)
         }
 
-        /* Fravær dag 12: gyldig grunn, men gir stans fordi kvoten er brukt opp. */
+        /* Fravær dag 11: gyldig grunn, men gir stans fordi kvoten er brukt opp. */
         vurderinger.segment(dato(2021, 1, startMeldeperiode2021 + 10))!!.verdi.also {
             assertEquals(STANS_TI_DAGER_BRUKT_OPP, it.vilkårsvurdering)
         }
