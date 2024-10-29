@@ -61,12 +61,9 @@ import no.nav.aap.motor.api.motorApi
 import no.nav.aap.motor.retry.RetryService
 import no.nav.aap.pip.behandlingsflytPip
 import no.nav.aap.verdityper.feilhåndtering.ElementNotFoundException
-import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
 import javax.sql.DataSource
-
-private val SECURE_LOGGER: Logger = LoggerFactory.getLogger("secureLog")
 
 class App
 
