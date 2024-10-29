@@ -69,7 +69,7 @@ class Avklaringsbehovene(
         definisjoner.forEach { definisjon ->
             val avklaringsbehov = hentBehovForDefinisjon(definisjon)
             if (avklaringsbehov != null) {
-                if (avklaringsbehov.erAvsluttet() || avklaringsbehov.status() == Status.AVBRUTT) {
+                if (avklaringsbehov.erAvsluttet()) {
                     avklaringsbehov.reåpne(frist, begrunnelse, grunn)
                     if (avklaringsbehov.erVentepunkt()) {
                         // TODO: Vurdere om funnet steg bør ligge på endringen...

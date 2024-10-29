@@ -92,9 +92,7 @@ class Avklaringsbehov(
     }
 
     fun erÅpent(): Boolean {
-        return status() in setOf(
-            Status.OPPRETTET, Status.SENDT_TILBAKE_FRA_BESLUTTER, Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER
-        )
+        return status().erÅpent()
     }
 
     fun skalStoppeHer(stegType: StegType): Boolean {
@@ -127,7 +125,7 @@ class Avklaringsbehov(
     }
 
     fun erAvsluttet(): Boolean {
-        return status() == Status.AVSLUTTET
+        return status().erAvsluttet()
     }
 
     fun status(): Status {

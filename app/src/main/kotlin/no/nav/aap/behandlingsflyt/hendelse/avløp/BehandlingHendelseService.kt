@@ -39,18 +39,15 @@ class BehandlingHendelseService(
                     type = avklaringsbehov.definisjon.kode,
                     behovType = avklaringsbehov.definisjon.type,
                     løsesISteg = avklaringsbehov.løsesISteg()
-                ), status = avklaringsbehov.status(), endringer = avklaringsbehov.historikk.filter {
-                    it.status in listOf(
-                        Status.OPPRETTET, Status.SENDT_TILBAKE_FRA_BESLUTTER, Status.AVSLUTTET
-                    )
-                }.map { endring ->
-                    EndringDTO(
-                        status = endring.status,
-                        tidsstempel = endring.tidsstempel,
-                        endretAv = endring.endretAv,
-                        frist = endring.frist
-                    )
-                })
+                ), status = avklaringsbehov.status(),
+                    endringer = avklaringsbehov.historikk.map { endring ->
+                        EndringDTO(
+                            status = endring.status,
+                            tidsstempel = endring.tidsstempel,
+                            endretAv = endring.endretAv,
+                            frist = endring.frist
+                        )
+                    })
             },
             opprettetTidspunkt = behandling.opprettetTidspunkt,
             hendelsesTidspunkt = LocalDateTime.now(),
