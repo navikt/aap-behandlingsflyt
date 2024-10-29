@@ -21,47 +21,54 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.FlytJobbRepository
+import no.nav.aap.verdityper.sakogbehandling.NavIdent
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
     route("/api/aktivitetsplikt") {
-        route("/lagre").post<Unit, String, BruddAktivitetspliktRequest> { _, req ->
-            dataSource.transaction { connection ->
-                val aktivitetspliktServce = AktivitetspliktService(
-                    repository = AktivitetspliktRepository(connection)
-                )
-
+        route("{saksnummer}") {
+            route("/opprett").post<SaksnummerParameter, String, OpprettAktivitetspliktDTO> { params, req ->
                 val navIdent = innloggetNavIdent()
-                val sak = SakService(connection).hent(Saksnummer(req.saksnummer))
-
-
-                val aktivitetspliktDokument = req.perioder.map { periode ->
-                    req.tilDomene(sak.id, periode, navIdent)
+                dataSource.transaction { connection ->
+                    opprettDokument(connection, navIdent, Saksnummer(params.saksnummer), req)
                 }
-
-                val innsendingId = aktivitetspliktServce.registrerBrudd(aktivitetspliktDokument)
-                registrerDokumentjobb(innsendingId, aktivitetspliktDokument, connection, sak)
+                respond("{}", HttpStatusCode.Accepted)
             }
-            respond("{}", HttpStatusCode.Accepted)
-        }
 
-        route("/{saksnummer}").get<HentHendelseDto, BruddAktivitetspliktResponse> { req ->
-            val response = dataSource.transaction { connection ->
-                val repository = AktivitetspliktRepository(connection)
-                val sak = SakService(connection).hent(Saksnummer(req.saksnummer))
-                val alleBrudd = repository.hentBrudd(sak.id)
-                    .aktiveBrudd()
-                    .map { dokument ->
-                        BruddAktivitetspliktHendelseDto(
-                            brudd = dokument.brudd.bruddType,
-                            paragraf = dokument.brudd.paragraf,
-                            periode = dokument.brudd.periode,
-                            grunn = dokument.grunn,
-                        )
-                    }
-                BruddAktivitetspliktResponse(alleBrudd)
+            route("/oppdater").post<SaksnummerParameter, String, OppdaterAktivitetspliktDTO> { params, req ->
+                val navIdent = innloggetNavIdent()
+                dataSource.transaction { connection ->
+                    opprettDokument(connection, navIdent, Saksnummer(params.saksnummer), req)
+                }
+                respond("{}", HttpStatusCode.Accepted)
             }
-            respond(response)
+
+            route("/feilregistrer").post<SaksnummerParameter, String, FeilregistrerAktivitetspliktDTO> { params, req ->
+                val navIdent = innloggetNavIdent()
+                dataSource.transaction { connection ->
+                    opprettDokument(connection, navIdent, Saksnummer(params.saksnummer), req)
+                }
+                respond("{}", HttpStatusCode.Accepted)
+            }
+
+            get<SaksnummerParameter, BruddAktivitetspliktResponse> { params ->
+                val response = dataSource.transaction { connection ->
+                    val repository = AktivitetspliktRepository(connection)
+                    val sak = SakService(connection).hent(Saksnummer(params.saksnummer))
+                    val alleBrudd = repository.hentBrudd(sak.id)
+                        .aktiveBrudd()
+                        .map { dokument ->
+                            BruddAktivitetspliktHendelseDto(
+                                brudd = dokument.brudd.bruddType,
+                                paragraf = dokument.brudd.paragraf,
+                                periode = dokument.brudd.periode,
+                                grunn = dokument.grunn,
+                            )
+                        }
+                    BruddAktivitetspliktResponse(alleBrudd)
+                }
+                respond(response)
+            }
         }
 
         route("/slett").post<Unit, String, String> { _, _ ->
@@ -72,6 +79,19 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
             respond("{}", HttpStatusCode.Accepted)
         }
     }
+}
+
+private fun opprettDokument(connection: DBConnection, navIdent: NavIdent, saksnummer: Saksnummer, req: AktivitetspliktDTO) {
+    val aktivitetspliktServce = AktivitetspliktService(
+        repository = AktivitetspliktRepository(connection)
+    )
+
+    val sak = SakService(connection).hent(saksnummer)
+
+    val aktivitetspliktDokumenter = req.tilDomene(sak.id, navIdent)
+    val innsendingId = aktivitetspliktServce.registrerBrudd(aktivitetspliktDokumenter)
+
+    registrerDokumentjobb(innsendingId, aktivitetspliktDokumenter, connection, sak)
 }
 
 private fun registrerDokumentjobb(
