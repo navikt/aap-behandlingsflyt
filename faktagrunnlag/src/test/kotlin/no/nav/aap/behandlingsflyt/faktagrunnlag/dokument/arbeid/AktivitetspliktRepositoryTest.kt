@@ -23,13 +23,50 @@ import java.time.LocalDate
 
 class AktivitetspliktRepositoryTest {
     @Test
+    fun `kan lagre feilregistrering brudd på sak`() {
+        InitTestDatabase.dataSource.transaction { connection ->
+            val sak = nySak(connection)
+            val repo = AktivitetspliktRepository(connection)
+            val periode = Periode(LocalDate.now(), LocalDate.now().plusDays(5))
+
+            val input = nyeFeilregistrering(
+                connection, sak,
+                bruddType = IKKE_AKTIVT_BIDRAG,
+                paragraf = PARAGRAF_11_7,
+                begrunnelse = "",
+                periode = periode,
+            ).first()
+
+            val lagretHendelse = repo.hentBrudd(sak.id)
+            assertEquals(1, lagretHendelse.size)
+            lagretHendelse[0].also {
+                it as AktivitetspliktFeilregistrering
+                assertEquals(IKKE_AKTIVT_BIDRAG, it.brudd.bruddType)
+                assertEquals(PARAGRAF_11_7, it.brudd.paragraf)
+                assertEquals("", it.begrunnelse)
+                assertEquals(periode, it.brudd.periode)
+            }
+
+            repo.hentBrudd(input.brudd).also {
+                val dokument = it.first()
+                dokument as AktivitetspliktFeilregistrering
+                assertEquals(IKKE_AKTIVT_BIDRAG, dokument.brudd.bruddType)
+                assertEquals(PARAGRAF_11_7, dokument.brudd.paragraf)
+                assertEquals("", dokument.begrunnelse)
+                assertEquals(periode, dokument.brudd.periode)
+            }
+        }
+    }
+
+    @Test
     fun `kan lagre brudd på sak`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = nySak(connection)
             val repo = AktivitetspliktRepository(connection)
             val periode = Periode(LocalDate.now(), LocalDate.now().plusDays(5))
 
-            nyeBrudd(connection, sak,
+            nyeBrudd(
+                connection, sak,
                 bruddType = IKKE_AKTIVT_BIDRAG,
                 paragraf = PARAGRAF_11_7,
                 begrunnelse = "Orket ikke",
@@ -53,14 +90,16 @@ class AktivitetspliktRepositoryTest {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = nySak(connection)
             val repo = AktivitetspliktRepository(connection)
-            nyeBrudd(connection, sak,
+            nyeBrudd(
+                connection, sak,
                 bruddType = IKKE_MØTT_TIL_BEHANDLING_ELLER_UTREDNING,
                 paragraf = PARAGRAF_11_8,
                 begrunnelse = "Ville ikke",
                 perioder = listOf(Periode(LocalDate.now(), LocalDate.now().plusDays(5))),
             )
 
-            nyeBrudd(connection, sak,
+            nyeBrudd(
+                connection, sak,
                 bruddType = IKKE_MØTT_TIL_BEHANDLING_ELLER_UTREDNING,
                 paragraf = PARAGRAF_11_9,
                 begrunnelse = "Fant ikke fram",
@@ -77,7 +116,8 @@ class AktivitetspliktRepositoryTest {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = nySak(connection)
             val repo = AktivitetspliktRepository(connection)
-            nyeBrudd(connection, sak,
+            nyeBrudd(
+                connection, sak,
                 bruddType = IKKE_MØTT_TIL_BEHANDLING_ELLER_UTREDNING,
                 paragraf = PARAGRAF_11_8,
                 begrunnelse = "Dobbel periode uten oppmøte",
@@ -95,7 +135,12 @@ class AktivitetspliktRepositoryTest {
     fun `nytt grunnlag endrer ikke gammelt grunnlag`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = nySak(connection)
-            val behandling = BehandlingRepositoryImpl(connection).opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
+            val behandling = BehandlingRepositoryImpl(connection).opprettBehandling(
+                sak.id,
+                listOf(),
+                TypeBehandling.Førstegangsbehandling,
+                null
+            )
 
             val førsteBrudd = nyeBrudd(connection, sak).toSet()
             nyttGrunnlag(connection, behandling, førsteBrudd)
@@ -154,7 +199,37 @@ fun nyeBrudd(
     return repo.hentBruddForInnsending(innsendingId)
 }
 
-fun nyttGrunnlag(connection: DBConnection, behandling: Behandling, brudd: Set<AktivitetspliktDokument>): AktivitetspliktGrunnlag {
+fun nyeFeilregistrering(
+    connection: DBConnection,
+    sak: Sak,
+    bruddType: BruddType = IKKE_MØTT_TIL_BEHANDLING_ELLER_UTREDNING,
+    paragraf: Brudd.Paragraf = PARAGRAF_11_8,
+    begrunnelse: String = "En begrunnnelse",
+    periode: Periode = Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
+): List<AktivitetspliktDokument> {
+    val repo = AktivitetspliktRepository(connection)
+    val innsendingId = repo.lagreBrudd(
+        listOf(
+            AktivitetspliktRepository.FeilregistreringInput(
+                brudd = Brudd(
+                    sakId = sak.id,
+                    bruddType = bruddType,
+                    paragraf = paragraf,
+                    periode = periode,
+                ),
+                begrunnelse = begrunnelse,
+                innsender = NavIdent("Z000000"),
+            )
+        )
+    )
+    return repo.hentBruddForInnsending(innsendingId)
+}
+
+fun nyttGrunnlag(
+    connection: DBConnection,
+    behandling: Behandling,
+    brudd: Set<AktivitetspliktDokument>
+): AktivitetspliktGrunnlag {
     val repo = AktivitetspliktRepository(connection)
     repo.nyttGrunnlag(behandling.id, brudd)
     return repo.hentGrunnlagHvisEksisterer(behandling.id)!!

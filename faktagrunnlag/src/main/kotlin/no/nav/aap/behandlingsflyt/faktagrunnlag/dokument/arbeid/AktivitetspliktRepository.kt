@@ -143,7 +143,7 @@ class AktivitetspliktRepository(private val connection: DBConnection) {
         val query = """
             |SELECT * FROM BRUDD_AKTIVITETSPLIKT brudd
             | WHERE SAK_ID = ?
-            | AND periode = ?
+            | AND periode = ?::daterange
             | AND paragraf = ?
             | AND brudd = ?
             | """.trimMargin()

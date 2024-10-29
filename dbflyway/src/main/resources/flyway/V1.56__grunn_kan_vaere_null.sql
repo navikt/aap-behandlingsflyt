@@ -1,0 +1,2 @@
+ALTER TABLE brudd_aktivitetsplikt
+ALTER COLUMN GRUNN DROP NOT NULL;
