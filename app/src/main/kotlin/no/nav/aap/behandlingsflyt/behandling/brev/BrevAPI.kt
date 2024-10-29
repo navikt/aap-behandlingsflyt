@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.brev
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
+import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.HttpStatusCode
@@ -26,7 +27,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
 
     route("/api/brev") {
         route("/løs-bestilling") {
-            authorizedPostWithApprovedList<Unit, Unit, LøsBrevbestillingDto>(brevAzp) { _, request ->
+            authorizedPostWithApprovedList<Unit, String, LøsBrevbestillingDto>(brevAzp) { _, request ->
                 dataSource.transaction { connection ->
                     val taSkriveLåsRepository = TaSkriveLåsRepository(connection)
                     val lås = taSkriveLåsRepository.lås(request.referanse)
@@ -48,7 +49,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                         }
                     }
                 }
-                respondWithStatus(HttpStatusCode.Accepted)
+                respond("{}", HttpStatusCode.Accepted)
             }
         }
     }
