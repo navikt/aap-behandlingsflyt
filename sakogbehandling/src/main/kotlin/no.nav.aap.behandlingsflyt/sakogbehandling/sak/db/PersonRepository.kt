@@ -8,7 +8,6 @@ import java.util.*
 
 class PersonRepository(private val connection: DBConnection) {
 
-    // TODO: denne må skrives om og håndtere lagring av flere identer på samme person
     fun finnEllerOpprett(identer: List<Ident>): Person {
         require(identer.isNotEmpty())
 
