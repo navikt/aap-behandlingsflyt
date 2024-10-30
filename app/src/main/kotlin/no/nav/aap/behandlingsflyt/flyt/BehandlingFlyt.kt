@@ -14,6 +14,7 @@ import java.util.*
  */
 class BehandlingFlyt private constructor(
     private val flyt: List<Behandlingsflytsteg>,
+    private val årsaker: Map<ÅrsakTilBehandling, StegType>,
     private val parent: BehandlingFlyt?
 ) {
     private var aktivtSteg: Behandlingsflytsteg? = flyt.firstOrNull()
@@ -24,8 +25,15 @@ class BehandlingFlyt private constructor(
         val oppdaterFaktagrunnlag: Boolean
     )
 
+    constructor(flyt: List<Behandlingsflytsteg>, årsaker: Map<ÅrsakTilBehandling, StegType>) : this(
+        flyt = flyt,
+        årsaker = årsaker,
+        parent = null
+    )
+
     constructor(flyt: List<Behandlingsflytsteg>) : this(
         flyt = flyt,
+        årsaker = emptyMap(),
         parent = null
     )
 
@@ -162,6 +170,7 @@ class BehandlingFlyt private constructor(
 
         return BehandlingFlyt(
             flyt = returflyt.reversed(),
+            årsaker = emptyMap(),
             parent = this
         )
     }
@@ -181,6 +190,13 @@ class BehandlingFlyt private constructor(
 
     internal fun aktivtSteg(): FlytSteg {
         return requireNotNull(aktivtSteg).steg
+    }
+
+    /**
+     * Lager en kopi av flyten uten årsaker knyttet til steg
+     */
+    fun utenÅrsaker(): BehandlingFlyt {
+        return BehandlingFlyt(flyt = flyt)
     }
 }
 
@@ -202,7 +218,7 @@ class BehandlingFlytBuilder {
 
     fun medSteg(
         steg: FlytSteg,
-        kunRelevantVedÅrsakerHvisSattEllersIkke: List<ÅrsakTilBehandling> = emptyList(),
+        årsakRelevanteForSteg: List<ÅrsakTilBehandling> = emptyList(),
         informasjonskrav: List<Informasjonskravkonstruktør> = emptyList()
     ): BehandlingFlytBuilder {
         if (buildt) {
@@ -212,7 +228,7 @@ class BehandlingFlytBuilder {
             throw IllegalStateException("[Utvikler feil] StegType UDEFINERT er ugyldig å legge til i flyten")
         }
         this.flyt.add(BehandlingFlyt.Behandlingsflytsteg(steg, informasjonskrav, oppdaterFaktagrunnlag))
-        kunRelevantVedÅrsakerHvisSattEllersIkke.forEach { endring ->
+        årsakRelevanteForSteg.forEach { endring ->
             this.endringTilSteg[endring] = steg.type()
         }
         return this
@@ -230,7 +246,8 @@ class BehandlingFlytBuilder {
         buildt = true
 
         return BehandlingFlyt(
-            Collections.unmodifiableList(flyt)
+            flyt = Collections.unmodifiableList(flyt),
+            årsaker = Collections.unmodifiableMap(endringTilSteg),
         )
     }
 }
