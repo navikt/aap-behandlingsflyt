@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.behandling.brev
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
-import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.HttpStatusCode
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovHendelseHåndterer
@@ -30,14 +29,16 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
             authorizedPostWithApprovedList<Unit, String, LøsBrevbestillingDto>(brevAzp) { _, request ->
                 dataSource.transaction { connection ->
                     val taSkriveLåsRepository = TaSkriveLåsRepository(connection)
-                    val lås = taSkriveLåsRepository.lås(request.referanse)
+
+                    val behandlingId = BrevbestillingRepository(connection).hent(request.referanse).behandlingId
+                    val lås = taSkriveLåsRepository.lås(behandlingId)
+
                     MDC.putCloseable("sakId", lås.sakSkrivelås.id.toString()).use {
                         MDC.putCloseable("behandlingId", lås.behandlingSkrivelås.id.toString()).use {
-                            val brevbestilling = BrevbestillingRepository(connection).hent(request.referanse)
-                            val behandling = BehandlingRepositoryImpl(connection).hent(brevbestilling.behandlingId)
+                            val behandling = BehandlingRepositoryImpl(connection).hent(behandlingId)
 
                             AvklaringsbehovHendelseHåndterer(connection).håndtere(
-                                key = brevbestilling.behandlingId,
+                                key = behandlingId,
                                 hendelse = LøsAvklaringsbehovBehandlingHendelse(
                                     løsning = BrevbestillingLøsning(request),
                                     behandlingVersjon = behandling.versjon,
