@@ -1,14 +1,12 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis
 
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederService
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AktivitetspliktRegel
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.GraderingArbeidRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.InstitusjonRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MapInstitusjonoppholdTilRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktRegel
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ReduksjonAktivitetspliktRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.RettTilRegel
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.SammenstiltAktivitetspliktRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.SoningRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UnderveisInput
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetRegel
@@ -41,9 +39,7 @@ class UnderveisService(
         InstitusjonRegel(),
         SoningRegel(),
         MeldepliktRegel(),
-        AktivitetspliktRegel(),
-        FraværFastsattAktivitetRegel(), /* Vurdering av 11-8 forutsetter at 11-7 allerede er vurdert [AktivitetspliktRegel] */
-        ReduksjonAktivitetspliktRegel(), /* Vurdering av 11-9 fortsetter at 11-8 allerede er vurdert [FraværFastsattAktivitetRegel] */
+        SammenstiltAktivitetspliktRegel(),
         GraderingArbeidRegel(),
         VarighetRegel(),
     )
