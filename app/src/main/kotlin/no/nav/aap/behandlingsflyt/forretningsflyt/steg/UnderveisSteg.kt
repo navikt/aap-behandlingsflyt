@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
@@ -32,15 +33,16 @@ class UnderveisSteg(private val underveisService: UnderveisService) : Behandling
         override fun konstruer(connection: DBConnection): BehandlingSteg {
             return UnderveisSteg(
                 UnderveisService(
-                    SakOgBehandlingService(connection),
-                    VilkårsresultatRepository(connection),
-                    PliktkortRepository(connection),
-                    UnderveisRepository(connection),
-                    AktivitetspliktRepository(connection),
-                    EtAnnetStedUtlederService(
+                    behandlingService = SakOgBehandlingService(connection),
+                    vilkårsresultatRepository = VilkårsresultatRepository(connection),
+                    pliktkortRepository = PliktkortRepository(connection),
+                    underveisRepository = UnderveisRepository(connection),
+                    aktivitetspliktRepository = AktivitetspliktRepository(connection),
+                    etAnnetStedUtlederService = EtAnnetStedUtlederService(
                         BarnetilleggRepository(connection),
                         InstitusjonsoppholdRepository(connection)
                     ),
+                    arbeidsevneRepository = ArbeidsevneRepository(connection),
                 )
             )
         }

@@ -19,6 +19,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
 import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.Dagsatser
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
@@ -29,7 +31,8 @@ class UnderveisService(
     private val pliktkortRepository: PliktkortRepository,
     private val underveisRepository: UnderveisRepository,
     private val aktivitetspliktRepository: AktivitetspliktRepository,
-    private val etAnnetStedUtlederService: EtAnnetStedUtlederService
+    private val etAnnetStedUtlederService: EtAnnetStedUtlederService,
+    private val arbeidsevneRepository: ArbeidsevneRepository,
 ) {
 
     private val kvoteService = KvoteService()
@@ -98,6 +101,9 @@ class UnderveisService(
         val aktivitetspliktGrunnlag = aktivitetspliktRepository.hentGrunnlagHvisEksisterer(behandlingId)
             ?: AktivitetspliktGrunnlag(bruddene = setOf())
 
+        val arbeidsevneGrunnlag = arbeidsevneRepository.hentHvisEksisterer(behandlingId)
+            ?: ArbeidsevneGrunnlag(vurderinger = emptyList())
+
         return UnderveisInput(
             rettighetsperiode = sak.rettighetsperiode,
             relevanteVilkår = relevanteVilkår,
@@ -107,6 +113,7 @@ class UnderveisService(
             kvote = kvote,
             aktivitetspliktGrunnlag = aktivitetspliktGrunnlag,
             etAnnetSted = etAnnetSted,
+            arbeidsevneGrunnlag = arbeidsevneGrunnlag,
         )
     }
 }

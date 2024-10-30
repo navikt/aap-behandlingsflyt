@@ -29,7 +29,7 @@ class ArbeidsevneRepository(private val connection: DBConnection) {
                     row.getLocalDateTime("OPPRETTET_TID")
                 )
             }
-        }.toGrunnlag(behandlingId)
+        }.toGrunnlag()
     }
 
     fun hentAlleVurderinger(sakId: SakId, behandlingId: BehandlingId): Set<ArbeidsevneVurdering> {
@@ -71,10 +71,11 @@ class ArbeidsevneRepository(private val connection: DBConnection) {
         }
     }
 
-    private fun List<ArbeidsevneInternal>.toGrunnlag(behandlingId: BehandlingId): ArbeidsevneGrunnlag? {
+    private fun List<ArbeidsevneInternal>.toGrunnlag(): ArbeidsevneGrunnlag? {
         return groupBy(ArbeidsevneInternal::arbeidsevneId, ArbeidsevneInternal::toArbeidsevnevurdering)
-            .map { (arbeidsevneId, arbeidsevneVurderinger) -> ArbeidsevneGrunnlag(arbeidsevneId, behandlingId, arbeidsevneVurderinger) }
-            .takeIf { it.isNotEmpty() }?.single()
+            .map { (_, arbeidsevneVurderinger) -> ArbeidsevneGrunnlag(arbeidsevneVurderinger) }
+            .takeIf { it.isNotEmpty() }
+            ?.single()
     }
 
     fun lagre(behandlingId: BehandlingId, arbeidsevneVurderinger: List<ArbeidsevneVurdering>) {

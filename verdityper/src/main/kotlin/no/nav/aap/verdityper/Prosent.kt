@@ -25,6 +25,11 @@ class Prosent private constructor(verdi: BigDecimal) : Comparable<Prosent> {
         internal fun dividert(teller: BigDecimal, nevner: Prosent, scale: Int = 10): BigDecimal {
             return teller.divide(nevner.verdi, scale, RoundingMode.HALF_UP)
         }
+
+        /** Fra desimal mellom 0 og 1. */
+        fun fraDesimal(andel: BigDecimal): Prosent {
+            return Prosent(andel.multiply(BigDecimal.valueOf(100)).toInt())
+        }
     }
 
     fun prosentverdi(): Int {
@@ -83,4 +88,5 @@ class Prosent private constructor(verdi: BigDecimal) : Comparable<Prosent> {
     override fun hashCode(): Int {
         return verdi.hashCode()
     }
+
 }
