@@ -6,6 +6,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.verdityper.Dagsatser
 import no.nav.aap.verdityper.Prosent
+import no.nav.aap.verdityper.Prosent.Companion.`0_PROSENT`
 import no.nav.aap.verdityper.TimerArbeid
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
@@ -57,7 +58,12 @@ class UnderveisRepository(private val connection: DBConnection) {
             null
         } else {
             val gradering = Prosent(graderingProsent)
-            Gradering(TimerArbeid(antallTimer), Prosent.`100_PROSENT`.minus(gradering), gradering)
+            Gradering(
+                totaltAntallTimer = TimerArbeid(antallTimer),
+                andelArbeid = Prosent.`100_PROSENT`.minus(gradering),
+                vurdertArbeidsevne = `0_PROSENT`,
+                gradering = gradering,
+            )
         }
 
         return Underveisperiode(

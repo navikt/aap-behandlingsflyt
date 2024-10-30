@@ -1,16 +1,44 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneVurdering.Companion.tidslinje
 import no.nav.aap.tidslinje.JoinStyle
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.StandardSammenslåere
 import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.Prosent
+import no.nav.aap.verdityper.Prosent.Companion.`0_PROSENT`
 import no.nav.aap.verdityper.TimerArbeid
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.Period
 import java.util.*
+
+/*
+
+- Skal vi legge vurderingen av andre ledd inn i Vurdering, og så sammenstille senere?
+- Hvordan sammenstille.
+
+
+arbeidsevne: 30%
+faktisk arbeid: 40%
+utbetaling %: 60%
+
+arbeidsevne: 30%
+faktisk arbeid: 20%
+utbetaling %: 70%
+
+utbetaling = 100 % - max(arbeidsevne, faktisk arbeid)
+ */
+
+
+/*
+ TODO: gjenbruk meldeperiode som er regnet ut i [MeldepliktRegel].
+ TODO: flytt gradering til metode basert på data.
+ TODO: skal arbeidsevne cappes av grenseverdier  e.l.?
+ TODO: Oppdater lagring av `Gradering`s klassen (husk 0% som vi hardkodet)
+*/
+
 
 private const val ANTALL_DAGER_I_MELDEPERIODE = 14
 
@@ -34,39 +62,46 @@ private const val HØYESTE_GRADERING_OPPTRAPPING = 80
  */
 class GraderingArbeidRegel : UnderveisRegel {
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
-        val pliktkortTidslinje = konstruerTidslinje(input)
+        val arbeidsTidslinje = graderingerTidslinje(input)
+        val graderingsgrenseverdier = graderingsgrenseverdier(input, resultat)
 
-        // Regner kun ut gradering for perioden det er sendt noe inn for
-        /* TODO: gjenbruk meldeperiode som er regnet ut i [MeldepliktRegel]. */
-        val arbeidsTidslinje =
-            pliktkortTidslinje.splittOppOgMapOmEtter(Period.ofDays(ANTALL_DAGER_I_MELDEPERIODE))
-            { arbeidsSegmenter ->
-                regnUtGradering(arbeidsSegmenter)
-            }.komprimer()
-
-        // § 11-23 sjette ledd
-        val opptrappingTidslinje =
-            Tidslinje(input.opptrappingPerioder.map { Segment(it, Prosent(HØYESTE_GRADERING_OPPTRAPPING)) })
-
-        val grenseverdiGraderinger = resultat.mapValue { Prosent(HØYESTE_GRADERING_NORMAL) }
-            .kombiner(opptrappingTidslinje, StandardSammenslåere.prioriterHøyreSideCrossJoin())
-
-        return resultat.kombiner(grenseverdiGraderinger, JoinStyle.OUTER_JOIN { periode, foreløpigVurdering, grenseverdiGradering ->
-            var vurdering = foreløpigVurdering?.verdi
-            if (grenseverdiGradering != null) {
-                vurdering = vurdering?.leggTilGrenseverdi(grenseverdiGradering.verdi)
-            }
-            Segment(periode, vurdering)
-        }).kombiner(arbeidsTidslinje, JoinStyle.OUTER_JOIN { periode, foreløpigVurdering, gradering ->
-            var vurdering: Vurdering = foreløpigVurdering?.verdi ?: Vurdering()
-            if (gradering != null) {
-                vurdering = vurdering.leggTilGradering(gradering.verdi)
-            }
-            Segment(periode, vurdering)
-        })
+        return resultat
+            .leggTilVurderinger(arbeidsTidslinje, Vurdering::leggTilGradering)
+            .leggTilVurderinger(graderingsgrenseverdier, Vurdering::leggTilGrenseverdi)
     }
 
-    private fun konstruerTidslinje(input: UnderveisInput): Tidslinje<TimerArbeid> {
+    private fun graderingerTidslinje(input: UnderveisInput): Tidslinje<Gradering> {
+        val timerArbeidetTidslinje = timerArbeidetTidslinje(input)
+        val arbeidsevneVurdering = input.arbeidsevneGrunnlag.vurderinger.tidslinje()
+
+        // Regner kun ut gradering for perioden det er sendt noe inn for
+        val arbeidsTidslinje = timerArbeidetTidslinje.kombiner(
+            arbeidsevneVurdering, JoinStyle.OUTER_JOIN { periode, pliktkort, arbeidsevne ->
+                Segment(
+                    periode,
+                    Arbeid(
+                        timerArbeid = pliktkort?.verdi,
+                        arbeidsevne = arbeidsevne?.verdi?.arbeidsevne
+                    )
+                )
+            })
+            .splittOppOgMapOmEtter(Period.ofDays(ANTALL_DAGER_I_MELDEPERIODE)) { meldeperiode ->
+                regnUtGradering(meldeperiode)
+            }.komprimer()
+        return arbeidsTidslinje
+    }
+
+    private fun graderingsgrenseverdier(
+        input: UnderveisInput,
+        resultat: Tidslinje<Vurdering>
+    ): Tidslinje<Prosent> {
+        val opptrappingTidslinje = Tidslinje(input.opptrappingPerioder.map { Segment(it, Prosent(HØYESTE_GRADERING_OPPTRAPPING)) })
+
+        return resultat.mapValue { Prosent(HØYESTE_GRADERING_NORMAL) }
+            .kombiner(opptrappingTidslinje, StandardSammenslåere.prioriterHøyreSideCrossJoin())
+    }
+
+    private fun timerArbeidetTidslinje(input: UnderveisInput): Tidslinje<TimerArbeid> {
         var tidslinje = Tidslinje(listOf(Segment(input.rettighetsperiode, TimerArbeid(BigDecimal.ZERO))))
         for (pliktkort in input.pliktkort) {
             tidslinje = tidslinje.kombiner(Tidslinje(pliktkort.timerArbeidPerPeriode.map {
@@ -80,8 +115,13 @@ class GraderingArbeidRegel : UnderveisRegel {
     }
 
     /** § 11-23 tredje ledd */
-    private fun regnUtGradering(arbeidsSegmenter: NavigableSet<Segment<TimerArbeid>>): NavigableSet<Segment<Gradering>> {
-        val arbeidetTidIMeldeperioden = arbeidsSegmenter.sumOf { it.verdi.antallTimer }
+    private class Arbeid(
+        val timerArbeid: TimerArbeid?,
+        val arbeidsevne: Prosent?,
+    )
+
+    private fun regnUtGradering(arbeidsSegmenter: NavigableSet<Segment<Arbeid>>): NavigableSet<Segment<Gradering>> {
+        val arbeidetTidIMeldeperioden = arbeidsSegmenter.sumOf { it.verdi.timerArbeid?.antallTimer ?: BigDecimal.ZERO }
 
         val andelArbeid = Prosent.fraDesimal(
             arbeidetTidIMeldeperioden.divide(ANTALL_TIMER_I_MELDEPERIODE, 3, RoundingMode.HALF_UP)
@@ -90,9 +130,10 @@ class GraderingArbeidRegel : UnderveisRegel {
             Segment(
                 segment.periode,
                 Gradering(
-                    totaltAntallTimer = segment?.verdi ?: TimerArbeid(BigDecimal.ZERO),
+                    totaltAntallTimer = segment?.verdi?.timerArbeid ?: TimerArbeid(BigDecimal.ZERO),
                     andelArbeid = andelArbeid,
-                    gradering = Prosent.`100_PROSENT`.minus(andelArbeid)
+                    vurdertArbeidsevne = segment?.verdi?.arbeidsevne ?: `0_PROSENT`,
+                    gradering = Prosent.`100_PROSENT`.minus(andelArbeid),
                 )
             )
         })

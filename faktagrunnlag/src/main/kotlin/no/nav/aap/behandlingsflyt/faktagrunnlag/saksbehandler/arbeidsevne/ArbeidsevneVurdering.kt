@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.flate.ArbeidsevneVurderingDto
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tidslinje.Segment
+import no.nav.aap.tidslinje.StandardSammenslåere
 import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.Prosent
 import no.nav.aap.verdityper.Tid
@@ -16,12 +17,22 @@ data class ArbeidsevneVurdering(
     val opprettetTid: LocalDateTime?
 ) {
     fun toDto(): ArbeidsevneVurderingDto {
-        return ArbeidsevneVurderingDto(begrunnelse, opprettetTid ?: LocalDateTime.now(), arbeidsevne.prosentverdi(), fraDato)
+        return ArbeidsevneVurderingDto(
+            begrunnelse,
+            opprettetTid ?: LocalDateTime.now(),
+            arbeidsevne.prosentverdi(),
+            fraDato
+        )
     }
 
     fun tidslinje(): Tidslinje<ArbeidsevneVurderingData> {
         return Tidslinje(
-            listOf(Segment(Periode(fraDato, Tid.MAKS), ArbeidsevneVurderingData(begrunnelse, arbeidsevne, opprettetTid)))
+            listOf(
+                Segment(
+                    Periode(fraDato, Tid.MAKS),
+                    ArbeidsevneVurderingData(begrunnelse, arbeidsevne, opprettetTid)
+                )
+            )
         )
     }
 
@@ -35,4 +46,11 @@ data class ArbeidsevneVurdering(
         }
     }
 
+    companion object {
+        fun List<ArbeidsevneVurdering>.tidslinje(): Tidslinje<ArbeidsevneVurderingData> {
+            return sortedBy { it.fraDato }.fold(Tidslinje()) { acc, arbeidsevneVurdering ->
+                acc.kombiner(arbeidsevneVurdering.tidslinje(), StandardSammenslåere.prioriterHøyreSideCrossJoin())
+            }
+        }
+    }
 }
