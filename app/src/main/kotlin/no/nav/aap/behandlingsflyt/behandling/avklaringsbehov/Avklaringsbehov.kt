@@ -133,7 +133,7 @@ class Avklaringsbehov(
     }
 
     fun begrunnelse(): String = historikk.maxOf { it }.begrunnelse
-    fun grunn(): ÅrsakTilSettPåVent = requireNotNull(historikk.maxOf { it }.grunn)
+    fun grunn(): ÅrsakTilSettPåVent = historikk.maxOf { it }.grunn ?: ÅrsakTilSettPåVent.VENTER_PÅ_MASKINELL_AVKLARING
     fun endretAv(): String = historikk.maxOf { it }.endretAv
     fun årsakTilRetur(): List<ÅrsakTilRetur> = historikk.maxOf { it }.årsakTilRetur
 
