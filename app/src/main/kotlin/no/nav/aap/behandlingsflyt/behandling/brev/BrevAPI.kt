@@ -7,7 +7,6 @@ import io.ktor.http.HttpStatusCode
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovHendelseHåndterer
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehovBehandlingHendelse
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.BrevbestillingLøsning
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.LøsBrevbestillingDto
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
@@ -30,15 +29,14 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                 dataSource.transaction { connection ->
                     val taSkriveLåsRepository = TaSkriveLåsRepository(connection)
 
-                    val behandlingId = BrevbestillingRepository(connection).hent(request.referanse).behandlingId
-                    val lås = taSkriveLåsRepository.lås(behandlingId)
+                    val lås = taSkriveLåsRepository.lås(request.behandlingReferanse)
 
                     MDC.putCloseable("sakId", lås.sakSkrivelås.id.toString()).use {
                         MDC.putCloseable("behandlingId", lås.behandlingSkrivelås.id.toString()).use {
-                            val behandling = BehandlingRepositoryImpl(connection).hent(behandlingId)
+                            val behandling = BehandlingRepositoryImpl(connection).hent(lås.behandlingSkrivelås.id)
 
                             AvklaringsbehovHendelseHåndterer(connection).håndtere(
-                                key = behandlingId,
+                                key = lås.behandlingSkrivelås.id,
                                 hendelse = LøsAvklaringsbehovBehandlingHendelse(
                                     løsning = BrevbestillingLøsning(request),
                                     behandlingVersjon = behandling.versjon,

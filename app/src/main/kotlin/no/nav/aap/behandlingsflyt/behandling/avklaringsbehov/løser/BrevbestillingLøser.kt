@@ -26,7 +26,7 @@ class BrevbestillingLøser(val connection: DBConnection) : AvklaringsbehovsLøse
 
         brevbestillingRepository.oppdaterStatus(
             behandlingId = kontekst.behandlingId(),
-            referanse = løsning.oppdatertStatusForBestilling.referanse,
+            referanse = løsning.oppdatertStatusForBestilling.bestillingReferanse,
             status = status
         )
 

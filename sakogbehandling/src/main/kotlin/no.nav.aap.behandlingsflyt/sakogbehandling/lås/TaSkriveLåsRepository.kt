@@ -46,25 +46,6 @@ class TaSkriveLåsRepository(private val connection: DBConnection) {
         }
     }
 
-    fun lås(behandlingId: BehandlingId): Skrivelås {
-        val query = """SELECT id, sak_id, versjon FROM BEHANDLING WHERE id = ? FOR UPDATE"""
-
-        return connection.queryFirst(query) {
-            setParams {
-                setLong(1, behandlingId.toLong())
-            }
-            setRowMapper {
-                Skrivelås(
-                    låsSak(SakId(it.getLong("sak_id"))),
-                    BehandlingSkrivelås(
-                        BehandlingId(it.getLong("id")),
-                        it.getLong("versjon")
-                    )
-                )
-            }
-        }
-    }
-
     fun låsSak(saksnummer: Saksnummer): SakSkrivelås {
         val query = """SELECT id,versjon FROM SAK WHERE saksnummer = ? FOR UPDATE"""
 

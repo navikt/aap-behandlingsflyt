@@ -395,8 +395,9 @@ class FlytOrkestratorTest {
                 LøsAvklaringsbehovBehandlingHendelse(
                     løsning = BrevbestillingLøsning(
                         LøsBrevbestillingDto(
-                            brevbestilling.referanse,
-                            BrevbestillingLøsningStatus.KLAR_FOR_EDITERING
+                            behandlingReferanse = behandling.referanse.referanse,
+                            bestillingReferanse = brevbestilling.referanse,
+                            status = BrevbestillingLøsningStatus.KLAR_FOR_EDITERING
                         )
                     ),
                     behandlingVersjon = behandling.versjon,
@@ -650,8 +651,9 @@ class FlytOrkestratorTest {
                 LøsAvklaringsbehovBehandlingHendelse(
                     løsning = BrevbestillingLøsning(
                         LøsBrevbestillingDto(
-                            brevbestilling.referanse,
-                            BrevbestillingLøsningStatus.KLAR_FOR_EDITERING
+                            behandlingReferanse = behandling.referanse.referanse,
+                            bestillingReferanse = brevbestilling.referanse,
+                            status = BrevbestillingLøsningStatus.KLAR_FOR_EDITERING
                         )
                     ),
                     behandlingVersjon = behandling.versjon,
@@ -1258,8 +1260,9 @@ class FlytOrkestratorTest {
                 LøsAvklaringsbehovBehandlingHendelse(
                     løsning = BrevbestillingLøsning(
                         LøsBrevbestillingDto(
-                            brevbestilling.referanse,
-                            BrevbestillingLøsningStatus.KLAR_FOR_EDITERING
+                            behandlingReferanse = behandling.referanse.referanse,
+                            bestillingReferanse = brevbestilling.referanse,
+                            status = BrevbestillingLøsningStatus.KLAR_FOR_EDITERING
                         )
                     ),
                     behandlingVersjon = behandling.versjon,
