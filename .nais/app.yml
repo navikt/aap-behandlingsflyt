@@ -35,7 +35,10 @@ spec:
   gcp:
     sqlInstances:
       - type: POSTGRES_16
-        tier: db-f1-micro
+        tier: db-custom-1-3840
+        diskAutoresize: true
+        highAvailability: true
+        pointInTimeRecovery: true
         databases:
           - name: behandlingsflyt
   liveness:
