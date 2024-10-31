@@ -1,6 +1,8 @@
 name: Bygg og deploy behandlingsflyt
 
 on:
+  schedule:
+    - cron: '0 12 * * SUN'
   push:
     branches: [ main ]
     paths-ignore:
