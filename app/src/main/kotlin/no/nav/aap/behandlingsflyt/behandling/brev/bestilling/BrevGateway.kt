@@ -84,6 +84,5 @@ class BrevGateway : BrevbestillingGateway {
         no.nav.aap.brev.kontrakt.Status.REGISTRERT -> Status.SENDT
         no.nav.aap.brev.kontrakt.Status.UNDER_ARBEID -> Status.FORHÅNDSVISNING_KLAR
         no.nav.aap.brev.kontrakt.Status.FERDIGSTILT -> Status.FULLFØRT
-        no.nav.aap.brev.kontrakt.Status.BESTILT -> Status.FULLFØRT
     }
 }
