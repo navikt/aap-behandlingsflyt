@@ -102,6 +102,8 @@ class FlytOrkestratorTest {
         @JvmStatic
         internal fun beforeAll() {
             motor.start()
+            // TODO denne kan tas bort når BrevSteg skrus på i miljø
+            System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
         }
 
         @AfterAll
