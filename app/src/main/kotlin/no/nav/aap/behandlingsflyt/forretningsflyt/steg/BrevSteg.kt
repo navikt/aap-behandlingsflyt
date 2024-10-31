@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevUtlederService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -9,6 +10,9 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.BESTILL_BREV
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.SKRIV_BREV
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
+import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
+import no.nav.aap.behandlingsflyt.flyt.steg.FantVentebehov
+import no.nav.aap.behandlingsflyt.flyt.steg.Ventebehov
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
@@ -27,15 +31,16 @@ class BrevSteg private constructor(
             if (bestilling == null) {
                 // Bestill hvis ikke bestilt allerede
                 brevbestillingService.bestill(kontekst.behandlingId, typeBrev)
-                return StegResultat(listOf(BESTILL_BREV))
+                return FantVentebehov(Ventebehov(BESTILL_BREV, ÅrsakTilSettPåVent.VENTER_PÅ_MASKINELL_AVKLARING))
             }
 
             // Er bestilling klar for visning
             return when (bestilling.status) {
                 // hvis ikke gå på vent
-                Status.SENDT -> StegResultat(listOf(BESTILL_BREV))
+                Status.SENDT ->
+                    FantVentebehov(Ventebehov(BESTILL_BREV, ÅrsakTilSettPåVent.VENTER_PÅ_MASKINELL_AVKLARING))
                 // hvis klar gi avklaringsbehov for brevskriving
-                Status.FORHÅNDSVISNING_KLAR -> StegResultat(listOf(SKRIV_BREV))
+                Status.FORHÅNDSVISNING_KLAR -> FantAvklaringsbehov(SKRIV_BREV)
                 // er brevet fullført, iverksett og gå videre til avslutting av behandling
                 Status.FULLFØRT -> {
                     val ferdigstilt = brevbestillingService.ferdigstill(bestilling.referanse)
@@ -46,9 +51,9 @@ class BrevSteg private constructor(
                             referanse = bestilling.referanse,
                             status = Status.FORHÅNDSVISNING_KLAR
                         )
-                        StegResultat(listOf(SKRIV_BREV))
+                        FantAvklaringsbehov(SKRIV_BREV)
                     } else {
-                        StegResultat()
+                        Fullført
                     }
                 }
             }
