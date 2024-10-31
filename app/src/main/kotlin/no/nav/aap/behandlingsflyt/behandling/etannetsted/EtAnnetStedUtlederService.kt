@@ -101,7 +101,6 @@ class EtAnnetStedUtlederService(
             oppholdSomLiggerMindreEnnTreMånederFraForrigeSomGaReduksjon,
             sammenslåer()
         ).komprimer()
-        log.info("${perioderSomTrengerVurdering}")
 
         return BehovForAvklaringer(perioderSomTrengerVurdering)
     }
