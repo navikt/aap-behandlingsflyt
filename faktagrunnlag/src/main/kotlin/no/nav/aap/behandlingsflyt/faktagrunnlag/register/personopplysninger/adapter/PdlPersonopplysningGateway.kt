@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
@@ -42,20 +41,17 @@ object PdlPersonopplysningGateway : PersonopplysningGateway {
         val request = PdlRequest(PERSON_QUERY, IdentVariables(person.aktivIdent().identifikator))
         val response: PdlPersoninfoDataResponse = query(request)
 
-        val foedselsdato = response
-            .data
-            ?.hentPerson
-            ?.foedselsdato
-            ?.firstOrNull()
-            ?.foedselsdato
+        val foedselsdato = PdlParser.utledFødselsdato(response.data?.hentPerson?.foedselsdato)
             ?: return null
 
         return Personopplysning(
             id = 0, // Setter no bs her for å få det gjennom
-            fødselsdato = Fødselsdato.parse(foedselsdato),
+            fødselsdato = foedselsdato,
             dødsdato = response.data?.hentPerson?.doedsfall?.firstOrNull()?.doedsdato?.let { Dødsdato.parse(it) }
         )
     }
+
+
 }
 
 private const val ident = "\$ident"

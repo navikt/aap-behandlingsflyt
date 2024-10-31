@@ -104,7 +104,8 @@ data class PDLDødsfall(
 )
 
 data class PdlFoedsel(
-    val foedselsdato: String?
+    val foedselsdato: String?,
+    val foedselAar: String?
 )
 
 data class PdlRelasjon(

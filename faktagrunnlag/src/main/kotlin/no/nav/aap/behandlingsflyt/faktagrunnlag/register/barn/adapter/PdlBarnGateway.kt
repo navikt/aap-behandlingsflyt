@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PdlParser
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
@@ -65,11 +65,10 @@ object PdlBarnGateway : BarnGateway {
         return bolk.mapNotNull { res ->
             res.person?.let { person ->
                 person.foedselsdato?.let { foedsel ->
-                    foedsel.singleOrNull()?.let { fdato ->
-                        Barn(ident = Ident(res.ident),
-                            fødselsdato = Fødselsdato.parse(fdato.foedselsdato.toString()),
-                            dødsdato = person.doedsfall?.firstOrNull()?.doedsdato?.let { Dødsdato.parse(it) })
-                    }
+                    val fødselsdato = PdlParser.utledFødselsdato(foedsel)
+                    Barn(ident = Ident(res.ident),
+                        fødselsdato = requireNotNull(fødselsdato),
+                        dødsdato = person.doedsfall?.firstOrNull()?.doedsdato?.let { Dødsdato.parse(it) })
                 }
             }
         }

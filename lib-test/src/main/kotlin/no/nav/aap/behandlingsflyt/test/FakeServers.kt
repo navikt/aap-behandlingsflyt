@@ -735,7 +735,12 @@ object FakeServers : AutoCloseable {
         return HentPersonBolkResult(
             ident = person.identer.first().identifikator,
             person = PdlPersoninfo(
-                foedselsdato = listOf(PdlFoedsel(person.fødselsdato.toFormatedString())),
+                foedselsdato = listOf(
+                    PdlFoedsel(
+                        person.fødselsdato.toFormatedString(),
+                        "" + person.fødselsdato.toLocalDate().year
+                    )
+                ),
                 doedsfall = mapDødsfall(person)
             )
         )
@@ -861,7 +866,14 @@ object FakeServers : AutoCloseable {
         if (person == null) {
             return null
         }
-        return PdlPersoninfo(foedselsdato = listOf(PdlFoedsel(person.fødselsdato.toFormatedString())))
+        return PdlPersoninfo(
+            foedselsdato = listOf(
+                PdlFoedsel(
+                    person.fødselsdato.toFormatedString(),
+                    "" + person.fødselsdato.toLocalDate().year
+                )
+            )
+        )
     }
 
     private fun Application.azureFake() {

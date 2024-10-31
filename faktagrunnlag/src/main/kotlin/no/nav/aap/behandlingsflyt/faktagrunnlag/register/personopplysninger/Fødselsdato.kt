@@ -44,7 +44,7 @@ class Fødselsdato(private val dato: LocalDate) {
     }
 
     companion object {
-        fun parse(fødselsdato: CharSequence): Fødselsdato {
+        fun parse(fødselsdato: String): Fødselsdato {
             return Fødselsdato(LocalDate.parse(fødselsdato))
         }
     }
