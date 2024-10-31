@@ -1,4 +1,4 @@
-FROM eclipse-temurin:23-jre-alpine
+FROM eclipse-temurin:23.0.1_11-jre-alpine
 ENV LANG='nb_NO.UTF-8' LC_ALL='nb_NO.UTF-8' TZ="Europe/Oslo"
 COPY /app/build/libs/app-all.jar app.jar
 CMD ["java", "-XX:MaxRAMPercentage=75.0", "-XX:ActiveProcessorCount=2", "-jar", "app.jar"]
