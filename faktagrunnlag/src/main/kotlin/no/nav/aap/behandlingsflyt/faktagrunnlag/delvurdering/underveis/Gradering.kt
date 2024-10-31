@@ -6,6 +6,6 @@ import no.nav.aap.verdityper.TimerArbeid
 data class Gradering(
     val totaltAntallTimer: TimerArbeid,
     val andelArbeid: Prosent,
-    val vurdertArbeidsevne: Prosent,
+    val fastsattArbeidsevne: Prosent,
     val gradering: Prosent
 )

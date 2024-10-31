@@ -28,6 +28,7 @@ arbeidsevne: 30%
 faktisk arbeid: 20%
 utbetaling %: 70%
 
+gradering = max(arbeidsevne, faktisk arbeid)
 utbetaling = 100 % - max(arbeidsevne, faktisk arbeid)
  */
 
@@ -36,7 +37,7 @@ utbetaling = 100 % - max(arbeidsevne, faktisk arbeid)
  TODO: gjenbruk meldeperiode som er regnet ut i [MeldepliktRegel].
  TODO: flytt gradering til metode basert på data.
  TODO: skal arbeidsevne cappes av grenseverdier  e.l.?
- TODO: Oppdater lagring av `Gradering`s klassen (husk 0% som vi hardkodet)
+ TODO: Flytte repository til primary constructor i Løsere
 */
 
 
@@ -132,7 +133,7 @@ class GraderingArbeidRegel : UnderveisRegel {
                 Gradering(
                     totaltAntallTimer = segment?.verdi?.timerArbeid ?: TimerArbeid(BigDecimal.ZERO),
                     andelArbeid = andelArbeid,
-                    vurdertArbeidsevne = segment?.verdi?.arbeidsevne ?: `0_PROSENT`,
+                    fastsattArbeidsevne = segment?.verdi?.arbeidsevne ?: `0_PROSENT`,
                     gradering = Prosent.`100_PROSENT`.minus(andelArbeid),
                 )
             )

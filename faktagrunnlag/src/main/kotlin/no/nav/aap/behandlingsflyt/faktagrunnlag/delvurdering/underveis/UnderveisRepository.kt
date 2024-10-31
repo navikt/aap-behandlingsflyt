@@ -6,7 +6,6 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.verdityper.Dagsatser
 import no.nav.aap.verdityper.Prosent
-import no.nav.aap.verdityper.Prosent.Companion.`0_PROSENT`
 import no.nav.aap.verdityper.TimerArbeid
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
@@ -53,15 +52,16 @@ class UnderveisRepository(private val connection: DBConnection) {
 
         val antallTimer = it.getBigDecimalOrNull("timer_arbeid")
         val graderingProsent = it.getIntOrNull("gradering")
+        val andelArbeidsevne = it.getIntOrNull("andel_arbeidsevne")
 
-        val gradering = if (antallTimer == null || graderingProsent == null) {
+        val gradering = if (antallTimer == null || graderingProsent == null || andelArbeidsevne == null) {
             null
         } else {
             val gradering = Prosent(graderingProsent)
             Gradering(
                 totaltAntallTimer = TimerArbeid(antallTimer),
                 andelArbeid = Prosent.`100_PROSENT`.minus(gradering),
-                vurdertArbeidsevne = `0_PROSENT`,
+                fastsattArbeidsevne = Prosent(andelArbeidsevne),
                 gradering = gradering,
             )
         }
@@ -106,7 +106,7 @@ class UnderveisRepository(private val connection: DBConnection) {
         val perioderId = connection.executeReturnKey(pliktkorteneQuery)
 
         val query = """
-            INSERT INTO UNDERVEIS_PERIODE (perioder_id, periode, utfall, avslagsarsak, grenseverdi, timer_arbeid, gradering, meldeperiode, trekk_dagsatser) VALUES (?, ?::daterange, ?, ?, ?, ?, ?, ?::daterange, ?)
+            INSERT INTO UNDERVEIS_PERIODE (perioder_id, periode, utfall, avslagsarsak, grenseverdi, timer_arbeid, gradering, meldeperiode, trekk_dagsatser, andel_arbeidsevne) VALUES (?, ?::daterange, ?, ?, ?, ?, ?, ?::daterange, ?, ?)
             """.trimIndent()
         connection.executeBatch(query, underveisperioder) {
             setParams { periode ->
@@ -119,6 +119,7 @@ class UnderveisRepository(private val connection: DBConnection) {
                 setInt(7, periode.gradering?.gradering?.prosentverdi())
                 setPeriode(8, periode.meldePeriode)
                 setInt(9, periode.trekk.antall)
+                setInt(10, periode.gradering?.fastsattArbeidsevne?.prosentverdi())
             }
         }
 

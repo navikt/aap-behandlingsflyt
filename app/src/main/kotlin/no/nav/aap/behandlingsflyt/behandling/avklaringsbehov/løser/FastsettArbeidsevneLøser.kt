@@ -8,10 +8,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.dbconnect.DBConnection
 
 class FastsettArbeidsevneLøser(
-    private val arbeidsevneRepository: ArbeidsevneRepository,
+    connection: DBConnection,
 ) : AvklaringsbehovsLøser<FastsettArbeidsevneLøsning> {
-
-    constructor(connection: DBConnection) : this(ArbeidsevneRepository(connection))
+    private val arbeidsevneRepository = ArbeidsevneRepository(connection)
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: FastsettArbeidsevneLøsning): LøsningsResultat {
         val arbeidsevneVurderinger = løsning.arbeidsevneVurderinger.map { it.toArbeidsevnevurdering() }

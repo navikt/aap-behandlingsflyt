@@ -46,7 +46,12 @@ class InstitusjonRegelTest {
             null,
             null,
             null,
-            Gradering(TimerArbeid(BigDecimal.ZERO), Prosent(0), Prosent(100)),
+            Gradering(
+                totaltAntallTimer = TimerArbeid(BigDecimal.ZERO),
+                andelArbeid = Prosent(0),
+                fastsattArbeidsevne = Prosent.`0_PROSENT`,
+                gradering = Prosent.`100_PROSENT`
+            ),
             grenseverdi = Prosent(60)
         ).leggTilVurdering(Vilkårtype.ALDERSVILKÅRET, Utfall.OPPFYLT)
 

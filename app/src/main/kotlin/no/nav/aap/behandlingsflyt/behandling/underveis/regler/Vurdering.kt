@@ -115,8 +115,9 @@ data class Vurdering(
                     totaltAntallTimer = gradering.totaltAntallTimer,
                     andelArbeid = gradering.andelArbeid,
                     gradering = gradering.gradering.minus(
-                        Prosent.`50_PROSENT`
-                    )
+                        Prosent.`50_PROSENT`,
+                    ),
+                    fastsattArbeidsevne = gradering.fastsattArbeidsevne
                 )
             }
             return gradering
@@ -124,7 +125,8 @@ data class Vurdering(
             return Gradering(
                 totaltAntallTimer = gradering.totaltAntallTimer,
                 andelArbeid = gradering.andelArbeid,
-                gradering = Prosent.`0_PROSENT`
+                gradering = Prosent.`0_PROSENT`,
+                fastsattArbeidsevne = gradering.fastsattArbeidsevne
             )
         }
     }

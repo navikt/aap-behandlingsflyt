@@ -44,7 +44,12 @@ class SoningRegelTest {
             EnumMap(Vilkårtype::class.java), MeldepliktVurdering(
                 null, periode,
                 Utfall.OPPFYLT
-            ), null, null, null, Gradering(TimerArbeid(BigDecimal.ZERO), Prosent(0), Prosent(100)), grenseverdi = Prosent(60)
+            ), null, null, null, Gradering(
+                totaltAntallTimer = TimerArbeid(BigDecimal.ZERO),
+                andelArbeid = Prosent(0),
+                fastsattArbeidsevne = Prosent.`0_PROSENT`,
+                gradering = Prosent.`100_PROSENT`
+            ), grenseverdi = Prosent(60)
         ).leggTilVurdering(Vilkårtype.ALDERSVILKÅRET, Utfall.OPPFYLT)
         val tidligereResultatTidslinje = Tidslinje(listOf( Segment(periode, vurderingFraTidligereResultat)))
 
