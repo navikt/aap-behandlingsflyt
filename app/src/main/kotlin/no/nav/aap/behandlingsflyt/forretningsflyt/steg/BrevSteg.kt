@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.BrevUtlederService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -23,7 +24,7 @@ class BrevSteg private constructor(
             // hvis klar gi avklaringsbehov for brevskriving
             // er brevet fullført, iverksett og gå videre til avslutting av behandling
         }
-        return StegResultat()
+        return Fullført
     }
 
     companion object : FlytSteg {

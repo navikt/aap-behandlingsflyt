@@ -147,13 +147,22 @@ class StegOrkestrator(
 
         val resultat = stegResultat.transisjon()
 
-        if (resultat.funnetAvklaringsbehov().isNotEmpty()) {
+        if (resultat is FunnetAvklaringsbehov) {
             log.info(
                 "Fant avklaringsbehov: {}",
-                resultat.funnetAvklaringsbehov()
+                resultat.avklaringsbehov()
             )
             val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekstMedPerioder.behandlingId)
-            avklaringsbehovene.leggTil(resultat.funnetAvklaringsbehov(), aktivtSteg.type())
+            avklaringsbehovene.leggTil(resultat.avklaringsbehov(), aktivtSteg.type())
+        } else if (resultat is FunnetVentebehov) {
+            log.info(
+                "Fant ventebehov: {}",
+                resultat.ventebehov()
+            )
+            val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekstMedPerioder.behandlingId)
+            resultat.ventebehov().forEach {
+                avklaringsbehovene.leggTil(definisjoner = listOf(it.definisjon), stegType = aktivtSteg.type(), frist = it.frist, grunn = it.grunn)
+            }
         }
 
         return resultat

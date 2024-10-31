@@ -1,17 +1,19 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 
 class FastsettBeregningstidspunktSteg private constructor(
     private val beregningVurderingRepository: BeregningVurderingRepository,
@@ -25,10 +27,10 @@ class FastsettBeregningstidspunktSteg private constructor(
         if (erBehovForÅFastsette(vilkårsresultat)) {
             val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
             if (beregningVurdering == null) {
-                return StegResultat(listOf(Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT))
+                return FantAvklaringsbehov(Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT)
             }
         }
-        return StegResultat()
+        return Fullført
     }
 
     private fun erBehovForÅFastsette(vilkårsresultat: Vilkårsresultat): Boolean {

@@ -95,7 +95,7 @@ class Avklaringsbehovene(
     }
 
     private fun utledFrist(definisjon: Definisjon, frist: LocalDate?): LocalDate? {
-        if (definisjon.erVentepunkt()) {
+        if (definisjon.erVentebehov()) {
             return definisjon.utledFrist(frist)
         }
         return null

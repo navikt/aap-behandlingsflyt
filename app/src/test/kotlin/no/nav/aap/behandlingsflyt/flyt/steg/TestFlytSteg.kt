@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.flyt.steg
 
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 
 object TestFlytSteg : FlytSteg {
     override fun konstruer(connection: DBConnection): BehandlingSteg {
@@ -17,6 +17,6 @@ object TestFlytSteg : FlytSteg {
 
 class TestSteg : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        return StegResultat(avklaringsbehov = listOf(Definisjon.AVKLAR_SYKDOM))
+        return FantAvklaringsbehov(Definisjon.AVKLAR_SYKDOM)
     }
 }

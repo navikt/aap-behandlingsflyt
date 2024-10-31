@@ -197,12 +197,12 @@ enum class Definisjon(
         return type == BehovType.MANUELT_FRIVILLIG
     }
 
-    fun erVentepunkt(): Boolean {
+    fun erVentebehov(): Boolean {
         return type == BehovType.VENTEPUNKT
     }
 
     fun utledFrist(frist: LocalDate?): LocalDate {
-        if (!erVentepunkt()) {
+        if (!erVentebehov()) {
             throw IllegalStateException("Forsøker utlede frist for et behov som ikke er ventepunkt")
         }
         if (frist != null) {

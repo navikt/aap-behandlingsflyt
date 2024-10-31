@@ -14,10 +14,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRep
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import org.slf4j.LoggerFactory
 
 class FastsettGrunnlagSteg(
@@ -76,7 +77,7 @@ class FastsettGrunnlagSteg(
 
         vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
 
-        return StegResultat()
+        return Fullført
     }
 
     companion object : FlytSteg {

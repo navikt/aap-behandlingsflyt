@@ -7,7 +7,9 @@ import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederServi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -36,8 +38,11 @@ class EtAnnetStedSteg(
         if (!avklaringsbehov.contains(Definisjon.AVKLAR_SONINGSFORRHOLD)) {
             avbrytHvisFinnesOgIkkeTrengs(avklaringsbehovene, Definisjon.AVKLAR_SONINGSFORRHOLD)
         }
+        if (avklaringsbehov.isNotEmpty()) {
+            return FantAvklaringsbehov(avklaringsbehov)
+        }
 
-        return StegResultat(avklaringsbehov)
+        return Fullført
     }
 
     private fun avbrytHvisFinnesOgIkkeTrengs(avklaringsbehovene: Avklaringsbehovene, definisjon: Definisjon) {

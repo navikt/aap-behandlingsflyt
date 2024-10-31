@@ -9,12 +9,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.Samordni
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import org.slf4j.LoggerFactory
 
 class SamordningSteg(
@@ -34,7 +36,7 @@ class SamordningSteg(
                 }
             }) {
             if (!samordningService.harGjortVurdering(kontekst.behandlingId)) {
-                return StegResultat(listOf(Definisjon.AVKLAR_SAMORDNING_GRADERING))
+                return FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_GRADERING)
             }
         }
 
@@ -50,7 +52,7 @@ class SamordningSteg(
         )
 
         log.info("Samordning tidslinje $samordningTidslinje")
-        return StegResultat()
+        return Fullført
     }
 
     override fun vedTilbakeføring(kontekst: FlytKontekstMedPerioder) {

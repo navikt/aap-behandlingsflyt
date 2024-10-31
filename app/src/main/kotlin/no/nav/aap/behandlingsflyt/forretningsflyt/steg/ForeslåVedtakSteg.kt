@@ -2,7 +2,9 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -17,10 +19,10 @@ class ForeslåVedtakSteg private constructor(
         val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         if (avklaringsbehov.harHattAvklaringsbehov() && avklaringsbehov.harIkkeForeslåttVedtak()) {
-            return StegResultat(listOf(Definisjon.FORESLÅ_VEDTAK))
+            return FantAvklaringsbehov(Definisjon.FORESLÅ_VEDTAK)
         }
 
-        return StegResultat() // DO NOTHING
+        return Fullført // DO NOTHING
     }
 
     override fun vedTilbakeføring(kontekst: FlytKontekstMedPerioder) {
