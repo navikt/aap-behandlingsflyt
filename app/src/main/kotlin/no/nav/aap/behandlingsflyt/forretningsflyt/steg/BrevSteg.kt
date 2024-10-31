@@ -15,6 +15,8 @@ import no.nav.aap.behandlingsflyt.flyt.steg.FantVentebehov
 import no.nav.aap.behandlingsflyt.flyt.steg.Ventebehov
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.miljo.Miljø
+import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
 
 class BrevSteg private constructor(
@@ -23,6 +25,10 @@ class BrevSteg private constructor(
 ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        if (Miljø.er() != MiljøKode.LOKALT) {
+            return Fullført
+        }
+
         val brevBehov = brevUtlederService.utledBrevbehov(kontekst.behandlingId)
         if (brevBehov.harBehovForBrev()) {
             val typeBrev = brevBehov.typeBrev!!
