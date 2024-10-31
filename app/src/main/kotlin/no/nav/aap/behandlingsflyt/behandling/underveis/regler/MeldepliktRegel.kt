@@ -8,6 +8,7 @@ import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.StandardSammenslåere
 import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.dokument.JournalpostId
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.Period
 import java.util.*
@@ -156,5 +157,41 @@ class MeldepliktRegel : UnderveisRegel {
             return UnderveisÅrsak.IKKE_OVERHOLDT_MELDEPLIKT_SANKSJON
         }
         return UnderveisÅrsak.MELDEPLIKT_FRIST_IKKE_PASSERT
+    }
+
+    companion object {
+        private val log = LoggerFactory.getLogger(Companion::class.java)!!
+
+        fun <T> groupByMeldeperiode(
+            vurderinger: Tidslinje<Vurdering>,
+            tidslinje: Tidslinje<T>,
+        ): Tidslinje<Tidslinje<T>> {
+            class VerdiMedMeldeperiode<T>(val meldeperiode: Periode, val tVerdi: T)
+
+            val meldeperioder: Tidslinje<Periode> = vurderinger
+                .mapNotNull { segment -> segment.verdi.meldeperiode() }
+                .map { meldeperiode -> Segment(meldeperiode, meldeperiode) }
+                .let { Tidslinje(it) }
+
+            val verdierMedMeldeperiodeTidslinje: Tidslinje<VerdiMedMeldeperiode<T>> =
+                meldeperioder.kombiner(tidslinje, JoinStyle.RIGHT_JOIN { periode, meldeperiode, tSegment ->
+                    if (meldeperiode == null) {
+                        log.warn("mangler meldeperiode for gruppering, verdi ")
+                        null
+                    } else {
+                        Segment(periode, VerdiMedMeldeperiode(meldeperiode.verdi, tSegment.verdi))
+                    }
+                })
+
+            return verdierMedMeldeperiodeTidslinje
+                .groupBy(
+                    { segment -> segment.verdi.meldeperiode },
+                    { segment -> Segment(segment.periode, segment.verdi.tVerdi) }
+                )
+                .map { (meldeperiode, listMedSegmenter) ->
+                    Segment(meldeperiode, Tidslinje(listMedSegmenter))
+                }
+                .let { Tidslinje(it) }
+        }
     }
 }

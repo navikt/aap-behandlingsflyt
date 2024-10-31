@@ -80,7 +80,10 @@ class FraværFastsattAktivitetRegelTest {
                 grunn = INGEN_GYLDIG_GRUNN,
             ),
         )
-        assertEquals(UNNTAK_STERKE_VELFERDSGRUNNER, vurdering.segment(LocalDate.of(2020, 1, 1))!!.verdi.vilkårsvurdering)
+        assertEquals(
+            UNNTAK_STERKE_VELFERDSGRUNNER,
+            vurdering.segment(LocalDate.of(2020, 1, 1))!!.verdi.vilkårsvurdering
+        )
         assertEquals(UNNTAK_INNTIL_EN_DAG, vurdering.segment(LocalDate.of(2020, 1, 2))!!.verdi.vilkårsvurdering)
         assertEquals(STANS_ANDRE_DAG, vurdering.segment(LocalDate.of(2020, 1, 3))!!.verdi.vilkårsvurdering)
     }
@@ -238,6 +241,45 @@ class FraværFastsattAktivitetRegelTest {
         /* Fravær dag 11: gyldig grunn, men gir stans fordi kvoten er brukt opp. */
         vurderinger.segment(LocalDate.of(2021, 1, startMeldeperiode2021 + 10))!!.verdi.also {
             assertEquals(STANS_TI_DAGER_BRUKT_OPP, it.vilkårsvurdering)
+        }
+    }
+
+    @Test
+    fun `brudd som strekker seg over to meldeperioder blir vurdert i hver sin meldeperiode`() {
+        val vurderinger = aktivitetsbruddVurderinger(
+            rettighetsperiode = Periode(fom = LocalDate.of(2020, 1, 1), tom = LocalDate.of(2022, 12, 31)),
+            brudd(
+                bruddType = IKKE_MØTT_TIL_TILTAK,
+                paragraf = PARAGRAF_11_8,
+                periode = Periode(LocalDate.of(2020, 1, 14), LocalDate.of(2020, 1, 15)),
+                opprettet = LocalDate.of(2020, 4, 1),
+            ),
+        )
+
+        vurderinger.segment(LocalDate.of(2020, 1, 14))!!.verdi.also {
+            assertEquals(UNNTAK_INNTIL_EN_DAG, it.vilkårsvurdering)
+        }
+        vurderinger.segment(LocalDate.of(2020, 1, 15))!!.verdi.also {
+            assertEquals(UNNTAK_INNTIL_EN_DAG, it.vilkårsvurdering)
+        }
+    }
+    @Test
+    fun `to brudd inntil grensen for en meldeperiode blir registrert i samme meldeperiode`() {
+        val vurderinger = aktivitetsbruddVurderinger(
+            rettighetsperiode = Periode(fom = LocalDate.of(2020, 1, 1), tom = LocalDate.of(2022, 12, 31)),
+            brudd(
+                bruddType = IKKE_MØTT_TIL_TILTAK,
+                paragraf = PARAGRAF_11_8,
+                periode = Periode(LocalDate.of(2020, 1, 13), LocalDate.of(2020, 1, 14)),
+                opprettet = LocalDate.of(2020, 4, 1),
+            ),
+        )
+
+        vurderinger.segment(LocalDate.of(2020, 1, 13))!!.verdi.also {
+            assertEquals(UNNTAK_INNTIL_EN_DAG, it.vilkårsvurdering)
+        }
+        vurderinger.segment(LocalDate.of(2020, 1, 14))!!.verdi.also {
+            assertEquals(STANS_ANDRE_DAG, it.vilkårsvurdering)
         }
     }
 

@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAkt
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_INNTIL_EN_DAG
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_STERKE_VELFERDSGRUNNER
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Vilkårsvurdering.UNNTAK_SYKDOM_ELLER_SKADE
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktRegel.Companion.groupByMeldeperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRegistrering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.PARAGRAF_11_8
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_MØTT_TIL_ANNEN_AKTIVITET
@@ -15,11 +16,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn.RIMELIG_GR
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn.STERKE_VELFERDSGRUNNER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn.SYKDOM_ELLER_SKADE
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.tidslinje.JoinStyle
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.StandardSammenslåere
 import no.nav.aap.tidslinje.Tidslinje
-import org.slf4j.LoggerFactory
 
 private const val KVOTE_KALENDERÅR = 10
 
@@ -31,8 +30,6 @@ private const val KVOTE_KALENDERÅR = 10
  * - [Forskriftens § 3](https://lovdata.no/forskrift/2017-12-13-2100/§3)
  */
 class FraværFastsattAktivitetRegel : UnderveisRegel {
-    private val log = LoggerFactory.getLogger(this::class.qualifiedName)!!
-
     companion object {
         private val relevanteBrudd = listOf(
             IKKE_MØTT_TIL_BEHANDLING_ELLER_UTREDNING,
@@ -73,29 +70,7 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
         resultat: Tidslinje<Vurdering>,
         tidslinje: Tidslinje<AktivitetspliktRegistrering>
     ): Tidslinje<AktivitetspliktSteg1> {
-        val bruddtidslinjeGruppertPåMeldeperiode = resultat.kombiner(
-            tidslinje,
-            JoinStyle.RIGHT_JOIN { periode, vurdering, brudd ->
-                val meldeperiode = vurdering?.verdi?.meldeperiode()
-                Segment(periode, BruddMedMeldeperiode(meldeperiode, brudd.verdi))
-            }
-        )
-            .segmenter()
-            .groupBy(
-                { it.verdi.meldeperiode },
-                { Segment(it.periode, it.verdi.aktivitetspliktRegistrering) }
-            )
-            .mapNotNull { (meldeperiode, bruddIMeldeperioden) ->
-                if (meldeperiode == null) {
-                    log.warn("meldeperiode manger, ignorerer brudd")
-                    null
-                } else {
-                    Segment(meldeperiode, Tidslinje(bruddIMeldeperioden.sortedBy { it.fom() }))
-                }
-            }
-            .let { Tidslinje(it) }
-
-        return bruddtidslinjeGruppertPåMeldeperiode
+        return groupByMeldeperiode(resultat, tidslinje)
             .flatMap { meldeperiodenSegment ->
                 vurderMeldeperiode(meldeperiodenSegment.verdi)
             }
@@ -192,10 +167,5 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
     class AktivitetspliktSteg1(
         val dokument: AktivitetspliktRegistrering,
         val inntilEnDagUnntak: Boolean,
-    )
-
-    private data class BruddMedMeldeperiode(
-        val meldeperiode: Periode?,
-        val aktivitetspliktRegistrering: AktivitetspliktRegistrering
     )
 }
