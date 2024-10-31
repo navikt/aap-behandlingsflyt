@@ -106,28 +106,15 @@ data class Vurdering(
     }
 
     fun gradering(): Gradering? {
-        if (gradering == null) {
-            return null
-        }
-        if (harRett()) {
-            if (institusjonVurdering?.skalReduseres == true) {
-                return Gradering(
-                    totaltAntallTimer = gradering.totaltAntallTimer,
-                    andelArbeid = gradering.andelArbeid,
-                    gradering = gradering.gradering.minus(
-                        Prosent.`50_PROSENT`,
-                    ),
-                    fastsattArbeidsevne = gradering.fastsattArbeidsevne
+        return when {
+            gradering == null -> null
+            harRett() && institusjonVurdering?.skalReduseres == true -> gradering.copy(
+                gradering = gradering.gradering.minus(
+                    Prosent.`50_PROSENT`,
                 )
-            }
-            return gradering
-        } else {
-            return Gradering(
-                totaltAntallTimer = gradering.totaltAntallTimer,
-                andelArbeid = gradering.andelArbeid,
-                gradering = Prosent.`0_PROSENT`,
-                fastsattArbeidsevne = gradering.fastsattArbeidsevne
             )
+            harRett() -> gradering
+            else -> gradering.copy(gradering = Prosent.`0_PROSENT`)
         }
     }
 

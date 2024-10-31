@@ -30,6 +30,10 @@ class Prosent private constructor(verdi: BigDecimal) : Comparable<Prosent> {
         fun fraDesimal(andel: BigDecimal): Prosent {
             return Prosent(andel.multiply(BigDecimal.valueOf(100)).toInt())
         }
+        fun max(first: Prosent, second: Prosent): Prosent {
+            return first.verdi.max(second.verdi).let { Prosent(it) }
+        }
+
     }
 
     fun prosentverdi(): Int {

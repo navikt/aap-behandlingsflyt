@@ -38,6 +38,7 @@ utbetaling = 100 % - max(arbeidsevne, faktisk arbeid)
  TODO: flytt gradering til metode basert på data.
  TODO: skal arbeidsevne cappes av grenseverdier  e.l.?
  TODO: Flytte repository til primary constructor i Løsere
+ TODO: skal reduksjon grunnet instutisjonsvurdering kunne føre til negativ gradering?
 */
 
 
@@ -128,13 +129,16 @@ class GraderingArbeidRegel : UnderveisRegel {
             arbeidetTidIMeldeperioden.divide(ANTALL_TIMER_I_MELDEPERIODE, 3, RoundingMode.HALF_UP)
         )
         return TreeSet(arbeidsSegmenter.map { segment ->
+            val fastsattArbeidsevne = segment?.verdi?.arbeidsevne ?: `0_PROSENT`
             Segment(
                 segment.periode,
                 Gradering(
                     totaltAntallTimer = segment?.verdi?.timerArbeid ?: TimerArbeid(BigDecimal.ZERO),
                     andelArbeid = andelArbeid,
-                    fastsattArbeidsevne = segment?.verdi?.arbeidsevne ?: `0_PROSENT`,
-                    gradering = Prosent.`100_PROSENT`.minus(andelArbeid),
+                    fastsattArbeidsevne = fastsattArbeidsevne,
+                    gradering = Prosent.`100_PROSENT`.minus(
+                        Prosent.max(andelArbeid, fastsattArbeidsevne)
+                    ),
                 )
             )
         })
