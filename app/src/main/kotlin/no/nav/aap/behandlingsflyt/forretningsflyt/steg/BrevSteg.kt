@@ -3,20 +3,18 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevUtlederService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
+import no.nav.aap.behandlingsflyt.flyt.steg.FantVentebehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
+import no.nav.aap.behandlingsflyt.flyt.steg.Ventebehov
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.BESTILL_BREV
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.SKRIV_BREV
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
-import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
-import no.nav.aap.behandlingsflyt.flyt.steg.FantVentebehov
-import no.nav.aap.behandlingsflyt.flyt.steg.Ventebehov
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.komponenter.miljo.Miljø
-import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
 
 class BrevSteg private constructor(
@@ -25,10 +23,6 @@ class BrevSteg private constructor(
 ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (Miljø.er() != MiljøKode.LOKALT) {
-            return Fullført
-        }
-
         val brevBehov = brevUtlederService.utledBrevbehov(kontekst.behandlingId)
         if (brevBehov.harBehovForBrev()) {
             val typeBrev = brevBehov.typeBrev!!
