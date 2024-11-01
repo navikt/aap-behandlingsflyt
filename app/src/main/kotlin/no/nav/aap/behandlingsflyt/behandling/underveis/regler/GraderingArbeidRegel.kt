@@ -75,6 +75,7 @@ class GraderingArbeidRegel : UnderveisRegel {
     private fun graderingerTidslinje(input: UnderveisInput): Tidslinje<Gradering> {
         val timerArbeidetTidslinje = timerArbeidetTidslinje(input)
         val arbeidsevneVurdering = input.arbeidsevneGrunnlag.vurderinger.tidslinje()
+            .kryss(input.rettighetsperiode)
 
         // Regner kun ut gradering for perioden det er sendt noe inn for
         val arbeidsTidslinje = timerArbeidetTidslinje.kombiner(
