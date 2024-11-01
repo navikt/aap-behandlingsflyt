@@ -34,8 +34,6 @@ utbetaling = 100 % - max(arbeidsevne, faktisk arbeid)
 
 
 /*
- TODO: flytt gradering til metode basert på data.
- TODO: skal arbeidsevne cappes av grenseverdier  e.l.?
  TODO: Flytte repository til primary constructor i Løsere
  TODO: skal reduksjon grunnet instutisjonsvurdering kunne føre til negativ gradering?
 */
@@ -127,7 +125,9 @@ class GraderingArbeidRegel : UnderveisRegel {
         val arbeidstimerMeldeperioden = arbeidMeldeperioden.sumOf { it.verdi.timerArbeid?.antallTimer ?: BigDecimal.ZERO }
 
         val andelArbeid = Prosent.fraDesimal(
-            arbeidstimerMeldeperioden.divide(ANTALL_TIMER_I_MELDEPERIODE, 3, RoundingMode.HALF_UP)
+            BigDecimal.ONE.min(
+                arbeidstimerMeldeperioden.divide(ANTALL_TIMER_I_MELDEPERIODE, 3, RoundingMode.HALF_UP)
+            )
         )
         return arbeidMeldeperioden.mapValue { arbeid ->
             val fastsattArbeidsevne = arbeid.arbeidsevne ?: `0_PROSENT`
