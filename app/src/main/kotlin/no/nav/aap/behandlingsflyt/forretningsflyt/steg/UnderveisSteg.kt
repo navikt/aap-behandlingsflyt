@@ -32,16 +32,18 @@ class UnderveisSteg(private val underveisService: UnderveisService) : Behandling
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
+            val behandlingService = SakOgBehandlingService(connection)
             return UnderveisSteg(
                 UnderveisService(
-                    behandlingService = SakOgBehandlingService(connection),
+                    behandlingService = behandlingService,
                     vilkårsresultatRepository = VilkårsresultatRepository(connection),
                     pliktkortRepository = PliktkortRepository(connection),
                     underveisRepository = UnderveisRepository(connection),
                     aktivitetspliktRepository = AktivitetspliktRepository(connection),
                     etAnnetStedUtlederService = EtAnnetStedUtlederService(
                         BarnetilleggRepository(connection),
-                        InstitusjonsoppholdRepository(connection)
+                        InstitusjonsoppholdRepository(connection),
+                        behandlingService
                     ),
                     arbeidsevneRepository = ArbeidsevneRepository(connection),
                 )

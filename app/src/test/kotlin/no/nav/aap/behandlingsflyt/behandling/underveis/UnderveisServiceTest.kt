@@ -40,7 +40,8 @@ class UnderveisServiceTest {
                     AktivitetspliktRepository(connection),
                     EtAnnetStedUtlederService(
                         BarnetilleggRepository(connection),
-                        InstitusjonsoppholdRepository(connection)
+                        InstitusjonsoppholdRepository(connection),
+                        SakOgBehandlingService(connection)
                     ),
                     ArbeidsevneRepository(connection)
                 )

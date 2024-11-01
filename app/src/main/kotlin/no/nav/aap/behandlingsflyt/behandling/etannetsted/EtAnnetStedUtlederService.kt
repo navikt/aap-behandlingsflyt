@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.etannetsted
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
@@ -15,7 +16,6 @@ import no.nav.aap.tidslinje.StandardSammenslåere
 import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.Tid
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
-import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.util.stream.IntStream
 import kotlin.collections.map
@@ -24,11 +24,10 @@ import kotlin.time.Duration
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
-private val log = LoggerFactory.getLogger(EtAnnetStedUtlederService::class.java)
-
 class EtAnnetStedUtlederService(
     private val barnetilleggRepository: BarnetilleggRepository,
-    private val institusjonsoppholdRepository: InstitusjonsoppholdRepository
+    private val institusjonsoppholdRepository: InstitusjonsoppholdRepository,
+    private val sakService: SakOgBehandlingService
 ) {
 
     private val grenseverdi = (3 * 30).toDuration(DurationUnit.DAYS)
@@ -44,8 +43,8 @@ class EtAnnetStedUtlederService(
         val soningsOppgold = opphold.filter { segment -> segment.verdi.type == Institusjonstype.FO }
         val helseopphold = opphold.filter { segment -> segment.verdi.type == Institusjonstype.HS }
         val barnetillegg = input.barnetillegg
-        val soningsvurderingTidslinje = byggSoningTidslinje(input.soningsvurderinger)
-        val helsevurderingerTidslinje = byggHelseTidslinje(input.helsevurderinger)
+        val soningsvurderingTidslinje = byggSoningTidslinje(input.soningsvurderinger, input.rettighetsperiode)
+        val helsevurderingerTidslinje = byggHelseTidslinje(input.helsevurderinger, input.rettighetsperiode)
 
         var perioderSomTrengerVurdering =
             Tidslinje(soningsOppgold).mapValue { InstitusjonsOpphold(soning = SoningOpphold(vurdering = OppholdVurdering.UAVKLART)) }
@@ -152,7 +151,10 @@ class EtAnnetStedUtlederService(
         return result
     }
 
-    private fun byggSoningTidslinje(soningsvurderinger: List<Soningsvurdering>): Tidslinje<SoningOpphold> {
+    private fun byggSoningTidslinje(
+        soningsvurderinger: List<Soningsvurdering>,
+        rettighetsperiode: Periode
+    ): Tidslinje<SoningOpphold> {
         return soningsvurderinger.sortedBy { it.fraDato }.map {
             Tidslinje(
                 Periode(
@@ -168,10 +170,13 @@ class EtAnnetStedUtlederService(
             )
         }.fold(Tidslinje<SoningOpphold>()) { acc, tidslinje ->
             acc.kombiner(tidslinje, StandardSammenslåere.prioriterHøyreSideCrossJoin())
-        }.komprimer()
+        }.kryss(rettighetsperiode).komprimer()
     }
 
-    private fun byggHelseTidslinje(helsevurderinger: List<HelseinstitusjonVurdering>): Tidslinje<HelseOpphold> {
+    private fun byggHelseTidslinje(
+        helsevurderinger: List<HelseinstitusjonVurdering>,
+        rettighetsperiode: Periode
+    ): Tidslinje<HelseOpphold> {
         return helsevurderinger.sortedBy { it.periode }.map {
             Tidslinje(
                 it.periode, HelseOpphold(
@@ -184,7 +189,7 @@ class EtAnnetStedUtlederService(
             )
         }.fold(Tidslinje<HelseOpphold>()) { acc, tidslinje ->
             acc.kombiner(tidslinje, StandardSammenslåere.prioriterHøyreSideCrossJoin())
-        }.komprimer()
+        }.kryss(rettighetsperiode).komprimer()
     }
 
     private fun sammenslåer(): JoinStyle.OUTER_JOIN<InstitusjonsOpphold, InstitusjonsOpphold, InstitusjonsOpphold> {
@@ -294,6 +299,7 @@ class EtAnnetStedUtlederService(
     }
 
     private fun konstruerInput(behandlingId: BehandlingId): EtAnnetStedInput {
+        val rettighetsperiode = sakService.hentSakFor(behandlingId).rettighetsperiode
         val grunnlag = institusjonsoppholdRepository.hentHvisEksisterer(behandlingId)
         val barnetillegg = barnetilleggRepository.hentHvisEksisterer(behandlingId)?.perioder ?: emptyList()
 
@@ -301,6 +307,6 @@ class EtAnnetStedUtlederService(
         val soningsvurderinger = grunnlag?.soningsVurderinger?.vurderinger ?: emptyList()
         val helsevurderinger = grunnlag?.helseoppholdvurderinger?.vurderinger ?: emptyList()
 
-        return EtAnnetStedInput(opphold, soningsvurderinger, barnetillegg, helsevurderinger)
+        return EtAnnetStedInput(rettighetsperiode, opphold, soningsvurderinger, barnetillegg, helsevurderinger)
     }
 }

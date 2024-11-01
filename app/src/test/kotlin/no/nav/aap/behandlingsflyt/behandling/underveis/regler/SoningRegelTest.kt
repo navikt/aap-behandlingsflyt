@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedInput
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederService
 import no.nav.aap.behandlingsflyt.dbtestdata.MockConnection
+import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
@@ -31,7 +32,8 @@ class SoningRegelTest {
     private val mockConnection = MockConnection().toDBConnection()
     val utlederService = EtAnnetStedUtlederService(
         BarnetilleggRepository(mockConnection),
-        InstitusjonsoppholdRepository(mockConnection)
+        InstitusjonsoppholdRepository(mockConnection),
+        SakOgBehandlingService(mockConnection)
     )
 
     val regel = SoningRegel()
@@ -85,7 +87,8 @@ class SoningRegelTest {
                 ),
             ),
             barnetillegg = emptyList(),
-            helsevurderinger = emptyList()
+            helsevurderinger = emptyList(),
+            rettighetsperiode = Periode(periode.fom, periode.fom.plusYears(3))
         )
 
         val delresultat = utlederService.utledBehov(utlederInput)

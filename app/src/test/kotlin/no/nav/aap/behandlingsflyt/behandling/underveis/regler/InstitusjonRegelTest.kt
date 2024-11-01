@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedInput
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederService
 import no.nav.aap.behandlingsflyt.dbtestdata.MockConnection
+import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
@@ -29,7 +30,8 @@ class InstitusjonRegelTest {
     private val mockConnection = MockConnection().toDBConnection()
     val utlederService = EtAnnetStedUtlederService(
         BarnetilleggRepository(mockConnection),
-        InstitusjonsoppholdRepository(mockConnection)
+        InstitusjonsoppholdRepository(mockConnection),
+        SakOgBehandlingService(mockConnection)
     )
 
     val regel = InstitusjonRegel()
@@ -109,7 +111,8 @@ class InstitusjonRegelTest {
                     forsoergerEktefelle = true,
                     harFasteUtgifter = false
                 ),
-            )
+            ),
+            rettighetsperiode = Periode(periode.fom, periode.fom.plusYears(3))
         )
 
         val behovForAvklaringer = utlederService.utledBehov(utlederInput)

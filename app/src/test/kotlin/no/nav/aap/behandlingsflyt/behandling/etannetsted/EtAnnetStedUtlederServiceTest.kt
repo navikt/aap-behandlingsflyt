@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.etannetsted
 
 
 import no.nav.aap.behandlingsflyt.dbtestdata.MockConnection
+import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
@@ -21,7 +22,8 @@ class EtAnnetStedUtlederServiceTest {
     val connection = MockConnection().toDBConnection()
     val utlederService = EtAnnetStedUtlederService(
         BarnetilleggRepository(connection),
-        InstitusjonsoppholdRepository(connection)
+        InstitusjonsoppholdRepository(connection),
+        SakOgBehandlingService(connection)
     )
 
     @Test
@@ -43,7 +45,8 @@ class EtAnnetStedUtlederServiceTest {
             ),
             soningsvurderinger = emptyList(),
             barnetillegg = emptyList(),
-            helsevurderinger = emptyList()
+            helsevurderinger = emptyList(),
+            rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now().plusYears(2))
         )
 
         val res = utlederService.utledBehov(input)
@@ -82,7 +85,8 @@ class EtAnnetStedUtlederServiceTest {
             ),
             soningsvurderinger = emptyList(),
             barnetillegg = emptyList(),
-            helsevurderinger = emptyList()
+            helsevurderinger = emptyList(),
+            rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now().plusYears(2))
         )
 
         val res = utlederService.utledBehov(input)
@@ -127,7 +131,8 @@ class EtAnnetStedUtlederServiceTest {
                 )
             ),
             barnetillegg = emptyList(),
-            helsevurderinger = emptyList()
+            helsevurderinger = emptyList(),
+            rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now().plusYears(2))
         )
 
         val res = utlederService.utledBehov(input)
@@ -163,7 +168,8 @@ class EtAnnetStedUtlederServiceTest {
                     )
                 )
             ),
-            helsevurderinger = emptyList()
+            helsevurderinger = emptyList(),
+            rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now().plusYears(2))
         )
 
         val res = utlederService.utledBehov(input)
@@ -199,7 +205,8 @@ class EtAnnetStedUtlederServiceTest {
                     )
                 )
             ),
-            helsevurderinger = emptyList()
+            helsevurderinger = emptyList(),
+            rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now().plusYears(2))
         )
 
         val res = utlederService.utledBehov(input)
@@ -247,7 +254,8 @@ class EtAnnetStedUtlederServiceTest {
                     forsoergerEktefelle = false,
                     harFasteUtgifter = false
                 )
-            )
+            ),
+            rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now().plusYears(2))
         )
 
         val res = utlederService.utledBehov(input)
@@ -262,7 +270,8 @@ class EtAnnetStedUtlederServiceTest {
             institusjonsOpphold = emptyList(),
             soningsvurderinger = emptyList(),
             barnetillegg = emptyList(),
-            helsevurderinger = emptyList()
+            helsevurderinger = emptyList(),
+            rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now().plusYears(2))
         )
 
         val res = utlederService.utledBehov(input)
@@ -298,7 +307,8 @@ class EtAnnetStedUtlederServiceTest {
                     )
                 )
             ),
-            helsevurderinger = emptyList()
+            helsevurderinger = emptyList(),
+            rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now().plusYears(2))
         )
 
         val res = utlederService.utledBehov(input)

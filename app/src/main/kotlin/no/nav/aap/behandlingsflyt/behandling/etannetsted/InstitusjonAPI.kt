@@ -5,6 +5,7 @@ import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import com.zaxxer.hikari.HikariDataSource
+import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGrunnlag
@@ -29,7 +30,10 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: HikariDataSource) {
                     val behandling = BehandlingReferanseService(BehandlingRepositoryImpl(connection)).behandling(req)
                     val institusjonsoppholdRepository = InstitusjonsoppholdRepository(connection)
                     val utlederService =
-                        EtAnnetStedUtlederService(BarnetilleggRepository(connection), institusjonsoppholdRepository)
+                        EtAnnetStedUtlederService(
+                            BarnetilleggRepository(connection), institusjonsoppholdRepository,
+                            SakOgBehandlingService(connection)
+                        )
                     val behov = utlederService.utled(behandling.id)
 
                     // Hent ut rå fakta fra grunnlaget
@@ -66,7 +70,10 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: HikariDataSource) {
                     val behandling = BehandlingReferanseService(BehandlingRepositoryImpl(connection)).behandling(req)
                     val institusjonsoppholdRepository = InstitusjonsoppholdRepository(connection)
                     val utlederService =
-                        EtAnnetStedUtlederService(BarnetilleggRepository(connection), institusjonsoppholdRepository)
+                        EtAnnetStedUtlederService(
+                            BarnetilleggRepository(connection), institusjonsoppholdRepository,
+                            SakOgBehandlingService(connection)
+                        )
                     val behov = utlederService.utled(behandling.id)
 
                     // Hent ut rå fakta fra grunnlaget

@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -59,7 +60,8 @@ class EtAnnetStedSteg(
             return EtAnnetStedSteg(
                 AvklaringsbehovRepositoryImpl(connection), EtAnnetStedUtlederService(
                     BarnetilleggRepository(connection),
-                    institusjonsoppholdRepository
+                    institusjonsoppholdRepository,
+                    SakOgBehandlingService(connection)
                 )
             )
         }
