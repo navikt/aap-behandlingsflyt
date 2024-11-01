@@ -120,7 +120,7 @@ class StatistikkJobbUtfører(
             mottattTid = mottattTidspunkt,
             sakStatus = behandlingflytSakStatusTilStatistikk(sak.status()),
             hendelsesTidspunkt = hendelse.hendelsesTidspunkt,
-            avsluttetBehandling = if (hendelse.status.erAvsluttet()) hentAvsluttetBehandlingDTO(hendelse) else null,
+            avsluttetBehandling = if (hendelse.status == AVSLUTTET) hentAvsluttetBehandlingDTO(hendelse) else null,
             identerForSak = hentIdenterPåSak(sak.saksnummer)
         )
         return statistikkHendelse
