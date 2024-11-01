@@ -830,7 +830,6 @@ class FlytOrkestratorTest {
                     løsning = AvklarStudentLøsning(
                         studentvurdering = StudentVurdering(
                             begrunnelse = "Er student",
-                            dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                             avbruttStudieDato = LocalDate.now(),
                             avbruddMerEnn6Måneder = true,
                             harBehovForBehandling = true,

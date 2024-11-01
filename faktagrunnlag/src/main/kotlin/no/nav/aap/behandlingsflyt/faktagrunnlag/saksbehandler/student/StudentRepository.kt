@@ -1,9 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student
 
+import no.nav.aap.behandlingsflyt.faktasaksbehandler.student.StudentVurdering
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
-import no.nav.aap.behandlingsflyt.faktasaksbehandler.student.StudentVurdering
-import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
 class StudentRepository(private val connection: DBConnection) {
@@ -106,23 +105,7 @@ class StudentRepository(private val connection: DBConnection) {
             }
         }
 
-        studentvurdering.dokumenterBruktIVurdering.forEach { lagreDokument(vurderingId, it) }
-
         return vurderingId
-    }
-
-    private fun lagreDokument(vurderingId: Long, journalpostId: JournalpostId) {
-        val query = """
-            INSERT INTO STUDENT_VURDERING_DOKUMENTER (vurdering_id, journalpost) 
-            VALUES (?, ?)
-        """.trimIndent()
-
-        connection.execute(query) {
-            setParams {
-                setLong(1, vurderingId)
-                setString(2, journalpostId.identifikator)
-            }
-        }
     }
 
     fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
@@ -208,28 +191,12 @@ class StudentRepository(private val connection: DBConnection) {
                     it.getLong("id"),
                     it.getString("begrunnelse"),
                     it.getBoolean("avbrutt_studie"),
-                    it.getBoolean("godkjent_studie_av_laanekassen"),
-                    it.getBoolean("avbrutt_pga_sykdom_eller_skade"),
-                    it.getBoolean("har_behov_for_behandling"),
-                    it.getLocalDate("avbrutt_dato"),
-                    it.getBoolean("avbrudd_mer_enn_6_maaneder"),
-                    hentDokumenterTilVurdering(studentId),
+                    it.getBooleanOrNull("godkjent_studie_av_laanekassen"),
+                    it.getBooleanOrNull("avbrutt_pga_sykdom_eller_skade"),
+                    it.getBooleanOrNull("har_behov_for_behandling"),
+                    it.getLocalDateOrNull("avbrutt_dato"),
+                    it.getBooleanOrNull("avbrudd_mer_enn_6_maaneder"),
                 )
-            }
-        }
-    }
-
-    private fun hentDokumenterTilVurdering(studentId: Long): List<JournalpostId> {
-        val query = """
-            SELECT journalpost FROM STUDENT_VURDERING_DOKUMENTER WHERE vurdering_id = ?
-        """.trimIndent()
-
-        return connection.queryList(query) {
-            setParams {
-                setLong(1, studentId)
-            }
-            setRowMapper {
-                JournalpostId(it.getString("journalpost"))
             }
         }
     }
