@@ -24,7 +24,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
     val brevAzp = requiredConfigForKey("integrasjon.brev.azp")
 
     route("/api/brev") {
-        route("/løs-bestilling") {
+        route("/los-bestilling") {
             authorizedPostWithApprovedList<Unit, String, LøsBrevbestillingDto>(brevAzp) { _, request ->
                 dataSource.transaction { connection ->
                     val taSkriveLåsRepository = TaSkriveLåsRepository(connection)
