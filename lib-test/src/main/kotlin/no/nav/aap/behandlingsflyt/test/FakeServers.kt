@@ -16,6 +16,8 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import no.nav.aap.Inntekt.InntektRequest
 import no.nav.aap.Inntekt.InntektResponse
@@ -24,15 +26,24 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.BARN_RELAS
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.PERSON_BOLK_QUERY
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PERSON_QUERY
+import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.BrevbestillingLøsningStatus
+import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.LøsBrevbestillingDto
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.IDENT_QUERY
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoGateway
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
+import no.nav.aap.brev.kontrakt.BestillBrevRequest
 import no.nav.aap.brev.kontrakt.BestillBrevResponse
 import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
 import no.nav.aap.brev.kontrakt.Brevtype
 import no.nav.aap.brev.kontrakt.Språk
 import no.nav.aap.brev.kontrakt.Status
+import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
+import no.nav.aap.komponenter.httpklient.httpclient.Header
+import no.nav.aap.komponenter.httpklient.httpclient.RestClient
+import no.nav.aap.komponenter.httpklient.httpclient.post
+import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.pdl.HentPerson
 import no.nav.aap.pdl.HentPersonBolkResult
 import no.nav.aap.pdl.PDLDødsfall
@@ -65,6 +76,7 @@ import tilgang.JournalpostTilgangRequest
 import tilgang.SakTilgangRequest
 import tilgang.TilgangResponse
 import java.io.ByteArrayInputStream
+import java.net.URI
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Year
@@ -910,6 +922,11 @@ object FakeServers : AutoCloseable {
     }
 
     private fun Application.brevFake() {
+        val config = ClientConfig(scope = "")
+        val client = RestClient.withDefaultResponseHandler(
+            config = config,
+            tokenProvider = ClientCredentialsTokenProvider
+        )
         install(ContentNegotiation) {
             jackson()
         }
@@ -925,7 +942,27 @@ object FakeServers : AutoCloseable {
         routing {
             route("/api") {
                 post("/bestill") {
-                    call.respond(status = HttpStatusCode.Created, BestillBrevResponse(UUID.randomUUID()))
+                    val request = call.receive<BestillBrevRequest>()
+                    val brevbestillingReferanse = UUID.randomUUID()
+
+                    call.respond(status = HttpStatusCode.Created, BestillBrevResponse(brevbestillingReferanse))
+
+                    launch {
+                        delay(100)
+                        val responseRequest = LøsBrevbestillingDto(
+                            behandlingReferanse = request.behandlingReferanse,
+                            bestillingReferanse = brevbestillingReferanse,
+                            status = BrevbestillingLøsningStatus.AUTOMATISK_FERDIGSTILT,
+                        )
+                        val uri = URI.create("http://localhost:8080/api/brev/los-bestilling")
+                        val httpRequest = PostRequest(
+                            body = responseRequest,
+                            additionalHeaders = listOf(
+                                Header("Accept", "application/json")
+                            )
+                        )
+                        client.post<_, Unit>(uri = uri, request = httpRequest)
+                    }
                 }
                 route("/bestilling/{referanse}") { ->
                     get {
@@ -968,6 +1005,7 @@ object FakeServers : AutoCloseable {
         }
 
         azure.start()
+        setAzureProperties()
         brev.start()
         yrkesskade.start()
         pdl.start()
@@ -989,13 +1027,15 @@ object FakeServers : AutoCloseable {
         started.set(true)
     }
 
-    private fun setProperties() {
-        // Azure
+    private fun setAzureProperties() {
         System.setProperty("azure.openid.config.token.endpoint", "http://localhost:${azure.port()}/token")
         System.setProperty("azure.app.client.id", "behandlingsflyt")
         System.setProperty("azure.app.client.secret", "")
         System.setProperty("azure.openid.config.jwks.uri", "http://localhost:${azure.port()}/jwks")
         System.setProperty("azure.openid.config.issuer", "behandlingsflyt")
+    }
+
+    private fun setProperties() {
 
         // Tilgang
         System.setProperty("integrasjon.brev.url", "http://localhost:${brev.port()}")
