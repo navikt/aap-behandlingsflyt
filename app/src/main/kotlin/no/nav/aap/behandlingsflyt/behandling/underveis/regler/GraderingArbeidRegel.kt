@@ -104,13 +104,14 @@ class GraderingArbeidRegel : UnderveisRegel {
 
     private fun timerArbeidetTidslinje(input: UnderveisInput): Tidslinje<TimerArbeid> {
         var tidslinje = Tidslinje(listOf(Segment(input.rettighetsperiode, TimerArbeid(BigDecimal.ZERO))))
-        for (pliktkort in input.pliktkort) {
+        val innsendt = input.innsendingsTidspunkt.map { it.value to it.key }.toMap()
+        for (pliktkort in input.pliktkort.sortedBy { innsendt[it.journalpostId] }) {
             tidslinje = tidslinje.kombiner(Tidslinje(pliktkort.timerArbeidPerPeriode.map {
                 Segment(
                     it.periode,
                     it.arbeidPerDag() // Smører timene meldt over alle dagene de er meldt for
                 )
-            }), StandardSammenslåere.prioriterHøyreSide())
+            }), StandardSammenslåere.prioriterHøyreSideCrossJoin())
         }
         return tidslinje.splittOppEtter(Period.ofDays(1))
     }
