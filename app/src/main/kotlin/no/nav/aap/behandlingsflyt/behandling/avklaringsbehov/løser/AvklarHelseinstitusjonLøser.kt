@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.StandardSammenslåere
 import no.nav.aap.tidslinje.Tidslinje
 
@@ -37,9 +38,9 @@ class AvklarHelseinstitusjonLøser(connection: DBConnection) : AvklaringsbehovsL
     ): List<HelseinstitusjonVurdering> {
         val eksisterendeTidslinje = byggTidslinjeForSoningsvurderinger(grunnlag)
 
-        val nyeVurderingerTidslinje = nyeVurderinger.sortedBy { it.periode }
+        val nyeVurderingerTidslinje = Tidslinje(nyeVurderinger.sortedBy { it.periode }
             .map {
-                Tidslinje(
+                Segment(
                     it.periode,
                     HelseoppholdVurderingData(
                         it.begrunnelse,
@@ -48,10 +49,7 @@ class AvklarHelseinstitusjonLøser(connection: DBConnection) : AvklaringsbehovsL
                         it.harFasteUtgifter
                     )
                 )
-            }
-            .fold(Tidslinje<HelseoppholdVurderingData>()) { acc, tidslinje ->
-                acc.kombiner(tidslinje, StandardSammenslåere.prioriterHøyreSideCrossJoin())
-            }.komprimer()
+            }).komprimer()
 
         return eksisterendeTidslinje.kombiner(
             nyeVurderingerTidslinje,
