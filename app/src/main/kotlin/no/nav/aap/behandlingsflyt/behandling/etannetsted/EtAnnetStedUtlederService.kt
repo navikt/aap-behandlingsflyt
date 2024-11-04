@@ -16,6 +16,7 @@ import no.nav.aap.tidslinje.StandardSammenslåere
 import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.Tid
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.util.stream.IntStream
 import kotlin.collections.map
@@ -29,7 +30,7 @@ class EtAnnetStedUtlederService(
     private val institusjonsoppholdRepository: InstitusjonsoppholdRepository,
     private val sakService: SakOgBehandlingService
 ) {
-
+    private val log = LoggerFactory.getLogger(EtAnnetStedUtlederService::class.java)
     private val grenseverdi = (3 * 30).toDuration(DurationUnit.DAYS)
 
     fun utled(behandlingId: BehandlingId): BehovForAvklaringer {
@@ -45,6 +46,7 @@ class EtAnnetStedUtlederService(
         val barnetillegg = input.barnetillegg
         val soningsvurderingTidslinje = byggSoningTidslinje(input.soningsvurderinger, input.rettighetsperiode)
         val helsevurderingerTidslinje = byggHelseTidslinje(input.helsevurderinger, input.rettighetsperiode)
+        log.info("helse vurderinger: {}", helsevurderingerTidslinje)
 
         var perioderSomTrengerVurdering =
             Tidslinje(soningsOppgold).mapValue { InstitusjonsOpphold(soning = SoningOpphold(vurdering = OppholdVurdering.UAVKLART)) }
