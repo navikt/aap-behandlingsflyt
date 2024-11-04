@@ -265,6 +265,45 @@ class EtAnnetStedUtlederServiceTest {
     }
 
     @Test
+    fun `flere innleggelser med samme vurdering`() {
+        val innleggelsesperiode = Periode(
+            LocalDate.now().minusMonths(12),
+            LocalDate.now()
+        )
+        val rettighetsperiode = Periode(LocalDate.now().minusMonths(6), LocalDate.now().plusYears(2).plusMonths(6))
+        val input = EtAnnetStedInput(
+            institusjonsOpphold = listOf(
+                Segment(
+                    innleggelsesperiode,
+                    Institusjon(
+                        Institusjonstype.HS,
+                        Oppholdstype.D,
+                        "123123123",
+                        "test"
+                    )
+                )
+            ),
+            soningsvurderinger = emptyList(),
+            barnetillegg = emptyList(),
+            helsevurderinger = listOf(
+                HelseinstitusjonVurdering(
+                    periode = rettighetsperiode,
+                    begrunnelse = "vurder",
+                    faarFriKostOgLosji = false,
+                    forsoergerEktefelle = true,
+                    harFasteUtgifter = true
+                )
+            ),
+            rettighetsperiode = rettighetsperiode
+        )
+
+        val res = utlederService.utledBehov(input)
+        assertThat(res.harBehovForAvklaring()).isFalse
+
+        assertThat(res.perioderTilVurdering.segmenter()).hasSize(1)
+    }
+
+    @Test
     fun `ingen opphold trengs ingen avklaring`() {
         val input = EtAnnetStedInput(
             institusjonsOpphold = emptyList(),

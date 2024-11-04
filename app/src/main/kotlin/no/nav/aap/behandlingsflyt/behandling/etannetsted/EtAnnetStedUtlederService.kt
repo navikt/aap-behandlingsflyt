@@ -49,7 +49,9 @@ class EtAnnetStedUtlederService(
         log.info("helse vurderinger: {}", helsevurderingerTidslinje)
 
         var perioderSomTrengerVurdering =
-            Tidslinje(soningsOppgold).mapValue { InstitusjonsOpphold(soning = SoningOpphold(vurdering = OppholdVurdering.UAVKLART)) }
+            Tidslinje(soningsOppgold)
+                .kryss(input.rettighetsperiode)
+                .mapValue { InstitusjonsOpphold(soning = SoningOpphold(vurdering = OppholdVurdering.UAVKLART)) }
                 .kombiner(soningsvurderingTidslinje, JoinStyle.OUTER_JOIN { periode, venstreSegment, høyreSegment ->
                     val venstreVerdi = venstreSegment?.verdi
                     val høyreVerdi = høyreSegment?.verdi
@@ -61,7 +63,7 @@ class EtAnnetStedUtlederService(
                     Segment(periode, verdi)
                 })
 
-        val helseOpphold = opprettTidslinje(helseopphold)
+        val helseOpphold = opprettTidslinje(helseopphold).kryss(input.rettighetsperiode)
 
         val barnetilleggTidslinje =
             opprettTidslinje(barnetillegg.filter { it.personIdenter.isNotEmpty() }.map { segment ->
