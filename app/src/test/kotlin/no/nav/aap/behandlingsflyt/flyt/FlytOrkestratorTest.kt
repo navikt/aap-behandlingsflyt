@@ -43,11 +43,8 @@ import no.nav.aap.behandlingsflyt.flyt.flate.Venteinformasjon
 import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.TestHendelsesMottak
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_BISTANDSBEHOV_KODE
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_SYKDOM_KODE
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FATTE_VEDTAK_KODE
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.KVALITETSSIKRING_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.BrevbestillingLøsningStatus
@@ -256,7 +253,7 @@ class FlytOrkestratorTest {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
                 LøsAvklaringsbehovBehandlingHendelse(
-                    løsning = ForeslåVedtakLøsning("Begrunnelse"),
+                    løsning = ForeslåVedtakLøsning(),
                     behandlingVersjon = behandling.versjon,
                     bruker = Bruker("SAKSBEHANDLER")
                 )
@@ -349,7 +346,7 @@ class FlytOrkestratorTest {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
                 LøsAvklaringsbehovBehandlingHendelse(
-                    løsning = ForeslåVedtakLøsning("Begrunnelse"),
+                    løsning = ForeslåVedtakLøsning(),
                     behandlingVersjon = behandling.versjon,
                     bruker = Bruker("SAKSBEHANDLER")
                 )
@@ -605,7 +602,7 @@ class FlytOrkestratorTest {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
                 LøsAvklaringsbehovBehandlingHendelse(
-                    løsning = ForeslåVedtakLøsning("Begrunnelse"),
+                    løsning = ForeslåVedtakLøsning(),
                     behandlingVersjon = behandling.versjon,
                     bruker = Bruker("SAKSBEHANDLER")
                 )
@@ -927,7 +924,7 @@ class FlytOrkestratorTest {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
                 LøsAvklaringsbehovBehandlingHendelse(
-                    løsning = ForeslåVedtakLøsning("Begrunnelse"),
+                    løsning = ForeslåVedtakLøsning(),
                     behandlingVersjon = behandling.versjon,
                     bruker = Bruker("SAKSBEHANDLER")
                 )
@@ -1011,7 +1008,7 @@ class FlytOrkestratorTest {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
                 LøsAvklaringsbehovBehandlingHendelse(
-                    løsning = ForeslåVedtakLøsning("Begrunnelse"),
+                    løsning = ForeslåVedtakLøsning(),
                     behandlingVersjon = behandling.versjon,
                     bruker = Bruker("SAKSBEHANDLER")
                 )
@@ -1135,7 +1132,7 @@ class FlytOrkestratorTest {
 
         dataSource.transaction {
             val behov = hentAvklaringsbehov(behandling.id, it)
-            assertThat(behov.åpne()).allSatisfy { assertThat(it.definisjon.kode).isEqualTo(AVKLAR_SYKDOM_KODE) }
+            assertThat(behov.åpne()).allSatisfy { assertThat(it.definisjon.kode).isEqualTo(AvklaringsbehovKode.`5003`) }
         }
 
         dataSource.transaction {
@@ -1167,7 +1164,7 @@ class FlytOrkestratorTest {
 
         dataSource.transaction {
             val behov = hentAvklaringsbehov(behandling.id, it)
-            assertThat(behov.åpne()).allSatisfy { assertThat(it.definisjon.kode).isEqualTo(AVKLAR_BISTANDSBEHOV_KODE) }
+            assertThat(behov.åpne()).allSatisfy { assertThat(it.definisjon.kode).isEqualTo(AvklaringsbehovKode.`5006`) }
         }
 
         dataSource.transaction {
@@ -1192,7 +1189,7 @@ class FlytOrkestratorTest {
 
         dataSource.transaction {
             val behov = hentAvklaringsbehov(behandling.id, it)
-            assertThat(behov.åpne()).allSatisfy { assertThat(it.definisjon.kode).isEqualTo(KVALITETSSIKRING_KODE) }
+            assertThat(behov.åpne()).allSatisfy { assertThat(it.definisjon.kode).isEqualTo(AvklaringsbehovKode.`5097`) }
         }
 
         dataSource.transaction {
@@ -1222,7 +1219,7 @@ class FlytOrkestratorTest {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
                 LøsAvklaringsbehovBehandlingHendelse(
-                    løsning = ForeslåVedtakLøsning("Begrunnelse"),
+                    løsning = ForeslåVedtakLøsning(),
                     behandlingVersjon = behandling.versjon,
                     bruker = Bruker("SAKSBEHANDLER")
                 )
@@ -1232,7 +1229,7 @@ class FlytOrkestratorTest {
 
         dataSource.transaction {
             val behov = hentAvklaringsbehov(behandling.id, it)
-            assertThat(behov.åpne()).allSatisfy { assertThat(it.definisjon.kode).isEqualTo(FATTE_VEDTAK_KODE) }
+            assertThat(behov.åpne()).allSatisfy { assertThat(it.definisjon.kode).isEqualTo(AvklaringsbehovKode.`5099`) }
         }
 
 
@@ -1288,7 +1285,7 @@ class FlytOrkestratorTest {
 
         dataSource.transaction {
             val behov = hentAvklaringsbehov(behandling.id, it)
-            assertThat(behov.åpne()).allSatisfy { assertThat(it.definisjon.kode).isEqualTo(FATTE_VEDTAK_KODE) }
+            assertThat(behov.åpne()).isEmpty()
         }
 
         util.ventPåSvar()

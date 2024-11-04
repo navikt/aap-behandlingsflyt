@@ -98,7 +98,7 @@ class StatistikkJobbUtfører(
             avklaringsbehov = hendelse.avklaringsbehov.map { avklaringsbehovHendelseDto ->
                 AvklaringsbehovHendelse(
                     definisjon = Definisjon(
-                        type = avklaringsbehovHendelseDto.definisjon.type,
+                        type = avklaringsbehovHendelseDto.definisjon.type.name,
                         behovType = behovTypeTilStatistikkKontraktBehovsType(avklaringsbehovHendelseDto),
                         løsesISteg = stegTypeTilStatistikkKontrakt(avklaringsbehovHendelseDto.definisjon.løsesISteg)
                     ),

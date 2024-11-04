@@ -24,9 +24,9 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.kvalitetssikr
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.utledSubtypes
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.flate.barnetilleggApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.flate.beregningsGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.brev.brevApi
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.dokumentinnhentingAPI
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.institusjonAPI
-import no.nav.aap.behandlingsflyt.behandling.brev.brevApi
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.flate.tilkjentYtelseAPI
 import no.nav.aap.behandlingsflyt.behandling.vilkår.alder.flate.aldersGrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
@@ -43,6 +43,7 @@ import no.nav.aap.behandlingsflyt.flyt.flate.flytApi
 import no.nav.aap.behandlingsflyt.flyt.flate.søknadApi
 import no.nav.aap.behandlingsflyt.flyt.flate.torsHammerApi
 import no.nav.aap.behandlingsflyt.hendelse.bruddaktivitetsplikt.aktivitetspliktApi
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.server.exception.FlytOperasjonException
@@ -206,10 +207,10 @@ fun Application.module(dataSource: DataSource): Motor {
 
 fun NormalOpenAPIRoute.configApi() {
     route("/config/definisjoner") {
-        get<Unit, Map<String, Definisjon>> {
-            val response = HashMap<String, Definisjon>()
+        get<Unit, Map<AvklaringsbehovKode, Definisjon>> {
+            val response = HashMap<AvklaringsbehovKode, Definisjon>()
             Definisjon.entries.forEach {
-                response[it.name] = it
+                response[it.kode] = it
             }
             respond(response)
         }

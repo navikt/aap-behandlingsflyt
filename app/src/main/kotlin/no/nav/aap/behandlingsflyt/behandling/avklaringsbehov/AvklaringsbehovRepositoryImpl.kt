@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.ÅrsakTilReturKode
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -73,7 +74,7 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         return connection.queryFirstOrNull<Long>(selectQuery) {
             setParams {
                 setLong(1, behandlingId.toLong())
-                setString(2, definisjon.kode)
+                setEnumName(2, definisjon.kode)
             }
             setRowMapper {
                 it.getLong("id")
@@ -94,7 +95,7 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         return connection.executeReturnKey(query) {
             setParams {
                 setLong(1, behandlingId.toLong())
-                setString(2, definisjon.kode)
+                setEnumName(2, definisjon.kode)
                 setEnumName(3, funnetISteg)
             }
         }
@@ -252,7 +253,7 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
     }
 
     private fun mapAvklaringsbehov(row: Row): AvklaringsbehovInternal {
-        val definisjon = Definisjon.Companion.forKode(row.getString("definisjon"))
+        val definisjon = Definisjon.Companion.forKode(row.getEnum<AvklaringsbehovKode>("definisjon"))
         val id = row.getLong("id")
         return AvklaringsbehovInternal(
             id = id,

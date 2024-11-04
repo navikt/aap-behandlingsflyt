@@ -9,27 +9,9 @@ import java.time.Period
 import java.util.*
 import java.util.stream.Collectors
 
-const val MANUELT_SATT_PÅ_VENT_KODE = "9001"
-const val BESTILL_BREV_KODE = "9002"
-const val AVKLAR_STUDENT_KODE = "5001"
-const val AVKLAR_SYKDOM_KODE = "5003"
-const val FASTSETT_ARBEIDSEVNE_KODE = "5004"
-const val FRITAK_MELDEPLIKT_KODE = "5005"
-const val AVKLAR_BISTANDSBEHOV_KODE = "5006"
-const val VURDER_SYKEPENGEERSTATNING_KODE = "5007"
-const val FASTSETT_BEREGNINGSTIDSPUNKT_KODE = "5008"
-const val AVKLAR_BARNETILLEGG_KODE = "5009"
-const val AVKLAR_SONINGSFORRHOLD_KODE = "5010"
-const val AVKLAR_HELSEINSTITUSJON_KODE = "5011"
-const val AVKLAR_SAMORDNING_GRADERING_KODE = "5012"
-const val KVALITETSSIKRING_KODE = "5097"
-const val FORESLÅ_VEDTAK_KODE = "5098"
-const val FATTE_VEDTAK_KODE = "5099"
-const val SKRIV_BREV_KODE = "5050"
-
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 enum class Definisjon(
-    @JsonProperty("kode") val kode: String,
+    @JsonProperty("kode") val kode: AvklaringsbehovKode,
     val type: BehovType,
     @JsonIgnore private val defaultFrist: Period = Period.ZERO,
     @JsonProperty("løsesISteg") val løsesISteg: StegType = StegType.UDEFINERT,
@@ -37,108 +19,112 @@ enum class Definisjon(
     val kvalitetssikres: Boolean = false
 ) {
     MANUELT_SATT_PÅ_VENT(
-        kode = MANUELT_SATT_PÅ_VENT_KODE,
+        kode = AvklaringsbehovKode.`9001`,
         type = BehovType.VENTEPUNKT,
         defaultFrist = Period.ofWeeks(3),
     ),
     BESTILL_BREV(
-        kode = BESTILL_BREV_KODE,
+        kode = AvklaringsbehovKode.`9002`,
         løsesISteg = StegType.BREV,
         type = BehovType.VENTEPUNKT,
         defaultFrist = Period.ofDays(1),
     ),
     SKRIV_BREV(
-        kode = SKRIV_BREV_KODE,
+        kode = AvklaringsbehovKode.`5050`,
         løsesISteg = StegType.BREV,
         type = BehovType.MANUELT_PÅKREVD,
     ),
     AVKLAR_STUDENT(
-        kode = AVKLAR_STUDENT_KODE,
+        kode = AvklaringsbehovKode.`5001`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.AVKLAR_STUDENT,
         kreverToTrinn = true
     ),
     AVKLAR_SYKDOM(
-        kode = AVKLAR_SYKDOM_KODE,
+        kode = AvklaringsbehovKode.`5003`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.AVKLAR_SYKDOM,
         kreverToTrinn = true,
         kvalitetssikres = true
     ),
     KVALITETSSIKRING(
-        kode = KVALITETSSIKRING_KODE,
+        kode = AvklaringsbehovKode.`5097`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.KVALITETSSIKRING
     ),
     FASTSETT_ARBEIDSEVNE(
-        kode = FASTSETT_ARBEIDSEVNE_KODE,
+        kode = AvklaringsbehovKode.`5004`,
         type = BehovType.MANUELT_FRIVILLIG,
         løsesISteg = StegType.FASTSETT_ARBEIDSEVNE,
         kreverToTrinn = true,
         kvalitetssikres = true
     ),
     FASTSETT_BEREGNINGSTIDSPUNKT(
-        kode = FASTSETT_BEREGNINGSTIDSPUNKT_KODE,
+        kode = AvklaringsbehovKode.`5008`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.FASTSETT_BEREGNINGSTIDSPUNKT,
         kreverToTrinn = true
     ),
     FRITAK_MELDEPLIKT(
-        kode = FRITAK_MELDEPLIKT_KODE,
+        kode = AvklaringsbehovKode.`5005`,
         type = BehovType.MANUELT_FRIVILLIG,
         løsesISteg = StegType.FRITAK_MELDEPLIKT,
         kreverToTrinn = true,
         kvalitetssikres = true
     ),
     AVKLAR_BISTANDSBEHOV(
-        kode = AVKLAR_BISTANDSBEHOV_KODE,
+        kode = AvklaringsbehovKode.`5006`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.VURDER_BISTANDSBEHOV,
         kreverToTrinn = true,
         kvalitetssikres = true
     ),
     AVKLAR_SYKEPENGEERSTATNING(
-        kode = VURDER_SYKEPENGEERSTATNING_KODE,
+        kode = AvklaringsbehovKode.`5007`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.VURDER_SYKEPENGEERSTATNING,
         kreverToTrinn = true
     ),
     AVKLAR_BARNETILLEGG(
-        kode = AVKLAR_BARNETILLEGG_KODE,
+        kode = AvklaringsbehovKode.`5009`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.BARNETILLEGG,
         kreverToTrinn = true
     ),
     AVKLAR_SONINGSFORRHOLD(
-        kode = AVKLAR_SONINGSFORRHOLD_KODE,
+        kode = AvklaringsbehovKode.`5010`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.DU_ER_ET_ANNET_STED,
         kreverToTrinn = true
     ),
     AVKLAR_HELSEINSTITUSJON(
-        kode = AVKLAR_HELSEINSTITUSJON_KODE,
+        kode = AvklaringsbehovKode.`5011`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.DU_ER_ET_ANNET_STED,
         kreverToTrinn = true
     ),
     AVKLAR_SAMORDNING_GRADERING(
-        kode = AVKLAR_SAMORDNING_GRADERING_KODE,
+        kode = AvklaringsbehovKode.`5012`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.SAMORDNING_GRADERING
     ),
     FORESLÅ_VEDTAK(
-        kode = FORESLÅ_VEDTAK_KODE,
+        kode = AvklaringsbehovKode.`5098`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.FORESLÅ_VEDTAK,
     ),
     FATTE_VEDTAK(
-        kode = FATTE_VEDTAK_KODE,
+        kode = AvklaringsbehovKode.`5099`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.FATTE_VEDTAK,
     );
 
     companion object {
         fun forKode(definisjon: String): Definisjon {
+            return entries.single { it.kode == AvklaringsbehovKode.valueOf(definisjon) }
+        }
+
+        fun forKode(definisjon: AvklaringsbehovKode): Definisjon {
             return entries.single { it.kode == definisjon }
         }
 

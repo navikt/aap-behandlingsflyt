@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -410,7 +411,7 @@ class StatistikkJobbUtførerTest {
         val avklaringsbehov = listOf(
             AvklaringsbehovHendelseDto(
                 definisjon = DefinisjonDTO(
-                    type = "xxx",
+                    type = AvklaringsbehovKode.`5050`,
                     behovType = Definisjon.BehovType.MANUELT_PÅKREVD, løsesISteg = StegType.FATTE_VEDTAK
                 ),
                 status = no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER,
@@ -458,7 +459,7 @@ class StatistikkJobbUtførerTest {
                 avklaringsbehov = avklaringsbehov.map { avklaringsbehovHendelseDto ->
                     AvklaringsbehovHendelse(
                         definisjon = no.nav.aap.statistikk.api_kontrakt.Definisjon(
-                            type = avklaringsbehovHendelseDto.definisjon.type,
+                            type = avklaringsbehovHendelseDto.definisjon.type.name,
                             behovType = BehovType.valueOf(avklaringsbehovHendelseDto.definisjon.behovType.toString()),
                             løsesISteg = no.nav.aap.statistikk.api_kontrakt.StegType.FATTE_VEDTAK
                         ),

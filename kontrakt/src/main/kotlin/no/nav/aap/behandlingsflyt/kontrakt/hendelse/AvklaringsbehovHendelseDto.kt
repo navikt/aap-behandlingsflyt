@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.kontrakt.hendelse
 
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -13,7 +14,7 @@ data class AvklaringsbehovHendelseDto(
 )
 
 data class DefinisjonDTO(
-    val type: String,
+    val type: AvklaringsbehovKode,
     val behovType: Definisjon.BehovType,
     val løsesISteg: StegType
 )
