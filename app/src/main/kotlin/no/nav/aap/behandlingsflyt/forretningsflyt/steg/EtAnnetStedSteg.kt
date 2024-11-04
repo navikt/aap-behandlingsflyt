@@ -16,11 +16,14 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
+import org.slf4j.LoggerFactory
 
 class EtAnnetStedSteg(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val etAnnetStedUtlederService: EtAnnetStedUtlederService
 ) : BehandlingSteg {
+
+    private val log = LoggerFactory.getLogger(EtAnnetStedSteg::class.java)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
@@ -28,6 +31,7 @@ class EtAnnetStedSteg(
         val avklaringsbehov = mutableListOf<Definisjon>()
 
         val harBehovForAvklaringer = etAnnetStedUtlederService.utled(kontekst.behandlingId)
+        log.info("Perioder til vurdering: {}", harBehovForAvklaringer.perioderTilVurdering)
         if (harBehovForAvklaringer.harBehovForAvklaring()) {
             avklaringsbehov += harBehovForAvklaringer.avklaringsbehov()
         }
