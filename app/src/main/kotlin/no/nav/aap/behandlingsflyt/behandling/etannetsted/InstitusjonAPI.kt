@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Ins
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.HelseinstitusjonGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.Helseopphold
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.InstitusjonsoppholdDto
@@ -89,7 +90,15 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: HikariDataSource) {
                         .map {
                             Helseopphold(
                                 periode = it.periode,
-                                vurderinger = vurderinger.kryss(it.periode).segmenter().map { it.verdi },
+                                vurderinger = vurderinger.kryss(it.periode).segmenter().map {
+                                    HelseinstitusjonVurdering(
+                                        it.verdi.begrunnelse,
+                                        it.verdi.faarFriKostOgLosji,
+                                        it.verdi.forsoergerEktefelle,
+                                        it.verdi.harFasteUtgifter,
+                                        it.periode
+                                    )
+                                },
                                 status = it.verdi!!.vurdering
                             )
                         }
