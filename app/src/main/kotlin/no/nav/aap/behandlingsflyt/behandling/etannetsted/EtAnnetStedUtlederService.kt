@@ -179,8 +179,8 @@ class EtAnnetStedUtlederService(
         helsevurderinger: List<HelseinstitusjonVurdering>,
         rettighetsperiode: Periode
     ): Tidslinje<HelseOpphold> {
-        return helsevurderinger.sortedBy { it.periode }.map {
-            Tidslinje(
+        return Tidslinje(helsevurderinger.sortedBy { it.periode }.map {
+            Segment(
                 it.periode, HelseOpphold(
                     if (it.faarFriKostOgLosji && it.harFasteUtgifter == false && it.forsoergerEktefelle == false) {
                         OppholdVurdering.AVSLÅTT
@@ -189,9 +189,7 @@ class EtAnnetStedUtlederService(
                     }
                 )
             )
-        }.fold(Tidslinje<HelseOpphold>()) { acc, tidslinje ->
-            acc.kombiner(tidslinje, StandardSammenslåere.prioriterHøyreSideCrossJoin())
-        }.kryss(rettighetsperiode).komprimer()
+        }).kryss(rettighetsperiode).komprimer()
     }
 
     private fun sammenslåer(): JoinStyle.OUTER_JOIN<InstitusjonsOpphold, InstitusjonsOpphold, InstitusjonsOpphold> {
