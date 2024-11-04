@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Pliktkort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDate
@@ -22,4 +23,5 @@ data class UnderveisInput(
     val aktivitetspliktGrunnlag: AktivitetspliktGrunnlag,
     val etAnnetSted: List<EtAnnetSted>,
     val arbeidsevneGrunnlag: ArbeidsevneGrunnlag,
+    val meldepliktGrunnlag: MeldepliktGrunnlag,
 ) : Faktagrunnlag

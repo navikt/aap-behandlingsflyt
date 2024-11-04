@@ -28,7 +28,7 @@ class MeldepliktRepository(private val connection: DBConnection) {
                     vurderingOpprettet = row.getLocalDateTime("OPPRETTET_TID"),
                 )
             }
-        }.grupperOgMapTilGrunnlag(behandlingId).firstOrNull()
+        }.grupperOgMapTilGrunnlag().firstOrNull()
     }
 
     fun hentAlleVurderinger(sakId: SakId, behandlingId: BehandlingId): Set<Fritaksvurdering> {
@@ -71,14 +71,10 @@ class MeldepliktRepository(private val connection: DBConnection) {
         }
     }
 
-    private fun Iterable<MeldepliktInternal>.grupperOgMapTilGrunnlag(behandlingId: BehandlingId): List<MeldepliktGrunnlag> {
+    private fun Iterable<MeldepliktInternal>.grupperOgMapTilGrunnlag(): List<MeldepliktGrunnlag> {
         return groupBy(MeldepliktInternal::meldepliktId) { it.toFritaksvurdering() }
-            .map { (meldepliktId, fritaksvurderinger) ->
-                MeldepliktGrunnlag(
-                    meldepliktId,
-                    behandlingId,
-                    fritaksvurderinger
-                )
+            .map { (_, fritaksvurderinger) ->
+                MeldepliktGrunnlag(fritaksvurderinger)
             }
     }
 
