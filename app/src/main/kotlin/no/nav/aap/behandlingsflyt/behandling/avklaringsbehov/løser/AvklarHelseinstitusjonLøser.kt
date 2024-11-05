@@ -12,10 +12,8 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.StandardSammenslåere
 import no.nav.aap.tidslinje.Tidslinje
-import org.slf4j.LoggerFactory
 
 class AvklarHelseinstitusjonLøser(connection: DBConnection) : AvklaringsbehovsLøser<AvklarHelseinstitusjonLøsning> {
-    private val log = LoggerFactory.getLogger(AvklarHelseinstitusjonLøser::class.java)
 
     private val helseinstitusjonRepository = InstitusjonsoppholdRepository(connection)
     private val behandlingRepository = BehandlingRepositoryImpl(connection)
@@ -26,11 +24,8 @@ class AvklarHelseinstitusjonLøser(connection: DBConnection) : AvklaringsbehovsL
         val vedtatteVurderinger =
             behandling.forrigeBehandlingId?.let { helseinstitusjonRepository.hentHvisEksisterer(it) }
 
-        log.info("nye vurderinger {}", løsning.helseinstitusjonVurdering.vurderinger)
-
         val oppdaterteVurderinger =
             slåSammenMedNyeVurderinger(vedtatteVurderinger, løsning.helseinstitusjonVurdering.vurderinger)
-        log.info("oppdaterteVurderinger {}", oppdaterteVurderinger)
         helseinstitusjonRepository.lagreHelseVurdering(kontekst.kontekst.behandlingId, oppdaterteVurderinger)
 
         return LøsningsResultat(løsning.helseinstitusjonVurdering.vurderinger.map { it.begrunnelse }.joinToString(" "))
