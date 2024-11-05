@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarHelsei
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.HelseinstitusjonVurderingerDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_HELSEINSTITUSJON_KODE
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_SONINGSFORRHOLD_KODE
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.komponenter.dbconnect.DBConnection
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -22,7 +22,7 @@ class AvklarHelseinstitusjonLøsning(
         "behovstype",
         required = true,
         defaultValue = AVKLAR_HELSEINSTITUSJON_KODE
-    ) val behovstype: String = AVKLAR_SONINGSFORRHOLD_KODE
+    ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5011`
 ) :
     AvklaringsbehovLøsning {
     override fun løs(connection: DBConnection, kontekst: AvklaringsbehovKontekst): LøsningsResultat {

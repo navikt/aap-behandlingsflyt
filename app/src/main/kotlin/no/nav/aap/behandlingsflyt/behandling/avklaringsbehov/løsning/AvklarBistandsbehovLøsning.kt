@@ -3,11 +3,12 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeName
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_BISTANDSBEHOV_KODE
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarBistandLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingDto
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_BISTANDSBEHOV_KODE
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.komponenter.dbconnect.DBConnection
 
 
@@ -20,7 +21,7 @@ class AvklarBistandsbehovLøsning(
         "behovstype",
         required = true,
         defaultValue = AVKLAR_BISTANDSBEHOV_KODE
-    ) val behovstype: String = AVKLAR_BISTANDSBEHOV_KODE
+    ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5006`
 ) : AvklaringsbehovLøsning {
     override fun løs(connection: DBConnection, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
         return AvklarBistandLøser(connection).løs(kontekst, this)
