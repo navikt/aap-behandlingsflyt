@@ -44,9 +44,8 @@ class EtAnnetStedUtlederService(
         val soningsOppgold = opphold.filter { segment -> segment.verdi.type == Institusjonstype.FO }
         val helseopphold = opphold.filter { segment -> segment.verdi.type == Institusjonstype.HS }
         val barnetillegg = input.barnetillegg
-        val soningsvurderingTidslinje = byggSoningTidslinje(input.soningsvurderinger, input.rettighetsperiode)
-        val helsevurderingerTidslinje = byggHelseTidslinje(input.helsevurderinger, input.rettighetsperiode)
-        log.info("helse vurderinger: {}", helsevurderingerTidslinje)
+        val soningsvurderingTidslinje = byggSoningsvurderingTidslinje(input.soningsvurderinger)
+        val helsevurderingerTidslinje = byggHelsevurderingTidslinje(input.helsevurderinger)
 
         var perioderSomTrengerVurdering =
             Tidslinje(soningsOppgold)
@@ -155,9 +154,8 @@ class EtAnnetStedUtlederService(
         return result
     }
 
-    private fun byggSoningTidslinje(
-        soningsvurderinger: List<Soningsvurdering>,
-        rettighetsperiode: Periode
+    private fun byggSoningsvurderingTidslinje(
+        soningsvurderinger: List<Soningsvurdering>
     ): Tidslinje<SoningOpphold> {
         return soningsvurderinger.sortedBy { it.fraDato }.map {
             Tidslinje(
@@ -174,12 +172,11 @@ class EtAnnetStedUtlederService(
             )
         }.fold(Tidslinje<SoningOpphold>()) { acc, tidslinje ->
             acc.kombiner(tidslinje, StandardSammenslåere.prioriterHøyreSideCrossJoin())
-        }.kryss(rettighetsperiode).komprimer()
+        }.komprimer()
     }
 
-    private fun byggHelseTidslinje(
+    private fun byggHelsevurderingTidslinje(
         helsevurderinger: List<HelseinstitusjonVurdering>,
-        rettighetsperiode: Periode
     ): Tidslinje<HelseOpphold> {
         return Tidslinje(helsevurderinger.sortedBy { it.periode }.map {
             Segment(
@@ -191,7 +188,7 @@ class EtAnnetStedUtlederService(
                     }
                 )
             )
-        }).kryss(rettighetsperiode).komprimer()
+        }).komprimer()
     }
 
     private fun sammenslåer(): JoinStyle.OUTER_JOIN<InstitusjonsOpphold, InstitusjonsOpphold, InstitusjonsOpphold> {
