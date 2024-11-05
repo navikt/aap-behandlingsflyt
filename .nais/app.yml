@@ -71,6 +71,7 @@ spec:
         - application: saksbehandling
         - application: tilgang
         - application: postmottak-backend
+        - application: paw-patrol
         - application: azure-token-generator # Ikke i prod :)
           namespace: aura
           cluster: dev-gcp
