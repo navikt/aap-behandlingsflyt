@@ -5,8 +5,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.Doku
 
 data class BestillLegeerklæringDto (
     val behandlerRef: String,
+    val behandlerNavn: String,
+    val veilederNavn: String,
     val fritekst: String,
-    val sakId: String,
+    val saksnummer: String,
     val dokumentasjonType: DokumentasjonType,
     val dialogmeldingVedlegg: ByteArray?
 )

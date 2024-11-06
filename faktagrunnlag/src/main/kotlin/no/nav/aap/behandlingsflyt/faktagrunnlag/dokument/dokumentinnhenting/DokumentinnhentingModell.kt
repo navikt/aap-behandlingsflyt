@@ -1,12 +1,15 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting
 
+import java.time.LocalDateTime
 import java.util.*
 
 data class LegeerklæringBestillingRequest (
     val behandlerRef: String,
+    val behandlerNavn: String,
+    val veilederNavn: String,
     val personIdent: String,
     val dialogmeldingTekst: String,
-    val sakId: String,
+    val saksnummer: String,
     val dokumentasjonType: DokumentasjonType,
     val dialogmeldingVedlegg: ByteArray?
 )
@@ -20,7 +23,8 @@ data class LegeerklæringStatusResponse(
     val status: MeldingStatusType?,
     val behandlerRef: String,
     val personId: String,
-    val sakId: String,
+    val saksnummer: String,
+    val opprettet: LocalDateTime
 )
 
 enum class DokumentasjonType {

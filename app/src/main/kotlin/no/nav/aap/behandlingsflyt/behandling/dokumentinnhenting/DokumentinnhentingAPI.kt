@@ -9,6 +9,8 @@ import com.zaxxer.hikari.HikariDataSource
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.DokumeninnhentingGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringBestillingRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringStatusResponse
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.transaction
 
 fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: HikariDataSource) {
@@ -16,14 +18,20 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: HikariDataSource) {
         route("/bestill") {
             post<Unit, String, BestillLegeerklæringDto> { _, req ->
                 val soningsgrunnlag = dataSource.transaction(readOnly = true) { connection ->
+
+                    val sakService = SakService(connection)
+                    val sak = sakService.hent(Saksnummer(req.saksnummer))
+
                     DokumeninnhentingGateway().bestillLegeerklæring(
                         LegeerklæringBestillingRequest(
                             req.behandlerRef,
-                            "PERSONIDENT", // TODO: Vi må hente inn personident på en fin måte
+                            req.behandlerNavn,
+                            req.veilederNavn,
+                            sak.person.aktivIdent().identifikator,
                             req.fritekst,
-                            req.sakId,
+                            req.saksnummer,
                             req.dokumentasjonType,
-                            req.dialogmeldingVedlegg
+                            req.dialogmeldingVedlegg,
                         )
                     )
                 }
