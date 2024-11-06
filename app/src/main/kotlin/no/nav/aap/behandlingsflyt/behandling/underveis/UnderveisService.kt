@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.RettTilRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.SammenstiltAktivitetspliktRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.SoningRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UnderveisInput
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UtledMeldeperiodeRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Vurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
@@ -42,6 +43,7 @@ class UnderveisService(
 
     private val regelset = listOf(
         RettTilRegel(),
+        UtledMeldeperiodeRegel(),
         InstitusjonRegel(),
         SoningRegel(),
         MeldepliktRegel(),

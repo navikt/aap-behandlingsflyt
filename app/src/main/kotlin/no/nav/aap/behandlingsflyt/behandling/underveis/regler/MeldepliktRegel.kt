@@ -1,7 +1,11 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UtledMeldeperiodeRegel.Companion.groupByMeldeperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering.Companion.tidslinje
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktFritaksperioder
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tidslinje.JoinStyle
 import no.nav.aap.tidslinje.Segment
@@ -21,11 +25,51 @@ import java.util.*
  *   - etc
  */
 class MeldepliktRegel : UnderveisRegel {
+    class MeldepliktData(val fritaksvurdering: Fritaksvurdering.FritaksvurderingData?, val innsending: JournalpostId?)
+
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
+        val defaultTidslinje = Tidslinje<JournalpostId?>(input.rettighetsperiode, null)
 
-        val nyttresultat = håndterMeldeplikt(resultat, input)
+        val fritaksTidslinje = input.meldepliktGrunnlag.vurderinger.tidslinje()
+        val innsendtTidslinje: Tidslinje<JournalpostId?> = input.innsendingsTidspunkt.entries
+            .map {
+                Segment<JournalpostId?>(
+                    Periode(it.key, it.key),
+                    it.value
+                )
+            }
+            .let { Tidslinje(it) }
 
-        return nyttresultat
+        val dokumentTidslinje: Tidslinje<JournalpostId?> = defaultTidslinje.kombiner(
+            innsendtTidslinje,
+            StandardSammenslåere.prioriterHøyreSideCrossJoin()
+        )
+
+        val data = fritaksTidslinje.kombiner(dokumentTidslinje, JoinStyle.OUTER_JOIN { periode, fritaksvurdering, dokument ->
+            Segment(periode, MeldepliktData(fritaksvurdering?.verdi, dokument?.verdi))
+
+        })
+
+
+        groupByMeldeperiode(resultat, dokumentTidslinje)
+            .map { meldeperiodeSegment ->
+                val meldeperioden = meldeperiodeSegment.periode
+                val førsteMeldekort = meldeperiodeSegment.verdi.segmenter().firstOrNull()
+                val fritak = TODO()
+
+                MeldepliktVurdering(
+                    journalpostId = TODO(),
+                    meldeperiode = TODO(),
+                    fritrak = TODO(),
+                    utfall = TODO(),
+                    årsak = TODO()
+                )
+            }
+
+
+//        val nyttresultat = håndterMeldeplikt(resultat, input)
+//
+//        return nyttresultat
     }
 
     private fun håndterMeldeplikt(

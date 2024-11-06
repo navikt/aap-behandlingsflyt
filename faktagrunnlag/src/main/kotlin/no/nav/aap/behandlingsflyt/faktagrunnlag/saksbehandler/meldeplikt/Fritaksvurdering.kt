@@ -1,7 +1,10 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneVurdering.ArbeidsevneVurderingData
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tidslinje.Segment
+import no.nav.aap.tidslinje.StandardSammenslåere
 import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.Tid
 import java.time.LocalDate
@@ -25,4 +28,12 @@ data class Fritaksvurdering(
         val begrunnelse: String,
         val opprettetTid: LocalDateTime?
     )
+
+    companion object {
+        fun List<Fritaksvurdering>.tidslinje(): Tidslinje<FritaksvurderingData> {
+            return sortedBy { it.fraDato }.fold(Tidslinje()) { acc, fritaksvurdering ->
+                acc.kombiner(fritaksvurdering.tidslinje(), StandardSammenslåere.prioriterHøyreSideCrossJoin())
+            }
+        }
+    }
 }
