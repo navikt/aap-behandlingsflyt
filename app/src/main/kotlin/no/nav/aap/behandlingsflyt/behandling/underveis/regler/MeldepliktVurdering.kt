@@ -7,8 +7,7 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 
 data class MeldepliktVurdering(
     val journalpostId: JournalpostId?,
-    val meldeperiode: Periode,
-    val fritrak: Boolean,
+    val fritak: Boolean,
     val utfall: Utfall?,
     val årsak: UnderveisÅrsak? = null
 )
