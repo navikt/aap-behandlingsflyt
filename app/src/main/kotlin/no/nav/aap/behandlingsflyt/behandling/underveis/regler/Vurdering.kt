@@ -25,6 +25,7 @@ data class Vurdering(
     private val grenseverdi: Prosent? = null,
     internal val institusjonVurdering: InstitusjonVurdering? = null,
     internal val soningsVurdering: SoningVurdering? = null,
+    internal val meldeperiode: Periode? = null,
 ) {
 
     fun leggTilVurdering(vilkårtype: Vilkårtype, utfall: Utfall): Vurdering {
@@ -63,6 +64,10 @@ data class Vurdering(
 
     fun leggTilAktivtBidragVurdering(vurdering: AktivitetspliktVurdering): Vurdering {
         return copy(aktivitetspliktVurdering = vurdering)
+    }
+
+    fun leggTilMeldeperiode(meldeperiode: Periode): Vurdering {
+        return copy(meldeperiode = meldeperiode)
     }
 
     fun vurderinger(): Map<Vilkårtype, Utfall> {
