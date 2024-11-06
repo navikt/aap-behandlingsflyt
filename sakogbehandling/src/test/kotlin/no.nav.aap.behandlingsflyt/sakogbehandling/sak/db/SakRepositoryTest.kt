@@ -5,10 +5,21 @@ import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import org.assertj.core.api.Assertions
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 internal class SakRepositoryTest {
+    @BeforeEach
+    fun beforeEach() {
+        InitTestDatabase.migrate()
+    }
+
+    @AfterEach
+    fun afterEach() {
+        InitTestDatabase.clean()
+    }
 
     @Test
     fun `skal avklare yrkesskade hvis det finnes spor av yrkesskade`() {
