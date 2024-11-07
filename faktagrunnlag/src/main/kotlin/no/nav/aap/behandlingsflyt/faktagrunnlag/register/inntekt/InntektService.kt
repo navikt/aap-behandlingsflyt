@@ -10,10 +10,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -47,7 +47,7 @@ class InntektService private constructor(
         val sak = sakService.hent(kontekst.sakId)
 
         val inntekter = if (skalInnhenteOpplysninger(vilkårsresultat)) {
-            val nedsettelsesDato = utledNedsettelsesdato(sykdomGrunnlag, studentGrunnlag);
+            val nedsettelsesDato = utledNedsettelsesdato(beregningVurdering, studentGrunnlag);
             val behov = Inntektsbehov(
                 Input(
                     nedsettelsesDato = nedsettelsesDato,
@@ -76,9 +76,9 @@ class InntektService private constructor(
         return sykdomsvilkåret.harPerioderSomErOppfylt() && bistandsvilkåret.harPerioderSomErOppfylt()
     }
 
-    private fun utledNedsettelsesdato(sykdomGrunnlag: SykdomGrunnlag?, studentGrunnlag: StudentGrunnlag?): LocalDate {
+    private fun utledNedsettelsesdato(beregningVurdering: BeregningVurdering?, studentGrunnlag: StudentGrunnlag?): LocalDate {
         val nedsettelsesdatoer = setOf(
-            sykdomGrunnlag?.sykdomsvurdering?.nedsattArbeidsevneDato,
+            beregningVurdering?.nedsattArbeidsevneDato,
             studentGrunnlag?.studentvurdering?.avbruttStudieDato
         ).filterNotNull()
 

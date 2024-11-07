@@ -37,7 +37,7 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
             utfall = Utfall.IKKE_OPPFYLT
             avslagsårsak = if (sykdomsvurdering?.erSkadeSykdomEllerLyteVesentligdel == false) {
                 Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL
-            } else if (sykdomsvurdering?.erNedsettelseIArbeidsevneHøyereEnnNedreGrense == false) {
+            } else if (sykdomsvurdering?.erNedsettelseIArbeidsevneMerEnnHalvparten == false) {
                 Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE
             } else {
                 Avslagsårsak.MANGLENDE_DOKUMENTASJON // TODO noe mer rett
@@ -60,7 +60,8 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
         }
         return sykdomsvurdering.erSkadeSykdomEllerLyteVesentligdel == true &&
                 sykdomsvurdering.erArbeidsevnenNedsatt == true &&
-                sykdomsvurdering.erNedsettelseIArbeidsevneHøyereEnnNedreGrense == true
+                sykdomsvurdering.erNedsettelseIArbeidsevneAvEnVissVarighet == true &&
+                sykdomsvurdering.erNedsettelseIArbeidsevneMerEnnHalvparten == true
     }
 
     private fun lagre(grunnlag: SykdomsFaktagrunnlag, vurderingsResultat: VurderingsResultat): VurderingsResultat {

@@ -1,9 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.NedreGrense
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
-import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDate
 
@@ -26,15 +23,10 @@ data class SykdomsvurderingDto(
     val erArbeidsevnenNedsatt: Boolean?,
     val harSkadeSykdomEllerLyte: Boolean,
     val erSkadeSykdomEllerLyteVesentligdel: Boolean?,
-    val erNedsettelseIArbeidsevneHøyereEnnNedreGrense: Boolean?,
-    val nedreGrense: NedreGrense?,
-    val nedsattArbeidsevneDato: LocalDate?,
-    val yrkesskadevurdering: YrkesskadevurderingDto?
+    val erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean?,
+    val erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean?,
+    val erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean?
 ) {
-
-    fun toYrkesskadevurdering() = yrkesskadevurdering?.let {
-        Yrkesskadevurdering(begrunnelse, it.erÅrsakssammenheng, nedsattArbeidsevneDato, Prosent.`50_PROSENT`)
-    }
 
     fun toSykdomsvurdering(): Sykdomsvurdering {
         return Sykdomsvurdering(
@@ -43,9 +35,9 @@ data class SykdomsvurderingDto(
             erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
             harSkadeSykdomEllerLyte = harSkadeSykdomEllerLyte,
             erSkadeSykdomEllerLyteVesentligdel = erSkadeSykdomEllerLyteVesentligdel,
-            erNedsettelseIArbeidsevneHøyereEnnNedreGrense = erNedsettelseIArbeidsevneHøyereEnnNedreGrense,
-            nedreGrense = nedreGrense,
-            nedsattArbeidsevneDato = nedsattArbeidsevneDato
+            erNedsettelseIArbeidsevneMerEnnHalvparten = this@SykdomsvurderingDto.erNedsettelseIArbeidsevneMerEnnHalvparten,
+            erNedsettelseIArbeidsevneAvEnVissVarighet = erNedsettelseIArbeidsevneAvEnVissVarighet,
+            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense
         )
     }
 }

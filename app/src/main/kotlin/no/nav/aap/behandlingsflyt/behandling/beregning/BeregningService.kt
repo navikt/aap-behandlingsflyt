@@ -11,7 +11,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.faktasaksbehandler.student.StudentVurdering
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -35,7 +34,6 @@ class BeregningService(
         val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
 
         val input = utledInput(
-            sykdomsvurdering = sykdomGrunnlag?.sykdomsvurdering,
             studentVurdering = student?.studentvurdering,
             yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
             vurdering = beregningVurdering,
@@ -55,7 +53,6 @@ class BeregningService(
     }
 
     private fun utledInput(
-        sykdomsvurdering: Sykdomsvurdering?,
         studentVurdering: StudentVurdering?,
         yrkesskadevurdering: Yrkesskadevurdering?,
         vurdering: BeregningVurdering?,
@@ -64,7 +61,7 @@ class BeregningService(
     ): Inntektsbehov {
         return Inntektsbehov(
             Input(
-                nedsettelsesDato = utledNedsettelsesdato(sykdomsvurdering, studentVurdering),
+                nedsettelsesDato = utledNedsettelsesdato(vurdering, studentVurdering),
                 inntekter = inntekter,
                 uføregrad = uføregrad,
                 yrkesskadevurdering = yrkesskadevurdering,
@@ -74,11 +71,11 @@ class BeregningService(
     }
 
     private fun utledNedsettelsesdato(
-        sykdomsvurdering: Sykdomsvurdering?,
+        beregningVurdering: BeregningVurdering?,
         studentVurdering: StudentVurdering?
     ): LocalDate {
         val nedsettelsesdatoer = setOf(
-            sykdomsvurdering?.nedsattArbeidsevneDato,
+            beregningVurdering?.nedsattArbeidsevneDato,
             studentVurdering?.avbruttStudieDato
         ).filterNotNull()
 

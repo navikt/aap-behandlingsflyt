@@ -48,6 +48,7 @@ class InntektsbehovTest {
                 BeregningVurdering(
                     begrunnelse = "asdf",
                     ytterligereNedsattArbeidsevneDato = ytterligereNedsattDato,
+                    nedsattArbeidsevneDato = nedsettelsesDato,
                     antattÅrligInntekt = Beløp(100)
                 )
             )
@@ -79,6 +80,7 @@ class InntektsbehovTest {
                 beregningVurdering = BeregningVurdering(
                     begrunnelse = "begrunnelse",
                     antattÅrligInntekt = Beløp(123456),
+                    nedsattArbeidsevneDato = nedsettelsesDato,
                     ytterligereNedsattArbeidsevneDato = LocalDate.now().minusYears(10)
                 )
             )

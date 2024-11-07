@@ -36,6 +36,7 @@ class BeregningsGrunnlagApiTest {
                 beregningVurdering = BeregningVurdering(
                     begrunnelse = "test",
                     ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
+                    nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
                     antattÅrligInntekt = Beløp(500000)
                 )
             )

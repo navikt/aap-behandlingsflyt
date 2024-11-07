@@ -5,6 +5,7 @@ import java.time.LocalDate
 
 data class BeregningVurdering(
     val begrunnelse: String,
+    val nedsattArbeidsevneDato: LocalDate,
     val ytterligereNedsattArbeidsevneDato: LocalDate?,
     val antattÅrligInntekt: Beløp?
 )

@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
@@ -13,7 +12,6 @@ import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.Year
 
@@ -54,6 +52,7 @@ class BeregningTest {
                 yrkesskadevurdering = null,
                 beregningVurdering = BeregningVurdering(
                     begrunnelse = "test",
+                    nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
                     ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
                     antattÅrligInntekt = Beløp(500000)
                 )
@@ -85,6 +84,7 @@ class BeregningTest {
                 ),
                 beregningVurdering = BeregningVurdering(
                     begrunnelse = "test",
+                    nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
                     ytterligereNedsattArbeidsevneDato = null,
                     antattÅrligInntekt = Beløp(500000)
                 )
@@ -117,6 +117,7 @@ class BeregningTest {
                 ),
                 beregningVurdering = BeregningVurdering(
                     begrunnelse = "test",
+                    nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
                     ytterligereNedsattArbeidsevneDato = LocalDate.of(2020, 1, 1),
                     antattÅrligInntekt = Beløp(500000)
                 )
@@ -145,6 +146,7 @@ class BeregningTest {
                 beregningVurdering = BeregningVurdering(
                     begrunnelse = "test",
                     ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
+                    nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
                     antattÅrligInntekt = Beløp(500000)
                 )
             )
@@ -163,6 +165,7 @@ class BeregningTest {
                 beregningVurdering = BeregningVurdering(
                     begrunnelse = "test",
                     ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
+                    nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
                     antattÅrligInntekt = Beløp(500000)
                 )
             )

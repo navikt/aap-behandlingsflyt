@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.NedreGrense
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
@@ -21,14 +20,14 @@ class SykdomsInformasjonskravTest {
                 dokumenterBruktIVurdering = emptyList(),
                 harSkadeSykdomEllerLyte = true,
                 erSkadeSykdomEllerLyteVesentligdel = true,
-                erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
-                nedreGrense = NedreGrense.FEMTI,
-                nedsattArbeidsevneDato = LocalDate.now(),
+                erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                 erArbeidsevnenNedsatt = true,
             )
         )
 
-        assertThat(sykdomGrunnlag.erKonsistent()).isTrue
+        assertThat(sykdomGrunnlag.erKonsistentForSykdom()).isTrue
     }
 
     @Test
@@ -41,14 +40,14 @@ class SykdomsInformasjonskravTest {
                 dokumenterBruktIVurdering = emptyList(),
                 harSkadeSykdomEllerLyte = true,
                 erSkadeSykdomEllerLyteVesentligdel = true,
-                erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
-                nedreGrense = NedreGrense.TRETTI,
-                nedsattArbeidsevneDato = LocalDate.now(),
+                erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                 erArbeidsevnenNedsatt = true,
             )
         )
 
-        assertThat(sykdomGrunnlag.erKonsistent()).isFalse
+        assertThat(sykdomGrunnlag.erKonsistentForSykdom()).isFalse
     }
 
     @Test
@@ -66,14 +65,14 @@ class SykdomsInformasjonskravTest {
                 dokumenterBruktIVurdering = emptyList(),
                 harSkadeSykdomEllerLyte = true,
                 erSkadeSykdomEllerLyteVesentligdel = true,
-                erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
-                nedreGrense = NedreGrense.TRETTI,
-                nedsattArbeidsevneDato = LocalDate.now(),
+                erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                 erArbeidsevnenNedsatt = true,
             )
         )
 
-        assertThat(sykdomGrunnlag.erKonsistent()).isTrue
+        assertThat(sykdomGrunnlag.erKonsistentForSykdom()).isTrue
     }
 
     @Test
@@ -91,14 +90,14 @@ class SykdomsInformasjonskravTest {
                 dokumenterBruktIVurdering = emptyList(),
                 harSkadeSykdomEllerLyte = true,
                 erSkadeSykdomEllerLyteVesentligdel = true,
-                erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
-                nedreGrense = NedreGrense.FEMTI,
-                nedsattArbeidsevneDato = LocalDate.now(),
+                erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                 erArbeidsevnenNedsatt = true,
             )
         )
 
-        assertThat(sykdomGrunnlag.erKonsistent()).isFalse
+        assertThat(sykdomGrunnlag.erKonsistentForSykdom()).isFalse
     }
 
     @Test
@@ -116,14 +115,14 @@ class SykdomsInformasjonskravTest {
                 dokumenterBruktIVurdering = emptyList(),
                 harSkadeSykdomEllerLyte = true,
                 erSkadeSykdomEllerLyteVesentligdel = true,
-                erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
-                nedreGrense = NedreGrense.TRETTI,
-                nedsattArbeidsevneDato = LocalDate.now(),
+                erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                 erArbeidsevnenNedsatt = true,
             )
         )
 
-        assertThat(sykdomGrunnlag.erKonsistent()).isFalse
+        assertThat(sykdomGrunnlag.erKonsistentForSykdom()).isFalse
     }
 
     @Test
@@ -141,14 +140,14 @@ class SykdomsInformasjonskravTest {
                 dokumenterBruktIVurdering = emptyList(),
                 harSkadeSykdomEllerLyte = true,
                 erSkadeSykdomEllerLyteVesentligdel = true,
-                erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
-                nedreGrense = NedreGrense.FEMTI,
-                nedsattArbeidsevneDato = LocalDate.now(),
+                erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                 erArbeidsevnenNedsatt = true,
             )
         )
 
-        assertThat(sykdomGrunnlag.erKonsistent()).isTrue
+        assertThat(sykdomGrunnlag.erKonsistentForSykdom()).isTrue
     }
 
     @Test
@@ -161,14 +160,14 @@ class SykdomsInformasjonskravTest {
                 dokumenterBruktIVurdering = emptyList(),
                 harSkadeSykdomEllerLyte = false,
                 erSkadeSykdomEllerLyteVesentligdel = false,
-                erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
-                nedreGrense = NedreGrense.FEMTI,
-                nedsattArbeidsevneDato = LocalDate.now(),
+                erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                 erArbeidsevnenNedsatt = true,
             )
         )
 
-        assertThat(sykdomGrunnlag.erKonsistent()).isTrue
+        assertThat(sykdomGrunnlag.erKonsistentForSykdom()).isTrue
     }
 
     @Test
@@ -181,14 +180,14 @@ class SykdomsInformasjonskravTest {
                 dokumenterBruktIVurdering = emptyList(),
                 harSkadeSykdomEllerLyte = true,
                 erSkadeSykdomEllerLyteVesentligdel = false,
-                erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
-                nedreGrense = NedreGrense.FEMTI,
-                nedsattArbeidsevneDato = LocalDate.now(),
+                erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                 erArbeidsevnenNedsatt = true,
             )
         )
 
-        assertThat(sykdomGrunnlag.erKonsistent()).isTrue
+        assertThat(sykdomGrunnlag.erKonsistentForSykdom()).isTrue
     }
 
     @Test
@@ -201,14 +200,14 @@ class SykdomsInformasjonskravTest {
                 dokumenterBruktIVurdering = emptyList(),
                 harSkadeSykdomEllerLyte = true,
                 erSkadeSykdomEllerLyteVesentligdel = true,
-                erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
-                nedreGrense = NedreGrense.FEMTI,
-                nedsattArbeidsevneDato = LocalDate.now(),
+                erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                 erArbeidsevnenNedsatt = true,
             )
         )
 
-        assertThat(sykdomGrunnlag.erKonsistent()).isTrue
+        assertThat(sykdomGrunnlag.erKonsistentForSykdom()).isTrue
     }
 
     @Test
@@ -221,13 +220,13 @@ class SykdomsInformasjonskravTest {
                 dokumenterBruktIVurdering = emptyList(),
                 harSkadeSykdomEllerLyte = false,
                 erSkadeSykdomEllerLyteVesentligdel = true,
-                erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
-                nedreGrense = NedreGrense.FEMTI,
-                nedsattArbeidsevneDato = LocalDate.now(),
+                erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                 erArbeidsevnenNedsatt = true,
             )
         )
 
-        assertThat(sykdomGrunnlag.erKonsistent()).isFalse
+        assertThat(sykdomGrunnlag.erKonsistentForSykdom()).isFalse
     }
 }

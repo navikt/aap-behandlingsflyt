@@ -41,7 +41,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: HikariDataSource) {
                             oppgittYrkesskadeISøknad = false,
                             innhentedeYrkesskader = innhentedeYrkesskader,
                         ),
-                        sykdomsvurdering = sykdomGrunnlag?.sykdomsvurdering?.toDto(sykdomGrunnlag.yrkesskadevurdering),
+                        sykdomsvurdering = sykdomGrunnlag?.sykdomsvurdering?.toDto(),
                         skalVurdereYrkesskade = innhentedeYrkesskader.isNotEmpty()
                     )
                 )

@@ -35,9 +35,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.NedreGrense
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.YrkesskadevurderingDto
 import no.nav.aap.behandlingsflyt.faktasaksbehandler.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.flyt.flate.Venteinformasjon
 import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
@@ -92,7 +90,8 @@ class FlytOrkestratorTest {
         private val dataSource = InitTestDatabase.dataSource
         private val motor = Motor(dataSource, 2, jobber = ProsesseringsJobber.alle())
         private val hendelsesMottak = TestHendelsesMottak(dataSource)
-        private val util = TestUtil(dataSource, ProsesseringsJobber.alle().filter { it.cron() != null }.map { it.type() })
+        private val util =
+            TestUtil(dataSource, ProsesseringsJobber.alle().filter { it.cron() != null }.map { it.type() })
 
         @BeforeAll
         @JvmStatic
@@ -181,13 +180,10 @@ class FlytOrkestratorTest {
                             dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                             harSkadeSykdomEllerLyte = true,
                             erSkadeSykdomEllerLyteVesentligdel = true,
-                            erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
-                            nedreGrense = NedreGrense.FEMTI,
-                            nedsattArbeidsevneDato = LocalDate.now(),
-                            erArbeidsevnenNedsatt = true,
-                            yrkesskadevurdering = YrkesskadevurderingDto(
-                                erÅrsakssammenheng = false
-                            )
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                            erArbeidsevnenNedsatt = true
                         )
                     ),
                     behandlingVersjon = behandling.versjon,
@@ -298,13 +294,10 @@ class FlytOrkestratorTest {
                             dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                             harSkadeSykdomEllerLyte = true,
                             erSkadeSykdomEllerLyteVesentligdel = true,
-                            erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
-                            nedreGrense = NedreGrense.FEMTI,
-                            nedsattArbeidsevneDato = LocalDate.now(),
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             erArbeidsevnenNedsatt = true,
-                            yrkesskadevurdering = YrkesskadevurderingDto(
-                                erÅrsakssammenheng = false
-                            )
                         )
                     ),
                     behandlingVersjon = behandling.versjon,
@@ -511,13 +504,10 @@ class FlytOrkestratorTest {
                             dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                             harSkadeSykdomEllerLyte = true,
                             erSkadeSykdomEllerLyteVesentligdel = true,
-                            erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
-                            nedreGrense = NedreGrense.TRETTI,
-                            nedsattArbeidsevneDato = LocalDate.now(),
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             erArbeidsevnenNedsatt = true,
-                            yrkesskadevurdering = YrkesskadevurderingDto(
-                                erÅrsakssammenheng = true
-                            )
                         )
                     ),
                     behandlingVersjon = behandling.versjon,
@@ -578,6 +568,7 @@ class FlytOrkestratorTest {
                     løsning = FastsettBeregningstidspunktLøsning(
                         beregningVurdering = BeregningVurdering(
                             begrunnelse = "Trenger hjelp fra Nav",
+                            nedsattArbeidsevneDato = LocalDate.now(),
                             ytterligereNedsattArbeidsevneDato = null,
                             antattÅrligInntekt = Beløp(700_000)
                         ),
@@ -850,13 +841,10 @@ class FlytOrkestratorTest {
                             dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                             harSkadeSykdomEllerLyte = true,
                             erSkadeSykdomEllerLyteVesentligdel = true,
-                            erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
-                            nedreGrense = NedreGrense.FEMTI,
-                            nedsattArbeidsevneDato = LocalDate.now(),
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             erArbeidsevnenNedsatt = true,
-                            yrkesskadevurdering = YrkesskadevurderingDto(
-                                erÅrsakssammenheng = false
-                            )
                         )
                     ),
                     behandlingVersjon = behandling.versjon,
@@ -978,13 +966,10 @@ class FlytOrkestratorTest {
                             dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                             harSkadeSykdomEllerLyte = true,
                             erSkadeSykdomEllerLyteVesentligdel = true,
-                            erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
-                            nedreGrense = NedreGrense.FEMTI,
-                            nedsattArbeidsevneDato = LocalDate.now(),
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             erArbeidsevnenNedsatt = true,
-                            yrkesskadevurdering = YrkesskadevurderingDto(
-                                erÅrsakssammenheng = false
-                            )
                         )
                     ),
                     ingenEndringIGruppe = true,
@@ -1144,13 +1129,10 @@ class FlytOrkestratorTest {
                             dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                             harSkadeSykdomEllerLyte = false,
                             erSkadeSykdomEllerLyteVesentligdel = false,
-                            erNedsettelseIArbeidsevneHøyereEnnNedreGrense = false,
-                            nedreGrense = NedreGrense.FEMTI,
-                            nedsattArbeidsevneDato = LocalDate.now(),
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             erArbeidsevnenNedsatt = false,
-                            yrkesskadevurdering = YrkesskadevurderingDto(
-                                erÅrsakssammenheng = false
-                            )
                         )
                     ),
                     behandlingVersjon = behandling.versjon,
