@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.brev.bestilling
 
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.brev.kontrakt.BestillBrevRequest
 import no.nav.aap.brev.kontrakt.BestillBrevResponse
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
@@ -36,11 +37,17 @@ class BrevGateway : BrevbestillingGateway {
     )
 
     override fun bestillBrev(
+        saksnummer: Saksnummer,
         behandlingReferanse: BehandlingReferanse,
         typeBrev: TypeBrev,
     ): UUID {
         // TODO språk
-        val request = BestillBrevRequest(behandlingReferanse.referanse, mapTypeBrev(typeBrev), Språk.NB)
+        val request = BestillBrevRequest(
+            saksnummer = saksnummer.toString(),
+            behandlingReferanse = behandlingReferanse.referanse,
+            brevtype = mapTypeBrev(typeBrev),
+            sprak = Språk.NB
+        )
 
         val httpRequest = PostRequest<BestillBrevRequest>(
             body = request,
@@ -96,7 +103,7 @@ class BrevGateway : BrevbestillingGateway {
                 uri = url,
                 request = request
             )
-        } catch (e: BadRequestHttpResponsException) {
+        } catch (_: BadRequestHttpResponsException) {
             log.warn("Bad request i response for ferdigstilling av brev.")
             return false
         }
