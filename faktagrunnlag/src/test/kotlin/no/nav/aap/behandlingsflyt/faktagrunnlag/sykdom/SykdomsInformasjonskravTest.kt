@@ -25,7 +25,7 @@ class SykdomsInformasjonskravTest {
             )
         )
 
-        assertThat(sykdomGrunnlag.erKonsistentForSykdom()).isTrue
+        assertThat(sykdomGrunnlag.erKonsistentForSykdom(false)).isTrue
     }
 
     @Test
@@ -46,7 +46,7 @@ class SykdomsInformasjonskravTest {
             )
         )
 
-        assertThat(sykdomGrunnlag.erKonsistentForSykdom()).isTrue
+        assertThat(sykdomGrunnlag.erKonsistentForSykdom(true)).isTrue
     }
 
     @Test
@@ -67,7 +67,7 @@ class SykdomsInformasjonskravTest {
             )
         )
 
-        assertThat(sykdomGrunnlag.erKonsistentForSykdom()).isFalse
+        assertThat(sykdomGrunnlag.erKonsistentForSykdom(true)).isFalse
     }
 
     @Test
@@ -88,7 +88,7 @@ class SykdomsInformasjonskravTest {
             )
         )
 
-        assertThat(sykdomGrunnlag.erKonsistentForSykdom()).isFalse
+        assertThat(sykdomGrunnlag.erKonsistentForSykdom(true)).isFalse
     }
 
     @Test
@@ -109,7 +109,7 @@ class SykdomsInformasjonskravTest {
             )
         )
 
-        assertThat(sykdomGrunnlag.erKonsistentForSykdom()).isTrue
+        assertThat(sykdomGrunnlag.erKonsistentForSykdom(true)).isTrue
     }
 
     @Test
@@ -130,7 +130,7 @@ class SykdomsInformasjonskravTest {
             )
         )
 
-        assertThat(sykdomGrunnlag.erKonsistentForSykdom()).isTrue
+        assertThat(sykdomGrunnlag.erKonsistentForSykdom(false)).isTrue
     }
 
     @Test
@@ -151,7 +151,7 @@ class SykdomsInformasjonskravTest {
             )
         )
 
-        assertThat(sykdomGrunnlag.erKonsistentForSykdom()).isTrue
+        assertThat(sykdomGrunnlag.erKonsistentForSykdom(false)).isTrue
     }
 
     @Test
@@ -172,7 +172,7 @@ class SykdomsInformasjonskravTest {
             )
         )
 
-        assertThat(sykdomGrunnlag.erKonsistentForSykdom()).isTrue
+        assertThat(sykdomGrunnlag.erKonsistentForSykdom(false)).isTrue
     }
 
     @Test
@@ -193,6 +193,6 @@ class SykdomsInformasjonskravTest {
             )
         )
 
-        assertThat(sykdomGrunnlag.erKonsistentForSykdom()).isFalse
+        assertThat(sykdomGrunnlag.erKonsistentForSykdom(false)).isFalse
     }
 }

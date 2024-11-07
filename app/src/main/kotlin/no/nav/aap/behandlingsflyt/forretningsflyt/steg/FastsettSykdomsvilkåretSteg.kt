@@ -25,17 +25,15 @@ class FastsettSykdomsvilkåretSteg private constructor(
         val sykdomsGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
         val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId)
 
-        if (sykdomsGrunnlag != null && sykdomsGrunnlag.erKonsistentForSykdom() || studentGrunnlag?.studentvurdering?.erOppfylt() == true) {
-            for (periode in kontekst.perioder()) {
-                val faktagrunnlag = no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykdomsFaktagrunnlag(
-                    periode.fom,
-                    periode.tom,
-                    sykdomsGrunnlag?.yrkesskadevurdering,
-                    sykdomsGrunnlag?.sykdomsvurdering,
-                    studentGrunnlag?.studentvurdering
-                )
-                Sykdomsvilkår(vilkårResultat).vurder(faktagrunnlag)
-            }
+        for (periode in kontekst.perioder()) {
+            val faktagrunnlag = no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykdomsFaktagrunnlag(
+                periode.fom,
+                periode.tom,
+                sykdomsGrunnlag?.yrkesskadevurdering,
+                sykdomsGrunnlag?.sykdomsvurdering,
+                studentGrunnlag?.studentvurdering
+            )
+            Sykdomsvilkår(vilkårResultat).vurder(faktagrunnlag)
         }
         vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårResultat)
 

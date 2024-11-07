@@ -6,7 +6,7 @@ class SykdomGrunnlag(
     val sykdomsvurdering: Sykdomsvurdering?
 ) {
 
-    fun erKonsistentForSykdom(): Boolean {
+    fun erKonsistentForSykdom(harYrkesskadeRegistrert: Boolean): Boolean {
         if (sykdomsvurdering == null) {
             return false
         }
@@ -18,6 +18,7 @@ class SykdomGrunnlag(
         }
         if (sykdomsvurdering.erNedsettelseIArbeidsevneMerEnnHalvparten != null &&
             !sykdomsvurdering.erNedsettelseIArbeidsevneMerEnnHalvparten &&
+            harYrkesskadeRegistrert &&
             sykdomsvurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == null
         ) {
             return false

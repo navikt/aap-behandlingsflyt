@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -20,6 +21,7 @@ import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
 class VurderSykdomSteg private constructor(
     private val sykdomRepository: SykdomRepository,
     private val studentRepository: StudentRepository,
+    private val yrkesskadeRepository: YrkesskadeRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository
 ) : BehandlingSteg {
@@ -29,6 +31,7 @@ class VurderSykdomSteg private constructor(
         if (kontekst.perioderTilVurdering.isNotEmpty()) {
             val sykdomsGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId = kontekst.behandlingId)
             val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId = kontekst.behandlingId)
+            val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId = kontekst.behandlingId)
 
             val vilkårResultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
             val studentVurdering = studentGrunnlag?.studentvurdering
@@ -36,7 +39,7 @@ class VurderSykdomSteg private constructor(
             val sykdomsvilkåret = vilkårResultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
             val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
-            if (erIkkeAvslagPåVilkårTidligere(vilkårResultat) && sykdomsvilkåret.harPerioderSomIkkeErVurdert(kontekst.perioder()) || (studentVurdering?.erOppfylt() == false && sykdomsGrunnlag?.erKonsistentForSykdom() != true)
+            if (erIkkeAvslagPåVilkårTidligere(vilkårResultat) && sykdomsvilkåret.harPerioderSomIkkeErVurdert(kontekst.perioder()) || (studentVurdering?.erOppfylt() == false && sykdomsGrunnlag?.erKonsistentForSykdom(yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true) != true)
             ) {
                 return FantAvklaringsbehov(Definisjon.AVKLAR_SYKDOM)
             } else {
@@ -58,6 +61,7 @@ class VurderSykdomSteg private constructor(
             return VurderSykdomSteg(
                 SykdomRepository(connection),
                 StudentRepository(connection),
+                YrkesskadeRepository(connection),
                 VilkårsresultatRepository(connection),
                 AvklaringsbehovRepositoryImpl(connection)
             )
