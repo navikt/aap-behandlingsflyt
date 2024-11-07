@@ -17,7 +17,7 @@ import java.util.*
 
 data class Vurdering(
     private val vurderinger: EnumMap<Vilkårtype, Utfall> = EnumMap(Vilkårtype::class.java),
-    private val meldepliktVurdering: MeldepliktVurdering? = null,
+    internal val meldepliktVurdering: MeldepliktVurdering? = null,
     internal val fraværFastsattAktivitetVurdering: FraværFastsattAktivitetVurdering? = null,
     internal val reduksjonAktivitetspliktVurdering: ReduksjonAktivitetspliktVurdering? = null,
     internal val aktivitetspliktVurdering: AktivitetspliktVurdering? = null,

@@ -13,9 +13,8 @@ import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.StandardSammenslåere
 import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.dokument.JournalpostId
+import java.time.Clock
 import java.time.LocalDate
-import java.time.Period
-import java.util.*
 
 /**
  * Aktivitetskravene
@@ -26,8 +25,9 @@ import java.util.*
  *   - etc
  */
 
-//TODO - REFACTOR!!!!
-class MeldepliktRegel : UnderveisRegel {
+class MeldepliktRegel(
+    private val clock: Clock = Clock.systemDefaultZone(),
+) : UnderveisRegel {
     class MeldepliktData(val fritaksvurdering: Fritaksvurdering.FritaksvurderingData?, val innsending: JournalpostId?)
 
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
@@ -54,16 +54,31 @@ class MeldepliktRegel : UnderveisRegel {
                 Segment(periode, MeldepliktData(fritaksvurdering?.verdi, dokument?.verdi))
             })
 
-        val meldepliktVurderinger = groupByMeldeperiode(resultat, meldepliktTidslinje)
-            .fold(Tidslinje<MeldepliktVurdering>()) { meldeperioderVurdert, nåværendeMeldeperiodeSegment ->
-                meldeperioderVurdert.flatMap {
-                    vurderForMeldeperiode(
-                        meldeperiode = nåværendeMeldeperiodeSegment.periode,
-                        dataForMeldeperiode = nåværendeMeldeperiodeSegment.verdi,
-                        forrigeSegmentOppfylt = meldeperioderVurdert.lastOrNull()?.verdi?.utfall == OPPFYLT
-                    )
-                }
+        val groupByMeldeperiode = groupByMeldeperiode(resultat, meldepliktTidslinje).segmenter()
+
+        if (groupByMeldeperiode.isEmpty()) return resultat
+
+        val førsteMeldeperiode = groupByMeldeperiode.first()
+
+        val førsteVurdering = Tidslinje(
+            førsteMeldeperiode.periode,
+            MeldepliktVurdering(
+                journalpostId = null,
+                fritak = false,
+                utfall = OPPFYLT,
+            )
+        )
+
+        val meldepliktVurderinger = groupByMeldeperiode.drop(1)
+            .fold(førsteVurdering) { meldeperioderVurdert, nåværendeMeldeperiodeSegment ->
+                val neste = vurderForMeldeperiode(
+                    meldeperiode = nåværendeMeldeperiodeSegment.periode,
+                    dataForMeldeperiode = nåværendeMeldeperiodeSegment.verdi,
+                    forrigeSegmentOppfylt = meldeperioderVurdert.lastOrNull()?.verdi?.utfall == OPPFYLT
+                )
+                meldeperioderVurdert.kombiner(neste, StandardSammenslåere.xor())
             }
+            .kryss(input.rettighetsperiode)
 
         return resultat.leggTilVurderinger(meldepliktVurderinger, Vurdering::leggTilMeldepliktVurdering)
     }
@@ -92,31 +107,22 @@ class MeldepliktRegel : UnderveisRegel {
             )
 
             førsteDokument == null -> {
-                Tidslinje(meldeperiode, Unit).splittOppOgMapOmEtter(
-                    Period.ofDays(1)
-                ) { segmenter ->
-                    val segment = segmenter.single()
-                    val fortsattMuligÅEndreUtfall = erDetFortsattMuligÅEndreUtfall(meldefrist, segment.periode.fom)
-
+                meldeperiode.dager().map { gjeldendeDag ->
+                    val fortsattMuligÅEndreUtfall = erDetFortsattMuligÅEndreUtfall(meldefrist, gjeldendeDag)
                     val utfall = if (fortsattMuligÅEndreUtfall && forrigeSegmentOppfylt) OPPFYLT else IKKE_OPPFYLT
 
-                    listOf(
-                        Segment(
-                            segment.periode,
-                            MeldepliktVurdering(
-                                journalpostId = null,
-                                fritak = false,
-                                utfall = utfall,
-                                årsak =
-                                when {
-                                    utfall == OPPFYLT -> null
-                                    fortsattMuligÅEndreUtfall -> MELDEPLIKT_FRIST_IKKE_PASSERT
-                                    else -> IKKE_OVERHOLDT_MELDEPLIKT_SANKSJON
-                                }
-                            )
-                        )
-                    ).let { TreeSet(it) }
-                }
+                    val vurdering = MeldepliktVurdering(
+                        journalpostId = null,
+                        fritak = false,
+                        utfall = utfall,
+                        årsak = when {
+                            utfall == OPPFYLT -> null
+                            fortsattMuligÅEndreUtfall -> MELDEPLIKT_FRIST_IKKE_PASSERT
+                            else -> IKKE_OVERHOLDT_MELDEPLIKT_SANKSJON
+                        }
+                    )
+                    Segment(Periode(gjeldendeDag, gjeldendeDag), vurdering)
+                }.let { Tidslinje(it).komprimer() }
             }
 
             førsteDokument.periode.fom > meldefrist -> listOf(
@@ -153,12 +159,11 @@ class MeldepliktRegel : UnderveisRegel {
     }
 
     private fun erDetFortsattMuligÅEndreUtfall(meldefrist: LocalDate, gjeldendeDag: LocalDate): Boolean {
-        val erMeldefristIFremtiden = meldefrist > LocalDate.now()
-        val erVurdertDagIkkePassert = gjeldendeDag >= LocalDate.now()
-        val vurdertDagErInnenforFrist = meldefrist >= gjeldendeDag
+        val nå = LocalDate.now(clock)
+        val erMeldefristIFremtiden = nå < meldefrist
+        val erVurdertDagIkkePassert = nå <= gjeldendeDag
+        val vurdertDagErInnenforFrist = gjeldendeDag <= meldefrist
 
         return (vurdertDagErInnenforFrist && erMeldefristIFremtiden) || erVurdertDagIkkePassert
     }
-
-
 }

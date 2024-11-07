@@ -169,4 +169,14 @@ object StandardSammenslåere {
             Segment(periode, høyreSegment.verdi)
         }
     }
+
+    fun <T> xor(): JoinStyle<T ,T , T> {
+        return JoinStyle.OUTER_JOIN { p, venstreSegment, høyreSegment ->
+            when {
+                venstreSegment == null && høyreSegment != null -> høyreSegment
+                venstreSegment != null && høyreSegment == null -> venstreSegment
+                else -> error("tidslinjene overlapper")
+            }
+        }
+    }
 }

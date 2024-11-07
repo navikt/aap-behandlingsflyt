@@ -320,4 +320,10 @@ class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>> = TreeSet()) : Iterab
     override fun toString(): String {
         return "Tidslinje(segmenter=$segmenter)"
     }
+
+    fun erSammenhengende(): Boolean {
+        return segmenter.windowed(2).all {
+            it[0].tom().plusDays(1) == it[1].fom()
+        }
+    }
 }
