@@ -36,10 +36,9 @@ class VurderSykdomSteg private constructor(
             val vilkårResultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
             val studentVurdering = studentGrunnlag?.studentvurdering
 
-            val sykdomsvilkåret = vilkårResultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
             val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
-            if (erIkkeAvslagPåVilkårTidligere(vilkårResultat) && sykdomsvilkåret.harPerioderSomIkkeErVurdert(kontekst.perioder()) || (studentVurdering?.erOppfylt() == false && sykdomsGrunnlag?.erKonsistentForSykdom(yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true) != true)
+            if (erIkkeAvslagPåVilkårTidligere(vilkårResultat) || (studentVurdering?.erOppfylt() == false && sykdomsGrunnlag?.erKonsistentForSykdom(yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true) != true)
             ) {
                 return FantAvklaringsbehov(Definisjon.AVKLAR_SYKDOM)
             } else {
