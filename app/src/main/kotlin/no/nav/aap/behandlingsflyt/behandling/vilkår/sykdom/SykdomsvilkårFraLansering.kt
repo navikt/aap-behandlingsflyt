@@ -38,8 +38,10 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
             utfall = Utfall.IKKE_OPPFYLT
             avslagsårsak = if (sykdomsvurdering?.erSkadeSykdomEllerLyteVesentligdel == false) {
                 Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL
-            } else if (sykdomsvurdering?.erNedsettelseIArbeidsevneMerEnnHalvparten == false) {
+            } else if (sykdomsvurdering?.erNedsettelseIArbeidsevneMerEnnHalvparten == false && sykdomsvurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != true) {
                 Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE
+            } else if (sykdomsvurdering?.erNedsettelseIArbeidsevneAvEnVissVarighet == false) {
+                Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET
             } else {
                 Avslagsårsak.MANGLENDE_DOKUMENTASJON // TODO noe mer rett
             }
