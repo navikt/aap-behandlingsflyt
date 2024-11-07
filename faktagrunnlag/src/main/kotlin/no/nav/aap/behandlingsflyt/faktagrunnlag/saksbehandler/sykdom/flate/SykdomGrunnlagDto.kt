@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
+import no.nav.aap.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDate
 
@@ -45,5 +47,17 @@ data class SykdomsvurderingDto(
 }
 
 data class YrkesskadevurderingDto(
+    val begrunnelse: String,
+    val relevanteSaker: List<String>,
+    val andelAvNedsettelsen: Prosent?,
     val erÅrsakssammenheng: Boolean
-)
+) {
+    fun toYrkesskadevurdering(): Yrkesskadevurdering {
+        return Yrkesskadevurdering(
+            begrunnelse = begrunnelse,
+            relevanteSaker = relevanteSaker,
+            erÅrsakssammenheng = erÅrsakssammenheng,
+            andelAvNedsettelse = andelAvNedsettelsen
+        )
+    }
+}

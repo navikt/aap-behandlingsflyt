@@ -26,8 +26,7 @@ class YrkesskadeRepository(private val connection: DBConnection) {
                     skadedato = row.getLocalDate("SKADEDATO")
                 )
             }
-        }
-            .grupperOgMapTilGrunnlag(behandlingId)
+        }.grupperOgMapTilGrunnlag(behandlingId)
             .firstOrNull()
     }
 

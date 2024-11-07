@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.Sykdomsvilkår
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
@@ -49,7 +50,7 @@ class VurderSykdomSteg private constructor(
             val sykdomsvilkåret = vilkårResultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
             val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
-            if (sykdomsvilkåret.harPerioderSomIkkeErVurdert(kontekst.perioder()) || (studentVurdering?.erOppfylt() == false && sykdomsGrunnlag?.erKonsistentForSykdom() != true)
+            if (erIkkeAvslagPåVilkårTidligere(vilkårResultat) && sykdomsvilkåret.harPerioderSomIkkeErVurdert(kontekst.perioder()) || (studentVurdering?.erOppfylt() == false && sykdomsGrunnlag?.erKonsistentForSykdom() != true)
             ) {
                 return FantAvklaringsbehov(Definisjon.AVKLAR_SYKDOM)
             } else {
@@ -60,6 +61,10 @@ class VurderSykdomSteg private constructor(
             }
         }
         return Fullført
+    }
+
+    private fun erIkkeAvslagPåVilkårTidligere(vilkårsresultat: Vilkårsresultat): Boolean {
+        return vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET).harPerioderSomErOppfylt()
     }
 
     companion object : FlytSteg {

@@ -84,17 +84,27 @@ class SykdomRepository(private val connection: DBConnection) {
 
         val query = """
             INSERT INTO YRKESSKADE_VURDERING 
-            (BEGRUNNELSE, ARSAKSSAMMENHENG, SKADEDATO, ANDEL_AV_NEDSETTELSE)
+            (BEGRUNNELSE, ARSAKSSAMMENHENG, ANDEL_AV_NEDSETTELSE)
             VALUES
-            (?, ?, ?, ?)
+            (?, ?, ?)
         """.trimIndent()
 
         val id = connection.executeReturnKey(query) {
             setParams {
                 setString(1, vurdering.begrunnelse)
                 setBoolean(2, vurdering.erÅrsakssammenheng)
-                setLocalDate(3, vurdering.skadetidspunkt)
-                setInt(4, vurdering.andelAvNedsettelse?.prosentverdi())
+                setInt(3, vurdering.andelAvNedsettelse?.prosentverdi())
+            }
+        }
+
+        connection.executeBatch(
+            """
+            INSERT INTO YRKESSKADE_RELATERTE_SAKER (vurdering_id, referanse) VALUES (?, ?)
+        """.trimIndent(), vurdering.relevanteSaker
+        ) {
+            setParams { sak ->
+                setLong(1, id)
+                setString(2, sak)
             }
         }
 
@@ -113,7 +123,7 @@ class SykdomRepository(private val connection: DBConnection) {
             INSERT INTO SYKDOM_VURDERING 
             (BEGRUNNELSE, ER_ARBEIDSEVNE_NEDSATT, HAR_SYKDOM_SKADE_LYTE, ER_SYKDOM_SKADE_LYTE_VESETLING_DEL, ER_NEDSETTELSE_MER_ENN_HALVPARTEN, ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE, ER_NEDSETTELSE_AV_EN_VISS_VARIGHET, YRKESSKADE_BEGRUNNELSE)
             VALUES
-            (?, ?, ?, ?, ?, ?, ?)
+            (?, ?, ?, ?, ?, ?, ?, ?)
         """.trimIndent()
 
         val id = connection.executeReturnKey(query) {
@@ -242,13 +252,28 @@ class SykdomRepository(private val connection: DBConnection) {
                 setLong(1, yrkesskadeId)
             }
             setRowMapper { row ->
+                val id = row.getLong("id")
                 Yrkesskadevurdering(
-                    row.getLong("id"),
-                    row.getString("BEGRUNNELSE"),
-                    row.getBoolean("ARSAKSSAMMENHENG"),
-                    row.getLocalDateOrNull("SKADEDATO"),
-                    row.getIntOrNull("ANDEL_AV_NEDSETTELSE")?.let(::Prosent)
+                    id = id,
+                    begrunnelse = row.getString("BEGRUNNELSE"),
+                    erÅrsakssammenheng = row.getBoolean("ARSAKSSAMMENHENG"),
+                    andelAvNedsettelse = row.getIntOrNull("ANDEL_AV_NEDSETTELSE")?.let(::Prosent),
+                    relevanteSaker = hentRelevanteSaker(id)
                 )
+            }
+        }
+    }
+
+    private fun hentRelevanteSaker(vurderingId: Long): List<String> {
+        val query = """
+            SELECT * FROM YRKESSKADE_RELATERTE_SAKER WHERE vurdering_id = ?
+        """.trimIndent()
+        return connection.queryList(query) {
+            setParams {
+                setLong(1, vurderingId)
+            }
+            setRowMapper { row ->
+                row.getString("REFERANSE")
             }
         }
     }

@@ -22,6 +22,9 @@ class SykdomGrunnlag(
         ) {
             return false
         }
+        if (sykdomsvurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != null && sykdomsvurdering.yrkesskadeBegrunnelse.isNullOrBlank()) {
+            return false
+        }
         return true
     }
 

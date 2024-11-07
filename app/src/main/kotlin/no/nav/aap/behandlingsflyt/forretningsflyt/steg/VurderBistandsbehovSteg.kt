@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.bistand.BistandFaktagrunnla
 import no.nav.aap.behandlingsflyt.behandling.vilkår.bistand.Bistandsvilkåret
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
@@ -33,7 +34,6 @@ class VurderBistandsbehovSteg private constructor(
 
             val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
 
-
             val studentVurdering = studentGrunnlag?.studentvurdering
 
             if (studentVurdering?.erOppfylt() == true || bistandsGrunnlag != null) {
@@ -51,7 +51,8 @@ class VurderBistandsbehovSteg private constructor(
 
             val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
 
-            if (harBehovForAvklaring(vilkår, kontekst.perioder(), studentVurdering?.erOppfylt() == true)) {
+            // TODO: Se på vurdering fra sykdom om viss varighet
+            if (erIkkeAvslagPåVilkårTidligere(vilkårsresultat) && harBehovForAvklaring(vilkår, kontekst.perioder(), studentVurdering?.erOppfylt() == true)) {
                 return FantAvklaringsbehov(Definisjon.AVKLAR_BISTANDSBEHOV)
             }
         }
@@ -67,6 +68,11 @@ class VurderBistandsbehovSteg private constructor(
         return (vilkår.harPerioderSomIkkeErVurdert(periodeTilVurdering)
                 || harInnvilgetForStudentUtenÅVæreStudent(vilkår, erStudentStegOppfylt))
     }
+
+    private fun erIkkeAvslagPåVilkårTidligere(vilkårsresultat: Vilkårsresultat): Boolean {
+        return vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET).harPerioderSomErOppfylt()
+    }
+
 
     private fun harInnvilgetForStudentUtenÅVæreStudent(vilkår: Vilkår, erStudentStegOppfylt: Boolean): Boolean {
 

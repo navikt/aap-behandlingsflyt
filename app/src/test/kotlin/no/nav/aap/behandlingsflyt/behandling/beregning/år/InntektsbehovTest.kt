@@ -21,7 +21,8 @@ class InntektsbehovTest {
                 inntekter = setOf(),
                 uføregrad = Prosent.`0_PROSENT`,
                 yrkesskadevurdering = null,
-                beregningVurdering = null
+                beregningVurdering = null,
+                registrerteYrkesskader = null
             )
         ).utledAlleRelevanteÅr()
 
@@ -45,12 +46,13 @@ class InntektsbehovTest {
                 setOf(),
                 Prosent.`0_PROSENT`,
                 null,
+                null,
                 BeregningVurdering(
                     begrunnelse = "asdf",
                     ytterligereNedsattArbeidsevneDato = ytterligereNedsattDato,
                     nedsattArbeidsevneDato = nedsettelsesDato,
                     antattÅrligInntekt = Beløp(100)
-                )
+                ),
             )
         ).utledAlleRelevanteÅr()
 
@@ -77,6 +79,7 @@ class InntektsbehovTest {
                 inntekter = setOf(),
                 uføregrad = Prosent.`30_PROSENT`,
                 yrkesskadevurdering = null,
+                registrerteYrkesskader = null,
                 beregningVurdering = BeregningVurdering(
                     begrunnelse = "begrunnelse",
                     antattÅrligInntekt = Beløp(123456),

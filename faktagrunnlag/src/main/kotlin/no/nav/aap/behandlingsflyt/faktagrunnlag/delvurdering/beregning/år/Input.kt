@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -18,8 +19,9 @@ data class Input(
     val inntekter: Set<InntektPerÅr>,
     val uføregrad: Prosent?,
     val yrkesskadevurdering: Yrkesskadevurdering?,
+    val registrerteYrkesskader: Yrkesskader?,
     val beregningVurdering: BeregningVurdering?
-) {
+    ) {
 
     fun datoerForInnhenting(): Set<LocalDate> {
         val ytterligereNedsattArbeidsevneDato = beregningVurdering?.ytterligereNedsattArbeidsevneDato

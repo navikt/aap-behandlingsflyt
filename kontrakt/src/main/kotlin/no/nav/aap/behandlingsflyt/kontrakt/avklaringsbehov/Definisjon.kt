@@ -91,6 +91,12 @@ public enum class Definisjon(
         løsesISteg = StegType.VURDER_SYKEPENGEERSTATNING,
         kreverToTrinn = true
     ),
+    AVKLAR_YRKESSKADE(
+        kode = AvklaringsbehovKode.`5013`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.VURDER_YRKESSKADE,
+        kreverToTrinn = true
+    ),
     AVKLAR_BARNETILLEGG(
         kode = AvklaringsbehovKode.`5009`,
         type = BehovType.MANUELT_PÅKREVD,

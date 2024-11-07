@@ -237,6 +237,25 @@ class FlytOrkestratorTest {
         }
         util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
         behandling = hentBehandling(sak.id)
+        dataSource.transaction {
+            AvklaringsbehovHendelseHåndterer(it).håndtere(
+                behandling.id,
+                LøsAvklaringsbehovBehandlingHendelse(
+                    løsning = FastsettBeregningstidspunktLøsning(
+                        beregningVurdering = BeregningVurdering(
+                            begrunnelse = "Trenger hjelp fra Nav",
+                            nedsattArbeidsevneDato = LocalDate.now(),
+                            ytterligereNedsattArbeidsevneDato = null,
+                            antattÅrligInntekt = null
+                        ),
+                    ),
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
+                )
+            )
+        }
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
+        behandling = hentBehandling(sak.id)
 
         // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
         dataSource.transaction { dbConnection ->
@@ -915,6 +934,26 @@ class FlytOrkestratorTest {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
                 LøsAvklaringsbehovBehandlingHendelse(
+                    løsning = FastsettBeregningstidspunktLøsning(
+                        beregningVurdering = BeregningVurdering(
+                            begrunnelse = "Trenger hjelp fra Nav",
+                            nedsattArbeidsevneDato = LocalDate.now(),
+                            ytterligereNedsattArbeidsevneDato = null,
+                            antattÅrligInntekt = null
+                        ),
+                    ),
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
+                )
+            )
+        }
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
+        behandling = hentBehandling(sak.id)
+
+        dataSource.transaction {
+            AvklaringsbehovHendelseHåndterer(it).håndtere(
+                behandling.id,
+                LøsAvklaringsbehovBehandlingHendelse(
                     løsning = ForeslåVedtakLøsning(),
                     behandlingVersjon = behandling.versjon,
                     bruker = Bruker("SAKSBEHANDLER")
@@ -1098,11 +1137,11 @@ class FlytOrkestratorTest {
         util.ventPåSvar()
 
         val sak = hentSak(ident, periode)
-        val behandling = hentBehandling(sak.id)
+        var behandling = hentBehandling(sak.id)
         assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
 
         val stegHistorikk = behandling.stegHistorikk()
-        assertThat(stegHistorikk.map { it.steg() }).contains(StegType.AVKLAR_SYKDOM)
+        assertThat(stegHistorikk.map { it.steg() }).contains(StegType.BREV)
         assertThat(stegHistorikk.map { it.status() }).contains(StegStatus.AVKLARINGSPUNKT)
 
         //Henter vurder alder-vilkår
@@ -1117,124 +1156,12 @@ class FlytOrkestratorTest {
         util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
 
         val status = dataSource.transaction { BehandlingRepositoryImpl(it).hent(behandling.id).status() }
-        assertThat(status).isEqualTo(Status.UTREDES)
+        assertThat(status).isEqualTo(Status.IVERKSETTES)
 
         dataSource.transaction {
             val behov = hentAvklaringsbehov(behandling.id, it)
-            assertThat(behov.åpne()).allSatisfy { assertThat(it.definisjon.kode).isEqualTo(AvklaringsbehovKode.`5003`) }
+            assertThat(behov.åpne()).allSatisfy { assertThat(it.definisjon.kode).isEqualTo(AvklaringsbehovKode.`9002`) }
         }
-
-        dataSource.transaction {
-            AvklaringsbehovHendelseHåndterer(it).håndtere(
-                behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
-                    løsning = AvklarSykdomLøsning(
-                        sykdomsvurdering = SykdomsvurderingDto(
-                            begrunnelse = "Er syk nok",
-                            dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
-                            harSkadeSykdomEllerLyte = false,
-                            erSkadeSykdomEllerLyteVesentligdel = false,
-                            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            erArbeidsevnenNedsatt = false,
-                            yrkesskadeBegrunnelse = null
-                        )
-                    ),
-                    behandlingVersjon = behandling.versjon,
-                    bruker = Bruker("SAKSBEHANDLER")
-                )
-            )
-        }
-
-        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
-
-        dataSource.transaction {
-            val behov = hentAvklaringsbehov(behandling.id, it)
-            assertThat(behov.åpne()).allSatisfy { assertThat(it.definisjon.kode).isEqualTo(AvklaringsbehovKode.`5006`) }
-        }
-
-        dataSource.transaction {
-            AvklaringsbehovHendelseHåndterer(it).håndtere(
-                behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
-                    løsning = AvklarBistandsbehovLøsning(
-                        bistandsVurdering = BistandVurderingDto(
-                            begrunnelse = "Trenger ikke hjelp fra nav",
-                            erBehovForAktivBehandling = false,
-                            erBehovForArbeidsrettetTiltak = false,
-                            erBehovForAnnenOppfølging = false
-                        ),
-                    ),
-                    behandlingVersjon = behandling.versjon,
-                    bruker = Bruker("SAKSBEHANDLER")
-                )
-            )
-        }
-
-        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
-
-        dataSource.transaction {
-            val behov = hentAvklaringsbehov(behandling.id, it)
-            assertThat(behov.åpne()).allSatisfy { assertThat(it.definisjon.kode).isEqualTo(AvklaringsbehovKode.`5097`) }
-        }
-
-        dataSource.transaction {
-            val avklaringsbehov = hentAvklaringsbehov(behandling.id, it)
-            AvklaringsbehovHendelseHåndterer(it).håndtere(
-                behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
-                    løsning = KvalitetssikringLøsning(avklaringsbehov.alle()
-                        .filter { behov -> behov.erTotrinn() }
-                        .map { behov ->
-                            TotrinnsVurdering(
-                                behov.definisjon.kode,
-                                true,
-                                "begrunnelse",
-                                emptyList()
-                            )
-                        }),
-                    behandlingVersjon = behandling.versjon,
-                    bruker = Bruker("SAKSBEHANDLER")
-                )
-            )
-        }
-
-        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
-
-        dataSource.transaction {
-            AvklaringsbehovHendelseHåndterer(it).håndtere(
-                behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
-                    løsning = ForeslåVedtakLøsning(),
-                    behandlingVersjon = behandling.versjon,
-                    bruker = Bruker("SAKSBEHANDLER")
-                )
-            )
-        }
-        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
-
-        dataSource.transaction {
-            val behov = hentAvklaringsbehov(behandling.id, it)
-            assertThat(behov.åpne()).allSatisfy { assertThat(it.definisjon.kode).isEqualTo(AvklaringsbehovKode.`5099`) }
-        }
-
-
-        dataSource.transaction { connection ->
-            val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
-            AvklaringsbehovHendelseHåndterer(connection).håndtere(
-                behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
-                    løsning = FatteVedtakLøsning(avklaringsbehov.alle()
-                        .filter { behov -> behov.erTotrinn() }
-                        .map { behov -> TotrinnsVurdering(behov.definisjon.kode, true, "begrunnelse", emptyList()) }),
-                    behandlingVersjon = behandling.versjon,
-                    bruker = Bruker("SAKSBEHANDLER")
-                )
-            )
-        }
-
-        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
 
         dataSource.transaction { connection ->
             val brevbestilling = BrevbestillingRepository(connection).hent(behandling.id, TypeBrev.VEDTAK_AVSLAG)!!

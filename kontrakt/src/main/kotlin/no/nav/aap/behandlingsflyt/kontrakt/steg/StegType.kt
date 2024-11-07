@@ -35,6 +35,10 @@ public enum class StegType(
         gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES
     ),
+    VURDER_YRKESSKADE(
+        gruppe = StegGruppe.SYKDOM,
+        status = Status.UTREDES
+    ),
     FRITAK_MELDEPLIKT(
         gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES

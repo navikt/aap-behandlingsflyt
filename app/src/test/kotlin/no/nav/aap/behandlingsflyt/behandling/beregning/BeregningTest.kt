@@ -5,6 +5,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagY
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Input
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.komponenter.verdityper.Beløp
@@ -29,7 +31,8 @@ class BeregningTest {
                 ),
                 uføregrad = null,
                 yrkesskadevurdering = null,
-                beregningVurdering = null
+                beregningVurdering = null,
+                registrerteYrkesskader = null
             )
         )
 
@@ -55,7 +58,8 @@ class BeregningTest {
                     nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
                     ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
                     antattÅrligInntekt = Beløp(500000)
-                )
+                ),
+                registrerteYrkesskader = null
             )
         )
 
@@ -80,13 +84,21 @@ class BeregningTest {
                     begrunnelse = "en begrunnelse",
                     andelAvNedsettelse = Prosent(40),
                     erÅrsakssammenheng = true,
-                    skadetidspunkt = LocalDate.of(2019, 1, 1),
+                    relevanteSaker = listOf("yrkesskadesaken"),
                 ),
                 beregningVurdering = BeregningVurdering(
                     begrunnelse = "test",
                     nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
                     ytterligereNedsattArbeidsevneDato = null,
                     antattÅrligInntekt = Beløp(500000)
+                ),
+                registrerteYrkesskader = Yrkesskader(
+                    listOf(
+                        Yrkesskade(
+                            ref = "yrkesskadesaken",
+                            skadedato = LocalDate.of(2019, 1, 1)
+                        )
+                    )
                 )
             )
         )
@@ -113,13 +125,21 @@ class BeregningTest {
                     begrunnelse = "en begrunnelse",
                     andelAvNedsettelse = Prosent(30),
                     erÅrsakssammenheng = true,
-                    skadetidspunkt = LocalDate.of(2021, 1, 1),
+                    relevanteSaker = listOf("yrkesskadesaken"),
                 ),
                 beregningVurdering = BeregningVurdering(
                     begrunnelse = "test",
                     nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
                     ytterligereNedsattArbeidsevneDato = LocalDate.of(2020, 1, 1),
                     antattÅrligInntekt = Beløp(500000)
+                ),
+                registrerteYrkesskader = Yrkesskader(
+                    listOf(
+                        Yrkesskade(
+                            ref = "yrkesskadesaken",
+                            skadedato = LocalDate.of(2021, 1, 1)
+                        )
+                    )
                 )
             )
         )
@@ -148,7 +168,8 @@ class BeregningTest {
                     ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
                     nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
                     antattÅrligInntekt = Beløp(500000)
-                )
+                ),
+                registrerteYrkesskader = null
             )
         )
 
@@ -167,7 +188,8 @@ class BeregningTest {
                     ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
                     nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
                     antattÅrligInntekt = Beløp(500000)
-                )
+                ),
+                registrerteYrkesskader = null
             )
         )
 

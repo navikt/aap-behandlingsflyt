@@ -4,6 +4,8 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.Beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Input
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.komponenter.verdityper.Beløp
@@ -31,14 +33,23 @@ class BeregningsGrunnlagApiTest {
                     begrunnelse = "en begrunnelse",
                     andelAvNedsettelse = Prosent(30),
                     erÅrsakssammenheng = true,
-                    skadetidspunkt = LocalDate.of(2021, 1, 1),
+                    relevanteSaker = listOf("yrkesskadesaken")
                 ),
                 beregningVurdering = BeregningVurdering(
                     begrunnelse = "test",
                     ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
                     nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
                     antattÅrligInntekt = Beløp(500000)
+                ),
+                registrerteYrkesskader = Yrkesskader(
+                    listOf(
+                        Yrkesskade(
+                            ref = "yrkesskadesaken",
+                            skadedato = LocalDate.of(2021, 1, 1)
+                        )
+                    )
                 )
+
             )
         )
 

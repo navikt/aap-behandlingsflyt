@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingDto
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
-import java.time.LocalDate
 
 class Sykdomsvurdering(
     internal val id: Long? = null,
@@ -33,7 +32,7 @@ class Sykdomsvurdering(
 class Yrkesskadevurdering(
     internal val id: Long? = null,
     val begrunnelse: String,
+    val relevanteSaker: List<String>,
     val erÅrsakssammenheng: Boolean,
-    val skadetidspunkt: LocalDate?,
     val andelAvNedsettelse: Prosent?
 )

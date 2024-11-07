@@ -46,7 +46,7 @@ class Inntektsbehov(private val input: Input) {
      * inntekt, så skal beregningen skje med yrkesskadefordel (§11-22)
      */
     fun yrkesskadeVurderingEksisterer(): Boolean {
-        return input.yrkesskadevurdering?.skadetidspunkt != null && input.beregningVurdering?.antattÅrligInntekt != null && input.yrkesskadevurdering.andelAvNedsettelse != null
+        return input.yrkesskadevurdering?.relevanteSaker?.isNotEmpty() == true && input.beregningVurdering?.antattÅrligInntekt != null && input.yrkesskadevurdering.andelAvNedsettelse != null
     }
 
     /**
@@ -73,7 +73,10 @@ class Inntektsbehov(private val input: Input) {
     }
 
     fun skadetidspunkt(): LocalDate {
-        return requireNotNull(input.yrkesskadevurdering?.skadetidspunkt)
+        val relevanteSaker = input.yrkesskadevurdering?.relevanteSaker ?: emptyList()
+
+        return requireNotNull(relevanteSaker.map { sak -> input.registrerteYrkesskader?.yrkesskader?.singleOrNull { it.ref == sak } }
+            .firstOrNull()?.skadedato)
     }
 
     fun antattÅrligInntekt(): Beløp {

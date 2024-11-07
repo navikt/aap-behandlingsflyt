@@ -92,7 +92,7 @@ class BeregningVurderingRepository(private val connection: DBConnection) {
             INSERT INTO BEREGNINGSTIDSPUNKT_VURDERING 
             (BEGRUNNELSE, NEDSATT_ARBEIDSEVNE_DATO,YTTERLIGERE_NEDSATT_ARBEIDSEVNE_DATO, YRKESSKADE_ANTATT_ARLIG_INNTEKT)
             VALUES
-            (?, ?, ?)
+            (?, ?, ?, ?)
         """.trimIndent()
 
         val id = connection.executeReturnKey(query) {

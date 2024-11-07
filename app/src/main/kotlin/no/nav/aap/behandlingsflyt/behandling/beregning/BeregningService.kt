@@ -7,6 +7,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Input
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
@@ -23,7 +25,8 @@ class BeregningService(
     private val studentRepository: StudentRepository,
     private val uføreRepository: UføreRepository,
     private val beregningsgrunnlagRepository: BeregningsgrunnlagRepository,
-    private val beregningVurderingRepository: BeregningVurderingRepository
+    private val beregningVurderingRepository: BeregningVurderingRepository,
+    private val yrkesskadeRepository: YrkesskadeRepository
 ) {
 
     fun beregnGrunnlag(behandlingId: BehandlingId): Beregningsgrunnlag {
@@ -32,13 +35,15 @@ class BeregningService(
         val uføre = uføreRepository.hentHvisEksisterer(behandlingId)
         val student = studentRepository.hentHvisEksisterer(behandlingId)
         val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
+        val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
 
         val input = utledInput(
             studentVurdering = student?.studentvurdering,
             yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
             vurdering = beregningVurdering,
             inntekter = inntektGrunnlag.inntekter,
-            uføregrad = uføre?.vurdering?.uføregrad
+            uføregrad = uføre?.vurdering?.uføregrad,
+            registrerteYrkesskader = yrkesskadeGrunnlag?.yrkesskader
         )
 
         val beregning = Beregning(input)
@@ -57,7 +62,8 @@ class BeregningService(
         yrkesskadevurdering: Yrkesskadevurdering?,
         vurdering: BeregningVurdering?,
         inntekter: Set<InntektPerÅr>,
-        uføregrad: Prosent?
+        uføregrad: Prosent?,
+        registrerteYrkesskader: Yrkesskader?
     ): Inntektsbehov {
         return Inntektsbehov(
             Input(
@@ -65,7 +71,8 @@ class BeregningService(
                 inntekter = inntekter,
                 uføregrad = uføregrad,
                 yrkesskadevurdering = yrkesskadevurdering,
-                beregningVurdering = vurdering
+                beregningVurdering = vurdering,
+                registrerteYrkesskader = registrerteYrkesskader
             )
         )
     }
