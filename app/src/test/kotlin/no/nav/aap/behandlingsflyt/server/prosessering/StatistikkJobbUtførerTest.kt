@@ -29,7 +29,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.EndringDTO
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvklaringsbehovHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvsluttetBehandlingDTO
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BehovType
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BeregningsgrunnlagDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Endring
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Grunnlag11_19DTO
@@ -452,13 +451,13 @@ class StatistikkJobbUtførerTest {
                 saksnummer = Saksnummer.valueOf(sakId.id).toString(),
                 behandlingReferanse = referanse.referanse,
                 behandlingStatus = Status.UTREDES,
-                behandlingType = no.nav.aap.behandlingsflyt.kontrakt.statistikk.TypeBehandling.valueOf(TypeBehandling.Klage.toString()),
+                behandlingType = TypeBehandling.Klage,
                 ident = fødselsNummer,
                 avklaringsbehov = avklaringsbehov.map { avklaringsbehovHendelseDto ->
                     AvklaringsbehovHendelse(
                         definisjon = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Definisjon(
                             type = avklaringsbehovHendelseDto.definisjon.type.name,
-                            behovType = BehovType.valueOf(avklaringsbehovHendelseDto.definisjon.behovType.toString()),
+                            behovType = avklaringsbehovHendelseDto.definisjon.behovType,
                             løsesISteg = StegType.FATTE_VEDTAK
                         ),
                         status = avklaringsbehovHendelseDto.status,

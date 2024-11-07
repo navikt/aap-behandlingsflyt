@@ -1,11 +1,12 @@
 package no.nav.aap.behandlingsflyt.kontrakt.statistikk
 
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status as BehandlingsFlytBehandlingStatus
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsBehovStatus
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsBehovStatus
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status as BehandlingsFlytBehandlingStatus
 
 /**
  * @param saksnummer Saksnummer.
@@ -47,15 +48,6 @@ public enum class SakStatus {
     AVSLUTTET
 }
 
-
-public enum class TypeBehandling {
-    Førstegangsbehandling,
-    Revurdering,
-    Tilbakekreving,
-    Klage;
-}
-
-
 public data class AvklaringsbehovHendelse(
     val definisjon: Definisjon,
     val status: AvklaringsBehovStatus,
@@ -67,7 +59,7 @@ public data class AvklaringsbehovHendelse(
  */
 public data class Definisjon(
     val type: String,
-    val behovType: BehovType,
+    val behovType: no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.BehovType,
     val løsesISteg: no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 )
 
@@ -78,7 +70,3 @@ public data class Endring(
     val frist: LocalDate? = null,
     val endretAv: String
 )
-
-public enum class BehovType {
-    MANUELT_PÅKREVD, MANUELT_FRIVILLIG, VENTEPUNKT,
-}

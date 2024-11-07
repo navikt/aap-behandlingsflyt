@@ -15,7 +15,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendels
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvklaringsbehovHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvsluttetBehandlingDTO
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BehovType
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BeregningsgrunnlagDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Endring
@@ -26,7 +25,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.SakStatus
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.TilkjentYtelseDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.TilkjentYtelsePeriodeDTO
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.UføreType
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Utfall
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårDTO
@@ -87,14 +85,14 @@ class StatistikkJobbUtfører(
 
         val statistikkHendelse = StoppetBehandling(
             saksnummer = hendelse.saksnummer.toString(),
-            behandlingType = typeBehandlingTilStatistikkKontrakt(hendelse.behandlingType),
+            behandlingType = hendelse.behandlingType,
             behandlingStatus = hendelse.status,
             ident = hendelse.personIdent,
             avklaringsbehov = hendelse.avklaringsbehov.map { avklaringsbehovHendelseDto ->
                 AvklaringsbehovHendelse(
                     definisjon = Definisjon(
                         type = avklaringsbehovHendelseDto.definisjon.type.name,
-                        behovType = behovTypeTilStatistikkKontraktBehovsType(avklaringsbehovHendelseDto),
+                        behovType = avklaringsbehovHendelseDto.definisjon.behovType,
                         løsesISteg = avklaringsbehovHendelseDto.definisjon.løsesISteg
                     ),
                     status = avklaringsbehovHendelseDto.status,
@@ -148,19 +146,6 @@ class StatistikkJobbUtfører(
             no.nav.aap.behandlingsflyt.sakogbehandling.sak.Status.UTREDES -> SakStatus.UTREDES
             no.nav.aap.behandlingsflyt.sakogbehandling.sak.Status.LØPENDE -> SakStatus.LØPENDE
             no.nav.aap.behandlingsflyt.sakogbehandling.sak.Status.AVSLUTTET -> SakStatus.AVSLUTTET
-        }
-
-    private fun behovTypeTilStatistikkKontraktBehovsType(avklaringsbehovHendelseDto: AvklaringsbehovHendelseDto): BehovType {
-        // TODO: bedre oversettelse mellom domeneobjekter
-        return BehovType.valueOf(avklaringsbehovHendelseDto.definisjon.behovType.toString())
-    }
-
-    private fun typeBehandlingTilStatistikkKontrakt(typeBehandling: no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling): TypeBehandling =
-        when (typeBehandling) {
-            no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling.Førstegangsbehandling -> TypeBehandling.Førstegangsbehandling
-            no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling.Revurdering -> TypeBehandling.Revurdering
-            no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling.Tilbakekreving -> TypeBehandling.Tilbakekreving
-            no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling.Klage -> TypeBehandling.Klage
         }
 
     /**
