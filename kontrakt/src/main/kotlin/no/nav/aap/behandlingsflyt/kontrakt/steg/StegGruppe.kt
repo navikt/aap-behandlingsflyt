@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.kontrakt.steg
 
-enum class StegGruppe(val skalVises: Boolean, val obligatoriskVisning: Boolean) {
+public enum class StegGruppe(public val skalVises: Boolean, public val obligatoriskVisning: Boolean) {
     START_BEHANDLING(false, true),
     ALDER(true, true),
     LOVVALG(true, true),

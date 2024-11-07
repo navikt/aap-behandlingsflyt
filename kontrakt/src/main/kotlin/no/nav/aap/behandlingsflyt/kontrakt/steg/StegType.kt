@@ -2,10 +2,10 @@ package no.nav.aap.behandlingsflyt.kontrakt.steg
 
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 
-enum class StegType(
-    val gruppe: StegGruppe,
-    val status: Status,
-    val tekniskSteg: Boolean = false
+public enum class StegType(
+    public val gruppe: StegGruppe,
+    public val status: Status,
+    public val tekniskSteg: Boolean = false
 ) {
     START_BEHANDLING(
         gruppe = StegGruppe.START_BEHANDLING,

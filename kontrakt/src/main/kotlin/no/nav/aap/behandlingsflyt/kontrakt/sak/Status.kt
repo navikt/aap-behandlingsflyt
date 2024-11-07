@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.kontrakt.sak
 
-enum class Status {
+public enum class Status {
     OPPRETTET,
     UTREDES,
     LØPENDE,

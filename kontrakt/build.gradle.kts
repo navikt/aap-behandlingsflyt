@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
+
 plugins {
     id("behandlingsflyt.conventions")
     `maven-publish`
@@ -18,6 +20,10 @@ group = "no.nav.aap.behandlingsflyt"
 
 apply(plugin = "maven-publish")
 apply(plugin = "java-library")
+
+kotlin {
+    explicitApi = ExplicitApiMode.Warning
+}
 
 java {
     withSourcesJar()

@@ -36,8 +36,7 @@ public data class VilkårsResultatDTO(
     val typeBehandling: String, val vilkår: List<VilkårDTO>
 )
 
-public data class VilkårDTO(val vilkårType: Vilkårtype, val perioder: List<VilkårsPeriodeDTO>) {
-}
+public data class VilkårDTO(val vilkårType: Vilkårtype, val perioder: List<VilkårsPeriodeDTO>)
 
 
 public enum class Utfall {

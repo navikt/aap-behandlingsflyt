@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov
 
-enum class Status {
+public enum class Status {
     OPPRETTET,
     AVSLUTTET,
     TOTRINNS_VURDERT,
@@ -9,7 +9,7 @@ enum class Status {
     SENDT_TILBAKE_FRA_KVALITETSSIKRER,
     AVBRUTT;
 
-    fun erÅpent(): Boolean {
+    public fun erÅpent(): Boolean {
         return this in setOf(
             OPPRETTET,
             SENDT_TILBAKE_FRA_BESLUTTER,
@@ -17,7 +17,7 @@ enum class Status {
         )
     }
 
-    fun erAvsluttet(): Boolean {
+    public fun erAvsluttet(): Boolean {
         return this in setOf(
             AVSLUTTET,
             TOTRINNS_VURDERT,

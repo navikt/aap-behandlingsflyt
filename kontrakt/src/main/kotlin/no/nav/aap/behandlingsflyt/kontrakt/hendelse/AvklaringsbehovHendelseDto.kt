@@ -7,19 +7,19 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-data class AvklaringsbehovHendelseDto(
+public data class AvklaringsbehovHendelseDto(
     val definisjon: DefinisjonDTO,
     val status: Status,
     val endringer: List<EndringDTO>
 )
 
-data class DefinisjonDTO(
+public data class DefinisjonDTO(
     val type: AvklaringsbehovKode,
     val behovType: Definisjon.BehovType,
     val løsesISteg: StegType
 )
 
-data class EndringDTO(
+public data class EndringDTO(
     val status: Status,
     val tidsstempel: LocalDateTime = LocalDateTime.now(),
     val frist: LocalDate? = null,

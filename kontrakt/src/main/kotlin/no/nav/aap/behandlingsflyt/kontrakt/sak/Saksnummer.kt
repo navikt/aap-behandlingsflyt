@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.kontrakt.sak
 import com.fasterxml.jackson.annotation.JsonValue
 import java.util.*
 
-class Saksnummer(private val identifikator: String) {
+public class Saksnummer(private val identifikator: String) {
 
     @JsonValue
     override fun toString(): String {
@@ -23,12 +23,12 @@ class Saksnummer(private val identifikator: String) {
         return identifikator.hashCode()
     }
 
-    companion object {
+    public companion object {
 
         /**
          * Gjør saksnummer "human readable"
          */
-        fun valueOf(id: Long): Saksnummer {
+        public fun valueOf(id: Long): Saksnummer {
             return Saksnummer(
                 (id * 1000).toString(36)
                     .uppercase(Locale.getDefault())

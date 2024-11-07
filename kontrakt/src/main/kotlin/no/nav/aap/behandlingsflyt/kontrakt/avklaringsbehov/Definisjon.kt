@@ -10,13 +10,13 @@ import java.util.*
 import java.util.stream.Collectors
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
-enum class Definisjon(
-    @JsonProperty("kode") val kode: AvklaringsbehovKode,
-    val type: BehovType,
+public enum class Definisjon(
+    @JsonProperty("kode") public val kode: AvklaringsbehovKode,
+    public val type: BehovType,
     @JsonIgnore private val defaultFrist: Period = Period.ZERO,
-    @JsonProperty("løsesISteg") val løsesISteg: StegType = StegType.UDEFINERT,
-    val kreverToTrinn: Boolean = false,
-    val kvalitetssikres: Boolean = false
+    @JsonProperty("løsesISteg") public val løsesISteg: StegType = StegType.UDEFINERT,
+    public val kreverToTrinn: Boolean = false,
+    public val kvalitetssikres: Boolean = false
 ) {
     MANUELT_SATT_PÅ_VENT(
         kode = AvklaringsbehovKode.`9001`,
@@ -119,12 +119,12 @@ enum class Definisjon(
         løsesISteg = StegType.FATTE_VEDTAK,
     );
 
-    companion object {
-        fun forKode(definisjon: String): Definisjon {
+    public companion object {
+        public fun forKode(definisjon: String): Definisjon {
             return entries.single { it.kode == AvklaringsbehovKode.valueOf(definisjon) }
         }
 
-        fun forKode(definisjon: AvklaringsbehovKode): Definisjon {
+        public fun forKode(definisjon: AvklaringsbehovKode): Definisjon {
             return entries.single { it.kode == definisjon }
         }
 
@@ -144,13 +144,13 @@ enum class Definisjon(
         }
     }
 
-    enum class BehovType(val valideringsFunksjon: Definisjon.() -> Unit) {
+    public enum class BehovType(public val valideringsFunksjon: Definisjon.() -> Unit) {
         MANUELT_PÅKREVD(Definisjon::validerManuelt),
         MANUELT_FRIVILLIG(Definisjon::validerManuelt),
         VENTEPUNKT(Definisjon::validerVentepunkt)
     }
 
-    fun skalLøsesISteg(steg: StegType, funnetISteg: StegType): Boolean {
+    public fun skalLøsesISteg(steg: StegType, funnetISteg: StegType): Boolean {
         if (løsesISteg == StegType.UDEFINERT) {
             return steg == funnetISteg
         }
@@ -185,15 +185,15 @@ enum class Definisjon(
         return "$name(kode='$kode')"
     }
 
-    fun erFrivillig(): Boolean {
+    public fun erFrivillig(): Boolean {
         return type == BehovType.MANUELT_FRIVILLIG
     }
 
-    fun erVentebehov(): Boolean {
+    public fun erVentebehov(): Boolean {
         return type == BehovType.VENTEPUNKT
     }
 
-    fun utledFrist(frist: LocalDate?): LocalDate {
+    public fun utledFrist(frist: LocalDate?): LocalDate {
         if (!erVentebehov()) {
             throw IllegalStateException("Forsøker utlede frist for et behov som ikke er ventepunkt")
         }

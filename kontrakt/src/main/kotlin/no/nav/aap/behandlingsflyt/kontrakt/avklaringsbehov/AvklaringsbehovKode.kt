@@ -3,25 +3,25 @@ package no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov
 /**
  * Disse verdiene må igjen gjenspeile enumene under
  */
-const val MANUELT_SATT_PÅ_VENT_KODE = "9001"
-const val BESTILL_BREV_KODE = "9002"
-const val AVKLAR_STUDENT_KODE = "5001"
-const val AVKLAR_SYKDOM_KODE = "5003"
-const val FASTSETT_ARBEIDSEVNE_KODE = "5004"
-const val FRITAK_MELDEPLIKT_KODE = "5005"
-const val AVKLAR_BISTANDSBEHOV_KODE = "5006"
-const val VURDER_SYKEPENGEERSTATNING_KODE = "5007"
-const val FASTSETT_BEREGNINGSTIDSPUNKT_KODE = "5008"
-const val AVKLAR_BARNETILLEGG_KODE = "5009"
-const val AVKLAR_SONINGSFORRHOLD_KODE = "5010"
-const val AVKLAR_HELSEINSTITUSJON_KODE = "5011"
-const val AVKLAR_SAMORDNING_GRADERING_KODE = "5012"
-const val KVALITETSSIKRING_KODE = "5097"
-const val FORESLÅ_VEDTAK_KODE = "5098"
-const val FATTE_VEDTAK_KODE = "5099"
-const val SKRIV_BREV_KODE = "5050"
+public const val MANUELT_SATT_PÅ_VENT_KODE: String = "9001"
+public const val BESTILL_BREV_KODE: String = "9002"
+public const val AVKLAR_STUDENT_KODE: String = "5001"
+public const val AVKLAR_SYKDOM_KODE: String = "5003"
+public const val FASTSETT_ARBEIDSEVNE_KODE: String = "5004"
+public const val FRITAK_MELDEPLIKT_KODE: String = "5005"
+public const val AVKLAR_BISTANDSBEHOV_KODE: String = "5006"
+public const val VURDER_SYKEPENGEERSTATNING_KODE: String = "5007"
+public const val FASTSETT_BEREGNINGSTIDSPUNKT_KODE: String = "5008"
+public const val AVKLAR_BARNETILLEGG_KODE: String = "5009"
+public const val AVKLAR_SONINGSFORRHOLD_KODE: String = "5010"
+public const val AVKLAR_HELSEINSTITUSJON_KODE: String = "5011"
+public const val AVKLAR_SAMORDNING_GRADERING_KODE = "5012"
+public const val KVALITETSSIKRING_KODE: String = "5097"
+public const val FORESLÅ_VEDTAK_KODE: String = "5098"
+public const val FATTE_VEDTAK_KODE: String = "5099"
+public const val SKRIV_BREV_KODE: String = "5050"
 
-enum class AvklaringsbehovKode {
+public enum class AvklaringsbehovKode {
     `9001`,
     `9002`,
     `5001`,

@@ -11,7 +11,7 @@ import java.time.LocalDateTime
  * @param opprettetTidspunkt Når behandlingen ble opprettet.
  * @param hendelsesTidspunkt Når denne hendelsen ble opprettet i Behandlingsflyt.
  */
-data class BehandlingFlytStoppetHendelse(
+public data class BehandlingFlytStoppetHendelse(
     val personIdent: String,
     val saksnummer: Saksnummer,
     val referanse: BehandlingReferanse,
