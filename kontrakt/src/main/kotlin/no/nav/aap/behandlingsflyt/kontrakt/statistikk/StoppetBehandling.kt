@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.kontrakt.statistikk
 
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Status as SakStatus
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -39,13 +40,6 @@ public data class StoppetBehandling(
         require(behandlingStatus != Status.AVSLUTTET || avsluttetBehandling != null)
         { "Om behandling ikke er avsluttet, ikke legg ved data om avsluttet behandling. Status er $behandlingStatus" }
     }
-}
-
-public enum class SakStatus {
-    OPPRETTET,
-    UTREDES,
-    LØPENDE,
-    AVSLUTTET
 }
 
 public data class AvklaringsbehovHendelse(

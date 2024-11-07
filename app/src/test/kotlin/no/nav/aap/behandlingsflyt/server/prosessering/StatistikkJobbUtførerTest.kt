@@ -32,7 +32,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvsluttetBehandlingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BeregningsgrunnlagDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Endring
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Grunnlag11_19DTO
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.SakStatus
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.TilkjentYtelseDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårDTO
@@ -474,7 +473,7 @@ class StatistikkJobbUtførerTest {
                 behandlingOpprettetTidspunkt = payload.opprettetTidspunkt,
                 versjon = ApplikasjonsVersjon.versjon,
                 mottattTid = tidligsteMottattTid,
-                sakStatus = SakStatus.UTREDES,
+                sakStatus = no.nav.aap.behandlingsflyt.kontrakt.sak.Status.UTREDES,
                 hendelsesTidspunkt = hendelsesTidspunkt,
                 identerForSak = listOf("123")
             )

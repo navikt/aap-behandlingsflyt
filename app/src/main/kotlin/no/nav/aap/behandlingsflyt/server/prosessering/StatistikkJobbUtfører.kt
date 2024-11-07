@@ -12,7 +12,6 @@ import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
-import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvklaringsbehovHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvsluttetBehandlingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BeregningsgrunnlagDTO
@@ -21,7 +20,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Endring
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Grunnlag11_19DTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.GrunnlagUføreDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.GrunnlagYrkesskadeDTO
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.SakStatus
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.TilkjentYtelseDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.TilkjentYtelsePeriodeDTO
@@ -111,7 +109,7 @@ class StatistikkJobbUtfører(
             behandlingOpprettetTidspunkt = hendelse.opprettetTidspunkt,
             versjon = hendelse.versjon,
             mottattTid = mottattTidspunkt,
-            sakStatus = behandlingflytSakStatusTilStatistikk(sak.status()),
+            sakStatus = sak.status(),
             hendelsesTidspunkt = hendelse.hendelsesTidspunkt,
             avsluttetBehandling = if (hendelse.status == AVSLUTTET) hentAvsluttetBehandlingDTO(hendelse) else null,
             identerForSak = hentIdenterPåSak(sak.saksnummer)
@@ -139,14 +137,6 @@ class StatistikkJobbUtfører(
         }
         return mottattTidspunkt
     }
-
-    private fun behandlingflytSakStatusTilStatistikk(sakStatus: Status): SakStatus =
-        when (sakStatus) {
-            Status.OPPRETTET -> SakStatus.OPPRETTET
-            Status.UTREDES -> SakStatus.UTREDES
-            Status.LØPENDE -> SakStatus.LØPENDE
-            Status.AVSLUTTET -> SakStatus.AVSLUTTET
-        }
 
     /**
      * Skal kalles når en behandling er avsluttet for å levere statistikk til statistikk-appen.
