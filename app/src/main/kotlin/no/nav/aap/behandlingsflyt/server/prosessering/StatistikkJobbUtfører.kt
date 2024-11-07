@@ -12,11 +12,8 @@ import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvklaringsbehovHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvsluttetBehandlingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BeregningsgrunnlagDTO
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Endring
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Grunnlag11_19DTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.GrunnlagUføreDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.GrunnlagYrkesskadeDTO
@@ -86,24 +83,7 @@ class StatistikkJobbUtfører(
             behandlingType = hendelse.behandlingType,
             behandlingStatus = hendelse.status,
             ident = hendelse.personIdent,
-            avklaringsbehov = hendelse.avklaringsbehov.map { avklaringsbehovHendelseDto ->
-                AvklaringsbehovHendelse(
-                    definisjon = Definisjon(
-                        type = avklaringsbehovHendelseDto.definisjon.type.name,
-                        behovType = avklaringsbehovHendelseDto.definisjon.behovType,
-                        løsesISteg = avklaringsbehovHendelseDto.definisjon.løsesISteg
-                    ),
-                    status = avklaringsbehovHendelseDto.status,
-                    endringer = avklaringsbehovHendelseDto.endringer.map { endring ->
-                        Endring(
-                            status = endring.status,
-                            tidsstempel = endring.tidsstempel,
-                            frist = endring.frist,
-                            endretAv = endring.endretAv,
-                        )
-                    }
-                )
-            },
+            avklaringsbehov = hendelse.avklaringsbehov,
             behandlingReferanse = hendelse.referanse.referanse,
             relatertBehandling = forrigeBehandling?.referanse?.referanse,
             behandlingOpprettetTidspunkt = hendelse.opprettetTidspunkt,
@@ -252,7 +232,6 @@ class StatistikkJobbUtfører(
         grunnlaget = beregningsgrunnlag.grunnlaget().verdi().toDouble(),
         er6GBegrenset = false,
         erGjennomsnitt = false
-
     )
 
 

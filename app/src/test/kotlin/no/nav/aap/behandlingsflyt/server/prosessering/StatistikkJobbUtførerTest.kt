@@ -27,10 +27,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendels
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.DefinisjonDTO
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.EndringDTO
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvklaringsbehovHendelse
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Status.UTREDES
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvsluttetBehandlingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BeregningsgrunnlagDTO
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Endring
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Grunnlag11_19DTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.TilkjentYtelseDTO
@@ -46,7 +45,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.kontrakt.sak.Status.UTREDES
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
@@ -452,24 +450,7 @@ class StatistikkJobbUtførerTest {
                 behandlingStatus = Status.UTREDES,
                 behandlingType = TypeBehandling.Klage,
                 ident = fødselsNummer,
-                avklaringsbehov = avklaringsbehov.map { avklaringsbehovHendelseDto ->
-                    AvklaringsbehovHendelse(
-                        definisjon = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Definisjon(
-                            type = avklaringsbehovHendelseDto.definisjon.type.name,
-                            behovType = avklaringsbehovHendelseDto.definisjon.behovType,
-                            løsesISteg = StegType.FATTE_VEDTAK
-                        ),
-                        status = avklaringsbehovHendelseDto.status,
-                        endringer = avklaringsbehovHendelseDto.endringer.map { endring ->
-                            Endring(
-                                status = endring.status,
-                                tidsstempel = endring.tidsstempel,
-                                frist = endring.frist,
-                                endretAv = endring.endretAv
-                            )
-                        }
-                    )
-                },
+                avklaringsbehov = avklaringsbehov,
                 behandlingOpprettetTidspunkt = payload.opprettetTidspunkt,
                 versjon = ApplikasjonsVersjon.versjon,
                 mottattTid = tidligsteMottattTid,

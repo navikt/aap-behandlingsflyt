@@ -2,12 +2,11 @@ package no.nav.aap.behandlingsflyt.kontrakt.statistikk
 
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.kontrakt.sak.Status as SakStatus
-import java.time.LocalDate
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
 import java.time.LocalDateTime
 import java.util.*
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsBehovStatus
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status as BehandlingsFlytBehandlingStatus
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Status as SakStatus
 
 /**
  * @param saksnummer Saksnummer.
@@ -28,7 +27,7 @@ public data class StoppetBehandling(
     val behandlingType: TypeBehandling,
     val ident: String,
     val versjon: String,
-    val avklaringsbehov: List<AvklaringsbehovHendelse>,
+    val avklaringsbehov: List<AvklaringsbehovHendelseDto>,
     val hendelsesTidspunkt: LocalDateTime,
     val avsluttetBehandling: AvsluttetBehandlingDTO? = null,
     val identerForSak: List<String> = listOf(),
@@ -41,26 +40,3 @@ public data class StoppetBehandling(
         { "Om behandling ikke er avsluttet, ikke legg ved data om avsluttet behandling. Status er $behandlingStatus" }
     }
 }
-
-public data class AvklaringsbehovHendelse(
-    val definisjon: Definisjon,
-    val status: AvklaringsBehovStatus,
-    val endringer: List<Endring>
-)
-
-/**
- * @param type Referer til type avklaringsbehov. Disse er definert i Definisjon.kt i aap-behandlingsflyt.
- */
-public data class Definisjon(
-    val type: String,
-    val behovType: no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.BehovType,
-    val løsesISteg: no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-)
-
-
-public data class Endring(
-    val status: AvklaringsBehovStatus,
-    val tidsstempel: LocalDateTime,
-    val frist: LocalDate? = null,
-    val endretAv: String
-)
