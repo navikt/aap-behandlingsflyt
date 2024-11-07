@@ -44,7 +44,7 @@ class SoningRegelTest {
         val periode = Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 1))
         val vurderingFraTidligereResultat = Vurdering(
             EnumMap(Vilkårtype::class.java), MeldepliktVurdering(
-                null, periode,
+                null, false,
                 Utfall.OPPFYLT
             ), null, null, null, Gradering(
                 totaltAntallTimer = TimerArbeid(BigDecimal.ZERO),

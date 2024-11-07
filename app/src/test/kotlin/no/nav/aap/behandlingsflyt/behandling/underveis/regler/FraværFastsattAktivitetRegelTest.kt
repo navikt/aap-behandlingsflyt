@@ -292,7 +292,7 @@ class FraværFastsattAktivitetRegelTest {
             rettighetsperiode = rettighetsperiode,
             aktivitetspliktDokument = aktivitetspliktDokument.toSet(),
         )
-        return FraværFastsattAktivitetRegel().vurder(input, MeldepliktRegel().vurder(input, startTidslinje))
+        return FraværFastsattAktivitetRegel().vurder(input, UtledMeldeperiodeRegel().vurder(input, startTidslinje))
             .filter { it.verdi.fraværFastsattAktivitetVurdering != null }
             .mapValue { it.fraværFastsattAktivitetVurdering!! }
     }

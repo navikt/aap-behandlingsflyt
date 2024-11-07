@@ -123,23 +123,33 @@ class GraderingArbeidRegel : UnderveisRegel {
     )
 
     private fun regnUtGradering(arbeidMeldeperioden: Tidslinje<Arbeid>): Tidslinje<Gradering> {
-        val arbeidstimerMeldeperioden = arbeidMeldeperioden.sumOf { it.verdi.timerArbeid?.antallTimer ?: BigDecimal.ZERO }
+        val arbeidstimerMeldeperioden =
+            arbeidMeldeperioden.sumOf { it.verdi.timerArbeid?.antallTimer ?: BigDecimal.ZERO }
 
+        val antallDager = BigDecimal(arbeidMeldeperioden.helePerioden().antallDager())
+
+        // TODO: Hvordan skal vi regne ut andel arbeid hvis siste meldeperiode slutter før 14 dager.
+        // Siste meldeperiode i rettighetsperioden er ikke nødvendig vis 14 dager lang.
+        // Vi skalerer derfor antall timer i meldeperiode med hvor lang meldeperioden faktisk er, altså:
+        // (antall timer arbeidet) / (antall timer i meldeperiode * (antall faktiske timer i meldeperioden / 14))
+        // men for å bevare presisjon er formelen stokket om.
         val andelArbeid = Prosent.fraDesimal(
-            BigDecimal.ONE.min(
-                arbeidstimerMeldeperioden.divide(ANTALL_TIMER_I_MELDEPERIODE, 3, RoundingMode.HALF_UP)
+            minOf(
+                BigDecimal.ONE,
+                (arbeidstimerMeldeperioden * BigDecimal(14)).divide(ANTALL_TIMER_I_MELDEPERIODE * antallDager, 3, RoundingMode.HALF_UP)
             )
         )
+
         return arbeidMeldeperioden.mapValue { arbeid ->
             val fastsattArbeidsevne = arbeid.arbeidsevne ?: `0_PROSENT`
-                Gradering(
-                    totaltAntallTimer = arbeid.timerArbeid ?: TimerArbeid(BigDecimal.ZERO),
-                    andelArbeid = andelArbeid,
-                    fastsattArbeidsevne = fastsattArbeidsevne,
-                    gradering = Prosent.`100_PROSENT`.minus(
-                        Prosent.max(andelArbeid, fastsattArbeidsevne)
-                    ),
-                )
+            Gradering(
+                totaltAntallTimer = arbeid.timerArbeid ?: TimerArbeid(BigDecimal.ZERO),
+                andelArbeid = andelArbeid,
+                fastsattArbeidsevne = fastsattArbeidsevne,
+                gradering = Prosent.`100_PROSENT`.minus(
+                    Prosent.max(andelArbeid, fastsattArbeidsevne)
+                ),
+            )
         }
     }
 }

@@ -186,7 +186,7 @@ class GraderingArbeidRegelTest {
     private fun vurder(input: UnderveisInput): Tidslinje<Vurdering> {
         return regel.vurder(
             input,
-            MeldepliktRegel().vurder(input, Tidslinje())
+            UtledMeldeperiodeRegel().vurder(input, Tidslinje())
         ).mapValue { it.copy(vurderinger = EnumMap(mapOf(Vilkårtype.ALDERSVILKÅRET to Utfall.OPPFYLT))) }
     }
 }

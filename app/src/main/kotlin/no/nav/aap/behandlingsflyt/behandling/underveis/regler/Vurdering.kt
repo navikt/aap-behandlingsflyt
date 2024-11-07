@@ -161,7 +161,7 @@ data class Vurdering(
     }
 
     fun meldeperiode(): Periode? {
-        return meldepliktVurdering?.meldeperiode
+        return meldeperiode
     }
 
     fun skalReduseresDagsatser(): Boolean {

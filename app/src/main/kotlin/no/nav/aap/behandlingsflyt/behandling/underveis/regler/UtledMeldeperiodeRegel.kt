@@ -6,7 +6,7 @@ import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.Tidslinje
 import org.slf4j.LoggerFactory
 
-class UtledMeldeperiodeRegel: UnderveisRegel {
+class UtledMeldeperiodeRegel : UnderveisRegel {
     companion object {
         const val MELDEPERIODE_LENGDE: Long = 14
         private val log = LoggerFactory.getLogger(Companion::class.java)!!
@@ -47,12 +47,12 @@ class UtledMeldeperiodeRegel: UnderveisRegel {
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
         val rettighetsperiode = input.rettighetsperiode
         val meldeperiodeTidslinje = generateSequence(rettighetsperiode.fom) { it.plusDays(MELDEPERIODE_LENGDE) }
-            .map { meldeperiodeStart ->
-                val meldeperiode = Periode(meldeperiodeStart, meldeperiodeStart.plusDays(MELDEPERIODE_LENGDE-1))
-                Segment(meldeperiode, meldeperiode)
-            }
-            .takeWhile { it.periode.tom <= rettighetsperiode.tom }.toList() //TODO - hva skjer hvis rettighetsperioden.dager%14 != 0
+            .takeWhile { it <= rettighetsperiode.tom }
+            .map { Periode(it, minOf(it.plusDays(MELDEPERIODE_LENGDE - 1), rettighetsperiode.tom)) }
+            .map { Segment(it, it) }
+            .toList()
+            .let { Tidslinje(it) }
 
-        return resultat.leggTilVurderinger(Tidslinje(meldeperiodeTidslinje), Vurdering::leggTilMeldeperiode)
+        return resultat.leggTilVurderinger(meldeperiodeTidslinje, Vurdering::leggTilMeldeperiode)
     }
 }

@@ -9,8 +9,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_M
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_MØTT_TIL_TILTAK
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn.STERKE_VELFERDSGRUNNER
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.tidslinje.JoinStyle
 import no.nav.aap.tidslinje.Tidslinje
-import no.nav.aap.verdityper.Tid
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
@@ -27,8 +27,9 @@ class SammenstiltAktivitetspliktRegelTest {
         )
         val aktivitetspliktBruddPeriode = Periode(LocalDate.of(2020, 1, 7), LocalDate.of(2020, 1, 7))
 
+        val rettighetsperiode = Periode(fom = LocalDate.of(2020, 1, 1), tom = LocalDate.of(2022, 12, 31))
         val aktivitetsbruddVurderinger = aktivitetsbruddVurderinger(
-            rettighetsperiode = Periode(fom = LocalDate.of(2020, 1, 1), tom = LocalDate.of(2022, 12, 31)),
+            rettighetsperiode = rettighetsperiode,
             startTidslinje = Tidslinje(),
             brudd(
                 bruddType = IKKE_AKTIVT_BIDRAG,
@@ -46,17 +47,19 @@ class SammenstiltAktivitetspliktRegelTest {
             )
         )
 
-        aktivitetsbruddVurderinger.segment(fraværFastsattAktivitetPeriode.fom). also {
+        aktivitetsbruddVurderinger.segment(fraværFastsattAktivitetPeriode.fom).also {
             assertEquals(Periode(fraværFastsattAktivitetPeriode.fom, aktivitetspliktBruddPeriode.fom.minusDays(1)), it?.periode)
             assertNotNull(it?.verdi?.fraværFastsattAktivitetVurdering)
             assertNull(it?.verdi?.aktivitetspliktVurdering)
         }
 
-        aktivitetsbruddVurderinger.segment(aktivitetspliktBruddPeriode.fom). also {
-            assertEquals(Periode(aktivitetspliktBruddPeriode.fom, Tid.MAKS), it?.periode)
-            assertNotNull(it?.verdi?.aktivitetspliktVurdering)
-            assertNull(it?.verdi?.fraværFastsattAktivitetVurdering)
-        }
+        aktivitetsbruddVurderinger.kombiner<_, Nothing>(Tidslinje(Periode(aktivitetspliktBruddPeriode.fom, rettighetsperiode.tom), Unit),
+            JoinStyle.RIGHT_JOIN { _, vurdering, _ ->
+                assertNotNull(vurdering?.verdi?.aktivitetspliktVurdering)
+                assertNull(vurdering?.verdi?.fraværFastsattAktivitetVurdering)
+                null
+            }
+        )
     }
 
     @Test
@@ -97,18 +100,21 @@ class SammenstiltAktivitetspliktRegelTest {
             )
         )
 
-        aktivitetsbruddVurderinger.segment(reduksjonAktivitetspliktPeriode.fom). also {
-            assertEquals(Periode(reduksjonAktivitetspliktPeriode.fom, fraværFastsattAktivitetPeriode.fom.minusDays(1)), it?.periode)
+        aktivitetsbruddVurderinger.segment(reduksjonAktivitetspliktPeriode.fom).also {
+            assertEquals(
+                Periode(reduksjonAktivitetspliktPeriode.fom, fraværFastsattAktivitetPeriode.fom.minusDays(1)),
+                it?.periode
+            )
             assertNotNull(it?.verdi?.reduksjonAktivitetspliktVurdering)
             assertNull(it?.verdi?.fraværFastsattAktivitetVurdering)
             assertNull(it?.verdi?.aktivitetspliktVurdering)
         }
 
-        aktivitetsbruddVurderinger.segment(fraværFastsattAktivitetPeriode.fom). also {
+        aktivitetsbruddVurderinger.segment(fraværFastsattAktivitetPeriode.fom).also {
             assertNull(it?.verdi?.reduksjonAktivitetspliktVurdering)
         }
 
-        aktivitetsbruddVurderinger.segment(aktivitetspliktBruddPeriode.fom). also {
+        aktivitetsbruddVurderinger.segment(aktivitetspliktBruddPeriode.fom).also {
             assertNull(it?.verdi?.reduksjonAktivitetspliktVurdering)
         }
     }
@@ -123,7 +129,7 @@ private fun aktivitetsbruddVurderinger(
         rettighetsperiode = rettighetsperiode,
         aktivitetspliktDokument = aktivitetspliktDokument.toSet(),
     )
-    return SammenstiltAktivitetspliktRegel().vurder(input, MeldepliktRegel().vurder(input, startTidslinje))
-        .filter { it.verdi.fraværFastsattAktivitetVurdering != null ||  it.verdi.reduksjonAktivitetspliktVurdering != null || it.verdi.aktivitetspliktVurdering != null }
+    return SammenstiltAktivitetspliktRegel().vurder(input, UtledMeldeperiodeRegel().vurder(input, startTidslinje))
+        .filter { it.verdi.fraværFastsattAktivitetVurdering != null || it.verdi.reduksjonAktivitetspliktVurdering != null || it.verdi.aktivitetspliktVurdering != null }
         .mapValue { it.copy(meldepliktVurdering = null) }.komprimer()
 }

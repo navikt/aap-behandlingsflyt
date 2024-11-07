@@ -42,7 +42,7 @@ class InstitusjonRegelTest {
         val vurderingFraTidligereResultat = Vurdering(
             EnumMap(Vilkårtype::class.java),
             MeldepliktVurdering(
-                null, periode,
+                null, false,
                 Utfall.OPPFYLT
             ),
             null,
