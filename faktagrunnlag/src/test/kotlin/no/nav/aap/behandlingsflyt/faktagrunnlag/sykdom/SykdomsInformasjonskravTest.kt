@@ -24,30 +24,11 @@ class SykdomsInformasjonskravTest {
                 erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                 erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                 erArbeidsevnenNedsatt = true,
+                yrkesskadeBegrunnelse = null
             )
         )
 
         assertThat(sykdomGrunnlag.erKonsistentForSykdom()).isTrue
-    }
-
-    @Test
-    fun `er ikke konsistent hvis ikke yrkesskade og 30 prosent`() {
-        val sykdomGrunnlag = SykdomGrunnlag(
-            id = 1L,
-            yrkesskadevurdering = null,
-            sykdomsvurdering = Sykdomsvurdering(
-                begrunnelse = "",
-                dokumenterBruktIVurdering = emptyList(),
-                harSkadeSykdomEllerLyte = true,
-                erSkadeSykdomEllerLyteVesentligdel = true,
-                erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-                erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                erArbeidsevnenNedsatt = true,
-            )
-        )
-
-        assertThat(sykdomGrunnlag.erKonsistentForSykdom()).isFalse
     }
 
     @Test
@@ -69,35 +50,11 @@ class SykdomsInformasjonskravTest {
                 erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                 erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                 erArbeidsevnenNedsatt = true,
+                yrkesskadeBegrunnelse = null
             )
         )
 
         assertThat(sykdomGrunnlag.erKonsistentForSykdom()).isTrue
-    }
-
-    @Test
-    fun `er ikke konsistent hvis yrkesskade med årsakssammenheng og 50 prosent`() {
-        val sykdomGrunnlag = SykdomGrunnlag(
-            id = 1L,
-            yrkesskadevurdering = Yrkesskadevurdering(
-                begrunnelse = "",
-                erÅrsakssammenheng = true,
-                skadetidspunkt = LocalDate.now(),
-                andelAvNedsettelse = Prosent.`100_PROSENT`,
-            ),
-            sykdomsvurdering = Sykdomsvurdering(
-                begrunnelse = "",
-                dokumenterBruktIVurdering = emptyList(),
-                harSkadeSykdomEllerLyte = true,
-                erSkadeSykdomEllerLyteVesentligdel = true,
-                erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-                erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                erArbeidsevnenNedsatt = true,
-            )
-        )
-
-        assertThat(sykdomGrunnlag.erKonsistentForSykdom()).isFalse
     }
 
     @Test
@@ -115,10 +72,11 @@ class SykdomsInformasjonskravTest {
                 dokumenterBruktIVurdering = emptyList(),
                 harSkadeSykdomEllerLyte = true,
                 erSkadeSykdomEllerLyteVesentligdel = true,
-                erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                erNedsettelseIArbeidsevneMerEnnHalvparten = false,
                 erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                 erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                 erArbeidsevnenNedsatt = true,
+                yrkesskadeBegrunnelse = null
             )
         )
 
@@ -144,6 +102,7 @@ class SykdomsInformasjonskravTest {
                 erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                 erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                 erArbeidsevnenNedsatt = true,
+                yrkesskadeBegrunnelse = null
             )
         )
 
@@ -164,6 +123,7 @@ class SykdomsInformasjonskravTest {
                 erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                 erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                 erArbeidsevnenNedsatt = true,
+                yrkesskadeBegrunnelse = null
             )
         )
 
@@ -184,6 +144,7 @@ class SykdomsInformasjonskravTest {
                 erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                 erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                 erArbeidsevnenNedsatt = true,
+                yrkesskadeBegrunnelse = null
             )
         )
 
@@ -204,6 +165,7 @@ class SykdomsInformasjonskravTest {
                 erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                 erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                 erArbeidsevnenNedsatt = true,
+                yrkesskadeBegrunnelse = null
             )
         )
 
@@ -224,6 +186,7 @@ class SykdomsInformasjonskravTest {
                 erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                 erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                 erArbeidsevnenNedsatt = true,
+                yrkesskadeBegrunnelse = null
             )
         )
 

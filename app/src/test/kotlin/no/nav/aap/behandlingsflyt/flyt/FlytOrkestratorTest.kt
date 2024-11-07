@@ -183,7 +183,8 @@ class FlytOrkestratorTest {
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
                             erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            erArbeidsevnenNedsatt = true
+                            erArbeidsevnenNedsatt = true,
+                            yrkesskadeBegrunnelse = null
                         )
                     ),
                     behandlingVersjon = behandling.versjon,
@@ -298,6 +299,7 @@ class FlytOrkestratorTest {
                             erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             erArbeidsevnenNedsatt = true,
+                            yrkesskadeBegrunnelse = null
                         )
                     ),
                     behandlingVersjon = behandling.versjon,
@@ -508,6 +510,7 @@ class FlytOrkestratorTest {
                             erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             erArbeidsevnenNedsatt = true,
+                            yrkesskadeBegrunnelse = null
                         )
                     ),
                     behandlingVersjon = behandling.versjon,
@@ -845,6 +848,7 @@ class FlytOrkestratorTest {
                             erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             erArbeidsevnenNedsatt = true,
+                            yrkesskadeBegrunnelse = null
                         )
                     ),
                     behandlingVersjon = behandling.versjon,
@@ -970,6 +974,7 @@ class FlytOrkestratorTest {
                             erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             erArbeidsevnenNedsatt = true,
+                            yrkesskadeBegrunnelse = null
                         )
                     ),
                     ingenEndringIGruppe = true,
@@ -1133,6 +1138,7 @@ class FlytOrkestratorTest {
                             erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             erArbeidsevnenNedsatt = false,
+                            yrkesskadeBegrunnelse = null
                         )
                     ),
                     behandlingVersjon = behandling.versjon,

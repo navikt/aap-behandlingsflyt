@@ -111,7 +111,7 @@ class SykdomRepository(private val connection: DBConnection) {
 
         val query = """
             INSERT INTO SYKDOM_VURDERING 
-            (BEGRUNNELSE, ER_ARBEIDSEVNE_NEDSATT, HAR_SYKDOM_SKADE_LYTE, ER_SYKDOM_SKADE_LYTE_VESETLING_DEL, ER_NEDSETTELSE_MER_ENN_HALVPARTEN, ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE, ER_NEDSETTELSE_AV_EN_VISS_VARIGHET)
+            (BEGRUNNELSE, ER_ARBEIDSEVNE_NEDSATT, HAR_SYKDOM_SKADE_LYTE, ER_SYKDOM_SKADE_LYTE_VESETLING_DEL, ER_NEDSETTELSE_MER_ENN_HALVPARTEN, ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE, ER_NEDSETTELSE_AV_EN_VISS_VARIGHET, YRKESSKADE_BEGRUNNELSE)
             VALUES
             (?, ?, ?, ?, ?, ?, ?)
         """.trimIndent()
@@ -125,6 +125,7 @@ class SykdomRepository(private val connection: DBConnection) {
                 setBoolean(5, vurdering.erNedsettelseIArbeidsevneMerEnnHalvparten)
                 setBoolean(6, vurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense)
                 setBoolean(7, vurdering.erNedsettelseIArbeidsevneAvEnVissVarighet)
+                setString(8, vurdering.yrkesskadeBegrunnelse)
             }
         }
 
@@ -192,7 +193,7 @@ class SykdomRepository(private val connection: DBConnection) {
         }
         return connection.queryFirstOrNull(
             """
-            SELECT id, BEGRUNNELSE, HAR_SYKDOM_SKADE_LYTE, ER_SYKDOM_SKADE_LYTE_VESETLING_DEL, ER_NEDSETTELSE_MER_ENN_HALVPARTEN, ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE, ER_NEDSETTELSE_AV_EN_VISS_VARIGHET, ER_ARBEIDSEVNE_NEDSATT
+            SELECT id, BEGRUNNELSE, HAR_SYKDOM_SKADE_LYTE, ER_SYKDOM_SKADE_LYTE_VESETLING_DEL, ER_NEDSETTELSE_MER_ENN_HALVPARTEN, ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE, ER_NEDSETTELSE_AV_EN_VISS_VARIGHET, ER_ARBEIDSEVNE_NEDSATT, YRKESSKADE_BEGRUNNELSE
             FROM SYKDOM_VURDERING WHERE id = ?
             """.trimIndent()
         ) {
@@ -209,7 +210,8 @@ class SykdomRepository(private val connection: DBConnection) {
                     erNedsettelseIArbeidsevneMerEnnHalvparten = row.getBooleanOrNull("ER_NEDSETTELSE_MER_ENN_HALVPARTEN"),
                     erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = row.getBooleanOrNull("ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE"),
                     erNedsettelseIArbeidsevneAvEnVissVarighet = row.getBooleanOrNull("ER_NEDSETTELSE_AV_EN_VISS_VARIGHET"),
-                    erArbeidsevnenNedsatt = row.getBooleanOrNull("ER_ARBEIDSEVNE_NEDSATT")
+                    erArbeidsevnenNedsatt = row.getBooleanOrNull("ER_ARBEIDSEVNE_NEDSATT"),
+                    yrkesskadeBegrunnelse = row.getStringOrNull("YRKESSKADE_BEGRUNNELSE")
                 )
             }
         }

@@ -14,6 +14,7 @@ class Sykdomsvurdering(
     val erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean?,
     val erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean?,
     val erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean?,
+    val yrkesskadeBegrunnelse: String?,
     val erArbeidsevnenNedsatt: Boolean?
 ) {
     fun toDto() = SykdomsvurderingDto(
@@ -24,7 +25,8 @@ class Sykdomsvurdering(
         erSkadeSykdomEllerLyteVesentligdel = erSkadeSykdomEllerLyteVesentligdel,
         erNedsettelseIArbeidsevneAvEnVissVarighet = erNedsettelseIArbeidsevneAvEnVissVarighet,
         erNedsettelseIArbeidsevneMerEnnHalvparten = erNedsettelseIArbeidsevneMerEnnHalvparten,
-        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense
+        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
+        yrkesskadeBegrunnelse = yrkesskadeBegrunnelse,
     )
 }
 
