@@ -48,7 +48,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: HikariDataSource) {
             }
         }
         route("/{referanse}/grunnlag/sykdom/yrkesskade") {
-            get<BehandlingReferanse, YrkesskadeGrunnlagDto> { req ->
+            get<BehandlingReferanse, YrkesskadeVurderingGrunnlagDto> { req ->
                 val (yrkesskadeGrunnlag, sykdomGrunnlag) = dataSource.transaction { connection ->
                     val behandling: Behandling =
                         BehandlingReferanseService(BehandlingRepositoryImpl(connection)).behandling(req)
@@ -68,7 +68,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: HikariDataSource) {
                     )
                 } ?: emptyList()
                 respond(
-                    YrkesskadeGrunnlagDto(
+                    YrkesskadeVurderingGrunnlagDto(
                         opplysninger = InnhentetSykdomsOpplysninger(
                             oppgittYrkesskadeISøknad = false,
                             innhentedeYrkesskader = innhentedeYrkesskader,

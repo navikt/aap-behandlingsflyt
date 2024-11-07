@@ -12,7 +12,7 @@ data class SykdomGrunnlagDto(
     val sykdomsvurdering: SykdomsvurderingDto?
 )
 
-data class YrkesskadeGrunnlagDto(
+data class YrkesskadeVurderingGrunnlagDto(
     val opplysninger: InnhentetSykdomsOpplysninger,
     val yrkesskadeVurdering: YrkesskadevurderingDto?
 )
