@@ -38,7 +38,7 @@ class VurderSykdomSteg private constructor(
 
             val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
-            if (erIkkeAvslagPåVilkårTidligere(vilkårResultat) || (studentVurdering?.erOppfylt() == false && sykdomsGrunnlag?.erKonsistentForSykdom(yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true) != true)
+            if (erIkkeAvslagPåVilkårTidligere(vilkårResultat) && (studentVurdering?.erOppfylt() != true && sykdomsGrunnlag?.erKonsistentForSykdom(yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true) != true)
             ) {
                 return FantAvklaringsbehov(Definisjon.AVKLAR_SYKDOM)
             } else {

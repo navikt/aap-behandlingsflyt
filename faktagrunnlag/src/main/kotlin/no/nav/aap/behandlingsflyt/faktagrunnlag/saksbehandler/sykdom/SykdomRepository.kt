@@ -243,7 +243,7 @@ class SykdomRepository(private val connection: DBConnection) {
             return null
         }
         val query = """
-            SELECT id, BEGRUNNELSE, ARSAKSSAMMENHENG, SKADEDATO, ANDEL_AV_NEDSETTELSE
+            SELECT id, BEGRUNNELSE, ARSAKSSAMMENHENG, ANDEL_AV_NEDSETTELSE
             FROM YRKESSKADE_VURDERING
             WHERE ID = ?
         """.trimIndent()
