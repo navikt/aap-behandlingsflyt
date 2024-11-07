@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.komponenter.type.Periode
 
 class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<SykdomsFaktagrunnlag> {
@@ -22,14 +23,14 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
 
         val sykdomsvurdering = grunnlag.sykdomsvurdering
         val studentVurdering = grunnlag.studentvurdering
+        val yrkesskadevurdering = grunnlag.yrkesskadevurdering
 
 
         if (studentVurdering?.erOppfylt() == true) {
             utfall = Utfall.OPPFYLT
             innvilgelsesårsak = Innvilgelsesårsak.STUDENT
-        } else if (harSykdomBlittVurdertTilGodkjent(sykdomsvurdering)) {
+        } else if (harSykdomBlittVurdertTilGodkjent(sykdomsvurdering, yrkesskadevurdering)) {
             utfall = Utfall.OPPFYLT
-            val yrkesskadevurdering = grunnlag.yrkesskadevurdering
             if (yrkesskadevurdering != null && yrkesskadevurdering.erÅrsakssammenheng) {
                 innvilgelsesårsak = Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG
             }
@@ -54,14 +55,18 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
         )
     }
 
-    private fun harSykdomBlittVurdertTilGodkjent(sykdomsvurdering: Sykdomsvurdering?): Boolean {
+    private fun harSykdomBlittVurdertTilGodkjent(
+        sykdomsvurdering: Sykdomsvurdering?,
+        yrkesskadevurdering: Yrkesskadevurdering?
+    ): Boolean {
         if (sykdomsvurdering == null) {
             return false
         }
         return sykdomsvurdering.erSkadeSykdomEllerLyteVesentligdel == true &&
                 sykdomsvurdering.erArbeidsevnenNedsatt == true &&
                 sykdomsvurdering.erNedsettelseIArbeidsevneAvEnVissVarighet == true &&
-                sykdomsvurdering.erNedsettelseIArbeidsevneMerEnnHalvparten == true
+                (sykdomsvurdering.erNedsettelseIArbeidsevneMerEnnHalvparten == true ||
+                        (sykdomsvurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true && yrkesskadevurdering?.erÅrsakssammenheng == true))
     }
 
     private fun lagre(grunnlag: SykdomsFaktagrunnlag, vurderingsResultat: VurderingsResultat): VurderingsResultat {
