@@ -35,6 +35,10 @@ public enum class StegType(
         gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES
     ),
+    FASTSETT_SYKDOMSVILKÅRET(
+        gruppe = StegGruppe.SYKDOM,
+        status = Status.UTREDES
+    ),
     VURDER_YRKESSKADE(
         gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES

@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
-import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.Sykdomsvilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
@@ -34,19 +33,6 @@ class VurderSykdomSteg private constructor(
             val vilkårResultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
             val studentVurdering = studentGrunnlag?.studentvurdering
 
-            if (sykdomsGrunnlag != null && sykdomsGrunnlag.erKonsistentForSykdom() || studentVurdering?.erOppfylt() == true) {
-                for (periode in kontekst.perioder()) {
-                    val faktagrunnlag = no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykdomsFaktagrunnlag(
-                        periode.fom,
-                        periode.tom,
-                        sykdomsGrunnlag?.yrkesskadevurdering,
-                        sykdomsGrunnlag?.sykdomsvurdering,
-                        studentGrunnlag?.studentvurdering
-                    )
-                    Sykdomsvilkår(vilkårResultat).vurder(faktagrunnlag)
-                }
-            }
-            vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårResultat)
             val sykdomsvilkåret = vilkårResultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
             val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
