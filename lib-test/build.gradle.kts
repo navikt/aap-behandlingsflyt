@@ -12,6 +12,7 @@ dependencies {
     implementation(project(":verdityper"))
     implementation(project(":integrasjon"))
     implementation(project(":app"))
+    implementation(project(":kontrakt"))
     implementation("no.nav.aap.brev:kontrakt:0.0.14")
     implementation("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
     implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
@@ -23,8 +24,6 @@ dependencies {
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
     implementation("io.ktor:ktor-server-cors:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
-
-    implementation("no.nav.aap.statistikk:api-kontrakt:0.0.25")
 
     implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.18.0")

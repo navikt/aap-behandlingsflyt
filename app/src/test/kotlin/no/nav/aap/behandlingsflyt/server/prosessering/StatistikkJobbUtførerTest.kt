@@ -44,20 +44,20 @@ import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.pip.PipRepository
-import no.nav.aap.statistikk.api_kontrakt.AvklaringsbehovHendelse
-import no.nav.aap.statistikk.api_kontrakt.AvsluttetBehandlingDTO
-import no.nav.aap.statistikk.api_kontrakt.BehandlingStatus
-import no.nav.aap.statistikk.api_kontrakt.BehovType
-import no.nav.aap.statistikk.api_kontrakt.BeregningsgrunnlagDTO
-import no.nav.aap.statistikk.api_kontrakt.Endring
-import no.nav.aap.statistikk.api_kontrakt.EndringStatus
-import no.nav.aap.statistikk.api_kontrakt.Grunnlag11_19DTO
-import no.nav.aap.statistikk.api_kontrakt.SakStatus
-import no.nav.aap.statistikk.api_kontrakt.StoppetBehandling
-import no.nav.aap.statistikk.api_kontrakt.TilkjentYtelseDTO
-import no.nav.aap.statistikk.api_kontrakt.VilkårDTO
-import no.nav.aap.statistikk.api_kontrakt.VilkårsPeriodeDTO
-import no.nav.aap.statistikk.api_kontrakt.VilkårsResultatDTO
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvklaringsbehovHendelse
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvsluttetBehandlingDTO
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BehandlingStatus
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BehovType
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BeregningsgrunnlagDTO
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Endring
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.EndringStatus
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Grunnlag11_19DTO
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.SakStatus
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.TilkjentYtelseDTO
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårDTO
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsPeriodeDTO
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsResultatDTO
 import no.nav.aap.verdityper.GUnit
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.Ident
@@ -308,12 +308,12 @@ class StatistikkJobbUtførerTest {
                     typeBehandling = TypeBehandling.Førstegangsbehandling.toString(),
                     vilkår = listOf(
                         VilkårDTO(
-                            vilkårType = no.nav.aap.statistikk.api_kontrakt.Vilkårtype.valueOf(Vilkårtype.MEDLEMSKAP.toString()),
+                            vilkårType = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype.valueOf(Vilkårtype.MEDLEMSKAP.toString()),
                             perioder = listOf(
                                 VilkårsPeriodeDTO(
                                     fraDato = LocalDate.now().minusDays(1),
                                     tilDato = LocalDate.now().plusDays(1),
-                                    utfall = no.nav.aap.statistikk.api_kontrakt.Utfall.valueOf(Utfall.OPPFYLT.toString()),
+                                    utfall = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Utfall.valueOf(Utfall.OPPFYLT.toString()),
                                     manuellVurdering = false,
                                     avslagsårsak = null,
                                     innvilgelsesårsak = "null",
@@ -454,14 +454,14 @@ class StatistikkJobbUtførerTest {
                 saksnummer = Saksnummer.valueOf(sakId.id).toString(),
                 behandlingReferanse = referanse.referanse,
                 status = BehandlingStatus.UTREDES,
-                behandlingType = no.nav.aap.statistikk.api_kontrakt.TypeBehandling.valueOf(TypeBehandling.Klage.toString()),
+                behandlingType = no.nav.aap.behandlingsflyt.kontrakt.statistikk.TypeBehandling.valueOf(TypeBehandling.Klage.toString()),
                 ident = fødselsNummer,
                 avklaringsbehov = avklaringsbehov.map { avklaringsbehovHendelseDto ->
                     AvklaringsbehovHendelse(
-                        definisjon = no.nav.aap.statistikk.api_kontrakt.Definisjon(
+                        definisjon = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Definisjon(
                             type = avklaringsbehovHendelseDto.definisjon.type.name,
                             behovType = BehovType.valueOf(avklaringsbehovHendelseDto.definisjon.behovType.toString()),
-                            løsesISteg = no.nav.aap.statistikk.api_kontrakt.StegType.FATTE_VEDTAK
+                            løsesISteg = no.nav.aap.behandlingsflyt.kontrakt.statistikk.StegType.FATTE_VEDTAK
                         ),
                         status = EndringStatus.valueOf(avklaringsbehovHendelseDto.status.toString()),
                         endringer = avklaringsbehovHendelseDto.endringer.map { endring ->

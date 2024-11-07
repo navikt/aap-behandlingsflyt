@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.test
 
-import no.nav.aap.statistikk.api_kontrakt.StoppetBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
