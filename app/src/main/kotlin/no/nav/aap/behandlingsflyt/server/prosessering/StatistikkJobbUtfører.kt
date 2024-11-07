@@ -93,6 +93,7 @@ class StatistikkJobbUtfører(
             saksnummer = hendelse.saksnummer.toString(),
             behandlingType = typeBehandlingTilStatistikkKontrakt(hendelse.behandlingType),
             status = behandlingStatusTilStatistikkKontrakt(hendelse.status),
+            behandlingStatus = hendelse.status,
             ident = hendelse.personIdent,
             avklaringsbehov = hendelse.avklaringsbehov.map { avklaringsbehovHendelseDto ->
                 AvklaringsbehovHendelse(

@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.kontrakt.statistikk
 
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status as BehandlingsFlytBehandlingStatus
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -20,6 +21,7 @@ public data class StoppetBehandling(
     val behandlingOpprettetTidspunkt: LocalDateTime,
     val mottattTid: LocalDateTime,
     val status: BehandlingStatus,
+    val behandlingStatus: BehandlingsFlytBehandlingStatus,
     val behandlingType: TypeBehandling,
     val ident: String,
     val versjon: String,

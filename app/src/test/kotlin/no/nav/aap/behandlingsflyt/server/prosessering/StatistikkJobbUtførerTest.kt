@@ -454,6 +454,7 @@ class StatistikkJobbUtførerTest {
                 saksnummer = Saksnummer.valueOf(sakId.id).toString(),
                 behandlingReferanse = referanse.referanse,
                 status = BehandlingStatus.UTREDES,
+                behandlingStatus = Status.UTREDES,
                 behandlingType = no.nav.aap.behandlingsflyt.kontrakt.statistikk.TypeBehandling.valueOf(TypeBehandling.Klage.toString()),
                 ident = fødselsNummer,
                 avklaringsbehov = avklaringsbehov.map { avklaringsbehovHendelseDto ->
