@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.kontrakt.statistikk
 
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status as BehandlingsFlytBehandlingStatus
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsBehovStatus
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -57,7 +58,7 @@ public enum class TypeBehandling {
 
 public data class AvklaringsbehovHendelse(
     val definisjon: Definisjon,
-    val status: EndringStatus,
+    val status: AvklaringsBehovStatus,
     val endringer: List<Endring>
 )
 
@@ -71,18 +72,8 @@ public data class Definisjon(
 )
 
 
-public enum class EndringStatus {
-    OPPRETTET,
-    AVSLUTTET,
-    TOTRINNS_VURDERT,
-    SENDT_TILBAKE_FRA_BESLUTTER,
-    KVALITETSSIKRET,
-    SENDT_TILBAKE_FRA_KVALITETSSIKRER,
-    AVBRUTT
-}
-
 public data class Endring(
-    val status: EndringStatus,
+    val status: AvklaringsBehovStatus,
     val tidsstempel: LocalDateTime,
     val frist: LocalDate? = null,
     val endretAv: String

@@ -9,11 +9,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagY
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.EndringDTO
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvklaringsbehovHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvsluttetBehandlingDTO
@@ -21,7 +19,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BehovType
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BeregningsgrunnlagDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Endring
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.EndringStatus
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Grunnlag11_19DTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.GrunnlagUføreDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.GrunnlagYrkesskadeDTO
@@ -100,10 +97,10 @@ class StatistikkJobbUtfører(
                         behovType = behovTypeTilStatistikkKontraktBehovsType(avklaringsbehovHendelseDto),
                         løsesISteg = avklaringsbehovHendelseDto.definisjon.løsesISteg
                     ),
-                    status = avklaringsBehovStatusTilStatistikkKontrakt(avklaringsbehovHendelseDto),
+                    status = avklaringsbehovHendelseDto.status,
                     endringer = avklaringsbehovHendelseDto.endringer.map { endring ->
                         Endring(
-                            status = endringStatusTilStatistikkKontrakt(endring),
+                            status = endring.status,
                             tidsstempel = endring.tidsstempel,
                             frist = endring.frist,
                             endretAv = endring.endretAv,
@@ -151,27 +148,6 @@ class StatistikkJobbUtfører(
             no.nav.aap.behandlingsflyt.sakogbehandling.sak.Status.UTREDES -> SakStatus.UTREDES
             no.nav.aap.behandlingsflyt.sakogbehandling.sak.Status.LØPENDE -> SakStatus.LØPENDE
             no.nav.aap.behandlingsflyt.sakogbehandling.sak.Status.AVSLUTTET -> SakStatus.AVSLUTTET
-        }
-
-    private fun endringStatusTilStatistikkKontrakt(endring: EndringDTO): EndringStatus = when (endring.status) {
-        Status.OPPRETTET -> EndringStatus.OPPRETTET
-        Status.AVSLUTTET -> EndringStatus.AVSLUTTET
-        Status.TOTRINNS_VURDERT -> EndringStatus.TOTRINNS_VURDERT
-        Status.SENDT_TILBAKE_FRA_BESLUTTER -> EndringStatus.SENDT_TILBAKE_FRA_BESLUTTER
-        Status.KVALITETSSIKRET -> EndringStatus.KVALITETSSIKRET
-        Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER -> EndringStatus.SENDT_TILBAKE_FRA_KVALITETSSIKRER
-        Status.AVBRUTT -> EndringStatus.AVBRUTT
-    }
-
-    private fun avklaringsBehovStatusTilStatistikkKontrakt(avklaringsbehovHendelseDto: AvklaringsbehovHendelseDto): EndringStatus =
-        when (avklaringsbehovHendelseDto.status) {
-            Status.OPPRETTET -> EndringStatus.OPPRETTET
-            Status.AVSLUTTET -> EndringStatus.AVSLUTTET
-            Status.TOTRINNS_VURDERT -> EndringStatus.TOTRINNS_VURDERT
-            Status.SENDT_TILBAKE_FRA_BESLUTTER -> EndringStatus.SENDT_TILBAKE_FRA_BESLUTTER
-            Status.KVALITETSSIKRET -> EndringStatus.KVALITETSSIKRET
-            Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER -> EndringStatus.SENDT_TILBAKE_FRA_KVALITETSSIKRER
-            Status.AVBRUTT -> EndringStatus.AVBRUTT
         }
 
     private fun behovTypeTilStatistikkKontraktBehovsType(avklaringsbehovHendelseDto: AvklaringsbehovHendelseDto): BehovType {

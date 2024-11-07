@@ -32,7 +32,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvsluttetBehandlingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BehovType
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BeregningsgrunnlagDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Endring
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.EndringStatus
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Grunnlag11_19DTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.SakStatus
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
@@ -462,10 +461,10 @@ class StatistikkJobbUtførerTest {
                             behovType = BehovType.valueOf(avklaringsbehovHendelseDto.definisjon.behovType.toString()),
                             løsesISteg = StegType.FATTE_VEDTAK
                         ),
-                        status = EndringStatus.valueOf(avklaringsbehovHendelseDto.status.toString()),
+                        status = avklaringsbehovHendelseDto.status,
                         endringer = avklaringsbehovHendelseDto.endringer.map { endring ->
                             Endring(
-                                status = EndringStatus.valueOf(endring.status.toString()),
+                                status = endring.status,
                                 tidsstempel = endring.tidsstempel,
                                 frist = endring.frist,
                                 endretAv = endring.endretAv
