@@ -38,7 +38,7 @@ data class SykdomsvurderingDto(
             erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
             harSkadeSykdomEllerLyte = harSkadeSykdomEllerLyte,
             erSkadeSykdomEllerLyteVesentligdel = erSkadeSykdomEllerLyteVesentligdel,
-            erNedsettelseIArbeidsevneMerEnnHalvparten = this@SykdomsvurderingDto.erNedsettelseIArbeidsevneMerEnnHalvparten,
+            erNedsettelseIArbeidsevneMerEnnHalvparten = erNedsettelseIArbeidsevneMerEnnHalvparten,
             erNedsettelseIArbeidsevneAvEnVissVarighet = erNedsettelseIArbeidsevneAvEnVissVarighet,
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
             yrkesskadeBegrunnelse = yrkesskadeBegrunnelse
@@ -49,7 +49,7 @@ data class SykdomsvurderingDto(
 data class YrkesskadevurderingDto(
     val begrunnelse: String,
     val relevanteSaker: List<String>,
-    val andelAvNedsettelsen: Prosent?,
+    val andelAvNedsettelsen: Int?,
     val erÅrsakssammenheng: Boolean
 ) {
     fun toYrkesskadevurdering(): Yrkesskadevurdering {
@@ -57,7 +57,7 @@ data class YrkesskadevurderingDto(
             begrunnelse = begrunnelse,
             relevanteSaker = relevanteSaker,
             erÅrsakssammenheng = erÅrsakssammenheng,
-            andelAvNedsettelse = andelAvNedsettelsen
+            andelAvNedsettelse = andelAvNedsettelsen?.let { Prosent(it) }
         )
     }
 }
