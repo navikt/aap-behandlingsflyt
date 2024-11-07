@@ -56,9 +56,12 @@ class MeldepliktRegel : UnderveisRegel {
 
         val meldepliktVurderinger = groupByMeldeperiode(resultat, meldepliktTidslinje)
             .fold(Tidslinje<MeldepliktVurdering>()) { meldeperioderVurdert, nåværendeMeldeperiodeSegment ->
-                val forrigeSegmentOppfylt = meldeperioderVurdert.lastOrNull()?.verdi?.utfall == OPPFYLT
                 meldeperioderVurdert.flatMap {
-                    vurderForMeldeperiode(nåværendeMeldeperiodeSegment, forrigeSegmentOppfylt)
+                    vurderForMeldeperiode(
+                        meldeperiode = nåværendeMeldeperiodeSegment.periode,
+                        dataForMeldeperiode = nåværendeMeldeperiodeSegment.verdi,
+                        forrigeSegmentOppfylt = meldeperioderVurdert.lastOrNull()?.verdi?.utfall == OPPFYLT
+                    )
                 }
             }
 
@@ -66,22 +69,22 @@ class MeldepliktRegel : UnderveisRegel {
     }
 
     private fun vurderForMeldeperiode(
-        meldeperiodeSegment: Segment<Tidslinje<MeldepliktData>>,
+        meldeperiode: Periode,
+        dataForMeldeperiode: Tidslinje<MeldepliktData>,
         forrigeSegmentOppfylt: Boolean
     ): Tidslinje<MeldepliktVurdering> {
-        val meldeperioden = meldeperiodeSegment.periode
-        val førsteDokument = meldeperiodeSegment.verdi.segmenter().firstOrNull { it.verdi.innsending != null }
+        val førsteDokument = dataForMeldeperiode.segmenter().firstOrNull { it.verdi.innsending != null }
 
-        val fritak = meldeperiodeSegment.verdi.segmenter().firstOrNull {
+        val fritak = dataForMeldeperiode.segmenter().firstOrNull {
             it.verdi.fritaksvurdering?.harFritak == true
         }
-        val meldefrist = meldeperioden.fom.plusDays(7)
+        val meldefrist = meldeperiode.fom.plusDays(7)
 
         return when {
             fritak?.verdi?.fritaksvurdering?.harFritak == true -> Tidslinje(
-                meldeperioden,
+                meldeperiode,
                 MeldepliktVurdering(
-                    journalpostId = førsteDokument?.verdi?.innsending,
+                    journalpostId = null,
                     fritak = true,
                     utfall = OPPFYLT,
                     årsak = null
@@ -89,22 +92,13 @@ class MeldepliktRegel : UnderveisRegel {
             )
 
             førsteDokument == null -> {
-                val forrigeMeldeperiodeOppfylt = forrigeSegmentOppfylt
-                Tidslinje(meldeperioden, true).splittOppOgMapOmEtter(
+                Tidslinje(meldeperiode, Unit).splittOppOgMapOmEtter(
                     Period.ofDays(1)
                 ) { segmenter ->
                     val segment = segmenter.single()
-                    val erMeldefristIFremtiden = meldefrist > LocalDate.now()
-                    val erVurdertDagIkkePassert = segment.periode.fom >= LocalDate.now()
-                    val vurdertDagErInnenforFrist = meldefrist >= segment.periode.fom
+                    val fortsattMuligÅEndreUtfall = erDetFortsattMuligÅEndreUtfall(meldefrist, segment.periode.fom)
 
-                    val fortsattMuligÅEndreUtfall =
-                        if (vurdertDagErInnenforFrist && erMeldefristIFremtiden) true
-                        else if (erVurdertDagIkkePassert) true
-                        else false
-
-                    val utfall =
-                        if (fortsattMuligÅEndreUtfall && forrigeMeldeperiodeOppfylt) OPPFYLT else IKKE_OPPFYLT
+                    val utfall = if (fortsattMuligÅEndreUtfall && forrigeSegmentOppfylt) OPPFYLT else IKKE_OPPFYLT
 
                     listOf(
                         Segment(
@@ -113,7 +107,12 @@ class MeldepliktRegel : UnderveisRegel {
                                 journalpostId = null,
                                 fritak = false,
                                 utfall = utfall,
-                                årsak = if (fortsattMuligÅEndreUtfall) MELDEPLIKT_FRIST_IKKE_PASSERT else IKKE_OVERHOLDT_MELDEPLIKT_SANKSJON
+                                årsak =
+                                when {
+                                    utfall == OPPFYLT -> null
+                                    fortsattMuligÅEndreUtfall -> MELDEPLIKT_FRIST_IKKE_PASSERT
+                                    else -> IKKE_OVERHOLDT_MELDEPLIKT_SANKSJON
+                                }
                             )
                         )
                     ).let { TreeSet(it) }
@@ -122,7 +121,7 @@ class MeldepliktRegel : UnderveisRegel {
 
             førsteDokument.periode.fom > meldefrist -> listOf(
                 Segment(
-                    Periode(meldeperioden.fom, førsteDokument.periode.fom.minusDays(1)),
+                    Periode(meldeperiode.fom, førsteDokument.periode.fom.minusDays(1)),
                     MeldepliktVurdering(
                         journalpostId = førsteDokument.verdi.innsending,
                         fritak = false,
@@ -131,7 +130,7 @@ class MeldepliktRegel : UnderveisRegel {
                     )
                 ),
                 Segment(
-                    Periode(førsteDokument.periode.fom, meldeperioden.tom),
+                    Periode(førsteDokument.periode.fom, meldeperiode.tom),
                     MeldepliktVurdering(
                         journalpostId = førsteDokument.verdi.innsending,
                         fritak = false,
@@ -142,7 +141,7 @@ class MeldepliktRegel : UnderveisRegel {
             ).let { Tidslinje(it) }
 
             else -> Tidslinje(
-                meldeperioden,
+                meldeperiode,
                 MeldepliktVurdering(
                     journalpostId = førsteDokument.verdi.innsending,
                     fritak = false,
@@ -151,6 +150,14 @@ class MeldepliktRegel : UnderveisRegel {
                 )
             )
         }
+    }
+
+    private fun erDetFortsattMuligÅEndreUtfall(meldefrist: LocalDate, gjeldendeDag: LocalDate): Boolean {
+        val erMeldefristIFremtiden = meldefrist > LocalDate.now()
+        val erVurdertDagIkkePassert = gjeldendeDag >= LocalDate.now()
+        val vurdertDagErInnenforFrist = meldefrist >= gjeldendeDag
+
+        return (vurdertDagErInnenforFrist && erMeldefristIFremtiden) || erVurdertDagIkkePassert
     }
 
 
