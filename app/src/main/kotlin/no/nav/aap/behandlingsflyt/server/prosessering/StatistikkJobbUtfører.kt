@@ -16,18 +16,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendels
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.EndringDTO
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvklaringsbehovHendelse
-import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
-import no.nav.aap.motor.Jobb
-import no.nav.aap.motor.JobbInput
-import no.nav.aap.motor.JobbUtfører
-import no.nav.aap.pip.PipRepository
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvsluttetBehandlingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BehovType
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BeregningsgrunnlagDTO
@@ -48,6 +36,17 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsPeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsResultatDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
+import no.nav.aap.motor.Jobb
+import no.nav.aap.motor.JobbInput
+import no.nav.aap.motor.JobbUtfører
+import no.nav.aap.pip.PipRepository
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status as BehandlingStatus
@@ -100,7 +99,7 @@ class StatistikkJobbUtfører(
                     definisjon = Definisjon(
                         type = avklaringsbehovHendelseDto.definisjon.type.name,
                         behovType = behovTypeTilStatistikkKontraktBehovsType(avklaringsbehovHendelseDto),
-                        løsesISteg = stegTypeTilStatistikkKontrakt(avklaringsbehovHendelseDto.definisjon.løsesISteg)
+                        løsesISteg = avklaringsbehovHendelseDto.definisjon.løsesISteg
                     ),
                     status = avklaringsBehovStatusTilStatistikkKontrakt(avklaringsbehovHendelseDto),
                     endringer = avklaringsbehovHendelseDto.endringer.map { endring ->
@@ -158,7 +157,7 @@ class StatistikkJobbUtfører(
     private fun behandlingStatusTilStatistikkKontrakt(status: BehandlingStatus): no.nav.aap.behandlingsflyt.kontrakt.statistikk.BehandlingStatus =
         when (status) {
             no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.OPPRETTET -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.BehandlingStatus.OPPRETTET
-            no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.UTREDES ->no.nav.aap.behandlingsflyt.kontrakt.statistikk.BehandlingStatus.UTREDES
+            no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.UTREDES -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.BehandlingStatus.UTREDES
             no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.IVERKSETTES -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.BehandlingStatus.IVERKSETTES
             AVSLUTTET -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.BehandlingStatus.AVSLUTTET
         }
@@ -259,36 +258,6 @@ class StatistikkJobbUtfører(
             hendelsesTidspunkt = hendelse.hendelsesTidspunkt
         )
         return avsluttetBehandlingDTO
-    }
-
-    private fun stegTypeTilStatistikkKontrakt(stegType: StegType): no.nav.aap.behandlingsflyt.kontrakt.statistikk.StegType {
-        return when (stegType) {
-            StegType.START_BEHANDLING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.StegType.AVKLAR_SYKDOM
-            StegType.VURDER_ALDER -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.StegType.VURDER_ALDER
-            StegType.VURDER_LOVVALG -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.StegType.VURDER_LOVVALG
-            StegType.VURDER_MEDLEMSKAP -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.StegType.VURDER_MEDLEMSKAP
-            StegType.AVKLAR_STUDENT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.StegType.AVKLAR_STUDENT
-            StegType.VURDER_BISTANDSBEHOV -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.StegType.VURDER_BISTANDSBEHOV
-            StegType.VURDER_SYKEPENGEERSTATNING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.StegType.VURDER_SYKEPENGEERSTATNING
-            StegType.FRITAK_MELDEPLIKT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.StegType.FRITAK_MELDEPLIKT
-            StegType.KVALITETSSIKRING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.StegType.KVALITETSSIKRING
-            StegType.BARNETILLEGG -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.StegType.BARNETILLEGG
-            StegType.AVKLAR_SYKDOM -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.StegType.AVKLAR_SYKDOM
-            StegType.FASTSETT_ARBEIDSEVNE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.StegType.FASTSETT_ARBEIDSEVNE
-            StegType.FASTSETT_BEREGNINGSTIDSPUNKT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.StegType.FASTSETT_BEREGNINGSTIDSPUNKT
-            StegType.FASTSETT_GRUNNLAG -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.StegType.FASTSETT_GRUNNLAG
-            StegType.VIS_GRUNNLAG -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.StegType.VIS_GRUNNLAG
-            StegType.FASTSETT_UTTAK -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.StegType.FASTSETT_UTTAK
-            StegType.SAMORDNING_GRADERING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.StegType.SAMORDNING_GRADERING
-            StegType.DU_ER_ET_ANNET_STED -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.StegType.DU_ER_ET_ANNET_STED
-            StegType.BEREGN_TILKJENT_YTELSE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.StegType.BEREGN_TILKJENT_YTELSE
-            StegType.SIMULERING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.StegType.SIMULERING
-            StegType.FORESLÅ_VEDTAK -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.StegType.FORESLÅ_VEDTAK
-            StegType.FATTE_VEDTAK -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.StegType.FATTE_VEDTAK
-            StegType.BREV -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.StegType.BREV
-            StegType.IVERKSETT_VEDTAK -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.StegType.IVERKSETT_VEDTAK
-            StegType.UDEFINERT -> error("Statistikk vil ikke ha denne :)")
-        }
     }
 
     private fun beregningsgrunnlagDTO(

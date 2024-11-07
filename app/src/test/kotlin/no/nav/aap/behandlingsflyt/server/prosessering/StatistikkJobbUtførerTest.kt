@@ -461,7 +461,7 @@ class StatistikkJobbUtførerTest {
                         definisjon = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Definisjon(
                             type = avklaringsbehovHendelseDto.definisjon.type.name,
                             behovType = BehovType.valueOf(avklaringsbehovHendelseDto.definisjon.behovType.toString()),
-                            løsesISteg = no.nav.aap.behandlingsflyt.kontrakt.statistikk.StegType.FATTE_VEDTAK
+                            løsesISteg = StegType.FATTE_VEDTAK
                         ),
                         status = EndringStatus.valueOf(avklaringsbehovHendelseDto.status.toString()),
                         endringer = avklaringsbehovHendelseDto.endringer.map { endring ->
