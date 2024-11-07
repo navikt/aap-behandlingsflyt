@@ -27,6 +27,19 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendels
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.DefinisjonDTO
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.EndringDTO
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvklaringsbehovHendelse
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvsluttetBehandlingDTO
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BehovType
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BeregningsgrunnlagDTO
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Endring
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.EndringStatus
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Grunnlag11_19DTO
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.SakStatus
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.TilkjentYtelseDTO
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårDTO
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsPeriodeDTO
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsResultatDTO
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -44,20 +57,6 @@ import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.pip.PipRepository
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvklaringsbehovHendelse
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvsluttetBehandlingDTO
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BehandlingStatus
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BehovType
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BeregningsgrunnlagDTO
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Endring
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.EndringStatus
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Grunnlag11_19DTO
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.SakStatus
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.TilkjentYtelseDTO
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårDTO
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsPeriodeDTO
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsResultatDTO
 import no.nav.aap.verdityper.GUnit
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.Ident
@@ -453,7 +452,6 @@ class StatistikkJobbUtførerTest {
             StoppetBehandling(
                 saksnummer = Saksnummer.valueOf(sakId.id).toString(),
                 behandlingReferanse = referanse.referanse,
-                status = BehandlingStatus.UTREDES,
                 behandlingStatus = Status.UTREDES,
                 behandlingType = no.nav.aap.behandlingsflyt.kontrakt.statistikk.TypeBehandling.valueOf(TypeBehandling.Klage.toString()),
                 ident = fødselsNummer,

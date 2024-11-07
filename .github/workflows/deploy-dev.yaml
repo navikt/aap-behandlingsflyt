@@ -68,7 +68,7 @@ jobs:
                 bump_each_commit: true
                 tag_prefix: ""
                 bump_each_commit_patch_pattern: ''
-                major_pattern: "(MAJOR)" # If major bump, include this in commit message
+                major_pattern: "(MAJOR)" # If major bump, include this in the commit message
           - uses: actions/setup-java@v4
             if: ${{ steps.tag.outputs.changed == 'true' }}
             with:
@@ -85,6 +85,11 @@ jobs:
                 echo 'CHANGELOG<<$randomDelimiter' >> $GITHUB_OUTPUT
                 echo $text >> $GITHUB_OUTPUT
                 echo '$randomDelimiter' >> $GITHUB_OUTPUT
+          - if: ${{ steps.tag.outputs.changed == 'true' }}
+            env:
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            run: |
+                ./gradlew -Pversion=${{ steps.tag.outputs.version }} publish
           - uses:  softprops/action-gh-release@v2
             if: ${{ steps.tag.outputs.changed == 'true' }}
             id: create_release
@@ -95,12 +100,7 @@ jobs:
                 name: ${{ steps.tag.outputs.version }}
                 body: |
                     Endringer siden sist:
-                    ${{ steps.notes.outputs.CHANGELOG }}
-          - if: ${{ steps.tag.outputs.changed == 'true' }}
-            env:
-                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            run: |
-                ./gradlew -Pversion=${{ steps.tag.outputs.version }} publish
+                    ${{ steps.notes.outputs.CHANGELOG }}                
 
   deploy-dev:
     needs: build

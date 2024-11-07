@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.kontrakt.statistikk
 
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status as BehandlingsFlytBehandlingStatus
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -20,7 +21,6 @@ public data class StoppetBehandling(
     val relatertBehandling: UUID? = null,
     val behandlingOpprettetTidspunkt: LocalDateTime,
     val mottattTid: LocalDateTime,
-    val status: BehandlingStatus,
     val behandlingStatus: BehandlingsFlytBehandlingStatus,
     val behandlingType: TypeBehandling,
     val ident: String,
@@ -32,10 +32,10 @@ public data class StoppetBehandling(
 ) {
     init {
         require(ident.isNotEmpty())
-        require(status == BehandlingStatus.AVSLUTTET || avsluttetBehandling == null)
-        { "Om behandling er avsluttet, legg ved data om avsluttet behandling. Status er $status" }
-        require(status != BehandlingStatus.AVSLUTTET || avsluttetBehandling != null)
-        { "Om behandling ikke er avsluttet, ikke legg ved data om avsluttet behandling. Status er $status" }
+        require(behandlingStatus == Status.AVSLUTTET || avsluttetBehandling == null)
+        { "Om behandling er avsluttet, legg ved data om avsluttet behandling. Status er $behandlingStatus" }
+        require(behandlingStatus != Status.AVSLUTTET || avsluttetBehandling != null)
+        { "Om behandling ikke er avsluttet, ikke legg ved data om avsluttet behandling. Status er $behandlingStatus" }
     }
 }
 
@@ -44,13 +44,6 @@ public enum class SakStatus {
     UTREDES,
     LØPENDE,
     AVSLUTTET
-}
-
-public enum class BehandlingStatus {
-    OPPRETTET,
-    UTREDES,
-    IVERKSETTES,
-    AVSLUTTET;
 }
 
 

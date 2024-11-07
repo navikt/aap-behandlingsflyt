@@ -49,6 +49,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.BrevbestillingLøsningStatus
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.LøsBrevbestillingDto
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
@@ -69,8 +70,6 @@ import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.testutil.TestUtil
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BehandlingStatus
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.flyt.StegStatus
@@ -1291,7 +1290,7 @@ class FlytOrkestratorTest {
         util.ventPåSvar()
 
         assertThat(hentBehandling(sak.id).status()).isEqualTo(Status.AVSLUTTET)
-        assertThat(hendelser.last().status).isEqualTo(BehandlingStatus.AVSLUTTET)
+        assertThat(hendelser.last().behandlingStatus).isEqualTo(Status.AVSLUTTET)
     }
 
     private fun hentPerson(ident: Ident): Person {

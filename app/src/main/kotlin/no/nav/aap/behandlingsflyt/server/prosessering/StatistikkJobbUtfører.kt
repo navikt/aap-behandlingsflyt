@@ -49,7 +49,6 @@ import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.pip.PipRepository
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status as BehandlingStatus
 
 private val log = LoggerFactory.getLogger(StatistikkJobbUtfører::class.java)
 
@@ -92,7 +91,6 @@ class StatistikkJobbUtfører(
         val statistikkHendelse = StoppetBehandling(
             saksnummer = hendelse.saksnummer.toString(),
             behandlingType = typeBehandlingTilStatistikkKontrakt(hendelse.behandlingType),
-            status = behandlingStatusTilStatistikkKontrakt(hendelse.status),
             behandlingStatus = hendelse.status,
             ident = hendelse.personIdent,
             avklaringsbehov = hendelse.avklaringsbehov.map { avklaringsbehovHendelseDto ->
@@ -153,14 +151,6 @@ class StatistikkJobbUtfører(
             no.nav.aap.behandlingsflyt.sakogbehandling.sak.Status.UTREDES -> SakStatus.UTREDES
             no.nav.aap.behandlingsflyt.sakogbehandling.sak.Status.LØPENDE -> SakStatus.LØPENDE
             no.nav.aap.behandlingsflyt.sakogbehandling.sak.Status.AVSLUTTET -> SakStatus.AVSLUTTET
-        }
-
-    private fun behandlingStatusTilStatistikkKontrakt(status: BehandlingStatus): no.nav.aap.behandlingsflyt.kontrakt.statistikk.BehandlingStatus =
-        when (status) {
-            no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.OPPRETTET -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.BehandlingStatus.OPPRETTET
-            no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.UTREDES -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.BehandlingStatus.UTREDES
-            no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.IVERKSETTES -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.BehandlingStatus.IVERKSETTES
-            AVSLUTTET -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.BehandlingStatus.AVSLUTTET
         }
 
     private fun endringStatusTilStatistikkKontrakt(endring: EndringDTO): EndringStatus = when (endring.status) {
