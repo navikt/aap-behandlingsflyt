@@ -10,9 +10,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvklaringsbehovHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvsluttetBehandlingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BeregningsgrunnlagDTO
@@ -140,12 +140,12 @@ class StatistikkJobbUtfører(
         return mottattTidspunkt
     }
 
-    private fun behandlingflytSakStatusTilStatistikk(sakStatus: no.nav.aap.behandlingsflyt.sakogbehandling.sak.Status): SakStatus =
+    private fun behandlingflytSakStatusTilStatistikk(sakStatus: Status): SakStatus =
         when (sakStatus) {
-            no.nav.aap.behandlingsflyt.sakogbehandling.sak.Status.OPPRETTET -> SakStatus.OPPRETTET
-            no.nav.aap.behandlingsflyt.sakogbehandling.sak.Status.UTREDES -> SakStatus.UTREDES
-            no.nav.aap.behandlingsflyt.sakogbehandling.sak.Status.LØPENDE -> SakStatus.LØPENDE
-            no.nav.aap.behandlingsflyt.sakogbehandling.sak.Status.AVSLUTTET -> SakStatus.AVSLUTTET
+            Status.OPPRETTET -> SakStatus.OPPRETTET
+            Status.UTREDES -> SakStatus.UTREDES
+            Status.LØPENDE -> SakStatus.LØPENDE
+            Status.AVSLUTTET -> SakStatus.AVSLUTTET
         }
 
     /**

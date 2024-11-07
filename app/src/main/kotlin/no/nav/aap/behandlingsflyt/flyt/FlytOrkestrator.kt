@@ -17,7 +17,7 @@ import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Status.UTREDES
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Status.UTREDES
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.stegFullførtTeller
 import no.nav.aap.komponenter.dbconnect.DBConnection

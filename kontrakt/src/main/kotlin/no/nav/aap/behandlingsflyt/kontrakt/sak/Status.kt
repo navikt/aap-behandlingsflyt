@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.sakogbehandling.sak
+package no.nav.aap.behandlingsflyt.kontrakt.sak
 
 enum class Status {
     OPPRETTET,
