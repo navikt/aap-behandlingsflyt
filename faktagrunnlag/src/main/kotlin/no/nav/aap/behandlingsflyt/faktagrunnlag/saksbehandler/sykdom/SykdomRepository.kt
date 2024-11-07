@@ -93,7 +93,7 @@ class SykdomRepository(private val connection: DBConnection) {
             setParams {
                 setString(1, vurdering.begrunnelse)
                 setBoolean(2, vurdering.erÅrsakssammenheng)
-                setInt(3, vurdering.andelAvNedsettelse?.prosentverdi())
+                setInt(3, vurdering.andelAvNedsettelsen?.prosentverdi())
             }
         }
 
@@ -257,7 +257,7 @@ class SykdomRepository(private val connection: DBConnection) {
                     id = id,
                     begrunnelse = row.getString("BEGRUNNELSE"),
                     erÅrsakssammenheng = row.getBoolean("ARSAKSSAMMENHENG"),
-                    andelAvNedsettelse = row.getIntOrNull("ANDEL_AV_NEDSETTELSE")?.let(::Prosent),
+                    andelAvNedsettelsen = row.getIntOrNull("ANDEL_AV_NEDSETTELSE")?.let(::Prosent),
                     relevanteSaker = hentRelevanteSaker(id)
                 )
             }

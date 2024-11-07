@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.YrkesskadevurderingDto
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
 
@@ -16,17 +17,19 @@ class Sykdomsvurdering(
     val yrkesskadeBegrunnelse: String?,
     val erArbeidsevnenNedsatt: Boolean?
 ) {
-    fun toDto() = SykdomsvurderingDto(
-        begrunnelse = begrunnelse,
-        dokumenterBruktIVurdering = dokumenterBruktIVurdering,
-        erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
-        harSkadeSykdomEllerLyte = harSkadeSykdomEllerLyte,
-        erSkadeSykdomEllerLyteVesentligdel = erSkadeSykdomEllerLyteVesentligdel,
-        erNedsettelseIArbeidsevneAvEnVissVarighet = erNedsettelseIArbeidsevneAvEnVissVarighet,
-        erNedsettelseIArbeidsevneMerEnnHalvparten = erNedsettelseIArbeidsevneMerEnnHalvparten,
-        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
-        yrkesskadeBegrunnelse = yrkesskadeBegrunnelse,
-    )
+    fun toDto(): SykdomsvurderingDto {
+        return SykdomsvurderingDto(
+            begrunnelse = begrunnelse,
+            dokumenterBruktIVurdering = dokumenterBruktIVurdering,
+            erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
+            harSkadeSykdomEllerLyte = harSkadeSykdomEllerLyte,
+            erSkadeSykdomEllerLyteVesentligdel = erSkadeSykdomEllerLyteVesentligdel,
+            erNedsettelseIArbeidsevneAvEnVissVarighet = erNedsettelseIArbeidsevneAvEnVissVarighet,
+            erNedsettelseIArbeidsevneMerEnnHalvparten = erNedsettelseIArbeidsevneMerEnnHalvparten,
+            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
+            yrkesskadeBegrunnelse = yrkesskadeBegrunnelse,
+        )
+    }
 }
 
 class Yrkesskadevurdering(
@@ -34,5 +37,14 @@ class Yrkesskadevurdering(
     val begrunnelse: String,
     val relevanteSaker: List<String>,
     val erÅrsakssammenheng: Boolean,
-    val andelAvNedsettelse: Prosent?
-)
+    val andelAvNedsettelsen: Prosent?
+) {
+    fun toDto(): YrkesskadevurderingDto {
+        return YrkesskadevurderingDto(
+            begrunnelse = begrunnelse,
+            relevanteSaker = relevanteSaker,
+            andelAvNedsettelsen = andelAvNedsettelsen?.prosentverdi(),
+            erÅrsakssammenheng = erÅrsakssammenheng
+        )
+    }
+}

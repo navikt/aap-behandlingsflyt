@@ -82,7 +82,7 @@ class BeregningTest {
                 uføregrad = null,
                 yrkesskadevurdering = Yrkesskadevurdering(
                     begrunnelse = "en begrunnelse",
-                    andelAvNedsettelse = Prosent(40),
+                    andelAvNedsettelsen = Prosent(40),
                     erÅrsakssammenheng = true,
                     relevanteSaker = listOf("yrkesskadesaken"),
                 ),
@@ -123,7 +123,7 @@ class BeregningTest {
                 uføregrad = Prosent(50),
                 yrkesskadevurdering = Yrkesskadevurdering(
                     begrunnelse = "en begrunnelse",
-                    andelAvNedsettelse = Prosent(30),
+                    andelAvNedsettelsen = Prosent(30),
                     erÅrsakssammenheng = true,
                     relevanteSaker = listOf("yrkesskadesaken"),
                 ),

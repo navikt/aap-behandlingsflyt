@@ -31,7 +31,7 @@ class BeregningsGrunnlagApiTest {
                 uføregrad = Prosent(30),
                 yrkesskadevurdering = Yrkesskadevurdering(
                     begrunnelse = "en begrunnelse",
-                    andelAvNedsettelse = Prosent(30),
+                    andelAvNedsettelsen = Prosent(30),
                     erÅrsakssammenheng = true,
                     relevanteSaker = listOf("yrkesskadesaken")
                 ),

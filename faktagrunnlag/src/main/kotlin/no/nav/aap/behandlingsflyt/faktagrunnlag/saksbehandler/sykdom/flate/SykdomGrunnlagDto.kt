@@ -12,6 +12,11 @@ data class SykdomGrunnlagDto(
     val sykdomsvurdering: SykdomsvurderingDto?
 )
 
+data class YrkesskadeGrunnlagDto(
+    val opplysninger: InnhentetSykdomsOpplysninger,
+    val yrkesskadeVurdering: YrkesskadevurderingDto?
+)
+
 data class InnhentetSykdomsOpplysninger(
     val oppgittYrkesskadeISøknad: Boolean,
     val innhentedeYrkesskader: List<RegistrertYrkesskade>,
@@ -57,7 +62,7 @@ data class YrkesskadevurderingDto(
             begrunnelse = begrunnelse,
             relevanteSaker = relevanteSaker,
             erÅrsakssammenheng = erÅrsakssammenheng,
-            andelAvNedsettelse = andelAvNedsettelsen?.let { Prosent(it) }
+            andelAvNedsettelsen = this@YrkesskadevurderingDto.andelAvNedsettelsen?.let { Prosent(it) }
         )
     }
 }

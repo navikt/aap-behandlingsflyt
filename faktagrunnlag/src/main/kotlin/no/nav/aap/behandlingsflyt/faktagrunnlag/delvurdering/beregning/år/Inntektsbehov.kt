@@ -46,7 +46,7 @@ class Inntektsbehov(private val input: Input) {
      * inntekt, så skal beregningen skje med yrkesskadefordel (§11-22)
      */
     fun yrkesskadeVurderingEksisterer(): Boolean {
-        return input.yrkesskadevurdering?.relevanteSaker?.isNotEmpty() == true && input.beregningVurdering?.antattÅrligInntekt != null && input.yrkesskadevurdering.andelAvNedsettelse != null
+        return input.yrkesskadevurdering?.relevanteSaker?.isNotEmpty() == true && input.beregningVurdering?.antattÅrligInntekt != null && input.yrkesskadevurdering.andelAvNedsettelsen != null
     }
 
     /**
@@ -84,6 +84,6 @@ class Inntektsbehov(private val input: Input) {
     }
 
     fun andelYrkesskade(): Prosent {
-        return requireNotNull(input.yrkesskadevurdering?.andelAvNedsettelse)
+        return requireNotNull(input.yrkesskadevurdering?.andelAvNedsettelsen)
     }
 }
