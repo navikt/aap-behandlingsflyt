@@ -14,7 +14,6 @@ data class BestillLegeerklæringDto (
 
 data class ForhåndsvisBrevRequest (
     val saksnummer: String,
-    val personIdent: String,
     val fritekst: String,
     val veilederNavn: String,
     val dokumentasjonType: DokumentasjonType
