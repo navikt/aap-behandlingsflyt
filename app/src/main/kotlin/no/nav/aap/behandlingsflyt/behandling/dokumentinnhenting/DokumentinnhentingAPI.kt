@@ -7,6 +7,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import com.zaxxer.hikari.HikariDataSource
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.BrevRequest
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.BrevResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.DokumeninnhentingGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringBestillingRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringStatusResponse
@@ -25,7 +26,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: HikariDataSource) {
                     val sakService = SakService(connection)
                     val sak = sakService.hent(Saksnummer(req.saksnummer))
                     val personIdent = sak.person.aktivIdent()
-                    //val personinfo = PdlPersoninfoGateway.hentPersoninfoForIdent(personIdent, token())
+                    val personinfo = PdlPersoninfoGateway.hentPersoninfoForIdent(personIdent, token())
 
                     DokumeninnhentingGateway().bestillLegeerklæring(
                         LegeerklæringBestillingRequest(
@@ -33,14 +34,14 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: HikariDataSource) {
                             req.behandlerNavn,
                             req.veilederNavn,
                             personIdent.identifikator,
-                            "Test navn",//personinfo.fulltNavn(),
+                            personinfo.fulltNavn(),
                             req.fritekst,
                             req.saksnummer,
                             req.dokumentasjonType
                         )
                     )
                 }
-                respond(bestilling.dialogmeldingUUID)
+                respond(bestilling)
             }
         }
         route("/status/{saksnummer}") {
@@ -50,18 +51,18 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: HikariDataSource) {
             }
         }
         route("/brevpreview") {
-            post<Unit, String, ForhåndsvisBrevRequest> { _, req ->
+            post<Unit, BrevResponse, ForhåndsvisBrevRequest> { _, req ->
                 val brevPreview = dataSource.transaction(readOnly = true) { connection ->
                     val sakService = SakService(connection)
                     val sak = sakService.hent(Saksnummer(req.saksnummer))
 
                     val personIdent = sak.person.aktivIdent()
-                    //val personinfo = PdlPersoninfoGateway.hentPersoninfoForIdent(personIdent, token())
+                    val personinfo = PdlPersoninfoGateway.hentPersoninfoForIdent(personIdent, token())
 
-                    val brevRequest = BrevRequest("testnavn", personIdent.identifikator, req.fritekst, req.veilederNavn, req.dokumentasjonType)
+                    val brevRequest = BrevRequest(personinfo.fulltNavn(), personIdent.identifikator, req.fritekst, req.veilederNavn, req.dokumentasjonType)
                     DokumeninnhentingGateway().forhåndsvisBrev(brevRequest)
                 }
-                respond(brevPreview)
+                respond(BrevResponse(brevPreview))
             }
         }
     }
