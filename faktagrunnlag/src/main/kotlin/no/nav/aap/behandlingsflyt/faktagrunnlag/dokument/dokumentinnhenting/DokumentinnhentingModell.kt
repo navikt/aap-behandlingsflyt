@@ -8,6 +8,7 @@ data class LegeerklæringBestillingRequest (
     val behandlerNavn: String,
     val veilederNavn: String,
     val personIdent: String,
+    val personNavn: String,
     val dialogmeldingTekst: String,
     val saksnummer: String,
     val dokumentasjonType: DokumentasjonType,
@@ -21,10 +22,19 @@ data class LegeerklæringBestillingResponse(
 data class LegeerklæringStatusResponse(
     val dialogmeldingUuid: UUID,
     val status: MeldingStatusType?,
+    val statusTekst: String?,
     val behandlerRef: String,
     val personId: String,
     val saksnummer: String,
     val opprettet: LocalDateTime
+)
+
+data class BrevRequest(
+    val personNavn: String,
+    val personIdent: String,
+    val dialogmeldingTekst: String,
+    val veilederNavn: String,
+    val dokumentasjonType: DokumentasjonType
 )
 
 enum class DokumentasjonType {

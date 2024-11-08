@@ -53,4 +53,20 @@ class DokumeninnhentingGateway {
             throw RuntimeException("Feil ved innhentning av status til legeerklæring i aap-dokumentinnhenting: ${e.message}")
         }
     }
+
+    fun forhåndsvisBrev(request: BrevRequest): String {
+        val request = PostRequest(
+            body = request,
+            additionalHeaders = listOf(
+                Header("Nav-Consumer-Id", "aap-behandlingsflyt"),
+                Header("Accept", "application/json")
+            )
+        )
+
+        try {
+            return requireNotNull(client.post(uri = URI.create("$syfoUri/brevpreview"), request))
+        } catch (e: Exception) {
+            throw RuntimeException("Feil ved generering av forhåndsvisning brev i aap-dokumentinnhenting: ${e.message}")
+        }
+    }
 }

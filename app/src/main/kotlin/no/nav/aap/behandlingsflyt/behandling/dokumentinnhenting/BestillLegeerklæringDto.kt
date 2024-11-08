@@ -13,4 +13,12 @@ data class BestillLegeerklæringDto (
     val dialogmeldingVedlegg: ByteArray?
 )
 
+data class ForhåndsvisBrevRequest (
+    val saksnummer: String,
+    val personIdent: String,
+    val dialogmeldingTekst: String,
+    val veilederNavn: String,
+    val dokumentasjonType: DokumentasjonType
+)
+
 data class HentStatusLegeerklæring(@PathParam("saksnummer") val saksnummer: String)
