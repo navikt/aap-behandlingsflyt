@@ -1,12 +1,13 @@
 package no.nav.aap.behandlingsflyt.behandling.brev.bestilling
 
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
+import no.nav.aap.brev.kontrakt.BrevbestillingResponse
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
-import java.util.UUID
 
 class BrevbestillingService(
     private val brevbestillingGateway: BrevbestillingGateway,
@@ -46,11 +47,21 @@ class BrevbestillingService(
         )
     }
 
-    fun oppdaterStatus(behandlingId: BehandlingId, referanse: UUID, status: Status) {
+    fun oppdaterStatus(behandlingId: BehandlingId, referanse: BrevbestillingReferanse, status: Status) {
         brevbestillingRepository.oppdaterStatus(behandlingId, referanse, status)
     }
 
-    fun ferdigstill(referanse: UUID): Boolean {
+    fun hentBrevbestillingForEditering(behandlingReferanse: BehandlingReferanse): BrevbestillingResponse? {
+        val behandling = behandlingRepository.hent(behandlingReferanse)
+
+        val brevbestilling =
+            brevbestillingRepository.hent(behandling.id).find { it.status == Status.FORHÅNDSVISNING_KLAR }
+                ?: return null
+
+        return brevbestillingGateway.hent(brevbestilling.referanse)
+    }
+
+    fun ferdigstill(referanse: BrevbestillingReferanse): Boolean {
         return brevbestillingGateway.ferdigstill(referanse)
     }
 }

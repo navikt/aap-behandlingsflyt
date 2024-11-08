@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.BrevbestillingLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.BREV_SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -26,7 +27,7 @@ class BrevbestillingLøser(val connection: DBConnection) : AvklaringsbehovsLøse
 
         brevbestillingRepository.oppdaterStatus(
             behandlingId = kontekst.behandlingId(),
-            referanse = løsning.oppdatertStatusForBestilling.bestillingReferanse,
+            referanse = BrevbestillingReferanse(løsning.oppdatertStatusForBestilling.bestillingReferanse),
             status = status
         )
 

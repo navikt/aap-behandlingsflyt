@@ -28,7 +28,7 @@ class BrevbestillingRepositoryTest {
             val brevbestillingRepository = BrevbestillingRepository(connection)
 
             val behandlingId = opprettBehandling(connection)
-            val referanse = UUID.randomUUID()
+            val referanse = BrevbestillingReferanse(UUID.randomUUID())
 
             assertThrows<NoSuchElementException> { brevbestillingRepository.hent(referanse) }
             assertThat(brevbestillingRepository.hent(behandlingId, TypeBrev.VEDTAK_INNVILGELSE)).isNull()

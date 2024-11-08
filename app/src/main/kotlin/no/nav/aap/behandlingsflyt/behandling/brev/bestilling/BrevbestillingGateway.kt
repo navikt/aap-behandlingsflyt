@@ -2,16 +2,19 @@ package no.nav.aap.behandlingsflyt.behandling.brev.bestilling
 
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
-import java.util.UUID
+import no.nav.aap.brev.kontrakt.Brev
+import no.nav.aap.brev.kontrakt.BrevbestillingResponse
 
 interface BrevbestillingGateway {
     fun bestillBrev(
         saksnummer: Saksnummer,
         behandlingReferanse: BehandlingReferanse,
         typeBrev: TypeBrev,
-    ): UUID
+    ): BrevbestillingReferanse
 
-    fun hentBestillingStatus(referanse: UUID): Status
+    fun ferdigstill(referanse: BrevbestillingReferanse): Boolean
 
-    fun ferdigstill(referanse: UUID): Boolean
+    fun hent(bestillingReferanse: BrevbestillingReferanse): BrevbestillingResponse
+
+    fun oppdater(bestillingReferanse: BrevbestillingReferanse, brev: Brev)
 }
