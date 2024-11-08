@@ -37,7 +37,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
             route("/{referanse}/grunnlag/brev") {
                 get<BehandlingReferanse, BrevbestillingResponse> { behandlingReferanse ->
                     val brevbestilling = dataSource.transaction { connection ->
-                        BrevbestillingService.konstruer(connection).hentBrevbestillingForEditering(behandlingReferanse)
+                        BrevbestillingService.konstruer(connection).hentSisteBrevbestilling(behandlingReferanse)
                             ?: throw ElementNotFoundException()
                     }
                     respond(brevbestilling)

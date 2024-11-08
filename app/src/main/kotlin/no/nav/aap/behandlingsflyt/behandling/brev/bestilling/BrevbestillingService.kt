@@ -51,12 +51,11 @@ class BrevbestillingService(
         brevbestillingRepository.oppdaterStatus(behandlingId, referanse, status)
     }
 
-    fun hentBrevbestillingForEditering(behandlingReferanse: BehandlingReferanse): BrevbestillingResponse? {
+    fun hentSisteBrevbestilling(behandlingReferanse: BehandlingReferanse): BrevbestillingResponse? {
         val behandling = behandlingRepository.hent(behandlingReferanse)
 
-        val brevbestilling =
-            brevbestillingRepository.hent(behandling.id).find { it.status == Status.FORHÅNDSVISNING_KLAR }
-                ?: return null
+        val brevbestilling = // TODO Bør ha en mer robust logikk for å finne relevant brev for editering, gitt en behandlingreferanse
+            brevbestillingRepository.hent(behandling.id).sortedByDescending { it.id }.first()
 
         return brevbestillingGateway.hent(brevbestilling.referanse)
     }
