@@ -36,8 +36,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: HikariDataSource) {
                             personinfo.fulltNavn(),
                             req.fritekst,
                             req.saksnummer,
-                            req.dokumentasjonType,
-                            req.dialogmeldingVedlegg,
+                            req.dokumentasjonType
                         )
                     )
                 }

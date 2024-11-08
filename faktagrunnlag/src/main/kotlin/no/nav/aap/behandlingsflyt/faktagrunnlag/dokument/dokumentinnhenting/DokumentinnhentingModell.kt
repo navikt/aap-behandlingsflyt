@@ -11,8 +11,7 @@ data class LegeerklæringBestillingRequest (
     val personNavn: String,
     val dialogmeldingTekst: String,
     val saksnummer: String,
-    val dokumentasjonType: DokumentasjonType,
-    val dialogmeldingVedlegg: ByteArray?
+    val dokumentasjonType: DokumentasjonType
 )
 
 data class LegeerklæringBestillingResponse(

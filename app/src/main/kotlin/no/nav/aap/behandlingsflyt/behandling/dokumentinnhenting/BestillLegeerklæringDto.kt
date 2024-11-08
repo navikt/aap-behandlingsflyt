@@ -9,8 +9,7 @@ data class BestillLegeerklæringDto (
     val veilederNavn: String,
     val fritekst: String,
     val saksnummer: String,
-    val dokumentasjonType: DokumentasjonType,
-    val dialogmeldingVedlegg: ByteArray?
+    val dokumentasjonType: DokumentasjonType
 )
 
 data class ForhåndsvisBrevRequest (
