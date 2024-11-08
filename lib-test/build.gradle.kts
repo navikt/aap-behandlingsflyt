@@ -13,7 +13,7 @@ dependencies {
     implementation(project(":integrasjon"))
     implementation(project(":app"))
     implementation(project(":kontrakt"))
-    implementation("no.nav.aap.brev:kontrakt:0.0.17")
+    implementation("no.nav.aap.brev:kontrakt:0.0.18")
     implementation("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
     implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
     implementation("io.ktor:ktor-server-auth:$ktorVersion")
