@@ -39,7 +39,7 @@ class DokumeninnhentingGateway {
         }
     }
 
-    fun legeerklæringStatus(sakId: String): LegeerklæringStatusResponse {
+    fun legeerklæringStatus(saksnummer: String): List<LegeerklæringStatusResponse> {
         val request = GetRequest(
             additionalHeaders = listOf(
                 Header("Nav-Consumer-Id", "aap-behandlingsflyt"),
@@ -48,7 +48,7 @@ class DokumeninnhentingGateway {
         )
 
         try {
-            return requireNotNull(client.get(uri = URI.create("$syfoUri/status/{$sakId}"), request = request, mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }))
+            return requireNotNull(client.get(uri = URI.create("$syfoUri/status/$saksnummer"), request = request, mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }))
         } catch (e: Exception) {
             throw RuntimeException("Feil ved innhentning av status til legeerklæring i aap-dokumentinnhenting: ${e.message}")
         }
