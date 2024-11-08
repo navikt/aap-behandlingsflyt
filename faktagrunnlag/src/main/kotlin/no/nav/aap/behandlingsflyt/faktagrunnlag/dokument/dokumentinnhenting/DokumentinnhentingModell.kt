@@ -14,10 +14,6 @@ data class LegeerklæringBestillingRequest (
     val dokumentasjonType: DokumentasjonType
 )
 
-data class LegeerklæringBestillingResponse(
-    val dialogmeldingUUID: String
-)
-
 data class LegeerklæringStatusResponse(
     val dialogmeldingUuid: UUID,
     val status: MeldingStatusType?,

@@ -23,7 +23,7 @@ class DokumeninnhentingGateway {
         tokenProvider = ClientCredentialsTokenProvider,
     )
 
-    fun bestillLegeerklæring(request: LegeerklæringBestillingRequest): LegeerklæringBestillingResponse {
+    fun bestillLegeerklæring(request: LegeerklæringBestillingRequest): String {
         val request = PostRequest(
             body = request,
             additionalHeaders = listOf(
