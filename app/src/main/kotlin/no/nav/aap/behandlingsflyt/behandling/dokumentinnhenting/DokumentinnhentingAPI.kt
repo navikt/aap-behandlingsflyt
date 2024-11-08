@@ -62,7 +62,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: HikariDataSource) {
                     val brevRequest = BrevRequest("personinfo.fulltNavn()", personIdent.identifikator, req.fritekst, req.veilederNavn, req.dokumentasjonType)
                     DokumeninnhentingGateway().forhåndsvisBrev(brevRequest)
                 }
-                respond(BrevResponse(brevPreview))
+                respond(brevPreview)
             }
         }
     }

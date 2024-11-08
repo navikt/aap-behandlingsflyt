@@ -54,7 +54,7 @@ class DokumeninnhentingGateway {
         }
     }
 
-    fun forhåndsvisBrev(request: BrevRequest): String {
+    fun forhåndsvisBrev(request: BrevRequest): BrevResponse {
         val request = PostRequest(
             body = request,
             additionalHeaders = listOf(
