@@ -44,7 +44,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: HikariDataSource) {
             }
         }
         route("/status/{saksnummer}") {
-            get<HentStatusLegeerklæring, LegeerklæringStatusResponse> { par ->
+            get<HentStatusLegeerklæring, List<LegeerklæringStatusResponse>> { par ->
                 val status = DokumeninnhentingGateway().legeerklæringStatus(par.saksnummer)
                 respond(status)
             }
