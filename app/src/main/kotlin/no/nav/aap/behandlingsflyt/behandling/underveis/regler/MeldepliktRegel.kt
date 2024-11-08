@@ -107,9 +107,10 @@ class MeldepliktRegel(
             )
 
             førsteDokument == null -> {
+                var forrigeDagOppfylt = forrigeSegmentOppfylt
                 meldeperiode.dager().map { gjeldendeDag ->
                     val fortsattMuligÅEndreUtfall = erDetFortsattMuligÅEndreUtfall(meldefrist, gjeldendeDag)
-                    val utfall = if (fortsattMuligÅEndreUtfall && forrigeSegmentOppfylt) OPPFYLT else IKKE_OPPFYLT
+                    val utfall = if (fortsattMuligÅEndreUtfall && forrigeDagOppfylt) OPPFYLT else IKKE_OPPFYLT
 
                     val vurdering = MeldepliktVurdering(
                         journalpostId = null,
@@ -121,15 +122,16 @@ class MeldepliktRegel(
                             else -> IKKE_OVERHOLDT_MELDEPLIKT_SANKSJON
                         }
                     )
+                    forrigeDagOppfylt = utfall == OPPFYLT
                     Segment(Periode(gjeldendeDag, gjeldendeDag), vurdering)
                 }.let { Tidslinje(it).komprimer() }
             }
 
-            førsteDokument.periode.fom > meldefrist -> listOf(
+            meldefrist < førsteDokument.periode.fom -> listOf(
                 Segment(
                     Periode(meldeperiode.fom, førsteDokument.periode.fom.minusDays(1)),
                     MeldepliktVurdering(
-                        journalpostId = førsteDokument.verdi.innsending,
+                        journalpostId = null,
                         fritak = false,
                         utfall = IKKE_OPPFYLT,
                         årsak = IKKE_OVERHOLDT_MELDEPLIKT_SANKSJON
