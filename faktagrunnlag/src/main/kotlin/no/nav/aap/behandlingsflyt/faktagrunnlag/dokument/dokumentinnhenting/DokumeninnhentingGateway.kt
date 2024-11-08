@@ -15,7 +15,7 @@ import java.net.URI
  * Bestiller dokumenter fra dokumentinnhenting
  */
 class DokumeninnhentingGateway {
-    private val syfoUri = requiredConfigForKey("integrasjon.dokumentinnhenting.url" + "/syfo")
+    private val syfoUri = requiredConfigForKey("integrasjon.dokumentinnhenting.url") + "/syfo"
     val config = ClientConfig(scope = requiredConfigForKey("integrasjon.dokumentinnhenting.scope"))
 
     private val client = RestClient.withDefaultResponseHandler(
