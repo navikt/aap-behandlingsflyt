@@ -7,12 +7,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.pliktkort.Plik
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.adapter.UbehandletSøknad
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.SakId
-import java.time.Instant
 import java.time.LocalDateTime
-import java.time.ZoneId
 
 class MottaDokumentService(
     private val mottattDokumentRepository: MottattDokumentRepository,
@@ -23,6 +22,7 @@ class MottaDokumentService(
         sakId: SakId,
         mottattTidspunkt: LocalDateTime,
         brevkode: Brevkode,
+        kanal: Kanal,
         strukturertDokument: StrukturertDokument<*>
     ) {
         mottattDokumentRepository.lagre(
@@ -33,7 +33,8 @@ class MottaDokumentService(
                 type = brevkode,
                 status = Status.MOTTATT,
                 behandlingId = null,
-                strukturertDokument = strukturertDokument
+                strukturertDokument = strukturertDokument,
+                kanal = kanal
             )
         )
     }
@@ -43,6 +44,7 @@ class MottaDokumentService(
         sakId: SakId,
         mottattTidspunkt: LocalDateTime,
         brevkode: Brevkode,
+        kanal: Kanal,
         strukturertDokument: UnparsedStrukturertDokument
     ) {
         mottattDokumentRepository.lagre(
@@ -51,6 +53,7 @@ class MottaDokumentService(
                 sakId = sakId,
                 mottattTidspunkt = mottattTidspunkt,
                 type = brevkode,
+                kanal = kanal,
                 status = Status.MOTTATT,
                 behandlingId = null,
                 strukturertDokument = strukturertDokument

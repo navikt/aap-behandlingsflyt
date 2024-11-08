@@ -41,6 +41,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -108,6 +109,7 @@ class StatistikkJobbUtførerTest {
                     behandlingId = opprettetBehandling.id,
                     mottattTidspunkt = LocalDateTime.now().minusDays(23),
                     type = Brevkode.SØKNAD,
+                    kanal = Kanal.PAPIR,
                     strukturertDokument = null
                 )
             )
@@ -233,6 +235,7 @@ class StatistikkJobbUtførerTest {
                     behandlingId = opprettetBehandling.id,
                     mottattTidspunkt = LocalDateTime.now().minusDays(1),
                     type = Brevkode.SØKNAD,
+                    kanal = Kanal.PAPIR,
                     strukturertDokument = null
                 )
             )
@@ -369,6 +372,7 @@ class StatistikkJobbUtførerTest {
                     behandlingId = behandlingId,
                     mottattTidspunkt = nå.minusDays(1),
                     type = Brevkode.SØKNAD,
+                    kanal = Kanal.DIGITAL,
                     strukturertDokument = null
                 ),
                 MottattDokument(
@@ -377,6 +381,7 @@ class StatistikkJobbUtførerTest {
                     behandlingId = behandlingId,
                     mottattTidspunkt = tidligsteMottattTid,
                     type = Brevkode.SØKNAD,
+                    kanal = Kanal.PAPIR,
                     strukturertDokument = null
                 )
             )

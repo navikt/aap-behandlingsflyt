@@ -11,7 +11,9 @@ import no.nav.aap.verdityper.sakogbehandling.SakId
 class MottattDokumentRepository(private val connection: DBConnection) {
     fun lagre(mottattDokument: MottattDokument) {
         val query = """
-            INSERT INTO MOTTATT_DOKUMENT (sak_id, MOTTATT_TID, type, status, strukturert_dokument, referanse, referanse_type, behandling_id) VALUES (?, ?, ?, ?, ?, ?, ?,?)
+            INSERT INTO MOTTATT_DOKUMENT (sak_id, MOTTATT_TID, type, status, strukturert_dokument, referanse,
+                                          referanse_type, behandling_id, kanal)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """.trimIndent()
 
         connection.execute(query) {
@@ -24,6 +26,7 @@ class MottattDokumentRepository(private val connection: DBConnection) {
                 setString(6, mottattDokument.referanse.verdi)
                 setEnumName(7, mottattDokument.referanse.type)
                 setLong(8, mottattDokument.behandlingId?.toLong())
+                setEnumName(9, mottattDokument.kanal)
             }
         }
     }
@@ -77,6 +80,7 @@ class MottattDokumentRepository(private val connection: DBConnection) {
             behandlingId = row.getLongOrNull("BEHANDLING_ID")?.let { BehandlingId(it) },
             mottattTidspunkt = row.getLocalDateTime("MOTTATT_TID"),
             type = brevkode,
+            kanal = row.getEnum("kanal"),
             status = row.getEnum("status"),
             strukturertDokument = LazyStrukturertDokument(referanse, brevkode, connection),
         )

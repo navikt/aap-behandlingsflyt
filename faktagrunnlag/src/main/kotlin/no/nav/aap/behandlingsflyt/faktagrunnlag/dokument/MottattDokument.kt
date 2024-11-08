@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.SakId
@@ -13,6 +14,7 @@ class MottattDokument(
     val behandlingId: BehandlingId?,
     val mottattTidspunkt: LocalDateTime,
     val type: Brevkode,
+    val kanal: Kanal,
     val status: Status = Status.MOTTATT,
     private val strukturertDokument: StrukturerteData?
 ) {

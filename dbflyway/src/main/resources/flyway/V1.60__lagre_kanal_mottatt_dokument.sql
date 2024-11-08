@@ -1,0 +1,4 @@
+ALTER TABLE mottatt_dokument
+    ADD COLUMN kanal VARCHAR(50) NOT NULL DEFAULT 'DIGITAL';
+
+ALTER TABLE mottatt_dokument ALTER COLUMN kanal DROP DEFAULT;

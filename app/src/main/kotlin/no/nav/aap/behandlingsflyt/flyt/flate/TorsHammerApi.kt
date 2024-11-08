@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.InnsendingId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.aktivitet.TorsHammerDto
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.HentSakDTO
 import no.nav.aap.behandlingsflyt.server.prosessering.HendelseMottattHåndteringJobbUtfører
@@ -34,6 +35,7 @@ fun NormalOpenAPIRoute.torsHammerApi(dataSource: DataSource) {
                         sakId = sak.id,
                         dokumentReferanse = MottattDokumentReferanse(InnsendingId.ny()),
                         brevkode = Brevkode.AKTIVITETSKORT,
+                        kanal = Kanal.DIGITAL,
                         periode = Periode(dto.hammer.dato, dto.hammer.dato),
                         payload = dto
                     )

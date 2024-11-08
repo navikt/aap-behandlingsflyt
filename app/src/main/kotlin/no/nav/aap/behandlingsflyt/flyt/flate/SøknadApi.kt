@@ -8,6 +8,7 @@ import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.server.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -34,6 +35,8 @@ fun NormalOpenAPIRoute.søknadApi(dataSource: DataSource) {
                             sakId = sak.id,
                             dokumentReferanse = dokumentReferanse,
                             brevkode = Brevkode.SØKNAD,
+                            // TODO få kanal fra payload i stedet
+                            kanal = Kanal.DIGITAL,
                             periode = Periode(
                                 LocalDate.now(),
                                 LocalDate.now().plusYears(3)

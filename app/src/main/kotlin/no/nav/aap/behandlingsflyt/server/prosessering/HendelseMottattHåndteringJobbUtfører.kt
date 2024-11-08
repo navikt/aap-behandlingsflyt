@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReposito
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.UnparsedStrukturertDokument
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterMottattDokumentService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
@@ -17,6 +18,7 @@ import no.nav.aap.verdityper.sakogbehandling.SakId
 import java.time.LocalDateTime
 
 private const val BREVKODE = "brevkode"
+private const val KANAL = "kanal"
 private const val MOTTATT_DOKUMENT_REFERANSE = "referanse"
 private const val MOTTATT_TIDSPUNKT = "mottattTidspunkt"
 private const val PERIODE = "periode"
@@ -31,6 +33,7 @@ class HendelseMottattHåndteringJobbUtfører(connection: DBConnection) : JobbUtf
         val sakSkrivelås = låsRepository.låsSak(sakId)
 
         val brevkode = Brevkode.valueOf(input.parameter(BREVKODE))
+        val kanal = Kanal.valueOf(input.parameter(KANAL))
         val payloadAsString = input.payload()
         val mottattTidspunkt = DefaultJsonMapper.fromJson<LocalDateTime>(input.parameter(MOTTATT_TIDSPUNKT))
 
@@ -42,6 +45,7 @@ class HendelseMottattHåndteringJobbUtfører(connection: DBConnection) : JobbUtf
             sakId = sakId,
             mottattTidspunkt = mottattTidspunkt,
             brevkode = brevkode,
+            kanal = kanal,
             strukturertDokument = UnparsedStrukturertDokument(payloadAsString)
         )
 
@@ -63,6 +67,7 @@ class HendelseMottattHåndteringJobbUtfører(connection: DBConnection) : JobbUtf
             sakId: SakId,
             dokumentReferanse: MottattDokumentReferanse,
             brevkode: Brevkode,
+            kanal: Kanal,
             periode: Periode?,
             payload: Any,
         ) = JobbInput(HendelseMottattHåndteringJobbUtfører)
@@ -71,6 +76,7 @@ class HendelseMottattHåndteringJobbUtfører(connection: DBConnection) : JobbUtf
                 medCallId()
                 medParameter(MOTTATT_DOKUMENT_REFERANSE, DefaultJsonMapper.toJson(dokumentReferanse))
                 medParameter(BREVKODE, brevkode.name)
+                medParameter(KANAL, kanal.name)
                 medParameter(PERIODE, if (periode == null) "" else DefaultJsonMapper.toJson(periode))
                 medParameter(MOTTATT_TIDSPUNKT, DefaultJsonMapper.toJson(LocalDateTime.now()))
                 medPayload(payload?.let { DefaultJsonMapper.toJson(it) })

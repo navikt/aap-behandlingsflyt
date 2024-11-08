@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingHendelseHåndterer
 import no.nav.aap.behandlingsflyt.hendelse.mottak.DokumentMottattSakHendelse
 import no.nav.aap.behandlingsflyt.hendelse.mottak.SakHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdentGateway
@@ -42,6 +43,7 @@ class TestHendelsesMottak(private val dataSource: DataSource) {
                         sakId = sak.id,
                         dokumentReferanse = referanse,
                         brevkode = hendelse.strukturertDokument.brevkode,
+                        kanal = Kanal.DIGITAL,
                         periode = null,
                         payload = hendelse.strukturertDokument.data!!
                     )

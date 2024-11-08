@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.InnsendingId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.aktiveBrudd
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.server.authenticate.innloggetNavIdent
@@ -110,6 +111,7 @@ private fun registrerDokumentjobb(
         HendelseMottattHåndteringJobbUtfører.nyJobb(
             sakId = sak.id,
             brevkode = Brevkode.AKTIVITETSKORT,
+            kanal = Kanal.DIGITAL,
             dokumentReferanse = dokumentReferanse,
             periode = Periode(fom, tom),
             payload = innsendingId

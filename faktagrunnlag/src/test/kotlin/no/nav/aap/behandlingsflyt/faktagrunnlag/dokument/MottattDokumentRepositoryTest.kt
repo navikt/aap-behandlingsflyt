@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -36,6 +37,7 @@ class MottattDokumentRepositoryTest {
             behandlingId = behandling.id,
             mottattTidspunkt = LocalDateTime.now(),
             type = Brevkode.SØKNAD,
+            kanal = Kanal.PAPIR,
             status = Status.MOTTATT,
             strukturertDokument = null,
         )
@@ -47,8 +49,12 @@ class MottattDokumentRepositoryTest {
         val res = hentDokumenterAvType(sak, Brevkode.SØKNAD)
 
         assertThat(res).hasSize(1)
-        assertThat(res.first()).extracting(MottattDokument::behandlingId, MottattDokument::sakId).containsExactly(
-            mottattDokument.behandlingId, mottattDokument.sakId
+        assertThat(res.first()).extracting(
+            MottattDokument::behandlingId,
+            MottattDokument::sakId,
+            MottattDokument::kanal
+        ).containsExactly(
+            mottattDokument.behandlingId, mottattDokument.sakId, mottattDokument.kanal
         )
     }
 
@@ -68,6 +74,7 @@ class MottattDokumentRepositoryTest {
             mottattTidspunkt = LocalDateTime.now(),
             type = Brevkode.SØKNAD,
             status = Status.MOTTATT,
+            kanal = Kanal.PAPIR,
             strukturertDokument = null,
         )
 
@@ -109,6 +116,7 @@ class MottattDokumentRepositoryTest {
             mottattTidspunkt = LocalDateTime.now(),
             type = Brevkode.SØKNAD,
             status = Status.MOTTATT,
+            kanal = Kanal.PAPIR,
             strukturertDokument = null,
         )
 
@@ -119,6 +127,7 @@ class MottattDokumentRepositoryTest {
             mottattTidspunkt = LocalDateTime.now(),
             type = Brevkode.PLIKTKORT,
             status = Status.MOTTATT,
+            kanal = Kanal.DIGITAL,
             strukturertDokument = null,
         )
 
