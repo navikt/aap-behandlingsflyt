@@ -27,6 +27,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Meldepl
 import no.nav.aap.tidslinje.Tidslinje
 import no.nav.aap.verdityper.Dagsatser
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
+import kotlin.reflect.KClass
 
 class UnderveisService(
     private val behandlingService: SakOgBehandlingService,
@@ -41,16 +42,34 @@ class UnderveisService(
 
     private val kvoteService = KvoteService()
 
-    private val regelset = listOf(
-        RettTilRegel(),
-        UtledMeldeperiodeRegel(),
-        InstitusjonRegel(),
-        SoningRegel(),
-        MeldepliktRegel(),
-        SammenstiltAktivitetspliktRegel(),
-        GraderingArbeidRegel(),
-        VarighetRegel(),
-    )
+    companion object {
+        private val regelset = listOf(
+            RettTilRegel(),
+            UtledMeldeperiodeRegel(),
+            InstitusjonRegel(),
+            SoningRegel(),
+            MeldepliktRegel(),
+            SammenstiltAktivitetspliktRegel(),
+            GraderingArbeidRegel(),
+            VarighetRegel(),
+        )
+
+        init {
+            fun checkAvhengighet(forventetFør: KClass<*>, forventetEtter: KClass<*>) {
+                val offset1 = regelset.indexOfFirst { it::class == forventetFør }
+                val offset2 = regelset.indexOfFirst { it::class == forventetEtter }
+                check(offset1 != -1) { "Regel ${forventetFør.qualifiedName} er ikke med" }
+                check(offset2 != -1) { "Regel ${forventetEtter.qualifiedName} er ikke med" }
+                check(offset1 < offset2) {
+                    "Regel ${forventetFør.qualifiedName} må ha kjørt før ${forventetEtter.qualifiedName}, men er kjørt etter"
+                }
+            }
+
+            checkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = MeldepliktRegel::class)
+            checkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = SammenstiltAktivitetspliktRegel::class)
+            checkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = GraderingArbeidRegel::class)
+        }
+    }
 
     fun vurder(behandlingId: BehandlingId): Tidslinje<Vurdering> {
         val input = genererInput(behandlingId)
