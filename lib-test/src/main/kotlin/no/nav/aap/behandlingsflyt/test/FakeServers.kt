@@ -966,7 +966,7 @@ object FakeServers : AutoCloseable {
                 }
                 route("/bestilling/{referanse}") { ->
                     get {
-                        BrevbestillingResponse(
+                        call.respond(BrevbestillingResponse(
                             referanse = UUID.fromString(call.pathParameters.get("referanse"))!!,
                             brev = Brev(overskrift = "Overskrift", tekstbolker = emptyList()),
                             opprettet = LocalDateTime.now(),
@@ -975,7 +975,7 @@ object FakeServers : AutoCloseable {
                             brevtype = Brevtype.INNVILGELSE,
                             språk = Språk.NB,
                             status = Status.REGISTRERT,
-                        )
+                        ))
                     }
                     put("/oppdater") {
                         call.respond(HttpStatusCode.NoContent, Unit)
