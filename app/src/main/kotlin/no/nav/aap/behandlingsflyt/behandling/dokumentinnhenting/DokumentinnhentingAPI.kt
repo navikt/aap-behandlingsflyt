@@ -25,7 +25,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: HikariDataSource) {
                     val sakService = SakService(connection)
                     val sak = sakService.hent(Saksnummer(req.saksnummer))
                     val personIdent = sak.person.aktivIdent()
-                    val personinfo = PdlPersoninfoGateway.hentPersoninfoForIdent(personIdent, token())
+                    //val personinfo = PdlPersoninfoGateway.hentPersoninfoForIdent(personIdent, token())
 
                     DokumeninnhentingGateway().bestillLegeerklæring(
                         LegeerklæringBestillingRequest(
@@ -33,7 +33,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: HikariDataSource) {
                             req.behandlerNavn,
                             req.veilederNavn,
                             personIdent.identifikator,
-                            personinfo.fulltNavn(),
+                            "Test navn",//personinfo.fulltNavn(),
                             req.fritekst,
                             req.saksnummer,
                             req.dokumentasjonType
@@ -56,9 +56,9 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: HikariDataSource) {
                     val sak = sakService.hent(Saksnummer(req.saksnummer))
 
                     val personIdent = sak.person.aktivIdent()
-                    val personinfo = PdlPersoninfoGateway.hentPersoninfoForIdent(personIdent, token())
+                    //val personinfo = PdlPersoninfoGateway.hentPersoninfoForIdent(personIdent, token())
 
-                    val brevRequest = BrevRequest(personinfo.fulltNavn(), personIdent.identifikator, req.fritekst, req.veilederNavn, req.dokumentasjonType)
+                    val brevRequest = BrevRequest("testnavn", personIdent.identifikator, req.fritekst, req.veilederNavn, req.dokumentasjonType)
                     DokumeninnhentingGateway().forhåndsvisBrev(brevRequest)
                 }
                 respond(brevPreview)
