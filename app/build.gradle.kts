@@ -54,7 +54,7 @@ fun getCheckedOutGitCommitHash(): String {
 }
 
 
-val komponenterVersjon = "1.0.52"
+val komponenterVersjon = "1.0.55"
 
 dependencies {
     implementation("io.ktor:ktor-server-cors:$ktorVersion")
