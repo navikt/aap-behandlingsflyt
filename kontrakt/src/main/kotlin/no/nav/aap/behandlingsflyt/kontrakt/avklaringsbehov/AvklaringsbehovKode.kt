@@ -5,6 +5,7 @@ package no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov
  */
 public const val MANUELT_SATT_PÅ_VENT_KODE: String = "9001"
 public const val BESTILL_BREV_KODE: String = "9002"
+public const val BESTILL_LEGEERKLÆRING_KODE: String = "9003"
 public const val AVKLAR_STUDENT_KODE: String = "5001"
 public const val AVKLAR_SYKDOM_KODE: String = "5003"
 public const val FASTSETT_ARBEIDSEVNE_KODE: String = "5004"
@@ -24,6 +25,7 @@ public const val SKRIV_BREV_KODE: String = "5050"
 public enum class AvklaringsbehovKode {
     `9001`,
     `9002`,
+    `9003`,
     `5001`,
     `5003`,
     `5004`,

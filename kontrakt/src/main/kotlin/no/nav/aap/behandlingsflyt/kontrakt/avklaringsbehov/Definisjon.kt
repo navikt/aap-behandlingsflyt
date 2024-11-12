@@ -29,6 +29,12 @@ public enum class Definisjon(
         type = BehovType.VENTEPUNKT,
         defaultFrist = Period.ofDays(1),
     ),
+    BESTILL_LEGEERKLÆRING(
+        kode = AvklaringsbehovKode.`9003`,
+        løsesISteg = StegType.AVKLAR_SYKDOM,
+        type = BehovType.VENTEPUNKT,
+        defaultFrist = Period.ofWeeks(4)
+    ),
     SKRIV_BREV(
         kode = AvklaringsbehovKode.`5050`,
         løsesISteg = StegType.BREV,
