@@ -175,7 +175,7 @@ data class Vurdering(
         return """
             Vurdering(
             harRett=${harRett()},
-            meldeplikt=${meldepliktVurdering?.utfall ?: Utfall.IKKE_VURDERT}(${meldepliktVurdering?.årsak ?: "-"}),
+            meldeplikt=${meldepliktVurdering},
             gradering=${gradering?.gradering ?: Prosent(0)},
             bruddAktivitetsplikt=${fraværFastsattAktivitetVurdering}
             institusjonVurdering=${institusjonVurdering}

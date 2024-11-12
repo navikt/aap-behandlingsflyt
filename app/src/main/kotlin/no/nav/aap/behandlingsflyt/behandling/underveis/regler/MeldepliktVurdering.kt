@@ -5,8 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.verdityper.dokument.JournalpostId
 
 data class MeldepliktVurdering(
-    val journalpostId: JournalpostId?,
-    val fritak: Boolean,
+    val dokument: MeldepliktRegel.Dokument?,
     val utfall: Utfall,
     val årsak: UnderveisÅrsak? = null
 )

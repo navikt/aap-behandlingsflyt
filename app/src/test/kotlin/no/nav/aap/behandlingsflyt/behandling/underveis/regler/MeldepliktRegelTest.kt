@@ -32,8 +32,7 @@ class MeldepliktRegelTest {
         val tom: LocalDate,
         val utfall: Utfall,
         val årsak: UnderveisÅrsak? = null,
-        val journalpostId: JournalpostId? = null,
-        val fritak: Boolean = false,
+        val dokument: MeldepliktRegel.Dokument? = null,
     )
 
     /*   2020
@@ -73,19 +72,19 @@ class MeldepliktRegelTest {
             Forventer(
                 fom = LocalDate.of(2020, JANUARY, 20),
                 tom = LocalDate.of(2020, FEBRUARY, 2),
-                journalpostId = JournalpostId("1"),
+                dokument = MeldepliktRegel.Meldt(JournalpostId("1")),
                 utfall = OPPFYLT,
             ),
             Forventer(
                 fom = LocalDate.of(2020, FEBRUARY, 3),
                 tom = LocalDate.of(2020, FEBRUARY, 16),
-                journalpostId = JournalpostId("2"),
+                dokument = MeldepliktRegel.Meldt(JournalpostId("2")),
                 utfall = OPPFYLT,
             ),
             Forventer(
                 fom = LocalDate.of(2020, FEBRUARY, 17),
                 tom = LocalDate.of(2020, MARCH, 1),
-                journalpostId = JournalpostId("3"),
+                dokument = MeldepliktRegel.Meldt(JournalpostId("3")),
                 utfall = OPPFYLT,
             ),
         )
@@ -162,7 +161,7 @@ class MeldepliktRegelTest {
             ),
             Forventer(
                 fom = LocalDate.of(2020, FEBRUARY, 2), tom = LocalDate.of(2020, FEBRUARY, 2),
-                journalpostId = JournalpostId("1"),
+                dokument = MeldepliktRegel.Meldt(JournalpostId("1")),
                 utfall = OPPFYLT,
             ),
             Forventer(
@@ -177,7 +176,7 @@ class MeldepliktRegelTest {
             ),
             Forventer(
                 fom = LocalDate.of(2020, MARCH, 2), tom = LocalDate.of(2020, MARCH, 15),
-                journalpostId = JournalpostId("2"),
+                dokument = MeldepliktRegel.Meldt(JournalpostId("2")),
                 utfall = OPPFYLT,
             ),
             Forventer(
@@ -228,19 +227,19 @@ class MeldepliktRegelTest {
                 fom = rettighetsperiode.fom.plusDays(14),
                 tom = rettighetsperiode.tom,
                 utfall = OPPFYLT,
-                fritak = true,
+                dokument = MeldepliktRegel.Fritak
             )
         )
     }
 
 /*
-           April                      May                       June
-     Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
-            1  2  3  4  5                   1  2  3       1  2  3  4  5  6  7
-      6  7  8  9 10 11 12       4  5  6  7  8  9 10       8  9 10 11 12 13 14
-     13 14 15 16 17 18 19      11 12 13 14 15 16 17      15 16 17 18 19 20 21
-     20 21 22 23 24 25 26      18 19 20 21 22 23 24      22 23 24 25 26 27 28
-     27 28 29 30               25 26 27 28 29 30 31      29 30
+             April                      May                       June
+      Mo  Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
+              1  2  3  4  5                   1  2  3       1  2  3  4  5  6  7
+       6   7  8  9 10 11 12       4  5  6  7  8  9 10       8  9 10 11 12 13 14
+      13  14 15 16 17 18 19      11 12 13 14 15 16 17      15 16 17 18 19 20 21
+     [20] 21 22 23 24 25 26      18 19 20 21 22 23 24      22 23 24 25 26 27 28
+      27  28 29 30               25 26 27 28 29 30 31      29 30
      */
     @Test
     fun `Innsending etter fristen, men har fritak hele meldeperioden`() {
@@ -276,7 +275,7 @@ class MeldepliktRegelTest {
                 fom = rettighetsperiode.fom.plusDays(14),
                 tom = rettighetsperiode.tom,
                 utfall = OPPFYLT,
-                fritak = true,
+                dokument = MeldepliktRegel.Fritak
             )
         )
     }
@@ -359,7 +358,7 @@ class MeldepliktRegelTest {
                 utfall = OPPFYLT,
             ),
             Forventer(
-                journalpostId = JournalpostId("1"),
+                dokument = MeldepliktRegel.Meldt(JournalpostId("1")),
                 fom = rettighetsperiode.fom.plusDays(14),
                 tom = rettighetsperiode.fom.plusDays(27),
                 utfall = OPPFYLT,
@@ -404,7 +403,7 @@ class MeldepliktRegelTest {
                 utfall = OPPFYLT,
             ),
             Forventer(
-                journalpostId = JournalpostId("1"),
+                dokument = MeldepliktRegel.Meldt(JournalpostId("1")),
                 fom = rettighetsperiode.fom.plusDays(14),
                 tom = rettighetsperiode.fom.plusDays(27),
                 utfall = OPPFYLT,
@@ -456,7 +455,7 @@ class MeldepliktRegelTest {
             ),
             Forventer(
                 fom = LocalDate.of(2020, JANUARY, 28), tom = LocalDate.of(2020, FEBRUARY, 2),
-                journalpostId = JournalpostId("1"),
+                dokument = MeldepliktRegel.Meldt(JournalpostId("1")),
                 utfall = OPPFYLT,
             ),
             Forventer(
@@ -506,7 +505,7 @@ class MeldepliktRegelTest {
             ),
             Forventer(
                 fom = LocalDate.of(2020, JANUARY, 30), tom = LocalDate.of(2020, FEBRUARY, 2),
-                journalpostId = JournalpostId("1"),
+                dokument = MeldepliktRegel.Meldt(JournalpostId("1")),
                 utfall = OPPFYLT,
             ),
             Forventer(
@@ -517,20 +516,22 @@ class MeldepliktRegelTest {
         )
     }
 
+    /* TODO: meldefrist etter rettighetsperiode */
+
     /*
-           April                      May                       June
-     Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
-            1  2  3  4  5                   1  2  3       1  2  3  4  5  6  7
-      6  7  8  9 10 11 12       4  5  6  7  8  9 10       8  9 10 11 12 13 14
-     13 14 15 16 17 18 19      11 12 13 14 15 16 17      15 16 17 18 19 20 21
-     20 21 22 23 24 25 26      18 19 20 21 22 23 24      22 23 24 25 26 27 28
-     27 28 29 30               25 26 27 28 29 30 31      29 30
+           April                       May                       June
+     Mo Tu We Th Fr Sa Su      Mo  Tu We Th Fr Sa  Su      Mo Tu We Th Fr Sa Su
+            1  2  3  4  5                    1  2   3        1  2  3  4  5  6  7
+      6  7  8  9 10 11 12      [4]  5  6  7  8  9  10        8  9 10 11 12 13 14
+     13 14 15 16 17 18 19      11  12 13 14 15 16 [17]      15 16 17 18 19 20 21
+     20 21 22 23 24 25 26      18  19 20 21 22 23  24       22 23 24 25 26 27 28
+     27 28 29 30               25  26 27 28 29 30  31       29 30
      */
     @Test
     fun `Hvis fritaksperiode == meldeperiode, oppfylt for kun den meldeperioden`() {
         val rettighetsperiode = Periode(
             LocalDate.of(2020, APRIL, 20),
-            LocalDate.of(2020, JUNE, 7),
+            LocalDate.of(2020, MAY, 31),
         )
         val input = tomUnderveisInput.copy(
             rettighetsperiode = rettighetsperiode,
@@ -563,7 +564,7 @@ class MeldepliktRegelTest {
                 fom = LocalDate.of(2020, MAY, 4),
                 tom = LocalDate.of(2020, MAY, 17),
                 utfall = OPPFYLT,
-                fritak = true,
+                dokument = MeldepliktRegel.Fritak
             ),
             Forventer(
                 fom = LocalDate.of(2020, MAY, 18),
@@ -621,10 +622,10 @@ class MeldepliktRegelTest {
                 fom = LocalDate.of(2020, MAY, 4),
                 tom = LocalDate.of(2020, MAY, 17),
                 utfall = OPPFYLT,
-                fritak = true,
+                dokument = MeldepliktRegel.Fritak
             ),
             Forventer(
-                journalpostId = JournalpostId("1"),
+                dokument = MeldepliktRegel.Meldt(JournalpostId("1")),
                 fom = LocalDate.of(2020, MAY, 18),
                 tom = LocalDate.of(2020, MAY, 31),
                 utfall = OPPFYLT,
@@ -675,16 +676,13 @@ class MeldepliktRegelTest {
             forventetTidslinje,
             JoinStyle.RIGHT_JOIN { periode, vurdering, forventet ->
                 assertThat(vurdering?.verdi?.meldeplikUtfall())
-                    .`as`("for periode $periode")
+                    .`as`("for periode $vurdering")
                     .isEqualTo(forventet.verdi.utfall)
-                assertThat(vurdering?.verdi?.meldepliktVurdering?.journalpostId)
-                    .`as`("for periode $periode")
-                    .isEqualTo(forventet.verdi.journalpostId)
-                assertThat(vurdering?.verdi?.meldepliktVurdering?.fritak)
-                    .`as`("for periode $periode")
-                    .isEqualTo(forventet.verdi.fritak)
+                assertThat(vurdering?.verdi?.meldepliktVurdering?.dokument)
+                    .`as`("for periode $vurdering")
+                    .isEqualTo(forventet.verdi.dokument)
                 assertThat(vurdering?.verdi?.meldepliktVurdering?.årsak)
-                    .`as`("for periode $periode")
+                    .`as`("for periode $vurdering")
                     .isEqualTo(forventet.verdi.årsak)
                 null
             })
