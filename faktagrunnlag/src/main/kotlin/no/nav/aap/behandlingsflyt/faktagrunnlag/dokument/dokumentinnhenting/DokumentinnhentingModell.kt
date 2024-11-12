@@ -11,7 +11,8 @@ data class LegeerklæringBestillingRequest (
     val personNavn: String,
     val dialogmeldingTekst: String,
     val saksnummer: String,
-    val dokumentasjonType: DokumentasjonType
+    val dokumentasjonType: DokumentasjonType,
+    val behandlingsReferanse: UUID
 )
 
 data class LegeerklæringStatusResponse(

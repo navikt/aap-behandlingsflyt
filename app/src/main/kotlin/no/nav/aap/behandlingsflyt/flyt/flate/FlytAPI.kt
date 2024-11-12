@@ -176,6 +176,19 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
                 respondWithStatus(HttpStatusCode.NoContent)
             }
         }
+        route("/{referanse}/ta-av-vent") {
+            post<BehandlingReferanse, Unit, TaAvVentRequest> { par, req ->
+                dataSource.transaction { connection ->
+                    /*
+                    TODO: Implementer logikk for oppslag og oppdatering av behandling slik at flytorkestrator kan plukke det opp
+                    val taSkriveLåsRepository = TaSkriveLåsRepository(connection)
+                    val lås = taSkriveLåsRepository.lås(par.referanse)
+                    BehandlingTilstandValidator(connection).validerTilstand(par, req.behandlingVersjon)
+
+                    taSkriveLåsRepository.verifiserSkrivelås(lås)*/
+                }
+            }
+        }
         route("/{referanse}/vente-informasjon") {
             get<BehandlingReferanse, Venteinformasjon> { request ->
                 val dto = dataSource.transaction(readOnly = true) { connection ->
