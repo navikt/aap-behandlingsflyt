@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonValue
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.PARAGRAF_11_7
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.PARAGRAF_11_8
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.PARAGRAF_11_9
+import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.verdityper.sakogbehandling.NavIdent
 import no.nav.aap.verdityper.sakogbehandling.SakId
 import java.time.Instant
 import java.util.*
@@ -76,7 +76,7 @@ sealed interface AktivitetspliktDokument {
         val innsendingId: InnsendingId,
 
         /** Saksbehandler/veileder som sendte inn dokumentet. */
-        val innsender: NavIdent,
+        val innsender: Bruker,
 
         /** Tidspunktet dokumentet ble mottatt. */
         val opprettetTid: Instant,

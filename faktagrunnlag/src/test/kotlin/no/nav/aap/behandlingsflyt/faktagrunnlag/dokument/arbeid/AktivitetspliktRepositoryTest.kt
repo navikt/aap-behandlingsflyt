@@ -15,8 +15,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.verdityper.sakogbehandling.NavIdent
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -191,7 +191,7 @@ fun nyeBrudd(
                     periode = periode,
                 ),
                 begrunnelse = begrunnelse,
-                innsender = NavIdent("Z000000"),
+                innsender = Bruker("Z000000"),
                 grunn = grunn
             )
         }
@@ -218,7 +218,7 @@ fun nyeFeilregistrering(
                     periode = periode,
                 ),
                 begrunnelse = begrunnelse,
-                innsender = NavIdent("Z000000"),
+                innsender = Bruker("Z000000"),
             )
         )
     )

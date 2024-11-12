@@ -21,8 +21,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.HendelseId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.InnsendingId
+import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.verdityper.sakogbehandling.NavIdent
 import no.nav.aap.verdityper.sakogbehandling.SakId
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -39,7 +39,7 @@ class VurderingTest {
             id = BruddAktivitetspliktId(0),
             hendelseId = HendelseId.ny(),
             innsendingId = InnsendingId.ny(),
-            innsender = NavIdent("Z000000"),
+            innsender = Bruker("Z000000"),
             opprettetTid = Instant.now(),
         ),
         brudd = Brudd(

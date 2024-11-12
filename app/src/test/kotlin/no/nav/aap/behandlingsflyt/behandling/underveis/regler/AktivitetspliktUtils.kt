@@ -10,8 +10,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn.INGEN_GYLDIG_GRUNN
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.HendelseId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.InnsendingId
+import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.verdityper.sakogbehandling.NavIdent
 import no.nav.aap.verdityper.sakogbehandling.SakId
 import java.time.LocalDate
 import java.time.ZoneId
@@ -42,7 +42,7 @@ fun brudd(
         id = BruddAktivitetspliktId(0),
         hendelseId = HendelseId.ny(),
         innsendingId = InnsendingId.ny(),
-        innsender = NavIdent(""),
+        innsender = Bruker(""),
         opprettetTid = opprettet.atStartOfDay(ZoneId.of("Europe/Oslo")).toInstant(),
     ),
     begrunnelse = "Informasjon fra tiltaksarrangør",

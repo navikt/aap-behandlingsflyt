@@ -2,8 +2,8 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
+import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
-import no.nav.aap.verdityper.sakogbehandling.NavIdent
 import no.nav.aap.verdityper.sakogbehandling.SakId
 import org.jetbrains.annotations.TestOnly
 
@@ -11,14 +11,14 @@ class AktivitetspliktRepository(private val connection: DBConnection) {
 
     sealed interface DokumentInput {
         val brudd: Brudd
-        val innsender: NavIdent
+        val innsender: Bruker
         val dokumentType: DokumentType
         val begrunnelse: String
     }
 
     class RegistreringInput(
         override val brudd: Brudd,
-        override val innsender: NavIdent,
+        override val innsender: Bruker,
         override val begrunnelse: String,
         val grunn: Grunn
     ): DokumentInput {
@@ -27,7 +27,7 @@ class AktivitetspliktRepository(private val connection: DBConnection) {
 
     class FeilregistreringInput(
         override val brudd: Brudd,
-        override val innsender: NavIdent,
+        override val innsender: Bruker,
         override val begrunnelse: String,
     ): DokumentInput {
         override val dokumentType = DokumentType.FEILREGISTRERING
@@ -51,7 +51,7 @@ class AktivitetspliktRepository(private val connection: DBConnection) {
             setParams { request ->
                 setLong(1, request.brudd.sakId.toLong())
                 setPeriode(2, request.brudd.periode)
-                setString(3, request.innsender.navIdent)
+                setString(3, request.innsender.ident)
                 setUUID(4, HendelseId.ny().id)
                 setUUID(5, innsendingId.value)
                 setEnumName(6, request.brudd.bruddType)
@@ -207,7 +207,7 @@ class AktivitetspliktRepository(private val connection: DBConnection) {
             id = BruddAktivitetspliktId(row.getLong("ID")),
             hendelseId = HendelseId(row.getUUID("HENDELSE_ID")),
             innsendingId = InnsendingId(row.getUUID("INNSENDING_ID")),
-            innsender = NavIdent(row.getString("NAV_IDENT")),
+            innsender = Bruker(row.getString("NAV_IDENT")),
             opprettetTid = row.getInstant("OPPRETTET_TID"),
         )
         val begrunnelse = row.getString("BEGRUNNELSE")

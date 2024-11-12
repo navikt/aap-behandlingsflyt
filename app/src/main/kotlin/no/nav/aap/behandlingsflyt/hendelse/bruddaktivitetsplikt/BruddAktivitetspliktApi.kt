@@ -16,20 +16,20 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.server.authenticate.innloggetNavIdent
 import no.nav.aap.behandlingsflyt.server.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.httpklient.auth.Bruker
+import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.FlytJobbRepository
-import no.nav.aap.verdityper.sakogbehandling.NavIdent
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
     route("/api/aktivitetsplikt") {
         route("{saksnummer}") {
             route("/opprett").post<SaksnummerParameter, String, OpprettAktivitetspliktDTO> { params, req ->
-                val navIdent = innloggetNavIdent()
+                val navIdent = bruker()
                 dataSource.transaction { connection ->
                     opprettDokument(connection, navIdent, Saksnummer(params.saksnummer), req)
                 }
@@ -37,7 +37,7 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
             }
 
             route("/oppdater").post<SaksnummerParameter, String, OppdaterAktivitetspliktDTO> { params, req ->
-                val navIdent = innloggetNavIdent()
+                val navIdent = bruker()
                 dataSource.transaction { connection ->
                     opprettDokument(connection, navIdent, Saksnummer(params.saksnummer), req)
                 }
@@ -45,7 +45,7 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
             }
 
             route("/feilregistrer").post<SaksnummerParameter, String, FeilregistrerAktivitetspliktDTO> { params, req ->
-                val navIdent = innloggetNavIdent()
+                val navIdent = bruker()
                 dataSource.transaction { connection ->
                     opprettDokument(connection, navIdent, Saksnummer(params.saksnummer), req)
                 }
@@ -82,7 +82,7 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
     }
 }
 
-private fun opprettDokument(connection: DBConnection, navIdent: NavIdent, saksnummer: Saksnummer, req: AktivitetspliktDTO) {
+private fun opprettDokument(connection: DBConnection, navIdent: Bruker, saksnummer: Saksnummer, req: AktivitetspliktDTO) {
     val aktivitetspliktServce = AktivitetspliktService(
         repository = AktivitetspliktRepository(connection)
     )
