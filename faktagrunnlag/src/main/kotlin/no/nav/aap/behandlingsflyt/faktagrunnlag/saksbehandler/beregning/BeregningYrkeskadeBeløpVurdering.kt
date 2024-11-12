@@ -1,9 +1,10 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import no.nav.aap.verdityper.Beløp
 
 data class BeregningYrkeskaderBeløpVurdering(
-    internal val id: Long? = null,
+    @JsonIgnore internal val id: Long? = null,
     val vurderinger: List<YrkesskadeBeløpVurdering>
 )
 

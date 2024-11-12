@@ -36,10 +36,11 @@ class BeregningVurderingRepository(private val connection: DBConnection) {
         if (vurderingId == null) {
             return null
         }
+
         val query = """
-            SELECT BEGRUNNELSE, NEDSATT_ARBEIDSEVNE_DATO, YTTERLIGERE_NEDSATT_ARBEIDSEVNE_DATO, YTTERLIGERE_NEDSATT_BEGRUNNELSE
-            FROM BEREGNINGSTIDSPUNKT_VURDERING
-            WHERE id = ?
+            SELECT BEGRUNNELSE, REFERANSE, ANTATT_ARLIG_INNTEKT
+            FROM YRKESSKADE_INNTEKT
+            WHERE INNTEKTER_ID = ?
         """.trimIndent()
 
         return BeregningYrkeskaderBeløpVurdering(vurderingId, connection.queryList(query) {

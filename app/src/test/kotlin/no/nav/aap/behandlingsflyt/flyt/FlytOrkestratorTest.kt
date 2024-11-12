@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykd
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.BrevbestillingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBeregningstidspunktLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettYrkesskadeInntektLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
@@ -34,7 +35,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søkna
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.YrkesskadevurderingDto
@@ -110,42 +113,42 @@ class FlytOrkestratorTest {
 
     @Test
     fun `skal avklare yrkesskade hvis det finnes spor av yrkesskade`() {
-        val ident = ident()
         val fom = LocalDate.now().minusMonths(3)
         val periode = Periode(fom, fom.plusYears(3))
 
         // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
-        FakePersoner.leggTil(
-            TestPerson(
-                identer = setOf(ident),
-                fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
-                yrkesskade = listOf(TestYrkesskade()),
-                barn = listOf(
-                    TestPerson(
-                        identer = setOf(Ident("1234123")),
-                        fødselsdato = Fødselsdato(LocalDate.now().minusYears(3)),
-                        yrkesskade = listOf(),
-                        barn = listOf(),
-                        inntekter = listOf()
-                    )
+        val person = TestPerson(
+            fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
+            yrkesskade = listOf(TestYrkesskade()),
+            barn = listOf(
+                TestPerson(
+                    identer = setOf(Ident("1234123")),
+                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(3)),
+                    yrkesskade = listOf(),
+                    barn = listOf(),
+                    inntekter = listOf()
+                )
+            ),
+            inntekter = listOf(
+                InntektPerÅr(
+                    Year.now().minusYears(1),
+                    Beløp(1000000)
                 ),
-                inntekter = listOf(
-                    InntektPerÅr(
-                        Year.now().minusYears(1),
-                        Beløp(1000000)
-                    ),
-                    InntektPerÅr(
-                        Year.now().minusYears(2),
-                        Beløp(1000000)
-                    ),
-                    InntektPerÅr(
-                        Year.now().minusYears(3),
-                        Beløp(1000000)
-                    )
+                InntektPerÅr(
+                    Year.now().minusYears(2),
+                    Beløp(1000000)
+                ),
+                InntektPerÅr(
+                    Year.now().minusYears(3),
+                    Beløp(1000000)
                 )
             )
         )
+        FakePersoner.leggTil(
+            person
+        )
 
+        val ident = person.aktivIdent()
 
         // Sender inn en søknad
         sendInnDokument(
@@ -239,6 +242,47 @@ class FlytOrkestratorTest {
         }
         util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
         behandling = hentBehandling(sak.id)
+
+        dataSource.transaction {
+            AvklaringsbehovHendelseHåndterer(it).håndtere(
+                behandling.id,
+                LøsAvklaringsbehovBehandlingHendelse(
+                    løsning = AvklarYrkesskadeLøsning(
+                        yrkesskadesvurdering = YrkesskadevurderingDto(
+                            begrunnelse = "Ikke årsakssammenheng",
+                            relevanteSaker = listOf(),
+                            andelAvNedsettelsen = null,
+                            erÅrsakssammenheng = false
+                        )
+                    ),
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
+                )
+            )
+        }
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
+        behandling = hentBehandling(sak.id)
+
+        dataSource.transaction {
+            AvklaringsbehovHendelseHåndterer(it).håndtere(
+                behandling.id,
+                LøsAvklaringsbehovBehandlingHendelse(
+                    løsning = FastsettBeregningstidspunktLøsning(
+                        beregningVurdering = BeregningstidspunktVurdering(
+                            begrunnelse = "Trenger hjelp fra Nav",
+                            nedsattArbeidsevneDato = LocalDate.now(),
+                            ytterligereNedsattArbeidsevneDato = null,
+                            ytterligereNedsattBegrunnelse = null
+                        ),
+                    ),
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
+                )
+            )
+        }
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
+        behandling = hentBehandling(sak.id)
+
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
@@ -482,16 +526,17 @@ class FlytOrkestratorTest {
 
     @Test
     fun `skal avklare yrkesskade hvis det finnes spor av yrkesskade - yrkesskade har årsakssammenheng`() {
-        val ident = ident()
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
-        FakePersoner.leggTil(
-            TestPerson(
-                identer = setOf(ident),
-                fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
-                yrkesskade = listOf(TestYrkesskade())
-            )
+        val person = TestPerson(
+            fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
+            yrkesskade = listOf(TestYrkesskade())
         )
+        FakePersoner.leggTil(
+            person
+        )
+
+        val ident = person.aktivIdent()
 
         // Sender inn en søknad
         sendInnDokument(
@@ -589,6 +634,26 @@ class FlytOrkestratorTest {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
                 LøsAvklaringsbehovBehandlingHendelse(
+                    løsning = AvklarYrkesskadeLøsning(
+                        yrkesskadesvurdering = YrkesskadevurderingDto(
+                            begrunnelse = "Veldig relevante",
+                            relevanteSaker = person.yrkesskade.map { it.saksreferanse },
+                            andelAvNedsettelsen = 50,
+                            erÅrsakssammenheng = true
+                        )
+                    ),
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
+                )
+            )
+        }
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
+        behandling = hentBehandling(sak.id)
+
+        dataSource.transaction {
+            AvklaringsbehovHendelseHåndterer(it).håndtere(
+                behandling.id,
+                LøsAvklaringsbehovBehandlingHendelse(
                     løsning = FastsettBeregningstidspunktLøsning(
                         beregningVurdering = BeregningstidspunktVurdering(
                             begrunnelse = "Trenger hjelp fra Nav",
@@ -596,6 +661,30 @@ class FlytOrkestratorTest {
                             ytterligereNedsattArbeidsevneDato = null,
                             ytterligereNedsattBegrunnelse = null
                         ),
+                    ),
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
+                )
+            )
+        }
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
+        behandling = hentBehandling(sak.id)
+
+
+        dataSource.transaction {
+            AvklaringsbehovHendelseHåndterer(it).håndtere(
+                behandling.id,
+                LøsAvklaringsbehovBehandlingHendelse(
+                    løsning = FastsettYrkesskadeInntektLøsning(
+                        yrkesskadeInntektVurdering = BeregningYrkeskaderBeløpVurdering(
+                            vurderinger = person.yrkesskade.map {
+                                YrkesskadeBeløpVurdering(
+                                    antattÅrligInntekt = Beløp(5000000),
+                                    referanse = it.saksreferanse,
+                                    begrunnelse = "Trenger hjelp fra Nav"
+                                )
+                            },
+                        )
                     ),
                     behandlingVersjon = behandling.versjon,
                     bruker = Bruker("SAKSBEHANDLER")

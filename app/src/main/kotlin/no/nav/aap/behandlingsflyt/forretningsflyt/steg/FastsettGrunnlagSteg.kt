@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.beregning.AvklarFaktaBeregningService
 import no.nav.aap.behandlingsflyt.behandling.beregning.BeregningService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
@@ -24,28 +24,18 @@ import org.slf4j.LoggerFactory
 
 class FastsettGrunnlagSteg(
     private val beregningService: BeregningService,
-    private val vilkårsresultatRepository: VilkårsresultatRepository
+    private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val avklarFaktaBeregningService: AvklarFaktaBeregningService
 ) : BehandlingSteg {
     private val log = LoggerFactory.getLogger(FastsettGrunnlagSteg::class.java)
 
-    private fun skalBeregneGrunnlag(vilkårsresultat: Vilkårsresultat): Boolean {
-        val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
-        val bistandsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
-        val sykepengerErstatningvilkåret = if (!bistandsvilkåret.harPerioderSomErOppfylt()) {
-            vilkårsresultat.finnVilkår(Vilkårtype.SYKEPENGEERSTATNING).harPerioderSomErOppfylt()
-        } else {
-            true
-        }
-
-        return sykdomsvilkåret.harPerioderSomErOppfylt() && (bistandsvilkåret.harPerioderSomErOppfylt() || sykepengerErstatningvilkåret)
-    }
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
 
         val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.GRUNNLAGET)
 
-        if (skalBeregneGrunnlag(vilkårsresultat)) {
+        if (avklarFaktaBeregningService.skalFastsetteGrunnlag(kontekst.behandlingId)) {
             val beregningsgrunnlag = beregningService.beregnGrunnlag(kontekst.behandlingId)
 
             kontekst.perioder().forEach { periode ->
@@ -88,6 +78,7 @@ class FastsettGrunnlagSteg(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
+            val vilkårsresultatRepository = VilkårsresultatRepository(connection)
             return FastsettGrunnlagSteg(
                 BeregningService(
                     InntektGrunnlagRepository(connection),
@@ -98,7 +89,8 @@ class FastsettGrunnlagSteg(
                     BeregningVurderingRepository(connection),
                     YrkesskadeRepository(connection)
                 ),
-                VilkårsresultatRepository(connection)
+                vilkårsresultatRepository,
+                AvklarFaktaBeregningService(vilkårsresultatRepository)
             )
         }
 

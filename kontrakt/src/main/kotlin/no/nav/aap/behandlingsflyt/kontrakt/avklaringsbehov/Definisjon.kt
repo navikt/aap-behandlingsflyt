@@ -71,6 +71,12 @@ public enum class Definisjon(
         løsesISteg = StegType.FASTSETT_BEREGNINGSTIDSPUNKT,
         kreverToTrinn = true
     ),
+    FASTSETT_YRKESSKADEINNTEKT(
+        kode = AvklaringsbehovKode.`5014`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.FASTSETT_BEREGNINGSTIDSPUNKT,
+        kreverToTrinn = true
+    ),
     FRITAK_MELDEPLIKT(
         kode = AvklaringsbehovKode.`5005`,
         type = BehovType.MANUELT_FRIVILLIG,
