@@ -9,8 +9,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
@@ -60,25 +61,25 @@ class BeregningService(
     private fun utledInput(
         studentVurdering: StudentVurdering?,
         yrkesskadevurdering: Yrkesskadevurdering?,
-        vurdering: BeregningVurdering?,
+        vurdering: BeregningGrunnlag?,
         inntekter: Set<InntektPerÅr>,
         uføregrad: Prosent?,
         registrerteYrkesskader: Yrkesskader?
     ): Inntektsbehov {
         return Inntektsbehov(
             Input(
-                nedsettelsesDato = utledNedsettelsesdato(vurdering, studentVurdering),
+                nedsettelsesDato = utledNedsettelsesdato(vurdering?.tidspunktVurdering, studentVurdering),
                 inntekter = inntekter,
                 uføregrad = uføregrad,
                 yrkesskadevurdering = yrkesskadevurdering,
-                beregningVurdering = vurdering,
+                beregningGrunnlag = vurdering,
                 registrerteYrkesskader = registrerteYrkesskader
             )
         )
     }
 
     private fun utledNedsettelsesdato(
-        beregningVurdering: BeregningVurdering?,
+        beregningVurdering: BeregningstidspunktVurdering?,
         studentVurdering: StudentVurdering?
     ): LocalDate {
         val nedsettelsesdatoer = setOf(

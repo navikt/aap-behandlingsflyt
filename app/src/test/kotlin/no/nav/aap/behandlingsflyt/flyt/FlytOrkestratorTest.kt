@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSet
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.BrevbestillingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBeregningstidspunktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
@@ -33,9 +34,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søkna
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.YrkesskadevurderingDto
 import no.nav.aap.behandlingsflyt.faktasaksbehandler.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.flyt.flate.Venteinformasjon
 import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
@@ -242,11 +244,11 @@ class FlytOrkestratorTest {
                 behandling.id,
                 LøsAvklaringsbehovBehandlingHendelse(
                     løsning = FastsettBeregningstidspunktLøsning(
-                        beregningVurdering = BeregningVurdering(
+                        beregningVurdering = BeregningstidspunktVurdering(
                             begrunnelse = "Trenger hjelp fra Nav",
                             nedsattArbeidsevneDato = LocalDate.now(),
                             ytterligereNedsattArbeidsevneDato = null,
-                            antattÅrligInntekt = null
+                            ytterligereNedsattBegrunnelse = null
                         ),
                     ),
                     behandlingVersjon = behandling.versjon,
@@ -588,11 +590,11 @@ class FlytOrkestratorTest {
                 behandling.id,
                 LøsAvklaringsbehovBehandlingHendelse(
                     løsning = FastsettBeregningstidspunktLøsning(
-                        beregningVurdering = BeregningVurdering(
+                        beregningVurdering = BeregningstidspunktVurdering(
                             begrunnelse = "Trenger hjelp fra Nav",
                             nedsattArbeidsevneDato = LocalDate.now(),
                             ytterligereNedsattArbeidsevneDato = null,
-                            antattÅrligInntekt = Beløp(700_000)
+                            ytterligereNedsattBegrunnelse = null
                         ),
                     ),
                     behandlingVersjon = behandling.versjon,
@@ -934,12 +936,32 @@ class FlytOrkestratorTest {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
                 LøsAvklaringsbehovBehandlingHendelse(
+                    løsning = AvklarYrkesskadeLøsning(
+                        yrkesskadesvurdering = YrkesskadevurderingDto(
+                            begrunnelse = "",
+                            relevanteSaker = listOf(),
+                            andelAvNedsettelsen = null,
+                            erÅrsakssammenheng = false
+                        )
+                    ),
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
+                )
+            )
+        }
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
+        behandling = hentBehandling(sak.id)
+
+        dataSource.transaction {
+            AvklaringsbehovHendelseHåndterer(it).håndtere(
+                behandling.id,
+                LøsAvklaringsbehovBehandlingHendelse(
                     løsning = FastsettBeregningstidspunktLøsning(
-                        beregningVurdering = BeregningVurdering(
+                        beregningVurdering = BeregningstidspunktVurdering(
                             begrunnelse = "Trenger hjelp fra Nav",
                             nedsattArbeidsevneDato = LocalDate.now(),
                             ytterligereNedsattArbeidsevneDato = null,
-                            antattÅrligInntekt = null
+                            ytterligereNedsattBegrunnelse = null
                         ),
                     ),
                     behandlingVersjon = behandling.versjon,

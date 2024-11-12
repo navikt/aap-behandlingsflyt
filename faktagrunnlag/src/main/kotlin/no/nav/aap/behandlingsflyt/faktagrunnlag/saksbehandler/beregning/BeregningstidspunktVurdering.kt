@@ -1,11 +1,12 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning
 
-import no.nav.aap.komponenter.verdityper.Beløp
+import com.fasterxml.jackson.annotation.JsonIgnore
 import java.time.LocalDate
 
-data class BeregningVurdering(
+data class BeregningstidspunktVurdering(
+    @JsonIgnore internal val id: Long? = null,
     val begrunnelse: String,
     val nedsattArbeidsevneDato: LocalDate,
+    val ytterligereNedsattBegrunnelse: String?,
     val ytterligereNedsattArbeidsevneDato: LocalDate?,
-    val antattÅrligInntekt: Beløp?
 )

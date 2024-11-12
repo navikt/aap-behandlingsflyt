@@ -7,7 +7,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Input
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
@@ -31,7 +34,7 @@ class BeregningTest {
                 ),
                 uføregrad = null,
                 yrkesskadevurdering = null,
-                beregningVurdering = null,
+                beregningGrunnlag = null,
                 registrerteYrkesskader = null
             )
         )
@@ -53,11 +56,13 @@ class BeregningTest {
                 ),
                 uføregrad = Prosent(30),
                 yrkesskadevurdering = null,
-                beregningVurdering = BeregningVurdering(
-                    begrunnelse = "test",
-                    nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
-                    ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
-                    antattÅrligInntekt = Beløp(500000)
+                beregningGrunnlag = BeregningGrunnlag(
+                    tidspunktVurdering = BeregningstidspunktVurdering(
+                        begrunnelse = "test",
+                        nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
+                        ytterligereNedsattBegrunnelse = "test2",
+                        ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
+                    ), yrkesskadeBeløpVurdering = null
                 ),
                 registrerteYrkesskader = null
             )
@@ -86,11 +91,22 @@ class BeregningTest {
                     erÅrsakssammenheng = true,
                     relevanteSaker = listOf("yrkesskadesaken"),
                 ),
-                beregningVurdering = BeregningVurdering(
-                    begrunnelse = "test",
-                    nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
-                    ytterligereNedsattArbeidsevneDato = null,
-                    antattÅrligInntekt = Beløp(500000)
+                beregningGrunnlag = BeregningGrunnlag(
+                    tidspunktVurdering = BeregningstidspunktVurdering(
+                        begrunnelse = "test",
+                        nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
+                        ytterligereNedsattArbeidsevneDato = null,
+                        ytterligereNedsattBegrunnelse = null
+                    ),
+                    yrkesskadeBeløpVurdering = BeregningYrkeskaderBeløpVurdering(
+                        vurderinger = listOf(
+                            YrkesskadeBeløpVurdering(
+                                antattÅrligInntekt = Beløp(500000),
+                                referanse = "yrkesskadesaken",
+                                begrunnelse = "asdf"
+                            )
+                        )
+                    )
                 ),
                 registrerteYrkesskader = Yrkesskader(
                     listOf(
@@ -127,11 +143,22 @@ class BeregningTest {
                     erÅrsakssammenheng = true,
                     relevanteSaker = listOf("yrkesskadesaken"),
                 ),
-                beregningVurdering = BeregningVurdering(
-                    begrunnelse = "test",
-                    nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
-                    ytterligereNedsattArbeidsevneDato = LocalDate.of(2020, 1, 1),
-                    antattÅrligInntekt = Beløp(500000)
+                beregningGrunnlag = BeregningGrunnlag(
+                    tidspunktVurdering = BeregningstidspunktVurdering(
+                        begrunnelse = "test",
+                        nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
+                        ytterligereNedsattBegrunnelse = "test2",
+                        ytterligereNedsattArbeidsevneDato = LocalDate.of(2020, 1, 1)
+                    ),
+                    yrkesskadeBeløpVurdering = BeregningYrkeskaderBeløpVurdering(
+                        vurderinger = listOf(
+                            YrkesskadeBeløpVurdering(
+                                antattÅrligInntekt = Beløp(500000),
+                                referanse = "yrkesskadesaken",
+                                begrunnelse = "asdf"
+                            )
+                        )
+                    )
                 ),
                 registrerteYrkesskader = Yrkesskader(
                     listOf(
@@ -163,11 +190,14 @@ class BeregningTest {
                 ),
                 uføregrad = Prosent(0),
                 yrkesskadevurdering = null,
-                beregningVurdering = BeregningVurdering(
-                    begrunnelse = "test",
-                    ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
-                    nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
-                    antattÅrligInntekt = Beløp(500000)
+                beregningGrunnlag = BeregningGrunnlag(
+                    tidspunktVurdering = BeregningstidspunktVurdering(
+                        begrunnelse = "test",
+                        ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
+                        nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
+                        ytterligereNedsattBegrunnelse = "test2"
+                    ),
+                    yrkesskadeBeløpVurdering = null
                 ),
                 registrerteYrkesskader = null
             )
@@ -183,11 +213,13 @@ class BeregningTest {
                 ),
                 uføregrad = null,
                 yrkesskadevurdering = null,
-                beregningVurdering = BeregningVurdering(
-                    begrunnelse = "test",
-                    ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
-                    nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
-                    antattÅrligInntekt = Beløp(500000)
+                beregningGrunnlag = BeregningGrunnlag(
+                    tidspunktVurdering = BeregningstidspunktVurdering(
+                        begrunnelse = "test",
+                        ytterligereNedsattArbeidsevneDato = null,
+                        nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
+                        ytterligereNedsattBegrunnelse = "asdf"
+                    ), yrkesskadeBeløpVurdering = null
                 ),
                 registrerteYrkesskader = null
             )

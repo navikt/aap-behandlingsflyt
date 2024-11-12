@@ -31,9 +31,13 @@ class FastsettGrunnlagSteg(
     private fun skalBeregneGrunnlag(vilkårsresultat: Vilkårsresultat): Boolean {
         val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
         val bistandsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
-        val sykepengerErstatningvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKEPENGEERSTATNING)
+        val sykepengerErstatningvilkåret = if (!bistandsvilkåret.harPerioderSomErOppfylt()) {
+            vilkårsresultat.finnVilkår(Vilkårtype.SYKEPENGEERSTATNING).harPerioderSomErOppfylt()
+        } else {
+            true
+        }
 
-        return sykdomsvilkåret.harPerioderSomErOppfylt() && (bistandsvilkåret.harPerioderSomErOppfylt() || sykepengerErstatningvilkåret.harPerioderSomErOppfylt())
+        return sykdomsvilkåret.harPerioderSomErOppfylt() && (bistandsvilkåret.harPerioderSomErOppfylt() || sykepengerErstatningvilkåret)
     }
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {

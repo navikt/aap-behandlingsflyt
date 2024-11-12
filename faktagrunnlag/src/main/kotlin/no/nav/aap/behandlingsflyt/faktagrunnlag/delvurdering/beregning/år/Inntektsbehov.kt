@@ -1,8 +1,10 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
-import no.nav.aap.komponenter.verdityper.Beløp
-import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.verdityper.Beløp
+import no.nav.aap.verdityper.GUnit
+import no.nav.aap.verdityper.Prosent
 import java.time.LocalDate
 import java.time.Year
 import java.util.SortedSet
@@ -16,7 +18,7 @@ class Inntektsbehov(private val input: Input) {
     }
 
     fun hentYtterligereNedsattArbeidsevneDato(): LocalDate? {
-        return input.beregningVurdering?.ytterligereNedsattArbeidsevneDato
+        return input.beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
     }
 
     private fun treÅrForutFor(nedsettelsesdato: LocalDate): SortedSet<Year> {
@@ -29,7 +31,7 @@ class Inntektsbehov(private val input: Input) {
     }
 
     fun utledForYtterligereNedsatt(): Set<InntektPerÅr> {
-        val ytterligereNedsettelsesDato = input.beregningVurdering?.ytterligereNedsattArbeidsevneDato
+        val ytterligereNedsettelsesDato = input.beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
         requireNotNull(ytterligereNedsettelsesDato)
         return filtrerInntekter(ytterligereNedsettelsesDato, input.inntekter)
     }
@@ -38,7 +40,7 @@ class Inntektsbehov(private val input: Input) {
      * Skal beregne med uføre om det finnes data på uføregrad.
      */
     fun finnesUføreData(): Boolean {
-        return input.beregningVurdering?.ytterligereNedsattArbeidsevneDato != null && input.uføregrad != null
+        return input.beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato != null && input.uføregrad != null
     }
 
     /**
@@ -46,7 +48,7 @@ class Inntektsbehov(private val input: Input) {
      * inntekt, så skal beregningen skje med yrkesskadefordel (§11-22)
      */
     fun yrkesskadeVurderingEksisterer(): Boolean {
-        return input.yrkesskadevurdering?.relevanteSaker?.isNotEmpty() == true && input.beregningVurdering?.antattÅrligInntekt != null && input.yrkesskadevurdering.andelAvNedsettelsen != null
+        return input.yrkesskadevurdering?.relevanteSaker?.isNotEmpty() == true && input.beregningGrunnlag?.yrkesskadeBeløpVurdering != null && input.yrkesskadevurdering.andelAvNedsettelsen != null
     }
 
     /**
@@ -73,17 +75,42 @@ class Inntektsbehov(private val input: Input) {
     }
 
     fun skadetidspunkt(): LocalDate {
-        val relevanteSaker = input.yrkesskadevurdering?.relevanteSaker ?: emptyList()
-
-        return requireNotNull(relevanteSaker.map { sak -> input.registrerteYrkesskader?.yrkesskader?.singleOrNull { it.ref == sak } }
-            .firstOrNull()?.skadedato)
+        return samleOpplysningerOmYrkesskade().max().skadedato
     }
 
     fun antattÅrligInntekt(): Beløp {
-        return requireNotNull(input.beregningVurdering?.antattÅrligInntekt)
+        return requireNotNull(samleOpplysningerOmYrkesskade().max().antattÅrligInntekt)
+    }
+
+    private fun samleOpplysningerOmYrkesskade(): List<YrkesskadeBeregning> {
+        // Finn den saken med størst beløp basert på antall G på skadetidspunktet
+        val relevanteSaker = input.yrkesskadevurdering?.relevanteSaker ?: emptyList()
+        val sakerMedDato =
+            relevanteSaker.map { sak -> input.registrerteYrkesskader?.yrkesskader?.singleOrNull { it.ref == sak } }
+
+        return sakerMedDato.filterNotNull().map { sak ->
+            YrkesskadeBeregning(
+                sak.ref,
+                sak.skadedato,
+                input.beregningGrunnlag?.yrkesskadeBeløpVurdering?.vurderinger?.first { it.referanse == sak.ref }?.antattÅrligInntekt!!
+            )
+        }
     }
 
     fun andelYrkesskade(): Prosent {
         return requireNotNull(input.yrkesskadevurdering?.andelAvNedsettelsen)
     }
+}
+
+private data class YrkesskadeBeregning(val ref: String, val skadedato: LocalDate, val antattÅrligInntekt: Beløp) :
+    Comparable<YrkesskadeBeregning> {
+
+    fun gUnit(): GUnit {
+        return Grunnbeløp.finnGUnit(skadedato, antattÅrligInntekt).gUnit
+    }
+
+    override fun compareTo(other: YrkesskadeBeregning): Int {
+        return gUnit().compareTo(other.gUnit())
+    }
+
 }

@@ -11,8 +11,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
@@ -49,7 +49,7 @@ class InntektService private constructor(
             val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
 
             val sak = sakService.hent(kontekst.sakId)
-            val nedsettelsesDato = utledNedsettelsesdato(beregningVurdering, studentGrunnlag);
+            val nedsettelsesDato = utledNedsettelsesdato(beregningVurdering?.tidspunktVurdering, studentGrunnlag);
             val behov = Inntektsbehov(
                 Input(
                     nedsettelsesDato = nedsettelsesDato,
@@ -57,7 +57,7 @@ class InntektService private constructor(
                     uføregrad = Prosent.`0_PROSENT`,
                     yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
                     registrerteYrkesskader = yrkesskadeGrunnlag?.yrkesskader,
-                    beregningVurdering = beregningVurdering
+                    beregningGrunnlag = beregningVurdering
                 )
             )
             val inntektsBehov = behov.utledAlleRelevanteÅr()
@@ -79,7 +79,7 @@ class InntektService private constructor(
         return sykdomsvilkåret.harPerioderSomErOppfylt() && bistandsvilkåret.harPerioderSomErOppfylt()
     }
 
-    private fun utledNedsettelsesdato(beregningVurdering: BeregningVurdering?, studentGrunnlag: StudentGrunnlag?): LocalDate {
+    private fun utledNedsettelsesdato(beregningVurdering: BeregningstidspunktVurdering?, studentGrunnlag: StudentGrunnlag?): LocalDate {
         val nedsettelsesdatoer = setOf(
             beregningVurdering?.nedsattArbeidsevneDato,
             studentGrunnlag?.studentvurdering?.avbruttStudieDato

@@ -2,9 +2,9 @@ package no.nav.aap.behandlingsflyt.behandling.beregning.år
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Input
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurdering
-import no.nav.aap.komponenter.verdityper.Beløp
-import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
+import no.nav.aap.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -21,7 +21,7 @@ class InntektsbehovTest {
                 inntekter = setOf(),
                 uføregrad = Prosent.`0_PROSENT`,
                 yrkesskadevurdering = null,
-                beregningVurdering = null,
+                beregningGrunnlag = null,
                 registrerteYrkesskader = null
             )
         ).utledAlleRelevanteÅr()
@@ -47,11 +47,13 @@ class InntektsbehovTest {
                 Prosent.`0_PROSENT`,
                 null,
                 null,
-                BeregningVurdering(
-                    begrunnelse = "asdf",
-                    ytterligereNedsattArbeidsevneDato = ytterligereNedsattDato,
-                    nedsattArbeidsevneDato = nedsettelsesDato,
-                    antattÅrligInntekt = Beløp(100)
+                BeregningGrunnlag(
+                    tidspunktVurdering = BeregningstidspunktVurdering(
+                        begrunnelse = "asdf",
+                        ytterligereNedsattArbeidsevneDato = ytterligereNedsattDato,
+                        nedsattArbeidsevneDato = nedsettelsesDato,
+                        ytterligereNedsattBegrunnelse = "asdf"
+                    ), yrkesskadeBeløpVurdering = null
                 ),
             )
         ).utledAlleRelevanteÅr()
@@ -80,11 +82,13 @@ class InntektsbehovTest {
                 uføregrad = Prosent.`30_PROSENT`,
                 yrkesskadevurdering = null,
                 registrerteYrkesskader = null,
-                beregningVurdering = BeregningVurdering(
-                    begrunnelse = "begrunnelse",
-                    antattÅrligInntekt = Beløp(123456),
-                    nedsattArbeidsevneDato = nedsettelsesDato,
-                    ytterligereNedsattArbeidsevneDato = LocalDate.now().minusYears(10)
+                beregningGrunnlag = BeregningGrunnlag(
+                    tidspunktVurdering = BeregningstidspunktVurdering(
+                        begrunnelse = "begrunnelse",
+                        nedsattArbeidsevneDato = nedsettelsesDato,
+                        ytterligereNedsattArbeidsevneDato = LocalDate.now().minusYears(10),
+                        ytterligereNedsattBegrunnelse = "begrunnelse"
+                    ), yrkesskadeBeløpVurdering = null
                 )
             )
         )
