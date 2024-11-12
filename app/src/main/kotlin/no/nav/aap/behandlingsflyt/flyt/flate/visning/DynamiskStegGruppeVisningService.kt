@@ -11,7 +11,9 @@ class DynamiskStegGruppeVisningService(private val connection: DBConnection) {
 
     init {
         StegGruppeVisningUtleder::class.sealedSubclasses.forEach { utleder ->
-            val visningUtleder = utleder.primaryConstructor!!.call(connection)
+            val visningUtleder = utleder.constructors
+                .find { it.parameters.singleOrNull()?.type?.classifier == DBConnection::class }!!
+                .call(connection)
             utledere[visningUtleder.gruppe()] = visningUtleder
         }
     }
