@@ -1,0 +1,30 @@
+name: Generer openapi schema
+
+on: workflow_dispatch
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            id-token: write
+            packages: write
+            checks: write
+        steps:
+            - uses: actions/checkout@v4
+            -   uses: actions/setup-java@v4.3.0
+                with:
+                    java-version: 23
+                    distribution: 'temurin'
+            - name: Setup Gradle for a non-wrapper project
+              uses: gradle/actions/setup-gradle@v4
+              with:
+                  gradle-version: wrapper
+            - name: runTestApp og generer json/yml fil fra backend
+              run: curl http://localhost:8080/openapi.json -o schema.json
+            - name: generer json/yml fil fra backend
+            - name: lag schema med openapi-typescript
+            - name: sammenlign schemas og se om det må publiseres ny verson
+            - name: lag changeset-fil
+            - name: kjør yarn changeset version
+            - name: commit og push til navikt/aap-backend-typescript-types
