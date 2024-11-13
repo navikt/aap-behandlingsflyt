@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.verdityper.TimerArbeid
+import no.nav.aap.komponenter.verdityper.TimerArbeid
 import java.math.BigDecimal
 import java.math.RoundingMode
 

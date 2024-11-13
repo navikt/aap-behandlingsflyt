@@ -9,7 +9,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.StandardSammenslåere
 import no.nav.aap.tidslinje.Tidslinje
-import no.nav.aap.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.Beløp
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows

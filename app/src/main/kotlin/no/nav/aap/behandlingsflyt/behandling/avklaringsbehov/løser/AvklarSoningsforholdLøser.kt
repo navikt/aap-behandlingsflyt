@@ -12,7 +12,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tidslinje.StandardSammenslåere
 import no.nav.aap.tidslinje.Tidslinje
-import no.nav.aap.verdityper.Tid
+import no.nav.aap.komponenter.verdityper.Tid
 
 class AvklarSoningsforholdLøser(connection: DBConnection) : AvklaringsbehovsLøser<AvklarSoningsforholdLøsning> {
 

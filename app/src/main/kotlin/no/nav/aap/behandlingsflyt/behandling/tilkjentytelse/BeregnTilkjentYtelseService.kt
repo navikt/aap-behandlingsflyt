@@ -10,9 +10,9 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tidslinje.JoinStyle
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.Tidslinje
-import no.nav.aap.verdityper.Beløp
-import no.nav.aap.verdityper.GUnit
-import no.nav.aap.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.GUnit
+import no.nav.aap.komponenter.verdityper.Prosent
 
 
 class BeregnTilkjentYtelseService(

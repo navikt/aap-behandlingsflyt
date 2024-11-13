@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
-import no.nav.aap.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Prosent
 
 /**
  * @param grunnlag11_19 Beregningsgrunnlag, muligens justert etter uføregrad.

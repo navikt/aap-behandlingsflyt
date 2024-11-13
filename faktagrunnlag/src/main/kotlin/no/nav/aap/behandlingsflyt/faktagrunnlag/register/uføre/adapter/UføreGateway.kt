@@ -12,7 +12,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.get
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.uføre.UføreRequest
-import no.nav.aap.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Prosent
 import java.net.URI
 import java.time.format.DateTimeFormatter
 

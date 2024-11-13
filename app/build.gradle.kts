@@ -54,7 +54,7 @@ fun getCheckedOutGitCommitHash(): String {
 }
 
 
-val komponenterVersjon = "1.0.55"
+val komponenterVersjon = "1.0.58"
 
 dependencies {
     implementation("io.ktor:ktor-server-cors:$ktorVersion")
@@ -73,6 +73,7 @@ dependencies {
     implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:infrastructure:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:server:$komponenterVersjon")
+    implementation("no.nav.aap.kelvin:verdityper:$komponenterVersjon")
 
     implementation(project(":integrasjon"))
     implementation(project(":sakogbehandling"))

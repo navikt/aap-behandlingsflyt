@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 
 import no.nav.aap.tidslinje.Segment
-import no.nav.aap.verdityper.GUnit
+import no.nav.aap.komponenter.verdityper.GUnit
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate

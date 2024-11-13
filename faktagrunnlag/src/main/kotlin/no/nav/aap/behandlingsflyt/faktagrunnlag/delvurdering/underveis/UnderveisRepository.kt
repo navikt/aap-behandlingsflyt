@@ -4,9 +4,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Faktagrunnlag
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
-import no.nav.aap.verdityper.Dagsatser
-import no.nav.aap.verdityper.Prosent
-import no.nav.aap.verdityper.TimerArbeid
+import no.nav.aap.komponenter.verdityper.Dagsatser
+import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
 class UnderveisRepository(private val connection: DBConnection) {

@@ -25,7 +25,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.Arbeid
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.tidslinje.Tidslinje
-import no.nav.aap.verdityper.Dagsatser
+import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import kotlin.reflect.KClass
 

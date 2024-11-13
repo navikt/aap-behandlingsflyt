@@ -7,9 +7,9 @@ import no.nav.aap.tidslinje.JoinStyle
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.StandardSammenslåere
 import no.nav.aap.tidslinje.Tidslinje
-import no.nav.aap.verdityper.Prosent
-import no.nav.aap.verdityper.Prosent.Companion.`0_PROSENT`
-import no.nav.aap.verdityper.TimerArbeid
+import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
+import no.nav.aap.komponenter.verdityper.TimerArbeid
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.Period

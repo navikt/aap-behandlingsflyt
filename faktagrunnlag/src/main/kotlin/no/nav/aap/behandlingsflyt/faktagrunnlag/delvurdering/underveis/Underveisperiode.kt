@@ -2,8 +2,8 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.verdityper.Dagsatser
-import no.nav.aap.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Dagsatser
+import no.nav.aap.komponenter.verdityper.Prosent
 import java.util.*
 
 class Underveisperiode(

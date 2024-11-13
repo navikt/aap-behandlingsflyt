@@ -1,8 +1,8 @@
 package no.nav.aap.tidslinje
 
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.verdityper.Beløp
-import no.nav.aap.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate

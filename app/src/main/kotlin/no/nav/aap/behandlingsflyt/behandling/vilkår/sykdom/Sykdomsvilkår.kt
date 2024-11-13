@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.Tidslinje
-import no.nav.aap.verdityper.Tid
+import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
 
 class Sykdomsvilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<SykdomsFaktagrunnlag> {

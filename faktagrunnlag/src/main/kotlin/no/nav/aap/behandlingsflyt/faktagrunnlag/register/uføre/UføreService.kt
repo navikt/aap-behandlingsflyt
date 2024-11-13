@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.adapter.UføreGa
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
 import no.nav.aap.verdityper.flyt.Vurdering
 

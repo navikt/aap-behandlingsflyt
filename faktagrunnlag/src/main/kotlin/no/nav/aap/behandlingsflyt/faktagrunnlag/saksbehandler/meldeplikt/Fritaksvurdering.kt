@@ -6,7 +6,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.StandardSammenslåere
 import no.nav.aap.tidslinje.Tidslinje
-import no.nav.aap.verdityper.Tid
+import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
 import java.time.LocalDateTime
 

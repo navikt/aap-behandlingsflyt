@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt
 
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
-import no.nav.aap.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import java.time.Year
 

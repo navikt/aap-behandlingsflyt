@@ -1,5 +1,5 @@
 val ktorVersion = "3.0.1"
-val komponenterVersjon = "1.0.55"
+val komponenterVersjon = "1.0.58"
 
 plugins {
     id("behandlingsflyt.conventions")
@@ -16,6 +16,7 @@ dependencies {
     implementation("no.nav.aap.kelvin:infrastructure:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:dbconnect:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:dbmigrering:$komponenterVersjon")
+    implementation("no.nav.aap.kelvin:verdityper:$komponenterVersjon")
     implementation("no.nav:ktor-openapi-generator:1.0.46")
     implementation("io.ktor:ktor-http-jvm:$ktorVersion")
     implementation("com.zaxxer:HikariCP:6.0.0")

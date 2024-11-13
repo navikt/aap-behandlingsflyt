@@ -17,8 +17,8 @@ import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tidslinje.Segment
 import no.nav.aap.tidslinje.Tidslinje
-import no.nav.aap.verdityper.Prosent
-import no.nav.aap.verdityper.TimerArbeid
+import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.TimerArbeid
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal

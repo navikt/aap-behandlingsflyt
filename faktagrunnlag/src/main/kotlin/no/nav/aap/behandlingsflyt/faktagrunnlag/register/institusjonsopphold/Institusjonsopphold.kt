@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold
 
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.verdityper.Tid
+import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
 
 class Institusjonsopphold(

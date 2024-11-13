@@ -7,8 +7,8 @@ import no.nav.aap.behandlingsflyt.test.FiktivtNavnGenerator
 import no.nav.aap.behandlingsflyt.test.FødselsnummerGenerator
 import no.nav.aap.behandlingsflyt.test.PersonNavn
 import no.nav.aap.institusjon.Institusjonsopphold
-import no.nav.aap.verdityper.Beløp
-import no.nav.aap.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import java.time.LocalDate
 import java.time.Year

@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soning
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tidslinje.StandardSammenslåere
 import no.nav.aap.tidslinje.Tidslinje
-import no.nav.aap.verdityper.Tid
+import no.nav.aap.komponenter.verdityper.Tid
 
 data class Soningsvurderinger(internal val id: Long? = null, val vurderinger: List<Soningsvurdering>) {
     fun tilTidslinje(): Tidslinje<Soningsvurdering> {
