@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting
 
 import com.papsign.ktor.openapigen.annotations.parameters.PathParam
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.DokumentasjonType
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import java.util.*
 
 data class BestillLegeerklæringDto (
     val behandlerRef: String,
@@ -11,7 +11,7 @@ data class BestillLegeerklæringDto (
     val fritekst: String,
     val saksnummer: String,
     val dokumentasjonType: DokumentasjonType,
-    val behandlingsReferanse: BehandlingReferanse
+    val behandlingsReferanse: UUID
 )
 
 data class ForhåndsvisBrevRequest (
