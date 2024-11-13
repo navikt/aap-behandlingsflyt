@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UtledMeldeperiodeRegel.Companion.groupByMeldeperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak.IKKE_OVERHOLDT_MELDEPLIKT_SANKSJON
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak.MELDEPLIKT_FRIST_IKKE_PASSERT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.IKKE_OPPFYLT
@@ -50,7 +49,15 @@ class MeldepliktRegel(
                 Segment(periode, MeldepliktData(fritaksvurdering?.verdi, dokument?.verdi))
             })
 
-        val groupByMeldeperiode = groupByMeldeperiode(resultat, meldepliktTidslinje).segmenter()
+        val groupByMeldeperiode = meldepliktTidslinje.splittOppIPerioder(
+            resultat.mapNotNull { vurdering ->
+                vurdering.verdi.meldeperiode?.let {
+                    it.utvid(
+                        Periode(it.fom, it.fom.plusDays(7))
+                    )
+                }
+            }
+        ).segmenter()
 
         if (groupByMeldeperiode.isEmpty()) return resultat
 

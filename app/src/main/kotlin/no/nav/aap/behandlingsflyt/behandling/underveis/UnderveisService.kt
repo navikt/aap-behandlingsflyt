@@ -81,7 +81,7 @@ class UnderveisService(
                 .map {
                     Underveisperiode(
                         periode = it.periode,
-                        meldePeriode = it.verdi.meldeperiode(),
+                        meldePeriode = it.verdi.meldeperiode,
                         utfall = it.verdi.utfall(),
                         avslagsårsak = it.verdi.avslagsårsak(),
                         grenseverdi = it.verdi.grenseverdi(),

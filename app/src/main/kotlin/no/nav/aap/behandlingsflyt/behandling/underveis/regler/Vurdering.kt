@@ -25,7 +25,7 @@ data class Vurdering(
     private val grenseverdi: Prosent? = null,
     internal val institusjonVurdering: InstitusjonVurdering? = null,
     internal val soningsVurdering: SoningVurdering? = null,
-    internal val meldeperiode: Periode? = null,
+    val meldeperiode: Periode? = null,
 ) {
 
     fun leggTilVurdering(vilkårtype: Vilkårtype, utfall: Utfall): Vurdering {
@@ -158,10 +158,6 @@ data class Vurdering(
 
     internal fun meldeplikAvslagsårsak(): UnderveisÅrsak? {
         return meldepliktVurdering?.årsak
-    }
-
-    fun meldeperiode(): Periode? {
-        return meldeperiode
     }
 
     fun skalReduseresDagsatser(): Boolean {

@@ -274,6 +274,33 @@ class Tidslinje<T>(initSegmenter: NavigableSet<Segment<T>> = TreeSet()) : Iterab
         return splittOppOgGrupper(førsteDagFørsteKalenderår, sisteDagSisteKalenderår, Period.ofYears(1))
     }
 
+    fun splittOppIPerioder(
+        perioder: List<Periode>,
+    ): Tidslinje<Tidslinje<T>> {
+        val perioderÅSplitteOppI: Tidslinje<Periode> = perioder
+            .map { periode -> Segment(periode, periode) }
+            .let { Tidslinje(it) }
+
+        val verdierMedPeriodeTidslinje: Tidslinje<Segment<T>> =
+            perioderÅSplitteOppI.kombiner(this, JoinStyle.RIGHT_JOIN { periode, splittPeriode, tSegment ->
+                if (splittPeriode == null) {
+                    null
+                } else {
+                    Segment(periode, Segment(splittPeriode.verdi, tSegment.verdi))
+                }
+            })
+
+        return verdierMedPeriodeTidslinje
+            .groupBy(
+                { segment -> segment.verdi.periode },
+                { segment -> Segment(segment.periode, segment.verdi.verdi) }
+            )
+            .map { (splittPeriode, segmenter) ->
+                Segment(splittPeriode, Tidslinje(segmenter))
+            }
+            .let { Tidslinje(it) }
+    }
+
     /**
      * Henter segmentet som inneholder datoen
      */
