@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovHendelseHåndterer
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehovBehandlingHendelse
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehovHendelse
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.ÅrsakTilReturKode
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
@@ -92,7 +92,8 @@ class FlytOrkestratorTest {
         private val dataSource = InitTestDatabase.dataSource
         private val motor = Motor(dataSource, 2, jobber = ProsesseringsJobber.alle())
         private val hendelsesMottak = TestHendelsesMottak(dataSource)
-        private val util = TestUtil(dataSource, ProsesseringsJobber.alle().filter { it.cron() != null }.map { it.type() })
+        private val util =
+            TestUtil(dataSource, ProsesseringsJobber.alle().filter { it.cron() != null }.map { it.type() })
 
         @BeforeAll
         @JvmStatic
@@ -174,7 +175,7 @@ class FlytOrkestratorTest {
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = AvklarSykdomLøsning(
                         sykdomsvurdering = SykdomsvurderingDto(
                             begrunnelse = "Er syk nok",
@@ -201,7 +202,7 @@ class FlytOrkestratorTest {
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = AvklarBistandsbehovLøsning(
                         bistandsVurdering = BistandVurderingDto(
                             begrunnelse = "Trenger hjelp fra nav",
@@ -222,7 +223,7 @@ class FlytOrkestratorTest {
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, it)
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = KvalitetssikringLøsning(avklaringsbehov.alle()
                         .filter { behov -> behov.erTotrinn() }
                         .map { behov ->
@@ -251,7 +252,7 @@ class FlytOrkestratorTest {
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = ForeslåVedtakLøsning(),
                     behandlingVersjon = behandling.versjon,
                     bruker = Bruker("SAKSBEHANDLER")
@@ -265,7 +266,7 @@ class FlytOrkestratorTest {
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
             AvklaringsbehovHendelseHåndterer(connection).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = FatteVedtakLøsning(avklaringsbehov.alle()
                         .filter { behov -> behov.erTotrinn() }
                         .map { behov ->
@@ -291,7 +292,7 @@ class FlytOrkestratorTest {
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = AvklarSykdomLøsning(
                         sykdomsvurdering = SykdomsvurderingDto(
                             begrunnelse = "Er syk nok",
@@ -318,7 +319,7 @@ class FlytOrkestratorTest {
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = AvklarBistandsbehovLøsning(
                         bistandsVurdering = BistandVurderingDto(
                             begrunnelse = "Trenger hjelp fra nav",
@@ -344,7 +345,7 @@ class FlytOrkestratorTest {
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = ForeslåVedtakLøsning(),
                     behandlingVersjon = behandling.versjon,
                     bruker = Bruker("SAKSBEHANDLER")
@@ -365,7 +366,7 @@ class FlytOrkestratorTest {
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
             AvklaringsbehovHendelseHåndterer(connection).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = FatteVedtakLøsning(avklaringsbehov.alle()
                         .filter { behov -> behov.erTotrinn() }
                         .map { behov -> TotrinnsVurdering(behov.definisjon.kode, true, "begrunnelse", emptyList()) }),
@@ -388,7 +389,7 @@ class FlytOrkestratorTest {
             val brevbestilling = BrevbestillingRepository(connection).hent(behandling.id, TypeBrev.VEDTAK_INNVILGELSE)!!
             AvklaringsbehovHendelseHåndterer(connection).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = BrevbestillingLøsning(
                         LøsBrevbestillingDto(
                             behandlingReferanse = behandling.referanse.referanse,
@@ -418,7 +419,7 @@ class FlytOrkestratorTest {
             val brevbestilling = BrevbestillingRepository(connection).hent(behandling.id, TypeBrev.VEDTAK_INNVILGELSE)!!
             AvklaringsbehovHendelseHåndterer(connection).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = SkrivBrevLøsning(brevbestillingReferanse = brevbestilling.referanse),
                     behandlingVersjon = behandling.versjon,
                     bruker = Bruker("SAKSBEHANDLER")
@@ -504,7 +505,7 @@ class FlytOrkestratorTest {
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = AvklarSykdomLøsning(
                         sykdomsvurdering = SykdomsvurderingDto(
                             begrunnelse = "Er syk nok",
@@ -531,7 +532,7 @@ class FlytOrkestratorTest {
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = AvklarBistandsbehovLøsning(
                         bistandsVurdering = BistandVurderingDto(
                             begrunnelse = "Trenger hjelp fra nav",
@@ -552,7 +553,7 @@ class FlytOrkestratorTest {
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, it)
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = KvalitetssikringLøsning(avklaringsbehov.alle()
                         .filter { behov -> behov.erTotrinn() }
                         .map { behov ->
@@ -574,7 +575,7 @@ class FlytOrkestratorTest {
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = FastsettBeregningstidspunktLøsning(
                         beregningVurdering = BeregningVurdering(
                             begrunnelse = "Trenger hjelp fra Nav",
@@ -600,7 +601,7 @@ class FlytOrkestratorTest {
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = ForeslåVedtakLøsning(),
                     behandlingVersjon = behandling.versjon,
                     bruker = Bruker("SAKSBEHANDLER")
@@ -621,7 +622,7 @@ class FlytOrkestratorTest {
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
             AvklaringsbehovHendelseHåndterer(connection).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = FatteVedtakLøsning(avklaringsbehov.alle()
                         .filter { behov -> behov.erTotrinn() }
                         .map { behov -> TotrinnsVurdering(behov.definisjon.kode, true, "begrunnelse", emptyList()) }),
@@ -644,7 +645,7 @@ class FlytOrkestratorTest {
             val brevbestilling = BrevbestillingRepository(connection).hent(behandling.id, TypeBrev.VEDTAK_INNVILGELSE)!!
             AvklaringsbehovHendelseHåndterer(connection).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = BrevbestillingLøsning(
                         LøsBrevbestillingDto(
                             behandlingReferanse = behandling.referanse.referanse,
@@ -674,7 +675,7 @@ class FlytOrkestratorTest {
             val brevbestilling = BrevbestillingRepository(connection).hent(behandling.id, TypeBrev.VEDTAK_INNVILGELSE)!!
             AvklaringsbehovHendelseHåndterer(connection).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = SkrivBrevLøsning(brevbestillingReferanse = brevbestilling.referanse),
                     behandlingVersjon = behandling.versjon,
                     bruker = Bruker("SAKSBEHANDLER")
@@ -820,7 +821,7 @@ class FlytOrkestratorTest {
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = AvklarStudentLøsning(
                         studentvurdering = StudentVurdering(
                             begrunnelse = "Er student",
@@ -843,7 +844,7 @@ class FlytOrkestratorTest {
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = AvklarSykdomLøsning(
                         sykdomsvurdering = SykdomsvurderingDto(
                             begrunnelse = "Arbeidsevnen er nedsatt med mer enn halvparten",
@@ -870,7 +871,7 @@ class FlytOrkestratorTest {
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = AvklarBistandsbehovLøsning(
                         bistandsVurdering = BistandVurderingDto(
                             begrunnelse = "Trenger hjelp fra nav",
@@ -900,7 +901,7 @@ class FlytOrkestratorTest {
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, it)
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = KvalitetssikringLøsning(avklaringsbehov.alle()
                         .filter { behov -> behov.kreverKvalitetssikring() }
                         .map { behov ->
@@ -922,7 +923,7 @@ class FlytOrkestratorTest {
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = ForeslåVedtakLøsning(),
                     behandlingVersjon = behandling.versjon,
                     bruker = Bruker("SAKSBEHANDLER")
@@ -943,7 +944,7 @@ class FlytOrkestratorTest {
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
             AvklaringsbehovHendelseHåndterer(connection).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = FatteVedtakLøsning(avklaringsbehov.alle()
                         .filter { behov -> behov.erTotrinn() }
                         .map { behov ->
@@ -971,7 +972,7 @@ class FlytOrkestratorTest {
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = AvklarSykdomLøsning(
                         sykdomsvurdering = SykdomsvurderingDto(
                             begrunnelse = "Er syk nok",
@@ -1006,7 +1007,7 @@ class FlytOrkestratorTest {
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = ForeslåVedtakLøsning(),
                     behandlingVersjon = behandling.versjon,
                     bruker = Bruker("SAKSBEHANDLER")
@@ -1027,7 +1028,7 @@ class FlytOrkestratorTest {
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
             AvklaringsbehovHendelseHåndterer(connection).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = FatteVedtakLøsning(avklaringsbehov.alle()
                         .filter { behov -> behov.erTotrinn() }
                         .map { behov -> TotrinnsVurdering(behov.definisjon.kode, true, "begrunnelse", emptyList()) }),
@@ -1137,7 +1138,7 @@ class FlytOrkestratorTest {
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = AvklarSykdomLøsning(
                         sykdomsvurdering = SykdomsvurderingDto(
                             begrunnelse = "Er syk nok",
@@ -1169,7 +1170,7 @@ class FlytOrkestratorTest {
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = AvklarBistandsbehovLøsning(
                         bistandsVurdering = BistandVurderingDto(
                             begrunnelse = "Trenger ikke hjelp fra nav",
@@ -1195,7 +1196,7 @@ class FlytOrkestratorTest {
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, it)
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = KvalitetssikringLøsning(avklaringsbehov.alle()
                         .filter { behov -> behov.erTotrinn() }
                         .map { behov ->
@@ -1217,7 +1218,7 @@ class FlytOrkestratorTest {
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = ForeslåVedtakLøsning(),
                     behandlingVersjon = behandling.versjon,
                     bruker = Bruker("SAKSBEHANDLER")
@@ -1236,7 +1237,7 @@ class FlytOrkestratorTest {
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
             AvklaringsbehovHendelseHåndterer(connection).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = FatteVedtakLøsning(avklaringsbehov.alle()
                         .filter { behov -> behov.erTotrinn() }
                         .map { behov -> TotrinnsVurdering(behov.definisjon.kode, true, "begrunnelse", emptyList()) }),
@@ -1252,7 +1253,7 @@ class FlytOrkestratorTest {
             val brevbestilling = BrevbestillingRepository(connection).hent(behandling.id, TypeBrev.VEDTAK_AVSLAG)!!
             AvklaringsbehovHendelseHåndterer(connection).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = BrevbestillingLøsning(
                         LøsBrevbestillingDto(
                             behandlingReferanse = behandling.referanse.referanse,
@@ -1272,7 +1273,7 @@ class FlytOrkestratorTest {
             val brevbestilling = BrevbestillingRepository(connection).hent(behandling.id, TypeBrev.VEDTAK_AVSLAG)!!
             AvklaringsbehovHendelseHåndterer(connection).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = SkrivBrevLøsning(brevbestillingReferanse = brevbestilling.referanse),
                     behandlingVersjon = behandling.versjon,
                     bruker = Bruker("SAKSBEHANDLER")
@@ -1343,7 +1344,7 @@ class FlytOrkestratorTest {
             val avklaringsbehovene = hentAvklaringsbehov(behandling.id, connection)
 
             if (avklaringsbehovene.erSattPåVent()) {
-                val avklaringsbehov = avklaringsbehovene.hentVentepunkter().first()
+                val avklaringsbehov = avklaringsbehovene.hentÅpneVentebehov().first()
                 Venteinformasjon(avklaringsbehov.frist(), avklaringsbehov.begrunnelse(), avklaringsbehov.grunn())
             } else {
                 null

@@ -16,7 +16,7 @@ class AvklaringsbehovHendelseHåndterer(connection: DBConnection) {
         BehandlingHendelseService(FlytJobbRepository(connection), SakService(connection))
     )
 
-    fun håndtere(key: BehandlingId, hendelse: LøsAvklaringsbehovBehandlingHendelse) {
+    fun håndtere(key: BehandlingId, hendelse: LøsAvklaringsbehovHendelse) {
         val behandling = behandlingRepository.hent(key)
 
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)

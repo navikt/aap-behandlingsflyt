@@ -1,3 +1,3 @@
-package no.nav.aap.behandlingsflyt.hendelse.mottak
+package no.nav.aap.behandlingsflyt.flyt.internals
 
 class DokumentMottattBehandlingHendelse : BehandlingHendelse

@@ -10,4 +10,4 @@ class BehandlingSattPåVent(
     val grunn: ÅrsakTilSettPåVent,
     val bruker: Bruker,
     val behandlingVersjon: Long
-) : BehandlingHendelse
+)

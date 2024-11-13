@@ -7,7 +7,7 @@ import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovHendelseHåndterer
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.BehandlingTilstandValidator
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehovBehandlingHendelse
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehovHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -29,7 +29,7 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource) {
                             )
 
                             AvklaringsbehovHendelseHåndterer(connection).håndtere(
-                                key = lås.behandlingSkrivelås.id, hendelse = LøsAvklaringsbehovBehandlingHendelse(
+                                key = lås.behandlingSkrivelås.id, hendelse = LøsAvklaringsbehovHendelse(
                                     request.behov,
                                     request.ingenEndringIGruppe ?: false,
                                     request.behandlingVersjon,

@@ -8,6 +8,7 @@ import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import com.zaxxer.hikari.HikariDataSource
 import io.ktor.http.*
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.BehandlingTilstandValidator
@@ -22,7 +23,7 @@ import no.nav.aap.behandlingsflyt.flyt.flate.visning.Prosessering
 import no.nav.aap.behandlingsflyt.flyt.flate.visning.ProsesseringStatus
 import no.nav.aap.behandlingsflyt.flyt.flate.visning.Visning
 import no.nav.aap.behandlingsflyt.flyt.utledType
-import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingHendelseHåndterer
+import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -32,6 +33,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.bruker
@@ -159,9 +161,11 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
 
                     MDC.putCloseable("sakId", lås.sakSkrivelås.id.toString()).use {
                         MDC.putCloseable("behandlingId", lås.behandlingSkrivelås.id.toString()).use {
-                            BehandlingHendelseHåndterer(connection).håndtere(
-                                key = lås.behandlingSkrivelås.id,
-                                hendelse = BehandlingSattPåVent(
+                            AvklaringsbehovOrkestrator(
+                                connection,
+                                BehandlingHendelseService(FlytJobbRepository((connection)), SakService((connection)))
+                            ).settBehandlingPåVent(
+                                lås.behandlingSkrivelås.id, BehandlingSattPåVent(
                                     frist = body.frist,
                                     begrunnelse = body.begrunnelse,
                                     behandlingVersjon = body.behandlingVersjon,
@@ -195,7 +199,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
                     val behandling = behandling(connection, request)
                     val avklaringsbehovene = avklaringsbehov(connection, behandling.id)
 
-                    val ventepunkter = avklaringsbehovene.hentVentepunkter()
+                    val ventepunkter = avklaringsbehovene.hentÅpneVentebehov()
                     if (avklaringsbehovene.erSattPåVent()) {
                         val avklaringsbehov = ventepunkter.first()
                         Venteinformasjon(
