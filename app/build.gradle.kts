@@ -6,7 +6,7 @@ val ktorVersion = "3.0.1"
 
 plugins {
     id("behandlingsflyt.conventions")
-    id("io.ktor.plugin") version "3.0.0"
+    id("io.ktor.plugin") version "3.0.1"
 }
 
 application {
