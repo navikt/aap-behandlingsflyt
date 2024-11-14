@@ -23,7 +23,8 @@ data class LegeerklæringStatusResponse(
     val behandlerNavn: String,
     val personId: String,
     val saksnummer: String,
-    val opprettet: LocalDateTime
+    val opprettet: LocalDateTime,
+    val fritekst: String
 )
 
 data class BrevRequest(
