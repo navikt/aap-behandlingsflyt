@@ -17,6 +17,7 @@ jobs:
             packages: write
             checks: write
             actions: write
+            deployments: write
         steps:
             -   uses: actions/checkout@v4
             -   uses: actions/setup-java@v4.3.0
