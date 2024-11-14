@@ -45,6 +45,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 import no.nav.aap.pdl.HentPerson
 import no.nav.aap.pdl.HentPersonBolkResult
 import no.nav.aap.pdl.PDLDødsfall
@@ -928,7 +929,7 @@ object FakeServers : AutoCloseable {
             tokenProvider = ClientCredentialsTokenProvider
         )
         install(ContentNegotiation) {
-            jackson()
+            register(ContentType.Application.Json, JacksonConverter(objectMapper = DefaultJsonMapper.objectMapper(), true))
         }
         install(StatusPages) {
             exception<Throwable> { call, cause ->
