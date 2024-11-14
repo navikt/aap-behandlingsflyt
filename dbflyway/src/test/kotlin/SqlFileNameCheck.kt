@@ -10,8 +10,7 @@ class SqlFileNameCheck {
         val resourceFiles = File("src/main/resources/flyway/").listFiles()
 
         assertThat(resourceFiles).isNotEmpty
-        assertThat(resourceFiles!!.map { it.name }).anySatisfy { assertThat(it).contains("ø") }
-        assertThat(resourceFiles.map { it.name }).allSatisfy { assertThat(it).endsWith(".sql") }
+        assertThat(resourceFiles!!.map { it.name }).allSatisfy { assertThat(it).endsWith(".sql") }
         assertThat(resourceFiles.map { it.name })
             .allSatisfy { assertThat(it).matches(Pattern.compile("^V(?:\\d{1,4}\\.)+\\d+__[A-Za-z_-]+\\.sql$")) }
 
