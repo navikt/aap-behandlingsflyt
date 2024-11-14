@@ -121,9 +121,9 @@ class SykdomRepository(private val connection: DBConnection) {
 
         val query = """
             INSERT INTO SYKDOM_VURDERING 
-            (BEGRUNNELSE, ER_ARBEIDSEVNE_NEDSATT, HAR_SYKDOM_SKADE_LYTE, ER_SYKDOM_SKADE_LYTE_VESETLING_DEL, ER_NEDSETTELSE_MER_ENN_HALVPARTEN, ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE, ER_NEDSETTELSE_AV_EN_VISS_VARIGHET, YRKESSKADE_BEGRUNNELSE)
+            (BEGRUNNELSE, ER_ARBEIDSEVNE_NEDSATT, HAR_SYKDOM_SKADE_LYTE, ER_SYKDOM_SKADE_LYTE_VESETLING_DEL, ER_NEDSETTELSE_MER_ENN_HALVPARTEN, ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE, ER_NEDSETTELSE_AV_EN_VISS_VARIGHET, YRKESSKADE_BEGRUNNELSE, KODEVERK, DIAGNOSE)
             VALUES
-            (?, ?, ?, ?, ?, ?, ?, ?)
+            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """.trimIndent()
 
         val id = connection.executeReturnKey(query) {
@@ -136,6 +136,8 @@ class SykdomRepository(private val connection: DBConnection) {
                 setBoolean(6, vurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense)
                 setBoolean(7, vurdering.erNedsettelseIArbeidsevneAvEnVissVarighet)
                 setString(8, vurdering.yrkesskadeBegrunnelse)
+                setString(9, vurdering.kodeverk)
+                setString(10, vurdering.diagnose)
             }
         }
 
@@ -203,7 +205,7 @@ class SykdomRepository(private val connection: DBConnection) {
         }
         return connection.queryFirstOrNull(
             """
-            SELECT id, BEGRUNNELSE, HAR_SYKDOM_SKADE_LYTE, ER_SYKDOM_SKADE_LYTE_VESETLING_DEL, ER_NEDSETTELSE_MER_ENN_HALVPARTEN, ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE, ER_NEDSETTELSE_AV_EN_VISS_VARIGHET, ER_ARBEIDSEVNE_NEDSATT, YRKESSKADE_BEGRUNNELSE
+            SELECT id, BEGRUNNELSE, HAR_SYKDOM_SKADE_LYTE, ER_SYKDOM_SKADE_LYTE_VESETLING_DEL, ER_NEDSETTELSE_MER_ENN_HALVPARTEN, ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE, ER_NEDSETTELSE_AV_EN_VISS_VARIGHET, ER_ARBEIDSEVNE_NEDSATT, YRKESSKADE_BEGRUNNELSE, KODEVERK, DIAGNOSE
             FROM SYKDOM_VURDERING WHERE id = ?
             """.trimIndent()
         ) {
@@ -221,7 +223,9 @@ class SykdomRepository(private val connection: DBConnection) {
                     erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = row.getBooleanOrNull("ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE"),
                     erNedsettelseIArbeidsevneAvEnVissVarighet = row.getBooleanOrNull("ER_NEDSETTELSE_AV_EN_VISS_VARIGHET"),
                     erArbeidsevnenNedsatt = row.getBooleanOrNull("ER_ARBEIDSEVNE_NEDSATT"),
-                    yrkesskadeBegrunnelse = row.getStringOrNull("YRKESSKADE_BEGRUNNELSE")
+                    yrkesskadeBegrunnelse = row.getStringOrNull("YRKESSKADE_BEGRUNNELSE"),
+                    kodeverk = row.getStringOrNull("KODEVERK"),
+                    diagnose = row.getStringOrNull("DIAGNOSE")
                 )
             }
         }
