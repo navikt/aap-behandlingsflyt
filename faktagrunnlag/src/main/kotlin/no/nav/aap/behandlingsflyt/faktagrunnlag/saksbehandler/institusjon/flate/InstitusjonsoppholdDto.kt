@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
-import no.nav.aap.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.Segment
 import java.time.LocalDate
 
 enum class Status{

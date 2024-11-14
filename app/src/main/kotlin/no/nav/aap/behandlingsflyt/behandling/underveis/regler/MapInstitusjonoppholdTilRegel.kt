@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.etannetsted.Institusjon
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.InstitusjonsOpphold
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.Soning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.OppholdVurdering
-import no.nav.aap.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.Segment
 
 object MapInstitusjonoppholdTilRegel {
 

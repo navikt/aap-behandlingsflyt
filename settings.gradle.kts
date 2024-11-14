@@ -8,7 +8,6 @@ include(
     "sakogbehandling",
     "faktagrunnlag",
     "verdityper",
-    "tidslinje",
     "dbflyway",
     "dbtestdata",
     "integrasjon",
