@@ -47,7 +47,7 @@ jobs:
                           'POST /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches',
                           {
                               owner: 'navikt',
-                              repo: 'navikt/aap-backend-typescript-types',
+                              repo: 'aap-backend-typescript-types',
                               workflow_id: 'publish-and-release.yml',
                               ref: 'main',
                               'schema-json-string': jsonString
