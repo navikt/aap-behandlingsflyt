@@ -50,7 +50,7 @@ object UføreGateway : UføreRegisterGateway {
         }
 
         val fom = fomDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-        val request = UføreRequest(person.identer().map { it.identifikator }, fom)
+        val request = UføreRequest(person.identer().filter { it.aktivIdent }.map { it.identifikator }, fom)
         val uføreRes = query(request)
 
         if (uføreRes == null) return Uføre(uføregrad = Prosent.`0_PROSENT`)
