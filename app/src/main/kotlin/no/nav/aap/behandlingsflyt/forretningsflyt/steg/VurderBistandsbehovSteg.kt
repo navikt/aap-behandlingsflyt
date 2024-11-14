@@ -4,10 +4,13 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.bistand.BistandFaktagrunnla
 import no.nav.aap.behandlingsflyt.behandling.vilkår.bistand.Bistandsvilkåret
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -22,6 +25,7 @@ import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
 class VurderBistandsbehovSteg private constructor(
     private val bistandRepository: BistandRepository,
     private val studentRepository: StudentRepository,
+    private val sykdomsRepository: SykdomRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository
 ) : BehandlingSteg {
 
@@ -30,9 +34,9 @@ class VurderBistandsbehovSteg private constructor(
         if (kontekst.perioderTilVurdering.isNotEmpty()) {
             val bistandsGrunnlag = bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
             val studentGrunnlag = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
+            val sykdomsvurdering = sykdomsRepository.hentHvisEksisterer(kontekst.behandlingId)?.sykdomsvurdering
 
             val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-
 
             val studentVurdering = studentGrunnlag?.studentvurdering
 
@@ -51,7 +55,13 @@ class VurderBistandsbehovSteg private constructor(
 
             val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
 
-            if (harBehovForAvklaring(vilkår, kontekst.perioder(), studentVurdering?.erOppfylt() == true)) {
+            // TODO: Se på vurdering fra sykdom om viss varighet
+            if (erIkkeAvslagPåVilkårTidligere(vilkårsresultat, sykdomsvurdering) && harBehovForAvklaring(
+                    vilkår,
+                    kontekst.perioder(),
+                    studentVurdering?.erOppfylt() == true
+                )
+            ) {
                 return FantAvklaringsbehov(Definisjon.AVKLAR_BISTANDSBEHOV)
             }
         }
@@ -68,9 +78,19 @@ class VurderBistandsbehovSteg private constructor(
                 || harInnvilgetForStudentUtenÅVæreStudent(vilkår, erStudentStegOppfylt))
     }
 
+    private fun erIkkeAvslagPåVilkårTidligere(
+        vilkårsresultat: Vilkårsresultat,
+        sykdomsvurdering: Sykdomsvurdering?
+    ): Boolean {
+        return vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET)
+            .harPerioderSomErOppfylt() && sykdomsvurdering?.erNedsettelseIArbeidsevneAvEnVissVarighet != false
+    }
+
+
     private fun harInnvilgetForStudentUtenÅVæreStudent(vilkår: Vilkår, erStudentStegOppfylt: Boolean): Boolean {
 
-        return !erStudentStegOppfylt && vilkår.vilkårsperioder().any { it.innvilgelsesårsak == Innvilgelsesårsak.STUDENT }
+        return !erStudentStegOppfylt && vilkår.vilkårsperioder()
+            .any { it.innvilgelsesårsak == Innvilgelsesårsak.STUDENT }
     }
 
     companion object : FlytSteg {
@@ -78,6 +98,7 @@ class VurderBistandsbehovSteg private constructor(
             return VurderBistandsbehovSteg(
                 BistandRepository(connection),
                 StudentRepository(connection),
+                SykdomRepository(connection),
                 VilkårsresultatRepository(connection)
             )
         }

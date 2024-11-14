@@ -4,24 +4,27 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeName
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.FastsettBeregningstidspunktLøser
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.FastsettYrkesskadeInntektLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FASTSETT_BEREGNINGSTIDSPUNKT_KODE
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FASTSETT_YRKESSKADE_BELØP_KODE
 import no.nav.aap.komponenter.dbconnect.DBConnection
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeName(value = FASTSETT_BEREGNINGSTIDSPUNKT_KODE)
-class FastsettBeregningstidspunktLøsning(
-    @JsonProperty("beregningVurdering", required = true) val beregningVurdering: BeregningstidspunktVurdering,
+@JsonTypeName(value = FASTSETT_YRKESSKADE_BELØP_KODE)
+class FastsettYrkesskadeInntektLøsning(
+    @JsonProperty(
+        "yrkesskadeInntektVurdering",
+        required = true
+    ) val yrkesskadeInntektVurdering: BeregningYrkeskaderBeløpVurdering,
     @JsonProperty(
         "behovstype",
         required = true,
-        defaultValue = FASTSETT_BEREGNINGSTIDSPUNKT_KODE
-    ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5008`
+        defaultValue = FASTSETT_YRKESSKADE_BELØP_KODE
+    ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5014`
 ) : AvklaringsbehovLøsning {
     override fun løs(connection: DBConnection, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
-        return FastsettBeregningstidspunktLøser(connection).løs(kontekst, this)
+        return FastsettYrkesskadeInntektLøser(connection).løs(kontekst, this)
     }
 }

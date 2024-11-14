@@ -17,6 +17,8 @@ public const val AVKLAR_BARNETILLEGG_KODE: String = "5009"
 public const val AVKLAR_SONINGSFORRHOLD_KODE: String = "5010"
 public const val AVKLAR_HELSEINSTITUSJON_KODE: String = "5011"
 public const val AVKLAR_SAMORDNING_GRADERING_KODE: String = "5012"
+public const val AVKLAR_YRKESSKADE_KODE: String = "5013"
+public const val FASTSETT_YRKESSKADE_BELØP_KODE: String = "5014"
 public const val KVALITETSSIKRING_KODE: String = "5097"
 public const val FORESLÅ_VEDTAK_KODE: String = "5098"
 public const val FATTE_VEDTAK_KODE: String = "5099"
@@ -37,6 +39,8 @@ public enum class AvklaringsbehovKode {
     `5010`,
     `5011`,
     `5012`,
+    `5013`,
+    `5014`,
     `5097`,
     `5098`,
     `5099`,

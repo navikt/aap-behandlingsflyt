@@ -7,11 +7,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Input
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.faktasaksbehandler.student.StudentVurdering
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -24,7 +26,8 @@ class BeregningService(
     private val studentRepository: StudentRepository,
     private val uføreRepository: UføreRepository,
     private val beregningsgrunnlagRepository: BeregningsgrunnlagRepository,
-    private val beregningVurderingRepository: BeregningVurderingRepository
+    private val beregningVurderingRepository: BeregningVurderingRepository,
+    private val yrkesskadeRepository: YrkesskadeRepository
 ) {
 
     fun beregnGrunnlag(behandlingId: BehandlingId): Beregningsgrunnlag {
@@ -33,14 +36,15 @@ class BeregningService(
         val uføre = uføreRepository.hentHvisEksisterer(behandlingId)
         val student = studentRepository.hentHvisEksisterer(behandlingId)
         val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
+        val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
 
         val input = utledInput(
-            sykdomsvurdering = sykdomGrunnlag?.sykdomsvurdering,
             studentVurdering = student?.studentvurdering,
             yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
             vurdering = beregningVurdering,
             inntekter = inntektGrunnlag.inntekter,
-            uføregrad = uføre?.vurdering?.uføregrad
+            uføregrad = uføre?.vurdering?.uføregrad,
+            registrerteYrkesskader = yrkesskadeGrunnlag?.yrkesskader
         )
 
         val beregning = Beregning(input)
@@ -55,30 +59,31 @@ class BeregningService(
     }
 
     private fun utledInput(
-        sykdomsvurdering: Sykdomsvurdering?,
         studentVurdering: StudentVurdering?,
         yrkesskadevurdering: Yrkesskadevurdering?,
-        vurdering: BeregningVurdering?,
+        vurdering: BeregningGrunnlag?,
         inntekter: Set<InntektPerÅr>,
-        uføregrad: Prosent?
+        uføregrad: Prosent?,
+        registrerteYrkesskader: Yrkesskader?
     ): Inntektsbehov {
         return Inntektsbehov(
             Input(
-                nedsettelsesDato = utledNedsettelsesdato(sykdomsvurdering, studentVurdering),
+                nedsettelsesDato = utledNedsettelsesdato(vurdering?.tidspunktVurdering, studentVurdering),
                 inntekter = inntekter,
                 uføregrad = uføregrad,
                 yrkesskadevurdering = yrkesskadevurdering,
-                beregningVurdering = vurdering
+                beregningGrunnlag = vurdering,
+                registrerteYrkesskader = registrerteYrkesskader
             )
         )
     }
 
     private fun utledNedsettelsesdato(
-        sykdomsvurdering: Sykdomsvurdering?,
+        beregningVurdering: BeregningstidspunktVurdering?,
         studentVurdering: StudentVurdering?
     ): LocalDate {
         val nedsettelsesdatoer = setOf(
-            sykdomsvurdering?.nedsattArbeidsevneDato,
+            beregningVurdering?.nedsattArbeidsevneDato,
             studentVurdering?.avbruttStudieDato
         ).filterNotNull()
 

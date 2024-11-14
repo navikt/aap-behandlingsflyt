@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.NedreGrense
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -11,6 +10,11 @@ data class SykdomGrunnlagDto(
     val skalVurdereYrkesskade: Boolean,
     val opplysninger: InnhentetSykdomsOpplysninger,
     val sykdomsvurdering: SykdomsvurderingDto?
+)
+
+data class YrkesskadeVurderingGrunnlagDto(
+    val opplysninger: InnhentetSykdomsOpplysninger,
+    val yrkesskadeVurdering: YrkesskadevurderingDto?
 )
 
 data class InnhentetSykdomsOpplysninger(
@@ -26,15 +30,11 @@ data class SykdomsvurderingDto(
     val erArbeidsevnenNedsatt: Boolean?,
     val harSkadeSykdomEllerLyte: Boolean,
     val erSkadeSykdomEllerLyteVesentligdel: Boolean?,
-    val erNedsettelseIArbeidsevneHøyereEnnNedreGrense: Boolean?,
-    val nedreGrense: NedreGrense?,
-    val nedsattArbeidsevneDato: LocalDate?,
-    val yrkesskadevurdering: YrkesskadevurderingDto?
+    val erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean?,
+    val erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean?,
+    val erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean?,
+    val yrkesskadeBegrunnelse: String?
 ) {
-
-    fun toYrkesskadevurdering() = yrkesskadevurdering?.let {
-        Yrkesskadevurdering(begrunnelse, it.erÅrsakssammenheng, nedsattArbeidsevneDato, Prosent.`50_PROSENT`)
-    }
 
     fun toSykdomsvurdering(): Sykdomsvurdering {
         return Sykdomsvurdering(
@@ -43,13 +43,26 @@ data class SykdomsvurderingDto(
             erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
             harSkadeSykdomEllerLyte = harSkadeSykdomEllerLyte,
             erSkadeSykdomEllerLyteVesentligdel = erSkadeSykdomEllerLyteVesentligdel,
-            erNedsettelseIArbeidsevneHøyereEnnNedreGrense = erNedsettelseIArbeidsevneHøyereEnnNedreGrense,
-            nedreGrense = nedreGrense,
-            nedsattArbeidsevneDato = nedsattArbeidsevneDato
+            erNedsettelseIArbeidsevneMerEnnHalvparten = erNedsettelseIArbeidsevneMerEnnHalvparten,
+            erNedsettelseIArbeidsevneAvEnVissVarighet = erNedsettelseIArbeidsevneAvEnVissVarighet,
+            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
+            yrkesskadeBegrunnelse = yrkesskadeBegrunnelse
         )
     }
 }
 
 data class YrkesskadevurderingDto(
+    val begrunnelse: String,
+    val relevanteSaker: List<String>,
+    val andelAvNedsettelsen: Int?,
     val erÅrsakssammenheng: Boolean
-)
+) {
+    fun toYrkesskadevurdering(): Yrkesskadevurdering {
+        return Yrkesskadevurdering(
+            begrunnelse = begrunnelse,
+            relevanteSaker = relevanteSaker,
+            erÅrsakssammenheng = erÅrsakssammenheng,
+            andelAvNedsettelsen = this@YrkesskadevurderingDto.andelAvNedsettelsen?.let { Prosent(it) }
+        )
+    }
+}

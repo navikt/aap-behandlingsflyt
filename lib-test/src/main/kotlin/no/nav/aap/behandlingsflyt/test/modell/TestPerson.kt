@@ -43,4 +43,8 @@ class TestPerson(
     override fun toString(): String {
         return "TestPerson(fødselsdato=$fødselsdato, identer=$identer, dødsdato=$dødsdato, barn=$barn, navn=$navn, yrkesskade=$yrkesskade, institusjonsopphold=$institusjonsopphold, inntekter=$inntekter)"
     }
+
+    fun aktivIdent(): Ident {
+        return identer.single { it.aktivIdent }
+    }
 }

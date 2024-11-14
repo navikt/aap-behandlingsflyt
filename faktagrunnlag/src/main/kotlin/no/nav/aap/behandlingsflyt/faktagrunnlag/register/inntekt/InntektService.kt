@@ -10,10 +10,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -31,6 +32,7 @@ class InntektService private constructor(
     private val sykdomRepository: SykdomRepository,
     private val studentRepository: StudentRepository,
     private val beregningVurderingRepository: BeregningVurderingRepository,
+    private val yrkesskadeRepository: YrkesskadeRepository,
     private val inntektRegisterGateway: InntektRegisterGateway
 ) : Informasjonskrav {
 
@@ -38,23 +40,24 @@ class InntektService private constructor(
         val behandlingId = kontekst.behandlingId
         val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
 
-        val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
-        val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId)
-        val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
-
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
 
-        val sak = sakService.hent(kontekst.sakId)
-
         val inntekter = if (skalInnhenteOpplysninger(vilkårsresultat)) {
-            val nedsettelsesDato = utledNedsettelsesdato(sykdomGrunnlag, studentGrunnlag);
+            val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
+            val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId)
+            val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
+            val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
+
+            val sak = sakService.hent(kontekst.sakId)
+            val nedsettelsesDato = utledNedsettelsesdato(beregningVurdering?.tidspunktVurdering, studentGrunnlag);
             val behov = Inntektsbehov(
                 Input(
                     nedsettelsesDato = nedsettelsesDato,
                     inntekter = setOf(),
                     uføregrad = Prosent.`0_PROSENT`,
                     yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
-                    beregningVurdering = beregningVurdering
+                    registrerteYrkesskader = yrkesskadeGrunnlag?.yrkesskader,
+                    beregningGrunnlag = beregningVurdering
                 )
             )
             val inntektsBehov = behov.utledAlleRelevanteÅr()
@@ -76,9 +79,9 @@ class InntektService private constructor(
         return sykdomsvilkåret.harPerioderSomErOppfylt() && bistandsvilkåret.harPerioderSomErOppfylt()
     }
 
-    private fun utledNedsettelsesdato(sykdomGrunnlag: SykdomGrunnlag?, studentGrunnlag: StudentGrunnlag?): LocalDate {
+    private fun utledNedsettelsesdato(beregningVurdering: BeregningstidspunktVurdering?, studentGrunnlag: StudentGrunnlag?): LocalDate {
         val nedsettelsesdatoer = setOf(
-            sykdomGrunnlag?.sykdomsvurdering?.nedsattArbeidsevneDato,
+            beregningVurdering?.nedsattArbeidsevneDato,
             studentGrunnlag?.studentvurdering?.avbruttStudieDato
         ).filterNotNull()
 
@@ -107,6 +110,7 @@ class InntektService private constructor(
                 SykdomRepository(connection),
                 StudentRepository(connection),
                 BeregningVurderingRepository(connection),
+                YrkesskadeRepository(connection),
                 InntektGateway
             )
         }

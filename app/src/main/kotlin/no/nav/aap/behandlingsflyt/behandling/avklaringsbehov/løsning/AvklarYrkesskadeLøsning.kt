@@ -4,24 +4,24 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeName
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.FastsettBeregningstidspunktLøser
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarYrkesskadeLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.YrkesskadevurderingDto
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_YRKESSKADE_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FASTSETT_BEREGNINGSTIDSPUNKT_KODE
 import no.nav.aap.komponenter.dbconnect.DBConnection
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeName(value = FASTSETT_BEREGNINGSTIDSPUNKT_KODE)
-class FastsettBeregningstidspunktLøsning(
-    @JsonProperty("beregningVurdering", required = true) val beregningVurdering: BeregningstidspunktVurdering,
+@JsonTypeName(value = AVKLAR_YRKESSKADE_KODE)
+class AvklarYrkesskadeLøsning(
+    @JsonProperty("yrkesskadesvurdering", required = true) val yrkesskadesvurdering: YrkesskadevurderingDto,
     @JsonProperty(
         "behovstype",
         required = true,
-        defaultValue = FASTSETT_BEREGNINGSTIDSPUNKT_KODE
-    ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5008`
+        defaultValue = AVKLAR_YRKESSKADE_KODE
+    ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5013`
 ) : AvklaringsbehovLøsning {
     override fun løs(connection: DBConnection, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
-        return FastsettBeregningstidspunktLøser(connection).løs(kontekst, this)
+        return AvklarYrkesskadeLøser(connection).løs(kontekst, this)
     }
 }

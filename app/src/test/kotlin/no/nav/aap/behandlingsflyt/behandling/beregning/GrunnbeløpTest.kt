@@ -55,7 +55,7 @@ class GrunnbeløpTest {
     fun `fornuftig feilmelding om man prøver å slå opp grunnbeløp som ikke finnes`() {
         val exception = assertThrows<RuntimeException> { Grunnbeløp.finnGUnit(Year.of(1814), Beløp(1000)) }
 
-        assertThat(exception.message).contains("Finner ikke gjennomsnittsbeløp for år: 1814.")
+        assertThat(exception.message).contains("Finner ikke gjennomsnittsbeløp for dato: 1814-01-01.")
     }
 
     @Test

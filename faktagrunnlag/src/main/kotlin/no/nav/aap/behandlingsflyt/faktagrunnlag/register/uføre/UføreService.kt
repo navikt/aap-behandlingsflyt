@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.adapter.UføreGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -16,14 +15,11 @@ import no.nav.aap.verdityper.flyt.Vurdering
 class UføreService(
     private val sakService: SakService,
     private val uføreRepository: UføreRepository,
-    private val personopplysningRepository: PersonopplysningRepository,
     private val uføreRegisterGateway: UføreRegisterGateway
 ) : Informasjonskrav {
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
-        val fødselsdato =
-            requireNotNull(personopplysningRepository.hentHvisEksisterer(kontekst.behandlingId)?.brukerPersonopplysning?.fødselsdato)
-        val uføregrad = uføreRegisterGateway.innhent(sak.person, fødselsdato)
+        val uføregrad = uføreRegisterGateway.innhent(sak.person, sak.rettighetsperiode.fom)
 
         val behandlingId = kontekst.behandlingId
         val gamleData = uføreRepository.hentHvisEksisterer(behandlingId)
@@ -56,7 +52,6 @@ class UføreService(
             return UføreService(
                 SakService(connection),
                 UføreRepository(connection),
-                PersonopplysningRepository(connection),
                 UføreGateway
             )
         }

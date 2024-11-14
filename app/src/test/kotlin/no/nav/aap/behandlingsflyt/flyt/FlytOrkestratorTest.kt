@@ -11,8 +11,10 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSet
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.BrevbestillingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBeregningstidspunktLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettYrkesskadeInntektLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
@@ -33,9 +35,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søkna
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.NedreGrense
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.YrkesskadevurderingDto
 import no.nav.aap.behandlingsflyt.faktasaksbehandler.student.StudentVurdering
@@ -92,7 +95,8 @@ class FlytOrkestratorTest {
         private val dataSource = InitTestDatabase.dataSource
         private val motor = Motor(dataSource, 2, jobber = ProsesseringsJobber.alle())
         private val hendelsesMottak = TestHendelsesMottak(dataSource)
-        private val util = TestUtil(dataSource, ProsesseringsJobber.alle().filter { it.cron() != null }.map { it.type() })
+        private val util =
+            TestUtil(dataSource, ProsesseringsJobber.alle().filter { it.cron() != null }.map { it.type() })
 
         @BeforeAll
         @JvmStatic
@@ -109,42 +113,42 @@ class FlytOrkestratorTest {
 
     @Test
     fun `skal avklare yrkesskade hvis det finnes spor av yrkesskade`() {
-        val ident = ident()
         val fom = LocalDate.now().minusMonths(3)
         val periode = Periode(fom, fom.plusYears(3))
 
         // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
-        FakePersoner.leggTil(
-            TestPerson(
-                identer = setOf(ident),
-                fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
-                yrkesskade = listOf(TestYrkesskade()),
-                barn = listOf(
-                    TestPerson(
-                        identer = setOf(Ident("1234123")),
-                        fødselsdato = Fødselsdato(LocalDate.now().minusYears(3)),
-                        yrkesskade = listOf(),
-                        barn = listOf(),
-                        inntekter = listOf()
-                    )
+        val person = TestPerson(
+            fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
+            yrkesskade = listOf(TestYrkesskade()),
+            barn = listOf(
+                TestPerson(
+                    identer = setOf(Ident("1234123")),
+                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(3)),
+                    yrkesskade = listOf(),
+                    barn = listOf(),
+                    inntekter = listOf()
+                )
+            ),
+            inntekter = listOf(
+                InntektPerÅr(
+                    Year.now().minusYears(1),
+                    Beløp(1000000)
                 ),
-                inntekter = listOf(
-                    InntektPerÅr(
-                        Year.now().minusYears(1),
-                        Beløp(1000000)
-                    ),
-                    InntektPerÅr(
-                        Year.now().minusYears(2),
-                        Beløp(1000000)
-                    ),
-                    InntektPerÅr(
-                        Year.now().minusYears(3),
-                        Beløp(1000000)
-                    )
+                InntektPerÅr(
+                    Year.now().minusYears(2),
+                    Beløp(1000000)
+                ),
+                InntektPerÅr(
+                    Year.now().minusYears(3),
+                    Beløp(1000000)
                 )
             )
         )
+        FakePersoner.leggTil(
+            person
+        )
 
+        val ident = person.aktivIdent()
 
         // Sender inn en søknad
         sendInnDokument(
@@ -181,13 +185,11 @@ class FlytOrkestratorTest {
                             dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                             harSkadeSykdomEllerLyte = true,
                             erSkadeSykdomEllerLyteVesentligdel = true,
-                            erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
-                            nedreGrense = NedreGrense.FEMTI,
-                            nedsattArbeidsevneDato = LocalDate.now(),
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             erArbeidsevnenNedsatt = true,
-                            yrkesskadevurdering = YrkesskadevurderingDto(
-                                erÅrsakssammenheng = false
-                            )
+                            yrkesskadeBegrunnelse = null
                         )
                     ),
                     behandlingVersjon = behandling.versjon,
@@ -233,6 +235,66 @@ class FlytOrkestratorTest {
                                 emptyList()
                             )
                         }),
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
+                )
+            )
+        }
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
+        behandling = hentBehandling(sak.id)
+
+        dataSource.transaction {
+            AvklaringsbehovHendelseHåndterer(it).håndtere(
+                behandling.id,
+                LøsAvklaringsbehovBehandlingHendelse(
+                    løsning = AvklarYrkesskadeLøsning(
+                        yrkesskadesvurdering = YrkesskadevurderingDto(
+                            begrunnelse = "Ikke årsakssammenheng",
+                            relevanteSaker = listOf(),
+                            andelAvNedsettelsen = null,
+                            erÅrsakssammenheng = false
+                        )
+                    ),
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
+                )
+            )
+        }
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
+        behandling = hentBehandling(sak.id)
+
+        dataSource.transaction {
+            AvklaringsbehovHendelseHåndterer(it).håndtere(
+                behandling.id,
+                LøsAvklaringsbehovBehandlingHendelse(
+                    løsning = FastsettBeregningstidspunktLøsning(
+                        beregningVurdering = BeregningstidspunktVurdering(
+                            begrunnelse = "Trenger hjelp fra Nav",
+                            nedsattArbeidsevneDato = LocalDate.now(),
+                            ytterligereNedsattArbeidsevneDato = null,
+                            ytterligereNedsattBegrunnelse = null
+                        ),
+                    ),
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
+                )
+            )
+        }
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
+        behandling = hentBehandling(sak.id)
+
+        dataSource.transaction {
+            AvklaringsbehovHendelseHåndterer(it).håndtere(
+                behandling.id,
+                LøsAvklaringsbehovBehandlingHendelse(
+                    løsning = FastsettBeregningstidspunktLøsning(
+                        beregningVurdering = BeregningstidspunktVurdering(
+                            begrunnelse = "Trenger hjelp fra Nav",
+                            nedsattArbeidsevneDato = LocalDate.now(),
+                            ytterligereNedsattArbeidsevneDato = null,
+                            ytterligereNedsattBegrunnelse = null
+                        ),
+                    ),
                     behandlingVersjon = behandling.versjon,
                     bruker = Bruker("SAKSBEHANDLER")
                 )
@@ -298,13 +360,11 @@ class FlytOrkestratorTest {
                             dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                             harSkadeSykdomEllerLyte = true,
                             erSkadeSykdomEllerLyteVesentligdel = true,
-                            erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
-                            nedreGrense = NedreGrense.FEMTI,
-                            nedsattArbeidsevneDato = LocalDate.now(),
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             erArbeidsevnenNedsatt = true,
-                            yrkesskadevurdering = YrkesskadevurderingDto(
-                                erÅrsakssammenheng = false
-                            )
+                            yrkesskadeBegrunnelse = null
                         )
                     ),
                     behandlingVersjon = behandling.versjon,
@@ -466,16 +526,17 @@ class FlytOrkestratorTest {
 
     @Test
     fun `skal avklare yrkesskade hvis det finnes spor av yrkesskade - yrkesskade har årsakssammenheng`() {
-        val ident = ident()
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
-        FakePersoner.leggTil(
-            TestPerson(
-                identer = setOf(ident),
-                fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
-                yrkesskade = listOf(TestYrkesskade())
-            )
+        val person = TestPerson(
+            fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
+            yrkesskade = listOf(TestYrkesskade())
         )
+        FakePersoner.leggTil(
+            person
+        )
+
+        val ident = person.aktivIdent()
 
         // Sender inn en søknad
         sendInnDokument(
@@ -511,13 +572,11 @@ class FlytOrkestratorTest {
                             dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                             harSkadeSykdomEllerLyte = true,
                             erSkadeSykdomEllerLyteVesentligdel = true,
-                            erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
-                            nedreGrense = NedreGrense.TRETTI,
-                            nedsattArbeidsevneDato = LocalDate.now(),
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             erArbeidsevnenNedsatt = true,
-                            yrkesskadevurdering = YrkesskadevurderingDto(
-                                erÅrsakssammenheng = true
-                            )
+                            yrkesskadeBegrunnelse = null
                         )
                     ),
                     behandlingVersjon = behandling.versjon,
@@ -575,12 +634,57 @@ class FlytOrkestratorTest {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
                 LøsAvklaringsbehovBehandlingHendelse(
+                    løsning = AvklarYrkesskadeLøsning(
+                        yrkesskadesvurdering = YrkesskadevurderingDto(
+                            begrunnelse = "Veldig relevante",
+                            relevanteSaker = person.yrkesskade.map { it.saksreferanse },
+                            andelAvNedsettelsen = 50,
+                            erÅrsakssammenheng = true
+                        )
+                    ),
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
+                )
+            )
+        }
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
+        behandling = hentBehandling(sak.id)
+
+        dataSource.transaction {
+            AvklaringsbehovHendelseHåndterer(it).håndtere(
+                behandling.id,
+                LøsAvklaringsbehovBehandlingHendelse(
                     løsning = FastsettBeregningstidspunktLøsning(
-                        beregningVurdering = BeregningVurdering(
+                        beregningVurdering = BeregningstidspunktVurdering(
                             begrunnelse = "Trenger hjelp fra Nav",
+                            nedsattArbeidsevneDato = LocalDate.now(),
                             ytterligereNedsattArbeidsevneDato = null,
-                            antattÅrligInntekt = Beløp(700_000)
+                            ytterligereNedsattBegrunnelse = null
                         ),
+                    ),
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
+                )
+            )
+        }
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
+        behandling = hentBehandling(sak.id)
+
+
+        dataSource.transaction {
+            AvklaringsbehovHendelseHåndterer(it).håndtere(
+                behandling.id,
+                LøsAvklaringsbehovBehandlingHendelse(
+                    løsning = FastsettYrkesskadeInntektLøsning(
+                        yrkesskadeInntektVurdering = BeregningYrkeskaderBeløpVurdering(
+                            vurderinger = person.yrkesskade.map {
+                                YrkesskadeBeløpVurdering(
+                                    antattÅrligInntekt = Beløp(5000000),
+                                    referanse = it.saksreferanse,
+                                    begrunnelse = "Trenger hjelp fra Nav"
+                                )
+                            },
+                        )
                     ),
                     behandlingVersjon = behandling.versjon,
                     bruker = Bruker("SAKSBEHANDLER")
@@ -850,13 +954,11 @@ class FlytOrkestratorTest {
                             dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                             harSkadeSykdomEllerLyte = true,
                             erSkadeSykdomEllerLyteVesentligdel = true,
-                            erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
-                            nedreGrense = NedreGrense.FEMTI,
-                            nedsattArbeidsevneDato = LocalDate.now(),
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             erArbeidsevnenNedsatt = true,
-                            yrkesskadevurdering = YrkesskadevurderingDto(
-                                erÅrsakssammenheng = false
-                            )
+                            yrkesskadeBegrunnelse = null
                         )
                     ),
                     behandlingVersjon = behandling.versjon,
@@ -911,6 +1013,46 @@ class FlytOrkestratorTest {
                                 emptyList()
                             )
                         }),
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
+                )
+            )
+        }
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
+        behandling = hentBehandling(sak.id)
+
+        dataSource.transaction {
+            AvklaringsbehovHendelseHåndterer(it).håndtere(
+                behandling.id,
+                LøsAvklaringsbehovBehandlingHendelse(
+                    løsning = AvklarYrkesskadeLøsning(
+                        yrkesskadesvurdering = YrkesskadevurderingDto(
+                            begrunnelse = "",
+                            relevanteSaker = listOf(),
+                            andelAvNedsettelsen = null,
+                            erÅrsakssammenheng = false
+                        )
+                    ),
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
+                )
+            )
+        }
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
+        behandling = hentBehandling(sak.id)
+
+        dataSource.transaction {
+            AvklaringsbehovHendelseHåndterer(it).håndtere(
+                behandling.id,
+                LøsAvklaringsbehovBehandlingHendelse(
+                    løsning = FastsettBeregningstidspunktLøsning(
+                        beregningVurdering = BeregningstidspunktVurdering(
+                            begrunnelse = "Trenger hjelp fra Nav",
+                            nedsattArbeidsevneDato = LocalDate.now(),
+                            ytterligereNedsattArbeidsevneDato = null,
+                            ytterligereNedsattBegrunnelse = null
+                        ),
+                    ),
                     behandlingVersjon = behandling.versjon,
                     bruker = Bruker("SAKSBEHANDLER")
                 )
@@ -978,13 +1120,11 @@ class FlytOrkestratorTest {
                             dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                             harSkadeSykdomEllerLyte = true,
                             erSkadeSykdomEllerLyteVesentligdel = true,
-                            erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
-                            nedreGrense = NedreGrense.FEMTI,
-                            nedsattArbeidsevneDato = LocalDate.now(),
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             erArbeidsevnenNedsatt = true,
-                            yrkesskadevurdering = YrkesskadevurderingDto(
-                                erÅrsakssammenheng = false
-                            )
+                            yrkesskadeBegrunnelse = null
                         )
                     ),
                     ingenEndringIGruppe = true,
@@ -1108,11 +1248,11 @@ class FlytOrkestratorTest {
         util.ventPåSvar()
 
         val sak = hentSak(ident, periode)
-        val behandling = hentBehandling(sak.id)
+        var behandling = hentBehandling(sak.id)
         assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
 
         val stegHistorikk = behandling.stegHistorikk()
-        assertThat(stegHistorikk.map { it.steg() }).contains(StegType.AVKLAR_SYKDOM)
+        assertThat(stegHistorikk.map { it.steg() }).contains(StegType.BREV)
         assertThat(stegHistorikk.map { it.status() }).contains(StegStatus.AVKLARINGSPUNKT)
 
         //Henter vurder alder-vilkår
@@ -1127,126 +1267,12 @@ class FlytOrkestratorTest {
         util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
 
         val status = dataSource.transaction { BehandlingRepositoryImpl(it).hent(behandling.id).status() }
-        assertThat(status).isEqualTo(Status.UTREDES)
+        assertThat(status).isEqualTo(Status.IVERKSETTES)
 
         dataSource.transaction {
             val behov = hentAvklaringsbehov(behandling.id, it)
-            assertThat(behov.åpne()).allSatisfy { assertThat(it.definisjon.kode).isEqualTo(AvklaringsbehovKode.`5003`) }
+            assertThat(behov.åpne()).allSatisfy { assertThat(it.definisjon.kode).isEqualTo(AvklaringsbehovKode.`9002`) }
         }
-
-        dataSource.transaction {
-            AvklaringsbehovHendelseHåndterer(it).håndtere(
-                behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
-                    løsning = AvklarSykdomLøsning(
-                        sykdomsvurdering = SykdomsvurderingDto(
-                            begrunnelse = "Er syk nok",
-                            dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
-                            harSkadeSykdomEllerLyte = false,
-                            erSkadeSykdomEllerLyteVesentligdel = false,
-                            erNedsettelseIArbeidsevneHøyereEnnNedreGrense = false,
-                            nedreGrense = NedreGrense.FEMTI,
-                            nedsattArbeidsevneDato = LocalDate.now(),
-                            erArbeidsevnenNedsatt = false,
-                            yrkesskadevurdering = YrkesskadevurderingDto(
-                                erÅrsakssammenheng = false
-                            )
-                        )
-                    ),
-                    behandlingVersjon = behandling.versjon,
-                    bruker = Bruker("SAKSBEHANDLER")
-                )
-            )
-        }
-
-        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
-
-        dataSource.transaction {
-            val behov = hentAvklaringsbehov(behandling.id, it)
-            assertThat(behov.åpne()).allSatisfy { assertThat(it.definisjon.kode).isEqualTo(AvklaringsbehovKode.`5006`) }
-        }
-
-        dataSource.transaction {
-            AvklaringsbehovHendelseHåndterer(it).håndtere(
-                behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
-                    løsning = AvklarBistandsbehovLøsning(
-                        bistandsVurdering = BistandVurderingDto(
-                            begrunnelse = "Trenger ikke hjelp fra nav",
-                            erBehovForAktivBehandling = false,
-                            erBehovForArbeidsrettetTiltak = false,
-                            erBehovForAnnenOppfølging = false
-                        ),
-                    ),
-                    behandlingVersjon = behandling.versjon,
-                    bruker = Bruker("SAKSBEHANDLER")
-                )
-            )
-        }
-
-        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
-
-        dataSource.transaction {
-            val behov = hentAvklaringsbehov(behandling.id, it)
-            assertThat(behov.åpne()).allSatisfy { assertThat(it.definisjon.kode).isEqualTo(AvklaringsbehovKode.`5097`) }
-        }
-
-        dataSource.transaction {
-            val avklaringsbehov = hentAvklaringsbehov(behandling.id, it)
-            AvklaringsbehovHendelseHåndterer(it).håndtere(
-                behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
-                    løsning = KvalitetssikringLøsning(avklaringsbehov.alle()
-                        .filter { behov -> behov.erTotrinn() }
-                        .map { behov ->
-                            TotrinnsVurdering(
-                                behov.definisjon.kode,
-                                true,
-                                "begrunnelse",
-                                emptyList()
-                            )
-                        }),
-                    behandlingVersjon = behandling.versjon,
-                    bruker = Bruker("SAKSBEHANDLER")
-                )
-            )
-        }
-
-        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
-
-        dataSource.transaction {
-            AvklaringsbehovHendelseHåndterer(it).håndtere(
-                behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
-                    løsning = ForeslåVedtakLøsning(),
-                    behandlingVersjon = behandling.versjon,
-                    bruker = Bruker("SAKSBEHANDLER")
-                )
-            )
-        }
-        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
-
-        dataSource.transaction {
-            val behov = hentAvklaringsbehov(behandling.id, it)
-            assertThat(behov.åpne()).allSatisfy { assertThat(it.definisjon.kode).isEqualTo(AvklaringsbehovKode.`5099`) }
-        }
-
-
-        dataSource.transaction { connection ->
-            val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
-            AvklaringsbehovHendelseHåndterer(connection).håndtere(
-                behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
-                    løsning = FatteVedtakLøsning(avklaringsbehov.alle()
-                        .filter { behov -> behov.erTotrinn() }
-                        .map { behov -> TotrinnsVurdering(behov.definisjon.kode, true, "begrunnelse", emptyList()) }),
-                    behandlingVersjon = behandling.versjon,
-                    bruker = Bruker("SAKSBEHANDLER")
-                )
-            )
-        }
-
-        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
 
         dataSource.transaction { connection ->
             val brevbestilling = BrevbestillingRepository(connection).hent(behandling.id, TypeBrev.VEDTAK_AVSLAG)!!

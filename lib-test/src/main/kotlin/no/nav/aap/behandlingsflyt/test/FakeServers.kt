@@ -146,7 +146,7 @@ object FakeServers : AutoCloseable {
             }
         }
         routing() {
-            get("/vedtak/gradalderellerufore?fom={ting1}&sakstype={ting2}") {
+            get("/vedtak/gradalderellerufore") {
                 val ident = requireNotNull(call.request.header("Nav-Personident"))
                 val uføregrad = FakePersoner.hentPerson(ident)?.uføre?.prosentverdi() ?: 0
 

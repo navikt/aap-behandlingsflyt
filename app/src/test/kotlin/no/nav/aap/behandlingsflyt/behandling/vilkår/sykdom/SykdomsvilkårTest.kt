@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.NedreGrense
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -27,10 +26,11 @@ class SykdomsvilkårTest {
                     dokumenterBruktIVurdering = listOf(),
                     harSkadeSykdomEllerLyte = true,
                     erSkadeSykdomEllerLyteVesentligdel = true,
-                    erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
-                    nedreGrense = NedreGrense.FEMTI,
-                    nedsattArbeidsevneDato = LocalDate.now(),
-                    erArbeidsevnenNedsatt = true
+                    erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                    erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                    erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
+                    erArbeidsevnenNedsatt = true,
+                    yrkesskadeBegrunnelse = null
                 ),
                 studentvurdering = null
             )
@@ -49,10 +49,11 @@ class SykdomsvilkårTest {
                     dokumenterBruktIVurdering = listOf(),
                     harSkadeSykdomEllerLyte = true,
                     erSkadeSykdomEllerLyteVesentligdel = true,
-                    erNedsettelseIArbeidsevneHøyereEnnNedreGrense = false,
-                    nedreGrense = NedreGrense.FEMTI,
-                    nedsattArbeidsevneDato = LocalDate.now(),
-                    erArbeidsevnenNedsatt = true
+                    erNedsettelseIArbeidsevneMerEnnHalvparten = false,
+                    erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                    erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
+                    erArbeidsevnenNedsatt = true,
+                    yrkesskadeBegrunnelse = null
                 ),
                 studentvurdering = null
             )
