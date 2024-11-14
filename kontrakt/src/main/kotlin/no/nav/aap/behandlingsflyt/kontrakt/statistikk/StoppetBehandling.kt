@@ -25,6 +25,7 @@ public data class StoppetBehandling(
     val mottattTid: LocalDateTime,
     val behandlingStatus: BehandlingsFlytBehandlingStatus,
     val behandlingType: TypeBehandling,
+    val soknadsFormat: Kanal = Kanal.DIGITAL,
     val ident: String,
     val versjon: String,
     val avklaringsbehov: List<AvklaringsbehovHendelseDto>,
@@ -39,4 +40,8 @@ public data class StoppetBehandling(
         require(behandlingStatus != Status.AVSLUTTET || avsluttetBehandling != null)
         { "Om behandling ikke er avsluttet, ikke legg ved data om avsluttet behandling. Status er $behandlingStatus" }
     }
+}
+
+public enum class Kanal {
+    DIGITAL, PAPIR;
 }

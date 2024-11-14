@@ -458,6 +458,7 @@ class StatistikkJobbUtførerTest {
                 avklaringsbehov = avklaringsbehov,
                 behandlingOpprettetTidspunkt = payload.opprettetTidspunkt,
                 versjon = ApplikasjonsVersjon.versjon,
+                soknadsFormat = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Kanal.PAPIR,
                 mottattTid = tidligsteMottattTid,
                 sakStatus = no.nav.aap.behandlingsflyt.kontrakt.sak.Status.UTREDES,
                 hendelsesTidspunkt = hendelsesTidspunkt,
