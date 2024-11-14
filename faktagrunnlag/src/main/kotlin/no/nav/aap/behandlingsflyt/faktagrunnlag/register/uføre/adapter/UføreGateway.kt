@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.adapter
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRegisterGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
@@ -11,9 +10,12 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.get
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.miljo.Miljø
+import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.uføre.UføreRequest
 import no.nav.aap.komponenter.verdityper.Prosent
 import java.net.URI
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 object UføreGateway : UføreRegisterGateway {
@@ -41,14 +43,14 @@ object UføreGateway : UføreRegisterGateway {
 
     // /springapi/vedtak/gradalderellerufore
     // https://github.com/navikt/pensjon-pen/blob/16fd07f36c6bfaaeeb1e5e139834f07f9c59b0e2/pen-app/src/main/java/no/nav/pensjon/pen_app/provider/api/vedtak/VedtakController.kt#L288
-    override fun innhent(person: Person, fødselsdato: Fødselsdato): Uføre {
+    override fun innhent(person: Person, fomDate: LocalDate): Uføre {
         //FIXME: Fjerne mock respons
-        if (true) {
+        if (Miljø.er() == MiljøKode.DEV) {
             return Uføre(Prosent.`0_PROSENT`)
         }
 
-        val fom = fødselsdato.toLocalDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-        val request = UføreRequest(person.identer().map { it.identifikator }, fom) // TODO: fra når skal uføre hentes
+        val fom = fomDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        val request = UføreRequest(person.identer().map { it.identifikator }, fom)
         val uføreRes = query(request)
 
         if (uføreRes == null) return Uføre(uføregrad = Prosent.`0_PROSENT`)
