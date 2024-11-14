@@ -1,6 +1,12 @@
 name: Generer openapi schema
 
-on: workflow_dispatch
+on:
+    push:
+        branches: [ main ]
+        paths-ignore:
+            - '.github/pr.yml'
+            - '*.md'
+    workflow_dispatch:
 
 jobs:
     build:
@@ -11,20 +17,46 @@ jobs:
             packages: write
             checks: write
         steps:
-            - uses: actions/checkout@v4
+            -   uses: actions/checkout@v4
             -   uses: actions/setup-java@v4.3.0
                 with:
                     java-version: 23
                     distribution: 'temurin'
-            - name: Setup Gradle for a non-wrapper project
-              uses: gradle/actions/setup-gradle@v4
-              with:
-                  gradle-version: wrapper
-            - name: runTestApp og generer json/yml fil fra backend
-              run: curl http://localhost:8080/openapi.json -o schema.json
-            - name: generer json/yml fil fra backend
-            - name: lag schema med openapi-typescript
-            - name: sammenlign schemas og se om det må publiseres ny verson
-            - name: lag changeset-fil
-            - name: kjør yarn changeset version
-            - name: commit og push til navikt/aap-backend-typescript-types
+            -   name: Setup Gradle for a non-wrapper project
+                uses: gradle/actions/setup-gradle@v4
+                with:
+                    gradle-version: wrapper
+            -   name: Bygg & test
+                run: gradle test buildFatJar --continue --no-daemon --configuration-cache --stacktrace --info
+            -   uses: actions/checkout@v4
+                with:
+                    repository: navikt/aap-backend-typescript-types
+                    path: ./aap-backend-typescript-types
+                    token: ${{ secrets.github_token }}
+            -   uses: actions/setup-node@v4
+                with:
+                    node-version: 22
+                    registry-url: https://npm.pkg.github.com
+                    cache: yarn
+            -   name: generer schema fra json
+                run: |
+                    cd aap-backend-typescript-types
+                    yarn install --immutable
+                    yarn openapi-typescript ../openapi.json -o ./packages/aap-behandlingsflyt-typescript-types/schema.d.ts
+#            -   name: TODO: sammenlign schemas og se om det må publiseres ny verson
+#                run: hei
+            -   name: lag changeset-fil
+                run: |
+                    echo "---\n '@navikt/aap-behandlingsflyt-typescript-types': patch\n---\n \nny versjon av typescript typer" > .changeset/test.md
+            -   name: kjør yarn changeset version
+                run: |
+                    yarn changeset version
+            -   name: commit og push til navikt/aap-backend-typescript-types
+                run: |
+                    git config --global user.email "aap-backend-typescript-types@nav.no"
+                    git config --global user.name "Aap typescript bot"
+                    git add ./packages/aap-behandlingsflyt-typescript-types/
+                    git commit -m ":label: nye genererte typer for behandlingsflyt"
+                    git push
+                env:
+                    GH_TOKEN: ${{ secrets.github_token }}
