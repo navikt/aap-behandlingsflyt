@@ -50,7 +50,7 @@ class VurderYrkesskadeSteg private constructor(
         if (!vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET).harPerioderSomErOppfylt()) {
             return false
         }
-        if (yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == false) {
+        if (yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() != true) {
             return false
         }
         if (sykdomGrunnlag?.sykdomsvurdering?.erNedsettelseIArbeidsevneMerEnnHalvparten == false && sykdomGrunnlag.sykdomsvurdering?.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == false) {
