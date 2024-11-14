@@ -9,6 +9,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -23,6 +25,7 @@ import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
 class VurderBistandsbehovSteg private constructor(
     private val bistandRepository: BistandRepository,
     private val studentRepository: StudentRepository,
+    private val sykdomsRepository: SykdomRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository
 ) : BehandlingSteg {
 
@@ -31,6 +34,7 @@ class VurderBistandsbehovSteg private constructor(
         if (kontekst.perioderTilVurdering.isNotEmpty()) {
             val bistandsGrunnlag = bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
             val studentGrunnlag = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
+            val sykdomsvurdering = sykdomsRepository.hentHvisEksisterer(kontekst.behandlingId)?.sykdomsvurdering
 
             val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
 
@@ -52,7 +56,12 @@ class VurderBistandsbehovSteg private constructor(
             val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
 
             // TODO: Se på vurdering fra sykdom om viss varighet
-            if (erIkkeAvslagPåVilkårTidligere(vilkårsresultat) && harBehovForAvklaring(vilkår, kontekst.perioder(), studentVurdering?.erOppfylt() == true)) {
+            if (erIkkeAvslagPåVilkårTidligere(vilkårsresultat, sykdomsvurdering) && harBehovForAvklaring(
+                    vilkår,
+                    kontekst.perioder(),
+                    studentVurdering?.erOppfylt() == true
+                )
+            ) {
                 return FantAvklaringsbehov(Definisjon.AVKLAR_BISTANDSBEHOV)
             }
         }
@@ -69,14 +78,19 @@ class VurderBistandsbehovSteg private constructor(
                 || harInnvilgetForStudentUtenÅVæreStudent(vilkår, erStudentStegOppfylt))
     }
 
-    private fun erIkkeAvslagPåVilkårTidligere(vilkårsresultat: Vilkårsresultat): Boolean {
-        return vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET).harPerioderSomErOppfylt()
+    private fun erIkkeAvslagPåVilkårTidligere(
+        vilkårsresultat: Vilkårsresultat,
+        sykdomsvurdering: Sykdomsvurdering?
+    ): Boolean {
+        return vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET)
+            .harPerioderSomErOppfylt() && sykdomsvurdering?.erNedsettelseIArbeidsevneAvEnVissVarighet != false
     }
 
 
     private fun harInnvilgetForStudentUtenÅVæreStudent(vilkår: Vilkår, erStudentStegOppfylt: Boolean): Boolean {
 
-        return !erStudentStegOppfylt && vilkår.vilkårsperioder().any { it.innvilgelsesårsak == Innvilgelsesårsak.STUDENT }
+        return !erStudentStegOppfylt && vilkår.vilkårsperioder()
+            .any { it.innvilgelsesårsak == Innvilgelsesårsak.STUDENT }
     }
 
     companion object : FlytSteg {
@@ -84,6 +98,7 @@ class VurderBistandsbehovSteg private constructor(
             return VurderBistandsbehovSteg(
                 BistandRepository(connection),
                 StudentRepository(connection),
+                SykdomRepository(connection),
                 VilkårsresultatRepository(connection)
             )
         }
