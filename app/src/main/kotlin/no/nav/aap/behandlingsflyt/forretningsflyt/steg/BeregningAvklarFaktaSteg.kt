@@ -1,7 +1,10 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.beregning.AvklarFaktaBeregningService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
@@ -19,6 +22,7 @@ import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 class BeregningAvklarFaktaSteg private constructor(
     private val beregningVurderingRepository: BeregningVurderingRepository,
     private val sykdomRepository: SykdomRepository,
+    private val vilkårsresultatRepository1: VilkårsresultatRepository,
     private val avklarFaktaBeregningService: AvklarFaktaBeregningService
 ) : BehandlingSteg {
 
@@ -27,7 +31,8 @@ class BeregningAvklarFaktaSteg private constructor(
 
         if (avklarFaktaBeregningService.skalFastsetteGrunnlag(behandlingId)) {
             val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
-            if (beregningVurdering == null) {
+            val vilkårsresultat = vilkårsresultatRepository1.hent(behandlingId)
+            if (beregningVurdering == null && erIkkeStudent(vilkårsresultat)) {
                 return FantAvklaringsbehov(Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT)
             }
             if (erBehovForÅAvklareYrkesskade(behandlingId, beregningVurdering)) {
@@ -37,9 +42,14 @@ class BeregningAvklarFaktaSteg private constructor(
         return Fullført
     }
 
+    private fun erIkkeStudent(vilkårsresultat: Vilkårsresultat): Boolean {
+        return vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET).vilkårsperioder()
+            .firstOrNull()?.innvilgelsesårsak != Innvilgelsesårsak.STUDENT
+    }
+
     private fun erBehovForÅAvklareYrkesskade(
         behandlingId: BehandlingId,
-        beregningGrunnlag: BeregningGrunnlag
+        beregningGrunnlag: BeregningGrunnlag?
     ): Boolean {
         val yrkesskadeVurdering = sykdomRepository.hent(behandlingId).yrkesskadevurdering
 
@@ -51,18 +61,20 @@ class BeregningAvklarFaktaSteg private constructor(
 
     private fun harIkkeFastsattBeløpForAlle(
         relevanteSaker: List<String>,
-        beregningGrunnlag: BeregningGrunnlag
+        beregningGrunnlag: BeregningGrunnlag?
     ): Boolean {
-        val vurderteSaker = beregningGrunnlag.yrkesskadeBeløpVurdering?.vurderinger ?: emptyList()
+        val vurderteSaker = beregningGrunnlag?.yrkesskadeBeløpVurdering?.vurderinger ?: emptyList()
         return !relevanteSaker.all { sak -> vurderteSaker.any { it.referanse == sak } }
     }
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
+            val vilkårsresultatRepository = VilkårsresultatRepository(connection)
             return BeregningAvklarFaktaSteg(
                 BeregningVurderingRepository(connection),
                 SykdomRepository(connection),
-                AvklarFaktaBeregningService(VilkårsresultatRepository(connection))
+                vilkårsresultatRepository,
+                AvklarFaktaBeregningService(vilkårsresultatRepository)
             )
         }
 
