@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.flate
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
-import no.nav.aap.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.Beløp
 import java.time.LocalDate
 
 data class BeregningYrkesskadeAvklaringDto(

@@ -14,7 +14,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.Beløp
 
 fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: HikariDataSource) {
     route("/api/behandling") {
