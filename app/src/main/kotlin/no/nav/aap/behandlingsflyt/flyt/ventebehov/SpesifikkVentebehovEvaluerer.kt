@@ -9,5 +9,5 @@ import no.nav.aap.verdityper.sakogbehandling.BehandlingId
  */
 sealed interface SpesifikkVentebehovEvaluerer {
     fun definisjon(): Definisjon
-    fun ansesSomLøst(behanndlingId: BehandlingId, avklaringsbehov: Avklaringsbehov): Boolean
+    fun ansesSomLøst(behandlingId: BehandlingId, avklaringsbehov: Avklaringsbehov): Boolean
 }
