@@ -51,7 +51,7 @@ class BeregningAvklarFaktaSteg private constructor(
         behandlingId: BehandlingId,
         beregningGrunnlag: BeregningGrunnlag?
     ): Boolean {
-        val yrkesskadeVurdering = sykdomRepository.hent(behandlingId).yrkesskadevurdering
+        val yrkesskadeVurdering = sykdomRepository.hentHvisEksisterer(behandlingId)?.yrkesskadevurdering
 
         return yrkesskadeVurdering?.erÅrsakssammenheng == true && harIkkeFastsattBeløpForAlle(
             yrkesskadeVurdering.relevanteSaker,
