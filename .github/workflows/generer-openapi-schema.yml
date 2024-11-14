@@ -48,7 +48,7 @@ jobs:
                           {
                               owner: context.repo.owner,
                               repo: "navikt/aap-backend-typescript-types",
-                              workflow_id: "build-and-publish",
+                              workflow_id: 'build-and-publish.yml',
                               ref: 'main',
                               'schema-json-string': jsonString
                           }
