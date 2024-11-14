@@ -50,6 +50,6 @@ jobs:
                               repo: "navikt/aap-backend-typescript-types",
                               workflow_id: "build-and-publish",
                               ref: 'main',
-                             schema-json-string: jsonString
+                              'schema-json-string': jsonString
                           }
                       )
