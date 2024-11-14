@@ -46,9 +46,9 @@ jobs:
                       await github.request(
                           'POST /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches',
                           {
-                              owner: context.repo.owner,
-                              repo: "navikt/aap-backend-typescript-types",
-                              workflow_id: 'build-and-publish.yml',
+                              owner: 'navikt',
+                              repo: 'navikt/aap-backend-typescript-types',
+                              workflow_id: 'publish-and-release.yml',
                               ref: 'main',
                               'schema-json-string': jsonString
                           }
