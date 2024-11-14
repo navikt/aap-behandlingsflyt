@@ -22,21 +22,23 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource) {
                 dataSource.transaction { connection ->
                     val taSkriveLåsRepository = TaSkriveLåsRepository(connection)
                     val lås = taSkriveLåsRepository.lås(request.referanse)
-                    MDC.putCloseable("sakId", lås.sakSkrivelås.id.toString()).use {
-                        MDC.putCloseable("behandlingId", lås.behandlingSkrivelås.id.toString()).use {
-                            BehandlingTilstandValidator(connection).validerTilstand(
-                                BehandlingReferanse(request.referanse), request.behandlingVersjon
-                            )
-
-                            AvklaringsbehovHendelseHåndterer(connection).håndtere(
-                                key = lås.behandlingSkrivelås.id, hendelse = LøsAvklaringsbehovBehandlingHendelse(
-                                    request.behov,
-                                    request.ingenEndringIGruppe ?: false,
-                                    request.behandlingVersjon,
-                                    bruker()
+                    MDC.putCloseable("behandlingReferanse", request.referanse.toString()).use {
+                        MDC.putCloseable("sakId", lås.sakSkrivelås.id.toString()).use {
+                            MDC.putCloseable("behandlingId", lås.behandlingSkrivelås.id.toString()).use {
+                                BehandlingTilstandValidator(connection).validerTilstand(
+                                    BehandlingReferanse(request.referanse), request.behandlingVersjon
                                 )
-                            )
-                            taSkriveLåsRepository.verifiserSkrivelås(lås)
+
+                                AvklaringsbehovHendelseHåndterer(connection).håndtere(
+                                    key = lås.behandlingSkrivelås.id, hendelse = LøsAvklaringsbehovBehandlingHendelse(
+                                        request.behov,
+                                        request.ingenEndringIGruppe ?: false,
+                                        request.behandlingVersjon,
+                                        bruker()
+                                    )
+                                )
+                                taSkriveLåsRepository.verifiserSkrivelås(lås)
+                            }
                         }
                     }
                 }
