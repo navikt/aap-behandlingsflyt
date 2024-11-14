@@ -42,14 +42,12 @@ jobs:
                   script: |
                       const fs = require('fs');
                       const jsonString = fs.readFileSync("./openapi.json").toString('utf-8');
-                      
-                      await github.request(
-                          'POST /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches',
-                          {
-                              owner: 'navikt',
-                              repo: 'aap-backend-typescript-types',
-                              workflow_id: 'publish-and-release.yml',
-                              ref: 'main',
+                      await github.rest.actions.createWorkflowDispatch({
+                          owner: 'navikt',
+                          repo: 'aap-backend-typescript-types',
+                          workflow_id: 'publish-and-release.yml',
+                          ref: 'main',
+                          inputs: {
                               'schema-json-string': jsonString
                           }
-                      )
+                      })
