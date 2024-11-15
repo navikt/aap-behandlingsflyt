@@ -35,21 +35,25 @@ jobs:
                     repository: navikt/aap-backend-typescript-types
                     path: ./aap-backend-typescript-types
                     token: ${{ secrets.github_token }}
-            - uses: actions/github-script@v7
-              env:
-                  WORKFLOW_ID: ${{ inputs.workflow-id }}
-                  LABEL: ${{ inputs.label }}
-              with:
-                  github-token: ${{ secrets.GH_WF_TOKEN }}
-                  script: |
-                      const fs = require('fs');
-                      const jsonString = fs.readFileSync("./openapi.json").toString('utf-8');
-                      await github.rest.actions.createWorkflowDispatch({
-                          owner: 'navikt',
-                          repo: 'aap-backend-typescript-types',
-                          workflow_id: 'publish-and-release.yml',
-                          ref: 'main',
-                          inputs: {
-                              'schema-json-string': jsonString
-                          }
-                      })
+            -   uses: actions/upload-artifact@v4
+                with:
+                    name: openapi
+                    path: ./openapi.json
+            -   uses: actions/github-script@v7
+                env:
+                    WORKFLOW_ID: ${{ inputs.workflow-id }}
+                    LABEL: ${{ inputs.label }}
+                with:
+                    github-token: ${{ secrets.GH_WF_TOKEN }}
+                    script: |
+                        const fs = require('fs');
+                        await github.rest.actions.createWorkflowDispatch({
+                            owner: 'navikt',
+                            repo: 'aap-backend-typescript-types',
+                            workflow_id: 'publish-and-release.yml',
+                            ref: 'main',
+                            inputs: {
+                                'artifactId': ${{steps.artifact-upload-step.outputs.artifact-id}},
+                                'appNavn': 'behandlingflyt'
+                            }
+                        })
