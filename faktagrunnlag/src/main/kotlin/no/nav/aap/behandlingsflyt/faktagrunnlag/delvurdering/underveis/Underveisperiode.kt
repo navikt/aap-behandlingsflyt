@@ -8,11 +8,11 @@ import java.util.*
 
 class Underveisperiode(
     val periode: Periode,
-    val meldePeriode: Periode?,
+    val meldePeriode: Periode,
     val utfall: Utfall,
     val avslagsårsak: UnderveisÅrsak?,
     val grenseverdi: Prosent,
-    val gradering: Gradering?,
+    val gradering: Gradering,
     val trekk: Dagsatser
 ) : Comparable<Underveisperiode> {
 
@@ -20,7 +20,7 @@ class Underveisperiode(
         if (utfall == Utfall.IKKE_OPPFYLT) {
             return Prosent.`0_PROSENT`
         }
-        return gradering?.gradering ?: Prosent.`0_PROSENT`
+        return gradering.gradering
     }
 
     override fun compareTo(other: Underveisperiode): Int {

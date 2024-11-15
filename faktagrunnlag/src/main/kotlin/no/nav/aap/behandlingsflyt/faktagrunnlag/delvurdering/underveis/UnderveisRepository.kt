@@ -50,21 +50,17 @@ class UnderveisRepository(private val connection: DBConnection) {
 
     private fun mapPeriode(it: Row): Underveisperiode {
 
-        val antallTimer = it.getBigDecimalOrNull("timer_arbeid")
-        val graderingProsent = it.getIntOrNull("gradering")
-        val andelArbeidsevne = it.getIntOrNull("andel_arbeidsevne")
+        val antallTimer = it.getBigDecimal("timer_arbeid")
+        val graderingProsent = it.getInt("gradering")
+        val andelArbeidsevne = it.getInt("andel_arbeidsevne")
 
-        val gradering = if (antallTimer == null || graderingProsent == null || andelArbeidsevne == null) {
-            null
-        } else {
-            val gradering = Prosent(graderingProsent)
-            Gradering(
+        val gradering = Gradering(
                 totaltAntallTimer = TimerArbeid(antallTimer),
-                andelArbeid = Prosent.`100_PROSENT`.minus(gradering),
+                andelArbeid = Prosent.`100_PROSENT`.minus(Prosent(graderingProsent)),
                 fastsattArbeidsevne = Prosent(andelArbeidsevne),
-                gradering = gradering,
+                gradering = Prosent(graderingProsent),
             )
-        }
+
 
         return Underveisperiode(
             it.getPeriode("periode"),
@@ -115,11 +111,11 @@ class UnderveisRepository(private val connection: DBConnection) {
                 setEnumName(3, periode.utfall)
                 setEnumName(4, periode.avslagsårsak)
                 setInt(5, periode.grenseverdi.prosentverdi())
-                setBigDecimal(6, periode.gradering?.totaltAntallTimer?.antallTimer)
-                setInt(7, periode.gradering?.gradering?.prosentverdi())
+                setBigDecimal(6, periode.gradering.totaltAntallTimer.antallTimer)
+                setInt(7, periode.gradering.gradering.prosentverdi())
                 setPeriode(8, periode.meldePeriode)
                 setInt(9, periode.trekk.antall)
-                setInt(10, periode.gradering?.fastsattArbeidsevne?.prosentverdi())
+                setInt(10, periode.gradering.fastsattArbeidsevne.prosentverdi())
             }
         }
 

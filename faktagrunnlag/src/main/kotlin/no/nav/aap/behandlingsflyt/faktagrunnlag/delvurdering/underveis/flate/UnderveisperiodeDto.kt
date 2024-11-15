@@ -1,0 +1,54 @@
+package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.flate
+
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Dagsatser
+import no.nav.aap.komponenter.verdityper.Prosent
+
+data class UnderveisperiodeDto(
+    val periode: Periode,
+    val meldePeriode: Periode,
+    val utfall: Utfall,
+    val avslagsårsak: UnderveisÅrsak?,
+    val gradering: GraderingDto,
+    val trekk: Dagsatser
+) {
+    constructor(underveisperiode: Underveisperiode): this(
+        periode = underveisperiode.periode,
+        meldePeriode = underveisperiode.meldePeriode,
+        utfall = underveisperiode.utfall,
+        avslagsårsak = underveisperiode.avslagsårsak,
+        gradering = GraderingDto(underveisperiode.gradering, underveisperiode.grenseverdi),
+        trekk = Dagsatser(underveisperiode.trekk.antall * underveisperiode.periode.antallDager())
+    )
+}
+
+data class GraderingDto(
+    val gradering: Int,
+    val andelArbeid: Int,
+    val fastsattArbeidsevne: Int,
+    val grenseverdi: Int
+) {
+    constructor(gradering: Gradering, grenseverdi: Prosent) : this(
+        gradering = gradering.gradering.prosentverdi(),
+        andelArbeid = gradering.andelArbeid.prosentverdi(),
+        fastsattArbeidsevne = gradering.fastsattArbeidsevne.prosentverdi(),
+        grenseverdi = grenseverdi.prosentverdi()
+    )
+}
+
+/*
+class Underveisperiode(
+    val periode: Periode,
+    val meldePeriode: Periode?,
+    val utfall: Utfall,
+    val avslagsårsak: UnderveisÅrsak?,
+    val grenseverdi: Prosent,
+    val gradering: Gradering?,
+    val trekk: Dagsatser
+)
+ */

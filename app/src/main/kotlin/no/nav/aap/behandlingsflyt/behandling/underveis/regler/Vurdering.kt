@@ -25,7 +25,7 @@ data class Vurdering(
     private val grenseverdi: Prosent? = null,
     internal val institusjonVurdering: InstitusjonVurdering? = null,
     internal val soningsVurdering: SoningVurdering? = null,
-    val meldeperiode: Periode? = null,
+    private val meldeperiode: Periode? = null,
 ) {
 
     fun leggTilVurdering(vilkårtype: Vilkårtype, utfall: Utfall): Vurdering {
@@ -110,9 +110,13 @@ data class Vurdering(
         return requireNotNull(grenseverdi)
     }
 
-    fun gradering(): Gradering? {
+    fun meldeperiode(): Periode {
+        return requireNotNull(meldeperiode)
+    }
+
+    fun gradering(): Gradering {
         return when {
-            gradering == null -> null
+            gradering == null -> error("gradering er ikke lagt til enda")
             harRett() && institusjonVurdering?.skalReduseres == true -> gradering.copy(
                 gradering = gradering.gradering.minus(
                     Prosent.`50_PROSENT`,

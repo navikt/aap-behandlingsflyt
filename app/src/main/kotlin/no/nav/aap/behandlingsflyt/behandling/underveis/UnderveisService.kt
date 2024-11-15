@@ -86,7 +86,7 @@ class UnderveisService(
                         avslagsårsak = it.verdi.avslagsårsak(),
                         grenseverdi = it.verdi.grenseverdi(),
                         gradering = it.verdi.gradering(),
-                        trekk = if (it.verdi.skalReduseresDagsatser()) Dagsatser(it.periode.antallDager()) else Dagsatser(0)
+                        trekk = if (it.verdi.skalReduseresDagsatser()) Dagsatser(1) else Dagsatser(0)
                     )
                 },
             input
