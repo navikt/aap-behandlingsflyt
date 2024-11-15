@@ -34,12 +34,13 @@ jobs:
                 with:
                     repository: navikt/aap-backend-typescript-types
                     path: ./aap-backend-typescript-types
-                    token: ${{ secrets.READER_TOKEN }}
+                    token: ${{ secrets.github_token }}
             - uses: actions/github-script@v7
               env:
                   WORKFLOW_ID: ${{ inputs.workflow-id }}
                   LABEL: ${{ inputs.label }}
               with:
+                  github-token: ${{ secrets.READER_TOKEN }}
                   script: |
                       const fs = require('fs');
                       const jsonString = fs.readFileSync("./openapi.json").toString('utf-8');
