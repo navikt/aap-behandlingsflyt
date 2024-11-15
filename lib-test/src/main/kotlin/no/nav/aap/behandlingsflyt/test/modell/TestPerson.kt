@@ -25,7 +25,7 @@ class TestPerson(
     val navn: PersonNavn = FiktivtNavnGenerator.genererNavn(),
     val yrkesskade: List<TestYrkesskade> = emptyList(),
     val institusjonsopphold: List<Institusjonsopphold> = emptyList(),
-    val uføre: Prosent = Prosent(0),
+    val uføre: Prosent? = Prosent(0),
     inntekter: List<InntektPerÅr> = (1..10).map { InntektPerÅr(Year.now().minusYears(it.toLong()), Beløp("400000.0")) }
 ) {
     private val inntekter: MutableList<InntektPerÅr> = inntekter.toMutableList()
