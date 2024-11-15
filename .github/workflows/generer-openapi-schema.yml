@@ -54,7 +54,7 @@ jobs:
                             workflow_id: 'publish-and-release.yml',
                             ref: 'main',
                             inputs: {
-                                'artifactId': ${{steps.artifact-upload-step.outputs.artifact-id}},
+                                'artifactId': '${{steps.artifact-upload-step.outputs.artifact-id}}',
                                 'appNavn': 'behandlingflyt'
                             }
                         })
