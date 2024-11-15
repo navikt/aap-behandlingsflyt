@@ -89,7 +89,7 @@ private fun opprettDokument(connection: DBConnection, navIdent: Bruker, saksnumm
 
     val sak = SakService(connection).hent(saksnummer)
 
-    val aktivitetspliktDokumenter = req.tilDomene(sak.id, navIdent)
+    val aktivitetspliktDokumenter = req.tilDomene(sak, navIdent)
     val innsendingId = aktivitetspliktServce.registrerBrudd(aktivitetspliktDokumenter)
 
     registrerDokumentjobb(innsendingId, aktivitetspliktDokumenter, connection, sak)
