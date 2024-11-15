@@ -46,12 +46,12 @@ enum class MeldingStatusType {
     BESTILT, SENDT, OK, AVVIST
 }
 
-data class AvslåttLegeerklæringId(@JsonValue val value: UUID) {
+data class AvvistLegeerklæringId(@JsonValue val value: UUID) {
     val asString get() = value.toString()
 
     constructor(value: String) : this(UUID.fromString(value))
 
     companion object {
-        fun ny() = AvslåttLegeerklæringId(UUID.randomUUID())
+        fun ny() = AvvistLegeerklæringId(UUID.randomUUID())
     }
 }

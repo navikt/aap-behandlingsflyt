@@ -41,7 +41,7 @@ class LegeerklæringVentebehovEvaluererTest {
             val sak = opprettSak(connection)
             val behandling = opprettBehandling(connection, sak)
 
-            genererDokument(sak.id, behandling.id, connection, Brevkode.LEGEERKLÆRING_AVSLÅTT, MottattDokumentReferanse(MottattDokumentReferanse.Type.AVSLÅTT_LEGEERKLÆRING_ID, "referanse"))
+            genererDokument(sak.id, behandling.id, connection, Brevkode.LEGEERKLÆRING_AVVIST, MottattDokumentReferanse(MottattDokumentReferanse.Type.AVVIST_LEGEERKLÆRING_ID, "referanse"))
 
             val erLøst = evaluerer.ansesSomLøst(behandling.id, avklaringsbehov)
             assertEquals(true, erLøst)
@@ -88,7 +88,7 @@ class LegeerklæringVentebehovEvaluererTest {
 
     private fun opprettBehandling(connection: DBConnection, sak: Sak): Behandling {
         return SakOgBehandlingService(connection).finnEllerOpprettBehandling(
-            sak.saksnummer, listOf(Årsak(ÅrsakTilBehandling.MOTTATT_AVSLÅTT_LEGEERKLÆRING))
+            sak.saksnummer, listOf(Årsak(ÅrsakTilBehandling.MOTTATT_AVVIST_LEGEERKLÆRING))
         ).behandling
     }
 }
