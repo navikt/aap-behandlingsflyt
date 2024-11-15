@@ -19,6 +19,7 @@ import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.tilgang.AuthorizetionGetPathConfig
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPostWithApprovedList
@@ -33,6 +34,7 @@ private val logger = LoggerFactory.getLogger("SaksAPI")
 
 fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
     val postmottakAzp = requiredConfigForKey("integrasjon.postmottak.azp")
+    val brevAzp = requiredConfigForKey("integrasjon.brev.azp")
     route("/api/sak") {
         route("/finn").post<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO> { _, dto ->
             val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
@@ -152,7 +154,10 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
 
             route("/{saksnummer}/personinformasjon") {
                 authorizedGet<HentSakDTO, SakPersoninfoDTO>(
-                    SakPathParam("saksnummer")
+                    AuthorizetionGetPathConfig(
+                        sakPathParam = SakPathParam("saksnummer"),
+                        approvedApplications = setOf(brevAzp)
+                    )
                 ) { req ->
 
                     val saksnummer = req.saksnummer
