@@ -1,7 +1,9 @@
 package no.nav.aap.behandlingsflyt.flyt.ventebehov
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
@@ -11,8 +13,10 @@ class LegeerklæringVentebehovEvaluerer(private val connection: DBConnection): S
     }
 
     override fun ansesSomLøst(behandlingId: BehandlingId, avklaringsbehov: Avklaringsbehov): Boolean {
-        // ER avvist eller er funnet i mottak
+        val mottattDokumentRepository = MottattDokumentRepository(connection)
+        val avslåtteDokumenter = mottattDokumentRepository.hentDokumenterAvType(behandlingId, Brevkode.LEGEERKLÆRING_AVSLÅTT)
+        val relevanteAvslåtteDokumenter = avslåtteDokumenter.filter { it.behandlingId == behandlingId }
 
-        TODO("Not yet implemented")
+        return relevanteAvslåtteDokumenter.any() && avklaringsbehov.erÅpent()
     }
 }
