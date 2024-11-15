@@ -40,7 +40,7 @@ jobs:
                   WORKFLOW_ID: ${{ inputs.workflow-id }}
                   LABEL: ${{ inputs.label }}
               with:
-                  github-token: ${{ secrets.READER_TOKEN }}
+                  github-token: ${{ secrets.GH_WF_TOKEN }}
                   script: |
                       const fs = require('fs');
                       const jsonString = fs.readFileSync("./openapi.json").toString('utf-8');
