@@ -34,7 +34,7 @@ jobs:
                 with:
                     repository: navikt/aap-backend-typescript-types
                     path: ./aap-backend-typescript-types
-                    token: ${{ secrets.github_token }}
+                    token: ${{ secrets.READER_TOKEN }}
             - uses: actions/github-script@v7
               env:
                   WORKFLOW_ID: ${{ inputs.workflow-id }}
