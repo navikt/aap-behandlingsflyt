@@ -100,7 +100,7 @@ class PerioderTilVurderingService(connection: DBConnection) {
                 listOf(årsak.type),
                 rettighetsperiode
             )
-            ÅrsakTilBehandling.MOTTATT_AVSLÅTT_LEGEERKLÆRING -> Vurdering(
+            ÅrsakTilBehandling.MOTTATT_AVVIST_LEGEERKLÆRING -> Vurdering(
                 VurderingType.FØRSTEGANGSBEHANDLING,
                 listOf(årsak.type),
                 rettighetsperiode

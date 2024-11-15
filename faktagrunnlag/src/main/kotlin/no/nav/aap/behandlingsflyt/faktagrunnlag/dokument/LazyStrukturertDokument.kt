@@ -37,7 +37,7 @@ class LazyStrukturertDokument(
             Brevkode.SØKNAD -> DefaultJsonMapper.fromJson(strukturerteData, Søknad::class.java) as T
             Brevkode.PLIKTKORT -> DefaultJsonMapper.fromJson(strukturerteData, Pliktkort::class.java) as T
             Brevkode.AKTIVITETSKORT -> DefaultJsonMapper.fromJson(strukturerteData, InnsendingId::class.java) as T
-            Brevkode.LEGEERKLÆRING_AVSLÅTT -> DefaultJsonMapper.fromJson(strukturerteData, AvslåttLegeerklæringId::class.java) as T
+            Brevkode.LEGEERKLÆRING_AVVIST -> DefaultJsonMapper.fromJson(strukturerteData, AvslåttLegeerklæringId::class.java) as T
             Brevkode.LEGEERKLÆRING_MOTTATT -> TODO()
             Brevkode.DIALOGMELDING -> TODO()
             Brevkode.UKJENT -> throw IllegalArgumentException("Ukjent brevkode")

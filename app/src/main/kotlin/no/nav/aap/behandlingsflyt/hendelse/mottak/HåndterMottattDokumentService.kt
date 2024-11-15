@@ -48,7 +48,7 @@ class HåndterMottattDokumentService(connection: DBConnection) {
 
             Brevkode.AKTIVITETSKORT -> Årsak(ÅrsakTilBehandling.MOTTATT_AKTIVITETSMELDING, periode)
             Brevkode.UKJENT -> TODO("Ukjent dokument")
-            Brevkode.LEGEERKLÆRING_AVSLÅTT -> Årsak(ÅrsakTilBehandling.MOTTATT_AVSLÅTT_LEGEERKLÆRING)
+            Brevkode.LEGEERKLÆRING_AVVIST -> Årsak(ÅrsakTilBehandling.MOTTATT_AVVIST_LEGEERKLÆRING)
             Brevkode.LEGEERKLÆRING_MOTTATT -> TODO()
             Brevkode.DIALOGMELDING -> TODO()
         }

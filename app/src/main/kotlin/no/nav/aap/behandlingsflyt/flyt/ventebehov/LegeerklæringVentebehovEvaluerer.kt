@@ -14,7 +14,7 @@ class LegeerklæringVentebehovEvaluerer(private val connection: DBConnection): S
 
     override fun ansesSomLøst(behandlingId: BehandlingId, avklaringsbehov: Avklaringsbehov): Boolean {
         val mottattDokumentRepository = MottattDokumentRepository(connection)
-        val avslåtteDokumenter = mottattDokumentRepository.hentDokumenterAvType(behandlingId, Brevkode.LEGEERKLÆRING_AVSLÅTT)
+        val avslåtteDokumenter = mottattDokumentRepository.hentDokumenterAvType(behandlingId, Brevkode.LEGEERKLÆRING_AVVIST)
         val relevanteAvslåtteDokumenter = avslåtteDokumenter.filter { it.behandlingId == behandlingId }
 
         return relevanteAvslåtteDokumenter.any() && avklaringsbehov.erÅpent()
