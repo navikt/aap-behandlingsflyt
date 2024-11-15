@@ -29,7 +29,7 @@ jobs:
                 with:
                     gradle-version: wrapper
             -   name: Bygg & test
-                run: gradle test buildFatJar --continue --no-daemon --configuration-cache --stacktrace --info
+                run: gradle :app:test --tests '*ApiTest*.*openapi*' --continue --no-daemon --configuration-cache --stacktrace --info
             -   uses: actions/checkout@v4
                 with:
                     repository: navikt/aap-backend-typescript-types
