@@ -55,7 +55,7 @@ class BrevbestillingService(
         val behandling = behandlingRepository.hent(behandlingReferanse)
 
         val brevbestilling = // TODO Bør ha en mer robust logikk for å finne relevant brev for editering, gitt en behandlingreferanse
-            brevbestillingRepository.hent(behandling.id).sortedByDescending { it.id }.first()
+            brevbestillingRepository.hent(behandling.id).maxByOrNull { it.id }!!
 
         return brevbestillingGateway.hent(brevbestilling.referanse)
     }
