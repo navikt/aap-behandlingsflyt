@@ -9,15 +9,16 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.steg.TilbakeførtFraBeslutter
 import no.nav.aap.behandlingsflyt.flyt.steg.TilbakeførtFraKvalitetssikrer
 import no.nav.aap.behandlingsflyt.flyt.steg.Transisjon
+import no.nav.aap.behandlingsflyt.flyt.ventebehov.VentebehovEvaluererService
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Status.UTREDES
 import no.nav.aap.behandlingsflyt.periodisering.PerioderTilVurderingService
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.kontrakt.sak.Status.UTREDES
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.stegFullførtTeller
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -76,14 +77,19 @@ class FlytOrkestrator(
 
         // fjerner av ventepunkt med utløpt frist
         if (avklaringsbehovene.erSattPåVent()) {
-            val behov = avklaringsbehovene.hentVentepunkterMedUtløptFrist()
-            behov.forEach { avklaringsbehovene.løsAvklaringsbehov(it.definisjon, "", SYSTEMBRUKER.ident) }
+            // TODO: Vurdere om det hendelser som trigger prosesserBehandling
+            //  (f.eks ankommet dokument) skal ta behandling av vent
+            val evaluerere = VentebehovEvaluererService(connection)
+            val kandidatBehov = avklaringsbehovene.hentÅpneVentebehov()
+
+            val behovSomErLøst = kandidatBehov.filter { behov -> evaluerere.ansesSomLøst(behandling.id, behov, kontekst.sakId) }
+            behovSomErLøst.forEach { avklaringsbehovene.løsAvklaringsbehov(it.definisjon, "", SYSTEMBRUKER.ident) }
             // Hvis fortsatt på vent
             if (avklaringsbehovene.erSattPåVent()) {
                 return // Bail out
             } else {
                 // Behandlingen er tatt av vent pga frist og flyten flyttes tilbake til steget hvor den sto på vent
-                val tilbakeflyt = behandlingFlyt.tilbakeflyt(behov)
+                val tilbakeflyt = behandlingFlyt.tilbakeflyt(behovSomErLøst)
                 if (!tilbakeflyt.erTom()) {
                     log.info(
                         "Tilbakeført etter tatt av vent fra '{}' til '{}'",
@@ -130,15 +136,6 @@ class FlytOrkestrator(
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         avklaringsbehovene.validateTilstand(behandling = behandling)
-
-        // TODO: Vurdere om det hendelser som trigger prosesserBehandling
-        //  (f.eks ankommet dokument) skal ta behandling av vent
-
-        // fjerner av ventepunkt med utløpt frist
-        if (avklaringsbehovene.erSattPåVent()) {
-            val behov = avklaringsbehovene.hentVentepunkterMedUtløptFrist()
-            behov.forEach { avklaringsbehovene.løsAvklaringsbehov(it.definisjon, "", SYSTEMBRUKER.ident) }
-        }
 
         // Hvis fortsatt på vent
         if (avklaringsbehovene.erSattPåVent()) {

@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.hendelse.mottak
+package no.nav.aap.behandlingsflyt.flyt.internals
 
 interface SakHendelse {
 

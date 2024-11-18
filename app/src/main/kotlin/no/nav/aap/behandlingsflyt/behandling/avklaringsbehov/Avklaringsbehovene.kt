@@ -228,11 +228,12 @@ class Avklaringsbehovene(
         return alle().any { avklaringsbehov -> avklaringsbehov.erVentepunkt() && avklaringsbehov.erÅpent() }
     }
 
+    @Deprecated("Fjernes og erstattes med logikk i flytorkestrator")
     fun hentVentepunkterMedUtløptFrist(): List<Avklaringsbehov> {
         return alle().filter { it.erVentepunkt() && it.erÅpent() && it.fristUtløpt() }
     }
 
-    fun hentVentepunkter(): List<Avklaringsbehov> {
+    fun hentÅpneVentebehov(): List<Avklaringsbehov> {
         return alle().filter { it.erVentepunkt() && it.erÅpent() }
     }
 }

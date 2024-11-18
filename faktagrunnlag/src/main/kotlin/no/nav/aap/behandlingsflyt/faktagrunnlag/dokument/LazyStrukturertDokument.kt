@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.InnsendingId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Pliktkort
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.AvvistLegeerklæringId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -36,6 +37,9 @@ class LazyStrukturertDokument(
             Brevkode.SØKNAD -> DefaultJsonMapper.fromJson(strukturerteData, Søknad::class.java) as T
             Brevkode.PLIKTKORT -> DefaultJsonMapper.fromJson(strukturerteData, Pliktkort::class.java) as T
             Brevkode.AKTIVITETSKORT -> DefaultJsonMapper.fromJson(strukturerteData, InnsendingId::class.java) as T
+            Brevkode.LEGEERKLÆRING_AVVIST -> DefaultJsonMapper.fromJson(strukturerteData, AvvistLegeerklæringId::class.java) as T
+            Brevkode.LEGEERKLÆRING_MOTTATT -> TODO()
+            Brevkode.DIALOGMELDING -> TODO()
             Brevkode.UKJENT -> throw IllegalArgumentException("Ukjent brevkode")
         }
     }

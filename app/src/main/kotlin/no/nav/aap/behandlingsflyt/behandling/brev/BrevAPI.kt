@@ -6,9 +6,11 @@ import com.papsign.ktor.openapigen.route.path.normal.put
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
+import io.ktor.http.HttpStatusCode
+import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovHendelseHåndterer
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehovBehandlingHendelse
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehovHendelse
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.BrevbestillingLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevGateway
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
@@ -87,7 +89,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
 
                                 AvklaringsbehovHendelseHåndterer(connection).håndtere(
                                     key = lås.behandlingSkrivelås.id,
-                                    hendelse = LøsAvklaringsbehovBehandlingHendelse(
+                                    hendelse = LøsAvklaringsbehovHendelse(
                                         løsning = BrevbestillingLøsning(request),
                                         behandlingVersjon = behandling.versjon,
                                         bruker = BREV_SYSTEMBRUKER,

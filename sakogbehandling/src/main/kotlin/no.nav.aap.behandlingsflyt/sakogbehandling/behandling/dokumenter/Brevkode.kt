@@ -4,8 +4,10 @@ enum class Brevkode {
     SØKNAD,
     AKTIVITETSKORT,
     PLIKTKORT,
-    UKJENT
-
+    UKJENT,
+    LEGEERKLÆRING_MOTTATT,
+    LEGEERKLÆRING_AVVIST,
+    DIALOGMELDING
 }
 
 

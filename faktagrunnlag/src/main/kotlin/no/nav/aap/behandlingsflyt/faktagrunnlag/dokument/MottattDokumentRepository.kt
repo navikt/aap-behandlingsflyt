@@ -126,4 +126,21 @@ class MottattDokumentRepository(private val connection: DBConnection) {
             }
         }.toSet()
     }
+
+    fun hentDokumenterAvType(behandlingId: BehandlingId, type: Brevkode): Set<MottattDokument> {
+        val query = """
+            SELECT * FROM MOTTATT_DOKUMENT
+            WHERE behandling_id = ? AND type = ?
+        """.trimIndent()
+
+        return connection.queryList(query) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setEnumName(2, type)
+            }
+            setRowMapper { row ->
+                mapMottattDokument(row)
+            }
+        }.toSet()
+    }
 }

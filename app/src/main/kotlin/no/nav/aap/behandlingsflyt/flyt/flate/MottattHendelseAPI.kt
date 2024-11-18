@@ -1,0 +1,52 @@
+package no.nav.aap.behandlingsflyt.flyt.flate
+
+import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
+import com.papsign.ktor.openapigen.route.path.normal.post
+import com.papsign.ktor.openapigen.route.response.respond
+import com.papsign.ktor.openapigen.route.route
+import io.ktor.http.*
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.server.prosessering.HendelseMottattHåndteringJobbUtfører
+import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.motor.FlytJobbRepository
+import no.nav.aap.verdityper.dokument.JournalpostId
+import org.slf4j.MDC
+import java.time.LocalDate
+import javax.sql.DataSource
+
+fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource) {
+    route("/api/hendelse") {
+        route("/send").post<Unit, String, MottattHendelseDto> { _, dto ->
+            MDC.putCloseable("saksnummer", dto.saksnummer).use {
+                dataSource.transaction { connection ->
+                    val sakService = SakService(connection)
+                    val sak = sakService.hent(Saksnummer(dto.saksnummer))
+
+                    val flytJobbRepository = FlytJobbRepository(connection)
+                    val dokumentReferanse = MottattDokumentReferanse(dto.referanse.type, dto.referanse.verdi)
+
+                    flytJobbRepository.leggTil(
+                        HendelseMottattHåndteringJobbUtfører.nyJobb(
+                            sakId = sak.id,
+                            dokumentReferanse = dokumentReferanse,
+                            brevkode = dto.type,
+                            kanal = dto.kanal,
+                            periode = Periode(
+                                LocalDate.now(),
+                                LocalDate.now().plusWeeks(4)
+                            ),
+                            payload = dto
+                        )
+                    )
+                }
+            }
+            respond("{}", HttpStatusCode.Accepted)
+        }
+    }
+}
