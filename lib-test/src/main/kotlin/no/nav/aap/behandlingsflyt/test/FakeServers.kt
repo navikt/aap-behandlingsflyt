@@ -18,6 +18,11 @@ import kotlinx.coroutines.runBlocking
 import no.nav.aap.Inntekt.InntektRequest
 import no.nav.aap.Inntekt.InntektResponse
 import no.nav.aap.Inntekt.SumPi
+import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.BestillLegeerklæringDto
+import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.ForhåndsvisBrevRequest
+import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.HentStatusLegeerklæring
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringStatusResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.MeldingStatusType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.BARN_RELASJON_QUERY
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.PERSON_BOLK_QUERY
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
@@ -27,6 +32,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.LøsBrevbestillingDto
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.IDENT_QUERY
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoGateway
+import no.nav.aap.behandlingsflyt.test.FakeServers.statistikkFake
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.brev.kontrakt.BestillBrevRequest
 import no.nav.aap.brev.kontrakt.BestillBrevResponse
@@ -98,8 +104,10 @@ object FakeServers : AutoCloseable {
     private val foreldrepenger = embeddedServer(Netty, port = 0, module = { fpFake() })
     private val sykepenger = embeddedServer(Netty, port = 0, module = { spFake() })
     private val statistikk = embeddedServer(Netty, port = 0, module = { statistikkFake() })
+    private val dokumentinnhenting = embeddedServer(Netty, port = 0, module = { dokumentinnhentingFake() })
 
     internal val statistikkHendelser = mutableListOf<StoppetBehandling>()
+    internal val legeerklæringStatuser = mutableListOf<LegeerklæringStatusResponse>()
 
     private val started = AtomicBoolean(false)
 
@@ -254,6 +262,52 @@ object FakeServers : AutoCloseable {
             post("/tilgang/journalpost") {
                 call.receive<JournalpostTilgangRequest>()
                 call.respond(TilgangResponse(true))
+            }
+        }
+    }
+
+    private fun Application.dokumentinnhentingFake() {
+        install(ContentNegotiation) {
+            jackson {
+                registerModule(JavaTimeModule())
+            }
+        }
+        install(StatusPages) {
+            exception<Throwable> { call, cause ->
+                this@dokumentinnhentingFake.log.info(
+                    "DOKUMENTINNHENTING :: Ukjent feil ved kall til '{}'",
+                    call.request.local.uri,
+                    cause
+                )
+                call.respond(
+                    status = HttpStatusCode.Companion.InternalServerError,
+                    message = ErrorRespons(cause.message)
+                )
+            }
+        }
+        routing {
+            post("/api/dokumentinnhenting/syfo/bestill") {
+                val dto = call.receive<BestillLegeerklæringDto>()
+                val dialogmeldingId = UUID.randomUUID()
+                legeerklæringStatuser.add(
+                    LegeerklæringStatusResponse(
+                        dialogmeldingId, MeldingStatusType.OK, "", dto.behandlerRef, dto.behandlerNavn, UUID.randomUUID().toString(), dto.saksnummer, LocalDateTime.now(), dto.fritekst
+                    )
+                )
+                call.respond(dialogmeldingId.toString())
+            }
+        }
+        routing {
+            get("/api/dokumentinnhenting/syfo/status/{saksnummer}") {
+                val req = call.receive<HentStatusLegeerklæring>()
+                val statuser = legeerklæringStatuser.filter { it.saksnummer == req.saksnummer }
+                call.respond(statuser)
+            }
+        }
+        routing {
+            post("/api/dokumentinnhenting/syfo/brevpreview") {
+                val req = call.receive<ForhåndsvisBrevRequest>()
+                call.respond(req.fritekst)
             }
         }
     }
@@ -1025,6 +1079,7 @@ object FakeServers : AutoCloseable {
         pesysFake.start()
         sykepenger.start()
         statistikk.start()
+        dokumentinnhenting.start()
 
         println("AZURE PORT ${azure.port()}")
 
@@ -1101,6 +1156,10 @@ object FakeServers : AutoCloseable {
         // Sykepenger
         System.setProperty("integrasjon.sykepenger.url", "http://localhost:${sykepenger.port()}")
         System.setProperty("integrasjon.sykepenger.scope", "scope")
+
+        // Dokumentinnhenting
+        System.setProperty("integrasjon.dokumentinnhenting.url", "http://localhost:${dokumentinnhenting.port()}")
+        System.setProperty("integrasjon.dokumentinnhenting.scope", "scope")
     }
 
     override fun close() {
@@ -1120,6 +1179,7 @@ object FakeServers : AutoCloseable {
         tilgang.stop(0L, 0L)
         foreldrepenger.stop(0L, 0L)
         sykepenger.stop(0L, 0L)
+        dokumentinnhenting.stop(0L, 0L)
     }
 }
 
