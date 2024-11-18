@@ -4,8 +4,10 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.papsign.ktor.openapigen.annotations.Response
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.pliktkort.Pliktkort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
+import no.nav.aap.komponenter.verdityper.Beløp
 import org.jetbrains.annotations.NotNull
 import java.time.LocalDate
+import java.time.Year
 
 data class Institusjoner(
     val fengsel: Boolean? = false,
@@ -19,7 +21,7 @@ data class OpprettTestcaseDTO(
     @JsonProperty(value = "uføre") val uføre: Int?,
     @NotNull @JsonProperty(value = "student", defaultValue = "false") val student: Boolean,
     @NotNull @JsonProperty(value = "barn") val barn: List<TestBarn> = emptyList(),
-    @JsonProperty(value = "inntekterPerAr") val inntekterPerAr: List<InntektPerÅr>? = null,
+    @JsonProperty(value = "inntekterPerAr") val inntekterPerAr: List<InntektPerÅrDto>? = null,
     val institusjoner: Institusjoner = Institusjoner()
 )
 
@@ -27,6 +29,12 @@ data class TestBarn(
     @JsonProperty(value = "fodselsdato", required = true) val fodselsdato: LocalDate,
     val harRelasjon: Boolean = true
 )
+
+data class InntektPerÅrDto(val år: Int, val beløp: Beløp) {
+    fun to() : InntektPerÅr {
+        return InntektPerÅr(Year.of(år), beløp)
+    }
+}
 
 @Response(statusCode = 202)
 data class PliktkortTestDTO(

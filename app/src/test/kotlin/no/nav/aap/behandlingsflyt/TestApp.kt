@@ -81,7 +81,7 @@ fun main() {
                                     if (dto.institusjoner.fengsel == true) genererFengselsopphold() else null,
                                     if (dto.institusjoner.sykehus == true) genererSykehusopphold() else null,
                                 ),
-                                inntekter = dto.inntekterPerAr ?: defaultInntekt()
+                                inntekter = dto.inntekterPerAr?.map { inn -> inn.to() } ?: defaultInntekt()
                             )
                         )
                         val periode = Periode(
