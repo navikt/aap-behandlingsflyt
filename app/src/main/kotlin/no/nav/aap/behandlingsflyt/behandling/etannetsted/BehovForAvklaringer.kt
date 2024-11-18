@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.etannetsted
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.OppholdVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 
 class BehovForAvklaringer(
     val perioderTilVurdering: Tidslinje<InstitusjonsOpphold>

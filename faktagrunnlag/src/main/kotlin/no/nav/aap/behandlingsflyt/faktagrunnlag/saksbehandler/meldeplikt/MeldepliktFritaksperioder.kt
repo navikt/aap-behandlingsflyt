@@ -2,8 +2,8 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering.Companion.tidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering.FritaksvurderingData
-import no.nav.aap.tidslinje.StandardSammenslåere
-import no.nav.aap.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 
 class MeldepliktFritaksperioder private constructor(private val tidslinje: Tidslinje<FritaksvurderingData>) {
 

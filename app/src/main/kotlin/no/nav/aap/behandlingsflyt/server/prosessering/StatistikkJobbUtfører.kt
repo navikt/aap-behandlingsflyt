@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag1
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET
@@ -30,6 +31,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
@@ -71,7 +73,9 @@ class StatistikkJobbUtfører(
     private fun oversettHendelseTilKontrakt(hendelse: BehandlingFlytStoppetHendelse): StoppetBehandling {
         log.info("Oversetter hendelse for behandling ${hendelse.referanse} og saksnr ${hendelse.saksnummer}")
         val behandling = behandlingRepository.hent(hendelse.referanse)
-        val mottattTidspunkt = utledMottattTidspunkt(behandling)
+        val søknaderForSak = hentSøknanderForSak(behandling)
+        val mottattTidspunkt = utledMottattTidspunkt(behandling, søknaderForSak)
+        val kanal = hentSøknadsKanal(behandling, søknaderForSak)
 
         val forrigeBehandling =
             if (behandling.forrigeBehandlingId != null) behandlingRepository.hent(behandling.forrigeBehandlingId!!) else null
@@ -87,6 +91,10 @@ class StatistikkJobbUtfører(
             behandlingReferanse = hendelse.referanse.referanse,
             relatertBehandling = forrigeBehandling?.referanse?.referanse,
             behandlingOpprettetTidspunkt = hendelse.opprettetTidspunkt,
+            soknadsFormat = when (kanal) {
+                Kanal.DIGITAL -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Kanal.DIGITAL
+                Kanal.PAPIR -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Kanal.PAPIR
+            },
             versjon = hendelse.versjon,
             mottattTid = mottattTidspunkt,
             sakStatus = sak.status(),
@@ -101,12 +109,24 @@ class StatistikkJobbUtfører(
         return pipRepository.finnIdenterPåSak(saksnummer).map { it.ident }
     }
 
-    private fun utledMottattTidspunkt(behandling: Behandling): LocalDateTime {
-        val hentDokumenterAvType = dokumentRepository.hentDokumenterAvType(
-            behandling.sakId,
-            Brevkode.SØKNAD
-        )
+    private fun hentSøknadsKanal(behandling: Behandling, hentDokumenterAvType: Set<MottattDokument>): Kanal {
+        val kanaler = hentDokumenterAvType
+            .filter { it.behandlingId == behandling.id }
+            .map { it.kanal }
 
+        // Om minst én av søknadene er papir, regn med at hele behandlingen er papir
+        return kanaler.reduceOrNull() { acc, curr ->
+            when (acc) {
+                Kanal.DIGITAL -> curr
+                Kanal.PAPIR -> Kanal.PAPIR
+            }
+        } ?: Kanal.DIGITAL
+    }
+
+    private fun utledMottattTidspunkt(
+        behandling: Behandling,
+        hentDokumenterAvType: Set<MottattDokument>
+    ): LocalDateTime {
         val mottattTidspunkt = hentDokumenterAvType
             .filter { it.behandlingId == behandling.id }
             .minOfOrNull { it.mottattTidspunkt }
@@ -116,6 +136,14 @@ class StatistikkJobbUtfører(
             return behandling.opprettetTidspunkt
         }
         return mottattTidspunkt
+    }
+
+    private fun hentSøknanderForSak(behandling: Behandling): Set<MottattDokument> {
+        val hentDokumenterAvType = dokumentRepository.hentDokumenterAvType(
+            behandling.sakId,
+            Brevkode.SØKNAD
+        )
+        return hentDokumenterAvType
     }
 
     /**

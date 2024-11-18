@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Faktagrunnlag
-import no.nav.aap.verdityper.GUnit
+import no.nav.aap.komponenter.verdityper.GUnit
 
 /**
  * Grunnlag for beregningen.

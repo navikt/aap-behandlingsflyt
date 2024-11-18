@@ -6,10 +6,10 @@ import no.nav.aap.behandlingsflyt.dbtestdata.januar
 import no.nav.aap.behandlingsflyt.dbtestdata.mai
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.tidslinje.Segment
-import no.nav.aap.tidslinje.StandardSammenslåere
-import no.nav.aap.tidslinje.Tidslinje
-import no.nav.aap.verdityper.Beløp
+import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.verdityper.Beløp
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -55,7 +55,7 @@ class GrunnbeløpTest {
     fun `fornuftig feilmelding om man prøver å slå opp grunnbeløp som ikke finnes`() {
         val exception = assertThrows<RuntimeException> { Grunnbeløp.finnGUnit(Year.of(1814), Beløp(1000)) }
 
-        assertThat(exception.message).contains("Finner ikke gjennomsnittsbeløp for år: 1814.")
+        assertThat(exception.message).contains("Finner ikke gjennomsnittsbeløp for dato: 1814-01-01.")
     }
 
     @Test

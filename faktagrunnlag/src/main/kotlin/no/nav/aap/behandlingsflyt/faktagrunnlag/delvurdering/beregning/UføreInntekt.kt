@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning
 
-import no.nav.aap.verdityper.Beløp
-import no.nav.aap.verdityper.GUnit
-import no.nav.aap.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.GUnit
+import no.nav.aap.komponenter.verdityper.Prosent
 import java.time.Year
 
 /**

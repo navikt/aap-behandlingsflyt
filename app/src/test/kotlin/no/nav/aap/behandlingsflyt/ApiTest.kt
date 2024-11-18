@@ -40,8 +40,8 @@ import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.verdityper.Beløp
-import no.nav.aap.verdityper.GUnit
+import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.verdityper.flyt.ÅrsakTilBehandling
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import org.assertj.core.api.Assertions.assertThat
@@ -52,14 +52,18 @@ import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
+import java.io.BufferedWriter
+import java.io.FileWriter
 import java.io.InputStream
 import java.net.URI
+import java.nio.charset.StandardCharsets
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Year
 import java.time.temporal.ChronoUnit
 import java.util.*
+import kotlin.test.fail
 
 private val logger = LoggerFactory.getLogger("ApiTest")
 
@@ -93,7 +97,8 @@ class ApiTest {
         @BeforeAll
         fun beforeall() {
             server.start()
-            port = runBlocking { server.engine.resolvedConnectors().filter { it.type == ConnectorType.HTTP }.first().port }
+            port =
+                runBlocking { server.engine.resolvedConnectors().filter { it.type == ConnectorType.HTTP }.first().port }
         }
 
         @JvmStatic
@@ -312,6 +317,29 @@ class ApiTest {
         }
 
         logger.info("Behandling: $behandling")
+    }
+
+    @Test
+    fun `skal lager openapi som fil`() {
+        val openApiDoc =
+            requireNotNull(
+                client.get<String>(
+                    URI.create("http://localhost:$port/openapi.json"),
+                    GetRequest()
+                ) { body, _ ->
+                    String(body.readAllBytes(), StandardCharsets.UTF_8)
+                }
+            )
+
+        try {
+            val writer = BufferedWriter(FileWriter("../openapi.json"));
+            writer.write(openApiDoc);
+
+            writer.close();
+        } catch (_: Exception) {
+            fail()
+        }
+
     }
 
     private fun <E> kallInntilKlar(block: () -> E): E? {

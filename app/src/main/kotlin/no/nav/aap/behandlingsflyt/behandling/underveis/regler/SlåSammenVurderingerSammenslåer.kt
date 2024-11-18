@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.Segment
 
 internal class SlåSammenVurderingerSammenslåer {
     internal fun sammenslå(

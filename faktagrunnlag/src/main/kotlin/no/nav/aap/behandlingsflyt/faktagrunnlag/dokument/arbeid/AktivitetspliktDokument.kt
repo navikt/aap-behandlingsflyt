@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.PARAGRAF_11_7
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.PARAGRAF_11_8
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.PARAGRAF_11_9
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.sakogbehandling.SakId
@@ -36,6 +37,20 @@ data class Brudd(
         PARAGRAF_11_7,
         PARAGRAF_11_8,
         PARAGRAF_11_9
+    }
+
+    companion object {
+        fun nyttBrudd(sak: Sak, periode: Periode, bruddType: BruddType, paragraf: Paragraf): Brudd {
+            require(sak.opprettetTidspunkt.toLocalDate() <= periode.fom) {
+                "Brudd før søknadstidspunktet(${sak.opprettetTidspunkt.toLocalDate()} kan ikke registreres: brudd-perioden er $periode"
+            }
+            return Brudd(
+                sakId = sak.id,
+                periode = periode,
+                bruddType = bruddType,
+                paragraf = paragraf,
+            )
+        }
     }
 }
 

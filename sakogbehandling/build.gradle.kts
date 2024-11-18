@@ -1,6 +1,6 @@
 val ktorVersion = "3.0.1"
-val komponenterVersjon = "1.0.55"
-val tilgangVersjon = "0.0.27"
+val komponenterVersjon = "1.0.63"
+val tilgangVersjon = "0.0.38"
 
 plugins {
     id("behandlingsflyt.conventions")

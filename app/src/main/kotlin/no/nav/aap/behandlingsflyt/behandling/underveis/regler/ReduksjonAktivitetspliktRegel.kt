@@ -10,9 +10,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_M
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_SENDT_INN_DOKUMENTASJON
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.tidslinje.Segment
-import no.nav.aap.tidslinje.StandardSammenslåere
-import no.nav.aap.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import java.time.LocalDate
 import java.time.Period
 import java.time.ZoneId

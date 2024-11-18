@@ -1,6 +1,6 @@
 val ktorVersion = "3.0.1"
-val komponenterVersjon = "1.0.55"
-val tilgangVersjon = "0.0.27"
+val komponenterVersjon = "1.0.63"
+val tilgangVersjon = "0.0.38"
 
 plugins {
     id("behandlingsflyt.conventions")
@@ -16,6 +16,7 @@ dependencies {
     implementation("no.nav.aap.brev:kontrakt:0.0.20")
     implementation("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
     implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
+    implementation("no.nav.aap.kelvin:verdityper:$komponenterVersjon")
     implementation("io.ktor:ktor-server-auth:$ktorVersion")
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")

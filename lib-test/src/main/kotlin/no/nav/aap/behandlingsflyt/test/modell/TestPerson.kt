@@ -7,14 +7,17 @@ import no.nav.aap.behandlingsflyt.test.FiktivtNavnGenerator
 import no.nav.aap.behandlingsflyt.test.FødselsnummerGenerator
 import no.nav.aap.behandlingsflyt.test.PersonNavn
 import no.nav.aap.institusjon.Institusjonsopphold
-import no.nav.aap.verdityper.Beløp
-import no.nav.aap.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import java.time.LocalDate
 import java.time.Year
 
 fun genererIdent(fødselsdato: LocalDate): Ident {
     return Ident(FødselsnummerGenerator.Builder().fodselsdato(fødselsdato).buildAndGenerate())
+}
+fun defaultInntekt(): List<InntektPerÅr> {
+    return (1..10).map { InntektPerÅr(Year.now().minusYears(it.toLong()), Beløp("400000.0")) }
 }
 
 class TestPerson(
@@ -25,8 +28,8 @@ class TestPerson(
     val navn: PersonNavn = FiktivtNavnGenerator.genererNavn(),
     val yrkesskade: List<TestYrkesskade> = emptyList(),
     val institusjonsopphold: List<Institusjonsopphold> = emptyList(),
-    val uføre: Prosent = Prosent(0),
-    inntekter: List<InntektPerÅr> = (1..10).map { InntektPerÅr(Year.now().minusYears(it.toLong()), Beløp("400000.0")) }
+    val uføre: Prosent? = Prosent(0),
+    inntekter: List<InntektPerÅr> = defaultInntekt()
 ) {
     private val inntekter: MutableList<InntektPerÅr> = inntekter.toMutableList()
 
@@ -42,5 +45,9 @@ class TestPerson(
 
     override fun toString(): String {
         return "TestPerson(fødselsdato=$fødselsdato, identer=$identer, dødsdato=$dødsdato, barn=$barn, navn=$navn, yrkesskade=$yrkesskade, institusjonsopphold=$institusjonsopphold, inntekter=$inntekter)"
+    }
+
+    fun aktivIdent(): Ident {
+        return identer.single { it.aktivIdent }
     }
 }

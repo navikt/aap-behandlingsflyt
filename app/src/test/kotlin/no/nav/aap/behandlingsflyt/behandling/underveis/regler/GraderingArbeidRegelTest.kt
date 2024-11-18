@@ -7,9 +7,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Pliktkort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneVurdering
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.tidslinje.Tidslinje
-import no.nav.aap.verdityper.Prosent
-import no.nav.aap.verdityper.TimerArbeid
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue

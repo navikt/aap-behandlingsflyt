@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UtledMeldeperiodeRegel.Companion.groupByMeldeperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak.IKKE_OVERHOLDT_MELDEPLIKT_SANKSJON
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak.MELDEPLIKT_FRIST_IKKE_PASSERT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.IKKE_OPPFYLT
@@ -8,10 +7,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering.Companion.tidslinje
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.tidslinje.JoinStyle
-import no.nav.aap.tidslinje.Segment
-import no.nav.aap.tidslinje.StandardSammenslåere
-import no.nav.aap.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.JoinStyle
+import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.Clock
 import java.time.LocalDate
@@ -50,7 +49,15 @@ class MeldepliktRegel(
                 Segment(periode, MeldepliktData(fritaksvurdering?.verdi, dokument?.verdi))
             })
 
-        val groupByMeldeperiode = groupByMeldeperiode(resultat, meldepliktTidslinje).segmenter()
+        val groupByMeldeperiode = meldepliktTidslinje.splittOppIPerioder(
+            resultat.mapNotNull { vurdering ->
+                vurdering.verdi.meldeperiode?.let {
+                    it.utvid(
+                        Periode(it.fom, it.fom.plusDays(7))
+                    )
+                }
+            }
+        ).segmenter()
 
         if (groupByMeldeperiode.isEmpty()) return resultat
 

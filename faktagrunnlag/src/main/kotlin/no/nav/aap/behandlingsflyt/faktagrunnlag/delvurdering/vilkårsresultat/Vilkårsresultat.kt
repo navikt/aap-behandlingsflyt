@@ -17,6 +17,10 @@ class Vilkårsresultat(
         return vilkår.first { it.type == vilkårtype }
     }
 
+    fun optionalVilkår(vilkårtype: Vilkårtype): Vilkår? {
+        return vilkår.firstOrNull { it.type == vilkårtype }
+    }
+
     fun alle(): List<Vilkår> {
         return vilkår.toList()
     }

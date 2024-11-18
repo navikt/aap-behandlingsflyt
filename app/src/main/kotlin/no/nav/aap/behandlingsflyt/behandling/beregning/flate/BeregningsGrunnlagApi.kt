@@ -18,7 +18,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.verdityper.GUnit
+import no.nav.aap.komponenter.verdityper.GUnit
 import java.time.format.DateTimeFormatter
 import javax.sql.DataSource
 

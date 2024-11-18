@@ -9,10 +9,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.tidslinje.JoinStyle
-import no.nav.aap.tidslinje.Segment
-import no.nav.aap.tidslinje.Tidslinje
-import no.nav.aap.verdityper.Prosent
+import no.nav.aap.komponenter.tidslinje.JoinStyle
+import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.verdityper.Prosent
 import java.util.*
 
 data class Vurdering(
@@ -25,7 +25,7 @@ data class Vurdering(
     private val grenseverdi: Prosent? = null,
     internal val institusjonVurdering: InstitusjonVurdering? = null,
     internal val soningsVurdering: SoningVurdering? = null,
-    internal val meldeperiode: Periode? = null,
+    val meldeperiode: Periode? = null,
 ) {
 
     fun leggTilVurdering(vilkårtype: Vilkårtype, utfall: Utfall): Vurdering {
@@ -158,10 +158,6 @@ data class Vurdering(
 
     internal fun meldeplikAvslagsårsak(): UnderveisÅrsak? {
         return meldepliktVurdering?.årsak
-    }
-
-    fun meldeperiode(): Periode? {
-        return meldeperiode
     }
 
     fun skalReduseresDagsatser(): Boolean {

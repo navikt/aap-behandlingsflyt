@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre
 
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
 class UføreRepository(private val connection: DBConnection) {

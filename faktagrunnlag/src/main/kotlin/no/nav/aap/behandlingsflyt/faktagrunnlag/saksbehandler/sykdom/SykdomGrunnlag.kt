@@ -6,20 +6,27 @@ class SykdomGrunnlag(
     val sykdomsvurdering: Sykdomsvurdering?
 ) {
 
-    fun erKonsistent(): Boolean {
+    fun erKonsistentForSykdom(harYrkesskadeRegistrert: Boolean): Boolean {
         if (sykdomsvurdering == null) {
             return false
         }
         if (!sykdomsvurdering.harSkadeSykdomEllerLyte && sykdomsvurdering.erSkadeSykdomEllerLyteVesentligdel == true) {
             return false
         }
-        if (sykdomsvurdering.erArbeidsevnenNedsatt == false && sykdomsvurdering.erNedsettelseIArbeidsevneHøyereEnnNedreGrense == true) {
+        if (sykdomsvurdering.erArbeidsevnenNedsatt == false && sykdomsvurdering.erNedsettelseIArbeidsevneMerEnnHalvparten == true) {
             return false
         }
-        if (yrkesskadevurdering?.erÅrsakssammenheng == true) {
-            return sykdomsvurdering.nedreGrense == NedreGrense.TRETTI
+        if (sykdomsvurdering.erNedsettelseIArbeidsevneMerEnnHalvparten != null &&
+            !sykdomsvurdering.erNedsettelseIArbeidsevneMerEnnHalvparten &&
+            harYrkesskadeRegistrert &&
+            sykdomsvurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == null
+        ) {
+            return false
         }
-        return sykdomsvurdering.nedreGrense == NedreGrense.FEMTI
+        if (sykdomsvurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != null && sykdomsvurdering.yrkesskadeBegrunnelse.isNullOrBlank()) {
+            return false
+        }
+        return true
     }
 
     override fun equals(other: Any?): Boolean {

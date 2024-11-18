@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning
 
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Prosent
 
 data class SamordningPeriode (
     val periode: Periode,

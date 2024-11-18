@@ -21,10 +21,11 @@ import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FakeServers
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
+import no.nav.aap.behandlingsflyt.test.modell.defaultInntekt
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.institusjon.Institusjonsopphold
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import org.testcontainers.containers.PostgreSQLContainer
@@ -79,7 +80,8 @@ fun main() {
                                 institusjonsopphold = listOfNotNull(
                                     if (dto.institusjoner.fengsel == true) genererFengselsopphold() else null,
                                     if (dto.institusjoner.sykehus == true) genererSykehusopphold() else null,
-                                )
+                                ),
+                                inntekter = dto.inntekterPerAr?.map { inn -> inn.to() } ?: defaultInntekt()
                             )
                         )
                         val periode = Periode(

@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis
 
-import no.nav.aap.verdityper.Prosent
-import no.nav.aap.verdityper.TimerArbeid
+import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.TimerArbeid
 
 data class Gradering(
     val totaltAntallTimer: TimerArbeid,

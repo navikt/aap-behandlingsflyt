@@ -21,9 +21,11 @@ data class LegeerklæringStatusResponse(
     val status: MeldingStatusType?,
     val statusTekst: String?,
     val behandlerRef: String,
+    val behandlerNavn: String,
     val personId: String,
     val saksnummer: String,
-    val opprettet: LocalDateTime
+    val opprettet: LocalDateTime,
+    val fritekst: String
 )
 
 data class BrevRequest(

@@ -6,7 +6,7 @@ val ktorVersion = "3.0.1"
 
 plugins {
     id("behandlingsflyt.conventions")
-    id("io.ktor.plugin") version "3.0.0"
+    id("io.ktor.plugin") version "3.0.1"
 }
 
 application {
@@ -54,14 +54,14 @@ fun getCheckedOutGitCommitHash(): String {
 }
 
 
-val komponenterVersjon = "1.0.55"
+val komponenterVersjon = "1.0.63"
 
 dependencies {
     implementation("io.ktor:ktor-server-cors:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
 
 
-    implementation("io.micrometer:micrometer-registry-prometheus:1.13.6")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.14.0")
     implementation("ch.qos.logback:logback-classic:1.5.12")
     implementation("net.logstash.logback:logstash-logback-encoder:8.0")
 
@@ -73,12 +73,13 @@ dependencies {
     implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:infrastructure:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:server:$komponenterVersjon")
+    implementation("no.nav.aap.kelvin:verdityper:$komponenterVersjon")
+    implementation("no.nav.aap.kelvin:tidslinje:$komponenterVersjon")
 
     implementation(project(":integrasjon"))
     implementation(project(":sakogbehandling"))
     implementation(project(":faktagrunnlag"))
     implementation(project(":verdityper"))
-    implementation(project(":tidslinje"))
     implementation(project(":dbflyway"))
     implementation(project(":pip"))
     implementation("com.zaxxer:HikariCP:6.0.0")

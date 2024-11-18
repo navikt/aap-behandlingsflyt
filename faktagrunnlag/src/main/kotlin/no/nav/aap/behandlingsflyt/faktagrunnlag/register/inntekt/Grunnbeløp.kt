@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt
 
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.tidslinje.Segment
-import no.nav.aap.tidslinje.Tidslinje
-import no.nav.aap.verdityper.Beløp
-import no.nav.aap.verdityper.GUnit
+import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.GUnit
 import java.time.LocalDate
 import java.time.Year
 
@@ -179,16 +179,20 @@ object Grunnbeløp {
         }
 
         companion object {
-            fun finnGUnit(år: Year, beløp: Beløp): BenyttetGjennomsnittsbeløp {
+            fun finnGUnit(dato: LocalDate, beløp: Beløp): BenyttetGjennomsnittsbeløp {
                 val grunnbeløp =
-                    priv_tilTidslinjeGjennomsnitt().segment(år.atDay(1))?.verdi
-                        ?: throw RuntimeException("Finner ikke gjennomsnittsbeløp for år: $år.")
+                    priv_tilTidslinjeGjennomsnitt().segment(dato)?.verdi
+                        ?: throw RuntimeException("Finner ikke gjennomsnittsbeløp for dato: $dato.")
 
                 return BenyttetGjennomsnittsbeløp(
-                    år = år,
+                    år = Year.of(dato.year),
                     beløp = grunnbeløp.gjennomsnittBeløp,
                     gUnit = GUnit(beløp.dividert(grunnbeløp.gjennomsnittBeløp, GUnit.SCALE))
                 )
+            }
+
+            fun finnGUnit(år: Year, beløp: Beløp): BenyttetGjennomsnittsbeløp {
+                return finnGUnit(år.atDay(1), beløp)
             }
 
             fun tilTidslinjeGjennomsnitt(): Tidslinje<Beløp> {
@@ -218,6 +222,10 @@ object Grunnbeløp {
 
     fun finnGUnit(år: Year, beløp: Beløp): BenyttetGjennomsnittsbeløp {
         return GjennomsnittElement.finnGUnit(år, beløp)
+    }
+
+    fun finnGUnit(dato: LocalDate, beløp: Beløp): BenyttetGjennomsnittsbeløp {
+        return GjennomsnittElement.finnGUnit(dato, beløp)
     }
 
     fun tilTidslinje(): Tidslinje<Beløp> {

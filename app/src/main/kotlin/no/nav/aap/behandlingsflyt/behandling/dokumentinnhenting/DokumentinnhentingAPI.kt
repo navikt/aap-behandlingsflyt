@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.Lege
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringStatusResponse
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
@@ -31,7 +32,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: HikariDataSource) {
             post<Unit, String, BestillLegeerklæringDto> { _, req ->
                 val bestillingUuid = dataSource.transaction { connection ->
                     val taSkriveLåsRepository = TaSkriveLåsRepository(connection)
-                    val lås = taSkriveLåsRepository.lås(req.behandlingsReferanse.referanse)
+                    val lås = taSkriveLåsRepository.lås(req.behandlingsReferanse)
                     val avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection)
                     val behandlingRepository = BehandlingRepositoryImpl(connection)
                     val sakService = SakService(connection)
@@ -41,8 +42,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: HikariDataSource) {
                     val personIdent = sak.person.aktivIdent()
 
                     val personinfo = PdlPersoninfoGateway.hentPersoninfoForIdent(personIdent, token())
-
-                    val behandling = behandlingRepository.hent((req.behandlingsReferanse))
+                    val behandling = behandlingRepository.hent(BehandlingReferanse(req.behandlingsReferanse))
                     val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
                     avklaringsbehovene.validateTilstand(behandling = behandling)
                     avklaringsbehovene.leggTil(
@@ -64,7 +64,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: HikariDataSource) {
                             req.fritekst,
                             req.saksnummer,
                             req.dokumentasjonType,
-                            req.behandlingsReferanse.referanse
+                            req.behandlingsReferanse
                         )
                     )
 

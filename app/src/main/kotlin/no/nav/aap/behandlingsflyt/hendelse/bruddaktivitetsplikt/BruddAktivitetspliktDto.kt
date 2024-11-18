@@ -5,12 +5,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktR
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.verdityper.sakogbehandling.SakId
 
 interface AktivitetspliktDTO {
-    fun tilDomene(sakId: SakId, innsender: Bruker): List<AktivitetspliktRepository.DokumentInput>
+    fun tilDomene(sak: Sak, innsender: Bruker): List<AktivitetspliktRepository.DokumentInput>
 }
 
 data class OpprettAktivitetspliktDTO(
@@ -20,10 +20,10 @@ data class OpprettAktivitetspliktDTO(
     val grunn: Grunn?,
     val perioder: List<Periode>,
 ) : AktivitetspliktDTO {
-    override fun tilDomene(sakId: SakId, innsender: Bruker): List<AktivitetspliktRepository.DokumentInput> {
+    override fun tilDomene(sak: Sak, innsender: Bruker): List<AktivitetspliktRepository.DokumentInput> {
         return perioder.map { periode ->
-            val brudd = Brudd(
-                sakId = sakId,
+            val brudd = Brudd.nyttBrudd(
+                sak = sak,
                 periode = periode,
                 bruddType = brudd,
                 paragraf = brudd.paragraf(paragraf),
@@ -44,9 +44,9 @@ data class OppdaterAktivitetspliktDTO(
     val periode: Periode,
     val grunn: Grunn,
 ) : AktivitetspliktDTO {
-    override fun tilDomene(sakId: SakId, innsender: Bruker): List<AktivitetspliktRepository.DokumentInput> {
-        val brudd = Brudd(
-            sakId = sakId,
+    override fun tilDomene(sak: Sak, innsender: Bruker): List<AktivitetspliktRepository.DokumentInput> {
+        val brudd = Brudd.nyttBrudd(
+            sak= sak,
             periode = periode,
             bruddType = brudd,
             paragraf = brudd.paragraf(paragraf),
@@ -67,9 +67,9 @@ data class FeilregistrerAktivitetspliktDTO(
     val paragraf: Brudd.Paragraf,
     val periode: Periode,
 ) : AktivitetspliktDTO {
-    override fun tilDomene(sakId: SakId, innsender: Bruker): List<AktivitetspliktRepository.DokumentInput> {
-        val brudd = Brudd(
-            sakId = sakId,
+    override fun tilDomene(sak: Sak, innsender: Bruker): List<AktivitetspliktRepository.DokumentInput> {
+        val brudd = Brudd.nyttBrudd(
+            sak= sak,
             periode = periode,
             bruddType = brudd,
             paragraf = brudd.paragraf(paragraf),

@@ -81,7 +81,7 @@ jobs:
             if: ${{ steps.tag.outputs.changed == 'true' }}
             run: |
                 randomDelimiter=${RANDOM}
-                text=$(git --no-pager log $(git describe --tags --abbrev=0)..HEAD --pretty=format:"%h %s")
+                text=$(git --no-pager log $(git describe --tags --abbrev=0)..HEAD --pretty=format:"%h %s" | sed 'G')
                 echo 'CHANGELOG<<$randomDelimiter' >> $GITHUB_OUTPUT
                 echo $text >> $GITHUB_OUTPUT
                 echo '$randomDelimiter' >> $GITHUB_OUTPUT

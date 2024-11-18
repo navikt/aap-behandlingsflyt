@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Ins
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soningsvurdering
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.Segment
 
 internal class EtAnnetStedInput(
     val rettighetsperiode: Periode,

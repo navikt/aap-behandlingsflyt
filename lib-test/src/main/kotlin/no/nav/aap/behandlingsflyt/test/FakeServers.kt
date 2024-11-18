@@ -11,11 +11,7 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
-import io.ktor.server.routing.get
-import io.ktor.server.routing.post
-import io.ktor.server.routing.put
-import io.ktor.server.routing.route
-import io.ktor.server.routing.routing
+import io.ktor.server.routing.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -45,6 +41,8 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
+import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.pdl.HentPerson
 import no.nav.aap.pdl.HentPersonBolkResult
 import no.nav.aap.pdl.PDLDødsfall
@@ -64,7 +62,6 @@ import no.nav.aap.pdl.PdlRelasjon
 import no.nav.aap.pdl.PdlRelasjonData
 import no.nav.aap.pdl.PdlRelasjonDataResponse
 import no.nav.aap.pdl.PdlRequest
-import no.nav.aap.verdityper.Beløp
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import no.nav.aap.yrkesskade.YrkesskadeModell
 import no.nav.aap.yrkesskade.YrkesskadeRequest
@@ -146,11 +143,15 @@ object FakeServers : AutoCloseable {
             }
         }
         routing() {
-            get("/vedtak/gradalderellerufore?fom={ting1}&sakstype={ting2}") {
+            get("/vedtak/gradalderellerufore") {
                 val ident = requireNotNull(call.request.header("Nav-Personident"))
-                val uføregrad = FakePersoner.hentPerson(ident)?.uføre?.prosentverdi() ?: 0
+                val uføregrad = FakePersoner.hentPerson(ident)?.uføre?.prosentverdi()
+                if (uføregrad == null) {
+                    call.respond(HttpStatusCode.NoContent)
+                } else {
+                    call.respond(HttpStatusCode.Companion.OK, uføregrad)
+                }
 
-                call.respond(HttpStatusCode.Companion.OK, uføregrad)
             }
         }
     }
@@ -928,7 +929,10 @@ object FakeServers : AutoCloseable {
             tokenProvider = ClientCredentialsTokenProvider
         )
         install(ContentNegotiation) {
-            jackson()
+            register(
+                ContentType.Application.Json,
+                JacksonConverter(objectMapper = DefaultJsonMapper.objectMapper(), true)
+            )
         }
         install(StatusPages) {
             exception<Throwable> { call, cause ->
@@ -966,16 +970,18 @@ object FakeServers : AutoCloseable {
                 }
                 route("/bestilling/{referanse}") { ->
                     get {
-                        call.respond(BrevbestillingResponse(
-                            referanse = UUID.fromString(call.pathParameters.get("referanse"))!!,
-                            brev = Brev(overskrift = "Overskrift", tekstbolker = emptyList()),
-                            opprettet = LocalDateTime.now(),
-                            oppdatert = LocalDateTime.now(),
-                            behandlingReferanse = UUID.randomUUID(),
-                            brevtype = Brevtype.INNVILGELSE,
-                            språk = Språk.NB,
-                            status = Status.REGISTRERT,
-                        ))
+                        call.respond(
+                            BrevbestillingResponse(
+                                referanse = UUID.fromString(call.pathParameters.get("referanse"))!!,
+                                brev = Brev(overskrift = "Overskrift", tekstbolker = emptyList()),
+                                opprettet = LocalDateTime.now(),
+                                oppdatert = LocalDateTime.now(),
+                                behandlingReferanse = UUID.randomUUID(),
+                                brevtype = Brevtype.INNVILGELSE,
+                                språk = Språk.NB,
+                                status = Status.REGISTRERT,
+                            )
+                        )
                     }
                     put("/oppdater") {
                         call.respond(HttpStatusCode.NoContent, Unit)
