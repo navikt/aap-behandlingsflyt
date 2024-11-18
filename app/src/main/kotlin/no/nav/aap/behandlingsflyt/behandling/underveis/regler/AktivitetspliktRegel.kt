@@ -31,7 +31,6 @@ class AktivitetspliktRegel : UnderveisRegel {
             }.fold(Tidslinje<AktivitetspliktVurdering>()) { tidligereVurderinger, nyereVurdering ->
                 tidligereVurderinger.kombiner(nyereVurdering, StandardSammenslåere.prioriterHøyreSideCrossJoin())
             }
-            .kryss(input.rettighetsperiode)
 
         return resultat.leggTilVurderinger(vurderinger, Vurdering::leggTilAktivtBidragVurdering)
     }

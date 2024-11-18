@@ -78,7 +78,8 @@ class MeldepliktRegel(
                     forrigeSegmentOppfylt = meldeperioderVurdert.lastOrNull()?.verdi?.utfall == OPPFYLT
                 )
                 meldeperioderVurdert.kombiner(neste, StandardSammenslåere.xor())
-            }.kryss(input.rettighetsperiode)
+            }
+                .kryss(input.rettighetsperiode)
 
         return resultat.leggTilVurderinger(meldepliktVurderinger, Vurdering::leggTilMeldepliktVurdering)
     }
