@@ -95,7 +95,9 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 respond(saker)
             }
             route("/{saksnummer}").authorizedGet<HentSakDTO, UtvidetSaksinfoDTO>(
-                SakPathParam("saksnummer")
+                AuthorizetionGetPathConfig(
+                    sakPathParam = SakPathParam("saksnummer")
+                )
             ) { req ->
                 val saksnummer = req.saksnummer
 
@@ -126,7 +128,11 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 )
             }
             route("/{saksnummer}/dokumenter") {
-                authorizedGet<HentSakDTO, List<Dokument>>(SakPathParam("saksnummer")) { req ->
+                authorizedGet<HentSakDTO, List<Dokument>>(
+                    AuthorizetionGetPathConfig(
+                        sakPathParam = SakPathParam("saksnummer")
+                    )
+                ) { req ->
                     val token = token()
                     val safRespons = SafListDokumentGateway.hentDokumenterForSak(Saksnummer(req.saksnummer), token)
                     respond(

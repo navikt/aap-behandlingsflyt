@@ -27,6 +27,7 @@ internal class AzureTokenGen(private val issuer: String, private val audience: S
     private fun claims(): JWTClaimsSet {
         return JWTClaimsSet
             .Builder()
+            .subject(UUID.randomUUID().toString())
             .issuer(issuer)
             .audience(audience)
             .expirationTime(LocalDateTime.now().plusHours(4).toDate())
