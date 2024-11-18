@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.flate
 
+import com.papsign.ktor.openapigen.route.info
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
@@ -14,7 +15,16 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.komponenter.dbconnect.transaction
 
 fun NormalOpenAPIRoute.underveisVurderingerAPI(datasource: HikariDataSource) {
-    route("/api/behandling/underveis/{referanse}").get<BehandlingReferanse, List<UnderveisperiodeDto>> { behandlingReferanse ->
+    route("/api/behandling/underveis/{referanse}").get<BehandlingReferanse, List<UnderveisperiodeDto>>(
+        info(
+            summary = "Hente alle underveis-vurderinger på en behandling",
+            description = """
+                * periode: Perioden denne vurdering gjelder for 
+                * meldePeriode: Meldeperioden denne vurderingen faller inn i
+                * trekk: Total trekk for hele perioden
+            """.trimIndent()
+        )
+    ) { behandlingReferanse ->
         val underveisGrunnlag = datasource.transaction(readOnly = true) { conn ->
             val behandling = BehandlingReferanseService(BehandlingRepositoryImpl(conn)).behandling(behandlingReferanse)
             UnderveisRepository(conn).hentHvisEksisterer(behandling.id)
