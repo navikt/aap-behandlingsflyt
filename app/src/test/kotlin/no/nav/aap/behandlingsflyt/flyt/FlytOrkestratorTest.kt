@@ -253,7 +253,7 @@ class FlytOrkestratorTest {
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = AvklarYrkesskadeLøsning(
                         yrkesskadesvurdering = YrkesskadevurderingDto(
                             begrunnelse = "Ikke årsakssammenheng",
@@ -273,7 +273,7 @@ class FlytOrkestratorTest {
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = FastsettBeregningstidspunktLøsning(
                         beregningVurdering = BeregningstidspunktVurdering(
                             begrunnelse = "Trenger hjelp fra Nav",
@@ -293,7 +293,7 @@ class FlytOrkestratorTest {
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = FastsettBeregningstidspunktLøsning(
                         beregningVurdering = BeregningstidspunktVurdering(
                             begrunnelse = "Trenger hjelp fra Nav",
@@ -641,7 +641,7 @@ class FlytOrkestratorTest {
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = AvklarYrkesskadeLøsning(
                         yrkesskadesvurdering = YrkesskadevurderingDto(
                             begrunnelse = "Veldig relevante",
@@ -682,7 +682,7 @@ class FlytOrkestratorTest {
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = FastsettYrkesskadeInntektLøsning(
                         yrkesskadeInntektVurdering = BeregningYrkeskaderBeløpVurdering(
                             vurderinger = person.yrkesskade.map {
@@ -1032,7 +1032,7 @@ class FlytOrkestratorTest {
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = AvklarYrkesskadeLøsning(
                         yrkesskadesvurdering = YrkesskadevurderingDto(
                             begrunnelse = "",
@@ -1052,7 +1052,7 @@ class FlytOrkestratorTest {
         dataSource.transaction {
             AvklaringsbehovHendelseHåndterer(it).håndtere(
                 behandling.id,
-                LøsAvklaringsbehovBehandlingHendelse(
+                LøsAvklaringsbehovHendelse(
                     løsning = FastsettBeregningstidspunktLøsning(
                         beregningVurdering = BeregningstidspunktVurdering(
                             begrunnelse = "Trenger hjelp fra Nav",
@@ -1475,13 +1475,13 @@ class FlytOrkestratorTest {
                             dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                             harSkadeSykdomEllerLyte = true,
                             erSkadeSykdomEllerLyteVesentligdel = true,
-                            erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
-                            nedreGrense = NedreGrense.FEMTI,
-                            nedsattArbeidsevneDato = LocalDate.now(),
                             erArbeidsevnenNedsatt = true,
-                            yrkesskadevurdering = YrkesskadevurderingDto(
-                                erÅrsakssammenheng = false
-                            )
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = false,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = false,
+                            erNedsettelseIArbeidsevneAvEnVissVarighet = false,
+                            diagnose = "",
+                            kodeverk = "",
+                            yrkesskadeBegrunnelse = ""
                         )
                     ),
                     behandlingVersjon = behandling.versjon,
