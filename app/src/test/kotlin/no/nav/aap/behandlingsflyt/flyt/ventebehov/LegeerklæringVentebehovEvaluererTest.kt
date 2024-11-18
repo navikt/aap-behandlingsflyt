@@ -43,7 +43,7 @@ class LegeerklæringVentebehovEvaluererTest {
 
             genererDokument(sak.id, behandling.id, connection, Brevkode.LEGEERKLÆRING_AVVIST, MottattDokumentReferanse(MottattDokumentReferanse.Type.AVVIST_LEGEERKLÆRING_ID, "referanse"))
 
-            val erLøst = evaluerer.ansesSomLøst(behandling.id, avklaringsbehov)
+            val erLøst = evaluerer.ansesSomLøst(behandling.id, avklaringsbehov, sak.id)
             assertEquals(true, erLøst)
         }
     }
@@ -59,7 +59,7 @@ class LegeerklæringVentebehovEvaluererTest {
 
             genererDokument(sak.id, behandling.id, connection,  Brevkode.SØKNAD, MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, "referanse"))
 
-            val erIkkeLøst = evaluerer.ansesSomLøst(behandling.id, avklaringsbehov)
+            val erIkkeLøst = evaluerer.ansesSomLøst(behandling.id, avklaringsbehov, sak.id)
             assertEquals(false, erIkkeLøst)
         }
     }

@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.flyt.ventebehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
+import no.nav.aap.verdityper.sakogbehandling.SakId
 import kotlin.reflect.full.primaryConstructor
 
 class VentebehovEvaluererService(private val connection: DBConnection) {
@@ -13,12 +14,12 @@ class VentebehovEvaluererService(private val connection: DBConnection) {
         evaluerer.primaryConstructor!!.call(connection)
     }
 
-    fun ansesSomLøst(behandlingId: BehandlingId, avklaringsbehov: Avklaringsbehov): Boolean {
+    fun ansesSomLøst(behandlingId: BehandlingId, avklaringsbehov: Avklaringsbehov, sakId: SakId): Boolean {
         if (fristEvaluerer.ansesSomLøst(avklaringsbehov)) {
             return true
         }
 
         return evaluerere.filter { it.definisjon() == avklaringsbehov.definisjon }
-            .any { it.ansesSomLøst(behandlingId, avklaringsbehov) }
+            .any { it.ansesSomLøst(behandlingId, avklaringsbehov, sakId) }
     }
 }

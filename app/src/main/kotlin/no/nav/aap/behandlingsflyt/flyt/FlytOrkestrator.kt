@@ -82,7 +82,7 @@ class FlytOrkestrator(
             val evaluerere = VentebehovEvaluererService(connection)
             val kandidatBehov = avklaringsbehovene.hentÅpneVentebehov()
 
-            val behovSomErLøst = kandidatBehov.filter { behov -> evaluerere.ansesSomLøst(behandling.id, behov) }
+            val behovSomErLøst = kandidatBehov.filter { behov -> evaluerere.ansesSomLøst(behandling.id, behov, kontekst.sakId) }
             behovSomErLøst.forEach { avklaringsbehovene.løsAvklaringsbehov(it.definisjon, "", SYSTEMBRUKER.ident) }
             // Hvis fortsatt på vent
             if (avklaringsbehovene.erSattPåVent()) {

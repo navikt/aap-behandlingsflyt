@@ -28,6 +28,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.SøknadStudentDto
@@ -42,6 +43,7 @@ import no.nav.aap.behandlingsflyt.faktasaksbehandler.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.flyt.flate.Venteinformasjon
 import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.TestHendelsesMottak
+import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -54,10 +56,13 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
+import no.nav.aap.behandlingsflyt.server.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.behandlingsflyt.server.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.Fakes
@@ -68,6 +73,7 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.testutil.TestUtil
 import no.nav.aap.verdityper.Beløp
@@ -84,6 +90,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Year
+import java.util.*
 
 @Fakes
 class FlytOrkestratorTest {
@@ -1384,6 +1391,113 @@ class FlytOrkestratorTest {
                 .anySatisfy { assertThat(it.erÅpent() && it.definisjon == Definisjon.MANUELT_SATT_PÅ_VENT).isTrue() }
                 .anySatisfy { assertThat(it.erÅpent() && it.definisjon == Definisjon.AVKLAR_SYKDOM).isTrue() }
         }
+    }
 
+    @Test
+    fun `Tas av vent ved mottak av avvist legeerklæring`() {
+        val ident = ident()
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        // Oppretter vanlig søknad
+        hendelsesMottak.håndtere(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("2"),
+                mottattTidspunkt = LocalDateTime.now(),
+                strukturertDokument = StrukturertDokument(
+                    Søknad(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null),
+                    Brevkode.SØKNAD
+                ),
+                periode = periode
+            )
+        )
+
+        util.ventPåSvar()
+        val sak = hentSak(ident, periode)
+        var behandling = requireNotNull(hentBehandling(sak.id))
+
+        // Validér avklaring
+        dataSource.transaction { connection ->
+            val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
+            assertThat(avklaringsbehov.alle()).anySatisfy { assertThat(it.erÅpent() && it.definisjon == Definisjon.AVKLAR_SYKDOM).isTrue() }
+        }
+
+        // Oppretter bestilling av legeerklæring
+        dataSource.transaction { connection ->
+            val avklaringsbehovene = hentAvklaringsbehov(behandling.id, connection)
+            val sakService = SakService(connection)
+            val behandlingHendelseService = BehandlingHendelseService(FlytJobbRepository((connection)), sakService)
+            avklaringsbehovene.leggTil(
+                definisjoner = listOf(Definisjon.BESTILL_LEGEERKLÆRING),
+                stegType = behandling.aktivtSteg(),
+                grunn = ÅrsakTilSettPåVent.VENTER_PÅ_MEDISINSKE_OPPLYSNINGER,
+                bruker = SYSTEMBRUKER
+            )
+            behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
+            util.ventPåSvar()
+
+            assertThat(avklaringsbehovene.alle()).anySatisfy { assertThat(it.erÅpent() && it.definisjon == Definisjon.BESTILL_LEGEERKLÆRING).isTrue() }
+        }
+
+        // Løs avklar sykdom
+        dataSource.transaction {
+            AvklaringsbehovHendelseHåndterer(it).håndtere(
+                behandling.id,
+                LøsAvklaringsbehovHendelse(
+                    løsning = AvklarSykdomLøsning(
+                        sykdomsvurdering = SykdomsvurderingDto(
+                            begrunnelse = "Arbeidsevnen er nedsatt med mer enn halvparten",
+                            dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
+                            harSkadeSykdomEllerLyte = true,
+                            erSkadeSykdomEllerLyteVesentligdel = true,
+                            erNedsettelseIArbeidsevneHøyereEnnNedreGrense = true,
+                            nedreGrense = NedreGrense.FEMTI,
+                            nedsattArbeidsevneDato = LocalDate.now(),
+                            erArbeidsevnenNedsatt = true,
+                            yrkesskadevurdering = YrkesskadevurderingDto(
+                                erÅrsakssammenheng = false
+                            )
+                        )
+                    ),
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
+                )
+            )
+        }
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
+
+        // Validér avklaring
+        dataSource.transaction { connection ->
+            val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
+            assertThat(avklaringsbehov.åpne().all { it.definisjon ==  Definisjon.BESTILL_LEGEERKLÆRING })
+        }
+
+        // Send inn avvist legeerklæring
+        val avvistLegeerklæringId = UUID.randomUUID().toString()
+        dataSource.transaction { connection ->
+            val flytJobbRepository = FlytJobbRepository(connection)
+            flytJobbRepository.leggTil(
+                HendelseMottattHåndteringJobbUtfører.nyJobb(
+                    sakId = sak.id,
+                    dokumentReferanse = MottattDokumentReferanse(
+                        MottattDokumentReferanse.Type.AVVIST_LEGEERKLÆRING_ID,
+                        avvistLegeerklæringId
+                    ),
+                    brevkode = Brevkode.LEGEERKLÆRING_AVVIST,
+                    kanal = Kanal.DIGITAL,
+                    periode = Periode(
+                        LocalDate.now(),
+                        LocalDate.now().plusWeeks(4)
+                    ),
+                    payload = {}
+                )
+            )
+        }
+        util.ventPåSvar()
+
+        // Validér avklaring
+        dataSource.transaction { connection ->
+            val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
+            assertThat(avklaringsbehov.åpne().isEmpty())
+        }
     }
 }
