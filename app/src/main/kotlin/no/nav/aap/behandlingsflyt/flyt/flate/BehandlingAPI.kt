@@ -24,7 +24,7 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.pip.PipRepository
-import no.nav.aap.tilgang.AuthorizetionGetPathConfig
+import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
@@ -109,7 +109,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
         }
         route("/{referanse}/personinformasjon") {
             authorizedGet<BehandlingReferanse, BehandlingPersoninfo>(
-                AuthorizetionGetPathConfig(
+                AuthorizationParamPathConfig(
                     behandlingPathParam = BehandlingPathParam("referanse")
                 )
             ) { req ->

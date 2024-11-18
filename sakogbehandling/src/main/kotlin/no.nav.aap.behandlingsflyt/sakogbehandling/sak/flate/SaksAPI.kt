@@ -19,7 +19,7 @@ import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.tilgang.AuthorizetionGetPathConfig
+import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPostWithApprovedList
@@ -95,7 +95,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 respond(saker)
             }
             route("/{saksnummer}").authorizedGet<HentSakDTO, UtvidetSaksinfoDTO>(
-                AuthorizetionGetPathConfig(
+                AuthorizationParamPathConfig(
                     sakPathParam = SakPathParam("saksnummer")
                 )
             ) { req ->
@@ -129,7 +129,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
             }
             route("/{saksnummer}/dokumenter") {
                 authorizedGet<HentSakDTO, List<Dokument>>(
-                    AuthorizetionGetPathConfig(
+                    AuthorizationParamPathConfig(
                         sakPathParam = SakPathParam("saksnummer")
                     )
                 ) { req ->
@@ -160,7 +160,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
 
             route("/{saksnummer}/personinformasjon") {
                 authorizedGet<HentSakDTO, SakPersoninfoDTO>(
-                    AuthorizetionGetPathConfig(
+                    AuthorizationParamPathConfig(
                         sakPathParam = SakPathParam("saksnummer"),
                         approvedApplications = setOf(brevAzp)
                     )
