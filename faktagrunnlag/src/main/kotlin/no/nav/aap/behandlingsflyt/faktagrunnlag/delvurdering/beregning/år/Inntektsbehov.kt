@@ -7,14 +7,12 @@ import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import java.time.LocalDate
 import java.time.Year
-import java.util.SortedSet
+import java.util.*
 
 class Inntektsbehov(private val input: Input) {
 
     fun utledAlleRelevanteÅr(): Set<Year> {
-        return input.datoerForInnhenting()
-            .flatMap(::treÅrForutFor)
-            .toSortedSet()
+        return input.datoerForInnhenting().flatMap(::treÅrForutFor).toSortedSet()
     }
 
     fun hentYtterligereNedsattArbeidsevneDato(): LocalDate? {
@@ -48,7 +46,7 @@ class Inntektsbehov(private val input: Input) {
      * inntekt, så skal beregningen skje med yrkesskadefordel (§11-22)
      */
     fun yrkesskadeVurderingEksisterer(): Boolean {
-        return input.yrkesskadevurdering?.relevanteSaker?.isNotEmpty() == true && input.beregningGrunnlag?.yrkesskadeBeløpVurdering != null && input.yrkesskadevurdering.andelAvNedsettelsen != null
+        return input.registrerteYrkesskader?.harYrkesskade() == true && input.yrkesskadevurdering?.relevanteSaker != null && input.yrkesskadevurdering.relevanteSaker.isNotEmpty() && input.beregningGrunnlag?.yrkesskadeBeløpVurdering != null && input.yrkesskadevurdering.andelAvNedsettelsen != null
     }
 
     /**
@@ -57,8 +55,7 @@ class Inntektsbehov(private val input: Input) {
      * lik 0.
      */
     private fun filtrerInntekter(
-        nedsettelsesdato: LocalDate,
-        inntekter: Set<InntektPerÅr>
+        nedsettelsesdato: LocalDate, inntekter: Set<InntektPerÅr>
     ): Set<InntektPerÅr> {
         val relevanteÅr = treÅrForutFor(nedsettelsesdato)
         return relevanteÅr.map { relevantÅr ->
