@@ -13,7 +13,7 @@ class UtledMeldeperiodeRegel : UnderveisRegel {
             tidslinje: Tidslinje<T>,
         ): Tidslinje<Tidslinje<T>> {
             return tidslinje.splittOppIPerioder(
-                vurderinger.mapNotNull { it.verdi.meldeperiode }
+                vurderinger.map { it.verdi.meldeperiode() }
             )
         }
     }

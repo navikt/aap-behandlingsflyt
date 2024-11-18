@@ -30,6 +30,10 @@ class MeldepliktRegel(
     class MeldepliktData(val fritaksvurdering: Fritaksvurdering.FritaksvurderingData?, val innsending: JournalpostId?)
 
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
+        require(input.rettighetsperiode.inneholder(resultat.helePerioden())) {
+            "kan ikke vurdere utenfor rettighetsperioden fordi meldeperioden ikke er definert"
+        }
+
         val defaultTidslinje = Tidslinje<JournalpostId?>(input.rettighetsperiode, null)
 
         val innsendtTidslinje: Tidslinje<JournalpostId?> = input.innsendingsTidspunkt.entries.map {
@@ -50,8 +54,8 @@ class MeldepliktRegel(
             })
 
         val groupByMeldeperiode = meldepliktTidslinje.splittOppIPerioder(
-            resultat.mapNotNull { vurdering ->
-                vurdering.verdi.meldeperiode?.let {
+            resultat.map { vurdering ->
+                vurdering.verdi.meldeperiode().let {
                     it.utvid(
                         Periode(it.fom, it.fom.plusDays(7))
                     )

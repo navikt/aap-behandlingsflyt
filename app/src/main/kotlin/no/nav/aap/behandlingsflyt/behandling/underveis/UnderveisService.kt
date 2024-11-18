@@ -81,7 +81,7 @@ class UnderveisService(
                 .map {
                     Underveisperiode(
                         periode = it.periode,
-                        meldePeriode = it.verdi.meldeperiode,
+                        meldePeriode = it.verdi.meldeperiode(),
                         utfall = it.verdi.utfall(),
                         avslagsårsak = it.verdi.avslagsårsak(),
                         grenseverdi = it.verdi.grenseverdi(),
@@ -95,9 +95,9 @@ class UnderveisService(
     }
 
     internal fun vurderRegler(input: UnderveisInput): Tidslinje<Vurdering> {
-        return regelset.fold(Tidslinje<Vurdering>()) { resultat, regel ->
-            regel.vurder(input, resultat)
-        }.kryss(input.rettighetsperiode)
+        return regelset.fold(Tidslinje()) { resultat, regel ->
+            regel.vurder(input, resultat).kryss(input.rettighetsperiode)
+        }
     }
 
     private fun genererInput(behandlingId: BehandlingId): UnderveisInput {

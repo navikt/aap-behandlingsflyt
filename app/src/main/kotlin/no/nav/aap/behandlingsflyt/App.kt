@@ -29,6 +29,7 @@ import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.dokumentinnhenti
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.institusjonAPI
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.flate.tilkjentYtelseAPI
 import no.nav.aap.behandlingsflyt.behandling.vilkår.alder.flate.aldersGrunnlagApi
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.flate.underveisVurderingerAPI
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.flate.arbeidsevneGrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.flate.beregningVurderingAPI
@@ -174,6 +175,7 @@ internal fun Application.server(dbConfig: DbConfig) {
                 brevApi(dataSource)
                 dokumentinnhentingAPI(dataSource)
                 mottattHendelseApi(dataSource)
+                underveisVurderingerAPI(dataSource)
             }
         }
         actuator(prometheus, motor)

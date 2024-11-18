@@ -64,7 +64,7 @@ class UnderveisRepository(private val connection: DBConnection) {
 
         return Underveisperiode(
             it.getPeriode("periode"),
-            it.getPeriodeOrNull("meldeperiode"),
+            it.getPeriode("meldeperiode"),
             it.getEnum("utfall"),
             it.getEnumOrNull("avslagsarsak"),
             Prosent(it.getInt("grenseverdi")),

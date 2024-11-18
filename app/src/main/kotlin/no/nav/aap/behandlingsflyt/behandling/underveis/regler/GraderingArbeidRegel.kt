@@ -59,6 +59,10 @@ private const val HØYESTE_GRADERING_OPPTRAPPING = 80
  */
 class GraderingArbeidRegel : UnderveisRegel {
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
+        require(input.rettighetsperiode.inneholder(resultat.helePerioden())) {
+            "kan ikke vurdere utenfor rettighetsperioden fordi meldeperioden ikke er definert"
+        }
+
         val arbeidsTidslinje = graderingerTidslinje(resultat, input)
         val graderingsgrenseverdier = graderingsgrenseverdier(input, resultat)
 

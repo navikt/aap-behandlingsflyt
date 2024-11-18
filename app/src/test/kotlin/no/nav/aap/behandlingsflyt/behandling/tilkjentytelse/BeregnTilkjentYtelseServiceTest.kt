@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
@@ -13,6 +14,7 @@ import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -30,19 +32,9 @@ class BeregnTilkjentYtelseServiceTest {
             gjennomsnittligInntektIG = GUnit(0),
             inntekter = emptyList()
         )
-        val underveisgrunnlag = UnderveisGrunnlag(
-            id = 1L, listOf(
-                Underveisperiode(
-                    periode = Periode(LocalDate.of(2023, 4, 30), LocalDate.of(2023, 5, 1)),
-                    meldePeriode = null,
-                    utfall = Utfall.OPPFYLT,
-                    avslagsårsak = null,
-                    grenseverdi = Prosent.`100_PROSENT`,
-                    gradering = null,
-                    trekk = Dagsatser(0)
-                )
-            )
-        )
+        val underveisgrunnlag =
+            underveisgrunnlag(Periode(LocalDate.of(2023, 4, 30), LocalDate.of(2023, 5, 1)))
+
 
         val barnetilleggGrunnlag = BarnetilleggGrunnlag(1L, emptyList())
 
@@ -92,18 +84,8 @@ class BeregnTilkjentYtelseServiceTest {
             gjennomsnittligInntektIG = GUnit(0),
             inntekter = emptyList()
         )
-        val underveisgrunnlag = UnderveisGrunnlag(
-            id = 1L, listOf(
-                Underveisperiode(
-                    periode = Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1)),
-                    meldePeriode = null,
-                    utfall = Utfall.OPPFYLT,
-                    avslagsårsak = null,
-                    grenseverdi = Prosent.`100_PROSENT`,
-                    gradering = null,
-                    trekk = Dagsatser(0)
-                )
-            )
+        val underveisgrunnlag = underveisgrunnlag(
+            Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1))
         )
 
         val barnetilleggGrunnlag = BarnetilleggGrunnlag(
@@ -149,19 +131,7 @@ class BeregnTilkjentYtelseServiceTest {
             gjennomsnittligInntektIG = GUnit(0),
             inntekter = emptyList()
         )
-        val underveisgrunnlag = UnderveisGrunnlag(
-            id = 1L, listOf(
-                Underveisperiode(
-                    periode = Periode(LocalDate.of(2023, 12, 30), LocalDate.of(2024, 1, 1)),
-                    meldePeriode = null,
-                    utfall = Utfall.OPPFYLT,
-                    avslagsårsak = null,
-                    grenseverdi = Prosent.`100_PROSENT`,
-                    gradering = null,
-                    trekk = Dagsatser(0)
-                )
-            )
-        )
+        val underveisgrunnlag = underveisgrunnlag(Periode(LocalDate.of(2023, 12, 30), LocalDate.of(2024, 1, 1)))
 
         val barnetilleggGrunnlag = BarnetilleggGrunnlag(
             1L,
@@ -224,19 +194,8 @@ class BeregnTilkjentYtelseServiceTest {
             gjennomsnittligInntektIG = GUnit(0),
             inntekter = emptyList()
         )
-        val underveisgrunnlag = UnderveisGrunnlag(
-            id = 1L, listOf(
-                Underveisperiode(
-                    periode = Periode(LocalDate.of(2024, 6, 30), LocalDate.of(2024, 7, 1)),
-                    meldePeriode = null,
-                    utfall = Utfall.OPPFYLT,
-                    avslagsårsak = null,
-                    grenseverdi = Prosent.`100_PROSENT`,
-                    gradering = null,
-                    trekk = Dagsatser(0)
-                )
-            )
-        )
+        val underveisgrunnlag = underveisgrunnlag(Periode(LocalDate.of(2024, 6, 30), LocalDate.of(2024, 7, 1)))
+
 
         val barnetilleggGrunnlag = BarnetilleggGrunnlag(1L, emptyList())
 
@@ -286,19 +245,7 @@ class BeregnTilkjentYtelseServiceTest {
             gjennomsnittligInntektIG = GUnit(0),
             inntekter = emptyList()
         )
-        val underveisgrunnlag = UnderveisGrunnlag(
-            id = 1L, listOf(
-                Underveisperiode(
-                    periode = Periode(LocalDate.of(2020, 3, 31), LocalDate.of(2020, 4, 1)),
-                    meldePeriode = null,
-                    utfall = Utfall.OPPFYLT,
-                    avslagsårsak = null,
-                    grenseverdi = Prosent.`100_PROSENT`,
-                    gradering = null,
-                    trekk = Dagsatser(0)
-                )
-            )
-        )
+        val underveisgrunnlag = underveisgrunnlag(Periode(LocalDate.of(2020, 3, 31), LocalDate.of(2020, 4, 1)))
         val barnetilleggGrunnlag = BarnetilleggGrunnlag(
             1L,
             emptyList()
@@ -336,6 +283,29 @@ class BeregnTilkjentYtelseServiceTest {
                     antallBarn = 0,
                     barnetilleggsats = Beløp("0"),
                     barnetillegg = Beløp("0")
+                )
+            )
+        )
+    }
+
+    private fun underveisgrunnlag(periode: Periode): UnderveisGrunnlag {
+        return UnderveisGrunnlag(
+            id = 1L, perioder = listOf(
+                Underveisperiode(
+                    periode = periode,
+                    meldePeriode = Periode(
+                        LocalDate.of(2020, 3, 31), LocalDate.of(2020, 4, 13)
+                    ),
+                    utfall = Utfall.OPPFYLT,
+                    avslagsårsak = null,
+                    grenseverdi = Prosent.`100_PROSENT`,
+                    gradering = Gradering(
+                        totaltAntallTimer = TimerArbeid(BigDecimal(10)),
+                        andelArbeid = Prosent.`50_PROSENT`,
+                        fastsattArbeidsevne = Prosent.`50_PROSENT`,
+                        gradering = Prosent.`0_PROSENT`
+                    ),
+                    trekk = Dagsatser(0)
                 )
             )
         )

@@ -43,6 +43,10 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
     }
 
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
+        require(input.rettighetsperiode.inneholder(resultat.helePerioden())) {
+            "kan ikke vurdere utenfor rettighetsperioden fordi meldeperioden ikke er definert"
+        }
+
         val høyerePrioritertVurdering = resultat.filter { it.verdi.aktivitetspliktVurdering != null }
         val tidslinje = input.aktivitetspliktGrunnlag.tidslinje(PARAGRAF_11_8)
             .kombiner(høyerePrioritertVurdering, StandardSammenslåere.minus())
@@ -68,7 +72,7 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
 
     private fun tidslinjeMedFørsteFraværIdentifisert(
         resultat: Tidslinje<Vurdering>,
-        tidslinje: Tidslinje<AktivitetspliktRegistrering>
+        tidslinje: Tidslinje<AktivitetspliktRegistrering>,
     ): Tidslinje<AktivitetspliktSteg1> {
         return groupByMeldeperiode(resultat, tidslinje)
             .flatMap { meldeperiodenSegment ->
