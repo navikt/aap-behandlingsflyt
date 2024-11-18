@@ -16,6 +16,9 @@ import java.time.Year
 fun genererIdent(fødselsdato: LocalDate): Ident {
     return Ident(FødselsnummerGenerator.Builder().fodselsdato(fødselsdato).buildAndGenerate())
 }
+fun defaultInntekt(): List<InntektPerÅr> {
+    return (1..10).map { InntektPerÅr(Year.now().minusYears(it.toLong()), Beløp("400000.0")) }
+}
 
 class TestPerson(
     val fødselsdato: Fødselsdato = Fødselsdato(LocalDate.now().minusYears(19)),
@@ -26,7 +29,7 @@ class TestPerson(
     val yrkesskade: List<TestYrkesskade> = emptyList(),
     val institusjonsopphold: List<Institusjonsopphold> = emptyList(),
     val uføre: Prosent? = Prosent(0),
-    inntekter: List<InntektPerÅr> = (1..10).map { InntektPerÅr(Year.now().minusYears(it.toLong()), Beløp("400000.0")) }
+    inntekter: List<InntektPerÅr> = defaultInntekt()
 ) {
     private val inntekter: MutableList<InntektPerÅr> = inntekter.toMutableList()
 

@@ -71,9 +71,9 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.testutil.TestUtil
-import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.flyt.StegStatus
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
@@ -530,7 +530,8 @@ class FlytOrkestratorTest {
 
         val person = TestPerson(
             fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
-            yrkesskade = listOf(TestYrkesskade())
+            yrkesskade = listOf(TestYrkesskade()),
+            uføre = null
         )
         FakePersoner.leggTil(
             person
