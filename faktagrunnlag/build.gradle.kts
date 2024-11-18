@@ -22,7 +22,7 @@ dependencies {
     implementation("com.zaxxer:HikariCP:6.0.0")
 
     implementation("com.fasterxml.jackson.core:jackson-databind:2.18.0")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.0")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.1")
 
     implementation("ch.qos.logback:logback-classic:1.5.12")
 
