@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykepengerErstatning
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykepengerErstatningVilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
@@ -32,9 +33,9 @@ class VurderSykepengeErstatningSteg private constructor(
         val bistandsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
 
         // TODO: Dette må gjøres mye mer robust og sjekkes konsistent mot 11-6...
-        if (bistandsvilkåret.vilkårsperioder().all { !it.erOppfylt() } &&
+        if (bistandsvilkåret.vilkårsperioder().all { !it.erOppfylt() } && (
             sykdomsvilkåret.vilkårsperioder()
-                .any { it.utfall == Utfall.IKKE_OPPFYLT && it.avslagsårsak == Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET }) {
+                .any { it.erOppfylt() || avslagPåVissVarighet(it) })) {
 
             val grunnlag = sykepengerErstatningRepository.hentHvisEksisterer(kontekst.behandlingId)
 
@@ -63,6 +64,9 @@ class VurderSykepengeErstatningSteg private constructor(
 
         return Fullført
     }
+
+    private fun avslagPåVissVarighet(vilkårsperiode: Vilkårsperiode): Boolean =
+        vilkårsperiode.utfall == Utfall.IKKE_OPPFYLT && vilkårsperiode.avslagsårsak == Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
