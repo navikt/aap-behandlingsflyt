@@ -2,9 +2,9 @@ package no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom
 
 import no.nav.aap.behandlingsflyt.behandling.vilkår.Vilkårsvurderer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
 
@@ -19,7 +19,11 @@ class Sykdomsvilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<Sykd
     )
 
     override fun vurder(grunnlag: SykdomsFaktagrunnlag) {
-        val regel = requireNotNull(regelTidslinje.segment(grunnlag.vurderingsdato)).verdi
+        val segment = regelTidslinje.segment(grunnlag.vurderingsdato)
+        if (segment == null) {
+            throw IllegalArgumentException("Fant ikke regler for vurderingsdato ${grunnlag.vurderingsdato}")
+        }
+        val regel = requireNotNull(segment).verdi
 
         regel.vurder(grunnlag)
     }
