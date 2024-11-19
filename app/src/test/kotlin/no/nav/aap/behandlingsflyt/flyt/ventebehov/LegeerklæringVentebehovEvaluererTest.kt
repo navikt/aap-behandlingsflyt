@@ -49,6 +49,38 @@ class LegeerklæringVentebehovEvaluererTest {
     }
 
     @Test
+    fun LøserBehovNårDetFinnesMottattLegeerklæring () {
+        InitTestDatabase.dataSource.transaction { connection ->
+            val evaluerer = LegeerklæringVentebehovEvaluerer(connection)
+            val avklaringsbehov = Avklaringsbehov(1L, Definisjon.BESTILL_LEGEERKLÆRING, mutableListOf(), StegType.AVKLAR_SYKDOM, false)
+
+            val sak = opprettSak(connection)
+            val behandling = opprettBehandling(connection, sak)
+
+            genererDokument(sak.id, behandling.id, connection, Brevkode.LEGEERKLÆRING_MOTTATT, MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, "referanse"))
+
+            val erLøst = evaluerer.ansesSomLøst(behandling.id, avklaringsbehov, sak.id)
+            assertEquals(true, erLøst)
+        }
+    }
+
+    @Test
+    fun LøserIkkeBehovNårLegeerklæringErEldreEnnBestilling() {
+        InitTestDatabase.dataSource.transaction { connection ->
+            val evaluerer = LegeerklæringVentebehovEvaluerer(connection)
+
+            val sak = opprettSak(connection)
+            val behandling = opprettBehandling(connection, sak)
+
+            genererDokument(sak.id, behandling.id, connection, Brevkode.LEGEERKLÆRING_MOTTATT, MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, "referanse"))
+
+            val avklaringsbehov = Avklaringsbehov(1L, Definisjon.BESTILL_LEGEERKLÆRING, mutableListOf(), StegType.AVKLAR_SYKDOM, false)
+            val erLøst = evaluerer.ansesSomLøst(behandling.id, avklaringsbehov, sak.id)
+            assertEquals(false, erLøst)
+        }
+    }
+
+    @Test
     fun LøserIkkeBehovNårIkkeDetFinnesAvvistDokument () {
         InitTestDatabase.dataSource.transaction { connection ->
             val evaluerer = LegeerklæringVentebehovEvaluerer(connection)
