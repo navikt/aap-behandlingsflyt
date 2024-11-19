@@ -35,7 +35,7 @@ class VurderYrkesskadeSteg private constructor(
 
         if (erBehovForAvklaring(vilkårsresultat, yrkesskader, sykdomsgrunnlag)) {
             return FantAvklaringsbehov(Definisjon.AVKLAR_YRKESSKADE)
-        } else if (avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_YRKESSKADE)?.erÅpent() == true) {
+        } else if (avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_YRKESSKADE) != null) {
             avklaringsbehovene.avbryt(Definisjon.AVKLAR_YRKESSKADE)
         }
 

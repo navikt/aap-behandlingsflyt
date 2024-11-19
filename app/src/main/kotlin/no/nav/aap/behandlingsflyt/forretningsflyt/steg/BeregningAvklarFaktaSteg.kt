@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.beregning.AvklarFaktaBeregningService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
@@ -23,7 +25,8 @@ class BeregningAvklarFaktaSteg private constructor(
     private val beregningVurderingRepository: BeregningVurderingRepository,
     private val sykdomRepository: SykdomRepository,
     private val vilkårsresultatRepository1: VilkårsresultatRepository,
-    private val avklarFaktaBeregningService: AvklarFaktaBeregningService
+    private val avklarFaktaBeregningService: AvklarFaktaBeregningService,
+    private val avklaringsbehovRepository: AvklaringsbehovRepository
 ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -32,11 +35,15 @@ class BeregningAvklarFaktaSteg private constructor(
         if (avklarFaktaBeregningService.skalFastsetteGrunnlag(behandlingId)) {
             val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
             val vilkårsresultat = vilkårsresultatRepository1.hent(behandlingId)
+            val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
             if (beregningVurdering == null && erIkkeStudent(vilkårsresultat)) {
                 return FantAvklaringsbehov(Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT)
             }
+            val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FASTSETT_YRKESSKADEINNTEKT)
             if (erBehovForÅAvklareYrkesskade(behandlingId, beregningVurdering)) {
                 return FantAvklaringsbehov(Definisjon.FASTSETT_YRKESSKADEINNTEKT)
+            } else if (avklaringsbehov != null) {
+                avklaringsbehovene.avbryt(Definisjon.FASTSETT_YRKESSKADEINNTEKT)
             }
         }
         return Fullført
@@ -64,6 +71,9 @@ class BeregningAvklarFaktaSteg private constructor(
         beregningGrunnlag: BeregningGrunnlag?
     ): Boolean {
         val vurderteSaker = beregningGrunnlag?.yrkesskadeBeløpVurdering?.vurderinger ?: emptyList()
+        if (vurderteSaker.isEmpty()) {
+            return false
+        }
         return !relevanteSaker.all { sak -> vurderteSaker.any { it.referanse == sak } }
     }
 
@@ -74,7 +84,8 @@ class BeregningAvklarFaktaSteg private constructor(
                 BeregningVurderingRepository(connection),
                 SykdomRepository(connection),
                 vilkårsresultatRepository,
-                AvklarFaktaBeregningService(vilkårsresultatRepository)
+                AvklarFaktaBeregningService(vilkårsresultatRepository),
+                AvklaringsbehovRepositoryImpl(connection)
             )
         }
 
