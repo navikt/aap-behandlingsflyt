@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.SøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektService
@@ -44,7 +45,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderYrkesskadeSteg
 object Revurdering : BehandlingType {
     override fun flyt(): BehandlingFlyt {
         return BehandlingFlytBuilder()
-            .medSteg(steg = StartBehandlingSteg, informasjonskrav = listOf(SøknadService), )
+            .medSteg(steg = StartBehandlingSteg, informasjonskrav = listOf(SøknadService))
             .medSteg(steg = VurderLovvalgSteg)
             .medSteg(
                 steg = VurderAlderSteg,
@@ -53,7 +54,7 @@ object Revurdering : BehandlingType {
             .medSteg(steg = VurderStudentSteg)
             // UføreService svarer med mocket respons inntil pesys-integrasjon er fullført:
             // Relevant issue: https://github.com/navikt/pensjon-pen/pull/13138
-            .medSteg(steg = VurderSykdomSteg, informasjonskrav = listOf(YrkesskadeService, UføreService))
+            .medSteg(steg = VurderSykdomSteg, informasjonskrav = listOf(YrkesskadeService, UføreService, LegeerklæringService))
             .medSteg(steg = FritakMeldepliktSteg)
             .medSteg(steg = FastsettArbeidsevneSteg)
             .medSteg(steg = VurderBistandsbehovSteg)

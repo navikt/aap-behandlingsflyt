@@ -96,12 +96,12 @@ class PerioderTilVurderingService(connection: DBConnection) {
                 requireNotNull(årsak.periode)
             ) // TODO: Vurdere om denne skal utlede mer komplekst (dvs har mottatt for denne perioden før)
             ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING -> Vurdering(
-                VurderingType.FØRSTEGANGSBEHANDLING,
+                VurderingType.REVURDERING,
                 listOf(årsak.type),
                 rettighetsperiode
             )
             ÅrsakTilBehandling.MOTTATT_AVVIST_LEGEERKLÆRING -> Vurdering(
-                VurderingType.FØRSTEGANGSBEHANDLING,
+                VurderingType.REVURDERING,
                 listOf(årsak.type),
                 rettighetsperiode
             )

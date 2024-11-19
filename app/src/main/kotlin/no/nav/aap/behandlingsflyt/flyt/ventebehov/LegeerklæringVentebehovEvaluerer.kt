@@ -16,11 +16,15 @@ class LegeerklæringVentebehovEvaluerer(private val connection: DBConnection): S
 
     override fun ansesSomLøst(behandlingId: BehandlingId, avklaringsbehov: Avklaringsbehov, sakId: SakId): Boolean {
         val mottattDokumentRepository = MottattDokumentRepository(connection)
-        val avvistDokumenter = mottattDokumentRepository.hentDokumenterAvType(sakId, Brevkode.LEGEERKLÆRING_AVVIST)
-
         val sisteLegeerklæringBestilling = avklaringsbehov.historikk.maxBy { it.tidsstempel }
+
+        val avvistDokumenter = mottattDokumentRepository.hentDokumenterAvType(sakId, Brevkode.LEGEERKLÆRING_AVVIST)
         val avslåtteDokumenterEtterBestilling = avvistDokumenter.filter { it.mottattTidspunkt.isAfter(sisteLegeerklæringBestilling.tidsstempel)}
 
-        return avslåtteDokumenterEtterBestilling.any() && avklaringsbehov.erÅpent()
+        val mottatteLegeerklæringer = mottattDokumentRepository.hentDokumenterAvType(behandlingId, Brevkode.LEGEERKLÆRING_MOTTATT)
+        val mottatteLegeerklæringerEtterSisteBestilling = mottatteLegeerklæringer.filter { it.mottattTidspunkt.isAfter(sisteLegeerklæringBestilling.tidsstempel) }
+
+        return (avslåtteDokumenterEtterBestilling.any() && avklaringsbehov.erÅpent()) ||
+            mottatteLegeerklæringerEtterSisteBestilling.any()
     }
 }

@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.InnsendingId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.adapter.UbehandletPliktkort
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.UbehandletLegeerklæring
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.pliktkort.Pliktkort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.adapter.UbehandletSøknad
@@ -86,6 +87,19 @@ class MottaDokumentService(
             mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, Brevkode.SØKNAD)
 
         return ubehandledeSøknader.map { mapSøknad(it) }.toSet()
+    }
+
+    fun legeerklæringerSomIkkeHarBlittBehandlet(sakId: SakId) : Set<UbehandletLegeerklæring> {
+        val ubehandledeLegeerklæringer = mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, Brevkode.LEGEERKLÆRING_MOTTATT)
+        return ubehandledeLegeerklæringer.map { mapLegeerklæring(it) }.toSet()
+    }
+
+    private fun mapLegeerklæring(mottattDokument: MottattDokument): UbehandletLegeerklæring {
+        val mottattDato = mottattDokument.mottattTidspunkt.toLocalDate()
+        return UbehandletLegeerklæring(
+            mottattDokument.referanse.asJournalpostId,
+            Periode(mottattDato, mottattDato)
+        )
     }
 
     private fun mapSøknad(mottattDokument: MottattDokument): UbehandletSøknad {
