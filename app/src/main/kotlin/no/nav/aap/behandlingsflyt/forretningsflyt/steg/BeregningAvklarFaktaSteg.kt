@@ -71,7 +71,7 @@ class BeregningAvklarFaktaSteg private constructor(
         beregningGrunnlag: BeregningGrunnlag?
     ): Boolean {
         val vurderteSaker = beregningGrunnlag?.yrkesskadeBeløpVurdering?.vurderinger ?: emptyList()
-        if (vurderteSaker.isEmpty()) {
+        if (relevanteSaker.isEmpty()) {
             return false
         }
         return !relevanteSaker.all { sak -> vurderteSaker.any { it.referanse == sak } }
