@@ -985,7 +985,11 @@ object FakeServers : AutoCloseable {
         }
         routing {
             post("/token") {
-                val token = AzureTokenGen("behandlingsflyt", "behandlingsflyt").generate()
+                val body = call.receiveText()
+                val token = AzureTokenGen(
+                    issuer = "behandlingsflyt",
+                    audience = "behandlingsflyt"
+                ).generate(body.contains("grant_type=client_credentials"))
                 call.respond(TestToken(access_token = token))
             }
             get("/jwks") {
@@ -1067,7 +1071,7 @@ object FakeServers : AutoCloseable {
     }
 
     @Suppress("PropertyName")
-    internal data class TestToken(
+    data class TestToken(
         val access_token: String,
         val refresh_token: String = "very.secure.token",
         val id_token: String = "very.secure.token",

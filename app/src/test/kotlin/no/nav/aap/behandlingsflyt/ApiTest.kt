@@ -28,8 +28,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.FinnEllerOpprettSakD
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksinfoDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.UtvidetSaksinfoDTO
 import no.nav.aap.behandlingsflyt.test.FakePersoner
+import no.nav.aap.behandlingsflyt.test.FakeServers.TestToken
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
+import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
@@ -38,7 +40,9 @@ import no.nav.aap.komponenter.httpklient.httpclient.get
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.NoTokenTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.OnBehalfOfTokenProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
@@ -84,9 +88,22 @@ class ApiTest {
 
         private val client: RestClient<InputStream> = RestClient(
             config = ClientConfig(scope = "behandlingsflyt"),
-            tokenProvider = ClientCredentialsTokenProvider,
+            tokenProvider = OnBehalfOfTokenProvider,
             responseHandler = DefaultResponseHandler()
         )
+
+        private var token: OidcToken? = null
+        private fun getToken(): OidcToken {
+            val client = RestClient(
+                config = ClientConfig(scope = "behandlingsflyt"),
+                tokenProvider = NoTokenTokenProvider(),
+                responseHandler = DefaultResponseHandler()
+            )
+            return token ?: OidcToken(client.post<Unit, TestToken>(
+                URI.create(requiredConfigForKey("azure.openid.config.token.endpoint")),
+                PostRequest(Unit)
+            )!!.access_token)
+        }
 
         // Starter server
         private val server = embeddedServer(Netty, port = 0) {
@@ -148,7 +165,7 @@ class ApiTest {
         val medlemskapGrunnlag: MedlemskapGrunnlagDto? = client.get(
             URI.create("http://localhost:$port/")
                 .resolve("api/behandling/${opprettetBehandling.referanse}/grunnlag/medlemskap"),
-            GetRequest()
+            GetRequest(currentToken = getToken())
         )
 
         assertThat(medlemskapGrunnlag).isNotNull
@@ -208,7 +225,7 @@ class ApiTest {
 
         val asJSON: JsonNode? = client.get(
             URI.create("http://localhost:$port/api/beregning/grunnlag/").resolve(referanse.toString()),
-            GetRequest()
+            GetRequest(currentToken = getToken()),
         ) { x, _ -> ObjectMapper().readTree(x) }
 
         @Language("JSON") val expectedJSON =
@@ -265,7 +282,8 @@ class ApiTest {
         val responseSak: SaksinfoDTO? = client.post(
             URI.create("http://localhost:$port/").resolve("api/sak/finnEllerOpprett"),
             PostRequest(
-                body = FinnEllerOpprettSakDTO("12345678910", LocalDate.now())
+                body = FinnEllerOpprettSakDTO("12345678910", LocalDate.now()),
+                currentToken = getToken()
             )
         )
 
@@ -274,7 +292,8 @@ class ApiTest {
         client.post<_, Unit>(
             URI.create("http://localhost:$port/").resolve("api/soknad/send"),
             PostRequest(
-                body = SøknadSendDto(responseSak.saksnummer, "123", Søknad(SøknadStudentDto("NEI"), "NEI", null))
+                body = SøknadSendDto(responseSak.saksnummer, "123", Søknad(SøknadStudentDto("NEI"), "NEI", null)),
+                currentToken = getToken()
             )
         )
 
@@ -325,7 +344,7 @@ class ApiTest {
             requireNotNull(
                 client.get<String>(
                     URI.create("http://localhost:$port/openapi.json"),
-                    GetRequest()
+                    GetRequest(currentToken = getToken())
                 ) { body, _ ->
                     String(body.readAllBytes(), StandardCharsets.UTF_8)
                 }
@@ -352,10 +371,10 @@ class ApiTest {
                     try {
                         utvidedSak = block()
                         delay(100)
-                        tries++
-
                     } catch (e: Exception) {
                         println("Exception: $e")
+                    } finally {
+                        tries++
                     }
                 }
                 utvidedSak
@@ -368,7 +387,7 @@ class ApiTest {
     ): UtvidetSaksinfoDTO? {
         val utvidetSak3: UtvidetSaksinfoDTO? = client.get(
             URI.create("http://localhost:$port/").resolve("api/sak/").resolve(responseSak.saksnummer),
-            GetRequest()
+            GetRequest(currentToken = getToken())
         )
         if (utvidetSak3?.behandlinger?.isNotEmpty() == true) {
             return utvidetSak3
