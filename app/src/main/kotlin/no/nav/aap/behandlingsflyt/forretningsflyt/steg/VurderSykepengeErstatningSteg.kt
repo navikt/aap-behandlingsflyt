@@ -3,6 +3,8 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykepengerErstatningFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykepengerErstatningVilkår
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
@@ -31,7 +33,8 @@ class VurderSykepengeErstatningSteg private constructor(
 
         // TODO: Dette må gjøres mye mer robust og sjekkes konsistent mot 11-6...
         if (bistandsvilkåret.vilkårsperioder().all { !it.erOppfylt() } &&
-            sykdomsvilkåret.vilkårsperioder().any { it.erOppfylt() }) {
+            sykdomsvilkåret.vilkårsperioder()
+                .any { it.utfall == Utfall.IKKE_OPPFYLT && it.avslagsårsak == Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET }) {
 
             val grunnlag = sykepengerErstatningRepository.hentHvisEksisterer(kontekst.behandlingId)
 
