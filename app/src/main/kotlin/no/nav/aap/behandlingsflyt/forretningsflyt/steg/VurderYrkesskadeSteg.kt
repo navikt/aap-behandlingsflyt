@@ -34,7 +34,7 @@ class VurderYrkesskadeSteg private constructor(
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
 
         val erBehovForAvklaring = erBehovForAvklaring(vilkårsresultat, yrkesskader, sykdomsgrunnlag)
-        if (erBehovForAvklaring && sykdomsgrunnlag?.yrkesskadevurdering != null) {
+        if (erBehovForAvklaring && sykdomsgrunnlag?.yrkesskadevurdering == null) {
             return FantAvklaringsbehov(Definisjon.AVKLAR_YRKESSKADE)
         } else if (!erBehovForAvklaring && avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_YRKESSKADE) != null) {
             avklaringsbehovene.avbryt(Definisjon.AVKLAR_YRKESSKADE)
