@@ -49,7 +49,12 @@ class HendelseMottattHåndteringJobbUtfører(connection: DBConnection) : JobbUtf
             strukturertDokument = UnparsedStrukturertDokument(payloadAsString)
         )
 
-        hånderMottattDokumentService.håndterMottatteDokumenter(sakId, brevkode, utledPeriode(input.parameter(PERIODE)))
+        hånderMottattDokumentService.håndterMottatteDokumenter(
+            sakId,
+            brevkode,
+            utledPeriode(input.parameter(PERIODE)),
+            mottattTidspunkt.toLocalDate()
+        )
 
         låsRepository.verifiserSkrivelås(sakSkrivelås)
     }

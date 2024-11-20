@@ -11,6 +11,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.verdityper.flyt.ÅrsakTilBehandling
 import no.nav.aap.verdityper.sakogbehandling.SakId
+import java.time.LocalDate
 
 class HåndterMottattDokumentService(connection: DBConnection) {
 
@@ -19,7 +20,7 @@ class HåndterMottattDokumentService(connection: DBConnection) {
     private val låsRepository = TaSkriveLåsRepository(connection)
     private val prosesserBehandling = ProsesserBehandlingService(FlytJobbRepository(connection))
 
-    fun håndterMottatteDokumenter(sakId: SakId, brevkode: Brevkode, periode: Periode?) {
+    fun håndterMottatteDokumenter(sakId: SakId, brevkode: Brevkode, periode: Periode?, mottattDato: LocalDate) {
 
         val sak = sakService.hent(sakId)
         val element = utledÅrsak(brevkode, periode)
@@ -27,6 +28,8 @@ class HåndterMottattDokumentService(connection: DBConnection) {
             sakOgBehandlingService.finnEllerOpprettBehandling(sak.saksnummer, listOf(element))
 
         val behandlingSkrivelås = låsRepository.låsBehandling(beriketBehandling.behandling.id)
+
+        sakOgBehandlingService.oppdaterRettighetsperioden(sakId, brevkode, mottattDato)
 
         prosesserBehandling.triggProsesserBehandling(
             sakId,

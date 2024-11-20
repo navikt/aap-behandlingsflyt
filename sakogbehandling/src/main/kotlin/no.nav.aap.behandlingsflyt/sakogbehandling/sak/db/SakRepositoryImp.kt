@@ -1,11 +1,11 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak.db
 
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakFlytRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.type.Periode
@@ -174,4 +174,17 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository, S
         status = row.getEnum("status"),
         opprettetTidspunkt = row.getLocalDateTime("opprettet_tid")
     )
+
+    fun oppdaterRettighetsperiode(sakId: SakId, periode: Periode) {
+        val query = """
+            UPDATE SAK SET rettighetsperiode = ?::daterange WHERE id = ?
+        """.trimIndent()
+
+        connection.execute(query) {
+            setParams {
+                setPeriode(1, periode)
+                setLong(2, sakId.toLong())
+            }
+        }
+    }
 }
