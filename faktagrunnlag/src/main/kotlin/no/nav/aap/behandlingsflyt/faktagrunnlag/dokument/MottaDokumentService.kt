@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.InnsendingId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.adapter.UbehandletPliktkort
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.UbehandletDialogmelding
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.UbehandletLegeerklæring
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.pliktkort.Pliktkort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
@@ -94,9 +95,22 @@ class MottaDokumentService(
         return ubehandledeLegeerklæringer.map { mapLegeerklæring(it) }.toSet()
     }
 
+    fun dialogmeldingerSomIkkeHarBlittBehandlet(sakId: SakId) : Set<UbehandletDialogmelding> {
+        val ubehandledeDialogmeldinger = mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, Brevkode.DIALOGMELDING)
+        return ubehandledeDialogmeldinger.map { mapDialogmelding(it) }.toSet()
+    }
+
     private fun mapLegeerklæring(mottattDokument: MottattDokument): UbehandletLegeerklæring {
         val mottattDato = mottattDokument.mottattTidspunkt.toLocalDate()
         return UbehandletLegeerklæring(
+            mottattDokument.referanse.asJournalpostId,
+            Periode(mottattDato, mottattDato)
+        )
+    }
+
+    private fun mapDialogmelding(mottattDokument: MottattDokument): UbehandletDialogmelding {
+        val mottattDato = mottattDokument.mottattTidspunkt.toLocalDate()
+        return UbehandletDialogmelding(
             mottattDokument.referanse.asJournalpostId,
             Periode(mottattDato, mottattDato)
         )

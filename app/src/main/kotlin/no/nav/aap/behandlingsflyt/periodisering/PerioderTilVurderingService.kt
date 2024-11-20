@@ -105,6 +105,11 @@ class PerioderTilVurderingService(connection: DBConnection) {
                 listOf(årsak.type),
                 rettighetsperiode
             )
+            ÅrsakTilBehandling.MOTTATT_DIALOGMELDING -> Vurdering(
+                VurderingType.REVURDERING,
+                listOf(årsak.type),
+                rettighetsperiode
+            )
         }
     }
 }

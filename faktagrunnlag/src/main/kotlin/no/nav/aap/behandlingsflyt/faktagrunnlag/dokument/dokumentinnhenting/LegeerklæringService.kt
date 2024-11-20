@@ -30,12 +30,21 @@ class LegeerklæringService private constructor(
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val ubehandledeLegeerklæringer = mottaDokumentService.legeerklæringerSomIkkeHarBlittBehandlet(kontekst.sakId)
+        val ubehandledeDialogmeldinger = mottaDokumentService.dialogmeldingerSomIkkeHarBlittBehandlet(kontekst.sakId)
 
-        if (ubehandledeLegeerklæringer.isEmpty()) {
+        if (ubehandledeLegeerklæringer.isEmpty() && ubehandledeDialogmeldinger.isNotEmpty()) {
             return IKKE_ENDRET
         }
 
         for (dokument in ubehandledeLegeerklæringer) {
+            mottaDokumentService.knyttTilBehandling(
+                sakId = kontekst.sakId,
+                behandlingId = kontekst.behandlingId,
+                referanse = MottattDokumentReferanse(dokument.journalpostId)
+            )
+        }
+
+        for (dokument in ubehandledeDialogmeldinger) {
             mottaDokumentService.knyttTilBehandling(
                 sakId = kontekst.sakId,
                 behandlingId = kontekst.behandlingId,

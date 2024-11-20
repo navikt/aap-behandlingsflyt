@@ -1421,7 +1421,7 @@ class FlytOrkestratorTest {
     }
 
     @Test
-    fun `Tas av vent ved mottak av avvist legeerklæring`() {
+    fun `Fjerner legeerklæring ventebehov ved mottak av avvist legeerklæring`() {
         val ident = ident()
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
@@ -1464,33 +1464,6 @@ class FlytOrkestratorTest {
 
             assertThat(avklaringsbehovene.alle()).anySatisfy { assertThat(it.erÅpent() && it.definisjon == Definisjon.BESTILL_LEGEERKLÆRING).isTrue() }
         }
-
-        // Løs avklar sykdom
-        dataSource.transaction {
-            AvklaringsbehovHendelseHåndterer(it).håndtere(
-                behandling.id,
-                LøsAvklaringsbehovHendelse(
-                    løsning = AvklarSykdomLøsning(
-                        sykdomsvurdering = SykdomsvurderingDto(
-                            begrunnelse = "Arbeidsevnen er nedsatt med mer enn halvparten",
-                            dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
-                            harSkadeSykdomEllerLyte = true,
-                            erSkadeSykdomEllerLyteVesentligdel = true,
-                            erArbeidsevnenNedsatt = true,
-                            erNedsettelseIArbeidsevneMerEnnHalvparten = false,
-                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = false,
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = false,
-                            diagnose = "",
-                            kodeverk = "",
-                            yrkesskadeBegrunnelse = ""
-                        )
-                    ),
-                    behandlingVersjon = behandling.versjon,
-                    bruker = Bruker("SAKSBEHANDLER")
-                )
-            )
-        }
-        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
 
         // Validér avklaring
         dataSource.transaction { connection ->
@@ -1524,11 +1497,96 @@ class FlytOrkestratorTest {
         // Validér avklaring
         dataSource.transaction { connection ->
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
-            assertThat(avklaringsbehov.åpne().isEmpty())
+            val legeerklæringBestillingVenteBehov = avklaringsbehov.åpne().filter { it.definisjon == Definisjon.BESTILL_LEGEERKLÆRING }
+            assertThat(legeerklæringBestillingVenteBehov.isEmpty()).isTrue()
         }
     }
+
     @Test
-    fun `Tas av vent ved mottak av legeerklæring`() {
+    fun `Fjerner legeerklæring ventebehov ved mottak av legeerklæring`() {
+        val ident = ident()
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        // Oppretter vanlig søknad
+        hendelsesMottak.håndtere(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("2"),
+                mottattTidspunkt = LocalDateTime.now(),
+                strukturertDokument = StrukturertDokument(
+                    Søknad(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null),
+                    Brevkode.SØKNAD
+                ),
+                periode = periode
+            )
+        )
+
+        util.ventPåSvar()
+        val sak = hentSak(ident, periode)
+        var behandling = requireNotNull(hentBehandling(sak.id))
+
+        // Validér avklaring
+        dataSource.transaction { connection ->
+            val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
+            assertThat(avklaringsbehov.alle()).anySatisfy { assertThat(it.erÅpent() && it.definisjon == Definisjon.AVKLAR_SYKDOM).isTrue() }
+        }
+
+        // Oppretter bestilling av legeerklæring
+        dataSource.transaction { connection ->
+            val avklaringsbehovene = hentAvklaringsbehov(behandling.id, connection)
+            val sakService = SakService(connection)
+            val behandlingHendelseService = BehandlingHendelseService(FlytJobbRepository((connection)), sakService)
+            avklaringsbehovene.leggTil(
+                definisjoner = listOf(Definisjon.BESTILL_LEGEERKLÆRING),
+                stegType = behandling.aktivtSteg(),
+                grunn = ÅrsakTilSettPåVent.VENTER_PÅ_MEDISINSKE_OPPLYSNINGER,
+                bruker = SYSTEMBRUKER
+            )
+            behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
+            util.ventPåSvar()
+
+            assertThat(avklaringsbehovene.alle()).anySatisfy { assertThat(it.erÅpent() && it.definisjon == Definisjon.BESTILL_LEGEERKLÆRING).isTrue() }
+        }
+        util.ventPåSvar()
+
+        // Validér avklaring
+        dataSource.transaction { connection ->
+            val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
+            assertThat(avklaringsbehov.åpne().all { it.definisjon ==  Definisjon.BESTILL_LEGEERKLÆRING })
+        }
+
+        // Mottar legeerklæring
+        val journalpostId = UUID.randomUUID().toString()
+        dataSource.transaction { connection ->
+            val flytJobbRepository = FlytJobbRepository(connection)
+            flytJobbRepository.leggTil(
+                HendelseMottattHåndteringJobbUtfører.nyJobb(
+                    sakId = sak.id,
+                    dokumentReferanse = MottattDokumentReferanse(
+                        MottattDokumentReferanse.Type.JOURNALPOST,
+                        journalpostId
+                    ),
+                    brevkode = Brevkode.LEGEERKLÆRING_MOTTATT,
+                    kanal = Kanal.DIGITAL,
+                    periode = Periode(
+                        LocalDate.now(),
+                        LocalDate.now().plusWeeks(4)
+                    ),
+                    payload = Legeerklæring(JournalpostId("1234"))
+                )
+            )
+        }
+        util.ventPåSvar()
+
+        // Validér avklaring
+        dataSource.transaction { connection ->
+            val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
+            val legeerklæringBestillingVenteBehov = avklaringsbehov.åpne().filter { it.definisjon == Definisjon.BESTILL_LEGEERKLÆRING }
+            assertThat(legeerklæringBestillingVenteBehov.isEmpty()).isTrue()
+        }
+    }
+
+    @Test
+    fun `Fjerner legeerklæring ventebehov ved mottak av dialogmelding`() {
         val ident = ident()
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
@@ -1572,41 +1630,14 @@ class FlytOrkestratorTest {
             assertThat(avklaringsbehovene.alle()).anySatisfy { assertThat(it.erÅpent() && it.definisjon == Definisjon.BESTILL_LEGEERKLÆRING).isTrue() }
         }
 
-        // Løs avklar sykdom
-        dataSource.transaction {
-            AvklaringsbehovHendelseHåndterer(it).håndtere(
-                behandling.id,
-                LøsAvklaringsbehovHendelse(
-                    løsning = AvklarSykdomLøsning(
-                        sykdomsvurdering = SykdomsvurderingDto(
-                            begrunnelse = "Arbeidsevnen er nedsatt med mer enn halvparten",
-                            dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
-                            harSkadeSykdomEllerLyte = true,
-                            erSkadeSykdomEllerLyteVesentligdel = true,
-                            erArbeidsevnenNedsatt = true,
-                            erNedsettelseIArbeidsevneMerEnnHalvparten = false,
-                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = false,
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = false,
-                            diagnose = "",
-                            kodeverk = "",
-                            yrkesskadeBegrunnelse = ""
-                        )
-                    ),
-                    behandlingVersjon = behandling.versjon,
-                    bruker = Bruker("SAKSBEHANDLER")
-                )
-            )
-        }
-        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
-
         // Validér avklaring
         dataSource.transaction { connection ->
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
             assertThat(avklaringsbehov.åpne().all { it.definisjon ==  Definisjon.BESTILL_LEGEERKLÆRING })
         }
 
-        // Send inn legeerklæring
-        val avvistLegeerklæringId = UUID.randomUUID().toString()
+        // Mottar dialogmelding
+        val journalpostId = UUID.randomUUID().toString()
         dataSource.transaction { connection ->
             val flytJobbRepository = FlytJobbRepository(connection)
             flytJobbRepository.leggTil(
@@ -1614,9 +1645,9 @@ class FlytOrkestratorTest {
                     sakId = sak.id,
                     dokumentReferanse = MottattDokumentReferanse(
                         MottattDokumentReferanse.Type.JOURNALPOST,
-                        avvistLegeerklæringId
+                        journalpostId
                     ),
-                    brevkode = Brevkode.LEGEERKLÆRING_MOTTATT,
+                    brevkode = Brevkode.DIALOGMELDING,
                     kanal = Kanal.DIGITAL,
                     periode = Periode(
                         LocalDate.now(),
@@ -1631,7 +1662,8 @@ class FlytOrkestratorTest {
         // Validér avklaring
         dataSource.transaction { connection ->
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
-            assertThat(avklaringsbehov.åpne().isEmpty())
+            val legeerklæringBestillingVenteBehov = avklaringsbehov.åpne().filter { it.definisjon == Definisjon.BESTILL_LEGEERKLÆRING }
+            assertThat(legeerklæringBestillingVenteBehov.isEmpty()).isTrue()
         }
     }
 }

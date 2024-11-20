@@ -39,7 +39,7 @@ class LegeerklæringVentebehovEvaluererTest {
             val avklaringsbehov = Avklaringsbehov(1L, Definisjon.BESTILL_LEGEERKLÆRING, mutableListOf(), StegType.AVKLAR_SYKDOM, false)
 
             val sak = opprettSak(connection)
-            val behandling = opprettBehandling(connection, sak)
+            val behandling = opprettBehandling(connection, sak, ÅrsakTilBehandling.MOTTATT_AVVIST_LEGEERKLÆRING)
 
             genererDokument(sak.id, behandling.id, connection, Brevkode.LEGEERKLÆRING_AVVIST, MottattDokumentReferanse(MottattDokumentReferanse.Type.AVVIST_LEGEERKLÆRING_ID, "referanse"))
 
@@ -55,9 +55,25 @@ class LegeerklæringVentebehovEvaluererTest {
             val avklaringsbehov = Avklaringsbehov(1L, Definisjon.BESTILL_LEGEERKLÆRING, mutableListOf(), StegType.AVKLAR_SYKDOM, false)
 
             val sak = opprettSak(connection)
-            val behandling = opprettBehandling(connection, sak)
+            val behandling = opprettBehandling(connection, sak, ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING)
 
             genererDokument(sak.id, behandling.id, connection, Brevkode.LEGEERKLÆRING_MOTTATT, MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, "referanse"))
+
+            val erLøst = evaluerer.ansesSomLøst(behandling.id, avklaringsbehov, sak.id)
+            assertEquals(true, erLøst)
+        }
+    }
+
+    @Test
+    fun LøserBehovNårDetFinnesMottattDialogmelding() {
+        InitTestDatabase.dataSource.transaction { connection ->
+            val evaluerer = LegeerklæringVentebehovEvaluerer(connection)
+            val avklaringsbehov = Avklaringsbehov(1L, Definisjon.BESTILL_LEGEERKLÆRING, mutableListOf(), StegType.AVKLAR_SYKDOM, false)
+
+            val sak = opprettSak(connection)
+            val behandling = opprettBehandling(connection, sak, ÅrsakTilBehandling.MOTTATT_DIALOGMELDING)
+
+            genererDokument(sak.id, behandling.id, connection, Brevkode.DIALOGMELDING, MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, "referanse"))
 
             val erLøst = evaluerer.ansesSomLøst(behandling.id, avklaringsbehov, sak.id)
             assertEquals(true, erLøst)
@@ -70,7 +86,7 @@ class LegeerklæringVentebehovEvaluererTest {
             val evaluerer = LegeerklæringVentebehovEvaluerer(connection)
 
             val sak = opprettSak(connection)
-            val behandling = opprettBehandling(connection, sak)
+            val behandling = opprettBehandling(connection, sak, ÅrsakTilBehandling.MOTTATT_SØKNAD)
 
             genererDokument(sak.id, behandling.id, connection, Brevkode.LEGEERKLÆRING_MOTTATT, MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, "referanse"))
 
@@ -87,7 +103,7 @@ class LegeerklæringVentebehovEvaluererTest {
             val avklaringsbehov = Avklaringsbehov(1L, Definisjon.BESTILL_LEGEERKLÆRING, mutableListOf(), StegType.AVKLAR_SYKDOM, false)
 
             val sak = opprettSak(connection)
-            val behandling = opprettBehandling(connection, sak)
+            val behandling = opprettBehandling(connection, sak, ÅrsakTilBehandling.MOTTATT_SØKNAD)
 
             genererDokument(sak.id, behandling.id, connection,  Brevkode.SØKNAD, MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, "referanse"))
 
@@ -118,9 +134,9 @@ class LegeerklæringVentebehovEvaluererTest {
         )
     }
 
-    private fun opprettBehandling(connection: DBConnection, sak: Sak): Behandling {
+    private fun opprettBehandling(connection: DBConnection, sak: Sak, årsak: ÅrsakTilBehandling): Behandling {
         return SakOgBehandlingService(connection).finnEllerOpprettBehandling(
-            sak.saksnummer, listOf(Årsak(ÅrsakTilBehandling.MOTTATT_AVVIST_LEGEERKLÆRING))
+            sak.saksnummer, listOf(Årsak(årsak))
         ).behandling
     }
 }
