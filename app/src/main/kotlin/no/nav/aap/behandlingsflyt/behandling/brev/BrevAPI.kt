@@ -6,8 +6,6 @@ import com.papsign.ktor.openapigen.route.path.normal.put
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
-import io.ktor.http.HttpStatusCode
-import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovHendelseHåndterer
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehovHendelse
@@ -16,6 +14,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevGateway
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.LøsBrevbestillingDto
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
@@ -27,9 +26,12 @@ import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.httpklient.auth.token
-import no.nav.aap.tilgang.authorizedPostWithApprovedList
+import no.nav.aap.tilgang.AuthorizationBodyPathConfig
+import no.nav.aap.tilgang.TilgangReferanse
+import no.nav.aap.tilgang.authorizedPost
 import no.nav.aap.verdityper.feilhåndtering.ElementNotFoundException
 import org.slf4j.MDC
+import tilgang.Operasjon
 import javax.sql.DataSource
 
 val BREV_SYSTEMBRUKER = Bruker("Brevløsning")
@@ -77,7 +79,17 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                 }
             }
             route("/los-bestilling") {
-                authorizedPostWithApprovedList<Unit, String, LøsBrevbestillingDto>(brevAzp) { _, request ->
+                authorizedPost<Unit, String, LøsBrevbestillingDto>(
+                    AuthorizationBodyPathConfig(
+                        operasjon = Operasjon.SAKSBEHANDLE,
+                        approvedApplications = setOf(brevAzp),
+                        applicationsOnly = true
+                    ) {
+                        TilgangReferanse.behandlingsreferanse(
+                            it.behandlingReferanse, Definisjon.BESTILL_BREV.kode.toString()
+                        )
+                    }
+                ) { _, request ->
                     dataSource.transaction { connection ->
                         val taSkriveLåsRepository = TaSkriveLåsRepository(connection)
 
