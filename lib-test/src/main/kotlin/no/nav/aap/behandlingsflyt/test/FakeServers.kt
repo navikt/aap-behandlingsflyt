@@ -586,7 +586,7 @@ object FakeServers : AutoCloseable {
                                           "brevkode": "NAV 11-13.05",
                                           "dokumentstatus": null,
                                           "datoFerdigstilt": null,
-                                          "originalJournalpostId": "453877977",
+                                          "originalJournalpostId": "453877971",
                                           "skjerming": null,
                                           "logiskeVedlegg": [],
                                           "dokumentvarianter": [
