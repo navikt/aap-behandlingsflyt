@@ -2,11 +2,11 @@ package no.nav.aap.behandlingsflyt.hendelse.avløp
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.DefinisjonDTO
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.EndringDTO
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.server.prosessering.StatistikkJobbUtfører
@@ -35,17 +35,19 @@ class BehandlingHendelseService(
             behandlingType = behandling.typeBehandling(),
             status = behandling.status(),
             avklaringsbehov = avklaringsbehovene.alle().map { avklaringsbehov ->
-                AvklaringsbehovHendelseDto(definisjon = DefinisjonDTO(
-                    type = avklaringsbehov.definisjon.kode,
-                    behovType = avklaringsbehov.definisjon.type,
-                    løsesISteg = avklaringsbehov.løsesISteg()
-                ), status = avklaringsbehov.status(),
+                AvklaringsbehovHendelseDto(
+                    definisjon = DefinisjonDTO(
+                        type = avklaringsbehov.definisjon.kode,
+                        behovType = avklaringsbehov.definisjon.type,
+                        løsesISteg = avklaringsbehov.løsesISteg()
+                    ), status = avklaringsbehov.status(),
                     endringer = avklaringsbehov.historikk.map { endring ->
                         EndringDTO(
                             status = endring.status,
                             tidsstempel = endring.tidsstempel,
                             endretAv = endring.endretAv,
-                            frist = endring.frist
+                            frist = endring.frist,
+                            årsakTilSattPåVent = endring.grunn?.oversettTilKontrakt()
                         )
                     })
             },
@@ -63,5 +65,16 @@ class BehandlingHendelseService(
         flytJobbRepository.leggTil(
             JobbInput(jobb = StatistikkJobbUtfører).medPayload(payload)
         )
+    }
+}
+
+fun no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent.oversettTilKontrakt(): ÅrsakTilSettPåVent {
+    return when (this) {
+        no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent.VENTER_PÅ_OPPLYSNINGER -> ÅrsakTilSettPåVent.VENTER_PÅ_MEDISINSKE_OPPLYSNINGER
+        no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent.VENTER_PÅ_OPPLYSNINGER_FRA_UTENLANDSKE_MYNDIGHETER -> ÅrsakTilSettPåVent.VENTER_PÅ_OPPLYSNINGER_FRA_UTENLANDSKE_MYNDIGHETER
+        no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent.VENTER_PÅ_MEDISINSKE_OPPLYSNINGER -> ÅrsakTilSettPåVent.VENTER_PÅ_MEDISINSKE_OPPLYSNINGER
+        no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent.VENTER_PÅ_VURDERING_AV_ROL -> ÅrsakTilSettPåVent.VENTER_PÅ_VURDERING_AV_ROL
+        no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent.VENTER_PÅ_SVAR_FRA_BRUKER -> ÅrsakTilSettPåVent.VENTER_PÅ_SVAR_FRA_BRUKER
+        no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent.VENTER_PÅ_MASKINELL_AVKLARING -> ÅrsakTilSettPåVent.VENTER_PÅ_MASKINELL_AVKLARING
     }
 }
