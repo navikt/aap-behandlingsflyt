@@ -8,14 +8,23 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.pip.PipRepository.IdentPåSak.Companion.filterDistinctIdent
-import no.nav.aap.tilgang.authorizedGetWithApprovedList
+import no.nav.aap.tilgang.AuthorizationParamPathConfig
+import no.nav.aap.tilgang.BehandlingPathParam
+import no.nav.aap.tilgang.SakPathParam
+import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.behandlingsflytPip(dataSource: DataSource) {
     val tilgangAzp = requiredConfigForKey("integrasjon.tilgang.azp")
     route("/pip/api") {
         route("/sak/{saksnummer}/identer") {
-            authorizedGetWithApprovedList<SakDTO, IdenterDTO>(tilgangAzp) { req ->
+            authorizedGet<SakDTO, IdenterDTO>(
+                AuthorizationParamPathConfig(
+                    sakPathParam = SakPathParam("saksnummer"),
+                    approvedApplications = setOf(tilgangAzp),
+                    applicationsOnly = true
+                )
+            ) { req ->
                 val saksnummer = req.saksnummer
                 val identer = dataSource.transaction(readOnly = true) { connection ->
                     PipRepository(connection).finnIdenterPåSak(Saksnummer(saksnummer))
@@ -30,7 +39,13 @@ fun NormalOpenAPIRoute.behandlingsflytPip(dataSource: DataSource) {
         }
 
         route("/behandling/{behandlingsnummer}/identer") {
-            authorizedGetWithApprovedList<BehandlingDTO, IdenterDTO>(tilgangAzp) { req ->
+            authorizedGet<BehandlingDTO, IdenterDTO>(
+                AuthorizationParamPathConfig(
+                    behandlingPathParam = BehandlingPathParam("behandlingsnummer"),
+                    approvedApplications = setOf(tilgangAzp),
+                    applicationsOnly = true
+                )
+            ) { req ->
                 val behandlingsnummer = req.behandlingsnummer
                 val identer = dataSource.transaction(readOnly = true) { connection ->
                     PipRepository(connection).finnIdenterPåBehandling(BehandlingReferanse(behandlingsnummer))
