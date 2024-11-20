@@ -33,9 +33,10 @@ class VurderYrkesskadeSteg private constructor(
         val sykdomsgrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
 
-        if (erBehovForAvklaring(vilkårsresultat, yrkesskader, sykdomsgrunnlag)) {
+        val erBehovForAvklaring = erBehovForAvklaring(vilkårsresultat, yrkesskader, sykdomsgrunnlag)
+        if (erBehovForAvklaring && sykdomsgrunnlag?.yrkesskadevurdering != null) {
             return FantAvklaringsbehov(Definisjon.AVKLAR_YRKESSKADE)
-        } else if (avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_YRKESSKADE) != null) {
+        } else if (!erBehovForAvklaring && avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_YRKESSKADE) != null) {
             avklaringsbehovene.avbryt(Definisjon.AVKLAR_YRKESSKADE)
         }
 
@@ -54,9 +55,6 @@ class VurderYrkesskadeSteg private constructor(
             return false
         }
         if (sykdomGrunnlag?.sykdomsvurdering?.erNedsettelseIArbeidsevneMerEnnHalvparten == false && sykdomGrunnlag.sykdomsvurdering?.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == false) {
-            return false
-        }
-        if (sykdomGrunnlag?.yrkesskadevurdering != null) {
             return false
         }
 
