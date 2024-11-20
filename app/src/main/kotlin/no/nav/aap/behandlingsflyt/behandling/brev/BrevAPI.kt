@@ -14,7 +14,6 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevGateway
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.LøsBrevbestillingDto
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
@@ -27,7 +26,6 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
-import no.nav.aap.tilgang.TilgangReferanse
 import no.nav.aap.tilgang.authorizedPost
 import no.nav.aap.verdityper.feilhåndtering.ElementNotFoundException
 import org.slf4j.MDC
@@ -84,11 +82,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                         operasjon = Operasjon.SAKSBEHANDLE,
                         approvedApplications = setOf(brevAzp),
                         applicationsOnly = true
-                    ) {
-                        TilgangReferanse.behandlingsreferanse(
-                            it.behandlingReferanse, Definisjon.BESTILL_BREV.kode.toString()
-                        )
-                    }
+                    )
                 ) { _, request ->
                     dataSource.transaction { connection ->
                         val taSkriveLåsRepository = TaSkriveLåsRepository(connection)
