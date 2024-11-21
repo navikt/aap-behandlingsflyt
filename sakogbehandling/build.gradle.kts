@@ -32,6 +32,11 @@ dependencies {
     testImplementation("org.assertj:assertj-core:3.26.3")
     testImplementation("io.mockk:mockk:1.13.13")
     testImplementation("org.testcontainers:postgresql:1.20.3")
+    constraints {
+        implementation("org.apache.commons:commons-compress:1.27.1") {
+            because("https://github.com/advisories/GHSA-4g9r-vxhx-9pgx")
+        }
+    }
     testImplementation(kotlin("test"))
     testImplementation(project(":lib-test"))
 }
