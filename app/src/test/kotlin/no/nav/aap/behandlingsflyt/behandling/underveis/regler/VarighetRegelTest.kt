@@ -1,15 +1,23 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvote
+import no.nav.aap.behandlingsflyt.dbtestdata.januar
+import no.nav.aap.behandlingsflyt.dbtestdata.november
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak.VARIGHETSKVOTE_BRUKT_OPP
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.komponenter.tidslinje.JoinStyle.OUTER_JOIN
+import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import java.time.LocalDate
-import java.time.Month
+import org.opentest4j.AssertionFailedError
 import java.util.*
 
 class VarighetRegelTest {
@@ -17,8 +25,8 @@ class VarighetRegelTest {
 
     @Test
     fun `rett alle dager, innenfor en uke, men kvoten blir brukt opp`() {
-        val rettighetsperiode = Periode(LocalDate.of(2024, Month.NOVEMBER, 18), LocalDate.of(2024, Month.NOVEMBER, 22))
-        val vurdering = regel.vurder(
+        val rettighetsperiode = Periode(18 november 2024, 22 november 2024)
+        val vurderinger = regel.vurder(
             tomUnderveisInput.copy(
                 rettighetsperiode = rettighetsperiode,
                 kvote = Kvote(4)
@@ -32,13 +40,146 @@ class VarighetRegelTest {
             )
         )
 
-        assertTrue(
-            vurdering.segment(
-                LocalDate.of(2024, Month.NOVEMBER, 18)
-            )!!.verdi.harRett()
-        )
-        assertFalse(
-            vurdering.segment(LocalDate.of(2024, Month.NOVEMBER, 22))!!.verdi.harRett()
+        vurderinger.assert(
+            Segment(Periode(18 november 2024, 21 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
+            Segment(Periode(22 november 2024, 22 november 2024)) { vurdering ->
+                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP)
+            },
         )
     }
+
+    @Test
+    fun `Kvote blir brukt opp på fredag, stans skjer førstkommende mandag`() {
+        val rettighetsperiode = Periode(18 november 2024, 25 november 2024)
+        val vurderinger = regel.vurder(
+            tomUnderveisInput.copy(
+                rettighetsperiode = rettighetsperiode,
+                kvote = Kvote(5)
+            ),
+
+            Tidslinje(
+                rettighetsperiode,
+                Vurdering(
+                    vurderinger = EnumMap(mapOf(Vilkårtype.ALDERSVILKÅRET to Utfall.OPPFYLT)),
+                )
+            )
+        )
+
+        vurderinger.assert(
+            Segment(Periode(18 november 2024, 24 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
+            Segment(Periode(25 november 2024, 25 november 2024)) { vurdering ->
+                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP)
+            },
+        )
+    }
+
+    @Test
+    fun `Helg teller ikke på kvote`() {
+        val rettighetsperiode = Periode(22 november 2024, 26 november 2024)
+        val vurderinger = regel.vurder(
+            tomUnderveisInput.copy(
+                rettighetsperiode = rettighetsperiode,
+                kvote = Kvote(2)
+            ),
+
+            Tidslinje(
+                rettighetsperiode,
+                Vurdering(
+                    vurderinger = EnumMap(mapOf(Vilkårtype.ALDERSVILKÅRET to Utfall.OPPFYLT)),
+                )
+            )
+        )
+
+        vurderinger.assert(
+            Segment(Periode(22 november 2024, 25 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
+            Segment(Periode(26 november 2024, 26 november 2024)) { vurdering ->
+                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP)
+            },
+        )
+    }
+
+    @Test
+    fun `Helger etter brukt opp kvote får stans`() {
+        val rettighetsperiode = Periode(18 november 2024, 26 januar 2025)
+        val vurderinger = regel.vurder(
+            tomUnderveisInput.copy(
+                rettighetsperiode = rettighetsperiode,
+                kvote = Kvote(2)
+            ),
+
+            Tidslinje(
+                rettighetsperiode,
+                Vurdering(
+                    vurderinger = EnumMap(mapOf(Vilkårtype.ALDERSVILKÅRET to Utfall.OPPFYLT)),
+                )
+            )
+        )
+
+        vurderinger.assert(
+            Segment(Periode(18 november 2024, 19 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
+            Segment(Periode(20 november 2024, 26 januar 2025)) { vurdering ->
+                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP)
+            },
+        )
+    }
+
+
+    @Test
+    fun `Stans teller ikke på kvote`() {
+        val rettighetsperiode = Periode(18 november 2024, 22 november 2024)
+        val vurderinger = regel.vurder(
+            tomUnderveisInput.copy(
+                rettighetsperiode = rettighetsperiode,
+                kvote = Kvote(2)
+            ),
+
+            listOf(
+                Segment(
+                    Periode(18 november 2024, 18 november 2024),
+                    Vurdering(
+                        vurderinger = EnumMap(mapOf(Vilkårtype.ALDERSVILKÅRET to Utfall.OPPFYLT)),
+                    )
+                ),
+                Segment(
+                    Periode(19 november 2024, 20 november 2024),
+                    Vurdering()
+                ),
+                Segment(
+                    Periode(21 november 2024, 22 november 2024),
+                    Vurdering(
+                        vurderinger = EnumMap(mapOf(Vilkårtype.ALDERSVILKÅRET to Utfall.OPPFYLT)),
+                    )
+                ),
+            ).let { Tidslinje(it) }
+        )
+
+        vurderinger.assert(
+            Segment(Periode(18 november 2024, 18 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
+            Segment(Periode(19 november 2024, 20 november 2024)) { vurdering -> assertStansGrunnet(vurdering, IKKE_GRUNNLEGGENDE_RETT) },
+            Segment(Periode(21 november 2024, 21 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
+            Segment(Periode(22 november 2024, 22 november 2024)) { vurdering -> assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP) },
+        )
+    }
+}
+
+private fun assertStansGrunnet(vurdering: Vurdering, avslagsÅrsak: UnderveisÅrsak) {
+    assertFalse(vurdering.harRett())
+    assertEquals(avslagsÅrsak, vurdering.avslagsårsak())
+}
+
+inline fun <reified T> Tidslinje<T>.assert(vararg assertions: Segment<(T) -> Unit>) {
+    this.kombiner(
+        Tidslinje(assertions.toList()), OUTER_JOIN<_, _, Nothing?> { periode, tsegment, assertion ->
+            assertNotNull(tsegment, "Verdi av type ${T::class.simpleName} mangler for periode $periode")
+            assertNotNull(assertion, "Assert mangler for periode $periode")
+
+            try {
+                assertion!!.verdi.invoke(tsegment!!.verdi)
+            } catch (e: AssertionFailedError) {
+                println("Assert feilet for periode: $periode")
+                throw e
+            }
+            null
+        }
+    )
 }

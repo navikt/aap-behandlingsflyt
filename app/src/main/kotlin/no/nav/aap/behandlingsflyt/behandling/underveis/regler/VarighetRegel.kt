@@ -35,20 +35,20 @@ class VarighetRegel : UnderveisRegel {
         val kvote = input.kvote
         var dagerBrukt = 0
 
-        val vurderingenSomBrukerOppKvoten = vurderingerIHverdag.firstOrNull { vurdering ->
+        val førsteVurderingEtterKvote = vurderingerIHverdag.firstOrNull { vurdering ->
             val kvoteBrukt = if (vurdering.verdi.harRett()) vurdering.periode.antallDager() else 0
 
-            (kvote.antallHverdagerMedRett <= dagerBrukt + kvoteBrukt).also { vurderingenBrukerOppKvoten ->
+            (kvote.antallHverdagerMedRett < dagerBrukt + kvoteBrukt).also { vurderingenBrukerOppKvoten ->
                 if (!vurderingenBrukerOppKvoten) dagerBrukt += kvoteBrukt
             }
         }
 
-        if (vurderingenSomBrukerOppKvoten == null) {
+        if (førsteVurderingEtterKvote == null) {
             return resultat
         }
 
         val dagerInnIPeriode = kvote.antallHverdagerMedRett - dagerBrukt
-        val stansdato = vurderingenSomBrukerOppKvoten.periode.fom.plusDays(dagerInnIPeriode.toLong())
+        val stansdato = førsteVurderingEtterKvote.periode.fom.plusDays(dagerInnIPeriode.toLong())
 
         val varighetTidslinje = listOf(
             Segment(Periode(input.rettighetsperiode.fom, stansdato.minusDays(1)), KVOTE_IKKE_BRUKT_OPP),
