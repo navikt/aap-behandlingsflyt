@@ -104,7 +104,7 @@ public data class GrunnlagYrkesskadeDTO(
 
 /**
  * @property uføreInntekterFraForegåendeÅr Uføre ikke oppjustert
- * @property uføreInntektIKroner Grunnlaget
+ * @property uføreInntekterFraForegåendeÅr Grunnlaget
  */
 public data class GrunnlagUføreDTO(
     val grunnlaget: BigDecimal,

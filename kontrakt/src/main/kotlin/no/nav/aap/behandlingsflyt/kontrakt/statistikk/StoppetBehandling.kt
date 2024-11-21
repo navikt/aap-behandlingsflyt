@@ -13,7 +13,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Status as SakStatus
  * @param behandlingReferanse Behandlingsreferanse
  * @param relatertBehandling Hvis behandlingen har oppsått med bakgrunn i en annen, skal den foregående behandlingen refereres til her. Dette er tolket som forrige behandling på samme sak.
  * @param mottattTid Dato for første søknad mottatt for behandlingen.
- * @param status Behandlingstatus. Ikke det samme som sakstatus.
+ * @param behandlingStatus Behandlingstatus. Ikke det samme som sakstatus.
  * @param identerForSak Identer på sak. Brukes for å filtrere kode 6-personer.
  */
 public data class StoppetBehandling(

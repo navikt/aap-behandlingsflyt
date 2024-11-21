@@ -10,7 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktD
  * så får ikke vurderingen nødvendigvis noen effekt.
  *
  * Datoen/perioden som vurderingen gjelder for er implisitt, da typen brukes
- * inne i konteksten av en [Tidslinje][no.nav.aap.tidslinje.Tidslinje].
+ * inne i konteksten av en [Tidslinje][no.nav.aap.komponenter.tidslinje.Tidslinje].
  *
  * - [Folketrygdloven § 11-9](]https://lovdata.no/lov/1997-02-28-19/§11-9)
  * - [Forkskriftens § 4](https://lovdata.no/forskrift/2017-12-13-2100/§4)

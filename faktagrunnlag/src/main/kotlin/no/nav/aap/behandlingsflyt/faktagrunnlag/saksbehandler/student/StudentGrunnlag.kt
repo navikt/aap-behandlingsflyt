@@ -1,7 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student
 
-import no.nav.aap.behandlingsflyt.faktasaksbehandler.student.StudentVurdering
-
 class StudentGrunnlag(
     val id: Long? = null,
     val studentvurdering: StudentVurdering?,

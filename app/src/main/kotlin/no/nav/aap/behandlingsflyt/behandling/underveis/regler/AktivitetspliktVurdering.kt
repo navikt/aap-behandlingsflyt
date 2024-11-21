@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktD
  * Vurderingen kan være at det blir opphør av aap.
  *
  * Datoen/perioden som vurderingen gjelder for er implisitt, da typen brukes
- * inne i konteksten av en [Tidslinje][no.nav.aap.tidslinje.Tidslinje].
+ * inne i konteksten av en [Tidslinje][no.nav.aap.komponenter.tidslinje.Tidslinje].
  *
  * - [Folketrygdloven § 11-7](https://lovdata.no/lov/1997-02-28-19/§11-7)
  */

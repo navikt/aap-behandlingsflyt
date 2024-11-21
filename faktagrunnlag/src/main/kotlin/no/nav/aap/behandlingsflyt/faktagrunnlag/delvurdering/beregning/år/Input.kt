@@ -13,7 +13,8 @@ import java.time.LocalDate
  * @param inntekter Inntekter per år.
  * @param uføregrad Hvis ikke-null, uføregrad i prosent.
  * @param yrkesskadevurdering Hvis ikke-null, en yrkesskadevurdering.
- * @param beregningVurdering Se [BeregningstidspunktVurdering].
+ * @param registrerteYrkesskader
+ * @param beregningGrunnlag Se [no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag]
  */
 data class Input(
     val nedsettelsesDato: LocalDate,
@@ -22,7 +23,7 @@ data class Input(
     val yrkesskadevurdering: Yrkesskadevurdering?,
     val registrerteYrkesskader: Yrkesskader?,
     val beregningGrunnlag: BeregningGrunnlag?,
-    ) {
+) {
 
     fun datoerForInnhenting(): Set<LocalDate> {
         val ytterligereNedsattArbeidsevneDato = beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
