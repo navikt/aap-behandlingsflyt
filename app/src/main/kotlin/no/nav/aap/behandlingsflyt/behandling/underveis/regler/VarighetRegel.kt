@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetRegel.VarighetVurdering.KVOTE_BRUKT_OPP
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetRegel.VarighetVurdering.KVOTE_IKKE_BRUKT_OPP
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -21,34 +23,37 @@ import java.time.temporal.TemporalAdjusters
  */
 //WIP
 class VarighetRegel : UnderveisRegel {
+    enum class VarighetVurdering {
+        KVOTE_IKKE_BRUKT_OPP,
+        KVOTE_BRUKT_OPP,
+    }
+
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
         val vurderingerIHverdag = resultat.kombiner(
             helger(input.rettighetsperiode), StandardSammenslåere.minus()
         )
         val kvote = input.kvote
         var dagerBrukt = 0
-        
+
         val førsteVurderingUtenforKvote = vurderingerIHverdag.firstOrNull { vurdering ->
-            val kvoteBrukt = if (vurdering.verdi.harRett()) {
-                vurdering.periode.antallDager()
-            } else { 0 }
-            
-            (dagerBrukt+kvoteBrukt < kvote.antallHverdagerMedRett).also { innenforKvote ->
+            val kvoteBrukt = if (vurdering.verdi.harRett()) vurdering.periode.antallDager() else 0
+
+            (dagerBrukt + kvoteBrukt < kvote.antallHverdagerMedRett).also { innenforKvote ->
                 if (innenforKvote) dagerBrukt += kvoteBrukt
             }
         }
-        
+
         if (førsteVurderingUtenforKvote == null) {
             return resultat
         }
-        
+
         val stansdato = førsteVurderingUtenforKvote.periode.fom.plusDays(
-            (kvote.antallHverdagerMedRett-dagerBrukt).toLong()
+            (kvote.antallHverdagerMedRett - dagerBrukt).toLong()
         )
 
         val varighetTidslinje = listOf(
-            Segment(Periode(input.rettighetsperiode.fom, stansdato.minusDays(1)), false),
-            Segment(Periode(stansdato, input.rettighetsperiode.tom), true),
+            Segment(Periode(input.rettighetsperiode.fom, stansdato.minusDays(1)), KVOTE_IKKE_BRUKT_OPP),
+            Segment(Periode(stansdato, input.rettighetsperiode.tom), KVOTE_BRUKT_OPP),
         ).let { Tidslinje(it) }
 
         return resultat.leggTilVurderinger(varighetTidslinje, Vurdering::leggTilVarighetVurdering)

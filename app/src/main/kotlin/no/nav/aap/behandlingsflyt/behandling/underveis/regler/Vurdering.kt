@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AktivitetspliktVur
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Utfall.STANS
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Utfall.UNNTAK
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ReduksjonAktivitetspliktVurdering.Vilkårsvurdering.VILKÅR_FOR_REDUKSJON_OPPFYLT
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetRegel.VarighetVurdering.KVOTE_BRUKT_OPP
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
@@ -27,7 +28,7 @@ data class Vurdering(
     internal val soningsVurdering: SoningVurdering? = null,
     private val meldeperiode: Periode? = null,
 
-    private val varighetVurdering: Boolean? = null,
+    private val varighetVurdering: VarighetRegel.VarighetVurdering? = null,
 ) {
 
     fun leggTilVurdering(vilkårtype: Vilkårtype, utfall: Utfall): Vurdering {
@@ -72,8 +73,8 @@ data class Vurdering(
         return copy(meldeperiode = meldeperiode)
     }
 
-    fun leggTilVarighetVurdering(erKvoteOversteget: Boolean): Vurdering {
-        return copy(varighetVurdering = erKvoteOversteget)
+    fun leggTilVarighetVurdering(varighetVurdering: VarighetRegel.VarighetVurdering): Vurdering {
+        return copy(varighetVurdering = varighetVurdering)
     }
 
     fun vurderinger(): Map<Vilkårtype, Utfall> {
@@ -89,7 +90,17 @@ data class Vurdering(
     }
 
     fun harRett(): Boolean {
-        return ingenVilkårErAvslått() && arbeiderMindreEnnGrenseverdi() && harOverholdtMeldeplikten() && sonerIkke() && !bryterAktivitetsplikt() && !fraværFastsattAktivitet()
+        return ingenVilkårErAvslått() &&
+                arbeiderMindreEnnGrenseverdi() &&
+                harOverholdtMeldeplikten() &&
+                sonerIkke() &&
+                !bryterAktivitetsplikt() &&
+                !fraværFastsattAktivitet() &&
+                varighetsvurderingOppfylt()
+    }
+
+    private fun varighetsvurderingOppfylt(): Boolean {
+        return varighetVurdering != KVOTE_BRUKT_OPP
     }
 
     private fun sonerIkke(): Boolean {
@@ -158,6 +169,8 @@ data class Vurdering(
             return UnderveisÅrsak.ARBEIDER_MER_ENN_GRENSEVERDI
         } else if (!harOverholdtMeldeplikten()) {
             return requireNotNull(meldepliktVurdering?.årsak)
+        } else if (!varighetsvurderingOppfylt()) {
+            return UnderveisÅrsak.VARIGHETSKVOTE_BRUKT_OPP
         }
         throw IllegalStateException("Ukjent avslagsårsak")
     }

@@ -51,7 +51,7 @@ class UnderveisService(
             MeldepliktRegel(),
             SammenstiltAktivitetspliktRegel(),
             GraderingArbeidRegel(),
-            //TODO - VarighetRegel(),
+            VarighetRegel(),
         )
 
         init {
@@ -66,7 +66,10 @@ class UnderveisService(
             }
 
             checkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = MeldepliktRegel::class)
-            checkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = SammenstiltAktivitetspliktRegel::class)
+            checkAvhengighet(
+                forventetFør = UtledMeldeperiodeRegel::class,
+                forventetEtter = SammenstiltAktivitetspliktRegel::class
+            )
             checkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = GraderingArbeidRegel::class)
         }
     }
