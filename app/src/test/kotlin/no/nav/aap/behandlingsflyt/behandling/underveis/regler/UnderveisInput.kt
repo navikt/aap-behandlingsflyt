@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.Arbeid
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
-import java.time.Period
 
 val tomUnderveisInput = UnderveisInput(
     rettighetsperiode = Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 1, 1)),
@@ -14,7 +13,7 @@ val tomUnderveisInput = UnderveisInput(
     opptrappingPerioder = emptyList(),
     pliktkort = emptyList(),
     innsendingsTidspunkt = mapOf(),
-    kvote = Kvote(Period.ZERO),
+    kvote = Kvote(0),
     aktivitetspliktGrunnlag = AktivitetspliktGrunnlag(emptySet()),
     etAnnetSted = listOf(),
     arbeidsevneGrunnlag = ArbeidsevneGrunnlag(emptyList()),

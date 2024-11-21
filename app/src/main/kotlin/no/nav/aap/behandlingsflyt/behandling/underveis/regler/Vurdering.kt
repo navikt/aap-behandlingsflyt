@@ -26,6 +26,8 @@ data class Vurdering(
     internal val institusjonVurdering: InstitusjonVurdering? = null,
     internal val soningsVurdering: SoningVurdering? = null,
     private val meldeperiode: Periode? = null,
+
+    private val varighetVurdering: Boolean? = null,
 ) {
 
     fun leggTilVurdering(vilkårtype: Vilkårtype, utfall: Utfall): Vurdering {
@@ -68,6 +70,10 @@ data class Vurdering(
 
     fun leggTilMeldeperiode(meldeperiode: Periode): Vurdering {
         return copy(meldeperiode = meldeperiode)
+    }
+
+    fun leggTilVarighetVurdering(erKvoteOversteget: Boolean): Vurdering {
+        return copy(varighetVurdering = erKvoteOversteget)
     }
 
     fun vurderinger(): Map<Vilkårtype, Utfall> {

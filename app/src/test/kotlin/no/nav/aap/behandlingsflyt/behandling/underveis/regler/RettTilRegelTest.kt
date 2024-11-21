@@ -11,12 +11,11 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import java.time.Period
 
 class RettTilRegelTest {
 
     private val regel = RettTilRegel()
-    private val kvote = Kvote(Period.ofYears(3))
+    private val kvote = Kvote(260*3)
 
     @Test
     fun `skal lage tidslinje med alle relevante vilkår`() {

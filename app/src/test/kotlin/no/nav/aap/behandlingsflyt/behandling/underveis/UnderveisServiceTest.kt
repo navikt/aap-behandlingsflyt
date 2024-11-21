@@ -21,13 +21,12 @@ import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import java.time.Period
 import javax.sql.DataSource
 
 class UnderveisServiceTest {
 
     private val dataSource: DataSource = MockDataSource()
-    private val kvote = Kvote(Period.ofYears(3))
+    private val kvote = Kvote(260*3)
 
     @Test
     fun `skal vurdere alle reglene`() {

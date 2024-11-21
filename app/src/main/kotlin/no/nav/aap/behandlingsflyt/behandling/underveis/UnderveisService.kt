@@ -51,7 +51,7 @@ class UnderveisService(
             MeldepliktRegel(),
             SammenstiltAktivitetspliktRegel(),
             GraderingArbeidRegel(),
-            VarighetRegel(),
+            //TODO - VarighetRegel(),
         )
 
         init {
