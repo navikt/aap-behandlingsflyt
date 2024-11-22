@@ -49,7 +49,7 @@ class DokumeninnhentingGateway {
         )
 
         try {
-            return requireNotNull(client.post(uri = URI.create("$syfoUri/dialogmeldingbestilling"), request))
+            return requireNotNull(client.post(uri = URI.create("$syfoUri/purring"), request))
         } catch (e : Exception) {
             throw RuntimeException("Feil ved purring av legeerklæring i aap-dokumentinnhenting: ${e.message}")
         }
