@@ -64,9 +64,9 @@ class VarighetRegel : UnderveisRegel {
                 // §§ 11-5, 11-14, 11-15 og 11-16 skal telle mot kvoten (§ 11-12 fjerde ledd).
                 vurdering.fårAapEtterEnAv(
                     Vilkårtype.SYKDOMSVILKÅRET, // 11-5
-                    // 11-14 (mangler)
-                    // 11-15 (etablerer virksomhet)
-                    // 11-16 (uten påbegynt aktivitet)
+                    Vilkårtype.STUDENTVILKÅRET, // 11-14
+                    // 11-15 (etablerer virksomhet) Ikke implementert
+                    // 11-16 (uten påbegynt aktivitet) Er vel neppe et eget vilkår?
                 )
     }
 

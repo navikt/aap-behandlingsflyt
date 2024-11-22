@@ -155,9 +155,156 @@ class VarighetRegelTest {
 
         vurderinger.assert(
             Segment(Periode(18 november 2024, 18 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
-            Segment(Periode(19 november 2024, 20 november 2024)) { vurdering -> assertStansGrunnet(vurdering, IKKE_GRUNNLEGGENDE_RETT) },
+            Segment(Periode(19 november 2024, 20 november 2024)) { vurdering ->
+                assertStansGrunnet(
+                    vurdering,
+                    IKKE_GRUNNLEGGENDE_RETT
+                )
+            },
             Segment(Periode(21 november 2024, 21 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
-            Segment(Periode(22 november 2024, 22 november 2024)) { vurdering -> assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP) },
+            Segment(Periode(22 november 2024, 22 november 2024)) { vurdering ->
+                assertStansGrunnet(
+                    vurdering,
+                    VARIGHETSKVOTE_BRUKT_OPP
+                )
+            },
+        )
+    }
+
+    @Test
+    fun `rett etter sykepengererstatning, så standard-kvoten brukes ikke`() {
+        val rettighetsperiode = Periode(18 november 2024, 22 november 2024)
+        val vurderinger = regel.vurder(
+            tomUnderveisInput.copy(
+                rettighetsperiode = rettighetsperiode,
+                kvote = Kvote(2)
+            ),
+
+            Tidslinje(
+                listOf(
+                    Segment(
+                        Periode(18 november 2024, 19 november 2024),
+                        Vurdering(vurderinger = EnumMap(mapOf(Vilkårtype.SYKEPENGEERSTATNING to Utfall.OPPFYLT)))
+                    ),
+                    Segment(
+                        Periode(20 november 2024, 22 november 2024),
+                        Vurdering(vurderinger = EnumMap(mapOf(Vilkårtype.STUDENTVILKÅRET to Utfall.OPPFYLT)))
+                    )
+                )
+            )
+        )
+
+        vurderinger.assert(
+            Segment(Periode(18 november 2024, 21 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
+            Segment(Periode(22 november 2024, 22 november 2024)) { vurdering ->
+                assertStansGrunnet(
+                    vurdering,
+                    VARIGHETSKVOTE_BRUKT_OPP
+                )
+            },
+        )
+    }
+
+    @Test
+    fun `kvote brukes ikke ved ingen grunnleggende rett`() {
+        val rettighetsperiode = Periode(18 november 2024, 22 november 2024)
+        val vurderinger = regel.vurder(
+            tomUnderveisInput.copy(
+                rettighetsperiode = rettighetsperiode,
+                kvote = Kvote(2)
+            ),
+            Tidslinje(
+                listOf(
+                    Segment(
+                        Periode(18 november 2024, 19 november 2024),
+                        Vurdering(vurderinger = EnumMap(mapOf(
+                            Vilkårtype.SYKEPENGEERSTATNING to Utfall.IKKE_OPPFYLT,
+                            Vilkårtype.STUDENTVILKÅRET to Utfall.IKKE_OPPFYLT,
+                            Vilkårtype.SYKDOMSVILKÅRET to Utfall.IKKE_OPPFYLT,
+                        )))
+                    ),
+                    Segment(
+                        Periode(20 november 2024, 22 november 2024),
+                        Vurdering(vurderinger = EnumMap(mapOf(Vilkårtype.STUDENTVILKÅRET to Utfall.OPPFYLT)))
+                    )
+                )
+            )
+        )
+
+        vurderinger.assert(
+            Segment(Periode(18 november 2024, 19 november 2024)) { vurdering -> assertStansGrunnet(vurdering, IKKE_GRUNNLEGGENDE_RETT) },
+            Segment(Periode(20 november 2024, 21 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
+            Segment(Periode(22 november 2024, 22 november 2024)) { vurdering ->
+                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP)
+            },
+        )
+    }
+
+    @Test
+    fun `teller kvote riktig hvis input-vurderinger er segmentert opp og stans først dag i et segment`() {
+        val rettighetsperiode = Periode(18 november 2024, 22 november 2024)
+        val vurderinger = regel.vurder(
+            tomUnderveisInput.copy(
+                rettighetsperiode = rettighetsperiode,
+                kvote = Kvote(3)
+            ),
+            Tidslinje(
+                listOf(
+                    Segment(
+                        Periode(18 november 2024, 19 november 2024),
+                        Vurdering(vurderinger = EnumMap(mapOf(Vilkårtype.SYKDOMSVILKÅRET to Utfall.OPPFYLT)))
+                    ),
+                    Segment(
+                        Periode(20 november 2024, 20 november 2024),
+                        Vurdering(vurderinger = EnumMap(mapOf(Vilkårtype.SYKDOMSVILKÅRET to Utfall.OPPFYLT)))
+                    ),
+                    Segment(
+                        Periode(21 november 2024, 22 november 2024),
+                        Vurdering(vurderinger = EnumMap(mapOf(Vilkårtype.STUDENTVILKÅRET to Utfall.OPPFYLT)))
+                    )
+                )
+            )
+        )
+
+        vurderinger.assert(
+            Segment(Periode(18 november 2024, 20 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
+            Segment(Periode(21 november 2024, 22 november 2024)) { vurdering ->
+                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP)
+            },
+        )
+    }
+
+    @Test
+    fun `teller kvote riktig hvis input-vurderinger er segmentert opp og stans siste dag i et segment`() {
+        val rettighetsperiode = Periode(18 november 2024, 22 november 2024)
+        val vurderinger = regel.vurder(
+            tomUnderveisInput.copy(
+                rettighetsperiode = rettighetsperiode,
+                kvote = Kvote(4)
+            ),
+            Tidslinje(
+                listOf(
+                    Segment(
+                        Periode(18 november 2024, 19 november 2024),
+                        Vurdering(vurderinger = EnumMap(mapOf(Vilkårtype.SYKDOMSVILKÅRET to Utfall.OPPFYLT)))
+                    ),
+                    Segment(
+                        Periode(20 november 2024, 20 november 2024),
+                        Vurdering(vurderinger = EnumMap(mapOf(Vilkårtype.SYKDOMSVILKÅRET to Utfall.OPPFYLT)))
+                    ),
+                    Segment(
+                        Periode(21 november 2024, 22 november 2024),
+                        Vurdering(vurderinger = EnumMap(mapOf(Vilkårtype.STUDENTVILKÅRET to Utfall.OPPFYLT)))
+                    )
+                )
+            )
+        )
+
+        vurderinger.assert(
+            Segment(Periode(18 november 2024, 21 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
+            Segment(Periode(22 november 2024, 22 november 2024)) { vurdering ->
+                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP)
+            },
         )
     }
 }

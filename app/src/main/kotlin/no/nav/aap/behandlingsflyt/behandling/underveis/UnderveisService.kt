@@ -113,7 +113,9 @@ class UnderveisService(
                     Vilkårtype.ALDERSVILKÅRET,
                     Vilkårtype.MEDLEMSKAP,
                     Vilkårtype.SYKDOMSVILKÅRET,
-                    Vilkårtype.BISTANDSVILKÅRET
+                    Vilkårtype.BISTANDSVILKÅRET,
+                    Vilkårtype.SYKEPENGEERSTATNING,
+                    Vilkårtype.STUDENTVILKÅRET,
                 )
             }
 
