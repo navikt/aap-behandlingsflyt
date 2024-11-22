@@ -20,10 +20,11 @@ class RettTilRegel : UnderveisRegel {
         require(input.relevanteVilkår.any { it.type == Vilkårtype.BISTANDSVILKÅRET })
         require(input.relevanteVilkår.any { it.type == Vilkårtype.MEDLEMSKAP })
         require(input.relevanteVilkår.any { it.type == Vilkårtype.SYKDOMSVILKÅRET })
+        require(input.relevanteVilkår.distinctBy { it.type } == input.relevanteVilkår)
 
         return input.relevanteVilkår.fold(resultat) { retur, vilkår ->
             val segmenter = vilkår.vilkårsperioder()
-                .map { Segment(it.periode, EnkelVurdering(vilkår.type, it.utfall)) }
+                .map { Segment(it.periode, EnkelVurdering(vilkår.type, it.utfall, it.innvilgelsesårsak)) }
 
             retur.leggTilVurderinger(Tidslinje(segmenter), Vurdering::leggTilVurdering)
         }

@@ -6,8 +6,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Pliktkort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneVurdering
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -15,10 +15,8 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
-
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.*
 
 class GraderingArbeidRegelTest {
     private val regel = GraderingArbeidRegel()
@@ -187,6 +185,6 @@ class GraderingArbeidRegelTest {
         return regel.vurder(
             input,
             UtledMeldeperiodeRegel().vurder(input, Tidslinje())
-        ).mapValue { it.copy(vurderinger = EnumMap(mapOf(Vilkårtype.ALDERSVILKÅRET to Utfall.OPPFYLT))) }
+        ).mapValue { it.copy(vurderinger = listOf(EnkelVurdering(Vilkårtype.ALDERSVILKÅRET, Utfall.OPPFYLT, null))) }
     }
 }

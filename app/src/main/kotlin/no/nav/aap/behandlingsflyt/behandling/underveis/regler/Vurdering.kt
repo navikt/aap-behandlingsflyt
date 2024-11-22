@@ -7,17 +7,18 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ReduksjonAktivitet
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetRegel.VarighetVurdering.KVOTE_BRUKT_OPP
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
-import java.util.*
 
 data class Vurdering(
-    private val vurderinger: EnumMap<Vilkårtype, Utfall> = EnumMap(Vilkårtype::class.java),
+    private val vurderinger: List<EnkelVurdering> = emptyList(),
     internal val meldepliktVurdering: MeldepliktVurdering? = null,
     internal val fraværFastsattAktivitetVurdering: FraværFastsattAktivitetVurdering? = null,
     internal val reduksjonAktivitetspliktVurdering: ReduksjonAktivitetspliktVurdering? = null,
@@ -32,15 +33,13 @@ data class Vurdering(
 ) {
 
     fun leggTilVurdering(enkelVurdering: EnkelVurdering): Vurdering {
-        val kopi = EnumMap(vurderinger)
-        kopi[enkelVurdering.vilkår] = enkelVurdering.utfall
-        return copy(vurderinger = kopi)
+        return copy(vurderinger = vurderinger + enkelVurdering)
     }
 
-    fun fårAapEtterEnAv(vararg vilkårtyper: Vilkårtype): Boolean {
+    fun fårAapEtter(vilkårtype: Vilkårtype, innvilgelsesårsak: Innvilgelsesårsak?): Boolean {
         // TODO: finn ut om et vilkår kan være oppfylt uten at det er det vilkårete som medlemmet
         // får aap etter i betydningen fra § 11-12 fjerde ledd. Trenger i så fall prioritering, kanskje?
-        return vilkårtyper.any { vurderinger[it] == Utfall.OPPFYLT }
+        return vurderinger.any { it.vilkår == vilkårtype && it.innvilgelsesårsak == innvilgelsesårsak && it.utfall == OPPFYLT }
     }
 
     fun leggTilGradering(gradering: Gradering): Vurdering {
@@ -83,10 +82,6 @@ data class Vurdering(
         return copy(varighetVurdering = varighetVurdering)
     }
 
-    fun vurderinger(): Map<Vilkårtype, Utfall> {
-        return vurderinger.toMap()
-    }
-
     private fun bryterAktivitetsplikt(): Boolean {
         return aktivitetspliktVurdering?.vilkårsvurdering == AKTIVT_BIDRAG_IKKE_OPPFYLT
     }
@@ -118,11 +113,11 @@ data class Vurdering(
 
     private fun harOverholdtMeldeplikten(): Boolean {
         val utfall = meldepliktVurdering?.utfall
-        return utfall == null || utfall == Utfall.OPPFYLT
+        return utfall == null || utfall == OPPFYLT
     }
 
     internal fun ingenVilkårErAvslått(): Boolean {
-        return vurderinger.isNotEmpty() && vurderinger.none { it.value == Utfall.IKKE_OPPFYLT }
+        return vurderinger.isNotEmpty() && vurderinger.none { it.utfall == Utfall.IKKE_OPPFYLT }
     }
 
     private fun arbeiderMindreEnnGrenseverdi(): Boolean {
@@ -152,7 +147,7 @@ data class Vurdering(
 
     fun utfall(): Utfall {
         return if (harRett()) {
-            Utfall.OPPFYLT
+            OPPFYLT
         } else {
             Utfall.IKKE_OPPFYLT
         }

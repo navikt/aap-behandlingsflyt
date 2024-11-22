@@ -6,7 +6,9 @@ import no.nav.aap.behandlingsflyt.dbtestdata.november
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak.VARIGHETSKVOTE_BRUKT_OPP
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak.STUDENT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.IKKE_OPPFYLT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.komponenter.tidslinje.JoinStyle.OUTER_JOIN
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -35,7 +37,7 @@ class VarighetRegelTest {
             Tidslinje(
                 rettighetsperiode,
                 Vurdering(
-                    vurderinger = EnumMap(mapOf(Vilkårtype.SYKDOMSVILKÅRET to Utfall.OPPFYLT)),
+                    vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
                 )
             )
         )
@@ -60,7 +62,7 @@ class VarighetRegelTest {
             Tidslinje(
                 rettighetsperiode,
                 Vurdering(
-                    vurderinger = EnumMap(mapOf(Vilkårtype.SYKDOMSVILKÅRET to Utfall.OPPFYLT)),
+                    vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
                 )
             )
         )
@@ -85,7 +87,7 @@ class VarighetRegelTest {
             Tidslinje(
                 rettighetsperiode,
                 Vurdering(
-                    vurderinger = EnumMap(mapOf(Vilkårtype.SYKDOMSVILKÅRET to Utfall.OPPFYLT)),
+                    vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
                 )
             )
         )
@@ -110,7 +112,7 @@ class VarighetRegelTest {
             Tidslinje(
                 rettighetsperiode,
                 Vurdering(
-                    vurderinger = EnumMap(mapOf(Vilkårtype.SYKDOMSVILKÅRET to Utfall.OPPFYLT)),
+                    vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
                 )
             )
         )
@@ -137,7 +139,7 @@ class VarighetRegelTest {
                 Segment(
                     Periode(18 november 2024, 18 november 2024),
                     Vurdering(
-                        vurderinger = EnumMap(mapOf(Vilkårtype.SYKDOMSVILKÅRET to Utfall.OPPFYLT)),
+                        vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
                     )
                 ),
                 Segment(
@@ -147,7 +149,7 @@ class VarighetRegelTest {
                 Segment(
                     Periode(21 november 2024, 22 november 2024),
                     Vurdering(
-                        vurderinger = EnumMap(mapOf(Vilkårtype.SYKDOMSVILKÅRET to Utfall.OPPFYLT)),
+                        vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
                     )
                 ),
             ).let { Tidslinje(it) }
@@ -184,11 +186,27 @@ class VarighetRegelTest {
                 listOf(
                     Segment(
                         Periode(18 november 2024, 19 november 2024),
-                        Vurdering(vurderinger = EnumMap(mapOf(Vilkårtype.SYKEPENGEERSTATNING to Utfall.OPPFYLT)))
+                        Vurdering(
+                            vurderinger = listOf(
+                                EnkelVurdering(
+                                    Vilkårtype.SYKEPENGEERSTATNING,
+                                    Utfall.OPPFYLT,
+                                    null
+                                )
+                            )
+                        )
                     ),
                     Segment(
                         Periode(20 november 2024, 22 november 2024),
-                        Vurdering(vurderinger = EnumMap(mapOf(Vilkårtype.STUDENTVILKÅRET to Utfall.OPPFYLT)))
+                        Vurdering(
+                            vurderinger = listOf(
+                                EnkelVurdering(
+                                    Vilkårtype.SYKDOMSVILKÅRET,
+                                    Utfall.OPPFYLT,
+                                    STUDENT
+                                )
+                            )
+                        )
                     )
                 )
             )
@@ -217,22 +235,37 @@ class VarighetRegelTest {
                 listOf(
                     Segment(
                         Periode(18 november 2024, 19 november 2024),
-                        Vurdering(vurderinger = EnumMap(mapOf(
-                            Vilkårtype.SYKEPENGEERSTATNING to Utfall.IKKE_OPPFYLT,
-                            Vilkårtype.STUDENTVILKÅRET to Utfall.IKKE_OPPFYLT,
-                            Vilkårtype.SYKDOMSVILKÅRET to Utfall.IKKE_OPPFYLT,
-                        )))
+                        Vurdering(
+                            vurderinger = listOf(
+                                EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, IKKE_OPPFYLT, null),
+                                EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, IKKE_OPPFYLT, STUDENT),
+                                EnkelVurdering(Vilkårtype.SYKEPENGEERSTATNING, IKKE_OPPFYLT, null),
+                            )
+                        )
                     ),
                     Segment(
                         Periode(20 november 2024, 22 november 2024),
-                        Vurdering(vurderinger = EnumMap(mapOf(Vilkårtype.STUDENTVILKÅRET to Utfall.OPPFYLT)))
+                        Vurdering(
+                            vurderinger = listOf(
+                                EnkelVurdering(
+                                    Vilkårtype.SYKDOMSVILKÅRET,
+                                    Utfall.OPPFYLT,
+                                    STUDENT
+                                )
+                            )
+                        )
                     )
                 )
             )
         )
 
         vurderinger.assert(
-            Segment(Periode(18 november 2024, 19 november 2024)) { vurdering -> assertStansGrunnet(vurdering, IKKE_GRUNNLEGGENDE_RETT) },
+            Segment(Periode(18 november 2024, 19 november 2024)) { vurdering ->
+                assertStansGrunnet(
+                    vurdering,
+                    IKKE_GRUNNLEGGENDE_RETT
+                )
+            },
             Segment(Periode(20 november 2024, 21 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
             Segment(Periode(22 november 2024, 22 november 2024)) { vurdering ->
                 assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP)
@@ -252,15 +285,39 @@ class VarighetRegelTest {
                 listOf(
                     Segment(
                         Periode(18 november 2024, 19 november 2024),
-                        Vurdering(vurderinger = EnumMap(mapOf(Vilkårtype.SYKDOMSVILKÅRET to Utfall.OPPFYLT)))
+                        Vurdering(
+                            vurderinger = listOf(
+                                EnkelVurdering(
+                                    Vilkårtype.SYKDOMSVILKÅRET,
+                                    Utfall.OPPFYLT,
+                                    null
+                                )
+                            )
+                        )
                     ),
                     Segment(
                         Periode(20 november 2024, 20 november 2024),
-                        Vurdering(vurderinger = EnumMap(mapOf(Vilkårtype.SYKDOMSVILKÅRET to Utfall.OPPFYLT)))
+                        Vurdering(
+                            vurderinger = listOf(
+                                EnkelVurdering(
+                                    Vilkårtype.SYKDOMSVILKÅRET,
+                                    Utfall.OPPFYLT,
+                                    null
+                                )
+                            )
+                        )
                     ),
                     Segment(
                         Periode(21 november 2024, 22 november 2024),
-                        Vurdering(vurderinger = EnumMap(mapOf(Vilkårtype.STUDENTVILKÅRET to Utfall.OPPFYLT)))
+                        Vurdering(
+                            vurderinger = listOf(
+                                EnkelVurdering(
+                                    Vilkårtype.SYKDOMSVILKÅRET,
+                                    Utfall.OPPFYLT,
+                                    STUDENT
+                                )
+                            )
+                        )
                     )
                 )
             )
@@ -286,15 +343,39 @@ class VarighetRegelTest {
                 listOf(
                     Segment(
                         Periode(18 november 2024, 19 november 2024),
-                        Vurdering(vurderinger = EnumMap(mapOf(Vilkårtype.SYKDOMSVILKÅRET to Utfall.OPPFYLT)))
+                        Vurdering(
+                            vurderinger = listOf(
+                                EnkelVurdering(
+                                    Vilkårtype.SYKDOMSVILKÅRET,
+                                    Utfall.OPPFYLT,
+                                    null
+                                )
+                            )
+                        )
                     ),
                     Segment(
                         Periode(20 november 2024, 20 november 2024),
-                        Vurdering(vurderinger = EnumMap(mapOf(Vilkårtype.SYKDOMSVILKÅRET to Utfall.OPPFYLT)))
+                        Vurdering(
+                            vurderinger = listOf(
+                                EnkelVurdering(
+                                    Vilkårtype.SYKDOMSVILKÅRET,
+                                    Utfall.OPPFYLT,
+                                    null
+                                )
+                            )
+                        )
                     ),
                     Segment(
                         Periode(21 november 2024, 22 november 2024),
-                        Vurdering(vurderinger = EnumMap(mapOf(Vilkårtype.STUDENTVILKÅRET to Utfall.OPPFYLT)))
+                        Vurdering(
+                            vurderinger = listOf(
+                                EnkelVurdering(
+                                    Vilkårtype.SYKDOMSVILKÅRET,
+                                    Utfall.OPPFYLT,
+                                    STUDENT
+                                )
+                            )
+                        )
                     )
                 )
             )

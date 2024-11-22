@@ -15,16 +15,15 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Ins
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soningsvurdering
 import no.nav.aap.behandlingsflyt.test.Fakes
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
-import java.util.*
 
 @Fakes
 class SoningRegelTest {
@@ -43,7 +42,7 @@ class SoningRegelTest {
     fun vurder() {
         val periode = Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 1))
         val vurderingFraTidligereResultat = Vurdering(
-            EnumMap(Vilkårtype::class.java), MeldepliktVurdering(
+            emptyList(), MeldepliktVurdering(
                 null,
                 Utfall.OPPFYLT
             ), null, null, null, Gradering(

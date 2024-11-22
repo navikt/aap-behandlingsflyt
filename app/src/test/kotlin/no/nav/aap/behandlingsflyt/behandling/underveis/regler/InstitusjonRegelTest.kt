@@ -14,16 +14,15 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Ins
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
 import no.nav.aap.behandlingsflyt.test.Fakes
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
-import java.util.*
 
 @Fakes
 class InstitusjonRegelTest {
@@ -40,7 +39,7 @@ class InstitusjonRegelTest {
     fun vurder() {
         val periode = Periode(LocalDate.of(2024, 1, 5), LocalDate.of(2025, 5, 1))
         val vurderingFraTidligereResultat = Vurdering(
-            EnumMap(Vilkårtype::class.java),
+            emptyList(),
             MeldepliktVurdering(
                 null, Utfall.OPPFYLT
             ),
@@ -183,7 +182,7 @@ class InstitusjonRegelTest {
             Periode(LocalDate.of(2024, 9, 16), LocalDate.of(2025, 5, 1)),
             resultat.segmenter().elementAt(6).periode
         )
-        assertEquals(Prosent.`100_PROSENT`, resultat.segmenter().elementAt(6).verdi.gradering()?.gradering)
+        assertEquals(Prosent.`100_PROSENT`, resultat.segmenter().elementAt(6).verdi.gradering().gradering)
         assertEquals(null, resultat.segmenter().elementAt(6).verdi.institusjonVurdering?.årsak)
     }
 }

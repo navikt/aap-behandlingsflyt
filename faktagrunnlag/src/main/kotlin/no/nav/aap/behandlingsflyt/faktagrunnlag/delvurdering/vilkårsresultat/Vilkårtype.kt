@@ -58,11 +58,4 @@ enum class Vilkårtype(
         hjemmel = "§ 11-13",
         obligatorisk = false
     ),
-    STUDENTVILKÅRET(
-        kode = "AAP-14",
-        spesielleInnvilgelsesÅrsaker = listOf(),
-        avslagsårsaker = listOf(), // TODO: Har ikke vurdert hva som skal inn her
-        hjemmel = "§ 11-14",
-        obligatorisk = false,
-    )
 }
