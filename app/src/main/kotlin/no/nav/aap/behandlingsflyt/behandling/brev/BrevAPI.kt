@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoGateway
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -46,7 +47,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                             BrevbestillingService.konstruer(connection).hentSisteBrevbestilling(behandlingReferanse)
                                 ?: throw ElementNotFoundException()
                         val behandling = BehandlingRepositoryImpl(connection).hent(behandlingReferanse)
-                        val sak = SakService(connection).hent(behandling.sakId)
+                        val sak = SakService(SakRepositoryImpl(connection)).hent(behandling.sakId)
                         val personIdent = sak.person.aktivIdent()
                         val personinfo = PdlPersoninfoGateway.hentPersoninfoForIdent(personIdent, token())
                         BrevGrunnlag(

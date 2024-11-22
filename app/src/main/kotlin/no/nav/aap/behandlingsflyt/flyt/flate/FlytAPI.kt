@@ -23,7 +23,7 @@ import no.nav.aap.behandlingsflyt.flyt.flate.visning.Prosessering
 import no.nav.aap.behandlingsflyt.flyt.flate.visning.ProsesseringStatus
 import no.nav.aap.behandlingsflyt.flyt.flate.visning.Visning
 import no.nav.aap.behandlingsflyt.flyt.utledType
-import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
+import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -34,6 +34,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.bruker
@@ -163,7 +164,13 @@ fun NormalOpenAPIRoute.flytApi(dataSource: HikariDataSource) {
                         MDC.putCloseable("behandlingId", lås.behandlingSkrivelås.id.toString()).use {
                             AvklaringsbehovOrkestrator(
                                 connection,
-                                BehandlingHendelseService(FlytJobbRepository((connection)), SakService((connection)))
+                                BehandlingHendelseServiceImpl(
+                                    FlytJobbRepository((connection)), SakService(
+                                        SakRepositoryImpl(
+                                            connection
+                                        )
+                                    )
+                                )
                             ).settBehandlingPåVent(
                                 lås.behandlingSkrivelås.id, BehandlingSattPåVent(
                                     frist = body.frist,

@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_END
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
@@ -44,7 +45,7 @@ class MedlemskapService private constructor(
         override fun konstruer(connection: DBConnection): MedlemskapService {
             return MedlemskapService(
                 MedlemskapGateway(),
-                SakService(connection),
+                SakService(SakRepositoryImpl(connection)),
                 MedlemskapRepository(connection)
             )
         }

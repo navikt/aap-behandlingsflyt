@@ -41,13 +41,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.YrkesskadevurderingDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.flyt.flate.Venteinformasjon
 import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.TestHendelsesMottak
-import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
+import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -64,7 +64,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.server.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.behandlingsflyt.server.prosessering.ProsesseringsJobber
@@ -77,8 +77,8 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.testutil.TestUtil
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -1206,7 +1206,7 @@ class FlytOrkestratorTest {
     private fun hentSak(ident: Ident, periode: Periode): Sak {
         return dataSource.transaction { connection ->
             SakRepositoryImpl(connection).finnEllerOpprett(
-                PersonRepository(connection).finnEllerOpprett(listOf(ident)),
+                PersonRepositoryImpl(connection).finnEllerOpprett(listOf(ident)),
                 periode
             )
         }
@@ -1331,7 +1331,7 @@ class FlytOrkestratorTest {
     private fun hentPerson(ident: Ident): Person {
         var person: Person? = null
         dataSource.transaction {
-            person = PersonRepository(it).finnEllerOpprett(listOf(ident))
+            person = PersonRepositoryImpl(it).finnEllerOpprett(listOf(ident))
         }
         return person!!
     }
@@ -1451,8 +1451,8 @@ class FlytOrkestratorTest {
         // Oppretter bestilling av legeerklæring
         dataSource.transaction { connection ->
             val avklaringsbehovene = hentAvklaringsbehov(behandling.id, connection)
-            val sakService = SakService(connection)
-            val behandlingHendelseService = BehandlingHendelseService(FlytJobbRepository((connection)), sakService)
+            val sakService = SakService(SakRepositoryImpl(connection))
+            val behandlingHendelseService = BehandlingHendelseServiceImpl(FlytJobbRepository((connection)), sakService)
             avklaringsbehovene.leggTil(
                 definisjoner = listOf(Definisjon.BESTILL_LEGEERKLÆRING),
                 stegType = behandling.aktivtSteg(),
@@ -1533,8 +1533,8 @@ class FlytOrkestratorTest {
         // Oppretter bestilling av legeerklæring
         dataSource.transaction { connection ->
             val avklaringsbehovene = hentAvklaringsbehov(behandling.id, connection)
-            val sakService = SakService(connection)
-            val behandlingHendelseService = BehandlingHendelseService(FlytJobbRepository((connection)), sakService)
+            val sakService = SakService(SakRepositoryImpl(connection))
+            val behandlingHendelseService = BehandlingHendelseServiceImpl(FlytJobbRepository((connection)), sakService)
             avklaringsbehovene.leggTil(
                 definisjoner = listOf(Definisjon.BESTILL_LEGEERKLÆRING),
                 stegType = behandling.aktivtSteg(),
@@ -1616,8 +1616,8 @@ class FlytOrkestratorTest {
         // Oppretter bestilling av legeerklæring
         dataSource.transaction { connection ->
             val avklaringsbehovene = hentAvklaringsbehov(behandling.id, connection)
-            val sakService = SakService(connection)
-            val behandlingHendelseService = BehandlingHendelseService(FlytJobbRepository((connection)), sakService)
+            val sakService = SakService(SakRepositoryImpl(connection))
+            val behandlingHendelseService = BehandlingHendelseServiceImpl(FlytJobbRepository((connection)), sakService)
             avklaringsbehovene.leggTil(
                 definisjoner = listOf(Definisjon.BESTILL_LEGEERKLÆRING),
                 stegType = behandling.aktivtSteg(),

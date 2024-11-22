@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.HentSakDTO
 import no.nav.aap.behandlingsflyt.server.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -25,7 +26,7 @@ fun NormalOpenAPIRoute.torsHammerApi(dataSource: DataSource) {
     route("/api/hammer") {
         route("/send").post<Unit, String, TorsHammerDto> { _, dto ->
             dataSource.transaction { connection ->
-                val sakService = SakService(connection)
+                val sakService = SakService(SakRepositoryImpl(connection))
 
                 val sak = sakService.hent(Saksnummer(dto.saksnummer))
 
@@ -45,7 +46,7 @@ fun NormalOpenAPIRoute.torsHammerApi(dataSource: DataSource) {
         }
         route("/{saksnummer}").get<HentSakDTO, AlleHammereDto> { dto ->
             val response = dataSource.transaction(readOnly = true) { connection ->
-                val sakService = SakService(connection)
+                val sakService = SakService(SakRepositoryImpl(connection))
                 val sak = sakService.hent(Saksnummer(dto.saksnummer))
 
                 val mottattDokumentRepository = MottattDokumentRepository(connection)

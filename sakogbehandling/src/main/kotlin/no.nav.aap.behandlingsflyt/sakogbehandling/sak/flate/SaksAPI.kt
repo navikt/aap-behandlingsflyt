@@ -13,7 +13,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.SafHentDokumentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.SafListDokumentGateway
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -36,7 +36,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
         route("/finn").post<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO> { _, dto ->
             val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
                 val ident = Ident(dto.ident)
-                val person = PersonRepository(connection).finn(ident)
+                val person = PersonRepositoryImpl(connection).finn(ident)
 
                 if (person == null) {
                     throw ElementNotFoundException()

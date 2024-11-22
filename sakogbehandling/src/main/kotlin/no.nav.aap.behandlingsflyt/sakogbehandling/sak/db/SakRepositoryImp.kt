@@ -16,7 +16,7 @@ private val logger = LoggerFactory.getLogger(SakRepositoryImpl::class.java)
 
 class SakRepositoryImpl(private val connection: DBConnection) : SakRepository, SakFlytRepository {
 
-    private val personRepository = PersonRepository(connection)
+    private val personRepository = PersonRepositoryImpl(connection)
 
     override fun finnEllerOpprett(person: Person, periode: Periode): Sak {
         val relevantesaker = finnSakerFor(person, periode)

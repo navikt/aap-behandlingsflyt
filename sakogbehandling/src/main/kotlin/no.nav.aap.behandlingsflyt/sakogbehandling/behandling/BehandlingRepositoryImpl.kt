@@ -185,7 +185,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         }
     }
 
-    fun hentBehandlingType(behandlingId: BehandlingId): TypeBehandling {
+    override fun hentBehandlingType(behandlingId: BehandlingId): TypeBehandling {
         val query = """
             SELECT type FROM BEHANDLING WHERE id = ?
             """.trimIndent()

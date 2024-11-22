@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.server.prosessering.ProsesserBehandlingService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
@@ -15,7 +16,7 @@ import java.time.LocalDate
 
 class HåndterMottattDokumentService(connection: DBConnection) {
 
-    private val sakService = SakService(connection)
+    private val sakService = SakService(SakRepositoryImpl(connection))
     private val sakOgBehandlingService = SakOgBehandlingService(connection)
     private val låsRepository = TaSkriveLåsRepository(connection)
     private val prosesserBehandling = ProsesserBehandlingService(FlytJobbRepository(connection))

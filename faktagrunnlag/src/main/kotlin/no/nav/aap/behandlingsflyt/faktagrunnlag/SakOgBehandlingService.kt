@@ -80,7 +80,10 @@ class SakOgBehandlingService(connection: DBConnection) {
     fun oppdaterRettighetsperioden(sakId: SakId, brevkode: Brevkode, mottattDato: LocalDate) {
         if (setOf(Brevkode.SØKNAD, Brevkode.PLIKTKORT).contains(brevkode)) {
             val rettighetsperiode = sakRepository.hent(sakId).rettighetsperiode
-            val periode = Periode(rettighetsperiode.fom, mottattDato.plusYears(1))
+            val periode = Periode(
+                rettighetsperiode.fom,
+                mottattDato.plusYears(1)
+            ) // TODO: Usikker på om dette blir helt korrekt..
             if (rettighetsperiode.tom < periode.tom) {
                 sakRepository.oppdaterRettighetsperiode(sakId, periode)
             }

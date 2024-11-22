@@ -4,14 +4,20 @@ import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SattPåVentLøsning
 import no.nav.aap.behandlingsflyt.behandlingSattPåVentTeller
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlagImpl
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
+import no.nav.aap.behandlingsflyt.flyt.steg.internal.StegKonstruktørImpl
 import no.nav.aap.behandlingsflyt.flyt.utledType
-import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
+import no.nav.aap.behandlingsflyt.flyt.ventebehov.VentebehovEvaluererServiceImpl
+import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.periodisering.PerioderTilVurderingService
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.server.prosessering.ProsesserBehandlingService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.httpklient.auth.Bruker
@@ -21,7 +27,7 @@ import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import org.slf4j.LoggerFactory
 
 class AvklaringsbehovOrkestrator(
-    private val connection: DBConnection, private val behandlingHendelseService: BehandlingHendelseService
+    private val connection: DBConnection, private val behandlingHendelseService: BehandlingHendelseServiceImpl
 ) {
 
     private val avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection)
@@ -105,7 +111,20 @@ class AvklaringsbehovOrkestrator(
         )
 
         // løses det behov som fremtvinger tilbakehopp?
-        val flytOrkestrator = FlytOrkestrator(connection)
+        val flytOrkestrator = FlytOrkestrator(
+            stegKonstruktør = StegKonstruktørImpl(connection),
+            ventebehovEvaluererService = VentebehovEvaluererServiceImpl(connection),
+            behandlingRepository = behandlingRepository,
+            behandlingFlytRepository = behandlingRepository,
+            avklaringsbehovRepository = avklaringsbehovRepository,
+            informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(connection),
+            sakRepository = SakRepositoryImpl(connection),
+            perioderTilVurderingService = PerioderTilVurderingService(
+                SakService(SakRepositoryImpl(connection)),
+                BehandlingRepositoryImpl(connection)
+            ),
+            behandlingHendelseService = behandlingHendelseService
+        )
         flytOrkestrator.forberedLøsingAvBehov(definisjoner, behandling, kontekst)
 
         // Bør ideelt kalle på

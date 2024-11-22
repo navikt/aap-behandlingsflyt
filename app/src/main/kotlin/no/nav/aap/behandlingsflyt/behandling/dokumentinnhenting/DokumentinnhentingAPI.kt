@@ -14,7 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.Doku
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringBestillingRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringPurringRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringStatusResponse
-import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
+import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoGateway
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.komponenter.httpklient.auth.token
@@ -36,9 +37,9 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: HikariDataSource) {
                     val lås = taSkriveLåsRepository.lås(req.behandlingsReferanse)
                     val avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection)
                     val behandlingRepository = BehandlingRepositoryImpl(connection)
-                    val sakService = SakService(connection)
+                    val sakService = SakService(SakRepositoryImpl(connection))
                     val behandlingHendelseService =
-                        BehandlingHendelseService(FlytJobbRepository((connection)), sakService)
+                        BehandlingHendelseServiceImpl(FlytJobbRepository((connection)), sakService)
 
                     val sak = sakService.hent(Saksnummer(req.saksnummer))
                     val personIdent = sak.person.aktivIdent()
@@ -86,7 +87,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: HikariDataSource) {
         route("/brevpreview") {
             post<Unit, BrevResponse, ForhåndsvisBrevRequest> { _, req ->
                 val brevPreview = dataSource.transaction(readOnly = true) { connection ->
-                    val sakService = SakService(connection)
+                    val sakService = SakService(SakRepositoryImpl(connection))
                     val sak = sakService.hent(Saksnummer(req.saksnummer))
 
                     val personIdent = sak.person.aktivIdent()

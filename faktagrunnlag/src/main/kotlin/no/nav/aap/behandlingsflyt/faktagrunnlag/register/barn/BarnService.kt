@@ -14,6 +14,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
@@ -108,10 +110,10 @@ class BarnService private constructor(
         }
         override fun konstruer(connection: DBConnection): BarnService {
             return BarnService(
-                SakService(connection),
+                SakService(SakRepositoryImpl(connection)),
                 BarnRepository(connection),
                 PersonopplysningRepository(connection),
-                PersonRepository(connection),
+                PersonRepositoryImpl(connection),
                 PdlBarnGateway,
                 PdlIdentGateway,
                 VilkårsresultatRepository(connection)

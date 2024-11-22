@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.server.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -55,7 +56,7 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
             get<SaksnummerParameter, BruddAktivitetspliktResponse> { params ->
                 val response = dataSource.transaction { connection ->
                     val repository = AktivitetspliktRepository(connection)
-                    val sak = SakService(connection).hent(Saksnummer(params.saksnummer))
+                    val sak = SakService(SakRepositoryImpl(connection)).hent(Saksnummer(params.saksnummer))
                     val alleBrudd = repository.hentBrudd(sak.id)
                         .aktiveBrudd()
                         .map { dokument ->
@@ -87,7 +88,7 @@ private fun opprettDokument(connection: DBConnection, navIdent: Bruker, saksnumm
         repository = AktivitetspliktRepository(connection)
     )
 
-    val sak = SakService(connection).hent(saksnummer)
+    val sak = SakService(SakRepositoryImpl(connection)).hent(saksnummer)
 
     val aktivitetspliktDokumenter = req.tilDomene(sak, navIdent)
     val innsendingId = aktivitetspliktServce.registrerBrudd(aktivitetspliktDokumenter)

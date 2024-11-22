@@ -1,10 +1,11 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlag
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.StegKonstruktør
 import no.nav.aap.behandlingsflyt.flyt.steg.StegOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.steg.TilbakeførtFraBeslutter
 import no.nav.aap.behandlingsflyt.flyt.steg.TilbakeførtFraKvalitetssikrer
@@ -17,12 +18,10 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Status.UTREDES
 import no.nav.aap.behandlingsflyt.periodisering.PerioderTilVurderingService
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingFlytRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakFlytRepository
 import no.nav.aap.behandlingsflyt.stegFullførtTeller
-import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.verdityper.flyt.FlytKontekst
 import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
@@ -44,16 +43,16 @@ private val log = LoggerFactory.getLogger(FlytOrkestrator::class.java)
  *
  */
 class FlytOrkestrator(
-    private val connection: DBConnection
+    private val stegKonstruktør: StegKonstruktør,
+    private val perioderTilVurderingService: PerioderTilVurderingService,
+    private val informasjonskravGrunnlag: InformasjonskravGrunnlag,
+    private val sakRepository: SakFlytRepository,
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val behandlingRepository: BehandlingRepository,
+    private val behandlingFlytRepository: BehandlingFlytRepository,
+    private val behandlingHendelseService: BehandlingHendelseService,
+    private val ventebehovEvaluererService: VentebehovEvaluererService
 ) {
-    private val informasjonskravGrunnlag = InformasjonskravGrunnlag(connection)
-    private val sakRepository = SakRepositoryImpl(connection)
-    private val avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection)
-    private val behandlingRepository = BehandlingRepositoryImpl(connection)
-    private val behandlingHendelseService = BehandlingHendelseService(
-        FlytJobbRepository(connection), SakService(connection)
-    )
-    private val perioderTilVurderingService = PerioderTilVurderingService(connection)
 
     fun opprettKontekst(sakId: SakId, behandlingId: BehandlingId): FlytKontekst {
         val typeBehandling = behandlingRepository.hentBehandlingType(behandlingId)
@@ -79,10 +78,11 @@ class FlytOrkestrator(
         if (avklaringsbehovene.erSattPåVent()) {
             // TODO: Vurdere om det hendelser som trigger prosesserBehandling
             //  (f.eks ankommet dokument) skal ta behandling av vent
-            val evaluerere = VentebehovEvaluererService(connection)
+            val evaluerere = ventebehovEvaluererService
             val kandidatBehov = avklaringsbehovene.hentÅpneVentebehov()
 
-            val behovSomErLøst = kandidatBehov.filter { behov -> evaluerere.ansesSomLøst(behandling.id, behov, kontekst.sakId) }
+            val behovSomErLøst =
+                kandidatBehov.filter { behov -> evaluerere.ansesSomLøst(behandling.id, behov, kontekst.sakId) }
             behovSomErLøst.forEach { avklaringsbehovene.løsAvklaringsbehov(it.definisjon, "", SYSTEMBRUKER.ident) }
             // Hvis fortsatt på vent
             if (avklaringsbehovene.erSattPåVent()) {
@@ -147,7 +147,14 @@ class FlytOrkestrator(
         var gjeldendeSteg = behandlingFlyt.forberedFlyt(behandling.aktivtSteg())
 
         while (true) {
-            val result = StegOrkestrator(connection, gjeldendeSteg).utfør(
+            val result = StegOrkestrator(
+                aktivtSteg = gjeldendeSteg,
+                informasjonskravGrunnlag = informasjonskravGrunnlag,
+                behandlingFlytRepository = behandlingFlytRepository,
+                avklaringsbehovRepository = avklaringsbehovRepository,
+                perioderTilVurderingService = perioderTilVurderingService,
+                stegKonstruktør = stegKonstruktør
+            ).utfør(
                 kontekst,
                 behandling,
                 behandlingFlyt.faktagrunnlagForGjeldendeSteg()
@@ -176,7 +183,7 @@ class FlytOrkestrator(
             if (!result.kanFortsette() || neste == null) {
                 if (neste == null) {
                     // Avslutter behandling
-                    behandlingRepository.oppdaterBehandlingStatus(
+                    behandlingFlytRepository.oppdaterBehandlingStatus(
                         behandlingId = behandling.id,
                         status = Status.AVSLUTTET
                     )
@@ -257,7 +264,13 @@ class FlytOrkestrator(
                 }
                 return
             }
-            StegOrkestrator(connection, neste).utførTilbakefør(
+            StegOrkestrator(
+                aktivtSteg = neste, informasjonskravGrunnlag = informasjonskravGrunnlag,
+                behandlingFlytRepository = behandlingFlytRepository,
+                avklaringsbehovRepository = avklaringsbehovRepository,
+                perioderTilVurderingService = perioderTilVurderingService,
+                stegKonstruktør = stegKonstruktør
+            ).utførTilbakefør(
                 kontekst = kontekst,
                 behandling = behandling
             )

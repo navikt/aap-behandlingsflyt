@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Pers
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.Fakes
@@ -34,7 +33,7 @@ class InformasjonskravGrunnlagTest {
     fun `Yrkesskadedata er oppdatert`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val (ident, kontekst) = klargjør(connection)
-            val informasjonskravGrunnlag = InformasjonskravGrunnlag(connection)
+            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(connection)
 
             FakePersoner.leggTil(TestPerson(
                 identer = setOf(ident),
@@ -64,7 +63,7 @@ class InformasjonskravGrunnlagTest {
     fun `Yrkesskadedata er ikke oppdatert`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val (ident, kontekst) = klargjør(connection)
-            val informasjonskravGrunnlag = InformasjonskravGrunnlag(connection)
+            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(connection)
 
             FakePersoner.leggTil(TestPerson(
                 identer = setOf(ident),
@@ -87,7 +86,7 @@ class InformasjonskravGrunnlagTest {
     fun `Yrkesskadedata er utdatert, men har ingen endring fra registeret`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val (_, kontekst) = klargjør(connection)
-            val informasjonskravGrunnlag = InformasjonskravGrunnlag(connection)
+            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(connection)
 
             val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
                 listOf(YrkesskadeService),

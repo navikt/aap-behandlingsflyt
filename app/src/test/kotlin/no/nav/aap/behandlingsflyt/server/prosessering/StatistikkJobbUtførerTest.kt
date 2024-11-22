@@ -46,14 +46,15 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.pip.PipRepository
-import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import no.nav.aap.verdityper.sakogbehandling.SakId
@@ -135,7 +136,7 @@ class StatistikkJobbUtførerTest {
         // Act
 
         InitTestDatabase.dataSource.transaction { connection ->
-            val sakService = SakService(connection)
+            val sakService = SakService(SakRepositoryImpl(connection))
             val vilkårsResultatRepository = VilkårsresultatRepository(connection = connection)
             val behandlingRepository = BehandlingRepositoryImpl(connection)
             val beregningsgrunnlagRepository = BeregningsgrunnlagRepository(connection)
@@ -265,7 +266,7 @@ class StatistikkJobbUtførerTest {
         // Act
 
         InitTestDatabase.dataSource.transaction { connection ->
-            val sakService = SakService(connection)
+            val sakService = SakService(SakRepositoryImpl(connection))
             val vilkårsResultatRepository = VilkårsresultatRepository(connection = connection)
             val behandlingRepository = BehandlingRepositoryImpl(connection)
             val beregningsgrunnlagRepository = BeregningsgrunnlagRepository(connection)

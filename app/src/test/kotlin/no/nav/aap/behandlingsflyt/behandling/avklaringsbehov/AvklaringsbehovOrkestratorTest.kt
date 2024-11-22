@@ -3,13 +3,14 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.dbtestdata.ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
+import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.server.prosessering.StoppetHendelseJobbUtfører
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -29,9 +30,9 @@ class AvklaringsbehovOrkestratorTest {
     fun `behandlingHendelseService dot stoppet blir kalt når en behandling er satt på vent`() {
         val uthentedeJobber = InitTestDatabase.dataSource.transaction { connection ->
             val behandlingHendelseService =
-                BehandlingHendelseService(
+                BehandlingHendelseServiceImpl(
                     FlytJobbRepository(connection),
-                    SakService((connection))
+                    SakService(SakRepositoryImpl(connection))
                 )
 
             val avklaringsbehovOrkestrator = AvklaringsbehovOrkestrator(

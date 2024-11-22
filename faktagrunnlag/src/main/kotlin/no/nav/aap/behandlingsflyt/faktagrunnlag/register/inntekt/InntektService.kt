@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRep
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
@@ -104,7 +105,7 @@ class InntektService private constructor(
 
         override fun konstruer(connection: DBConnection): InntektService {
             return InntektService(
-                SakService(connection),
+                SakService(SakRepositoryImpl(connection)),
                 InntektGrunnlagRepository(connection),
                 VilkårsresultatRepository(connection),
                 SykdomRepository(connection),

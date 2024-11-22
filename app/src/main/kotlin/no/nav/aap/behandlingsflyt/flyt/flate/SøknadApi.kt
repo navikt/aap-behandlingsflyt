@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.server.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
@@ -24,7 +25,7 @@ fun NormalOpenAPIRoute.søknadApi(dataSource: DataSource) {
         route("/send").post<Unit, String, SøknadSendDto> { _, dto ->
             MDC.putCloseable("saksnummer", dto.saksnummer).use {
                 dataSource.transaction { connection ->
-                    val sakService = SakService(connection)
+                    val sakService = SakService(SakRepositoryImpl(connection))
 
                     val sak = sakService.hent(Saksnummer(dto.saksnummer))
 

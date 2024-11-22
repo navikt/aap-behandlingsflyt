@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_END
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.adapter.InstitusjonsoppholdGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
@@ -50,7 +51,7 @@ class InstitusjonsoppholdService private constructor(
         }
         override fun konstruer(connection: DBConnection): InstitusjonsoppholdService {
             return InstitusjonsoppholdService(
-                SakService(connection),
+                SakService(SakRepositoryImpl(connection)),
                 InstitusjonsoppholdRepository(connection),
                 InstitusjonsoppholdGateway
             )

@@ -1,22 +1,21 @@
 package no.nav.aap.behandlingsflyt.periodisering
 
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.flyt.FlytKontekst
 import no.nav.aap.verdityper.flyt.Vurdering
 import no.nav.aap.verdityper.flyt.VurderingType
 import no.nav.aap.verdityper.flyt.ÅrsakTilBehandling
 
-class PerioderTilVurderingService(connection: DBConnection) {
-    private val sakService: SakService = SakService(connection)
-    private val behandlingRepository = BehandlingRepositoryImpl(connection)
+class PerioderTilVurderingService(
+    private val sakService: SakService, private val behandlingRepository: BehandlingRepository
+) {
 
     fun utled(kontekst: FlytKontekst, stegType: no.nav.aap.behandlingsflyt.kontrakt.steg.StegType): Set<Vurdering> {
         val sak = sakService.hent(kontekst.sakId)
@@ -38,8 +37,12 @@ class PerioderTilVurderingService(connection: DBConnection) {
         val årsaker = behandling.årsaker()
 
         var tidslinje = Tidslinje<VurderingValue>()
-        årsaker.map { årsak -> utledVurdering(årsak, sak.rettighetsperiode) }.map { Tidslinje(it.periode,
-            VurderingValue(it.type, it.årsaker)) }
+        årsaker.map { årsak -> utledVurdering(årsak, sak.rettighetsperiode) }.map {
+            Tidslinje(
+                it.periode,
+                VurderingValue(it.type, it.årsaker)
+            )
+        }
             .forEach { segment ->
                 tidslinje = tidslinje.kombiner(segment, JoinStyle.OUTER_JOIN { periode, venstreSegment, høyreSegment ->
                     val venstreVerdi = venstreSegment?.verdi
@@ -100,11 +103,13 @@ class PerioderTilVurderingService(connection: DBConnection) {
                 listOf(årsak.type),
                 rettighetsperiode
             )
+
             ÅrsakTilBehandling.MOTTATT_AVVIST_LEGEERKLÆRING -> Vurdering(
                 VurderingType.REVURDERING,
                 listOf(årsak.type),
                 rettighetsperiode
             )
+
             ÅrsakTilBehandling.MOTTATT_DIALOGMELDING -> Vurdering(
                 VurderingType.REVURDERING,
                 listOf(årsak.type),

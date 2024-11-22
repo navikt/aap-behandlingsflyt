@@ -33,6 +33,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 import no.nav.aap.motor.Jobb
@@ -267,7 +268,7 @@ class StatistikkJobbUtfører(
         override fun konstruer(connection: DBConnection): JobbUtfører {
             val vilkårsresultatRepository = VilkårsresultatRepository(connection)
             val behandlingRepository = BehandlingRepositoryImpl(connection)
-            val sakService = SakService(connection)
+            val sakService = SakService(SakRepositoryImpl(connection))
 
             return StatistikkJobbUtfører(
                 StatistikkGateway(),

@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -8,7 +8,6 @@ import no.nav.aap.behandlingsflyt.periodisering.PerioderTilVurderingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingFlytRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.verdityper.flyt.FlytKontekst
 import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
 import no.nav.aap.verdityper.flyt.StegStatus
@@ -32,16 +31,16 @@ private val log = LoggerFactory.getLogger(StegOrkestrator::class.java)
  * @see no.nav.aap.verdityper.flyt.StegStatus.AVSLUTTER:        Teknisk markør for avslutting av steget
  */
 class StegOrkestrator(
-    private val connection: DBConnection,
-    private val aktivtSteg: FlytSteg
+    private val aktivtSteg: FlytSteg,
+    private val informasjonskravGrunnlag: InformasjonskravGrunnlag,
+    private val behandlingFlytRepository: BehandlingFlytRepository,
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val perioderTilVurderingService: PerioderTilVurderingService,
+    private val stegKonstruktør: StegKonstruktør
 ) {
 
-    private val behandlingRepository = BehandlingFlytRepository(connection)
-    private val avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection)
-    private val perioderTilVurderingService = PerioderTilVurderingService(connection)
-    private val informasjonskravGrunnlag = InformasjonskravGrunnlag(connection)
 
-    private val behandlingSteg = aktivtSteg.konstruer(connection)
+    private val behandlingSteg = stegKonstruktør.konstruer(aktivtSteg)
 
     fun utfør(
         kontekst: FlytKontekst,
@@ -70,7 +69,7 @@ class StegOrkestrator(
             )
             if (gjeldendeStegStatus in setOf(StegStatus.START, StegStatus.OPPDATER_FAKTAGRUNNLAG)) {
                 // Legger denne her slik at vi får savepoint på at vi har byttet steg, slik at vi starter opp igjen på rett sted når prosessen dras i gang igjen
-                connection.markerSavepoint()
+                stegKonstruktør.markerSavepoint()
             }
 
             if (gjeldendeStegStatus == StegStatus.AVSLUTTER) {
@@ -196,10 +195,10 @@ class StegOrkestrator(
     ) {
         val førStatus = behandling.status()
         behandling.visit(nyStegTilstand)
-        behandlingRepository.loggBesøktSteg(behandlingId = behandling.id, nyStegTilstand)
+        behandlingFlytRepository.loggBesøktSteg(behandlingId = behandling.id, nyStegTilstand)
         val etterStatus = nyStegTilstand.steg().status
         if (førStatus != etterStatus) {
-            behandlingRepository.oppdaterBehandlingStatus(behandlingId = behandling.id, status = etterStatus)
+            behandlingFlytRepository.oppdaterBehandlingStatus(behandlingId = behandling.id, status = etterStatus)
         }
     }
 }

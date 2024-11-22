@@ -10,7 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -83,7 +83,7 @@ class PipTest {
 
         val saksnummer = dataSource.transaction { connection ->
             val periode = Periode(LocalDate.now(), LocalDate.now())
-            val person = PersonRepository(connection).finnEllerOpprett(
+            val person = PersonRepositoryImpl(connection).finnEllerOpprett(
                 listOf(
                     Ident("ident", true),
                     Ident("gammelident", false),
@@ -135,7 +135,7 @@ class PipTest {
 
         val behandlingsreferanse = dataSource.transaction { connection ->
             val periode = Periode(LocalDate.now(), LocalDate.now())
-            val person = PersonRepository(connection).finnEllerOpprett(
+            val person = PersonRepositoryImpl(connection).finnEllerOpprett(
                 listOf(
                     Ident("ident", true),
                     Ident("gammelident", false),

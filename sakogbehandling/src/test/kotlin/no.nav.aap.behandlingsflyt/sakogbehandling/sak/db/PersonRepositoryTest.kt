@@ -6,7 +6,6 @@ import no.nav.aap.verdityper.sakogbehandling.Ident
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 
 internal class PersonRepositoryTest {
@@ -23,7 +22,7 @@ internal class PersonRepositoryTest {
     @Test
     fun `skal finne samme person`() {
         val person = InitTestDatabase.dataSource.transaction { connection ->
-            val personRepository = PersonRepository(connection)
+            val personRepository = PersonRepositoryImpl(connection)
             personRepository.finnEllerOpprett(
                 listOf(
                     Ident("12346432345", aktivIdent = false),
@@ -32,7 +31,7 @@ internal class PersonRepositoryTest {
             )
         }
         val person2 = InitTestDatabase.dataSource.transaction { connection ->
-            val personRepository = PersonRepository(connection)
+            val personRepository = PersonRepositoryImpl(connection)
             personRepository.finnEllerOpprett(
                 listOf(
                     Ident("23067823253"),
@@ -49,7 +48,7 @@ internal class PersonRepositoryTest {
     @Test
     fun `en oppdatert person returnerer nye identer`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val personRepository = PersonRepository(connection)
+            val personRepository = PersonRepositoryImpl(connection)
             personRepository.finnEllerOpprett(
                 listOf(
                     Ident("12346432345", aktivIdent = true),
@@ -57,7 +56,7 @@ internal class PersonRepositoryTest {
             )
         }
         val person2 = InitTestDatabase.dataSource.transaction { connection ->
-            val personRepository = PersonRepository(connection)
+            val personRepository = PersonRepositoryImpl(connection)
             personRepository.finnEllerOpprett(
                 listOf(
                     Ident("12346432345", aktivIdent = true),

@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -106,7 +106,7 @@ class SamordningServiceTest {
     }
 
     private fun opprettSakdata(connection: DBConnection): BehandlingId {
-        val person = PersonRepository(connection).finnEllerOpprett(listOf(Ident("ident", true)))
+        val person = PersonRepositoryImpl(connection).finnEllerOpprett(listOf(Ident("ident", true)))
         val sakId = SakRepositoryImpl(connection).finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusDays(5))).id
         return BehandlingRepositoryImpl(connection).opprettBehandling(sakId, listOf(), TypeBehandling.Førstegangsbehandling, null).id
     }

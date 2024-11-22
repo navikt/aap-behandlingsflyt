@@ -1,11 +1,18 @@
 package no.nav.aap.behandlingsflyt.flyt.steg
 
 import kotlinx.coroutines.runBlocking
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FakePdlGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlagImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.flyt.steg.internal.StegKonstruktørImpl
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.periodisering.PerioderTilVurderingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
@@ -28,7 +35,7 @@ class StegOrkestratorTest {
             val ident = Ident("123123123126")
             val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
-            val sak = runBlocking {PersonOgSakService(connection, FakePdlGateway).finnEllerOpprett(ident, periode) }
+            val sak = runBlocking { PersonOgSakService(connection, FakePdlGateway).finnEllerOpprett(ident, periode) }
             val behandling = SakOgBehandlingService(connection).finnEllerOpprettBehandling(
                 sak.saksnummer,
                 listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
@@ -37,7 +44,17 @@ class StegOrkestratorTest {
 
             val kontekst = behandling.flytKontekst()
 
-            val resultat = StegOrkestrator(connection, TestFlytSteg).utfør(
+            val resultat = StegOrkestrator(
+                aktivtSteg = TestFlytSteg,
+                informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(connection),
+                behandlingFlytRepository = BehandlingRepositoryImpl(connection),
+                avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection),
+                perioderTilVurderingService = PerioderTilVurderingService(
+                    SakService(SakRepositoryImpl(connection)),
+                    BehandlingRepositoryImpl(connection)
+                ),
+                stegKonstruktør = StegKonstruktørImpl(connection)
+            ).utfør(
                 kontekst,
                 behandling,
                 listOf()

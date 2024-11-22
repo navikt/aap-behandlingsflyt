@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerResponse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -18,10 +19,10 @@ import java.time.LocalDate
 
 class SamordningYtelseVurderingService(
     connection: DBConnection
-): Informasjonskrav {
+) : Informasjonskrav {
     private val fpGateway = ForeldrepengerGateway()
     private val spGateway = SykepengerGateway()
-    private val sakService = SakService(connection)
+    private val sakService = SakService(SakRepositoryImpl(connection))
     private val samordningYtelseVurderingRepository = SamordningYtelseVurderingRepository(connection)
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
@@ -33,7 +34,7 @@ class SamordningYtelseVurderingService(
         val eksisterendeData = samordningYtelseVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
         val samordningYtelser = mapTilSamordningYtelse(foreldrepenger, sykepenger, sak.saksnummer.toString())
 
-        if (harEndingerIYtelser(eksisterendeData, samordningYtelser) ) {
+        if (harEndingerIYtelser(eksisterendeData, samordningYtelser)) {
             samordningYtelseVurderingRepository.lagreYtelser(kontekst.behandlingId, samordningYtelser)
             return Informasjonskrav.Endret.ENDRET
         }
@@ -60,16 +61,23 @@ class SamordningYtelseVurderingService(
         )
     }
 
-    private fun harEndingerIYtelser(eksisterende: SamordningYtelseVurderingGrunnlag?, samordningYtelser: List<SamordningYtelse>): Boolean {
+    private fun harEndingerIYtelser(
+        eksisterende: SamordningYtelseVurderingGrunnlag?,
+        samordningYtelser: List<SamordningYtelse>
+    ): Boolean {
         return samordningYtelser != eksisterende?.ytelser
     }
 
-    private fun mapTilSamordningYtelse(foreldrepenger: ForeldrepengerResponse, sykepenger: SykepengerResponse, saksNummer: String): List<SamordningYtelse> {
+    private fun mapTilSamordningYtelse(
+        foreldrepenger: ForeldrepengerResponse,
+        sykepenger: SykepengerResponse,
+        saksNummer: String
+    ): List<SamordningYtelse> {
         val samordningYtelser = mutableListOf<SamordningYtelse>()
         val sykepengerYtelse = "SYKEPENGER"
         val sykepengerKilde = "INFOTRYGDSPEIL"
 
-        for(ytelse in foreldrepenger.ytelser) {
+        for (ytelse in foreldrepenger.ytelser) {
             val ytelsePerioder = ytelse.anvist.map {
                 SamordningYtelsePeriode(
                     periode = it.periode,

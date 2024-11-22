@@ -1,8 +1,18 @@
 package no.nav.aap.behandlingsflyt.server.prosessering
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlagImpl
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
+import no.nav.aap.behandlingsflyt.flyt.steg.internal.StegKonstruktørImpl
+import no.nav.aap.behandlingsflyt.flyt.ventebehov.VentebehovEvaluererServiceImpl
+import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
+import no.nav.aap.behandlingsflyt.periodisering.PerioderTilVurderingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
@@ -29,7 +39,27 @@ class ProsesserBehandlingJobbUtfører(
 
     companion object : Jobb {
         override fun konstruer(connection: DBConnection): JobbUtfører {
-            return ProsesserBehandlingJobbUtfører(TaSkriveLåsRepository(connection), FlytOrkestrator(connection))
+            val behandlingRepository = BehandlingRepositoryImpl(connection)
+            return ProsesserBehandlingJobbUtfører(
+                TaSkriveLåsRepository(connection),
+                FlytOrkestrator(
+                    stegKonstruktør = StegKonstruktørImpl(connection),
+                    ventebehovEvaluererService = VentebehovEvaluererServiceImpl(connection),
+                    behandlingRepository = behandlingRepository,
+                    behandlingFlytRepository = behandlingRepository,
+                    avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection),
+                    informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(connection),
+                    sakRepository = SakRepositoryImpl(connection),
+                    perioderTilVurderingService = PerioderTilVurderingService(
+                        SakService(SakRepositoryImpl(connection)),
+                        BehandlingRepositoryImpl(connection)
+                    ),
+                    behandlingHendelseService = BehandlingHendelseServiceImpl(
+                        FlytJobbRepository(connection),
+                        SakService(SakRepositoryImpl(connection))
+                    ),
+                )
+            )
         }
 
         override fun type(): String {

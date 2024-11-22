@@ -6,16 +6,13 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Brevkode
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.server.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.FlytJobbRepository
-import no.nav.aap.verdityper.dokument.JournalpostId
 import org.slf4j.MDC
 import java.time.LocalDate
 import javax.sql.DataSource
@@ -25,7 +22,7 @@ fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource) {
         route("/send").post<Unit, String, MottattHendelseDto> { _, dto ->
             MDC.putCloseable("saksnummer", dto.saksnummer).use {
                 dataSource.transaction { connection ->
-                    val sakService = SakService(connection)
+                    val sakService = SakService(SakRepositoryImpl(connection))
                     val sak = sakService.hent(Saksnummer(dto.saksnummer))
 
                     val flytJobbRepository = FlytJobbRepository(connection)

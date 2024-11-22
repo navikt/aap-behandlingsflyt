@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.brev.bestilling
 
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -10,11 +10,11 @@ import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.Ident
-import org.junit.jupiter.api.Test
-import java.time.LocalDate
-import java.util.UUID
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import java.time.LocalDate
+import java.util.*
 
 class BrevbestillingRepositoryTest {
 
@@ -57,7 +57,7 @@ class BrevbestillingRepositoryTest {
     }
 
     private fun opprettBehandling(connection: DBConnection): BehandlingId {
-        val person = PersonRepository(connection).finnEllerOpprett(listOf(Ident("ident", true)))
+        val person = PersonRepositoryImpl(connection).finnEllerOpprett(listOf(Ident("ident", true)))
         val sakId = SakRepositoryImpl(connection).finnEllerOpprett(
             person,
             Periode(LocalDate.now(), LocalDate.now().plusDays(5))

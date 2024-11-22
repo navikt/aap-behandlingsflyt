@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
 
@@ -73,7 +74,7 @@ class VurderSykepengeErstatningSteg private constructor(
             return VurderSykepengeErstatningSteg(
                 VilkårsresultatRepository(connection),
                 SykepengerErstatningRepository(connection),
-                SakService(connection),
+                SakService(SakRepositoryImpl(connection)),
                 AvklaringsbehovRepositoryImpl(connection)
             )
         }

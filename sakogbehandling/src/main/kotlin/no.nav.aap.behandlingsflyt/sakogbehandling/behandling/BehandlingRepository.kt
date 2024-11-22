@@ -18,6 +18,8 @@ interface BehandlingRepository {
 
     fun hent(referanse: BehandlingReferanse): Behandling
 
+    fun hentBehandlingType(behandlingId: BehandlingId): TypeBehandling
+
     fun oppdaterÅrsaker(behandling: Behandling, årsaker: List<Årsak>)
 
     fun finnSøker(referanse: BehandlingReferanse): Person

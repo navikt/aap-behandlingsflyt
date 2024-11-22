@@ -24,7 +24,7 @@ internal class SakRepositoryTest {
     @Test
     fun `skal avklare yrkesskade hvis det finnes spor av yrkesskade`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val personRepository = PersonRepository(connection)
+            val personRepository = PersonRepositoryImpl(connection)
             val sakRepository = SakRepositoryImpl(connection)
 
             val person = personRepository.finnEllerOpprett(listOf(Ident("23067823253")))
@@ -47,7 +47,7 @@ internal class SakRepositoryTest {
     @Test
     fun `legge til sak og hente ut igjen`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val personRepository = PersonRepository(connection)
+            val personRepository = PersonRepositoryImpl(connection)
             val sakRepository = SakRepositoryImpl(connection)
             val person = personRepository.finnEllerOpprett(listOf(Ident("23067823253")))
 

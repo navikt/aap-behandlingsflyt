@@ -2,14 +2,14 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 
 class PersonopplysningRepository(private val connection: DBConnection) {
 
-    private val personRepository = PersonRepository(connection)
+    private val personRepository = PersonRepositoryImpl(connection)
 
     fun hentHvisEksisterer(behandlingId: BehandlingId): PersonopplysningGrunnlag? {
         return connection.queryFirstOrNull(

@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak
 
-import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
+import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.sakogbehandling.Ident
 
@@ -17,7 +17,7 @@ class PersonOgSakService(
             throw IllegalStateException("Fikk ingen treff på ident i PDL")
         }
 
-        val personRepository = PersonRepository(connection)
+        val personRepository = PersonRepositoryImpl(connection)
         val person = personRepository.finnEllerOpprett(identliste)
 
         val sakRepository = SakRepositoryImpl(connection)

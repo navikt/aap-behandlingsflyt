@@ -2,13 +2,14 @@ package no.nav.aap.behandlingsflyt.flyt.internals
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
-import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
+import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdentGateway
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.server.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.motor.FlytJobbRepository
@@ -31,7 +32,7 @@ class TestHendelsesMottak(private val dataSource: DataSource) {
         dataSource.transaction { connection ->
             AvklaringsbehovOrkestrator(
                 connection,
-                BehandlingHendelseService(FlytJobbRepository(connection), SakService(connection))
+                BehandlingHendelseServiceImpl(FlytJobbRepository(connection), SakService(SakRepositoryImpl(connection)))
             ).settBehandlingPåVent(key, hendelse)
         }
     }
@@ -39,7 +40,7 @@ class TestHendelsesMottak(private val dataSource: DataSource) {
     private fun håndtere(key: Saksnummer, hendelse: SakHendelse) {
         dataSource.transaction { connection ->
             if (hendelse is DokumentMottattSakHendelse) {
-                val sakService = SakService(connection)
+                val sakService = SakService(SakRepositoryImpl(connection))
                 val sak = sakService.hent(key)
 
                 val flytJobbRepository = FlytJobbRepository(connection)
