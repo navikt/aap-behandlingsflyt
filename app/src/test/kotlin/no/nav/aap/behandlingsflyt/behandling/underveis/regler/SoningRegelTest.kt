@@ -52,7 +52,7 @@ class SoningRegelTest {
                 fastsattArbeidsevne = Prosent.`0_PROSENT`,
                 gradering = Prosent.`100_PROSENT`
             ), grenseverdi = Prosent(60)
-        ).leggTilVurdering(Vilkårtype.ALDERSVILKÅRET, Utfall.OPPFYLT)
+        ).leggTilVurdering(EnkelVurdering(Vilkårtype.ALDERSVILKÅRET, Utfall.OPPFYLT))
         val tidligereResultatTidslinje = Tidslinje(listOf( Segment(periode, vurderingFraTidligereResultat)))
 
         val utlederInput = EtAnnetStedInput(
@@ -105,17 +105,17 @@ class SoningRegelTest {
 
         //Soner ikke
         assertEquals(Periode(LocalDate.of(2024, 1, 1), (LocalDate.of(2024, 1, 5))), resultat.segmenter().elementAt(0).periode)
-        assertEquals(Prosent.`100_PROSENT`, resultat.segmenter().elementAt(0).verdi.gradering()?.gradering)
+        assertEquals(Prosent.`100_PROSENT`, resultat.segmenter().elementAt(0).verdi.gradering().gradering)
         assertEquals(null, resultat.segmenter().elementAt(0).verdi.avslagsårsak())
 
         //Formue under forvaltning og soner i fengsel
         assertEquals(Periode(LocalDate.of(2024, 1, 6), (LocalDate.of(2024, 1, 15))), resultat.segmenter().elementAt(1).periode)
-        assertEquals(Prosent.`0_PROSENT`, resultat.segmenter().elementAt(1).verdi.gradering()?.gradering)
+        assertEquals(Prosent.`0_PROSENT`, resultat.segmenter().elementAt(1).verdi.gradering().gradering)
         assertEquals(UnderveisÅrsak.SONER_STRAFF, resultat.segmenter().elementAt(1).verdi.avslagsårsak())
 
         // Arbeider utenfor anstalten og soner i ved frigang
         assertEquals(Periode(LocalDate.of(2024, 1, 16), (LocalDate.of(2024, 12, 1))), resultat.segmenter().elementAt(2).periode)
-        assertEquals(Prosent.`100_PROSENT`, resultat.segmenter().elementAt(2).verdi.gradering()?.gradering)
+        assertEquals(Prosent.`100_PROSENT`, resultat.segmenter().elementAt(2).verdi.gradering().gradering)
 
     }
 }

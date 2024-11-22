@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetRegel.VarighetVurdering.KVOTE_BRUKT_OPP
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetRegel.VarighetVurdering.KVOTE_IKKE_BRUKT_OPP
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -36,7 +37,7 @@ class VarighetRegel : UnderveisRegel {
         var dagerBrukt = 0
 
         val førsteVurderingEtterKvote = vurderingerIHverdag.firstOrNull { vurdering ->
-            val kvoteBrukt = if (vurdering.verdi.harRett()) vurdering.periode.antallDager() else 0
+            val kvoteBrukt = if (skalTelleMotKvote(vurdering.verdi)) vurdering.periode.antallDager() else 0
 
             (kvote.antallHverdagerMedRett < dagerBrukt + kvoteBrukt).also { vurderingenBrukerOppKvoten ->
                 if (!vurderingenBrukerOppKvoten) dagerBrukt += kvoteBrukt
@@ -56,6 +57,17 @@ class VarighetRegel : UnderveisRegel {
         ).let { Tidslinje(it) }
 
         return resultat.leggTilVurderinger(varighetTidslinje, Vurdering::leggTilVarighetVurdering)
+    }
+
+    private fun skalTelleMotKvote(vurdering: Vurdering): Boolean {
+        return vurdering.harRett() &&
+                // §§ 11-5, 11-14, 11-15 og 11-16 skal telle mot kvoten (§ 11-12 fjerde ledd).
+                vurdering.fårAapEtterEnAv(
+                    Vilkårtype.SYKDOMSVILKÅRET, // 11-5
+                    // 11-14 (mangler)
+                    // 11-15 (etablerer virksomhet)
+                    // 11-16 (uten påbegynt aktivitet)
+                )
     }
 
     private fun helger(rettighetsperiode: Periode): Tidslinje<Unit> {

@@ -31,10 +31,16 @@ data class Vurdering(
     private val varighetVurdering: VarighetRegel.VarighetVurdering? = null,
 ) {
 
-    fun leggTilVurdering(vilkårtype: Vilkårtype, utfall: Utfall): Vurdering {
+    fun leggTilVurdering(enkelVurdering: EnkelVurdering): Vurdering {
         val kopi = EnumMap(vurderinger)
-        kopi[vilkårtype] = utfall
+        kopi[enkelVurdering.vilkår] = enkelVurdering.utfall
         return copy(vurderinger = kopi)
+    }
+
+    fun fårAapEtterEnAv(vararg vilkårtyper: Vilkårtype): Boolean {
+        // TODO: finn ut om et vilkår kan være oppfylt uten at det er det vilkårete som medlemmet
+        // får aap etter i betydningen fra § 11-12 fjerde ledd. Trenger i så fall prioritering, kanskje?
+        return vilkårtyper.any { vurderinger[it] == Utfall.OPPFYLT }
     }
 
     fun leggTilGradering(gradering: Gradering): Vurdering {

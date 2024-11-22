@@ -35,7 +35,7 @@ class VarighetRegelTest {
             Tidslinje(
                 rettighetsperiode,
                 Vurdering(
-                    vurderinger = EnumMap(mapOf(Vilkårtype.ALDERSVILKÅRET to Utfall.OPPFYLT)),
+                    vurderinger = EnumMap(mapOf(Vilkårtype.SYKDOMSVILKÅRET to Utfall.OPPFYLT)),
                 )
             )
         )
@@ -60,7 +60,7 @@ class VarighetRegelTest {
             Tidslinje(
                 rettighetsperiode,
                 Vurdering(
-                    vurderinger = EnumMap(mapOf(Vilkårtype.ALDERSVILKÅRET to Utfall.OPPFYLT)),
+                    vurderinger = EnumMap(mapOf(Vilkårtype.SYKDOMSVILKÅRET to Utfall.OPPFYLT)),
                 )
             )
         )
@@ -85,7 +85,7 @@ class VarighetRegelTest {
             Tidslinje(
                 rettighetsperiode,
                 Vurdering(
-                    vurderinger = EnumMap(mapOf(Vilkårtype.ALDERSVILKÅRET to Utfall.OPPFYLT)),
+                    vurderinger = EnumMap(mapOf(Vilkårtype.SYKDOMSVILKÅRET to Utfall.OPPFYLT)),
                 )
             )
         )
@@ -110,7 +110,7 @@ class VarighetRegelTest {
             Tidslinje(
                 rettighetsperiode,
                 Vurdering(
-                    vurderinger = EnumMap(mapOf(Vilkårtype.ALDERSVILKÅRET to Utfall.OPPFYLT)),
+                    vurderinger = EnumMap(mapOf(Vilkårtype.SYKDOMSVILKÅRET to Utfall.OPPFYLT)),
                 )
             )
         )
@@ -137,7 +137,7 @@ class VarighetRegelTest {
                 Segment(
                     Periode(18 november 2024, 18 november 2024),
                     Vurdering(
-                        vurderinger = EnumMap(mapOf(Vilkårtype.ALDERSVILKÅRET to Utfall.OPPFYLT)),
+                        vurderinger = EnumMap(mapOf(Vilkårtype.SYKDOMSVILKÅRET to Utfall.OPPFYLT)),
                     )
                 ),
                 Segment(
@@ -147,7 +147,7 @@ class VarighetRegelTest {
                 Segment(
                     Periode(21 november 2024, 22 november 2024),
                     Vurdering(
-                        vurderinger = EnumMap(mapOf(Vilkårtype.ALDERSVILKÅRET to Utfall.OPPFYLT)),
+                        vurderinger = EnumMap(mapOf(Vilkårtype.SYKDOMSVILKÅRET to Utfall.OPPFYLT)),
                     )
                 ),
             ).let { Tidslinje(it) }
@@ -163,8 +163,8 @@ class VarighetRegelTest {
 }
 
 private fun assertStansGrunnet(vurdering: Vurdering, avslagsÅrsak: UnderveisÅrsak) {
-    assertFalse(vurdering.harRett())
     assertEquals(avslagsÅrsak, vurdering.avslagsårsak())
+    assertFalse(vurdering.harRett())
 }
 
 inline fun <reified T> Tidslinje<T>.assert(vararg assertions: Segment<(T) -> Unit>) {

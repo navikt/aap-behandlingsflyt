@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 
@@ -26,9 +25,7 @@ class RettTilRegel : UnderveisRegel {
             val segmenter = vilkår.vilkårsperioder()
                 .map { Segment(it.periode, EnkelVurdering(vilkår.type, it.utfall)) }
 
-            retur.kombiner(Tidslinje(segmenter), JoinStyle.OUTER_JOIN { periode, venstre, høyre ->
-                SlåSammenVurderingerSammenslåer().sammenslå(periode, venstre, høyre)
-            })
+            retur.leggTilVurderinger(Tidslinje(segmenter), Vurdering::leggTilVurdering)
         }
     }
 }
