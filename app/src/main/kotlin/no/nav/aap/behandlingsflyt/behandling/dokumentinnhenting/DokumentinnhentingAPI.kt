@@ -90,7 +90,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: HikariDataSource) {
                     val personIdent = sak.person.aktivIdent()
                     val personinfo = PdlPersoninfoGateway.hentPersoninfoForIdent(personIdent, token())
 
-                    val brevRequest = BrevRequest(personinfo.fulltNavn(), personIdent.identifikator, req.fritekst, req.veilederNavn, req.dokumentasjonType)
+                    val brevRequest = BrevRequest(personinfo.fulltNavn(), personIdent.identifikator, req.fritekst, req.veilederNavn, req.dokumentasjonType, )
                     DokumeninnhentingGateway().forhåndsvisBrev(brevRequest)
                 }
                 respond(brevPreview)
