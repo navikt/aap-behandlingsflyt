@@ -21,6 +21,7 @@ import no.nav.aap.Inntekt.SumPi
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.BestillLegeerklæringDto
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.ForhåndsvisBrevRequest
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.HentStatusLegeerklæring
+import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.PurringLegeerklæring
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringStatusResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.MeldingStatusType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.BARN_RELASJON_QUERY
@@ -292,6 +293,16 @@ object FakeServers : AutoCloseable {
                 legeerklæringStatuser.add(
                     LegeerklæringStatusResponse(
                         dialogmeldingId, MeldingStatusType.OK, "", dto.behandlerRef, dto.behandlerNavn, UUID.randomUUID().toString(), dto.saksnummer, LocalDateTime.now(), dto.fritekst
+                    )
+                )
+                call.respond(dialogmeldingId.toString())
+            }
+            post("/api/dokumentinnhenting/syfo/purring/{dialogmelding}") {
+                call.receive<PurringLegeerklæring>()
+                val dialogmeldingId = UUID.randomUUID()
+                legeerklæringStatuser.add(
+                    LegeerklæringStatusResponse(
+                        dialogmeldingId, MeldingStatusType.OK, "", "behandlerRef", "behandlerNavn", UUID.randomUUID().toString(), "saksnummer", LocalDateTime.now(), "fritekst"
                     )
                 )
                 call.respond(dialogmeldingId.toString())
