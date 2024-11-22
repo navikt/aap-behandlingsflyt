@@ -27,10 +27,7 @@ import no.nav.aap.verdityper.dokument.DokumentInfoId
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.feilhåndtering.ElementNotFoundException
 import no.nav.aap.verdityper.sakogbehandling.Ident
-import org.slf4j.LoggerFactory
 import javax.sql.DataSource
-
-private val logger = LoggerFactory.getLogger("SaksAPI")
 
 fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
     val postmottakAzp = requiredConfigForKey("integrasjon.postmottak.azp")

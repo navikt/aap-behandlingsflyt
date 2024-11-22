@@ -12,7 +12,6 @@ include(
     "dbtestdata",
     "integrasjon",
     "lib-test",
-    "tilgang",
     "kontrakt",
     "pip"
 )
