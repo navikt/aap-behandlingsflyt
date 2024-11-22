@@ -39,6 +39,22 @@ class DokumeninnhentingGateway {
         }
     }
 
+    fun purrPåLegeerklæring(purringRequest: LegeerklæringPurringRequest): String {
+        val request = PostRequest(
+            body = purringRequest,
+            additionalHeaders = listOf(
+                Header("Nav-Consumer-Id", "aap-behandlingsflyt"),
+                Header("Accept", "application/json")
+            )
+        )
+
+        try {
+            return requireNotNull(client.post(uri = URI.create("$syfoUri/dialogmeldingbestilling"), request))
+        } catch (e : Exception) {
+            throw RuntimeException("Feil ved purring av legeerklæring i aap-dokumentinnhenting: ${e.message}")
+        }
+    }
+
     fun legeerklæringStatus(saksnummer: String): List<LegeerklæringStatusResponse> {
         val request = GetRequest(
             additionalHeaders = listOf(

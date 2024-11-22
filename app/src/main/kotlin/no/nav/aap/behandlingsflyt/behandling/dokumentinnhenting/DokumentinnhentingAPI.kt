@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.Brev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.BrevResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.DokumeninnhentingGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringBestillingRequest
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringPurringRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringStatusResponse
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -36,7 +37,8 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: HikariDataSource) {
                     val avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection)
                     val behandlingRepository = BehandlingRepositoryImpl(connection)
                     val sakService = SakService(connection)
-                    val behandlingHendelseService = BehandlingHendelseService(FlytJobbRepository((connection)), sakService)
+                    val behandlingHendelseService =
+                        BehandlingHendelseService(FlytJobbRepository((connection)), sakService)
 
                     val sak = sakService.hent(Saksnummer(req.saksnummer))
                     val personIdent = sak.person.aktivIdent()
@@ -90,10 +92,27 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: HikariDataSource) {
                     val personIdent = sak.person.aktivIdent()
                     val personinfo = PdlPersoninfoGateway.hentPersoninfoForIdent(personIdent, token())
 
-                    val brevRequest = BrevRequest(personinfo.fulltNavn(), personIdent.identifikator, req.fritekst, req.veilederNavn, req.dokumentasjonType, )
+                    val brevRequest = BrevRequest(
+                        personinfo.fulltNavn(),
+                        personIdent.identifikator,
+                        req.fritekst,
+                        req.veilederNavn,
+                        req.dokumentasjonType,
+                    )
                     DokumeninnhentingGateway().forhåndsvisBrev(brevRequest)
                 }
                 respond(brevPreview)
+            }
+        }
+        route("/purring/{behandlingsreferanse}/{dialogmeldinguuid}") {
+            post<PurringLegeerklæring, String, Unit> { par, _ ->
+                val bestillingUuid = dataSource.transaction { connection ->
+                    val bestillingUUID = DokumeninnhentingGateway().purrPåLegeerklæring(
+                        LegeerklæringPurringRequest(par.dialogmeldingPurringUUID, par.behandlingsReferanse)
+                    )
+                    bestillingUUID
+                }
+                respond(bestillingUuid)
             }
         }
     }
