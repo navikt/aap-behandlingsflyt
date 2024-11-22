@@ -104,11 +104,11 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: HikariDataSource) {
                 respond(brevPreview)
             }
         }
-        route("/purring/{behandlingsreferanse}/{dialogmeldinguuid}") {
+        route("/purring/{dialogmeldinguuid}") {
             post<PurringLegeerklæring, String, Unit> { par, _ ->
                 val bestillingUuid = dataSource.transaction { connection ->
                     val bestillingUUID = DokumeninnhentingGateway().purrPåLegeerklæring(
-                        LegeerklæringPurringRequest(par.dialogmeldingPurringUUID, par.behandlingsReferanse)
+                        LegeerklæringPurringRequest(par.dialogmeldingPurringUUID)
                     )
                     bestillingUUID
                 }

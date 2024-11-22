@@ -24,6 +24,5 @@ data class ForhåndsvisBrevRequest (
 data class HentStatusLegeerklæring(@PathParam("saksnummer") val saksnummer: String)
 
 data class PurringLegeerklæring(
-    @PathParam("dialogmeldinguuid") val dialogmeldingPurringUUID: UUID,
-    @PathParam("behandlingsreferanse") val behandlingsReferanse: String
+    @PathParam("dialogmeldinguuid") val dialogmeldingPurringUUID: UUID
 )

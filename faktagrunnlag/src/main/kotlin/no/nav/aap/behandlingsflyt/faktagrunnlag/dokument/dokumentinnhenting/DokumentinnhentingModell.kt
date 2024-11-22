@@ -17,8 +17,7 @@ data class LegeerklæringBestillingRequest (
 )
 
 data class LegeerklæringPurringRequest(
-    val dialogmeldingUuid: UUID,
-    val behandlingsReferanse: String
+    val dialogmeldingUuid: UUID
 )
 
 data class LegeerklæringStatusResponse(
