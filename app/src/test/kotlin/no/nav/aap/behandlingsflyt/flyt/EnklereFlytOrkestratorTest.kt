@@ -25,7 +25,7 @@ import java.util.*
 class EnklereFlytOrkestratorTest {
 
     private val sakRepository = InMemorySakRepository
-    private val sakService = SakService(InMemorySakRepository)
+    private val sakService = SakService(sakRepository)
     private val behandlingRepository = InMemoryBehandlingRepository
     private val avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
 
@@ -110,5 +110,18 @@ class EnklereFlytOrkestratorTest {
                 StegType.AVKLAR_SYKDOM
             )
         )
+
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, "asdf", "TESTEN")
+
+        val flytKontekst3 = flytOrkestrator.opprettKontekst(behandling.sakId, behandling.id)
+        flytOrkestrator.forberedBehandling(flytKontekst3)
+        flytOrkestrator.prosesserBehandling(flytKontekst3)
+
+        assertThat(behandling.stegHistorikk()).isNotEmpty()
+        assertThat(behandling.stegHistorikk().map { tilstand -> tilstand.steg() }.distinct()).containsExactlyElementsOf(
+            Førstegangsbehandling.flyt().stegene()
+        )
+
+        assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
     }
 }
