@@ -221,12 +221,12 @@ class FlytOrkestrator(
         return neste
     }
 
-    internal fun forberedLøsingAvBehov(definisjoner: Definisjon, behandling: Behandling, kontekst: FlytKontekst) {
+    internal fun forberedLøsingAvBehov(behovDefinisjon: Definisjon, behandling: Behandling, kontekst: FlytKontekst) {
         val flyt = utledFlytFra(behandling)
         flyt.forberedFlyt(behandling.aktivtSteg())
 
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        val behovForLøsninger = avklaringsbehovene.hentBehovForDefinisjon(definisjoner)
+        val behovForLøsninger = avklaringsbehovene.hentBehovForDefinisjon(behovDefinisjon)
         val tilbakeføringsflyt = flyt.tilbakeflyt(behovForLøsninger)
 
         tilbakefør(
@@ -254,8 +254,8 @@ class FlytOrkestrator(
             return
         }
 
+        var neste: FlytSteg? = behandlingFlyt.aktivtSteg()
         while (true) {
-            val neste = behandlingFlyt.neste()
 
             if (neste == null) {
                 loggStopp(behandling, avklaringsbehovene)
@@ -274,6 +274,7 @@ class FlytOrkestrator(
                 kontekst = kontekst,
                 behandling = behandling
             )
+            neste = behandlingFlyt.neste()
         }
     }
 
