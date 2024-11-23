@@ -32,7 +32,7 @@ class LegeerklæringService private constructor(
         val ubehandledeLegeerklæringer = mottaDokumentService.legeerklæringerSomIkkeHarBlittBehandlet(kontekst.sakId)
         val ubehandledeDialogmeldinger = mottaDokumentService.dialogmeldingerSomIkkeHarBlittBehandlet(kontekst.sakId)
 
-        if (ubehandledeLegeerklæringer.isEmpty() && ubehandledeDialogmeldinger.isNotEmpty()) {
+        if (ubehandledeLegeerklæringer.isEmpty() && ubehandledeDialogmeldinger.isEmpty()) {
             return IKKE_ENDRET
         }
 
