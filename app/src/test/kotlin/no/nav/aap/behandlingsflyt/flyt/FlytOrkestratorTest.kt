@@ -1455,7 +1455,7 @@ class FlytOrkestratorTest {
             val behandlingHendelseService = BehandlingHendelseServiceImpl(FlytJobbRepository((connection)), sakService)
             avklaringsbehovene.leggTil(
                 definisjoner = listOf(Definisjon.BESTILL_LEGEERKLÆRING),
-                stegType = behandling.aktivtSteg(),
+                funnetISteg = behandling.aktivtSteg(),
                 grunn = ÅrsakTilSettPåVent.VENTER_PÅ_MEDISINSKE_OPPLYSNINGER,
                 bruker = SYSTEMBRUKER
             )
@@ -1537,7 +1537,7 @@ class FlytOrkestratorTest {
             val behandlingHendelseService = BehandlingHendelseServiceImpl(FlytJobbRepository((connection)), sakService)
             avklaringsbehovene.leggTil(
                 definisjoner = listOf(Definisjon.BESTILL_LEGEERKLÆRING),
-                stegType = behandling.aktivtSteg(),
+                funnetISteg = behandling.aktivtSteg(),
                 grunn = ÅrsakTilSettPåVent.VENTER_PÅ_MEDISINSKE_OPPLYSNINGER,
                 bruker = SYSTEMBRUKER
             )
@@ -1620,7 +1620,7 @@ class FlytOrkestratorTest {
             val behandlingHendelseService = BehandlingHendelseServiceImpl(FlytJobbRepository((connection)), sakService)
             avklaringsbehovene.leggTil(
                 definisjoner = listOf(Definisjon.BESTILL_LEGEERKLÆRING),
-                stegType = behandling.aktivtSteg(),
+                funnetISteg = behandling.aktivtSteg(),
                 grunn = ÅrsakTilSettPåVent.VENTER_PÅ_MEDISINSKE_OPPLYSNINGER,
                 bruker = SYSTEMBRUKER
             )

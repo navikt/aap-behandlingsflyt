@@ -150,7 +150,7 @@ class AvklaringsbehovOrkestrator(
 
         avklaringsbehovene.leggTil(
             definisjoner = listOf(Definisjon.MANUELT_SATT_PÅ_VENT),
-            stegType = behandling.aktivtSteg(),
+            funnetISteg = behandling.aktivtSteg(),
             frist = hendelse.frist,
             begrunnelse = hendelse.begrunnelse,
             grunn = hendelse.grunn,

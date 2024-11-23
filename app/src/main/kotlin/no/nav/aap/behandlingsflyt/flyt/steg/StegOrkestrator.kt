@@ -160,7 +160,12 @@ class StegOrkestrator(
             )
             val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekstMedPerioder.behandlingId)
             resultat.ventebehov().forEach {
-                avklaringsbehovene.leggTil(definisjoner = listOf(it.definisjon), stegType = aktivtSteg.type(), frist = it.frist, grunn = it.grunn)
+                avklaringsbehovene.leggTil(
+                    definisjoner = listOf(it.definisjon),
+                    funnetISteg = aktivtSteg.type(),
+                    frist = it.frist,
+                    grunn = it.grunn
+                )
             }
         }
 

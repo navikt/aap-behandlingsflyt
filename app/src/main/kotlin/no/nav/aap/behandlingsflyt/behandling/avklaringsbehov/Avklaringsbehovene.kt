@@ -48,7 +48,7 @@ class Avklaringsbehovene(
         if (definisjon.erFrivillig()) {
             if (hentBehovForDefinisjon(definisjon) == null) {
                 // Legger til frivillig behov
-                leggTil(definisjoner = listOf(definisjon), stegType = definisjon.løsesISteg, bruker = bruker)
+                leggTil(definisjoner = listOf(definisjon), funnetISteg = definisjon.løsesISteg, bruker = bruker)
             }
         }
     }
@@ -60,7 +60,7 @@ class Avklaringsbehovene(
      */
     fun leggTil(
         definisjoner: List<Definisjon>,
-        stegType: StegType,
+        funnetISteg: StegType,
         frist: LocalDate? = null,
         begrunnelse: String = "",
         grunn: ÅrsakTilSettPåVent? = null,
@@ -73,7 +73,7 @@ class Avklaringsbehovene(
                     avklaringsbehov.reåpne(frist, begrunnelse, grunn)
                     if (avklaringsbehov.erVentepunkt()) {
                         // TODO: Vurdere om funnet steg bør ligge på endringen...
-                        repository.endreVentepunkt(avklaringsbehov.id, avklaringsbehov.historikk.last(), stegType)
+                        repository.endreVentepunkt(avklaringsbehov.id, avklaringsbehov.historikk.last(), funnetISteg)
                     } else {
                         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
                     }
@@ -84,7 +84,7 @@ class Avklaringsbehovene(
                 repository.opprett(
                     behandlingId = behandlingId,
                     definisjon = definisjon,
-                    funnetISteg = stegType,
+                    funnetISteg = funnetISteg,
                     frist = utledFrist(definisjon, frist),
                     begrunnelse = begrunnelse,
                     grunn = grunn,
