@@ -4,4 +4,8 @@ object TilbakeføresFraBeslutter : StegResultat {
     override fun transisjon(): Transisjon {
         return TilbakeførtFraBeslutter
     }
+
+    override fun toString(): String {
+        return "TilbakeføresFraBeslutter()"
+    }
 }
