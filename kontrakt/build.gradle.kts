@@ -7,7 +7,7 @@ plugins {
 }
 
 dependencies {
-    api("com.fasterxml.jackson.core:jackson-annotations:2.18.0")
+    api("com.fasterxml.jackson.core:jackson-annotations:2.18.1")
     api("no.nav:ktor-openapi-generator:1.0.46")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.3")
