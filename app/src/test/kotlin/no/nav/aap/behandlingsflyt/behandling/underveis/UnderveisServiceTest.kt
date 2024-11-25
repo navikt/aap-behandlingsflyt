@@ -26,7 +26,7 @@ import javax.sql.DataSource
 class UnderveisServiceTest {
 
     private val dataSource: DataSource = MockDataSource()
-    private val kvote = Kvote(260*3)
+    private val kvote = Kvote(260*3, 260/2)
 
     @Test
     fun `skal vurdere alle reglene`() {

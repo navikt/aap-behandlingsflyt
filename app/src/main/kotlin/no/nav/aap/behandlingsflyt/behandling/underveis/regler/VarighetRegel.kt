@@ -1,9 +1,10 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetRegel.VarighetVurdering.KVOTE_BRUKT_OPP
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetRegel.VarighetVurdering.KVOTE_IKKE_BRUKT_OPP
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetVurdering.Avslagsårsak.STANDARDKVOTE_BRUKT_OPP
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetVurdering.Avslagsårsak.STUDENTKVOTE_BRUKT_OPP
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak.STUDENT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -25,51 +26,91 @@ import java.time.temporal.TemporalAdjusters
  */
 //WIP
 class VarighetRegel : UnderveisRegel {
-    enum class VarighetVurdering {
-        KVOTE_IKKE_BRUKT_OPP,
-        KVOTE_BRUKT_OPP,
-    }
 
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
-        val vurderingerIHverdag = resultat.kombiner(
-            helger(input.rettighetsperiode), StandardSammenslåere.minus()
-        )
         val kvote = input.kvote
+
+        val standardKvoteTidslinje = varighetTidslinje(
+            resultat = resultat,
+            rettighetsperiode = input.rettighetsperiode,
+            kvote = kvote.antallHverdagerMedRett,
+            tellerMotKvotePredikat = ::skalTelleMotStandardKvote,
+            kvoteBruktOppVurdering = Avslag(STANDARDKVOTE_BRUKT_OPP)
+        )
+
+        val studentKvoteTidslinje = varighetTidslinje(
+            resultat = resultat,
+            rettighetsperiode = input.rettighetsperiode,
+            kvote = kvote.studentKvote,
+            tellerMotKvotePredikat = ::skalTelleMotStudentKvote,
+            kvoteBruktOppVurdering = Avslag(STUDENTKVOTE_BRUKT_OPP)
+        )
+
+        val varighetTidslinje = standardKvoteTidslinje.kombiner(studentKvoteTidslinje,
+            JoinStyle.OUTER_JOIN { periode, standardkvote, studentkvote ->
+                if (standardkvote?.verdi == Oppfylt || studentkvote?.verdi == Oppfylt) Segment(
+                    periode,
+                    Oppfylt
+                )
+                else Segment(periode,
+                    standardkvote?.verdi ?: studentkvote?.verdi ?: error("ingen av vurderingene teller ikke på noen kvote")
+                )
+            })
+
+        return resultat.leggTilVurderinger(varighetTidslinje, Vurdering::leggTilVarighetVurdering)
+    }
+
+    private fun varighetTidslinje(
+        resultat: Tidslinje<Vurdering>,
+        rettighetsperiode: Periode,
+        kvote: Int,
+        tellerMotKvotePredikat: (Vurdering) -> Boolean,
+        kvoteBruktOppVurdering: Avslag
+    ): Tidslinje<VarighetVurdering> {
+        val vurderingerIHverdag = resultat.kombiner(
+            helger(rettighetsperiode), StandardSammenslåere.minus()
+        )
+
         var dagerBrukt = 0
 
         val førsteVurderingEtterKvote = vurderingerIHverdag.firstOrNull { vurdering ->
-            val kvoteBrukt = if (skalTelleMotKvote(vurdering.verdi)) vurdering.periode.antallDager() else 0
+            val kvoteBrukt = if (tellerMotKvotePredikat(vurdering.verdi)) vurdering.periode.antallDager() else 0
 
-            (kvote.antallHverdagerMedRett < dagerBrukt + kvoteBrukt).also { vurderingenBrukerOppKvoten ->
+            (kvote < dagerBrukt + kvoteBrukt).also { vurderingenBrukerOppKvoten ->
                 if (!vurderingenBrukerOppKvoten) dagerBrukt += kvoteBrukt
             }
         }
 
         if (førsteVurderingEtterKvote == null) {
-            return resultat
+            return Tidslinje()
         }
 
-        val dagerInnIPeriode = kvote.antallHverdagerMedRett - dagerBrukt
+        val dagerInnIPeriode = kvote - dagerBrukt
         val stansdato = førsteVurderingEtterKvote.periode.fom.plusDays(dagerInnIPeriode.toLong())
 
-        val varighetTidslinje = listOf(
-            Segment(Periode(input.rettighetsperiode.fom, stansdato.minusDays(1)), KVOTE_IKKE_BRUKT_OPP),
-            Segment(Periode(stansdato, input.rettighetsperiode.tom), KVOTE_BRUKT_OPP),
+        return listOf(
+            Segment<VarighetVurdering>(Periode(rettighetsperiode.fom, stansdato.minusDays(1)), Oppfylt),
+            Segment<VarighetVurdering>(Periode(stansdato, rettighetsperiode.tom), kvoteBruktOppVurdering),
         ).let { Tidslinje(it) }
+            .kombiner(resultat.filter { !tellerMotKvotePredikat(it.verdi) }, StandardSammenslåere.minus())
 
-        return resultat.leggTilVurderinger(varighetTidslinje, Vurdering::leggTilVarighetVurdering)
     }
 
-    private fun skalTelleMotKvote(vurdering: Vurdering): Boolean {
-        return vurdering.harRett() && paragraf11_12_4(vurdering)
+
+    private fun skalTelleMotStandardKvote(vurdering: Vurdering): Boolean {
+        return vurdering.harRett() && vurdering.fårAapEtter(Vilkårtype.SYKDOMSVILKÅRET, null)
+    }
+
+    private fun skalTelleMotStudentKvote(vurdering: Vurdering): Boolean {
+        return vurdering.harRett() && vurdering.fårAapEtter(Vilkårtype.SYKDOMSVILKÅRET, STUDENT)
     }
 
     // §§ 11-5, 11-14, 11-15 og 11-16 skal telle mot kvoten (§ 11-12 fjerde ledd).
     private fun paragraf11_12_4(vurdering: Vurdering): Boolean {
         return vurdering.fårAapEtter(Vilkårtype.SYKDOMSVILKÅRET, null) || // 11-5
                 vurdering.fårAapEtter(Vilkårtype.SYKDOMSVILKÅRET, STUDENT) // 11-14
-                // 11-15 (etablerer virksomhet) Ikke implementert
-                // 11-16 (uten påbegynt aktivitet) Er vel neppe et eget vilkår?
+        // 11-15 (etablerer virksomhet) Ikke implementert
+        // 11-16 (uten påbegynt aktivitet) Er vel neppe et eget vilkår?
     }
 
 
@@ -81,3 +122,4 @@ class VarighetRegel : UnderveisRegel {
             .let { Tidslinje(it.toList()) }
     }
 }
+

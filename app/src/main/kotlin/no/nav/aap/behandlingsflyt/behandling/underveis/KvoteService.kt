@@ -7,6 +7,6 @@ class KvoteService {
     private val ANTALL_ARBEIDSDAGER_I_ÅRET = 260
 
     fun beregn(behandlingId: BehandlingId): Kvote {
-        return Kvote(ANTALL_ARBEIDSDAGER_I_ÅRET * 3)
+        return Kvote(ANTALL_ARBEIDSDAGER_I_ÅRET * 3, ANTALL_ARBEIDSDAGER_I_ÅRET/2)
     }
 }

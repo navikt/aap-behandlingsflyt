@@ -1,8 +1,10 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis
 
 
-class Kvote(val antallHverdagerMedRett: Int) {
-}
+class Kvote(
+    val antallHverdagerMedRett: Int,
+    val studentKvote: Int
+)
 
 
 

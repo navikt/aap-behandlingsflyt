@@ -15,7 +15,7 @@ import java.time.LocalDate
 class RettTilRegelTest {
 
     private val regel = RettTilRegel()
-    private val kvote = Kvote(260*3)
+    private val kvote = Kvote(260*3, 260/2)
 
     @Test
     fun `skal lage tidslinje med alle relevante vilkår`() {

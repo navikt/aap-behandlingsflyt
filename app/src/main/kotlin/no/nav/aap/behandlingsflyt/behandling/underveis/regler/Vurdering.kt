@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AktivitetspliktVur
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Utfall.STANS
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Utfall.UNNTAK
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ReduksjonAktivitetspliktVurdering.Vilkårsvurdering.VILKÅR_FOR_REDUKSJON_OPPFYLT
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetRegel.VarighetVurdering.KVOTE_BRUKT_OPP
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
@@ -29,7 +28,7 @@ data class Vurdering(
     internal val soningsVurdering: SoningVurdering? = null,
     private val meldeperiode: Periode? = null,
 
-    private val varighetVurdering: VarighetRegel.VarighetVurdering? = null,
+    private val varighetVurdering: VarighetVurdering? = null,
 ) {
 
     fun leggTilVurdering(enkelVurdering: EnkelVurdering): Vurdering {
@@ -78,7 +77,7 @@ data class Vurdering(
         return copy(meldeperiode = meldeperiode)
     }
 
-    fun leggTilVarighetVurdering(varighetVurdering: VarighetRegel.VarighetVurdering): Vurdering {
+    fun leggTilVarighetVurdering(varighetVurdering: VarighetVurdering): Vurdering {
         return copy(varighetVurdering = varighetVurdering)
     }
 
@@ -101,7 +100,7 @@ data class Vurdering(
     }
 
     private fun varighetsvurderingOppfylt(): Boolean {
-        return varighetVurdering != KVOTE_BRUKT_OPP
+        return varighetVurdering !is Avslag
     }
 
     private fun sonerIkke(): Boolean {

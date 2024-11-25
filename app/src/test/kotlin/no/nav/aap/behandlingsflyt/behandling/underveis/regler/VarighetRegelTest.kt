@@ -31,7 +31,7 @@ class VarighetRegelTest {
         val vurderinger = regel.vurder(
             tomUnderveisInput.copy(
                 rettighetsperiode = rettighetsperiode,
-                kvote = Kvote(4)
+                kvote = Kvote(4, 0)
             ),
 
             Tidslinje(
@@ -56,7 +56,7 @@ class VarighetRegelTest {
         val vurderinger = regel.vurder(
             tomUnderveisInput.copy(
                 rettighetsperiode = rettighetsperiode,
-                kvote = Kvote(5)
+                kvote = Kvote(5, 0)
             ),
 
             Tidslinje(
@@ -81,7 +81,7 @@ class VarighetRegelTest {
         val vurderinger = regel.vurder(
             tomUnderveisInput.copy(
                 rettighetsperiode = rettighetsperiode,
-                kvote = Kvote(2)
+                kvote = Kvote(2, 0)
             ),
 
             Tidslinje(
@@ -106,7 +106,7 @@ class VarighetRegelTest {
         val vurderinger = regel.vurder(
             tomUnderveisInput.copy(
                 rettighetsperiode = rettighetsperiode,
-                kvote = Kvote(2)
+                kvote = Kvote(2, 0)
             ),
 
             Tidslinje(
@@ -132,7 +132,7 @@ class VarighetRegelTest {
         val vurderinger = regel.vurder(
             tomUnderveisInput.copy(
                 rettighetsperiode = rettighetsperiode,
-                kvote = Kvote(2)
+                kvote = Kvote(2, 0)
             ),
 
             listOf(
@@ -179,7 +179,7 @@ class VarighetRegelTest {
         val vurderinger = regel.vurder(
             tomUnderveisInput.copy(
                 rettighetsperiode = rettighetsperiode,
-                kvote = Kvote(2)
+                kvote = Kvote(2, 0)
             ),
 
             Tidslinje(
@@ -203,7 +203,7 @@ class VarighetRegelTest {
                                 EnkelVurdering(
                                     Vilkårtype.SYKDOMSVILKÅRET,
                                     Utfall.OPPFYLT,
-                                    STUDENT
+                                    null
                                 )
                             )
                         )
@@ -229,7 +229,7 @@ class VarighetRegelTest {
         val vurderinger = regel.vurder(
             tomUnderveisInput.copy(
                 rettighetsperiode = rettighetsperiode,
-                kvote = Kvote(2)
+                kvote = Kvote(2, 0)
             ),
             Tidslinje(
                 listOf(
@@ -250,7 +250,7 @@ class VarighetRegelTest {
                                 EnkelVurdering(
                                     Vilkårtype.SYKDOMSVILKÅRET,
                                     Utfall.OPPFYLT,
-                                    STUDENT
+                                    null
                                 )
                             )
                         )
@@ -279,7 +279,7 @@ class VarighetRegelTest {
         val vurderinger = regel.vurder(
             tomUnderveisInput.copy(
                 rettighetsperiode = rettighetsperiode,
-                kvote = Kvote(3)
+                kvote = Kvote(3, 0)
             ),
             Tidslinje(
                 listOf(
@@ -314,7 +314,7 @@ class VarighetRegelTest {
                                 EnkelVurdering(
                                     Vilkårtype.SYKDOMSVILKÅRET,
                                     Utfall.OPPFYLT,
-                                    STUDENT
+                                    null
                                 )
                             )
                         )
@@ -337,7 +337,7 @@ class VarighetRegelTest {
         val vurderinger = regel.vurder(
             tomUnderveisInput.copy(
                 rettighetsperiode = rettighetsperiode,
-                kvote = Kvote(4)
+                kvote = Kvote(4, 0)
             ),
             Tidslinje(
                 listOf(
@@ -372,7 +372,7 @@ class VarighetRegelTest {
                                 EnkelVurdering(
                                     Vilkårtype.SYKDOMSVILKÅRET,
                                     Utfall.OPPFYLT,
-                                    STUDENT
+                                    null
                                 )
                             )
                         )
