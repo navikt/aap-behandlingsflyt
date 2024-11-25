@@ -162,7 +162,7 @@ class Avklaringsbehovene(
     }
 
     override fun hentBehovForDefinisjon(definisjon: Definisjon): Avklaringsbehov? {
-        return alle().filter { it.definisjon == definisjon }.singleOrNull()
+        return alle().singleOrNull { it.definisjon == definisjon }
     }
 
     fun hentBehovForDefinisjon(definisjoner: List<Definisjon>): List<Avklaringsbehov> {

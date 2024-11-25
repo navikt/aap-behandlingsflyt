@@ -7,6 +7,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import java.time.LocalDate
 import java.time.LocalDateTime
 
+/**
+ * @param definisjon Hva slags avklaringsbehov denne hendelsen gjelder.
+ * @param status Status for avklaringsbehovet.
+ * @param endringer Alle endringer som har skjedd på en gitt behandling.
+ */
 public data class AvklaringsbehovHendelseDto(
     val definisjon: DefinisjonDTO,
     val status: Status,

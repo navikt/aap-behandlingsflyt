@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.flyt.internals.BehandlingHendelse
 import no.nav.aap.behandlingsflyt.flyt.testutil.DummyBehandlingHendelseService
 import no.nav.aap.behandlingsflyt.flyt.testutil.DummyInformasjonskravGrunnlag
 import no.nav.aap.behandlingsflyt.flyt.testutil.DummyStegKonstruktør
@@ -8,11 +10,13 @@ import no.nav.aap.behandlingsflyt.flyt.testutil.InMemoryAvklaringsbehovRepositor
 import no.nav.aap.behandlingsflyt.flyt.testutil.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.flyt.testutil.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Førstegangsbehandling
+import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.periodisering.PerioderTilVurderingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -64,6 +68,42 @@ class EnklereFlytOrkestratorTest {
         )
 
         assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
+    }
+
+    @Test
+    fun `hendelse blir avgitt ved en automatisk lukket behandling`() {
+        val person = Person(1, UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
+        val sak = sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        val behandling =
+            behandlingRepository.opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
+
+        val behandlingHendelseService = object : BehandlingHendelseService {
+            val hendelser = mutableListOf<Pair<Behandling, Avklaringsbehovene>>()
+            override fun stoppet(behandling: Behandling, avklaringsbehovene: Avklaringsbehovene) {
+                hendelser.add(Pair(behandling, avklaringsbehovene))
+            }
+        }
+        val flytOrkestrator = FlytOrkestrator(
+            stegKonstruktør = DummyStegKonstruktør(),
+            perioderTilVurderingService = PerioderTilVurderingService(
+                sakService = sakService,
+                behandlingRepository = behandlingRepository
+            ),
+            informasjonskravGrunnlag = DummyInformasjonskravGrunnlag(),
+            behandlingRepository = behandlingRepository,
+            behandlingFlytRepository = behandlingRepository,
+            ventebehovEvaluererService = DummyVentebehovEvaluererService(),
+            sakRepository = sakRepository,
+            avklaringsbehovRepository = avklaringsbehovRepository,
+            behandlingHendelseService = behandlingHendelseService
+        )
+
+        val flytKontekst = flytOrkestrator.opprettKontekst(behandling.sakId, behandling.id)
+        flytOrkestrator.forberedBehandling(flytKontekst)
+        flytOrkestrator.prosesserBehandling(flytKontekst)
+
+        assertThat(behandlingHendelseService.hendelser).hasSize(1)
+        assertThat(behandlingHendelseService.hendelser.first().first.status()).isEqualTo(Status.AVSLUTTET)
     }
 
     @Test
