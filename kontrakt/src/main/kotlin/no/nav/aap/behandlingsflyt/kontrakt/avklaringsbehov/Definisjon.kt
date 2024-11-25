@@ -163,8 +163,20 @@ public enum class Definisjon(
     }
 
     public enum class BehovType(public val valideringsFunksjon: Definisjon.() -> Unit) {
+        /**
+         * Manuelt påkrevd er at systemet vil trigge behovet og det er eneste måten å få det på.
+         */
         MANUELT_PÅKREVD(Definisjon::validerManuelt),
+
+        /**
+         * Frivillig er at saksbehandler og system kan trigge behovet
+         */
         MANUELT_FRIVILLIG(Definisjon::validerManuelt),
+
+        /**
+         * Ventebehov kan opprettes av saksbehandler og system, det er et behov som venter på tid og/eller en hendelse
+         * (f.eks et dokument)
+         */
         VENTEPUNKT(Definisjon::validerVentepunkt)
     }
 
