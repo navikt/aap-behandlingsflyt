@@ -82,6 +82,7 @@ class Avklaringsbehov(
     }
 
     internal fun reåpne(frist: LocalDate? = null, begrunnelse: String = "", grunn: ÅrsakTilSettPåVent? = null) {
+        require(historikk.last().status.erAvsluttet())
         historikk += Endring(
             status = Status.OPPRETTET,
             begrunnelse = begrunnelse,
@@ -174,6 +175,10 @@ class Avklaringsbehov(
 
     fun kreverKvalitetssikring(): Boolean {
         return definisjon.kvalitetssikres
+    }
+
+    fun erAutomatisk(): Boolean {
+        return definisjon.erAutomatisk()
     }
 
     override fun toString(): String {

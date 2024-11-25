@@ -9,6 +9,9 @@ import java.time.Period
 import java.util.*
 import java.util.stream.Collectors
 
+/**
+ * Brukes for å definere et [no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov].
+ */
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 public enum class Definisjon(
     @JsonProperty("kode") public val kode: AvklaringsbehovKode,
@@ -221,6 +224,10 @@ public enum class Definisjon(
 
     public fun erVentebehov(): Boolean {
         return type == BehovType.VENTEPUNKT
+    }
+
+    public fun erAutomatisk(): Boolean {
+        return this == BESTILL_BREV
     }
 
     public fun utledFrist(frist: LocalDate?): LocalDate {
