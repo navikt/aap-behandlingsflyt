@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvote
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetVurdering.Avslagsårsak.STANDARDKVOTE_BRUKT_OPP
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetVurdering.Avslagsårsak.STUDENTKVOTE_BRUKT_OPP
 import no.nav.aap.behandlingsflyt.dbtestdata.januar
 import no.nav.aap.behandlingsflyt.dbtestdata.november
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
@@ -45,7 +47,7 @@ class VarighetRegelTest {
         vurderinger.assert(
             Segment(Periode(18 november 2024, 21 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
             Segment(Periode(22 november 2024, 22 november 2024)) { vurdering ->
-                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP)
+                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP, STANDARDKVOTE_BRUKT_OPP)
             },
         )
     }
@@ -70,7 +72,7 @@ class VarighetRegelTest {
         vurderinger.assert(
             Segment(Periode(18 november 2024, 24 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
             Segment(Periode(25 november 2024, 25 november 2024)) { vurdering ->
-                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP)
+                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP, STANDARDKVOTE_BRUKT_OPP)
             },
         )
     }
@@ -95,7 +97,7 @@ class VarighetRegelTest {
         vurderinger.assert(
             Segment(Periode(22 november 2024, 25 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
             Segment(Periode(26 november 2024, 26 november 2024)) { vurdering ->
-                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP)
+                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP, STANDARDKVOTE_BRUKT_OPP)
             },
         )
     }
@@ -120,7 +122,7 @@ class VarighetRegelTest {
         vurderinger.assert(
             Segment(Periode(18 november 2024, 19 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
             Segment(Periode(20 november 2024, 26 januar 2025)) { vurdering ->
-                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP)
+                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP, STANDARDKVOTE_BRUKT_OPP)
             },
         )
     }
@@ -158,16 +160,14 @@ class VarighetRegelTest {
         vurderinger.assert(
             Segment(Periode(18 november 2024, 18 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
             Segment(Periode(19 november 2024, 20 november 2024)) { vurdering ->
-                assertStansGrunnet(
-                    vurdering,
-                    IKKE_GRUNNLEGGENDE_RETT
-                )
+                assertStansGrunnet(vurdering, IKKE_GRUNNLEGGENDE_RETT)
             },
             Segment(Periode(21 november 2024, 21 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
             Segment(Periode(22 november 2024, 22 november 2024)) { vurdering ->
                 assertStansGrunnet(
                     vurdering,
-                    VARIGHETSKVOTE_BRUKT_OPP
+                    VARIGHETSKVOTE_BRUKT_OPP,
+                    STANDARDKVOTE_BRUKT_OPP
                 )
             },
         )
@@ -217,7 +217,8 @@ class VarighetRegelTest {
             Segment(Periode(22 november 2024, 22 november 2024)) { vurdering ->
                 assertStansGrunnet(
                     vurdering,
-                    VARIGHETSKVOTE_BRUKT_OPP
+                    VARIGHETSKVOTE_BRUKT_OPP,
+                    STANDARDKVOTE_BRUKT_OPP
                 )
             },
         )
@@ -268,7 +269,7 @@ class VarighetRegelTest {
             },
             Segment(Periode(20 november 2024, 21 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
             Segment(Periode(22 november 2024, 22 november 2024)) { vurdering ->
-                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP)
+                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP, STANDARDKVOTE_BRUKT_OPP)
             },
         )
     }
@@ -326,7 +327,7 @@ class VarighetRegelTest {
         vurderinger.assert(
             Segment(Periode(18 november 2024, 20 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
             Segment(Periode(21 november 2024, 22 november 2024)) { vurdering ->
-                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP)
+                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP, STANDARDKVOTE_BRUKT_OPP)
             },
         )
     }
@@ -384,7 +385,7 @@ class VarighetRegelTest {
         vurderinger.assert(
             Segment(Periode(18 november 2024, 21 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
             Segment(Periode(22 november 2024, 22 november 2024)) { vurdering ->
-                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP)
+                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP, STANDARDKVOTE_BRUKT_OPP)
             },
         )
     }
@@ -426,19 +427,125 @@ class VarighetRegelTest {
         vurderinger.assert(
             Segment(Periode(18 november 2024, 19 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
             Segment(Periode(20 november 2024, 21 november 2024)) { vurdering ->
-                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP)
+                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP, STUDENTKVOTE_BRUKT_OPP)
             },
             Segment(Periode(22 november 2024, 25 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
             Segment(Periode(26 november 2024, 26 november 2024)) { vurdering ->
-                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP)
+                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP, STANDARDKVOTE_BRUKT_OPP)
+            },
+        )
+    }
+
+    /*
+        November 2024
+     Mo Tu We Th Fr Sa Su
+                  1  2  3
+      4  5  6  7  8  9 10
+     11 12 13 14 15 16 17
+     18 19 20 21 22 23 24
+     25 26 27 28 29 30
+     */
+    @Test
+    fun `brukt opp standard kvote, kan ikke bruke student-kvote alenex`() {
+        val rettighetsperiode = Periode(18 november 2024, 26 november 2024)
+        val vurderinger = regel.vurder(
+            tomUnderveisInput.copy(
+                rettighetsperiode = rettighetsperiode,
+                kvote = Kvote(2, 2)
+            ),
+
+            listOf(
+                Segment(
+                    Periode(18 november 2024, 21 november 2024),
+                    Vurdering(
+                        vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
+                    )
+                ),
+                Segment(
+                    Periode(22 november 2024, 25 november 2024),
+                    Vurdering(
+                        vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, STUDENT)),
+                    )
+                ),
+                Segment(
+                    Periode(26 november 2024, 26 november 2024),
+                    Vurdering(
+                        vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, STUDENT)),
+                    )
+                ),
+            ).let(::Tidslinje)
+        )
+
+        vurderinger.assert(
+            Segment(Periode(18 november 2024, 19 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
+            Segment(Periode(20 november 2024, 21 november 2024)) { vurdering ->
+                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP, STANDARDKVOTE_BRUKT_OPP)
+            },
+            Segment(Periode(22 november 2024, 25 november 2024)) { vurdering ->
+                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP, STANDARDKVOTE_BRUKT_OPP)
+            },
+            Segment(Periode(26 november 2024, 26 november 2024)) { vurdering ->
+                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP, STANDARDKVOTE_BRUKT_OPP)
+            },
+        )
+    }
+    /*
+        November 2024
+     Mo Tu We Th Fr Sa Su
+                  1  2  3
+      4  5  6  7  8  9 10
+     11 12 13 14 15 16 17
+     18 19 20 21 22 23 24
+     25 26 27 28 29 30
+     */
+    @Test
+    fun `brukt opp standard kvote, kan ikke bruke student-kvote alene`() {
+        val rettighetsperiode = Periode(18 november 2024, 26 november 2024)
+        val vurderinger = regel.vurder(
+            tomUnderveisInput.copy(
+                rettighetsperiode = rettighetsperiode,
+                kvote = Kvote(2, 2)
+            ),
+
+            listOf(
+                Segment(
+                    Periode(18 november 2024, 21 november 2024),
+                    Vurdering(
+                        vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
+                    )
+                ),
+                Segment(
+                    Periode(22 november 2024, 26 november 2024),
+                    Vurdering(
+                        vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, STUDENT)),
+                    )
+                ),
+            ).let(::Tidslinje)
+        )
+
+        vurderinger.assert(
+            Segment(Periode(18 november 2024, 19 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
+            Segment(Periode(20 november 2024, 21 november 2024)) { vurdering ->
+                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP, STANDARDKVOTE_BRUKT_OPP)
+            },
+            Segment(Periode(22 november 2024, 26 november 2024)) { vurdering ->
+                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP, STANDARDKVOTE_BRUKT_OPP)
             },
         )
     }
 }
 
-private fun assertStansGrunnet(vurdering: Vurdering, avslagsÅrsak: UnderveisÅrsak) {
+private fun assertStansGrunnet(
+    vurdering: Vurdering,
+    avslagsÅrsak: UnderveisÅrsak,
+    vararg kvoteAvslagsårsak: VarighetVurdering.Avslagsårsak
+) {
     assertEquals(avslagsÅrsak, vurdering.avslagsårsak())
     assertFalse(vurdering.harRett())
+    if (kvoteAvslagsårsak.isNotEmpty()) {
+        assertTrue(vurdering.varighetVurdering is Avslag)
+        assertEquals(kvoteAvslagsårsak.toSet(), (vurdering.varighetVurdering as Avslag).avslagsårsaker)
+    }
 }
 
 inline fun <reified T> Tidslinje<T>.assert(vararg assertions: Segment<(T) -> Unit>) {

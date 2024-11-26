@@ -28,7 +28,7 @@ data class Vurdering(
     internal val soningsVurdering: SoningVurdering? = null,
     private val meldeperiode: Periode? = null,
 
-    private val varighetVurdering: VarighetVurdering? = null,
+    internal val varighetVurdering: VarighetVurdering? = null,
 ) {
 
     fun leggTilVurdering(enkelVurdering: EnkelVurdering): Vurdering {
