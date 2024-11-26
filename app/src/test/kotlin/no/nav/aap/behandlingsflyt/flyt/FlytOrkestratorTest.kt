@@ -460,7 +460,7 @@ class FlytOrkestratorTest {
                     løsning = BrevbestillingLøsning(
                         LøsBrevbestillingDto(
                             behandlingReferanse = behandling.referanse.referanse,
-                            bestillingReferanse = brevbestilling.referanse.referanse,
+                            bestillingReferanse = brevbestilling.referanse.brevbestillingReferanse,
                             status = BrevbestillingLøsningStatus.KLAR_FOR_EDITERING
                         )
                     ),
@@ -761,7 +761,7 @@ class FlytOrkestratorTest {
                     løsning = BrevbestillingLøsning(
                         LøsBrevbestillingDto(
                             behandlingReferanse = behandling.referanse.referanse,
-                            bestillingReferanse = brevbestilling.referanse.referanse,
+                            bestillingReferanse = brevbestilling.referanse.brevbestillingReferanse,
                             status = BrevbestillingLøsningStatus.KLAR_FOR_EDITERING
                         )
                     ),
@@ -1291,7 +1291,7 @@ class FlytOrkestratorTest {
                     løsning = BrevbestillingLøsning(
                         LøsBrevbestillingDto(
                             behandlingReferanse = behandling.referanse.referanse,
-                            bestillingReferanse = brevbestilling.referanse.referanse,
+                            bestillingReferanse = brevbestilling.referanse.brevbestillingReferanse,
                             status = BrevbestillingLøsningStatus.KLAR_FOR_EDITERING
                         )
                     ),

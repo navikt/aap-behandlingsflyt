@@ -76,7 +76,7 @@ class BrevGateway : BrevbestillingGateway {
         val url = baseUri.resolve("/api/ferdigstill")
 
         val request = PostRequest<FerdigstillBrevRequest>(
-            body = FerdigstillBrevRequest(referanse.referanse),
+            body = FerdigstillBrevRequest(referanse.brevbestillingReferanse),
             additionalHeaders = listOf(
                 Header("Accept", "application/json")
             )

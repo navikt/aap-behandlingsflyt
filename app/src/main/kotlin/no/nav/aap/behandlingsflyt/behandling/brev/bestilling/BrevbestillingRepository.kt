@@ -16,7 +16,7 @@ class BrevbestillingRepository(private val connection: DBConnection) {
 
         return connection.queryFirst(query) {
             setParams {
-                setUUID(1, referanse.referanse)
+                setUUID(1, referanse.brevbestillingReferanse)
             }
             setRowMapper { rowMapper(it) }
         }
@@ -82,7 +82,7 @@ class BrevbestillingRepository(private val connection: DBConnection) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setEnumName(2, typeBrev)
-                setUUID(3, bestillingReferanse.referanse)
+                setUUID(3, bestillingReferanse.brevbestillingReferanse)
                 setEnumName(4, status)
             }
         }
@@ -97,7 +97,7 @@ class BrevbestillingRepository(private val connection: DBConnection) {
         connection.execute(query) {
             setParams {
                 setEnumName(1, status)
-                setUUID(2, referanse.referanse)
+                setUUID(2, referanse.brevbestillingReferanse)
                 setLong(3, behandlingId.toLong())
             }
             setResultValidator {
