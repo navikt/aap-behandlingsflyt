@@ -37,11 +37,15 @@ import no.nav.aap.behandlingsflyt.test.FakeServers.statistikkFake
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.brev.kontrakt.BestillBrevRequest
 import no.nav.aap.brev.kontrakt.BestillBrevResponse
+import no.nav.aap.brev.kontrakt.Blokk
+import no.nav.aap.brev.kontrakt.BlokkInnhold
 import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
 import no.nav.aap.brev.kontrakt.Brevtype
+import no.nav.aap.brev.kontrakt.Innhold
 import no.nav.aap.brev.kontrakt.Språk
 import no.nav.aap.brev.kontrakt.Status
+import no.nav.aap.brev.kontrakt.Tekstbolk
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
@@ -1060,7 +1064,21 @@ object FakeServers : AutoCloseable {
                         call.respond(
                             BrevbestillingResponse(
                                 referanse = UUID.fromString(call.pathParameters.get("referanse"))!!,
-                                brev = Brev(overskrift = "Overskrift", tekstbolker = emptyList()),
+                                brev = Brev(
+                                    overskrift = "Overskrift", tekstbolker = listOf(
+                                        Tekstbolk(
+                                            id = UUID.randomUUID(), overskrift = "En fin overskrift", innhold = listOf(
+                                                Innhold(
+                                                    id = UUID.randomUUID(),
+                                                    overskrift = "Enda en overskrift",
+                                                    blokker = emptyList(),
+                                                    kanRedigeres = true,
+                                                    erFullstendig = false
+                                                )
+                                            )
+                                        )
+                                    )
+                                ),
                                 opprettet = LocalDateTime.now(),
                                 oppdatert = LocalDateTime.now(),
                                 behandlingReferanse = UUID.randomUUID(),
