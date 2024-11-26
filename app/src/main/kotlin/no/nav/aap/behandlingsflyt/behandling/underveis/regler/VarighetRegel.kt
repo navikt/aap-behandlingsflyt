@@ -47,22 +47,21 @@ class VarighetRegel : UnderveisRegel {
             kvoteBruktOppVurdering = Avslag(STUDENTKVOTE_BRUKT_OPP)
         )
 
-        val studentkvoteBrukt = studentkvoteTidslinje.fold(0) { acc, segment ->
-            if (segment.verdi is Oppfylt) acc + segment.periode.antallDager() else acc
-        }
+        val resultatMedStudentVarighetVurdering =
+            resultat.leggTilVurderinger(studentkvoteTidslinje, Vurdering::leggTilVarighetVurdering)
 
         val standardkvoteTidslinje = varighetTidslinje(
-            resultat = resultat,
+            resultat = resultatMedStudentVarighetVurdering,
             rettighetsperiode = rettighetsperiode,
-            kvote = kvote.antallHverdagerMedRett - studentkvoteBrukt,
+            kvote = kvote.antallHverdagerMedRett,
             tellerMotKvotePredikat = ::skalTelleMotStandardKvote,
             kvoteBruktOppVurdering = Avslag(STANDARDKVOTE_BRUKT_OPP)
         )
 
         return standardkvoteTidslinje.kombiner(studentkvoteTidslinje,
             JoinStyle.OUTER_JOIN { periode, standardkvote, studentkvote ->
-                val gjeldendeKvote = listOfNotNull(standardkvote, studentkvote).single()
-                Segment(periode, gjeldendeKvote.verdi)
+                val gjeldendeKvote = listOfNotNull(standardkvote, studentkvote).firstOrNull { it.verdi is Avslag }
+                Segment(periode, gjeldendeKvote?.verdi ?: Oppfylt)
             })
     }
 
@@ -87,7 +86,9 @@ class VarighetRegel : UnderveisRegel {
             }
         }
 
-        if (førsteVurderingEtterKvote == null) return Tidslinje()
+        if (førsteVurderingEtterKvote == null) {
+            return resultat.filter { tellerMotKvotePredikat(it.verdi) }.mapValue { Oppfylt }
+        }
 
         val dagerInnIPeriode = kvote - dagerBrukt
         val stansdato = førsteVurderingEtterKvote.periode.fom.plusDays(dagerInnIPeriode.toLong())
@@ -102,7 +103,9 @@ class VarighetRegel : UnderveisRegel {
 
 
     private fun skalTelleMotStandardKvote(vurdering: Vurdering): Boolean {
-        return vurdering.harRett() && vurdering.fårAapEtter(Vilkårtype.SYKDOMSVILKÅRET, null)
+        return vurdering.harRett() &&
+                (vurdering.fårAapEtter(Vilkårtype.SYKDOMSVILKÅRET, null) ||
+                vurdering.fårAapEtter(Vilkårtype.SYKDOMSVILKÅRET, STUDENT))
     }
 
     private fun skalTelleMotStudentKvote(vurdering: Vurdering): Boolean {
