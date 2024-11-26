@@ -80,7 +80,7 @@ class VarighetRegel : UnderveisRegel {
         ).filterValues { it }.keys
     }
 
-    private fun hverdagerFra(start: LocalDate): Sequence<LocalDate> {
+    private fun hverdagerFraOgMed(start: LocalDate): Sequence<LocalDate> {
         var dag = start
         return sequence {
             while (true) {
@@ -92,8 +92,8 @@ class VarighetRegel : UnderveisRegel {
         }
     }
 
-    private fun stansDato(fom: LocalDate, hverdagerSomSkalLeggesTil: Int): LocalDate {
-        return hverdagerFra(fom).elementAt(hverdagerSomSkalLeggesTil)
+    private fun plussHverdager(fom: LocalDate, hverdagerSomSkalLeggesTil: Int): LocalDate {
+        return hverdagerFraOgMed(fom).elementAt(hverdagerSomSkalLeggesTil)
     }
 
     private fun vurderPeriode(
@@ -103,13 +103,15 @@ class VarighetRegel : UnderveisRegel {
     ): Tidslinje<VarighetVurdering> {
 
         val dagerIgjenPerKvote = kvoter.mapValues { it.value - telleverk[it.key]!! }
+
+        // TODO: må vel ta hensyn til helger når vi trekker fra `antallDager()`? Skriv test før fiks!
         val stansIPerioden = dagerIgjenPerKvote.any { (it.value - periode.antallDager()) < 0 }
 
         if (stansIPerioden) {
             val gjenværendeKvote = dagerIgjenPerKvote.minOf { it.value }
             telleverk.øk(kvoter.keys, gjenværendeKvote)
 
-            val stansDato = stansDato(periode.fom, gjenværendeKvote)
+            val stansDato = plussHverdager(periode.fom, gjenværendeKvote)
 
             val stansÅrsaker = dagerIgjenPerKvote
                 .filter { it.value == gjenværendeKvote }

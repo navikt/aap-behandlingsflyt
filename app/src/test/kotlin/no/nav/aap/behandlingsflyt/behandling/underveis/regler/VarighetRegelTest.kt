@@ -489,6 +489,7 @@ class VarighetRegelTest {
             },
         )
     }
+
     /*
         November 2024
      Mo Tu We Th Fr Sa Su
@@ -531,6 +532,31 @@ class VarighetRegelTest {
             Segment(Periode(22 november 2024, 26 november 2024)) { vurdering ->
                 assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP, STANDARDKVOTE_BRUKT_OPP)
             },
+        )
+    }
+
+    /*  November 2024
+     * Mo Tu We Th Fr Sa Su
+     *  4  5  6  7  8  9 10
+     */
+    @Test
+    fun `standard kvote brukt opp på siste hverdag i uka med påfølgende helg i samme segment`() {
+        val rettighetsperiode = Periode(8 november 2024, 10 november 2024)
+        val vurderinger = regel.vurder(
+            tomUnderveisInput.copy(
+                rettighetsperiode = rettighetsperiode,
+                kvote = Kvote(antallHverdagerMedRett = 1, studentKvote = 0)
+            ),
+            Tidslinje(
+                Periode(8 november 2024, 10 november 2024),
+                Vurdering(
+                    vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
+                )
+            )
+        )
+
+        vurderinger.assert(
+            Segment(Periode(8 november 2024, 10 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
         )
     }
 }
