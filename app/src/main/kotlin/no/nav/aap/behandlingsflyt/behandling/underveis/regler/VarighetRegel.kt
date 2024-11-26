@@ -48,13 +48,8 @@ class VarighetRegel : UnderveisRegel {
 
         val varighetTidslinje = standardKvoteTidslinje.kombiner(studentKvoteTidslinje,
             JoinStyle.OUTER_JOIN { periode, standardkvote, studentkvote ->
-                if (standardkvote?.verdi == Oppfylt || studentkvote?.verdi == Oppfylt) Segment(
-                    periode,
-                    Oppfylt
-                )
-                else Segment(periode,
-                    standardkvote?.verdi ?: studentkvote?.verdi ?: error("ingen av vurderingene teller ikke på noen kvote")
-                )
+                val gjeldendeKvote = listOfNotNull(standardkvote, studentkvote).single()
+                Segment(periode, gjeldendeKvote.verdi)
             })
 
         return resultat.leggTilVurderinger(varighetTidslinje, Vurdering::leggTilVarighetVurdering)
