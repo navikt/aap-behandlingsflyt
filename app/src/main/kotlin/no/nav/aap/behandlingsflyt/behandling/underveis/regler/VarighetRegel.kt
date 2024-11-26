@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.Kvote
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetVurdering.Avslagsårsak.STANDARDKVOTE_BRUKT_OPP
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetVurdering.Avslagsårsak.STUDENTKVOTE_BRUKT_OPP
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak.STUDENT
@@ -28,31 +29,41 @@ import java.time.temporal.TemporalAdjusters
 class VarighetRegel : UnderveisRegel {
 
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
-        val kvote = input.kvote
+        val sykdomVarighetTidslinje = sykdomVarighetTidslinje(resultat, input.rettighetsperiode, input.kvote)
 
-        val standardKvoteTidslinje = varighetTidslinje(
-            resultat = resultat,
-            rettighetsperiode = input.rettighetsperiode,
-            kvote = kvote.antallHverdagerMedRett,
-            tellerMotKvotePredikat = ::skalTelleMotStandardKvote,
-            kvoteBruktOppVurdering = Avslag(STANDARDKVOTE_BRUKT_OPP)
-        )
+        return resultat.leggTilVurderinger(sykdomVarighetTidslinje, Vurdering::leggTilVarighetVurdering)
+    }
 
-        val studentKvoteTidslinje = varighetTidslinje(
+    private fun sykdomVarighetTidslinje(
+        resultat: Tidslinje<Vurdering>,
+        rettighetsperiode: Periode,
+        kvote: Kvote
+    ): Tidslinje<VarighetVurdering> {
+        val studentkvoteTidslinje = varighetTidslinje(
             resultat = resultat,
-            rettighetsperiode = input.rettighetsperiode,
+            rettighetsperiode = rettighetsperiode,
             kvote = kvote.studentKvote,
             tellerMotKvotePredikat = ::skalTelleMotStudentKvote,
             kvoteBruktOppVurdering = Avslag(STUDENTKVOTE_BRUKT_OPP)
         )
 
-        val varighetTidslinje = standardKvoteTidslinje.kombiner(studentKvoteTidslinje,
+        val studentkvoteBrukt = studentkvoteTidslinje.fold(0) { acc, segment ->
+            if (segment.verdi is Oppfylt) acc + segment.periode.antallDager() else acc
+        }
+
+        val standardkvoteTidslinje = varighetTidslinje(
+            resultat = resultat,
+            rettighetsperiode = rettighetsperiode,
+            kvote = kvote.antallHverdagerMedRett - studentkvoteBrukt,
+            tellerMotKvotePredikat = ::skalTelleMotStandardKvote,
+            kvoteBruktOppVurdering = Avslag(STANDARDKVOTE_BRUKT_OPP)
+        )
+
+        return standardkvoteTidslinje.kombiner(studentkvoteTidslinje,
             JoinStyle.OUTER_JOIN { periode, standardkvote, studentkvote ->
                 val gjeldendeKvote = listOfNotNull(standardkvote, studentkvote).single()
                 Segment(periode, gjeldendeKvote.verdi)
             })
-
-        return resultat.leggTilVurderinger(varighetTidslinje, Vurdering::leggTilVarighetVurdering)
     }
 
     private fun varighetTidslinje(
@@ -76,9 +87,7 @@ class VarighetRegel : UnderveisRegel {
             }
         }
 
-        if (førsteVurderingEtterKvote == null) {
-            return Tidslinje()
-        }
+        if (førsteVurderingEtterKvote == null) return Tidslinje()
 
         val dagerInnIPeriode = kvote - dagerBrukt
         val stansdato = førsteVurderingEtterKvote.periode.fom.plusDays(dagerInnIPeriode.toLong())
@@ -99,15 +108,6 @@ class VarighetRegel : UnderveisRegel {
     private fun skalTelleMotStudentKvote(vurdering: Vurdering): Boolean {
         return vurdering.harRett() && vurdering.fårAapEtter(Vilkårtype.SYKDOMSVILKÅRET, STUDENT)
     }
-
-    // §§ 11-5, 11-14, 11-15 og 11-16 skal telle mot kvoten (§ 11-12 fjerde ledd).
-    private fun paragraf11_12_4(vurdering: Vurdering): Boolean {
-        return vurdering.fårAapEtter(Vilkårtype.SYKDOMSVILKÅRET, null) || // 11-5
-                vurdering.fårAapEtter(Vilkårtype.SYKDOMSVILKÅRET, STUDENT) // 11-14
-        // 11-15 (etablerer virksomhet) Ikke implementert
-        // 11-16 (uten påbegynt aktivitet) Er vel neppe et eget vilkår?
-    }
-
 
     private fun helger(rettighetsperiode: Periode): Tidslinje<Unit> {
         val førsteLørdag = rettighetsperiode.fom.with(TemporalAdjusters.previous(DayOfWeek.SATURDAY))

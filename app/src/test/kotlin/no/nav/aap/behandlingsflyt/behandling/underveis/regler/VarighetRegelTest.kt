@@ -388,6 +388,43 @@ class VarighetRegelTest {
             },
         )
     }
+
+    @Test
+    fun `stans grunnet student-kvote, får dermed vanlig 11-5 innvilget`() {
+        val rettighetsperiode = Periode(18 november 2024, 26 november 2024)
+        val vurderinger = regel.vurder(
+            tomUnderveisInput.copy(
+                rettighetsperiode = rettighetsperiode,
+                kvote = Kvote(4, 2)
+            ),
+
+            listOf(
+                Segment(
+                    Periode(18 november 2024, 21 november 2024),
+                    Vurdering(
+                        vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, STUDENT)),
+                    )
+                ),
+                Segment(
+                    Periode(22 november 2024, 26 november 2024),
+                    Vurdering(
+                        vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
+                    )
+                ),
+            ).let(::Tidslinje)
+        )
+
+        vurderinger.assert(
+            Segment(Periode(18 november 2024, 19 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
+            Segment(Periode(20 november 2024, 21 november 2024)) { vurdering ->
+                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP)
+            },
+            Segment(Periode(22 november 2024, 25 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
+            Segment(Periode(26 november 2024, 26 november 2024)) { vurdering ->
+                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP)
+            },
+        )
+    }
 }
 
 private fun assertStansGrunnet(vurdering: Vurdering, avslagsÅrsak: UnderveisÅrsak) {
