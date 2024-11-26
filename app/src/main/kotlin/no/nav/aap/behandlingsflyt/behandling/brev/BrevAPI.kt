@@ -72,9 +72,9 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
         }
         route("/brev") {
             route("/{brevbestillingReferanse}/oppdater") {
-                put<BrevbestillingReferanse, Unit, Brev> { brevbestillingReferanse, brev ->
+                put<BrevbestillingReferanse, String, Brev> { brevbestillingReferanse, brev ->
                     BrevGateway().oppdater(brevbestillingReferanse, brev)
-                    respondWithStatus(HttpStatusCode.NoContent)
+                    respond("{}", HttpStatusCode.Accepted)
                 }
             }
             route("/los-bestilling") {
