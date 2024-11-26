@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter
 
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDateTime
 

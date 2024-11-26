@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter
+package no.nav.aap.behandlingsflyt.kontrakt.hendelse
 
 enum class Brevkode {
     SØKNAD,
@@ -9,5 +9,3 @@ enum class Brevkode {
     LEGEERKLÆRING_AVVIST,
     DIALOGMELDING
 }
-
-

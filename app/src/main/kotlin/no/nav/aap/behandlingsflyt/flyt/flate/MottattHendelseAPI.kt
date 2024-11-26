@@ -6,7 +6,10 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.MottattHendelseDto
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.server.prosessering.HendelseMottattHåndteringJobbUtfører
@@ -26,24 +29,36 @@ fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource) {
                     val sak = sakService.hent(Saksnummer(dto.saksnummer))
 
                     val flytJobbRepository = FlytJobbRepository(connection)
-                    val dokumentReferanse = MottattDokumentReferanse(dto.referanse.type, dto.referanse.verdi)
+                    val dokumentReferanse = mapDokumentReferanse(dto)
 
                     flytJobbRepository.leggTil(
                         HendelseMottattHåndteringJobbUtfører.nyJobb(
                             sakId = sak.id,
                             dokumentReferanse = dokumentReferanse,
                             brevkode = dto.type,
-                            kanal = dto.kanal,
+                            kanal = Kanal.DIGITAL,
                             periode = Periode(
                                 LocalDate.now(),
                                 LocalDate.now().plusWeeks(4)
                             ),
-                            payload = dto
+                            payload = dto.payload ?: dto
                         )
                     )
                 }
             }
             respond("{}", HttpStatusCode.Accepted)
         }
+    }
+}
+
+private fun mapDokumentReferanse(dto: MottattHendelseDto): MottattDokumentReferanse {
+    return when (dto.type) {
+        Brevkode.LEGEERKLÆRING_MOTTATT -> MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, dto.hendelseId.toString() )
+        Brevkode.LEGEERKLÆRING_AVVIST ->MottattDokumentReferanse(MottattDokumentReferanse.Type.AVVIST_LEGEERKLÆRING_ID, dto.hendelseId.toString() )
+        Brevkode.DIALOGMELDING -> MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, dto.hendelseId.toString() )
+        Brevkode.SØKNAD -> TODO()
+        Brevkode.AKTIVITETSKORT -> TODO()
+        Brevkode.PLIKTKORT -> TODO()
+        Brevkode.UKJENT -> TODO()
     }
 }
