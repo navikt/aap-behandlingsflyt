@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.In
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
@@ -26,7 +27,8 @@ class BeregningAvklarFaktaSteg private constructor(
     private val sykdomRepository: SykdomRepository,
     private val vilkårsresultatRepository1: VilkårsresultatRepository,
     private val avklarFaktaBeregningService: AvklarFaktaBeregningService,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val yrkesskadeRepository: YrkesskadeRepository
 ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -34,6 +36,7 @@ class BeregningAvklarFaktaSteg private constructor(
 
         if (avklarFaktaBeregningService.skalFastsetteGrunnlag(behandlingId)) {
             val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
+
             val vilkårsresultat = vilkårsresultatRepository1.hent(behandlingId)
             val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
             if (beregningVurdering == null && erIkkeStudent(vilkårsresultat)) {
@@ -59,8 +62,8 @@ class BeregningAvklarFaktaSteg private constructor(
         beregningGrunnlag: BeregningGrunnlag?
     ): Boolean {
         val yrkesskadeVurdering = sykdomRepository.hentHvisEksisterer(behandlingId)?.yrkesskadevurdering
-
-        return yrkesskadeVurdering?.erÅrsakssammenheng == true && harIkkeFastsattBeløpForAlle(
+        val yrkesskader = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
+        return yrkesskader?.yrkesskader?.harYrkesskade() == true && yrkesskadeVurdering?.erÅrsakssammenheng == true && harIkkeFastsattBeløpForAlle(
             yrkesskadeVurdering.relevanteSaker,
             beregningGrunnlag
         )
@@ -85,7 +88,8 @@ class BeregningAvklarFaktaSteg private constructor(
                 SykdomRepository(connection),
                 vilkårsresultatRepository,
                 AvklarFaktaBeregningService(vilkårsresultatRepository),
-                AvklaringsbehovRepositoryImpl(connection)
+                AvklaringsbehovRepositoryImpl(connection),
+                YrkesskadeRepository(connection)
             )
         }
 
