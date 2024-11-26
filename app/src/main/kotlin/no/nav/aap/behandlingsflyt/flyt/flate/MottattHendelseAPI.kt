@@ -53,9 +53,9 @@ fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource) {
 
 private fun mapDokumentReferanse(dto: MottattHendelseDto): MottattDokumentReferanse {
     return when (dto.type) {
-        Brevkode.LEGEERKLÆRING_MOTTATT -> MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, dto.hendelseId.toString() )
-        Brevkode.LEGEERKLÆRING_AVVIST -> MottattDokumentReferanse(MottattDokumentReferanse.Type.AVVIST_LEGEERKLÆRING_ID, dto.hendelseId.toString() )
-        Brevkode.DIALOGMELDING -> MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, dto.hendelseId.toString() )
+        Brevkode.LEGEERKLÆRING_MOTTATT -> MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, dto.hendelseId )
+        Brevkode.LEGEERKLÆRING_AVVIST -> MottattDokumentReferanse(MottattDokumentReferanse.Type.AVVIST_LEGEERKLÆRING_ID, dto.hendelseId )
+        Brevkode.DIALOGMELDING -> MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, dto.hendelseId )
         Brevkode.SØKNAD -> TODO()
         Brevkode.AKTIVITETSKORT -> TODO()
         Brevkode.PLIKTKORT -> TODO()
