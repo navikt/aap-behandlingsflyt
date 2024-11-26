@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_A
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkode
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkategori
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -68,12 +68,12 @@ class AktivitetspliktInformasjonskravTest {
         brudd: AktivitetspliktDokument,
         sak: Sak
     ) {
-        val dokument = StrukturertDokument(brudd.metadata.innsendingId, Brevkode.AKTIVITETSKORT)
+        val dokument = StrukturertDokument(brudd.metadata.innsendingId, Brevkategori.AKTIVITETSKORT)
         MottaDokumentService(MottattDokumentRepository(connection)).mottattDokument(
             MottattDokumentReferanse(brudd.metadata.innsendingId),
             sak.id,
             LocalDateTime.ofInstant(brudd.metadata.opprettetTid, ZoneId.of("Europe/Oslo")),
-            dokument.brevkode,
+            dokument.brevkategori,
             kanal = Kanal.PAPIR,
             dokument,
         )

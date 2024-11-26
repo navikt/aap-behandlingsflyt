@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.Ubeh
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.pliktkort.Pliktkort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.adapter.UbehandletSøknad
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkode
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkategori
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
@@ -23,7 +23,7 @@ class MottaDokumentService(
         referanse: MottattDokumentReferanse,
         sakId: SakId,
         mottattTidspunkt: LocalDateTime,
-        brevkode: Brevkode,
+        brevkategori: Brevkategori,
         kanal: Kanal,
         strukturertDokument: StrukturertDokument<*>
     ) {
@@ -32,7 +32,7 @@ class MottaDokumentService(
                 referanse = referanse,
                 sakId = sakId,
                 mottattTidspunkt = mottattTidspunkt,
-                type = brevkode,
+                type = brevkategori,
                 status = Status.MOTTATT,
                 behandlingId = null,
                 strukturertDokument = strukturertDokument,
@@ -45,7 +45,7 @@ class MottaDokumentService(
         referanse: MottattDokumentReferanse,
         sakId: SakId,
         mottattTidspunkt: LocalDateTime,
-        brevkode: Brevkode,
+        brevkategori: Brevkategori,
         kanal: Kanal,
         strukturertDokument: UnparsedStrukturertDokument
     ) {
@@ -54,7 +54,7 @@ class MottaDokumentService(
                 referanse = referanse,
                 sakId = sakId,
                 mottattTidspunkt = mottattTidspunkt,
-                type = brevkode,
+                type = brevkategori,
                 kanal = kanal,
                 status = Status.MOTTATT,
                 behandlingId = null,
@@ -65,7 +65,7 @@ class MottaDokumentService(
 
     fun pliktkortSomIkkeErBehandlet(sakId: SakId): Set<UbehandletPliktkort> {
         val ubehandledePliktkort =
-            mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, Brevkode.PLIKTKORT)
+            mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, Brevkategori.PLIKTKORT)
 
         return ubehandledePliktkort.map {
             UbehandletPliktkort(
@@ -76,7 +76,7 @@ class MottaDokumentService(
     }
 
     fun aktivitetskortSomIkkeErBehandlet(sakId: SakId): Set<InnsendingId> {
-        val ubehandledeAktivitetskort = mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, Brevkode.AKTIVITETSKORT)
+        val ubehandledeAktivitetskort = mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, Brevkategori.AKTIVITETSKORT)
 
         return ubehandledeAktivitetskort
             .map { it.referanse.asInnsendingId }
@@ -85,18 +85,18 @@ class MottaDokumentService(
 
     fun søknaderSomIkkeHarBlittBehandlet(sakId: SakId): Set<UbehandletSøknad> {
         val ubehandledeSøknader =
-            mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, Brevkode.SØKNAD)
+            mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, Brevkategori.SØKNAD)
 
         return ubehandledeSøknader.map { mapSøknad(it) }.toSet()
     }
 
     fun legeerklæringerSomIkkeHarBlittBehandlet(sakId: SakId) : Set<UbehandletLegeerklæring> {
-        val ubehandledeLegeerklæringer = mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, Brevkode.LEGEERKLÆRING_MOTTATT)
+        val ubehandledeLegeerklæringer = mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, Brevkategori.LEGEERKLÆRING_MOTTATT)
         return ubehandledeLegeerklæringer.map { mapLegeerklæring(it) }.toSet()
     }
 
     fun dialogmeldingerSomIkkeHarBlittBehandlet(sakId: SakId) : Set<UbehandletDialogmelding> {
-        val ubehandledeDialogmeldinger = mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, Brevkode.DIALOGMELDING)
+        val ubehandledeDialogmeldinger = mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, Brevkategori.DIALOGMELDING)
         return ubehandledeDialogmeldinger.map { mapDialogmelding(it) }.toSet()
     }
 

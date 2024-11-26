@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.kontrakt.hendelse
 
-enum class Brevkode {
+enum class Brevkategori {
     SØKNAD,
     AKTIVITETSKORT,
     PLIKTKORT,

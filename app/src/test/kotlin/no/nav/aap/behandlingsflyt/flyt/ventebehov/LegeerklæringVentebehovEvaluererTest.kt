@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkode
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkategori
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
@@ -41,7 +41,7 @@ class LegeerklæringVentebehovEvaluererTest {
             val sak = opprettSak(connection)
             val behandling = opprettBehandling(connection, sak, ÅrsakTilBehandling.MOTTATT_AVVIST_LEGEERKLÆRING)
 
-            genererDokument(sak.id, behandling.id, connection, Brevkode.LEGEERKLÆRING_AVVIST, MottattDokumentReferanse(MottattDokumentReferanse.Type.AVVIST_LEGEERKLÆRING_ID, "referanse"))
+            genererDokument(sak.id, behandling.id, connection, Brevkategori.LEGEERKLÆRING_AVVIST, MottattDokumentReferanse(MottattDokumentReferanse.Type.AVVIST_LEGEERKLÆRING_ID, "referanse"))
 
             val erLøst = evaluerer.ansesSomLøst(behandling.id, avklaringsbehov, sak.id)
             assertEquals(true, erLøst)
@@ -57,7 +57,7 @@ class LegeerklæringVentebehovEvaluererTest {
             val sak = opprettSak(connection)
             val behandling = opprettBehandling(connection, sak, ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING)
 
-            genererDokument(sak.id, behandling.id, connection, Brevkode.LEGEERKLÆRING_MOTTATT, MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, "referanse"))
+            genererDokument(sak.id, behandling.id, connection, Brevkategori.LEGEERKLÆRING_MOTTATT, MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, "referanse"))
 
             val erLøst = evaluerer.ansesSomLøst(behandling.id, avklaringsbehov, sak.id)
             assertEquals(true, erLøst)
@@ -73,7 +73,7 @@ class LegeerklæringVentebehovEvaluererTest {
             val sak = opprettSak(connection)
             val behandling = opprettBehandling(connection, sak, ÅrsakTilBehandling.MOTTATT_DIALOGMELDING)
 
-            genererDokument(sak.id, behandling.id, connection, Brevkode.DIALOGMELDING, MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, "referanse"))
+            genererDokument(sak.id, behandling.id, connection, Brevkategori.DIALOGMELDING, MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, "referanse"))
 
             val erLøst = evaluerer.ansesSomLøst(behandling.id, avklaringsbehov, sak.id)
             assertEquals(true, erLøst)
@@ -88,7 +88,7 @@ class LegeerklæringVentebehovEvaluererTest {
             val sak = opprettSak(connection)
             val behandling = opprettBehandling(connection, sak, ÅrsakTilBehandling.MOTTATT_SØKNAD)
 
-            genererDokument(sak.id, behandling.id, connection, Brevkode.LEGEERKLÆRING_MOTTATT, MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, "referanse"))
+            genererDokument(sak.id, behandling.id, connection, Brevkategori.LEGEERKLÆRING_MOTTATT, MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, "referanse"))
 
             val avklaringsbehov = Avklaringsbehov(1L, Definisjon.BESTILL_LEGEERKLÆRING, mutableListOf(), StegType.AVKLAR_SYKDOM, false)
             val erLøst = evaluerer.ansesSomLøst(behandling.id, avklaringsbehov, sak.id)
@@ -105,14 +105,14 @@ class LegeerklæringVentebehovEvaluererTest {
             val sak = opprettSak(connection)
             val behandling = opprettBehandling(connection, sak, ÅrsakTilBehandling.MOTTATT_SØKNAD)
 
-            genererDokument(sak.id, behandling.id, connection,  Brevkode.SØKNAD, MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, "referanse"))
+            genererDokument(sak.id, behandling.id, connection,  Brevkategori.SØKNAD, MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, "referanse"))
 
             val erIkkeLøst = evaluerer.ansesSomLøst(behandling.id, avklaringsbehov, sak.id)
             assertEquals(false, erIkkeLøst)
         }
     }
 
-    private fun genererDokument(sakId: SakId, behandlingId: BehandlingId, connection: DBConnection, type: Brevkode, referanse: MottattDokumentReferanse) {
+    private fun genererDokument(sakId: SakId, behandlingId: BehandlingId, connection: DBConnection, type: Brevkategori, referanse: MottattDokumentReferanse) {
         val mottattDokument = MottattDokument(
             referanse = referanse,
             sakId = sakId,

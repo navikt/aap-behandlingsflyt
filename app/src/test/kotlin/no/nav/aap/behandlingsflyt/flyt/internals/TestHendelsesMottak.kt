@@ -51,7 +51,7 @@ class TestHendelsesMottak(private val dataSource: DataSource) {
                     HendelseMottattHåndteringJobbUtfører.nyJobb(
                         sakId = sak.id,
                         dokumentReferanse = referanse,
-                        brevkode = hendelse.strukturertDokument.brevkode,
+                        brevkategori = hendelse.strukturertDokument.brevkategori,
                         kanal = Kanal.DIGITAL,
                         periode = null,
                         payload = hendelse.strukturertDokument.data!!

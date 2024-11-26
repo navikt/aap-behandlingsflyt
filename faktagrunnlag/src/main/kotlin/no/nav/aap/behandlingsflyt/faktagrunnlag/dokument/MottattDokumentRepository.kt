@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.DokumentRekkefølge
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkode
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkategori
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
@@ -54,7 +54,7 @@ class MottattDokumentRepository(private val connection: DBConnection) {
         }
     }
 
-    fun hentUbehandledeDokumenterAvType(sakId: SakId, dokumentType: Brevkode): Set<MottattDokument> {
+    fun hentUbehandledeDokumenterAvType(sakId: SakId, dokumentType: Brevkategori): Set<MottattDokument> {
         val query = """
             SELECT * FROM MOTTATT_DOKUMENT WHERE sak_id = ? AND status = ? AND type = ?
         """.trimIndent()
@@ -72,17 +72,17 @@ class MottattDokumentRepository(private val connection: DBConnection) {
     }
 
     private fun mapMottattDokument(row: Row): MottattDokument {
-        val brevkode: Brevkode = row.getEnum("type")
+        val brevkategori: Brevkategori = row.getEnum("type")
         val referanse = mapDokumentReferanse(row)
         return MottattDokument(
             referanse = referanse,
             sakId = SakId(row.getLong("sak_id")),
             behandlingId = row.getLongOrNull("BEHANDLING_ID")?.let { BehandlingId(it) },
             mottattTidspunkt = row.getLocalDateTime("MOTTATT_TID"),
-            type = brevkode,
+            type = brevkategori,
             kanal = row.getEnum("kanal"),
             status = row.getEnum("status"),
-            strukturertDokument = LazyStrukturertDokument(referanse, brevkode, connection),
+            strukturertDokument = LazyStrukturertDokument(referanse, brevkategori, connection),
         )
     }
 
@@ -91,7 +91,7 @@ class MottattDokumentRepository(private val connection: DBConnection) {
         verdi = row.getString("referanse")
     )
 
-    fun hentDokumentRekkefølge(sakId: SakId, type: Brevkode): Set<DokumentRekkefølge> {
+    fun hentDokumentRekkefølge(sakId: SakId, type: Brevkategori): Set<DokumentRekkefølge> {
         val query = """
             SELECT referanse, referanse_type, MOTTATT_TID FROM MOTTATT_DOKUMENT WHERE sak_id = ? AND status = ? AND type = ?
         """.trimIndent()
@@ -111,7 +111,7 @@ class MottattDokumentRepository(private val connection: DBConnection) {
         }.toSet()
     }
 
-    fun hentDokumenterAvType(sakId: SakId, type: Brevkode): Set<MottattDokument> {
+    fun hentDokumenterAvType(sakId: SakId, type: Brevkategori): Set<MottattDokument> {
         val query = """
             SELECT * FROM MOTTATT_DOKUMENT WHERE sak_id = ? AND type = ?
         """.trimIndent()
@@ -127,7 +127,7 @@ class MottattDokumentRepository(private val connection: DBConnection) {
         }.toSet()
     }
 
-    fun hentDokumenterAvType(behandlingId: BehandlingId, type: Brevkode): Set<MottattDokument> {
+    fun hentDokumenterAvType(behandlingId: BehandlingId, type: Brevkategori): Set<MottattDokument> {
         val query = """
             SELECT * FROM MOTTATT_DOKUMENT
             WHERE behandling_id = ? AND type = ?

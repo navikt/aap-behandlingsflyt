@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkode
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkategori
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
@@ -36,7 +36,7 @@ class MottattDokumentRepositoryTest {
             sakId = sak.id,
             behandlingId = behandling.id,
             mottattTidspunkt = LocalDateTime.now(),
-            type = Brevkode.SØKNAD,
+            type = Brevkategori.SØKNAD,
             kanal = Kanal.PAPIR,
             status = Status.MOTTATT,
             strukturertDokument = null,
@@ -46,7 +46,7 @@ class MottattDokumentRepositoryTest {
         settInnDokument(mottattDokument)
 
         // VERIFY
-        val res = hentDokumenterAvType(sak, Brevkode.SØKNAD)
+        val res = hentDokumenterAvType(sak, Brevkategori.SØKNAD)
 
         assertThat(res).hasSize(1)
         assertThat(res.first()).extracting(
@@ -72,7 +72,7 @@ class MottattDokumentRepositoryTest {
             sakId = sak.id,
             behandlingId = null,
             mottattTidspunkt = LocalDateTime.now(),
-            type = Brevkode.SØKNAD,
+            type = Brevkategori.SØKNAD,
             status = Status.MOTTATT,
             kanal = Kanal.PAPIR,
             strukturertDokument = null,
@@ -91,7 +91,7 @@ class MottattDokumentRepositoryTest {
             )
         }
 
-        val res = hentDokumenterAvType(sak, Brevkode.SØKNAD)
+        val res = hentDokumenterAvType(sak, Brevkategori.SØKNAD)
 
         assertThat(res).hasSize(1)
         val hentetDokument = res.first()
@@ -114,7 +114,7 @@ class MottattDokumentRepositoryTest {
             sakId = sak.id,
             behandlingId = null,
             mottattTidspunkt = LocalDateTime.now(),
-            type = Brevkode.SØKNAD,
+            type = Brevkategori.SØKNAD,
             status = Status.MOTTATT,
             kanal = Kanal.PAPIR,
             strukturertDokument = null,
@@ -125,7 +125,7 @@ class MottattDokumentRepositoryTest {
             sakId = sak.id,
             behandlingId = null,
             mottattTidspunkt = LocalDateTime.now(),
-            type = Brevkode.PLIKTKORT,
+            type = Brevkategori.PLIKTKORT,
             status = Status.MOTTATT,
             kanal = Kanal.DIGITAL,
             strukturertDokument = null,
@@ -136,7 +136,7 @@ class MottattDokumentRepositoryTest {
         settInnDokument(pliktkortDokument)
 
 
-        val res = hentDokumenterAvType(sak, Brevkode.SØKNAD)
+        val res = hentDokumenterAvType(sak, Brevkategori.SØKNAD)
 
         // VERIFY
         assertThat(res).hasSize(1)
@@ -145,7 +145,7 @@ class MottattDokumentRepositoryTest {
                 søknadDokument.behandlingId, søknadDokument.sakId, søknadDokument.type
             )
 
-        val res2 = hentDokumenterAvType(sak, Brevkode.PLIKTKORT)
+        val res2 = hentDokumenterAvType(sak, Brevkategori.PLIKTKORT)
 
         assertThat(res2).hasSize(1)
         assertThat(res2.first()).extracting(
@@ -164,9 +164,9 @@ class MottattDokumentRepositoryTest {
         }
     }
 
-    private fun hentDokumenterAvType(sak: Sak, brevkode: Brevkode): Set<MottattDokument> {
+    private fun hentDokumenterAvType(sak: Sak, brevkategori: Brevkategori): Set<MottattDokument> {
         val res = InitTestDatabase.dataSource.transaction {
-            MottattDokumentRepository(it).hentDokumenterAvType(sak.id, brevkode)
+            MottattDokumentRepository(it).hentDokumenterAvType(sak.id, brevkategori)
         }
         return res
     }

@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkode
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkategori
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.BehandlingTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.BeriketBehandling
@@ -77,8 +77,8 @@ class SakOgBehandlingService(connection: DBConnection) {
         return sakRepository.hent(behandling.sakId)
     }
 
-    fun oppdaterRettighetsperioden(sakId: SakId, brevkode: Brevkode, mottattDato: LocalDate) {
-        if (setOf(Brevkode.SØKNAD, Brevkode.PLIKTKORT).contains(brevkode)) {
+    fun oppdaterRettighetsperioden(sakId: SakId, brevkategori: Brevkategori, mottattDato: LocalDate) {
+        if (setOf(Brevkategori.SØKNAD, Brevkategori.PLIKTKORT).contains(brevkategori)) {
             val rettighetsperiode = sakRepository.hent(sakId).rettighetsperiode
             val periode = Periode(
                 rettighetsperiode.fom,

@@ -40,7 +40,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkode
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkategori
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
@@ -109,7 +109,7 @@ class StatistikkJobbUtførerTest {
                     sakId = sak.id,
                     behandlingId = opprettetBehandling.id,
                     mottattTidspunkt = LocalDateTime.now().minusDays(23),
-                    type = Brevkode.SØKNAD,
+                    type = Brevkategori.SØKNAD,
                     kanal = Kanal.PAPIR,
                     strukturertDokument = null
                 )
@@ -235,7 +235,7 @@ class StatistikkJobbUtførerTest {
                     sakId = sak.id,
                     behandlingId = opprettetBehandling.id,
                     mottattTidspunkt = LocalDateTime.now().minusDays(1),
-                    type = Brevkode.SØKNAD,
+                    type = Brevkategori.SØKNAD,
                     kanal = Kanal.PAPIR,
                     strukturertDokument = null
                 )
@@ -364,7 +364,7 @@ class StatistikkJobbUtførerTest {
         val tidligsteMottattTid = nå.minusDays(3)
         // Mottatt tid defineres som tidligste mottatt-tidspunkt på innsendte søknader.
         every {
-            dokumentRepository.hentDokumenterAvType(sakId, Brevkode.SØKNAD)
+            dokumentRepository.hentDokumenterAvType(sakId, Brevkategori.SØKNAD)
         }.returns(
             setOf(
                 MottattDokument(
@@ -372,7 +372,7 @@ class StatistikkJobbUtførerTest {
                     sakId = sakId,
                     behandlingId = behandlingId,
                     mottattTidspunkt = nå.minusDays(1),
-                    type = Brevkode.SØKNAD,
+                    type = Brevkategori.SØKNAD,
                     kanal = Kanal.DIGITAL,
                     strukturertDokument = null
                 ),
@@ -381,7 +381,7 @@ class StatistikkJobbUtførerTest {
                     sakId = sakId,
                     behandlingId = behandlingId,
                     mottattTidspunkt = tidligsteMottattTid,
-                    type = Brevkode.SØKNAD,
+                    type = Brevkategori.SØKNAD,
                     kanal = Kanal.PAPIR,
                     strukturertDokument = null
                 )

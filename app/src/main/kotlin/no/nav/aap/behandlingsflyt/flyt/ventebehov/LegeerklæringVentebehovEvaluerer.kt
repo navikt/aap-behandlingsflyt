@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.flyt.ventebehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkode
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkategori
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.SakId
@@ -17,13 +17,13 @@ class LegeerklæringVentebehovEvaluerer(private val connection: DBConnection): S
         val mottattDokumentRepository = MottattDokumentRepository(connection)
         val sisteLegeerklæringBestilling = avklaringsbehov.historikk.maxBy { it.tidsstempel }
 
-        val avvistDokumenter = mottattDokumentRepository.hentDokumenterAvType(sakId, Brevkode.LEGEERKLÆRING_AVVIST)
+        val avvistDokumenter = mottattDokumentRepository.hentDokumenterAvType(sakId, Brevkategori.LEGEERKLÆRING_AVVIST)
         val avslåtteDokumenterEtterBestilling = avvistDokumenter.filter { it.mottattTidspunkt.isAfter(sisteLegeerklæringBestilling.tidsstempel)}
 
-        val mottatteLegeerklæringer = mottattDokumentRepository.hentDokumenterAvType(sakId, Brevkode.LEGEERKLÆRING_MOTTATT)
+        val mottatteLegeerklæringer = mottattDokumentRepository.hentDokumenterAvType(sakId, Brevkategori.LEGEERKLÆRING_MOTTATT)
         val mottatteLegeerklæringerEtterSisteBestilling = mottatteLegeerklæringer.filter { it.mottattTidspunkt.isAfter(sisteLegeerklæringBestilling.tidsstempel) }
 
-        val mottattedialogmeldinger = mottattDokumentRepository.hentDokumenterAvType (sakId, Brevkode.DIALOGMELDING)
+        val mottattedialogmeldinger = mottattDokumentRepository.hentDokumenterAvType (sakId, Brevkategori.DIALOGMELDING)
         val mottatteDialogmeldingerEtterSisteBestilling = mottattedialogmeldinger.filter { it.mottattTidspunkt.isAfter(sisteLegeerklæringBestilling.tidsstempel) }
 
         return (avslåtteDokumenterEtterBestilling.any() && avklaringsbehov.erÅpent()) ||

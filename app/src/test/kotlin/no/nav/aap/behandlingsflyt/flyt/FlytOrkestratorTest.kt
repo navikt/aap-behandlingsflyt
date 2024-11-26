@@ -59,7 +59,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkode
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkategori
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -165,7 +165,7 @@ class FlytOrkestratorTest {
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),
                 strukturertDokument = StrukturertDokument(
                     Søknad(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null),
-                    Brevkode.SØKNAD
+                    Brevkategori.SØKNAD
                 ),
                 periode = periode
             )
@@ -554,7 +554,7 @@ class FlytOrkestratorTest {
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
                     Søknad(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null),
-                    Brevkode.SØKNAD
+                    Brevkategori.SØKNAD
                 ),
                 periode = periode
             )
@@ -863,7 +863,7 @@ class FlytOrkestratorTest {
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),
                 strukturertDokument = StrukturertDokument(
                     Søknad(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null),
-                    Brevkode.SØKNAD
+                    Brevkategori.SØKNAD
                 ),
                 periode = periode
             )
@@ -913,7 +913,7 @@ class FlytOrkestratorTest {
                         student = SøknadStudentDto("JA", "JA"),
                         yrkesskade = "JA",
                         oppgitteBarn = null
-                    ), Brevkode.SØKNAD
+                    ), Brevkategori.SØKNAD
                 ),
                 periode = periode
             )
@@ -1249,7 +1249,7 @@ class FlytOrkestratorTest {
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
                     Søknad(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null),
-                    Brevkode.SØKNAD
+                    Brevkategori.SØKNAD
                 ),
                 periode = periode
             )
@@ -1347,7 +1347,7 @@ class FlytOrkestratorTest {
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
                     Søknad(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null),
-                    Brevkode.SØKNAD
+                    Brevkategori.SØKNAD
                 ),
                 periode = periode
             )
@@ -1401,7 +1401,7 @@ class FlytOrkestratorTest {
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
                     Søknad(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null),
-                    Brevkode.SØKNAD
+                    Brevkategori.SØKNAD
                 ),
                 periode = periode
             )
@@ -1432,7 +1432,7 @@ class FlytOrkestratorTest {
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
                     Søknad(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null),
-                    Brevkode.SØKNAD
+                    Brevkategori.SØKNAD
                 ),
                 periode = periode
             )
@@ -1482,7 +1482,7 @@ class FlytOrkestratorTest {
                         MottattDokumentReferanse.Type.AVVIST_LEGEERKLÆRING_ID,
                         avvistLegeerklæringId
                     ),
-                    brevkode = Brevkode.LEGEERKLÆRING_AVVIST,
+                    brevkategori = Brevkategori.LEGEERKLÆRING_AVVIST,
                     kanal = Kanal.DIGITAL,
                     periode = Periode(
                         LocalDate.now(),
@@ -1514,7 +1514,7 @@ class FlytOrkestratorTest {
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
                     Søknad(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null),
-                    Brevkode.SØKNAD
+                    Brevkategori.SØKNAD
                 ),
                 periode = periode
             )
@@ -1565,7 +1565,7 @@ class FlytOrkestratorTest {
                         MottattDokumentReferanse.Type.JOURNALPOST,
                         journalpostId
                     ),
-                    brevkode = Brevkode.LEGEERKLÆRING_MOTTATT,
+                    brevkategori = Brevkategori.LEGEERKLÆRING_MOTTATT,
                     kanal = Kanal.DIGITAL,
                     periode = Periode(
                         LocalDate.now(),
@@ -1597,7 +1597,7 @@ class FlytOrkestratorTest {
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
                     Søknad(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null),
-                    Brevkode.SØKNAD
+                    Brevkategori.SØKNAD
                 ),
                 periode = periode
             )
@@ -1647,7 +1647,7 @@ class FlytOrkestratorTest {
                         MottattDokumentReferanse.Type.JOURNALPOST,
                         journalpostId
                     ),
-                    brevkode = Brevkode.DIALOGMELDING,
+                    brevkategori = Brevkategori.DIALOGMELDING,
                     kanal = Kanal.DIGITAL,
                     periode = Periode(
                         LocalDate.now(),

@@ -7,7 +7,7 @@ import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkode
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkategori
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
@@ -35,7 +35,7 @@ fun NormalOpenAPIRoute.søknadApi(dataSource: DataSource) {
                         HendelseMottattHåndteringJobbUtfører.nyJobb(
                             sakId = sak.id,
                             dokumentReferanse = dokumentReferanse,
-                            brevkode = Brevkode.SØKNAD,
+                            brevkategori = Brevkategori.SØKNAD,
                             // TODO få kanal fra payload i stedet
                             kanal = Kanal.DIGITAL,
                             periode = Periode(

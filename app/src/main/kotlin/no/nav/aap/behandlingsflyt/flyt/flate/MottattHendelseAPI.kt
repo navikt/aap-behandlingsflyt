@@ -8,7 +8,7 @@ import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.MottattHendelseDto
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkode
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkategori
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
@@ -35,7 +35,7 @@ fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource) {
                         HendelseMottattHåndteringJobbUtfører.nyJobb(
                             sakId = sak.id,
                             dokumentReferanse = dokumentReferanse,
-                            brevkode = dto.type,
+                            brevkategori = dto.type,
                             kanal = Kanal.DIGITAL,
                             periode = Periode(
                                 LocalDate.now(),
@@ -53,12 +53,12 @@ fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource) {
 
 private fun mapDokumentReferanse(dto: MottattHendelseDto): MottattDokumentReferanse {
     return when (dto.type) {
-        Brevkode.LEGEERKLÆRING_MOTTATT -> MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, dto.hendelseId )
-        Brevkode.LEGEERKLÆRING_AVVIST -> MottattDokumentReferanse(MottattDokumentReferanse.Type.AVVIST_LEGEERKLÆRING_ID, dto.hendelseId )
-        Brevkode.DIALOGMELDING -> MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, dto.hendelseId )
-        Brevkode.SØKNAD -> TODO()
-        Brevkode.AKTIVITETSKORT -> TODO()
-        Brevkode.PLIKTKORT -> TODO()
-        Brevkode.UKJENT -> TODO()
+        Brevkategori.LEGEERKLÆRING_MOTTATT -> MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, dto.hendelseId )
+        Brevkategori.LEGEERKLÆRING_AVVIST -> MottattDokumentReferanse(MottattDokumentReferanse.Type.AVVIST_LEGEERKLÆRING_ID, dto.hendelseId )
+        Brevkategori.DIALOGMELDING -> MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, dto.hendelseId )
+        Brevkategori.SØKNAD -> TODO()
+        Brevkategori.AKTIVITETSKORT -> TODO()
+        Brevkategori.PLIKTKORT -> TODO()
+        Brevkategori.UKJENT -> TODO()
     }
 }

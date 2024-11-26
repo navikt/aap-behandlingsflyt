@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReposito
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.InnsendingId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.aktivitet.TorsHammerDto
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkode
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkategori
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
@@ -35,7 +35,7 @@ fun NormalOpenAPIRoute.torsHammerApi(dataSource: DataSource) {
                     HendelseMottattHåndteringJobbUtfører.nyJobb(
                         sakId = sak.id,
                         dokumentReferanse = MottattDokumentReferanse(InnsendingId.ny()),
-                        brevkode = Brevkode.AKTIVITETSKORT,
+                        brevkategori = Brevkategori.AKTIVITETSKORT,
                         kanal = Kanal.DIGITAL,
                         periode = Periode(dto.hammer.dato, dto.hammer.dato),
                         payload = dto
@@ -52,7 +52,7 @@ fun NormalOpenAPIRoute.torsHammerApi(dataSource: DataSource) {
                 val mottattDokumentRepository = MottattDokumentRepository(connection)
 
                 val hentDokumenterAvType =
-                    mottattDokumentRepository.hentDokumenterAvType(sak.id, Brevkode.AKTIVITETSKORT)
+                    mottattDokumentRepository.hentDokumenterAvType(sak.id, Brevkategori.AKTIVITETSKORT)
 
 
                 AlleHammereDto(hentDokumenterAvType.mapNotNull { it.strukturerteData<TorsHammerDto>()?.data?.hammer })

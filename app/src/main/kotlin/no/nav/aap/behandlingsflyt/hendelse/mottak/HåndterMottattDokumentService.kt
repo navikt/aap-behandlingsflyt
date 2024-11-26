@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.hendelse.mottak
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkode
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkategori
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -21,16 +21,16 @@ class HåndterMottattDokumentService(connection: DBConnection) {
     private val låsRepository = TaSkriveLåsRepository(connection)
     private val prosesserBehandling = ProsesserBehandlingService(FlytJobbRepository(connection))
 
-    fun håndterMottatteDokumenter(sakId: SakId, brevkode: Brevkode, periode: Periode?, mottattDato: LocalDate) {
+    fun håndterMottatteDokumenter(sakId: SakId, brevkategori: Brevkategori, periode: Periode?, mottattDato: LocalDate) {
 
         val sak = sakService.hent(sakId)
-        val element = utledÅrsak(brevkode, periode)
+        val element = utledÅrsak(brevkategori, periode)
         val beriketBehandling =
             sakOgBehandlingService.finnEllerOpprettBehandling(sak.saksnummer, listOf(element))
 
         val behandlingSkrivelås = låsRepository.låsBehandling(beriketBehandling.behandling.id)
 
-        sakOgBehandlingService.oppdaterRettighetsperioden(sakId, brevkode, mottattDato)
+        sakOgBehandlingService.oppdaterRettighetsperioden(sakId, brevkategori, mottattDato)
 
         prosesserBehandling.triggProsesserBehandling(
             sakId,
@@ -41,20 +41,20 @@ class HåndterMottattDokumentService(connection: DBConnection) {
         låsRepository.verifiserSkrivelås(behandlingSkrivelås)
     }
 
-    private fun utledÅrsak(brevkode: Brevkode, periode: Periode?): Årsak {
-        return when (brevkode) {
-            Brevkode.SØKNAD -> Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD)
-            Brevkode.PLIKTKORT ->
+    private fun utledÅrsak(brevkategori: Brevkategori, periode: Periode?): Årsak {
+        return when (brevkategori) {
+            Brevkategori.SØKNAD -> Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD)
+            Brevkategori.PLIKTKORT ->
                 Årsak(
                     ÅrsakTilBehandling.MOTTATT_MELDEKORT,
                     periode
                 )
 
-            Brevkode.AKTIVITETSKORT -> Årsak(ÅrsakTilBehandling.MOTTATT_AKTIVITETSMELDING, periode)
-            Brevkode.UKJENT -> TODO("Ukjent dokument")
-            Brevkode.LEGEERKLÆRING_AVVIST -> Årsak(ÅrsakTilBehandling.MOTTATT_AVVIST_LEGEERKLÆRING)
-            Brevkode.LEGEERKLÆRING_MOTTATT -> Årsak(ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING)
-            Brevkode.DIALOGMELDING -> Årsak(ÅrsakTilBehandling.MOTTATT_DIALOGMELDING)
+            Brevkategori.AKTIVITETSKORT -> Årsak(ÅrsakTilBehandling.MOTTATT_AKTIVITETSMELDING, periode)
+            Brevkategori.UKJENT -> TODO("Ukjent dokument")
+            Brevkategori.LEGEERKLÆRING_AVVIST -> Årsak(ÅrsakTilBehandling.MOTTATT_AVVIST_LEGEERKLÆRING)
+            Brevkategori.LEGEERKLÆRING_MOTTATT -> Årsak(ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING)
+            Brevkategori.DIALOGMELDING -> Årsak(ÅrsakTilBehandling.MOTTATT_DIALOGMELDING)
         }
     }
 }
