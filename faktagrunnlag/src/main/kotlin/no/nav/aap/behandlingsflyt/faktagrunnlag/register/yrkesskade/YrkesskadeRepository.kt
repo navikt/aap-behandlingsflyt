@@ -6,6 +6,21 @@ import java.time.LocalDate
 
 class YrkesskadeRepository(private val connection: DBConnection) {
 
+    private fun eksistererGrunnlag(behandlingId: BehandlingId): Boolean {
+        return connection.queryFirstOrNull(
+            """
+            SELECT id FROM YRKESSKADE_GRUNNLAG g WHERE g.AKTIV AND g.BEHANDLING_ID = ?
+        """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+            setRowMapper {
+                it.getLong("id")
+            }
+        } != null
+    }
+
     fun hentHvisEksisterer(behandlingId: BehandlingId): YrkesskadeGrunnlag? {
         return connection.queryList(
             """
@@ -58,7 +73,7 @@ class YrkesskadeRepository(private val connection: DBConnection) {
 
         if (yrkesskadeGrunnlag?.yrkesskader == yrkesskader) return
 
-        if (yrkesskadeGrunnlag != null) {
+        if (eksistererGrunnlag(behandlingId)) {
             deaktiverEksisterende(behandlingId)
         }
 
