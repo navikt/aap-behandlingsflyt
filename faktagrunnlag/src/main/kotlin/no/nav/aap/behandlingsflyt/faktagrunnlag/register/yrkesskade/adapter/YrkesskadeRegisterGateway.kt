@@ -15,32 +15,8 @@ import no.nav.aap.yrkesskade.YrkesskadeModell
 import no.nav.aap.yrkesskade.YrkesskadeRequest
 import no.nav.aap.yrkesskade.Yrkesskader
 import java.net.URI
-import java.time.LocalDate
 
 object YrkesskadeRegisterGateway {
-    @Deprecated("Brukes i dev på grunn av manglende integrasjon mot yrkesskaderegisteret i dolly")
-    private val yrkesskaderTestMap = mutableMapOf<Ident, YrkesskadeModell>()
-
-    @Deprecated("Brukes i dev på grunn av manglende integrasjon mot yrkesskaderegisteret i dolly")
-    fun puttInnTestPerson(ident: Ident, yrkesskadeDato: LocalDate) {
-        yrkesskaderTestMap[ident] = YrkesskadeModell(
-            kommunenr = "0301",
-            saksblokk = "1",
-            saksnr = 123456,
-            sakstype = "YRK",
-            mottattdato = LocalDate.now(),
-            resultat = "I",
-            resultattekst = "Innvilget",
-            vedtaksdato = LocalDate.now(),
-            skadeart = "YRK",
-            diagnose = "YRK",
-            skadedato = yrkesskadeDato,
-            kildetabell = "YRK",
-            kildesystem = "YRK",
-            saksreferanse = "YRK"
-        )
-    }
-
     private val url = URI.create(requiredConfigForKey("integrasjon.yrkesskade.url")).resolve("/api/v1/saker/")
     private val config = ClientConfig(
         scope = requiredConfigForKey("integrasjon.yrkesskade.scope"),
@@ -51,24 +27,21 @@ object YrkesskadeRegisterGateway {
         tokenProvider = ClientCredentialsTokenProvider
     )
 
-    private fun query(request: YrkesskadeRequest): Yrkesskader? {
-        val funnetIdent = yrkesskaderTestMap.entries.firstOrNull { (key) ->
-            key.identifikator in request.foedselsnumre
-        }
+    private fun query(request: YrkesskadeRequest, oppgittYrkesskade: YrkesskadeModell?): Yrkesskader? {
 
-        if (funnetIdent != null) {
-            return Yrkesskader(listOf(funnetIdent.value))
+        if (oppgittYrkesskade != null) {
+            return Yrkesskader(listOf(oppgittYrkesskade))
         }
 
         val httpRequest = PostRequest(body = request)
         return client.post(uri = url, request = httpRequest) { body, _ -> DefaultJsonMapper.fromJson(body) }
     }
 
-    fun innhent(person: Person, fødselsdato: Fødselsdato): List<Yrkesskade> {
+    fun innhent(person: Person, fødselsdato: Fødselsdato, oppgittYrkesskade: YrkesskadeModell?): List<Yrkesskade> {
         val identer = person.identer().map(Ident::identifikator)
         //TODO: fra når skal yrkesskade hentes
         val request = YrkesskadeRequest(identer, fødselsdato.toLocalDate())
-        val response: Yrkesskader? = query(request)
+        val response: Yrkesskader? = query(request, oppgittYrkesskade)
 
         if (response == null) {
             return emptyList()

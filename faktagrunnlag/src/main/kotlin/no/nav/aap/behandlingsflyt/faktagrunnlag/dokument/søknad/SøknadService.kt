@@ -7,7 +7,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeRegisterGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.OppgittStudent
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
@@ -57,13 +56,7 @@ class SøknadService private constructor(
                     skalGjenopptaStudieStatus = ubehandletSøknad.skalGjenopptaStudie
                 )
             )
-            //FIXME: Brukes i dev på grunn av manglende integrasjon mot yrkesskaderegisteret i dolly
-            if (ubehandletSøknad.harYrkesskade) {
-                YrkesskadeRegisterGateway.puttInnTestPerson(
-                    sak.person.aktivIdent(),
-                    sak.rettighetsperiode.fom.minusDays(60)
-                )
-            }
+
             if (ubehandletSøknad.oppgitteBarn != null) {
                 barnRepository.lagreOppgitteBarn(kontekst.behandlingId, ubehandletSøknad.oppgitteBarn)
             }
