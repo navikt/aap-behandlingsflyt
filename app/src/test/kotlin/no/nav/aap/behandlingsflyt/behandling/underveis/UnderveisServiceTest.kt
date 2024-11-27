@@ -26,7 +26,7 @@ import javax.sql.DataSource
 class UnderveisServiceTest {
 
     private val dataSource: DataSource = MockDataSource()
-    private val kvote = Kvote(260*3, 260/2)
+    private val kvoter = Kvoter.create(260*3, 260/2)
 
     @Test
     fun `skal vurdere alle reglene`() {
@@ -101,7 +101,7 @@ class UnderveisServiceTest {
                 rettighetsperiode = periode,
                 relevanteVilkår = relevanteVilkår,
                 opptrappingPerioder = listOf(Periode(søknadsdato.plusYears(2), søknadsdato.plusYears(3))),
-                kvote = kvote
+                kvoter = kvoter
             )
 
             val vurderingTidslinje = underveisService.vurderRegler(input)

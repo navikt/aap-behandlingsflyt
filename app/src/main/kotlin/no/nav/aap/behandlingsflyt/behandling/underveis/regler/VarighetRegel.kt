@@ -1,17 +1,13 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.Kvote
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetVurdering.Avslagsårsak.ETABLERINGSFASEKVOTE_BRUKT_OPP
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetVurdering.Avslagsårsak.STANDARDKVOTE_BRUKT_OPP
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetVurdering.Avslagsårsak.STUDENTKVOTE_BRUKT_OPP
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetVurdering.Avslagsårsak.UTVIKLINGSFASEKVOTE_BRUKT_OPP
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plusHverdager
+import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak.STUDENT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
-import java.time.DayOfWeek
-import java.time.LocalDate
 
 /**
  * Håndterer varighetsbestemmelsene (11-12 + unntak fra denne). Sjekker uttak mot kvoten etablert i saken.
@@ -27,9 +23,8 @@ import java.time.LocalDate
  */
 //WIP
 class VarighetRegel : UnderveisRegel {
-
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
-        val sykdomVarighetTidslinje = sykdomstidslinje(input.kvote, resultat)
+        val sykdomVarighetTidslinje = sykdomstidslinje(input.kvoter, resultat)
 
         return resultat.leggTilVurderinger(sykdomVarighetTidslinje, Vurdering::leggTilVarighetVurdering)
     }
@@ -46,15 +41,8 @@ class VarighetRegel : UnderveisRegel {
     }
 
     // ønsker vi kvote-info ved avslag i helgen?
-    private fun sykdomstidslinje(kvote: Kvote, resultat: Tidslinje<Vurdering>): Tidslinje<VarighetVurdering> {
-        val kvoter = mapOf(
-            Sykdomskvoter.STANDARD to kvote.antallHverdagerMedRett,
-            Sykdomskvoter.STUDENT to kvote.studentKvote,
-            Sykdomskvoter.UTVIKLINGSFASE to 0,
-            Sykdomskvoter.ETABLERINGSFASE to 0,
-        )
-
-        val telleverk: MutableMap<Sykdomskvoter, Int> = Sykdomskvoter.entries.associateWith { 0 }.toMutableMap()
+    private fun sykdomstidslinje(kvoter: Kvoter, resultat: Tidslinje<Vurdering>): Tidslinje<VarighetVurdering> {
+        val telleverk = Telleverk(kvoter)
 
         return resultat.flatMap {
             val relevanteKvoter = relevanteKvoter(it.verdi)
@@ -62,7 +50,7 @@ class VarighetRegel : UnderveisRegel {
                 relevanteKvoter.isNotEmpty() ->
                     vurderPeriode(
                         periode = it.periode,
-                        kvoter = kvoter.filterKeys { it in relevanteKvoter },
+                        relevanteKvoter = relevanteKvoter,
                         telleverk = telleverk,
                     )
 
@@ -80,43 +68,22 @@ class VarighetRegel : UnderveisRegel {
         ).filterValues { it }.keys
     }
 
-    private fun hverdagerFraOgMed(start: LocalDate): Sequence<LocalDate> {
-        var dag = start
-        return sequence {
-            while (true) {
-                if (dag.erHverdag) {
-                    yield(dag)
-                }
-                dag = dag.plusDays(1)
-            }
-        }
-    }
-
-    private fun plussHverdager(fom: LocalDate, hverdagerSomSkalLeggesTil: Int): LocalDate {
-        return hverdagerFraOgMed(fom).elementAt(hverdagerSomSkalLeggesTil)
-    }
 
     private fun vurderPeriode(
         periode: Periode,
-        kvoter: Map<Sykdomskvoter, Int>,
-        telleverk: MutableMap<Sykdomskvoter, Int>,
+        relevanteKvoter: Set<Sykdomskvoter>,
+        telleverk: Telleverk,
     ): Tidslinje<VarighetVurdering> {
+        require(relevanteKvoter.isNotEmpty())
 
-        val dagerIgjenPerKvote = kvoter.mapValues { it.value - telleverk[it.key]!! }
+        val dagerTilStans = telleverk.minsteUbrukteKvote(relevanteKvoter)
 
-        // TODO: må vel ta hensyn til helger når vi trekker fra `antallDager()`? Skriv test før fiks!
-        val stansIPerioden = dagerIgjenPerKvote.any { (it.value - periode.antallDager()) < 0 }
+        if (dagerTilStans < periode.antallHverdager()) {
+            telleverk.øk(relevanteKvoter, dagerTilStans)
 
-        if (stansIPerioden) {
-            val gjenværendeKvote = dagerIgjenPerKvote.minOf { it.value }
-            telleverk.øk(kvoter.keys, gjenværendeKvote)
+            val stansDato = periode.fom.plusHverdager(dagerTilStans)
 
-            val stansDato = plussHverdager(periode.fom, gjenværendeKvote)
-
-            val stansÅrsaker = dagerIgjenPerKvote
-                .filter { it.value == gjenværendeKvote }
-                .keys
-                .map { it.avslagsårsak }.toSet()
+            val stansÅrsaker = telleverk.kvoterNærmestÅBliBruktOpp(relevanteKvoter).map { it.avslagsårsak }.toSet()
             return listOfNotNull<Segment<VarighetVurdering>>(
                 if (stansDato == periode.fom)
                     null
@@ -130,7 +97,7 @@ class VarighetRegel : UnderveisRegel {
                 )
             ).let { Tidslinje(it) }
         } else {
-            telleverk.øk(kvoter.keys, periode)
+            telleverk.øk(relevanteKvoter, periode)
             return Tidslinje(
                 periode,
                 Oppfylt
@@ -138,28 +105,3 @@ class VarighetRegel : UnderveisRegel {
         }
     }
 }
-
-private val helg = setOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY)
-
-private val LocalDate.erHverdag: Boolean
-    get() = dayOfWeek !in helg
-
-fun MutableMap<Sykdomskvoter, Int>.øk(kvoter: Set<Sykdomskvoter>, periode: Periode) {
-    val hverdager = periode.dager().count { it.erHverdag }
-    this.øk(kvoter, hverdager)
-}
-
-fun MutableMap<Sykdomskvoter, Int>.øk(kvoter: Set<Sykdomskvoter>, bruk: Int) {
-    for (kvote in kvoter) {
-        this[kvote] = this[kvote]!! + bruk
-    }
-}
-
-
-enum class Sykdomskvoter(val avslagsårsak: VarighetVurdering.Avslagsårsak) {
-    STANDARD(STANDARDKVOTE_BRUKT_OPP),
-    STUDENT(STUDENTKVOTE_BRUKT_OPP),
-    ETABLERINGSFASE(ETABLERINGSFASEKVOTE_BRUKT_OPP),
-    UTVIKLINGSFASE(UTVIKLINGSFASEKVOTE_BRUKT_OPP),
-}
-

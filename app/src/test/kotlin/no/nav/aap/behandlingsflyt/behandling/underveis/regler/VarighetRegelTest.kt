@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.Kvote
+import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetVurdering.Avslagsårsak.STANDARDKVOTE_BRUKT_OPP
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetVurdering.Avslagsårsak.STUDENTKVOTE_BRUKT_OPP
 import no.nav.aap.behandlingsflyt.dbtestdata.januar
@@ -33,7 +33,7 @@ class VarighetRegelTest {
         val vurderinger = regel.vurder(
             tomUnderveisInput.copy(
                 rettighetsperiode = rettighetsperiode,
-                kvote = Kvote(4, 0)
+                kvoter = Kvoter.create(4, 0)
             ),
 
             Tidslinje(
@@ -58,7 +58,7 @@ class VarighetRegelTest {
         val vurderinger = regel.vurder(
             tomUnderveisInput.copy(
                 rettighetsperiode = rettighetsperiode,
-                kvote = Kvote(5, 0)
+                kvoter = Kvoter.create(5, 0)
             ),
 
             Tidslinje(
@@ -83,7 +83,7 @@ class VarighetRegelTest {
         val vurderinger = regel.vurder(
             tomUnderveisInput.copy(
                 rettighetsperiode = rettighetsperiode,
-                kvote = Kvote(2, 0)
+                kvoter = Kvoter.create(2, 0)
             ),
 
             Tidslinje(
@@ -108,7 +108,7 @@ class VarighetRegelTest {
         val vurderinger = regel.vurder(
             tomUnderveisInput.copy(
                 rettighetsperiode = rettighetsperiode,
-                kvote = Kvote(2, 0)
+                kvoter = Kvoter.create(2, 0)
             ),
 
             Tidslinje(
@@ -134,7 +134,7 @@ class VarighetRegelTest {
         val vurderinger = regel.vurder(
             tomUnderveisInput.copy(
                 rettighetsperiode = rettighetsperiode,
-                kvote = Kvote(2, 0)
+                kvoter = Kvoter.create(2, 0)
             ),
 
             listOf(
@@ -179,7 +179,7 @@ class VarighetRegelTest {
         val vurderinger = regel.vurder(
             tomUnderveisInput.copy(
                 rettighetsperiode = rettighetsperiode,
-                kvote = Kvote(2, 0)
+                kvoter = Kvoter.create(2, 0)
             ),
 
             Tidslinje(
@@ -230,7 +230,7 @@ class VarighetRegelTest {
         val vurderinger = regel.vurder(
             tomUnderveisInput.copy(
                 rettighetsperiode = rettighetsperiode,
-                kvote = Kvote(2, 0)
+                kvoter = Kvoter.create(2, 0)
             ),
             Tidslinje(
                 listOf(
@@ -280,7 +280,7 @@ class VarighetRegelTest {
         val vurderinger = regel.vurder(
             tomUnderveisInput.copy(
                 rettighetsperiode = rettighetsperiode,
-                kvote = Kvote(3, 0)
+                kvoter = Kvoter.create(3, 0)
             ),
             Tidslinje(
                 listOf(
@@ -338,7 +338,7 @@ class VarighetRegelTest {
         val vurderinger = regel.vurder(
             tomUnderveisInput.copy(
                 rettighetsperiode = rettighetsperiode,
-                kvote = Kvote(4, 0)
+                kvoter = Kvoter.create(4, 0)
             ),
             Tidslinje(
                 listOf(
@@ -405,7 +405,7 @@ class VarighetRegelTest {
         val vurderinger = regel.vurder(
             tomUnderveisInput.copy(
                 rettighetsperiode = rettighetsperiode,
-                kvote = Kvote(4, 2)
+                kvoter = Kvoter.create(4, 2)
             ),
 
             listOf(
@@ -451,7 +451,7 @@ class VarighetRegelTest {
         val vurderinger = regel.vurder(
             tomUnderveisInput.copy(
                 rettighetsperiode = rettighetsperiode,
-                kvote = Kvote(2, 2)
+                kvoter = Kvoter.create(2, 2)
             ),
 
             listOf(
@@ -505,7 +505,7 @@ class VarighetRegelTest {
         val vurderinger = regel.vurder(
             tomUnderveisInput.copy(
                 rettighetsperiode = rettighetsperiode,
-                kvote = Kvote(2, 2)
+                kvoter = Kvoter.create(2, 2)
             ),
 
             listOf(
@@ -537,7 +537,7 @@ class VarighetRegelTest {
 
     /*  November 2024
      * Mo Tu We Th Fr Sa Su
-     *  4  5  6  7  8  9 10
+     *              8  9 10
      */
     @Test
     fun `standard kvote brukt opp på siste hverdag i uka med påfølgende helg i samme segment`() {
@@ -545,7 +545,7 @@ class VarighetRegelTest {
         val vurderinger = regel.vurder(
             tomUnderveisInput.copy(
                 rettighetsperiode = rettighetsperiode,
-                kvote = Kvote(antallHverdagerMedRett = 1, studentKvote = 0)
+                kvoter = Kvoter.create(standardkvote = 1, studentkvote = 0)
             ),
             Tidslinje(
                 Periode(8 november 2024, 10 november 2024),

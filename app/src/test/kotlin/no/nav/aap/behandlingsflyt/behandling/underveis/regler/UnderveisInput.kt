@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.Kvote
+import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
@@ -13,7 +13,7 @@ val tomUnderveisInput = UnderveisInput(
     opptrappingPerioder = emptyList(),
     pliktkort = emptyList(),
     innsendingsTidspunkt = mapOf(),
-    kvote = Kvote(0, 0),
+    kvoter = Kvoter.create(0, 0),
     aktivitetspliktGrunnlag = AktivitetspliktGrunnlag(emptySet()),
     etAnnetSted = listOf(),
     arbeidsevneGrunnlag = ArbeidsevneGrunnlag(emptyList()),

@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetSted
-import no.nav.aap.behandlingsflyt.behandling.underveis.Kvote
+import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktGrunnlag
@@ -19,7 +19,7 @@ data class UnderveisInput(
     val pliktkort: List<Pliktkort>,
     val innsendingsTidspunkt: Map<LocalDate, JournalpostId>,
     val dødsdato: LocalDate? = null,
-    val kvote: Kvote,
+    val kvoter: Kvoter,
     val aktivitetspliktGrunnlag: AktivitetspliktGrunnlag,
     val etAnnetSted: List<EtAnnetSted>,
     val arbeidsevneGrunnlag: ArbeidsevneGrunnlag,

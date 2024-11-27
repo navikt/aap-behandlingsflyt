@@ -141,7 +141,7 @@ class UnderveisService(
             opptrappingPerioder = listOf(),
             pliktkort = pliktkort,
             innsendingsTidspunkt = innsendingsTidspunkt,
-            kvote = kvote,
+            kvoter = kvote,
             aktivitetspliktGrunnlag = aktivitetspliktGrunnlag,
             etAnnetSted = etAnnetSted,
             arbeidsevneGrunnlag = arbeidsevneGrunnlag,

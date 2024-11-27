@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.Kvote
+import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
@@ -15,7 +15,7 @@ import java.time.LocalDate
 class RettTilRegelTest {
 
     private val regel = RettTilRegel()
-    private val kvote = Kvote(260*3, 260/2)
+    private val kvoter = Kvoter.create(260*3, 260/2)
 
     @Test
     fun `skal lage tidslinje med alle relevante vilkår`() {
@@ -73,7 +73,7 @@ class RettTilRegelTest {
         val input = tomUnderveisInput.copy(
             rettighetsperiode = periode,
             relevanteVilkår = listOf(aldersVilkåret, sykdomsVilkåret, medlemskapVilkåret, bistandVilkåret),
-            kvote = kvote,
+            kvoter = kvoter,
         )
         val grunnleggendeRettTidslinje = regel.vurder(input = input, Tidslinje())
 
@@ -149,7 +149,7 @@ class RettTilRegelTest {
         val input = tomUnderveisInput.copy(
             rettighetsperiode = periode,
             relevanteVilkår = listOf(aldersVilkåret, sykdomsVilkåret, medlemskapVilkåret, bistandVilkåret),
-            kvote = kvote,
+            kvoter = kvoter,
         )
         val grunnleggendeRettTidslinje = regel.vurder(input = input, Tidslinje())
 
