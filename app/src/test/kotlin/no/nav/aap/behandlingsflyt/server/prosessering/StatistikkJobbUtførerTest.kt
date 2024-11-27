@@ -290,8 +290,6 @@ class StatistikkJobbUtførerTest {
         assertThat(hendelser).isNotEmpty()
         assertThat(hendelser.first().avsluttetBehandling.toString()).isEqualTo(
             AvsluttetBehandlingDTO(
-                behandlingsReferanse = behandling.referanse.referanse,
-                saksnummer = sak.saksnummer.toString(),
                 tilkjentYtelse = TilkjentYtelseDTO(perioder = listOf()),
                 beregningsGrunnlag = BeregningsgrunnlagDTO(
                     grunnlag11_19dto = Grunnlag11_19DTO(

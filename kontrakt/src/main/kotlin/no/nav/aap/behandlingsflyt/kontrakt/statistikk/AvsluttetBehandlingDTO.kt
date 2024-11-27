@@ -3,14 +3,11 @@ package no.nav.aap.behandlingsflyt.kontrakt.statistikk
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import java.math.BigDecimal
 import java.time.LocalDate
-import java.util.*
 
 /**
  * @param beregningsGrunnlag Beregningsgrunnlag. Kan være null om behandlingen avsluttes før inntekt hentes inn.
  */
 public data class AvsluttetBehandlingDTO(
-    val saksnummer: String,
-    val behandlingsReferanse: UUID,
     val tilkjentYtelse: TilkjentYtelseDTO,
     val vilkårsResultat: VilkårsResultatDTO,
     val beregningsGrunnlag: BeregningsgrunnlagDTO?,

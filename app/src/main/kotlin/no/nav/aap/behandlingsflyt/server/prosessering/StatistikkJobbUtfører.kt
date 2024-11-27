@@ -181,8 +181,6 @@ class StatistikkJobbUtfører(
         log.info("Kaller aap-statistikk for sak ${sak.saksnummer}.")
 
         val avsluttetBehandlingDTO = AvsluttetBehandlingDTO(
-            behandlingsReferanse = behandling.referanse.referanse,
-            saksnummer = sak.saksnummer.toString(),
             vilkårsResultat = VilkårsResultatDTO(
                 typeBehandling = behandling.typeBehandling(),
                 vilkår = vilkårsresultat.alle().map { res ->
