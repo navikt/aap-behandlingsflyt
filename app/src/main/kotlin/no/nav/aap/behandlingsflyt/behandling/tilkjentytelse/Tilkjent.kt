@@ -30,12 +30,12 @@ class Tilkjent(
 
         other as Tilkjent
 
+        if (antallBarn != other.antallBarn) return false
         if (dagsats != other.dagsats) return false
         if (gradering != other.gradering) return false
         if (grunnlag != other.grunnlag) return false
         if (grunnlagsfaktor != other.grunnlagsfaktor) return false
         if (grunnbeløp != other.grunnbeløp) return false
-        if (antallBarn != other.antallBarn) return false
         if (barnetilleggsats != other.barnetilleggsats) return false
         if (barnetillegg != other.barnetillegg) return false
 
@@ -43,8 +43,14 @@ class Tilkjent(
     }
 
     override fun hashCode(): Int {
-        var result = dagsats.hashCode()
+        var result = antallBarn
+        result = 31 * result + dagsats.hashCode()
         result = 31 * result + gradering.hashCode()
+        result = 31 * result + grunnlag.hashCode()
+        result = 31 * result + grunnlagsfaktor.hashCode()
+        result = 31 * result + grunnbeløp.hashCode()
+        result = 31 * result + barnetilleggsats.hashCode()
+        result = 31 * result + barnetillegg.hashCode()
         return result
     }
 }
