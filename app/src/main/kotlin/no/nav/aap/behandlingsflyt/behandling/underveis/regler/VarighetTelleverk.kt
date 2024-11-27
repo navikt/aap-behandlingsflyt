@@ -58,6 +58,12 @@ data class KvoteTilstand(
     private val kvote: Hverdager,
     private var kvoteBrukt: Hverdager = Hverdager(0),
 ) {
+    var erKvoteOversteget: Boolean = false
+        set(erKvoteOversteget: Boolean) {
+            require(erKvoteOversteget)
+            field = erKvoteOversteget
+        }
+
     val ubruktKvote: Hverdager
         get() = kvote - kvoteBrukt
 
@@ -98,6 +104,16 @@ class Telleverk private constructor(
             if (Sykdomskvoter.ETABLERINGSFASE in relevanteKvoter) action(etableringsfasekvote) else null,
             if (Sykdomskvoter.UTVIKLINGSFASE in relevanteKvoter) action(utviklingsfasekvote) else null,
         )
+    }
+
+    fun markereKvoterOversteget(kvoterSomSkalMarkeres: Set<Sykdomskvoter>) {
+        map(kvoterSomSkalMarkeres) {
+            it.erKvoteOversteget = true
+        }
+    }
+
+    fun kvoterSomErStanset(relevanteKvoter: Set<Sykdomskvoter>): List<Sykdomskvoter> {
+        return map(relevanteKvoter) { it }.filter { it.erKvoteOversteget }.map { it.type }
     }
 
     fun minsteUbrukteKvote(relevanteKvoter: Set<Sykdomskvoter>): Hverdager {

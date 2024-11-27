@@ -446,60 +446,6 @@ class VarighetRegelTest {
      25 26 27 28 29 30
      */
     @Test
-    fun `brukt opp standard kvote, kan ikke bruke student-kvote alenex`() {
-        val rettighetsperiode = Periode(18 november 2024, 26 november 2024)
-        val vurderinger = regel.vurder(
-            tomUnderveisInput.copy(
-                rettighetsperiode = rettighetsperiode,
-                kvoter = Kvoter.create(2, 2)
-            ),
-
-            listOf(
-                Segment(
-                    Periode(18 november 2024, 21 november 2024),
-                    Vurdering(
-                        vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
-                    )
-                ),
-                Segment(
-                    Periode(22 november 2024, 25 november 2024),
-                    Vurdering(
-                        vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, STUDENT)),
-                    )
-                ),
-                Segment(
-                    Periode(26 november 2024, 26 november 2024),
-                    Vurdering(
-                        vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, STUDENT)),
-                    )
-                ),
-            ).let(::Tidslinje)
-        )
-
-        vurderinger.assert(
-            Segment(Periode(18 november 2024, 19 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
-            Segment(Periode(20 november 2024, 21 november 2024)) { vurdering ->
-                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP, STANDARDKVOTE_BRUKT_OPP)
-            },
-            Segment(Periode(22 november 2024, 25 november 2024)) { vurdering ->
-                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP, STANDARDKVOTE_BRUKT_OPP)
-            },
-            Segment(Periode(26 november 2024, 26 november 2024)) { vurdering ->
-                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP, STANDARDKVOTE_BRUKT_OPP)
-            },
-        )
-    }
-
-    /*
-        November 2024
-     Mo Tu We Th Fr Sa Su
-                  1  2  3
-      4  5  6  7  8  9 10
-     11 12 13 14 15 16 17
-     18 19 20 21 22 23 24
-     25 26 27 28 29 30
-     */
-    @Test
     fun `brukt opp standard kvote, kan ikke bruke student-kvote alene`() {
         val rettighetsperiode = Periode(18 november 2024, 26 november 2024)
         val vurderinger = regel.vurder(
@@ -558,6 +504,96 @@ class VarighetRegelTest {
         vurderinger.assert(
             Segment(Periode(8 november 2024, 10 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
         )
+    }
+
+    /*
+        November 2024
+     Mo Tu We Th Fr Sa Su
+                  1  2  3
+      4  5  6  7  8  9 10
+     11 12 13 14 15 16 17
+     18 19 20 21 22 23 24
+     25 26 27 28 29 30
+     */
+    @Test
+    fun `alle måter å dele opp periode i to`() {
+        val rettighetsperiode = Periode(11 november 2024, 26 november 2024)
+        Periode(rettighetsperiode.fom.plusDays(1), rettighetsperiode.tom).dager().forEach {
+            println(it)
+            val vurderinger = regel.vurder(
+                tomUnderveisInput.copy(
+                    rettighetsperiode = rettighetsperiode,
+                    kvoter = Kvoter.create(4, 0)
+                ),
+
+                listOf(
+                    Segment(
+                        Periode(11 november 2024, it.minusDays(1)),
+                        Vurdering(
+                            vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
+                        )
+                    ),
+                    Segment(
+                        Periode(it, 26 november 2024),
+                        Vurdering(
+                            vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
+                        )
+                    ),
+                ).let(::Tidslinje)
+            )
+
+            vurderinger.assert(
+                Segment(Periode(11 november 2024, 14 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
+                Segment(Periode(15 november 2024, 26 november 2024)) { vurdering ->
+                    assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP, STANDARDKVOTE_BRUKT_OPP)
+                }
+            )
+        }
+    }
+
+    /*
+        November 2024
+     Mo Tu We Th Fr Sa Su
+                  1  2  3
+      4  5  6  7  8  9 10
+     11 12 13 14 15 16 17
+     18 19 20 21 22 23 24
+     25 26 27 28 29 30
+     */
+    @Test
+    fun `alle måter å dele opp periode i tox`() {
+        val rettighetsperiode = Periode(11 november 2024, 26 november 2024)
+        Periode(rettighetsperiode.fom.plusDays(1), rettighetsperiode.tom).dager().forEach {
+            println(it)
+            val vurderinger = regel.vurder(
+                tomUnderveisInput.copy(
+                    rettighetsperiode = rettighetsperiode,
+                    kvoter = Kvoter.create(5, 0)
+                ),
+
+                listOf(
+                    Segment(
+                        Periode(11 november 2024, it.minusDays(1)),
+                        Vurdering(
+                            vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
+                        )
+                    ),
+                    Segment(
+                        Periode(it, 26 november 2024),
+                        Vurdering(
+                            vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
+                        )
+                    ),
+                ).let(::Tidslinje)
+            )
+
+            vurderinger.assert(
+                Segment(Periode(11 november 2024, 17 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
+                Segment(Periode(18 november 2024, 26 november 2024)) { vurdering ->
+                    assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP, STANDARDKVOTE_BRUKT_OPP)
+                }
+            )
+        }
     }
 }
 

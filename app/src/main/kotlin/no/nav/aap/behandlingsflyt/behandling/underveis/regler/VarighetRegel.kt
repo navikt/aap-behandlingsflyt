@@ -68,22 +68,37 @@ class VarighetRegel : UnderveisRegel {
         ).filterValues { it }.keys
     }
 
-
     private fun vurderPeriode(
         periode: Periode,
         relevanteKvoter: Set<Sykdomskvoter>,
         telleverk: Telleverk,
     ): Tidslinje<VarighetVurdering> {
         require(relevanteKvoter.isNotEmpty())
-
         val dagerTilStans = telleverk.minsteUbrukteKvote(relevanteKvoter)
+        val kvoterSomErStanset = telleverk.kvoterSomErStanset(relevanteKvoter)
 
-        if (dagerTilStans < periode.antallHverdager()) {
+        if (kvoterSomErStanset.isEmpty() && periode.antallHverdager() <= dagerTilStans) {
+            telleverk.øk(relevanteKvoter, periode)
+            return Tidslinje(
+                periode,
+                Oppfylt
+            )
+        }
+
+        val kvoterSomBlirStanset = telleverk.kvoterNærmestÅBliBruktOpp(relevanteKvoter)
+        telleverk.markereKvoterOversteget(kvoterSomBlirStanset)
+        if (kvoterSomErStanset.isNotEmpty()) {
+            return Tidslinje(
+                periode,
+                Avslag(kvoterSomBlirStanset.map { it.avslagsårsak }.toSet())
+            )
+        }
+        else if (dagerTilStans < periode.antallHverdager()) {
             telleverk.øk(relevanteKvoter, dagerTilStans)
 
             val stansDato = periode.fom.plusHverdager(dagerTilStans)
 
-            val stansÅrsaker = telleverk.kvoterNærmestÅBliBruktOpp(relevanteKvoter).map { it.avslagsårsak }.toSet()
+            val stansÅrsaker = kvoterSomBlirStanset.map { it.avslagsårsak }.toSet()
             return listOfNotNull<Segment<VarighetVurdering>>(
                 if (stansDato == periode.fom)
                     null
@@ -97,11 +112,7 @@ class VarighetRegel : UnderveisRegel {
                 )
             ).let { Tidslinje(it) }
         } else {
-            telleverk.øk(relevanteKvoter, periode)
-            return Tidslinje(
-                periode,
-                Oppfylt
-            )
+            error("kan ikke skje")
         }
     }
 }
