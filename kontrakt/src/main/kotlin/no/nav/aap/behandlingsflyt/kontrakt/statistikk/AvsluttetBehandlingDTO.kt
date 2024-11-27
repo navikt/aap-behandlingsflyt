@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.kontrakt.statistikk
 
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import java.math.BigDecimal
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.util.*
 
 /**
@@ -32,7 +32,7 @@ public data class TilkjentYtelsePeriodeDTO(
 )
 
 public data class VilkårsResultatDTO(
-    val typeBehandling: String, val vilkår: List<VilkårDTO>
+    val typeBehandling: TypeBehandling, val vilkår: List<VilkårDTO>
 )
 
 public data class VilkårDTO(val vilkårType: Vilkårtype, val perioder: List<VilkårsPeriodeDTO>)
@@ -58,7 +58,6 @@ public data class VilkårsPeriodeDTO(
     val innvilgelsesårsak: String? = null,
     val avslagsårsak: String? = null
 )
-
 
 
 /**

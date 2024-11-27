@@ -184,7 +184,7 @@ class StatistikkJobbUtfører(
             behandlingsReferanse = behandling.referanse.referanse,
             saksnummer = sak.saksnummer.toString(),
             vilkårsResultat = VilkårsResultatDTO(
-                typeBehandling = behandling.typeBehandling().toString(),
+                typeBehandling = behandling.typeBehandling(),
                 vilkår = vilkårsresultat.alle().map { res ->
                     VilkårDTO(
                         vilkårType = Vilkårtype.valueOf(res.type.toString()),

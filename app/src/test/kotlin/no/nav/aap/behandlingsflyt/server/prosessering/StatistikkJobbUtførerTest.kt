@@ -303,7 +303,7 @@ class StatistikkJobbUtførerTest {
                 ),
                 vilkårsResultat =
                 VilkårsResultatDTO(
-                    typeBehandling = TypeBehandling.Førstegangsbehandling.toString(),
+                    typeBehandling = TypeBehandling.Førstegangsbehandling,
                     vilkår = listOf(
                         VilkårDTO(
                             vilkårType = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype.valueOf(Vilkårtype.MEDLEMSKAP.toString()),
