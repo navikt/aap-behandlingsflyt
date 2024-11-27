@@ -1,11 +1,10 @@
 package no.nav.aap.behandlingsflyt.kontrakt.hendelse
 
-enum class Brevkategori {
+public enum class InnsendingType {
     SØKNAD,
     AKTIVITETSKORT,
     PLIKTKORT,
-    UKJENT,
-    LEGEERKLÆRING_MOTTATT,
+    LEGEERKLÆRING,
     LEGEERKLÆRING_AVVIST,
     DIALOGMELDING
 }

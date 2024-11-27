@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting
 
-import com.fasterxml.jackson.annotation.JsonValue
 import java.time.LocalDateTime
 import java.util.*
 
@@ -52,12 +51,3 @@ enum class MeldingStatusType {
     BESTILT, SENDT, OK, AVVIST
 }
 
-data class AvvistLegeerklæringId(@JsonValue val value: UUID) {
-    val asString get() = value.toString()
-
-    constructor(value: String) : this(UUID.fromString(value))
-
-    companion object {
-        fun ny() = AvvistLegeerklæringId(UUID.randomUUID())
-    }
-}

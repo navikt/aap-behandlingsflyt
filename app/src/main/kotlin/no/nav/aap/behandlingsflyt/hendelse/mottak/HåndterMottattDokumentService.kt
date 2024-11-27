@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.hendelse.mottak
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkategori
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -21,7 +21,12 @@ class HåndterMottattDokumentService(connection: DBConnection) {
     private val låsRepository = TaSkriveLåsRepository(connection)
     private val prosesserBehandling = ProsesserBehandlingService(FlytJobbRepository(connection))
 
-    fun håndterMottatteDokumenter(sakId: SakId, brevkategori: Brevkategori, periode: Periode?, mottattDato: LocalDate) {
+    fun håndterMottatteDokumenter(
+        sakId: SakId,
+        brevkategori: InnsendingType,
+        periode: Periode?,
+        mottattDato: LocalDate
+    ) {
 
         val sak = sakService.hent(sakId)
         val element = utledÅrsak(brevkategori, periode)
@@ -41,20 +46,19 @@ class HåndterMottattDokumentService(connection: DBConnection) {
         låsRepository.verifiserSkrivelås(behandlingSkrivelås)
     }
 
-    private fun utledÅrsak(brevkategori: Brevkategori, periode: Periode?): Årsak {
+    private fun utledÅrsak(brevkategori: InnsendingType, periode: Periode?): Årsak {
         return when (brevkategori) {
-            Brevkategori.SØKNAD -> Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD)
-            Brevkategori.PLIKTKORT ->
+            InnsendingType.SØKNAD -> Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD)
+            InnsendingType.PLIKTKORT ->
                 Årsak(
                     ÅrsakTilBehandling.MOTTATT_MELDEKORT,
                     periode
                 )
 
-            Brevkategori.AKTIVITETSKORT -> Årsak(ÅrsakTilBehandling.MOTTATT_AKTIVITETSMELDING, periode)
-            Brevkategori.UKJENT -> TODO("Ukjent dokument")
-            Brevkategori.LEGEERKLÆRING_AVVIST -> Årsak(ÅrsakTilBehandling.MOTTATT_AVVIST_LEGEERKLÆRING)
-            Brevkategori.LEGEERKLÆRING_MOTTATT -> Årsak(ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING)
-            Brevkategori.DIALOGMELDING -> Årsak(ÅrsakTilBehandling.MOTTATT_DIALOGMELDING)
+            InnsendingType.AKTIVITETSKORT -> Årsak(ÅrsakTilBehandling.MOTTATT_AKTIVITETSMELDING, periode)
+            InnsendingType.LEGEERKLÆRING_AVVIST -> Årsak(ÅrsakTilBehandling.MOTTATT_AVVIST_LEGEERKLÆRING)
+            InnsendingType.LEGEERKLÆRING -> Årsak(ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING)
+            InnsendingType.DIALOGMELDING -> Årsak(ÅrsakTilBehandling.MOTTATT_DIALOGMELDING)
         }
     }
 }

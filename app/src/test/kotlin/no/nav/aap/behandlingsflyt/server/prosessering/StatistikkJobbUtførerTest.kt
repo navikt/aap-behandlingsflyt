@@ -14,7 +14,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
@@ -26,6 +25,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.DefinisjonDTO
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.EndringDTO
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status.UTREDES
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvsluttetBehandlingDTO
@@ -40,8 +41,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkategori
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -55,6 +54,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.pip.PipRepository
+import no.nav.aap.verdityper.dokument.Kanal
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.Ident
 import no.nav.aap.verdityper.sakogbehandling.SakId
@@ -105,11 +105,11 @@ class StatistikkJobbUtførerTest {
 
             MottattDokumentRepository(connection).lagre(
                 MottattDokument(
-                    referanse = MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, "xxx"),
+                    referanse = InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, "xxx"),
                     sakId = sak.id,
                     behandlingId = opprettetBehandling.id,
                     mottattTidspunkt = LocalDateTime.now().minusDays(23),
-                    type = Brevkategori.SØKNAD,
+                    type = InnsendingType.SØKNAD,
                     kanal = Kanal.PAPIR,
                     strukturertDokument = null
                 )
@@ -231,11 +231,11 @@ class StatistikkJobbUtførerTest {
 
             MottattDokumentRepository(connection).lagre(
                 MottattDokument(
-                    referanse = MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, "xxx"),
+                    referanse = InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, "xxx"),
                     sakId = sak.id,
                     behandlingId = opprettetBehandling.id,
                     mottattTidspunkt = LocalDateTime.now().minusDays(1),
-                    type = Brevkategori.SØKNAD,
+                    type = InnsendingType.SØKNAD,
                     kanal = Kanal.PAPIR,
                     strukturertDokument = null
                 )
@@ -363,24 +363,24 @@ class StatistikkJobbUtførerTest {
         val tidligsteMottattTid = nå.minusDays(3)
         // Mottatt tid defineres som tidligste mottatt-tidspunkt på innsendte søknader.
         every {
-            dokumentRepository.hentDokumenterAvType(sakId, Brevkategori.SØKNAD)
+            dokumentRepository.hentDokumenterAvType(sakId, InnsendingType.SØKNAD)
         }.returns(
             setOf(
                 MottattDokument(
-                    referanse = MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, "xxx"),
+                    referanse = InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, "xxx"),
                     sakId = sakId,
                     behandlingId = behandlingId,
                     mottattTidspunkt = nå.minusDays(1),
-                    type = Brevkategori.SØKNAD,
+                    type = InnsendingType.SØKNAD,
                     kanal = Kanal.DIGITAL,
                     strukturertDokument = null
                 ),
                 MottattDokument(
-                    referanse = MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, "xxx2"),
+                    referanse = InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, "xxx2"),
                     sakId = sakId,
                     behandlingId = behandlingId,
                     mottattTidspunkt = tidligsteMottattTid,
-                    type = Brevkategori.SØKNAD,
+                    type = InnsendingType.SØKNAD,
                     kanal = Kanal.PAPIR,
                     strukturertDokument = null
                 )
@@ -458,7 +458,7 @@ class StatistikkJobbUtførerTest {
                 avklaringsbehov = avklaringsbehov,
                 behandlingOpprettetTidspunkt = payload.opprettetTidspunkt,
                 versjon = ApplikasjonsVersjon.versjon,
-                soknadsFormat = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Kanal.PAPIR,
+                soknadsFormat = Kanal.PAPIR,
                 mottattTid = tidligsteMottattTid,
                 sakStatus = no.nav.aap.behandlingsflyt.kontrakt.sak.Status.UTREDES,
                 hendelsesTidspunkt = hendelsesTidspunkt,

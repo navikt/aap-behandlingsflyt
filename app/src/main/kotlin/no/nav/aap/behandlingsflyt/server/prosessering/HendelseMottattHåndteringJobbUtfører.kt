@@ -1,12 +1,11 @@
 package no.nav.aap.behandlingsflyt.server.prosessering
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.UnparsedStrukturertDokument
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterMottattDokumentService
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkategori
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
@@ -14,6 +13,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
+import no.nav.aap.verdityper.dokument.Kanal
 import no.nav.aap.verdityper.sakogbehandling.SakId
 import java.time.LocalDateTime
 
@@ -32,12 +32,12 @@ class HendelseMottattHåndteringJobbUtfører(connection: DBConnection) : JobbUtf
         val sakId = SakId(input.sakId())
         val sakSkrivelås = låsRepository.låsSak(sakId)
 
-        val brevkategori = Brevkategori.valueOf(input.parameter(BREVKODE))
+        val brevkategori = InnsendingType.valueOf(input.parameter(BREVKODE))
         val kanal = Kanal.valueOf(input.parameter(KANAL))
         val payloadAsString = input.payload()
         val mottattTidspunkt = DefaultJsonMapper.fromJson<LocalDateTime>(input.parameter(MOTTATT_TIDSPUNKT))
 
-        val referanse = DefaultJsonMapper.fromJson<MottattDokumentReferanse>(input.parameter(MOTTATT_DOKUMENT_REFERANSE))
+        val referanse = DefaultJsonMapper.fromJson<InnsendingReferanse>(input.parameter(MOTTATT_DOKUMENT_REFERANSE))
 
         // DO WORK
         mottaDokumentService.mottattDokument(
@@ -70,8 +70,8 @@ class HendelseMottattHåndteringJobbUtfører(connection: DBConnection) : JobbUtf
     companion object : Jobb {
         fun nyJobb(
             sakId: SakId,
-            dokumentReferanse: MottattDokumentReferanse,
-            brevkategori: Brevkategori,
+            dokumentReferanse: InnsendingReferanse,
+            brevkategori: InnsendingType,
             kanal: Kanal,
             periode: Periode?,
             payload: Any,

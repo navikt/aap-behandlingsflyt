@@ -40,6 +40,7 @@ class ProsesserBehandlingJobbUtfører(
     companion object : Jobb {
         override fun konstruer(connection: DBConnection): JobbUtfører {
             val behandlingRepository = BehandlingRepositoryImpl(connection)
+            val sakRepository = SakRepositoryImpl(connection)
             return ProsesserBehandlingJobbUtfører(
                 TaSkriveLåsRepository(connection),
                 FlytOrkestrator(
@@ -49,14 +50,14 @@ class ProsesserBehandlingJobbUtfører(
                     behandlingFlytRepository = behandlingRepository,
                     avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection),
                     informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(connection),
-                    sakRepository = SakRepositoryImpl(connection),
+                    sakRepository = sakRepository,
                     perioderTilVurderingService = PerioderTilVurderingService(
-                        SakService(SakRepositoryImpl(connection)),
+                        SakService(sakRepository),
                         BehandlingRepositoryImpl(connection)
                     ),
                     behandlingHendelseService = BehandlingHendelseServiceImpl(
                         FlytJobbRepository(connection),
-                        SakService(SakRepositoryImpl(connection))
+                        SakService(sakRepository)
                     ),
                 )
             )

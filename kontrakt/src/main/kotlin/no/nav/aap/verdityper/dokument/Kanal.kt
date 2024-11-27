@@ -1,9 +1,9 @@
-package no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter
+package no.nav.aap.verdityper.dokument
 
-enum class Kanal {
+public enum class Kanal {
     DIGITAL, PAPIR;
 
-    fun fraKanal(kanal: KanalFraKodeverk): Kanal {
+    public fun fraKanal(kanal: KanalFraKodeverk): Kanal {
         return when (kanal) {
             KanalFraKodeverk.SKAN_NETS -> PAPIR
             KanalFraKodeverk.SKAN_PEN -> PAPIR
@@ -18,7 +18,7 @@ enum class Kanal {
  * Kopiert fra https://github.com/navikt/saf/blob/master/app/src/main/resources/schemas/saf.graphqls#L675
  * Ikke til bruk internt i koden, kun for oversettelse til [Kanal].
  */
-enum class KanalFraKodeverk {
+public enum class KanalFraKodeverk {
     /**
      * Forsendelsen er sendt inn via et Altinn-skjema.
      * Brukes for inngående journalposter.

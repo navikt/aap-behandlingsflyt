@@ -30,7 +30,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.dokumentinnhenting.Legeerklæring
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
@@ -55,12 +54,12 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.BrevbestillingLøsningStatus
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.LøsBrevbestillingDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkategori
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -82,6 +81,7 @@ import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.testutil.TestUtil
 import no.nav.aap.verdityper.dokument.JournalpostId
+import no.nav.aap.verdityper.dokument.Kanal
 import no.nav.aap.verdityper.flyt.StegStatus
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.Ident
@@ -165,7 +165,7 @@ class FlytOrkestratorTest {
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),
                 strukturertDokument = StrukturertDokument(
                     Søknad(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null),
-                    Brevkategori.SØKNAD
+                    InnsendingType.SØKNAD
                 ),
                 periode = periode
             )
@@ -554,7 +554,7 @@ class FlytOrkestratorTest {
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
                     Søknad(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null),
-                    Brevkategori.SØKNAD
+                    InnsendingType.SØKNAD
                 ),
                 periode = periode
             )
@@ -863,7 +863,7 @@ class FlytOrkestratorTest {
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),
                 strukturertDokument = StrukturertDokument(
                     Søknad(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null),
-                    Brevkategori.SØKNAD
+                    InnsendingType.SØKNAD
                 ),
                 periode = periode
             )
@@ -913,7 +913,7 @@ class FlytOrkestratorTest {
                         student = SøknadStudentDto("JA", "JA"),
                         yrkesskade = "JA",
                         oppgitteBarn = null
-                    ), Brevkategori.SØKNAD
+                    ), InnsendingType.SØKNAD
                 ),
                 periode = periode
             )
@@ -1249,7 +1249,7 @@ class FlytOrkestratorTest {
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
                     Søknad(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null),
-                    Brevkategori.SØKNAD
+                    InnsendingType.SØKNAD
                 ),
                 periode = periode
             )
@@ -1347,7 +1347,7 @@ class FlytOrkestratorTest {
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
                     Søknad(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null),
-                    Brevkategori.SØKNAD
+                    InnsendingType.SØKNAD
                 ),
                 periode = periode
             )
@@ -1401,7 +1401,7 @@ class FlytOrkestratorTest {
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
                     Søknad(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null),
-                    Brevkategori.SØKNAD
+                    InnsendingType.SØKNAD
                 ),
                 periode = periode
             )
@@ -1432,7 +1432,7 @@ class FlytOrkestratorTest {
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
                     Søknad(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null),
-                    Brevkategori.SØKNAD
+                    InnsendingType.SØKNAD
                 ),
                 periode = periode
             )
@@ -1478,11 +1478,11 @@ class FlytOrkestratorTest {
             flytJobbRepository.leggTil(
                 HendelseMottattHåndteringJobbUtfører.nyJobb(
                     sakId = sak.id,
-                    dokumentReferanse = MottattDokumentReferanse(
-                        MottattDokumentReferanse.Type.AVVIST_LEGEERKLÆRING_ID,
+                    dokumentReferanse = InnsendingReferanse(
+                        InnsendingReferanse.Type.AVVIST_LEGEERKLÆRING_ID,
                         avvistLegeerklæringId
                     ),
-                    brevkategori = Brevkategori.LEGEERKLÆRING_AVVIST,
+                    brevkategori = InnsendingType.LEGEERKLÆRING_AVVIST,
                     kanal = Kanal.DIGITAL,
                     periode = Periode(
                         LocalDate.now(),
@@ -1514,7 +1514,7 @@ class FlytOrkestratorTest {
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
                     Søknad(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null),
-                    Brevkategori.SØKNAD
+                    InnsendingType.SØKNAD
                 ),
                 periode = periode
             )
@@ -1561,11 +1561,11 @@ class FlytOrkestratorTest {
             flytJobbRepository.leggTil(
                 HendelseMottattHåndteringJobbUtfører.nyJobb(
                     sakId = sak.id,
-                    dokumentReferanse = MottattDokumentReferanse(
-                        MottattDokumentReferanse.Type.JOURNALPOST,
+                    dokumentReferanse = InnsendingReferanse(
+                        InnsendingReferanse.Type.JOURNALPOST,
                         journalpostId
                     ),
-                    brevkategori = Brevkategori.LEGEERKLÆRING_MOTTATT,
+                    brevkategori = InnsendingType.LEGEERKLÆRING,
                     kanal = Kanal.DIGITAL,
                     periode = Periode(
                         LocalDate.now(),
@@ -1597,7 +1597,7 @@ class FlytOrkestratorTest {
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
                     Søknad(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null),
-                    Brevkategori.SØKNAD
+                    InnsendingType.SØKNAD
                 ),
                 periode = periode
             )
@@ -1643,11 +1643,11 @@ class FlytOrkestratorTest {
             flytJobbRepository.leggTil(
                 HendelseMottattHåndteringJobbUtfører.nyJobb(
                     sakId = sak.id,
-                    dokumentReferanse = MottattDokumentReferanse(
-                        MottattDokumentReferanse.Type.JOURNALPOST,
+                    dokumentReferanse = InnsendingReferanse(
+                        InnsendingReferanse.Type.JOURNALPOST,
                         journalpostId
                     ),
-                    brevkategori = Brevkategori.DIALOGMELDING,
+                    brevkategori = InnsendingType.DIALOGMELDING,
                     kanal = Kanal.DIGITAL,
                     periode = Periode(
                         LocalDate.now(),

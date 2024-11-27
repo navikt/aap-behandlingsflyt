@@ -1,15 +1,15 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument
+package no.nav.aap.behandlingsflyt.kontrakt.hendelse
 
 import com.fasterxml.jackson.annotation.JsonIgnore
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.InnsendingId
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.AvvistLegeerklæringId
+import com.fasterxml.jackson.annotation.JsonValue
 import no.nav.aap.verdityper.dokument.JournalpostId
+import java.util.*
 
-data class MottattDokumentReferanse(
+public data class InnsendingReferanse(
     val type: Type,
     val verdi: String,
 ) {
-    enum class Type {
+    public enum class Type {
         JOURNALPOST,
         BRUDD_AKTIVITETSPLIKT_INNSENDING_ID,
         AVVIST_LEGEERKLÆRING_ID
@@ -33,4 +33,24 @@ data class MottattDokumentReferanse(
     constructor(id: InnsendingId): this(Type.BRUDD_AKTIVITETSPLIKT_INNSENDING_ID, id.asString)
     constructor(id: JournalpostId): this(Type.JOURNALPOST, id.identifikator)
     constructor(id: AvvistLegeerklæringId): this(Type.AVVIST_LEGEERKLÆRING_ID, id.asString)
+}
+
+public data class InnsendingId(@JsonValue val value: UUID) {
+    val asString get() = value.toString()
+
+    public constructor(value: String) : this(UUID.fromString(value))
+
+    public companion object {
+        fun ny() = InnsendingId(UUID.randomUUID())
+    }
+}
+
+public data class AvvistLegeerklæringId(@JsonValue val value: UUID) {
+    val asString get() = value.toString()
+
+    constructor(value: String) : this(UUID.fromString(value))
+
+    companion object {
+        fun ny() = AvvistLegeerklæringId(UUID.randomUUID())
+    }
 }

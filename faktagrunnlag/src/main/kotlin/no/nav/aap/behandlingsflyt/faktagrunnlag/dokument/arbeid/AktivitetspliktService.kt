@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingId
+
 class AktivitetspliktService(
     private val repository: AktivitetspliktRepository,
 ) {

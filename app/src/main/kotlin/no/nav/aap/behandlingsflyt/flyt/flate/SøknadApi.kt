@@ -5,10 +5,9 @@ import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkategori
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.server.prosessering.HendelseMottattHåndteringJobbUtfører
@@ -16,6 +15,7 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.verdityper.dokument.JournalpostId
+import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.MDC
 import java.time.LocalDate
 import javax.sql.DataSource
@@ -30,12 +30,12 @@ fun NormalOpenAPIRoute.søknadApi(dataSource: DataSource) {
                     val sak = sakService.hent(Saksnummer(dto.saksnummer))
 
                     val flytJobbRepository = FlytJobbRepository(connection)
-                    val dokumentReferanse = MottattDokumentReferanse(JournalpostId(dto.journalpostId))
+                    val dokumentReferanse = InnsendingReferanse(JournalpostId(dto.journalpostId))
                     flytJobbRepository.leggTil(
                         HendelseMottattHåndteringJobbUtfører.nyJobb(
                             sakId = sak.id,
                             dokumentReferanse = dokumentReferanse,
-                            brevkategori = Brevkategori.SØKNAD,
+                            brevkategori = InnsendingType.SØKNAD,
                             // TODO få kanal fra payload i stedet
                             kanal = Kanal.DIGITAL,
                             periode = Periode(

@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.kontrakt.statistikk
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
+import no.nav.aap.verdityper.dokument.Kanal
 import java.time.LocalDateTime
 import java.util.*
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status as BehandlingsFlytBehandlingStatus
@@ -40,8 +41,4 @@ public data class StoppetBehandling(
         require(behandlingStatus != Status.AVSLUTTET || avsluttetBehandling != null)
         { "Om behandling ikke er avsluttet, ikke legg ved data om avsluttet behandling. Status er $behandlingStatus" }
     }
-}
-
-public enum class Kanal {
-    DIGITAL, PAPIR;
 }

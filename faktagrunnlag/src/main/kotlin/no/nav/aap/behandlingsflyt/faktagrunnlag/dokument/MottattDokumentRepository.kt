@@ -2,7 +2,8 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.DokumentRekkefølge
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkategori
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
@@ -32,7 +33,7 @@ class MottattDokumentRepository(private val connection: DBConnection) {
     }
 
     fun oppdaterStatus(
-        dokumentReferanse: MottattDokumentReferanse,
+        dokumentReferanse: InnsendingReferanse,
         behandlingId: BehandlingId,
         sakId: SakId,
         status: Status
@@ -54,7 +55,7 @@ class MottattDokumentRepository(private val connection: DBConnection) {
         }
     }
 
-    fun hentUbehandledeDokumenterAvType(sakId: SakId, dokumentType: Brevkategori): Set<MottattDokument> {
+    fun hentUbehandledeDokumenterAvType(sakId: SakId, dokumentType: InnsendingType): Set<MottattDokument> {
         val query = """
             SELECT * FROM MOTTATT_DOKUMENT WHERE sak_id = ? AND status = ? AND type = ?
         """.trimIndent()
@@ -72,7 +73,7 @@ class MottattDokumentRepository(private val connection: DBConnection) {
     }
 
     private fun mapMottattDokument(row: Row): MottattDokument {
-        val brevkategori: Brevkategori = row.getEnum("type")
+        val brevkategori: InnsendingType = row.getEnum("type")
         val referanse = mapDokumentReferanse(row)
         return MottattDokument(
             referanse = referanse,
@@ -86,12 +87,12 @@ class MottattDokumentRepository(private val connection: DBConnection) {
         )
     }
 
-    private fun mapDokumentReferanse(row: Row) = MottattDokumentReferanse(
-        type = row.getEnum<MottattDokumentReferanse.Type>("referanse_type"),
+    private fun mapDokumentReferanse(row: Row) = InnsendingReferanse(
+        type = row.getEnum<InnsendingReferanse.Type>("referanse_type"),
         verdi = row.getString("referanse")
     )
 
-    fun hentDokumentRekkefølge(sakId: SakId, type: Brevkategori): Set<DokumentRekkefølge> {
+    fun hentDokumentRekkefølge(sakId: SakId, type: InnsendingType): Set<DokumentRekkefølge> {
         val query = """
             SELECT referanse, referanse_type, MOTTATT_TID FROM MOTTATT_DOKUMENT WHERE sak_id = ? AND status = ? AND type = ?
         """.trimIndent()
@@ -111,7 +112,7 @@ class MottattDokumentRepository(private val connection: DBConnection) {
         }.toSet()
     }
 
-    fun hentDokumenterAvType(sakId: SakId, type: Brevkategori): Set<MottattDokument> {
+    fun hentDokumenterAvType(sakId: SakId, type: InnsendingType): Set<MottattDokument> {
         val query = """
             SELECT * FROM MOTTATT_DOKUMENT WHERE sak_id = ? AND type = ?
         """.trimIndent()
@@ -127,7 +128,7 @@ class MottattDokumentRepository(private val connection: DBConnection) {
         }.toSet()
     }
 
-    fun hentDokumenterAvType(behandlingId: BehandlingId, type: Brevkategori): Set<MottattDokument> {
+    fun hentDokumenterAvType(behandlingId: BehandlingId, type: InnsendingType): Set<MottattDokument> {
         val query = """
             SELECT * FROM MOTTATT_DOKUMENT
             WHERE behandling_id = ? AND type = ?

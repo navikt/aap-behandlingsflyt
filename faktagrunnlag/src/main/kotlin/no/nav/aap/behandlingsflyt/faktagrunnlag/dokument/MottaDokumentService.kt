@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.InnsendingId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.adapter.UbehandletPliktkort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.UbehandletDialogmelding
@@ -8,9 +7,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.Ubeh
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.pliktkort.Pliktkort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.adapter.UbehandletSøknad
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkategori
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingId
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.verdityper.dokument.Kanal
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.SakId
 import java.time.LocalDateTime
@@ -20,10 +21,10 @@ class MottaDokumentService(
 ) {
 
     fun mottattDokument(
-        referanse: MottattDokumentReferanse,
+        referanse: InnsendingReferanse,
         sakId: SakId,
         mottattTidspunkt: LocalDateTime,
-        brevkategori: Brevkategori,
+        brevkategori: InnsendingType,
         kanal: Kanal,
         strukturertDokument: StrukturertDokument<*>
     ) {
@@ -42,10 +43,10 @@ class MottaDokumentService(
     }
 
     fun mottattDokument(
-        referanse: MottattDokumentReferanse,
+        referanse: InnsendingReferanse,
         sakId: SakId,
         mottattTidspunkt: LocalDateTime,
-        brevkategori: Brevkategori,
+        brevkategori: InnsendingType,
         kanal: Kanal,
         strukturertDokument: UnparsedStrukturertDokument
     ) {
@@ -65,7 +66,7 @@ class MottaDokumentService(
 
     fun pliktkortSomIkkeErBehandlet(sakId: SakId): Set<UbehandletPliktkort> {
         val ubehandledePliktkort =
-            mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, Brevkategori.PLIKTKORT)
+            mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, InnsendingType.PLIKTKORT)
 
         return ubehandledePliktkort.map {
             UbehandletPliktkort(
@@ -76,7 +77,8 @@ class MottaDokumentService(
     }
 
     fun aktivitetskortSomIkkeErBehandlet(sakId: SakId): Set<InnsendingId> {
-        val ubehandledeAktivitetskort = mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, Brevkategori.AKTIVITETSKORT)
+        val ubehandledeAktivitetskort =
+            mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, InnsendingType.AKTIVITETSKORT)
 
         return ubehandledeAktivitetskort
             .map { it.referanse.asInnsendingId }
@@ -85,18 +87,20 @@ class MottaDokumentService(
 
     fun søknaderSomIkkeHarBlittBehandlet(sakId: SakId): Set<UbehandletSøknad> {
         val ubehandledeSøknader =
-            mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, Brevkategori.SØKNAD)
+            mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, InnsendingType.SØKNAD)
 
         return ubehandledeSøknader.map { mapSøknad(it) }.toSet()
     }
 
-    fun legeerklæringerSomIkkeHarBlittBehandlet(sakId: SakId) : Set<UbehandletLegeerklæring> {
-        val ubehandledeLegeerklæringer = mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, Brevkategori.LEGEERKLÆRING_MOTTATT)
+    fun legeerklæringerSomIkkeHarBlittBehandlet(sakId: SakId): Set<UbehandletLegeerklæring> {
+        val ubehandledeLegeerklæringer =
+            mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, InnsendingType.LEGEERKLÆRING)
         return ubehandledeLegeerklæringer.map { mapLegeerklæring(it) }.toSet()
     }
 
-    fun dialogmeldingerSomIkkeHarBlittBehandlet(sakId: SakId) : Set<UbehandletDialogmelding> {
-        val ubehandledeDialogmeldinger = mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, Brevkategori.DIALOGMELDING)
+    fun dialogmeldingerSomIkkeHarBlittBehandlet(sakId: SakId): Set<UbehandletDialogmelding> {
+        val ubehandledeDialogmeldinger =
+            mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, InnsendingType.DIALOGMELDING)
         return ubehandledeDialogmeldinger.map { mapDialogmelding(it) }.toSet()
     }
 
@@ -130,7 +134,7 @@ class MottaDokumentService(
         )
     }
 
-    fun knyttTilBehandling(sakId: SakId, behandlingId: BehandlingId, referanse: MottattDokumentReferanse) {
+    fun knyttTilBehandling(sakId: SakId, behandlingId: BehandlingId, referanse: InnsendingReferanse) {
         mottattDokumentRepository.oppdaterStatus(referanse, behandlingId, sakId, Status.BEHANDLET)
     }
 }

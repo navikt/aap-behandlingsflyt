@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkategori
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.verdityper.TimerArbeid
@@ -48,7 +48,7 @@ class PliktkortRepository(private val connection: DBConnection) {
             }
         }.toSet()
 
-        val dokumentRekkefølge = mottattDokumentRepository.hentDokumentRekkefølge(sakId, Brevkategori.PLIKTKORT)
+        val dokumentRekkefølge = mottattDokumentRepository.hentDokumentRekkefølge(sakId, InnsendingType.PLIKTKORT)
 
         return PliktkortGrunnlag(pliktkortene, dokumentRekkefølge)
     }

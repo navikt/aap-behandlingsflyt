@@ -1,19 +1,20 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkategori
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
+import no.nav.aap.verdityper.dokument.Kanal
 import no.nav.aap.verdityper.sakogbehandling.BehandlingId
 import no.nav.aap.verdityper.sakogbehandling.SakId
 import java.time.LocalDateTime
 
 class MottattDokument(
-    val referanse: MottattDokumentReferanse,
+    val referanse: InnsendingReferanse,
     val sakId: SakId,
     val behandlingId: BehandlingId?,
     val mottattTidspunkt: LocalDateTime,
-    val type: Brevkategori,
+    val type: InnsendingType,
     val kanal: Kanal,
     val status: Status = Status.MOTTATT,
     private val strukturertDokument: StrukturerteData?

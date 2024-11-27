@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
-import com.fasterxml.jackson.annotation.JsonValue
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.PARAGRAF_11_7
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.PARAGRAF_11_8
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.PARAGRAF_11_9
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
@@ -143,15 +143,6 @@ fun List<AktivitetspliktDokument>.aktiveBrudd(): List<AktivitetspliktRegistrerin
 
 data class BruddAktivitetspliktId(internal val id: Long)
 
-data class InnsendingId(@JsonValue val value: UUID) {
-    val asString get() = value.toString()
-
-    constructor(value: String) : this(UUID.fromString(value))
-
-    companion object {
-        fun ny() = InnsendingId(UUID.randomUUID())
-    }
-}
 
 data class HendelseId(val id: UUID) {
     override fun toString() = id.toString()

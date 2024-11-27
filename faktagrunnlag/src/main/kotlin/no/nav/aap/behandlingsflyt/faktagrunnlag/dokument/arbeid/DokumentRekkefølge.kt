@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import java.time.LocalDateTime
 
-class DokumentRekkefølge(val referanse: MottattDokumentReferanse, val mottattTidspunkt: LocalDateTime) :
+class DokumentRekkefølge(val referanse: InnsendingReferanse, val mottattTidspunkt: LocalDateTime) :
     Comparable<DokumentRekkefølge> {
 
 

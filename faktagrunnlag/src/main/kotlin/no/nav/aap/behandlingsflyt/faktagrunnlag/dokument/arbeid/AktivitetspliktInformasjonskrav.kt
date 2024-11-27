@@ -5,8 +5,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
 
@@ -46,7 +46,7 @@ class AktivitetspliktInformasjonskrav (
             mottaDokumentService.knyttTilBehandling(
                 sakId = kontekst.sakId,
                 behandlingId = kontekst.behandlingId,
-                referanse = MottattDokumentReferanse(ubehandletInnsendingId),
+                referanse = InnsendingReferanse(ubehandletInnsendingId),
             )
         }
 

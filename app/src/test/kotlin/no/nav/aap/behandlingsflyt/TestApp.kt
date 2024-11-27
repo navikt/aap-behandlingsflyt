@@ -15,7 +15,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Opp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.TestHendelsesMottak
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkategori
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.test.AzurePortHolder
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FakeServers
@@ -95,7 +95,7 @@ fun main() {
                                 mottattTidspunkt = LocalDateTime.now(),
                                 strukturertDokument = StrukturertDokument(
                                     mapTilSøknad(dto, urelaterteBarn),
-                                    Brevkategori.SØKNAD
+                                    InnsendingType.SØKNAD
                                 ),
                                 periode = periode
                             )
@@ -112,7 +112,7 @@ fun main() {
                             ident, DokumentMottattPersonHendelse(
                                 journalpost = JournalpostId("" + System.currentTimeMillis()),
                                 mottattTidspunkt = LocalDateTime.now(),
-                                strukturertDokument = StrukturertDokument(dto.pliktkort, Brevkategori.PLIKTKORT),
+                                strukturertDokument = StrukturertDokument(dto.pliktkort, InnsendingType.PLIKTKORT),
                                 periode = dto.pliktkort.periode()
                             )
                         )

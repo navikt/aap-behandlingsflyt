@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReposito
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvsluttetBehandlingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BeregningsgrunnlagDTO
@@ -30,8 +31,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkategori
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -40,6 +39,7 @@ import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.pip.PipRepository
+import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
@@ -92,10 +92,7 @@ class StatistikkJobbUtfører(
             behandlingReferanse = hendelse.referanse.referanse,
             relatertBehandling = forrigeBehandling?.referanse?.referanse,
             behandlingOpprettetTidspunkt = hendelse.opprettetTidspunkt,
-            soknadsFormat = when (kanal) {
-                Kanal.DIGITAL -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Kanal.DIGITAL
-                Kanal.PAPIR -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Kanal.PAPIR
-            },
+            soknadsFormat = kanal,
             versjon = hendelse.versjon,
             mottattTid = mottattTidspunkt,
             sakStatus = sak.status(),
@@ -142,7 +139,7 @@ class StatistikkJobbUtfører(
     private fun hentSøknanderForSak(behandling: Behandling): Set<MottattDokument> {
         val hentDokumenterAvType = dokumentRepository.hentDokumenterAvType(
             behandling.sakId,
-            Brevkategori.SØKNAD
+            InnsendingType.SØKNAD
         )
         return hentDokumenterAvType
     }

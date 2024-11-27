@@ -1,12 +1,12 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument
 
 import no.nav.aap.behandlingsflyt.dbtestdata.ident
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Brevkategori
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.dokumenter.Kanal
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -14,6 +14,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.verdityper.dokument.Kanal
 import no.nav.aap.verdityper.flyt.ÅrsakTilBehandling
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -32,11 +33,11 @@ class MottattDokumentRepositoryTest {
         }
 
         val mottattDokument = MottattDokument(
-            referanse = MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, "referanse"),
+            referanse = InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, "referanse"),
             sakId = sak.id,
             behandlingId = behandling.id,
             mottattTidspunkt = LocalDateTime.now(),
-            type = Brevkategori.SØKNAD,
+            type = InnsendingType.SØKNAD,
             kanal = Kanal.PAPIR,
             status = Status.MOTTATT,
             strukturertDokument = null,
@@ -46,7 +47,7 @@ class MottattDokumentRepositoryTest {
         settInnDokument(mottattDokument)
 
         // VERIFY
-        val res = hentDokumenterAvType(sak, Brevkategori.SØKNAD)
+        val res = hentDokumenterAvType(sak, InnsendingType.SØKNAD)
 
         assertThat(res).hasSize(1)
         assertThat(res.first()).extracting(
@@ -68,11 +69,11 @@ class MottattDokumentRepositoryTest {
         }
 
         val mottattDokument = MottattDokument(
-            referanse = MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, "referanse"),
+            referanse = InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, "referanse"),
             sakId = sak.id,
             behandlingId = null,
             mottattTidspunkt = LocalDateTime.now(),
-            type = Brevkategori.SØKNAD,
+            type = InnsendingType.SØKNAD,
             status = Status.MOTTATT,
             kanal = Kanal.PAPIR,
             strukturertDokument = null,
@@ -91,7 +92,7 @@ class MottattDokumentRepositoryTest {
             )
         }
 
-        val res = hentDokumenterAvType(sak, Brevkategori.SØKNAD)
+        val res = hentDokumenterAvType(sak, InnsendingType.SØKNAD)
 
         assertThat(res).hasSize(1)
         val hentetDokument = res.first()
@@ -110,22 +111,22 @@ class MottattDokumentRepositoryTest {
         }
 
         val søknadDokument = MottattDokument(
-            referanse = MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, "referanse"),
+            referanse = InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, "referanse"),
             sakId = sak.id,
             behandlingId = null,
             mottattTidspunkt = LocalDateTime.now(),
-            type = Brevkategori.SØKNAD,
+            type = InnsendingType.SØKNAD,
             status = Status.MOTTATT,
             kanal = Kanal.PAPIR,
             strukturertDokument = null,
         )
 
         val pliktkortDokument = MottattDokument(
-            referanse = MottattDokumentReferanse(MottattDokumentReferanse.Type.JOURNALPOST, "referanse2"),
+            referanse = InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, "referanse2"),
             sakId = sak.id,
             behandlingId = null,
             mottattTidspunkt = LocalDateTime.now(),
-            type = Brevkategori.PLIKTKORT,
+            type = InnsendingType.PLIKTKORT,
             status = Status.MOTTATT,
             kanal = Kanal.DIGITAL,
             strukturertDokument = null,
@@ -136,7 +137,7 @@ class MottattDokumentRepositoryTest {
         settInnDokument(pliktkortDokument)
 
 
-        val res = hentDokumenterAvType(sak, Brevkategori.SØKNAD)
+        val res = hentDokumenterAvType(sak, InnsendingType.SØKNAD)
 
         // VERIFY
         assertThat(res).hasSize(1)
@@ -145,7 +146,7 @@ class MottattDokumentRepositoryTest {
                 søknadDokument.behandlingId, søknadDokument.sakId, søknadDokument.type
             )
 
-        val res2 = hentDokumenterAvType(sak, Brevkategori.PLIKTKORT)
+        val res2 = hentDokumenterAvType(sak, InnsendingType.PLIKTKORT)
 
         assertThat(res2).hasSize(1)
         assertThat(res2.first()).extracting(
@@ -164,7 +165,7 @@ class MottattDokumentRepositoryTest {
         }
     }
 
-    private fun hentDokumenterAvType(sak: Sak, brevkategori: Brevkategori): Set<MottattDokument> {
+    private fun hentDokumenterAvType(sak: Sak, brevkategori: InnsendingType): Set<MottattDokument> {
         val res = InitTestDatabase.dataSource.transaction {
             MottattDokumentRepository(it).hentDokumenterAvType(sak.id, brevkategori)
         }
