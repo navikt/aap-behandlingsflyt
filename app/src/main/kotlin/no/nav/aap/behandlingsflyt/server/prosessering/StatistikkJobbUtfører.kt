@@ -206,7 +206,6 @@ class StatistikkJobbUtfører(
             ),
             tilkjentYtelse = tilkjentYtelseDTO,
             beregningsGrunnlag = beregningsGrunnlagDTO,
-            hendelsesTidspunkt = hendelse.hendelsesTidspunkt
         )
         return avsluttetBehandlingDTO
     }

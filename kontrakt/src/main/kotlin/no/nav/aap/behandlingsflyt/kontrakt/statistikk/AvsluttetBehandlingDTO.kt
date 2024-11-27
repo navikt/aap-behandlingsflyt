@@ -14,7 +14,6 @@ public data class AvsluttetBehandlingDTO(
     val tilkjentYtelse: TilkjentYtelseDTO,
     val vilkårsResultat: VilkårsResultatDTO,
     val beregningsGrunnlag: BeregningsgrunnlagDTO?,
-    val hendelsesTidspunkt: LocalDateTime,
 )
 
 

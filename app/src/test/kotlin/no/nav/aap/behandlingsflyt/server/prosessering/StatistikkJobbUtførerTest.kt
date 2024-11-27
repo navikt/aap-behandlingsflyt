@@ -320,7 +320,6 @@ class StatistikkJobbUtførerTest {
                         )
                     )
                 ),
-                hendelsesTidspunkt = hendelseTidspunkt
             ).toString()
         )
     }
