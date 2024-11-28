@@ -116,6 +116,10 @@ class Telleverk private constructor(
         return map(relevanteKvoter) { it }.filter { it.erKvoteOversteget }.map { it.type }
     }
 
+    fun erKvoterStanset(relevanteKvoter: Set<Sykdomskvoter>): Boolean {
+        return map(relevanteKvoter) { it.erKvoteOversteget }.any { it }
+    }
+
     fun minsteUbrukteKvote(relevanteKvoter: Set<Sykdomskvoter>): Hverdager {
         return map(relevanteKvoter) { it.ubruktKvote }.min()
     }

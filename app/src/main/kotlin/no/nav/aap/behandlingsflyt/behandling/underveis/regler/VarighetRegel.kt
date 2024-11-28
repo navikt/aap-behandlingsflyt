@@ -75,9 +75,9 @@ class VarighetRegel : UnderveisRegel {
     ): Tidslinje<VarighetVurdering> {
         require(relevanteKvoter.isNotEmpty())
         val dagerTilStans = telleverk.minsteUbrukteKvote(relevanteKvoter)
-        val kvoterSomErStanset = telleverk.kvoterSomErStanset(relevanteKvoter)
+        val kvoterStansesIPeriode = dagerTilStans < periode.antallHverdager()
 
-        if (kvoterSomErStanset.isEmpty() && periode.antallHverdager() <= dagerTilStans) {
+        if (!telleverk.erKvoterStanset(relevanteKvoter) && !kvoterStansesIPeriode) {
             telleverk.øk(relevanteKvoter, periode)
             return Tidslinje(
                 periode,
@@ -86,15 +86,16 @@ class VarighetRegel : UnderveisRegel {
         }
 
         val kvoterSomBlirStanset = telleverk.kvoterNærmestÅBliBruktOpp(relevanteKvoter)
-        telleverk.markereKvoterOversteget(kvoterSomBlirStanset)
-        if (kvoterSomErStanset.isNotEmpty()) {
+
+        if (telleverk.erKvoterStanset(relevanteKvoter)) {
             return Tidslinje(
                 periode,
                 Avslag(kvoterSomBlirStanset.map { it.avslagsårsak }.toSet())
             )
         }
-        else if (dagerTilStans < periode.antallHverdager()) {
+        else if (kvoterStansesIPeriode) {
             telleverk.øk(relevanteKvoter, dagerTilStans)
+            telleverk.markereKvoterOversteget(kvoterSomBlirStanset)
 
             val stansDato = periode.fom.plusHverdager(dagerTilStans)
 
