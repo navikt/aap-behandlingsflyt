@@ -88,7 +88,7 @@ class FødselsnummerGenerator private constructor(
     class Builder {
         private var kjonn: Kjønn = Kjønn.entries.random()
         private var identType: IdentType = IdentType.FNR
-        private var fodselsdato: LocalDate = LocalDate.now().minusYears(25)
+        private var fodselsdato: LocalDate = LocalDate.now().minusYears(25).minusDays(Holder.hent())
 
         fun kjonn(k: Kjønn): Builder {
             this.kjonn = k
