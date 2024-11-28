@@ -25,7 +25,6 @@ dependencies {
     implementation("org.flywaydb:flyway-database-postgresql:10.22.0")
     runtimeOnly("org.postgresql:postgresql:42.7.4")
 
-    testImplementation(project(":dbtestdata"))
     testImplementation("no.nav.aap.kelvin:dbtest:$komponenterVersjon")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.3")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.3")

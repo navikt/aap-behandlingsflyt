@@ -86,7 +86,6 @@ dependencies {
     implementation("org.flywaydb:flyway-database-postgresql:10.22.0")
     runtimeOnly("org.postgresql:postgresql:42.7.4")
 
-    testImplementation(project(":dbtestdata"))
     testImplementation(project(":lib-test"))
     testImplementation("no.nav.aap.kelvin:dbtest:$komponenterVersjon")
     testImplementation("no.nav.aap.kelvin:motor-test-utils:$komponenterVersjon")

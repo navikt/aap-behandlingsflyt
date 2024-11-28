@@ -39,6 +39,4 @@ dependencies {
     implementation("com.nimbusds:nimbus-jose-jwt:9.41.1")
 
     implementation("org.junit.jupiter:junit-jupiter-api:5.11.3")
-
-    api(project(":dbtestdata"))
 }
