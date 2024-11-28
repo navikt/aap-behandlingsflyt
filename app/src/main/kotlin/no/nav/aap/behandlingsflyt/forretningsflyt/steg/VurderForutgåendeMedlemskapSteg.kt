@@ -12,7 +12,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.verdityper.flyt.FlytKontekstMedPerioder
 
-class VurderMedlemskapSteg private constructor(
+class VurderForutgåendeMedlemskapSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -38,7 +38,7 @@ class VurderMedlemskapSteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            return VurderMedlemskapSteg(
+            return VurderForutgåendeMedlemskapSteg(
                 VilkårsresultatRepository(connection)
             )
         }

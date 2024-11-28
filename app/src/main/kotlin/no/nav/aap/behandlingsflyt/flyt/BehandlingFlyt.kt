@@ -198,6 +198,14 @@ class BehandlingFlyt private constructor(
     fun utenÅrsaker(): BehandlingFlyt {
         return BehandlingFlyt(flyt = flyt)
     }
+
+    fun årsakerRelevantForSteg(stegType: StegType): Set<ÅrsakTilBehandling> {
+        return if (steg(stegType).oppdaterFaktagrunnlag) {
+            årsaker.filter { entry -> entry.value == stegType }.keys
+        } else {
+            ÅrsakTilBehandling.entries.toSet()
+        }
+    }
 }
 
 class StegComparator(private var flyt: List<BehandlingFlyt.Behandlingsflytsteg>) : Comparator<StegType> {
@@ -218,7 +226,7 @@ class BehandlingFlytBuilder {
 
     fun medSteg(
         steg: FlytSteg,
-        årsakRelevanteForSteg: List<ÅrsakTilBehandling> = emptyList(),
+        årsakRelevanteForSteg: List<ÅrsakTilBehandling> = ÅrsakTilBehandling.alle(),
         informasjonskrav: List<Informasjonskravkonstruktør> = emptyList()
     ): BehandlingFlytBuilder {
         if (buildt) {

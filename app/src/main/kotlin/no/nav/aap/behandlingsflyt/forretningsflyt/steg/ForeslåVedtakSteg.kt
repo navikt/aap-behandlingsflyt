@@ -19,6 +19,8 @@ class ForeslåVedtakSteg internal constructor(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
+        // Fastsett behandlingresultat og lagre dette
+
         if (avklaringsbehov.harHattAvklaringsbehov() && avklaringsbehov.harIkkeForeslåttVedtak()) {
             return FantAvklaringsbehov(Definisjon.FORESLÅ_VEDTAK)
         }

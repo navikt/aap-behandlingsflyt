@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.periodisering
 
+import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
@@ -34,32 +35,35 @@ class PerioderTilVurderingService(
         // TODO(" Sjekk vilkår/steg mot årsaker til vurdering (ligger på behandling)")
         // Skal regne ut gitt hva som har skjedd på en behandling og hvilke perioder som er relevant at vi vurderer
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
+        val flyt = utledType(behandling.typeBehandling()).flyt()
+        val årsakerRelevantForSteg = flyt.årsakerRelevantForSteg(stegType)
         val årsaker = behandling.årsaker()
 
+        val relevanteÅrsak = årsaker.filter { årsak -> årsakerRelevantForSteg.contains(årsak.type) }
+
         var tidslinje = Tidslinje<VurderingValue>()
-        årsaker.map { årsak -> utledVurdering(årsak, sak.rettighetsperiode) }.map {
+        relevanteÅrsak.map { årsak -> utledVurdering(årsak, sak.rettighetsperiode) }.map {
             Tidslinje(
                 it.periode,
                 VurderingValue(it.type, it.årsaker)
             )
-        }
-            .forEach { segment ->
-                tidslinje = tidslinje.kombiner(segment, JoinStyle.OUTER_JOIN { periode, venstreSegment, høyreSegment ->
-                    val venstreVerdi = venstreSegment?.verdi
-                    val høyreVerdi = høyreSegment?.verdi
+        }.forEach { segment ->
+            tidslinje = tidslinje.kombiner(segment, JoinStyle.OUTER_JOIN { periode, venstreSegment, høyreSegment ->
+                val venstreVerdi = venstreSegment?.verdi
+                val høyreVerdi = høyreSegment?.verdi
 
-                    if (venstreVerdi != null && høyreVerdi != null) {
-                        val prioritertVerdi = velgPrioritertVerdi(venstreVerdi, høyreVerdi)
-                        Segment(periode, prioritertVerdi)
-                    } else if (venstreVerdi != null) {
-                        Segment(periode, venstreVerdi)
-                    } else if (høyreVerdi != null) {
-                        Segment(periode, høyreVerdi)
-                    } else {
-                        null
-                    }
-                })
-            }
+                if (venstreVerdi != null && høyreVerdi != null) {
+                    val prioritertVerdi = velgPrioritertVerdi(venstreVerdi, høyreVerdi)
+                    Segment(periode, prioritertVerdi)
+                } else if (venstreVerdi != null) {
+                    Segment(periode, venstreVerdi)
+                } else if (høyreVerdi != null) {
+                    Segment(periode, høyreVerdi)
+                } else {
+                    null
+                }
+            })
+        }
 
         return tidslinje.komprimer().segmenter()
             .map { Vurdering(type = it.verdi.type, årsaker = it.verdi.årsaker, periode = it.periode) }.toSet()
@@ -94,10 +98,11 @@ class PerioderTilVurderingService(
             )
 
             ÅrsakTilBehandling.MOTTATT_MELDEKORT -> Vurdering(
-                VurderingType.REVURDERING,
+                VurderingType.FORLENGELSE,
                 listOf(årsak.type),
                 requireNotNull(årsak.periode)
             ) // TODO: Vurdere om denne skal utlede mer komplekst (dvs har mottatt for denne perioden før)
+
             ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING -> Vurdering(
                 VurderingType.REVURDERING,
                 listOf(årsak.type),
@@ -114,6 +119,12 @@ class PerioderTilVurderingService(
                 VurderingType.REVURDERING,
                 listOf(årsak.type),
                 rettighetsperiode
+            )
+
+            ÅrsakTilBehandling.G_REGULERING -> Vurdering(
+                VurderingType.REVURDERING,
+                listOf(årsak.type),
+                requireNotNull(årsak.periode)
             )
         }
     }

@@ -30,6 +30,4 @@ class Ident(val identifikator: String, val aktivIdent: Boolean = true) {
         result = 31 * result + aktivIdent.hashCode()
         return result
     }
-
-
 }

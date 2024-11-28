@@ -35,12 +35,13 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.UnderveisSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VisGrunnlagSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderAlderSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderBistandsbehovSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderForutgåendeMedlemskapSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderLovvalgSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderMedlemskapSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderStudentSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykdomSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykepengeErstatningSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderYrkesskadeSteg
+import no.nav.aap.verdityper.flyt.ÅrsakTilBehandling
 
 object Revurdering : BehandlingType {
     override fun flyt(): BehandlingFlyt {
@@ -54,25 +55,69 @@ object Revurdering : BehandlingType {
             .medSteg(steg = VurderStudentSteg)
             // UføreService svarer med mocket respons inntil pesys-integrasjon er fullført:
             // Relevant issue: https://github.com/navikt/pensjon-pen/pull/13138
-            .medSteg(steg = VurderSykdomSteg, informasjonskrav = listOf(YrkesskadeService, UføreService, LegeerklæringService))
-            .medSteg(steg = FritakMeldepliktSteg)
-            .medSteg(steg = FastsettArbeidsevneSteg)
-            .medSteg(steg = VurderBistandsbehovSteg)
+            .medSteg(
+                steg = VurderSykdomSteg,
+                informasjonskrav = listOf(YrkesskadeService, UføreService, LegeerklæringService),
+                årsakRelevanteForSteg = listOf(
+                    ÅrsakTilBehandling.MOTTATT_SØKNAD,
+                    ÅrsakTilBehandling.MOTTATT_DIALOGMELDING,
+                    ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING
+                )
+            )
+            .medSteg(
+                steg = FritakMeldepliktSteg, årsakRelevanteForSteg = listOf(
+                    ÅrsakTilBehandling.MOTTATT_SØKNAD,
+                    ÅrsakTilBehandling.MOTTATT_DIALOGMELDING,
+                    ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING
+                )
+            )
+            .medSteg(
+                steg = FastsettArbeidsevneSteg, årsakRelevanteForSteg = listOf(
+                    ÅrsakTilBehandling.MOTTATT_SØKNAD,
+                    ÅrsakTilBehandling.MOTTATT_DIALOGMELDING,
+                    ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING
+                )
+            )
+            .medSteg(
+                steg = VurderBistandsbehovSteg, årsakRelevanteForSteg = listOf(
+                    ÅrsakTilBehandling.MOTTATT_SØKNAD,
+                    ÅrsakTilBehandling.MOTTATT_DIALOGMELDING,
+                    ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING
+                )
+            )
             .medSteg(steg = KvalitetssikringsSteg)
-            .medSteg(steg = VurderYrkesskadeSteg)
+            .medSteg(
+                steg = VurderYrkesskadeSteg, årsakRelevanteForSteg = listOf(
+                    ÅrsakTilBehandling.MOTTATT_SØKNAD,
+                    ÅrsakTilBehandling.MOTTATT_DIALOGMELDING,
+                    ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING
+                )
+            )
             .medSteg(steg = FastsettSykdomsvilkåretSteg)
-            .medSteg(steg = VurderSykepengeErstatningSteg)
-            .medSteg(steg = VurderMedlemskapSteg, informasjonskrav = listOf(MedlemskapService))
-            .medSteg(steg = BeregningAvklarFaktaSteg)
+            .medSteg(
+                steg = VurderSykepengeErstatningSteg, årsakRelevanteForSteg = listOf(
+                    ÅrsakTilBehandling.MOTTATT_SØKNAD,
+                    ÅrsakTilBehandling.MOTTATT_DIALOGMELDING,
+                    ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING
+                )
+            )
+            .medSteg(steg = VurderForutgåendeMedlemskapSteg, informasjonskrav = listOf(MedlemskapService))
+            .medSteg(
+                steg = BeregningAvklarFaktaSteg, årsakRelevanteForSteg = listOf(
+                    ÅrsakTilBehandling.MOTTATT_SØKNAD,
+                    ÅrsakTilBehandling.MOTTATT_DIALOGMELDING,
+                    ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING
+                )
+            )
             .medSteg(steg = VisGrunnlagSteg)
             .medSteg(steg = FastsettGrunnlagSteg, informasjonskrav = listOf(InntektService))
             .medSteg(steg = BarnetilleggSteg, informasjonskrav = listOf(BarnService))
             .medSteg(steg = EtAnnetStedSteg, informasjonskrav = listOf(InstitusjonsoppholdService))
             .medSteg(steg = UnderveisSteg, informasjonskrav = listOf(PliktkortService, AktivitetspliktInformasjonskrav))
             .medSteg(steg = SamordningSteg, informasjonskrav = listOf(SamordningYtelseVurderingService))
-            .medSteg(steg = BeregnTilkjentYtelseSteg)
-            .medSteg(steg = SimulerUtbetalingSteg)
-            .medSteg(steg = ForeslåVedtakSteg) // en-trinn
+            .medSteg(steg = BeregnTilkjentYtelseSteg, årsakRelevanteForSteg = ÅrsakTilBehandling.entries)
+            .medSteg(steg = SimulerUtbetalingSteg, årsakRelevanteForSteg = ÅrsakTilBehandling.entries)
+            .medSteg(steg = ForeslåVedtakSteg, årsakRelevanteForSteg = ÅrsakTilBehandling.entries) // en-trinn
             .sluttÅOppdatereFaktagrunnlag()
             .medSteg(steg = FatteVedtakSteg) // to-trinn
             .medSteg(steg = BrevSteg)
