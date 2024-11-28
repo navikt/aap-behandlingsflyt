@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning
 
-import no.nav.aap.behandlingsflyt.dbtestdata.april
-import no.nav.aap.behandlingsflyt.dbtestdata.desember
-import no.nav.aap.behandlingsflyt.dbtestdata.januar
-import no.nav.aap.behandlingsflyt.dbtestdata.mai
+import no.nav.aap.behandlingsflyt.test.april
+import no.nav.aap.behandlingsflyt.test.desember
+import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.tidslinje.Segment

@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger
 
-import no.nav.aap.behandlingsflyt.dbtestdata.april
-import no.nav.aap.behandlingsflyt.dbtestdata.ident
-import no.nav.aap.behandlingsflyt.dbtestdata.mars
+import no.nav.aap.behandlingsflyt.test.april
+import no.nav.aap.behandlingsflyt.test.ident
+import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato

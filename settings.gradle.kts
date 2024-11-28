@@ -9,7 +9,6 @@ include(
     "faktagrunnlag",
     "verdityper",
     "dbflyway",
-    "dbtestdata",
     "integrasjon",
     "lib-test",
     "kontrakt",

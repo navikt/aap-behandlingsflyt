@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.meldeplikt
 
-import no.nav.aap.behandlingsflyt.dbtestdata.august
-import no.nav.aap.behandlingsflyt.dbtestdata.ident
+import no.nav.aap.behandlingsflyt.test.august
+import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository

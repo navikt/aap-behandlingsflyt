@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
-import no.nav.aap.behandlingsflyt.dbtestdata.ident
+import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent

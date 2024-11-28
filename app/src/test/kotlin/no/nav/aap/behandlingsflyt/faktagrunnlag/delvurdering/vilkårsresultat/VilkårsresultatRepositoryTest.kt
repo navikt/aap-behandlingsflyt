@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FakePdlGateway
-import no.nav.aap.behandlingsflyt.dbtestdata.ident
+import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService

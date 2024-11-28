@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
-import no.nav.aap.behandlingsflyt.dbtestdata.ident
+import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository

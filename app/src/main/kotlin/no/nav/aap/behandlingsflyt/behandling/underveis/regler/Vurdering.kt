@@ -175,11 +175,11 @@ data class Vurdering(
         throw IllegalStateException("Ukjent avslagsårsak")
     }
 
-    internal fun meldeplikUtfall(): Utfall {
+    internal fun meldepliktUtfall(): Utfall {
         return meldepliktVurdering?.utfall ?: Utfall.IKKE_VURDERT
     }
 
-    internal fun meldeplikAvslagsårsak(): UnderveisÅrsak? {
+    internal fun meldepliktAvslagsårsak(): UnderveisÅrsak? {
         return meldepliktVurdering?.årsak
     }
 

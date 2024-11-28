@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.gjenopptak
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FakePdlGateway
-import no.nav.aap.behandlingsflyt.dbtestdata.ident
+import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status

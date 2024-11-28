@@ -3,8 +3,8 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetVurdering.Avslagsårsak.STANDARDKVOTE_BRUKT_OPP
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetVurdering.Avslagsårsak.STUDENTKVOTE_BRUKT_OPP
-import no.nav.aap.behandlingsflyt.dbtestdata.januar
-import no.nav.aap.behandlingsflyt.dbtestdata.november
+import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak.VARIGHETSKVOTE_BRUKT_OPP

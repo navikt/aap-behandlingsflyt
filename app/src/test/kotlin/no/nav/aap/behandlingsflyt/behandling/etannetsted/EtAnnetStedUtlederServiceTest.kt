@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.etannetsted
 
 
-import no.nav.aap.behandlingsflyt.dbtestdata.MockConnection
+import no.nav.aap.behandlingsflyt.test.MockConnection
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository

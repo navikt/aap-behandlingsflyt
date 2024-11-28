@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade
 
-import no.nav.aap.behandlingsflyt.dbtestdata.ident
-import no.nav.aap.behandlingsflyt.dbtestdata.juni
-import no.nav.aap.behandlingsflyt.dbtestdata.mai
+import no.nav.aap.behandlingsflyt.test.ident
+import no.nav.aap.behandlingsflyt.test.juni
+import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade

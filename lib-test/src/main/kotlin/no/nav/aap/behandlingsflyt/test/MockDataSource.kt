@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.dbtestdata
+package no.nav.aap.behandlingsflyt.test
 
 import java.io.PrintWriter
 import java.sql.Connection

@@ -7,7 +7,7 @@ import io.ktor.server.netty.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FakePdlGateway
-import no.nav.aap.behandlingsflyt.dbtestdata.ident
+import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt

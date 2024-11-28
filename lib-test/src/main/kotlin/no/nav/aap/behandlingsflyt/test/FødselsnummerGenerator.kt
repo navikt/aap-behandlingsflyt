@@ -39,7 +39,7 @@ class FødselsnummerGenerator private constructor(
         } else if (betweenExclusive(fullYear, 2000, 2039)) {
             if (!betweenExclusive(birthNumber, 500, 999)) return generate()
         } else {
-            LOG.info("Kunne ikke identifisere fødselsnummerserie")
+            LOG.info("Kunne ikke identifisere fødselsnummerserie: $fullYear")
         }
 
         val withoutControlDigits = day + month + year + birthNumber
@@ -81,7 +81,7 @@ class FødselsnummerGenerator private constructor(
         }
 
         private fun betweenExclusive(x: Int, min: Int, max: Int): Boolean {
-            return x > min && x < max
+            return x > min && x <= max
         }
     }
 

@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
 import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
-import no.nav.aap.behandlingsflyt.dbtestdata.ident
+import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType

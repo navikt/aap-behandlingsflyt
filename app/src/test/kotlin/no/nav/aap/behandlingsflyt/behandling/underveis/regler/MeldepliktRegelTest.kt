@@ -947,7 +947,7 @@ class MeldepliktRegelTest {
         vurdertTidslinje.kombiner<_, Nothing>(
             forventetTidslinje,
             JoinStyle.RIGHT_JOIN { periode, vurdering, forventet ->
-                assertThat(vurdering?.verdi?.meldeplikUtfall())
+                assertThat(vurdering?.verdi?.meldepliktUtfall())
                     .`as`("for periode $vurdering")
                     .isEqualTo(forventet.verdi.utfall)
                 assertThat(vurdering?.verdi?.meldepliktVurdering?.dokument)

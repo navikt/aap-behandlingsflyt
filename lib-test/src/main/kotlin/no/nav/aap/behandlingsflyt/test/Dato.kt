@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.dbtestdata
+package no.nav.aap.behandlingsflyt.test
 
 import java.time.LocalDate
 import java.time.Month

@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.underveis
 
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.tomUnderveisInput
-import no.nav.aap.behandlingsflyt.dbtestdata.MockDataSource
+import no.nav.aap.behandlingsflyt.test.MockDataSource
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
