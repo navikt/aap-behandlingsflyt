@@ -4,10 +4,12 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.verdityper.flyt.StegStatus
 import java.time.LocalDateTime
 
-class StegTilstand(private val tidspunkt: LocalDateTime = LocalDateTime.now(),
-                   private val stegStatus: StegStatus,
-                   private val stegType: StegType,
-                   var aktiv: Boolean = true) : Comparable<StegTilstand> {
+class StegTilstand(
+    private val tidspunkt: LocalDateTime = LocalDateTime.now(),
+    private val stegStatus: StegStatus,
+    private val stegType: StegType,
+    var aktiv: Boolean = true
+) : Comparable<StegTilstand> {
 
     fun status(): StegStatus {
         return stegStatus
@@ -19,6 +21,10 @@ class StegTilstand(private val tidspunkt: LocalDateTime = LocalDateTime.now(),
 
     fun deaktiver() {
         this.aktiv = false
+    }
+
+    fun tidspunkt(): LocalDateTime {
+        return tidspunkt
     }
 
     override fun compareTo(other: StegTilstand): Int {
