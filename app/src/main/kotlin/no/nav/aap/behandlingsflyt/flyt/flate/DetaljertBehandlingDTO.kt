@@ -13,5 +13,6 @@ data class DetaljertBehandlingDTO(
     val avklaringsbehov: List<AvklaringsbehovDTO>,
     val vilkår: List<VilkårDTO>,
     val aktivtSteg: StegType,
+    val skalForberede: Boolean,
     val versjon: Long
 )

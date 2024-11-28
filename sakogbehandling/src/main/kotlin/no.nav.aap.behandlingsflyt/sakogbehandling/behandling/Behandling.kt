@@ -64,6 +64,10 @@ class Behandling(
 
     fun stegHistorikk(): List<StegTilstand> = stegHistorikk.toList()
 
+    fun harIkkeVærtAktivitetIDetSiste(): Boolean {
+        return aktivtStegTilstand().tidspunkt().isBefore(LocalDateTime.now().minusMinutes(15))
+    }
+
     fun aktivtSteg(): StegType {
         return aktivtStegTilstand().steg()
     }

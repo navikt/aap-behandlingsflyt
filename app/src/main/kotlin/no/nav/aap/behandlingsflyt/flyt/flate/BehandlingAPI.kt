@@ -43,7 +43,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
                         type = behandling.typeBehandling().name,
                         status = behandling.status(),
                         opprettet = behandling.opprettetTidspunkt,
-
+                        skalForberede = behandling.harIkkeVærtAktivitetIDetSiste(),
                         avklaringsbehov = FrivilligeAvklaringsbehov(
                             avklaringsbehov(
                                 connection,
@@ -94,7 +94,11 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
                     val lås = taSkriveLåsRepository.lås(req.referanse)
                     val behandling = behandling(connection, req)
                     val flytJobbRepository = FlytJobbRepository(connection)
-                    if (!behandling.status().erAvsluttet() &&  flytJobbRepository.hentJobberForBehandling(behandling.id.toLong()).isEmpty()) {
+                    if (!behandling.status()
+                            .erAvsluttet() && behandling.harIkkeVærtAktivitetIDetSiste() && flytJobbRepository.hentJobberForBehandling(
+                            behandling.id.toLong()
+                        ).isEmpty()
+                    ) {
                         flytJobbRepository.leggTil(
                             JobbInput(ProsesserBehandlingJobbUtfører).forBehandling(
                                 behandling.sakId.toLong(),
