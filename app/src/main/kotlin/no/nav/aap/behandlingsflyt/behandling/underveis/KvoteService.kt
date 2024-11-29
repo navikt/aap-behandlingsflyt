@@ -7,6 +7,10 @@ class KvoteService {
     private val ANTALL_ARBEIDSDAGER_I_ÅRET = 260
 
     fun beregn(behandlingId: BehandlingId): Kvoter {
-        return Kvoter.create(ANTALL_ARBEIDSDAGER_I_ÅRET * 3, ANTALL_ARBEIDSDAGER_I_ÅRET/2)
+        return Kvoter.create(
+            standardkvote = ANTALL_ARBEIDSDAGER_I_ÅRET * 3,
+            studentkvote = ANTALL_ARBEIDSDAGER_I_ÅRET/2,
+            sykepengeerstatningkvote = ANTALL_ARBEIDSDAGER_I_ÅRET/2
+        )
     }
 }

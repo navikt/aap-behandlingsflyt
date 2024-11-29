@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import org.slf4j.LoggerFactory
 
 /**
  * Håndterer varighetsbestemmelsene (11-12 + unntak fra denne). Sjekker uttak mot kvoten etablert i saken.
@@ -23,6 +24,8 @@ import no.nav.aap.komponenter.type.Periode
  */
 //WIP
 class VarighetRegel : UnderveisRegel {
+    private val log = LoggerFactory.getLogger(VarighetRegel::class.java)
+
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
         val sykdomVarighetTidslinje = sykdomstidslinje(input.kvoter, resultat)
 
@@ -33,11 +36,15 @@ class VarighetRegel : UnderveisRegel {
     private fun skalTelleMotStandardKvote(vurdering: Vurdering): Boolean {
         return vurdering.harRett() &&
                 (vurdering.fårAapEtter(Vilkårtype.SYKDOMSVILKÅRET, null) ||
-                        vurdering.fårAapEtter(Vilkårtype.SYKDOMSVILKÅRET, STUDENT))
+                        vurdering.fårAapEtter(Vilkårtype.SYKDOMSVILKÅRET, STUDENT)) && !skalTelleMotSykepengeKvote(vurdering)
     }
 
     private fun skalTelleMotStudentKvote(vurdering: Vurdering): Boolean {
         return vurdering.harRett() && vurdering.fårAapEtter(Vilkårtype.SYKDOMSVILKÅRET, STUDENT)
+    }
+
+    private fun skalTelleMotSykepengeKvote(vurdering: Vurdering): Boolean {
+        return vurdering.harRett() && vurdering.fårAapEtter(Vilkårtype.SYKEPENGEERSTATNING, null)
     }
 
     // ønsker vi kvote-info ved avslag i helgen?
@@ -65,6 +72,7 @@ class VarighetRegel : UnderveisRegel {
             Sykdomskvoter.STUDENT to skalTelleMotStudentKvote(vurdering),
             Sykdomskvoter.ETABLERINGSFASE to false,
             Sykdomskvoter.UTVIKLINGSFASE to false,
+            Sykdomskvoter.SYKEPENGEERSTATNING to skalTelleMotSykepengeKvote(vurdering),
         ).filterValues { it }.keys
     }
 
@@ -74,6 +82,10 @@ class VarighetRegel : UnderveisRegel {
         telleverk: Telleverk,
     ): Tidslinje<VarighetVurdering> {
         require(relevanteKvoter.isNotEmpty())
+        if (Sykdomskvoter.SYKEPENGEERSTATNING in relevanteKvoter && Sykdomskvoter.STUDENT in relevanteKvoter) {
+            log.warn("sykepengeerstatning -og student-vilkår er oppfylt på samme vurdering")
+        }
+
         val dagerTilStans = telleverk.minsteUbrukteKvote(relevanteKvoter)
         val kvoterStansesIPeriode = dagerTilStans < periode.antallHverdager()
 

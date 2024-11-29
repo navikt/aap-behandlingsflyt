@@ -51,6 +51,7 @@ enum class Sykdomskvoter(val avslagsårsak: VarighetVurdering.Avslagsårsak) {
     STUDENT(VarighetVurdering.Avslagsårsak.STUDENTKVOTE_BRUKT_OPP),
     ETABLERINGSFASE(VarighetVurdering.Avslagsårsak.ETABLERINGSFASEKVOTE_BRUKT_OPP),
     UTVIKLINGSFASE(VarighetVurdering.Avslagsårsak.UTVIKLINGSFASEKVOTE_BRUKT_OPP),
+    SYKEPENGEERSTATNING(VarighetVurdering.Avslagsårsak.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP)
 }
 
 data class KvoteTilstand(
@@ -77,6 +78,7 @@ class Telleverk private constructor(
     private val studentkvote: KvoteTilstand,
     private val utviklingsfasekvote: KvoteTilstand,
     private val etableringsfasekvote: KvoteTilstand,
+    private val sykepengeerstatningkvote: KvoteTilstand
 ) {
     constructor(kvoter: Kvoter) : this(
         standardkvote = KvoteTilstand(
@@ -95,6 +97,10 @@ class Telleverk private constructor(
             type = Sykdomskvoter.ETABLERINGSFASE,
             kvote = Hverdager(0),
         ),
+        sykepengeerstatningkvote = KvoteTilstand(
+            type = Sykdomskvoter.SYKEPENGEERSTATNING,
+            kvote = kvoter.sykepengeerstatningkvote
+        )
     )
 
     private fun <T> map(relevanteKvoter: Set<Sykdomskvoter>, action: (KvoteTilstand) -> T): List<T> {
@@ -103,6 +109,7 @@ class Telleverk private constructor(
             if (Sykdomskvoter.STUDENT in relevanteKvoter) action(studentkvote) else null,
             if (Sykdomskvoter.ETABLERINGSFASE in relevanteKvoter) action(etableringsfasekvote) else null,
             if (Sykdomskvoter.UTVIKLINGSFASE in relevanteKvoter) action(utviklingsfasekvote) else null,
+            if (Sykdomskvoter.SYKEPENGEERSTATNING in relevanteKvoter) action(sykepengeerstatningkvote) else null,
         )
     }
 
@@ -110,10 +117,6 @@ class Telleverk private constructor(
         map(kvoterSomSkalMarkeres) {
             it.erKvoteOversteget = true
         }
-    }
-
-    fun kvoterSomErStanset(relevanteKvoter: Set<Sykdomskvoter>): List<Sykdomskvoter> {
-        return map(relevanteKvoter) { it }.filter { it.erKvoteOversteget }.map { it.type }
     }
 
     fun erKvoterStanset(relevanteKvoter: Set<Sykdomskvoter>): Boolean {
