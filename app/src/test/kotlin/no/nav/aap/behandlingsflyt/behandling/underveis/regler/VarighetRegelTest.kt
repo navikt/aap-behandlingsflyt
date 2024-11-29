@@ -616,7 +616,7 @@ class VarighetRegelTest {
      25 26 27 28 29 30
      */
     @Test
-    fun `alle måter å dele opp periode i tox`() {
+    fun `alle måter å dele opp periode i to hvor antall dager i kvote er lik hverdagene`() {
         val rettighetsperiode = Periode(11 november 2024, 26 november 2024)
         Periode(rettighetsperiode.fom.plusDays(1), rettighetsperiode.tom).dager().forEach {
             println(it)
@@ -649,6 +649,85 @@ class VarighetRegelTest {
                 }
             )
         }
+    }
+
+    /*
+        November 2024
+     Mo Tu We Th Fr Sa Su
+                  1  2  3
+      4  5  6  7  8  9 10
+     11 12 13 14 15 16 17
+     18 19 20 21 22 23 24
+     25 26 27 28 29 30
+     */
+    @Test
+    fun `Veksler mellom standard, student -og sykepengeerstatning-kvote`() {
+        val rettighetsperiode = Periode(11 november 2024, 26 november 2024)
+        val vurderinger = regel.vurder(
+            tomUnderveisInput.copy(
+                rettighetsperiode = rettighetsperiode,
+                kvoter = Kvoter.create(standardkvote = 6, studentkvote = 3, 3)
+            ),
+            listOf(
+                Segment(
+                    Periode(11 november 2024, 13 november 2024),
+                    Vurdering(
+                        vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
+                    )
+                ),
+                Segment(
+                    Periode(14 november 2024, 18 november 2024),
+                    Vurdering(
+                        vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, STUDENT)),
+                    )
+                ),
+                Segment(
+                    Periode(19 november 2024, 21 november 2024),
+                    Vurdering(
+                        vurderinger = listOf(
+                            EnkelVurdering(Vilkårtype.SYKEPENGEERSTATNING, Utfall.OPPFYLT, null),
+                            EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null),
+                        ),
+                    )
+                ),
+                Segment(
+                    Periode(22 november 2024, 24 november 2024),
+                    Vurdering(
+                        vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
+                    )
+                ),
+                Segment(
+                    Periode(25 november 2024, 25 november 2024),
+                    Vurdering(
+                        vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, STUDENT)),
+                    )
+                ),
+                Segment(
+                    Periode(26 november 2024, 26 november 2024),
+                    Vurdering(
+                        vurderinger = listOf(
+                            EnkelVurdering(Vilkårtype.SYKEPENGEERSTATNING, Utfall.OPPFYLT, null),
+                            EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null),
+                        ),
+                    )
+                ),
+            ).let(::Tidslinje)
+        )
+
+        vurderinger.assert(
+            Segment(Periode(11 november 2024, 13 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
+            Segment(Periode(14 november 2024, 18 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
+            Segment(Periode(19 november 2024, 21 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
+            Segment(Periode(22 november 2024, 24 november 2024)) { vurdering ->
+                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP, STANDARDKVOTE_BRUKT_OPP)
+            },
+            Segment(Periode(25 november 2024, 25 november 2024)) { vurdering ->
+                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP, STUDENTKVOTE_BRUKT_OPP, STANDARDKVOTE_BRUKT_OPP)
+            },
+            Segment(Periode(26 november 2024, 26 november 2024)) { vurdering ->
+                assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP, SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP)
+            },
+        )
     }
 }
 
