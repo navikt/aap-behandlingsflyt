@@ -1421,7 +1421,6 @@ class FlytOrkestratorTest {
         }
     }
 
-    @Ignore
     @Test
     fun `Fjerner legeerklæring ventebehov ved mottak av avvist legeerklæring`() {
         val ident = ident()
