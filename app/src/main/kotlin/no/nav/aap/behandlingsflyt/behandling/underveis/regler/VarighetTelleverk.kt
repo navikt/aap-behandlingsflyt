@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.komponenter.type.Periode
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -46,18 +47,40 @@ value class Hverdager(private val hverdager: Int) : Comparable<Hverdager> {
     }
 }
 
-enum class Sykdomskvoter(val avslagsårsak: VarighetVurdering.Avslagsårsak) {
-    STANDARD(VarighetVurdering.Avslagsårsak.STANDARDKVOTE_BRUKT_OPP),
-    STUDENT(VarighetVurdering.Avslagsårsak.STUDENTKVOTE_BRUKT_OPP),
-    ETABLERINGSFASE(VarighetVurdering.Avslagsårsak.ETABLERINGSFASEKVOTE_BRUKT_OPP),
-    UTVIKLINGSFASE(VarighetVurdering.Avslagsårsak.UTVIKLINGSFASEKVOTE_BRUKT_OPP),
-    SYKEPENGEERSTATNING(VarighetVurdering.Avslagsårsak.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP)
+enum class Kvote(val avslagsårsak: VarighetVurdering.Avslagsårsak, val tellerMotKvote: (Vurdering) -> Boolean) {
+    STANDARD(VarighetVurdering.Avslagsårsak.STANDARDKVOTE_BRUKT_OPP, ::skalTelleMotStandardKvote),
+    STUDENT(VarighetVurdering.Avslagsårsak.STUDENTKVOTE_BRUKT_OPP, ::skalTelleMotStudentKvote),
+    ETABLERINGSFASE(VarighetVurdering.Avslagsårsak.ETABLERINGSFASEKVOTE_BRUKT_OPP, { false }),
+    UTVIKLINGSFASE(VarighetVurdering.Avslagsårsak.UTVIKLINGSFASEKVOTE_BRUKT_OPP, { false }),
+    SYKEPENGEERSTATNING(VarighetVurdering.Avslagsårsak.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP, ::skalTelleMotSykepengeKvote);
 }
 
+private fun skalTelleMotStandardKvote(vurdering: Vurdering): Boolean {
+    return vurdering.harRett() &&
+            (vurdering.fårAapEtter(Vilkårtype.SYKDOMSVILKÅRET, null) ||
+                    vurdering.fårAapEtter(
+                        Vilkårtype.SYKDOMSVILKÅRET,
+                        no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak.STUDENT
+                    )) && !skalTelleMotSykepengeKvote(vurdering)
+}
+
+private fun skalTelleMotStudentKvote(vurdering: Vurdering): Boolean {
+    return vurdering.harRett() && vurdering.fårAapEtter(
+        Vilkårtype.SYKDOMSVILKÅRET,
+        no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak.STUDENT
+    )
+}
+
+private fun skalTelleMotSykepengeKvote(vurdering: Vurdering): Boolean {
+    return vurdering.harRett() && vurdering.fårAapEtter(Vilkårtype.SYKEPENGEERSTATNING, null)
+}
+
+
+
 data class KvoteTilstand(
-    val type: Sykdomskvoter,
-    private val kvote: Hverdager,
-    private var kvoteBrukt: Hverdager = Hverdager(0),
+    val kvote: Kvote,
+    private val hverdagerTilgjengelig: Hverdager,
+    private var hverdagerBrukt: Hverdager = Hverdager(0),
 ) {
     var erKvoteOversteget: Boolean = false
         set(erKvoteOversteget: Boolean) {
@@ -66,10 +89,10 @@ data class KvoteTilstand(
         }
 
     val ubruktKvote: Hverdager
-        get() = kvote - kvoteBrukt
+        get() = hverdagerTilgjengelig - hverdagerBrukt
 
     fun øk(brukt: Hverdager) {
-        kvoteBrukt += brukt
+        hverdagerBrukt += brukt
     }
 }
 
@@ -82,67 +105,67 @@ class Telleverk private constructor(
 ) {
     constructor(kvoter: Kvoter) : this(
         standardkvote = KvoteTilstand(
-            type = Sykdomskvoter.STANDARD,
-            kvote = kvoter.standardkvote,
+            kvote = Kvote.STANDARD,
+            hverdagerTilgjengelig = kvoter.standardkvote,
         ),
         studentkvote = KvoteTilstand(
-            type = Sykdomskvoter.STUDENT,
-            kvote = kvoter.studentkvote,
+            kvote = Kvote.STUDENT,
+            hverdagerTilgjengelig = kvoter.studentkvote,
         ),
         utviklingsfasekvote = KvoteTilstand(
-            type = Sykdomskvoter.UTVIKLINGSFASE,
-            kvote = Hverdager(0),
+            kvote = Kvote.UTVIKLINGSFASE,
+            hverdagerTilgjengelig = Hverdager(0),
         ),
         etableringsfasekvote = KvoteTilstand(
-            type = Sykdomskvoter.ETABLERINGSFASE,
-            kvote = Hverdager(0),
+            kvote = Kvote.ETABLERINGSFASE,
+            hverdagerTilgjengelig = Hverdager(0),
         ),
         sykepengeerstatningkvote = KvoteTilstand(
-            type = Sykdomskvoter.SYKEPENGEERSTATNING,
-            kvote = kvoter.sykepengeerstatningkvote
+            kvote = Kvote.SYKEPENGEERSTATNING,
+            hverdagerTilgjengelig = kvoter.sykepengeerstatningkvote
         )
     )
 
-    private fun <T> map(relevanteKvoter: Set<Sykdomskvoter>, action: (KvoteTilstand) -> T): List<T> {
+    private fun <T> map(relevanteKvoter: Set<Kvote>, action: (KvoteTilstand) -> T): List<T> {
         return listOfNotNull(
-            if (Sykdomskvoter.STANDARD in relevanteKvoter) action(standardkvote) else null,
-            if (Sykdomskvoter.STUDENT in relevanteKvoter) action(studentkvote) else null,
-            if (Sykdomskvoter.ETABLERINGSFASE in relevanteKvoter) action(etableringsfasekvote) else null,
-            if (Sykdomskvoter.UTVIKLINGSFASE in relevanteKvoter) action(utviklingsfasekvote) else null,
-            if (Sykdomskvoter.SYKEPENGEERSTATNING in relevanteKvoter) action(sykepengeerstatningkvote) else null,
+            if (Kvote.STANDARD in relevanteKvoter) action(standardkvote) else null,
+            if (Kvote.STUDENT in relevanteKvoter) action(studentkvote) else null,
+            if (Kvote.ETABLERINGSFASE in relevanteKvoter) action(etableringsfasekvote) else null,
+            if (Kvote.UTVIKLINGSFASE in relevanteKvoter) action(utviklingsfasekvote) else null,
+            if (Kvote.SYKEPENGEERSTATNING in relevanteKvoter) action(sykepengeerstatningkvote) else null,
         )
     }
 
-    fun markereKvoterOversteget(kvoterSomSkalMarkeres: Set<Sykdomskvoter>) {
+    fun markereKvoterOversteget(kvoterSomSkalMarkeres: Set<Kvote>) {
         map(kvoterSomSkalMarkeres) {
             it.erKvoteOversteget = true
         }
     }
 
-    fun erKvoterStanset(relevanteKvoter: Set<Sykdomskvoter>): Boolean {
+    fun erKvoterStanset(relevanteKvoter: Set<Kvote>): Boolean {
         return map(relevanteKvoter) { it.erKvoteOversteget }.any { it }
     }
 
-    fun minsteUbrukteKvote(relevanteKvoter: Set<Sykdomskvoter>): Hverdager {
+    fun minsteUbrukteKvote(relevanteKvoter: Set<Kvote>): Hverdager {
         return map(relevanteKvoter) { it.ubruktKvote }.min()
     }
 
-    fun kvoterNærmestÅBliBruktOpp(relevanteKvoter: Set<Sykdomskvoter>): Set<Sykdomskvoter> {
+    fun kvoterNærmestÅBliBruktOpp(relevanteKvoter: Set<Kvote>): Set<Kvote> {
         return map(relevanteKvoter) { it }
             .groupBy { it.ubruktKvote }
             .minByOrNull { it.key }
             ?.value
-            ?.map { it.type }
+            ?.map { it.kvote }
             ?.toSet().orEmpty()
     }
 
-    fun øk(relevanteKvoter: Set<Sykdomskvoter>, hverdagerBrukt: Hverdager) {
+    fun øk(relevanteKvoter: Set<Kvote>, hverdagerBrukt: Hverdager) {
         map(relevanteKvoter) {
             it.øk(hverdagerBrukt)
         }
     }
 
-    fun øk(relevanteKvoter: Set<Sykdomskvoter>, periode: Periode) {
+    fun øk(relevanteKvoter: Set<Kvote>, periode: Periode) {
         øk(relevanteKvoter, periode.antallHverdager())
     }
 }

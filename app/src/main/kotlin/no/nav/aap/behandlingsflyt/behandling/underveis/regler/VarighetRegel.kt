@@ -1,10 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plusHverdager
-import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak.STUDENT
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -32,21 +30,6 @@ class VarighetRegel : UnderveisRegel {
         return resultat.leggTilVurderinger(sykdomVarighetTidslinje, Vurdering::leggTilVarighetVurdering)
     }
 
-
-    private fun skalTelleMotStandardKvote(vurdering: Vurdering): Boolean {
-        return vurdering.harRett() &&
-                (vurdering.fårAapEtter(Vilkårtype.SYKDOMSVILKÅRET, null) ||
-                        vurdering.fårAapEtter(Vilkårtype.SYKDOMSVILKÅRET, STUDENT)) && !skalTelleMotSykepengeKvote(vurdering)
-    }
-
-    private fun skalTelleMotStudentKvote(vurdering: Vurdering): Boolean {
-        return vurdering.harRett() && vurdering.fårAapEtter(Vilkårtype.SYKDOMSVILKÅRET, STUDENT)
-    }
-
-    private fun skalTelleMotSykepengeKvote(vurdering: Vurdering): Boolean {
-        return vurdering.harRett() && vurdering.fårAapEtter(Vilkårtype.SYKEPENGEERSTATNING, null)
-    }
-
     // ønsker vi kvote-info ved avslag i helgen?
     private fun sykdomstidslinje(kvoter: Kvoter, resultat: Tidslinje<Vurdering>): Tidslinje<VarighetVurdering> {
         val telleverk = Telleverk(kvoter)
@@ -66,23 +49,17 @@ class VarighetRegel : UnderveisRegel {
         }
     }
 
-    private fun relevanteKvoter(vurdering: Vurdering): Set<Sykdomskvoter> {
-        return mapOf(
-            Sykdomskvoter.STANDARD to skalTelleMotStandardKvote(vurdering),
-            Sykdomskvoter.STUDENT to skalTelleMotStudentKvote(vurdering),
-            Sykdomskvoter.ETABLERINGSFASE to false,
-            Sykdomskvoter.UTVIKLINGSFASE to false,
-            Sykdomskvoter.SYKEPENGEERSTATNING to skalTelleMotSykepengeKvote(vurdering),
-        ).filterValues { it }.keys
+    private fun relevanteKvoter(vurdering: Vurdering): Set<Kvote> {
+        return Kvote.entries.associateWith { it.tellerMotKvote.invoke(vurdering) }.filterValues { it }.keys
     }
 
     private fun vurderPeriode(
         periode: Periode,
-        relevanteKvoter: Set<Sykdomskvoter>,
+        relevanteKvoter: Set<Kvote>,
         telleverk: Telleverk,
     ): Tidslinje<VarighetVurdering> {
         require(relevanteKvoter.isNotEmpty())
-        if (Sykdomskvoter.SYKEPENGEERSTATNING in relevanteKvoter && Sykdomskvoter.STUDENT in relevanteKvoter) {
+        if (Kvote.SYKEPENGEERSTATNING in relevanteKvoter && Kvote.STUDENT in relevanteKvoter) {
             log.warn("sykepengeerstatning -og student-vilkår er oppfylt på samme vurdering")
         }
 
