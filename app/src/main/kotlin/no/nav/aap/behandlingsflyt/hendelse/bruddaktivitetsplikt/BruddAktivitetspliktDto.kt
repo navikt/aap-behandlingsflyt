@@ -12,12 +12,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
 
-
 class OppdaterAktivitetspliktDTOV2(
     val brudd: BruddType,
     val paragraf: Brudd.Paragraf,
     val periode: Periode,
-    val grunn: Grunn,
+    val grunn: GrunnDTO,
     val begrunnelse: String,
 ) {
     fun tilDomene(sak: Sak, innsender: Bruker): List<AktivitetspliktRepository.DokumentInput> {
@@ -27,7 +26,7 @@ class OppdaterAktivitetspliktDTOV2(
             bruddType = brudd,
             paragraf = brudd.paragraf(paragraf),
         )
-        if (grunn == Grunn.FEILREGISTRERING) {
+        if (grunn == GrunnDTO.FEILREGISTRERING) {
             return listOf(
                 AktivitetspliktRepository.FeilregistreringInput(
                     brudd = brudd,
@@ -40,7 +39,7 @@ class OppdaterAktivitetspliktDTOV2(
             brudd = brudd,
             innsender = innsender,
             begrunnelse = begrunnelse,
-            grunn = grunn,
+            grunn = grunn.tilDomene(),
         ))
     }
 }
@@ -54,11 +53,11 @@ data class OpprettAktivitetspliktDTO(
     val brudd: BruddType,
     val paragraf: Brudd.Paragraf?,
     val begrunnelse: String,
-    val grunn: Grunn?,
+    val grunn: GrunnDTO?,
     val perioder: List<Periode>,
 ) : AktivitetspliktDTO {
     override fun tilDomene(sak: Sak, innsender: Bruker): List<AktivitetspliktRepository.DokumentInput> {
-        require(grunn != Grunn.FEILREGISTRERING)
+        require(grunn != GrunnDTO.FEILREGISTRERING)
         return perioder.map { periode ->
             val brudd = Brudd.nyttBrudd(
                 sak = sak,
@@ -70,7 +69,7 @@ data class OpprettAktivitetspliktDTO(
                 brudd = brudd,
                 innsender = innsender,
                 begrunnelse = begrunnelse,
-                grunn = grunn ?: Grunn.INGEN_GYLDIG_GRUNN,
+                grunn = grunn?.tilDomene() ?: Grunn.INGEN_GYLDIG_GRUNN,
             )
         }
     }
@@ -80,7 +79,7 @@ data class OppdaterAktivitetspliktDTO(
     val brudd: BruddType,
     val paragraf: Brudd.Paragraf,
     val periode: Periode,
-    val grunn: Grunn,
+    val grunn: GrunnDTO,
 ) : AktivitetspliktDTO {
     override fun tilDomene(sak: Sak, innsender: Bruker): List<AktivitetspliktRepository.DokumentInput> {
         val brudd = Brudd.nyttBrudd(
@@ -90,7 +89,7 @@ data class OppdaterAktivitetspliktDTO(
             paragraf = brudd.paragraf(paragraf),
         )
 
-        if (grunn == Grunn.FEILREGISTRERING) {
+        if (grunn == GrunnDTO.FEILREGISTRERING) {
             return listOf(
                 AktivitetspliktRepository.FeilregistreringInput(
                     brudd = brudd,
@@ -105,7 +104,7 @@ data class OppdaterAktivitetspliktDTO(
                 brudd = brudd,
                 innsender = innsender,
                 begrunnelse = "",
-                grunn = grunn,
+                grunn = grunn.tilDomene(),
             )
         )
     }
@@ -142,7 +141,7 @@ data class SaksnummerParameter(@PathParam("saksnummer") val saksnummer: String)
 data class BruddAktivitetspliktHendelseDto(
     val brudd: BruddType,
     val paragraf: Brudd.Paragraf,
-    val grunn: Grunn,
+    val grunn: GrunnDTO,
     val periode: Periode,
     val begrunnelse: String,
 )
@@ -161,8 +160,8 @@ fun List<AktivitetspliktDokument>.utledBruddTilstand(): List<BruddAktivitetsplik
                 brudd = it.brudd.bruddType,
                 paragraf = it.brudd.paragraf,
                 grunn = when (it) {
-                    is AktivitetspliktFeilregistrering -> Grunn.FEILREGISTRERING
-                    is AktivitetspliktRegistrering -> it.grunn
+                    is AktivitetspliktFeilregistrering -> GrunnDTO.FEILREGISTRERING
+                    is AktivitetspliktRegistrering -> GrunnDTO.fraDomene(it.grunn)
                 },
                 periode = it.brudd.periode,
                 begrunnelse = when (it) {
@@ -171,4 +170,26 @@ fun List<AktivitetspliktDokument>.utledBruddTilstand(): List<BruddAktivitetsplik
                 }
             )
         }
+}
+
+enum class GrunnDTO(private val tilDomene: Grunn?) {
+    SYKDOM_ELLER_SKADE(Grunn.SYKDOM_ELLER_SKADE),
+    STERKE_VELFERDSGRUNNER(Grunn.STERKE_VELFERDSGRUNNER),
+    RIMELIG_GRUNN(Grunn.RIMELIG_GRUNN),
+    INGEN_GYLDIG_GRUNN(Grunn.INGEN_GYLDIG_GRUNN),
+    FEILREGISTRERING(null);
+
+    fun tilDomene(): Grunn {
+        return requireNotNull(tilDomene) {
+            "$this kan ikke representeres som en grunn i domenet"
+        }
+    }
+
+    companion object {
+        fun fraDomene(grunn: Grunn): GrunnDTO {
+            return requireNotNull(entries.find { it.tilDomene == grunn }) {
+                "$grunn kan ikke representeres som GrunnDTO"
+            }
+        }
+    }
 }
