@@ -2,8 +2,10 @@ package no.nav.aap.behandlingsflyt.behandling.beregning.år
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Input
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
+import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -11,6 +13,33 @@ import java.time.LocalDate
 import java.time.Year
 
 class InntektsbehovTest {
+    @Test
+    fun `henter ut relevante år, nemlig tre år før nedsettelsen`() {
+        val nedsettelsesDato = LocalDate.now().withYear(2005)
+        val forOrdinær = Inntektsbehov(
+            Input(
+                nedsettelsesDato,
+                inntekter = setOf(
+                    InntektPerÅr(nedsettelsesDato.plusYears(1).year, Beløp(123)),
+                    InntektPerÅr(nedsettelsesDato.minusYears(0).year, Beløp(125)),
+                    InntektPerÅr(nedsettelsesDato.minusYears(1).year, Beløp(126)),
+                    InntektPerÅr(nedsettelsesDato.minusYears(2).year, Beløp(127)),
+                    InntektPerÅr(nedsettelsesDato.minusYears(3).year, Beløp(128)),
+                    InntektPerÅr(nedsettelsesDato.minusYears(4).year, Beløp(129))
+                ),
+                uføregrad = Prosent.`0_PROSENT`,
+                yrkesskadevurdering = null,
+                beregningGrunnlag = null,
+                registrerteYrkesskader = null
+            )
+        ).utledForOrdinær()
+
+        assertThat(forOrdinær).containsExactlyInAnyOrder(
+            InntektPerÅr(2004, Beløp(126)),
+            InntektPerÅr(2003, Beløp(127)),
+            InntektPerÅr(2002, Beløp(128))
+        )
+    }
 
     @Test
     fun `skal utlede de tre forutgående kalenderårene fra nedsettelsesdato`() {
@@ -29,7 +58,7 @@ class InntektsbehovTest {
         val nedsattYear = Year.of(nedsettelsesDato.year)
 
         assertThat(relevanteÅr).hasSize(3)
-        assertThat(relevanteÅr).containsExactly(
+        assertThat(relevanteÅr).containsExactlyInAnyOrder(
             nedsattYear.minusYears(3),
             nedsattYear.minusYears(2),
             nedsattYear.minusYears(1)
@@ -62,7 +91,7 @@ class InntektsbehovTest {
         val ytterligereNedsattYear = Year.of(ytterligereNedsattDato.year)
 
         assertThat(relevanteÅr).hasSize(6)
-        assertThat(relevanteÅr).containsExactly(
+        assertThat(relevanteÅr).containsExactlyInAnyOrder(
             nedsattYear.minusYears(3),
             nedsattYear.minusYears(2),
             nedsattYear.minusYears(1),

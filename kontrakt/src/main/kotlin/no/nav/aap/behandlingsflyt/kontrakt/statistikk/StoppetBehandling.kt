@@ -29,6 +29,7 @@ public data class StoppetBehandling(
     val soknadsFormat: Kanal = Kanal.DIGITAL,
     val ident: String,
     val versjon: String,
+    val årsakTilBehandling: String? = null,
     val avklaringsbehov: List<AvklaringsbehovHendelseDto>,
     val hendelsesTidspunkt: LocalDateTime,
     val avsluttetBehandling: AvsluttetBehandlingDTO? = null,
@@ -41,4 +42,17 @@ public data class StoppetBehandling(
         require(behandlingStatus != Status.AVSLUTTET || avsluttetBehandling != null)
         { "Om behandling ikke er avsluttet, ikke legg ved data om avsluttet behandling. Status er $behandlingStatus" }
     }
+}
+
+
+/**
+ * Eksponert versjon av [no.nav.aap.verdityper.flyt.ÅrsakTilBehandling] til kontrakt.
+ */
+public enum class ÅrsakTilBehandling {
+    SØKNAD,
+    AKTIVITETSMELDING,
+    MELDEKORT,
+    LEGEERKLÆRING,
+    AVVIST_LEGEERKLÆRING,
+    DIALOGMELDING
 }

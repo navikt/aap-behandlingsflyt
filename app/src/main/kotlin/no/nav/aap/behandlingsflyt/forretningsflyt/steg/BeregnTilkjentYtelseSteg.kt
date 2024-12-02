@@ -30,6 +30,7 @@ class BeregnTilkjentYtelseSteg private constructor(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val beregningsgrunnlag = beregningsgrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
         val underveisgrunnlag = underveisRepository.hent(kontekst.behandlingId)
+        // TODO: hvorfor brukes ikke denne?
         val samordningGrunnlag = requireNotNull(samordningRepository.hentHvisEksisterer(kontekst.behandlingId))
         val fødselsdato = requireNotNull(personopplysningRepository.hentHvisEksisterer(kontekst.behandlingId)?.brukerPersonopplysning?.fødselsdato)
         val barnetilleggGrunnlag = requireNotNull(barnetilleggRepository.hentHvisEksisterer(kontekst.behandlingId))

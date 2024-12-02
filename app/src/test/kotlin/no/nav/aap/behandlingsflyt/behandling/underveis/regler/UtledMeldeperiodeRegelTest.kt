@@ -12,7 +12,7 @@ class UtledMeldeperiodeRegelTest {
 
     @Test
     fun `utlede meldeperiode for rettighetsperiode som er akkurat 2 meldeperioder lang`() {
-        val rettighetperiode = Periode(LocalDate.now(), LocalDate.now().plusDays((MELDEPERIODE_LENGDE*2)-1))
+        val rettighetperiode = Periode(LocalDate.now(), LocalDate.now().plusDays((MELDEPERIODE_LENGDE * 2) - 1))
         val input = tomUnderveisInput.copy(rettighetsperiode = rettighetperiode)
         val resultat = UtledMeldeperiodeRegel().vurder(input, Tidslinje())
 
@@ -29,7 +29,7 @@ class UtledMeldeperiodeRegelTest {
 
     @Test
     fun `utlede meldeperiode hvor det er flere vurderinger i samme meldeperiode`() {
-        val rettighetperiode = Periode(LocalDate.now(), LocalDate.now().plusDays(MELDEPERIODE_LENGDE-1))
+        val rettighetperiode = Periode(LocalDate.now(), LocalDate.now().plusDays(MELDEPERIODE_LENGDE - 1))
         val sluttFørsteRettighetsperiode = rettighetperiode.fom.plusDays(3)
         val input = tomUnderveisInput.copy(rettighetsperiode = rettighetperiode)
         val segmenter = listOf(
@@ -50,6 +50,6 @@ class UtledMeldeperiodeRegelTest {
     }
 
     private fun meldeperiode(startDate: LocalDate): Periode {
-        return Periode(startDate, startDate.plusDays(MELDEPERIODE_LENGDE-1))
+        return Periode(startDate, startDate.plusDays(MELDEPERIODE_LENGDE - 1))
     }
 }

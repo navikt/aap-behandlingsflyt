@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.periodisering
 
 import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -18,7 +19,7 @@ class PerioderTilVurderingService(
     private val sakService: SakService, private val behandlingRepository: BehandlingRepository
 ) {
 
-    fun utled(kontekst: FlytKontekst, stegType: no.nav.aap.behandlingsflyt.kontrakt.steg.StegType): Set<Vurdering> {
+    fun utled(kontekst: FlytKontekst, stegType: StegType): Set<Vurdering> {
         val sak = sakService.hent(kontekst.sakId)
         if (kontekst.behandlingType == TypeBehandling.Førstegangsbehandling) {
             // ved førstegangsbehandling skal hele perioden alltid vurderes for alle vilkår?

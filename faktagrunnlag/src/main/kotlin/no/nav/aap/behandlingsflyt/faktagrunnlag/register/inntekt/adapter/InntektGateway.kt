@@ -1,7 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter
 
-import no.nav.aap.Inntekt.InntektRequest
-import no.nav.aap.Inntekt.InntektResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektRegisterGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
@@ -15,6 +13,23 @@ import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 import no.nav.aap.komponenter.verdityper.Beløp
 import java.net.URI
 import java.time.Year
+
+class InntektRequest(
+    val fnr: String,
+    val fomAr: Int,
+    val tomAr: Int
+)
+
+class InntektResponse(
+    val inntekter: List<SumPi>
+)
+
+class SumPi(
+    val inntektAr: Int,
+    val belop: Long, //TODO: Vi prøver å se om belop klarer seg uten nullable
+    val inntektType: String
+)
+
 
 object InntektGateway : InntektRegisterGateway {
     private val url = URI.create(requiredConfigForKey("integrasjon.inntekt.url"))

@@ -230,10 +230,10 @@ class BehandlingFlytBuilder {
         informasjonskrav: List<Informasjonskravkonstruktør> = emptyList()
     ): BehandlingFlytBuilder {
         if (buildt) {
-            throw IllegalStateException("[Utvikler feil] Builder er allerede bygget")
+            throw IllegalStateException("[Utviklerfeil] Builder er allerede bygget")
         }
         if (StegType.UDEFINERT == steg.type()) {
-            throw IllegalStateException("[Utvikler feil] StegType UDEFINERT er ugyldig å legge til i flyten")
+            throw IllegalStateException("[Utviklerfeil] StegType UDEFINERT er ugyldig å legge til i flyten")
         }
         this.flyt.add(BehandlingFlyt.Behandlingsflytsteg(steg, informasjonskrav, oppdaterFaktagrunnlag))
         årsakRelevanteForSteg.forEach { endring ->
