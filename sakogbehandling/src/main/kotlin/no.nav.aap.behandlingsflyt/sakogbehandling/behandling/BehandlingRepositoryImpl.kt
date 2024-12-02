@@ -4,18 +4,22 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
-import no.nav.aap.verdityper.sakogbehandling.BehandlingId
-import no.nav.aap.verdityper.sakogbehandling.SakId
 import java.time.LocalDateTime
 
 class BehandlingRepositoryImpl(private val connection: DBConnection) : BehandlingRepository, BehandlingFlytRepository {
 
     private val sakRepository = SakRepositoryImpl(connection)
 
-    override fun opprettBehandling(sakId: SakId, årsaker: List<Årsak>, typeBehandling: TypeBehandling, forrigeBehandlingId: BehandlingId?): Behandling {
+    override fun opprettBehandling(
+        sakId: SakId,
+        årsaker: List<Årsak>,
+        typeBehandling: TypeBehandling,
+        forrigeBehandlingId: BehandlingId?
+    ): Behandling {
 
         val query = """
             INSERT INTO BEHANDLING (sak_id, referanse, status, type, forrige_id)
@@ -239,8 +243,8 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             setParams {
                 setUUID(1, referanse.referanse)
             }
-            setRowMapper {
-                    row -> sakRepository.finnSøker(SakId(row.getLong("SAK_ID")))
+            setRowMapper { row ->
+                sakRepository.finnSøker(SakId(row.getLong("SAK_ID")))
             }
         }
     }

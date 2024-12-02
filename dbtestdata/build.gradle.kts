@@ -7,5 +7,5 @@ plugins {
 dependencies {
     implementation("no.nav.aap.kelvin:dbconnect:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:dbtest:$komponenterVersjon")
-    implementation(project(":verdityper"))
+    implementation(project("))
 }

@@ -2,7 +2,7 @@ package no.nav.aap.motor.help
 
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
-import no.nav.aap.verdityper.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import java.util.*
 
 class TestPersonRepository(private val connection: DBConnection) {

@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak
 
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
-import no.nav.aap.verdityper.sakogbehandling.SakId
 
 class SakService(private val sakRepository: SakRepository) {
 

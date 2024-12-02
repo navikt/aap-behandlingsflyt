@@ -8,7 +8,7 @@ plugins {
 
 dependencies {
     implementation(project(":integrasjon"))
-    implementation(project(":verdityper"))
+    implementation(project(":kontrakt"))
     implementation(project(":sakogbehandling"))
     implementation(project(":faktagrunnlag"))
     implementation("no.nav.aap.tilgang:plugin:$tilgangVersjon")

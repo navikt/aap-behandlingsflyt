@@ -7,7 +7,7 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
-import no.nav.aap.verdityper.sakogbehandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 
 class TilkjentYtelseRepository(private val connection: DBConnection) {
     fun hentHvisEksisterer(behandlingId: BehandlingId): Tidslinje<Tilkjent>? {

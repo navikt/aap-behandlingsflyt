@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis
 
-import no.nav.aap.verdityper.sakogbehandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 
 class KvoteService {
 

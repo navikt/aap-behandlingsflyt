@@ -22,8 +22,8 @@ import no.nav.aap.behandlingsflyt.server.prosessering.ProsesserBehandlingService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.motor.FlytJobbRepository
-import no.nav.aap.verdityper.flyt.FlytKontekst
-import no.nav.aap.verdityper.sakogbehandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import org.slf4j.LoggerFactory
 
 class AvklaringsbehovOrkestrator(

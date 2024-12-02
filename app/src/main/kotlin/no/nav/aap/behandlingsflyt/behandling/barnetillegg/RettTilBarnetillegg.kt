@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.barnetillegg
 
-import no.nav.aap.verdityper.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 
 class RettTilBarnetillegg(barn: Set<Ident> = emptySet()) {
     private val barnMedFolkeregisterRelasjonTil = barn.toMutableSet()
