@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.Dokument
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.DokumentInfoId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.SafHentDokumentGateway
@@ -23,7 +24,6 @@ import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPostWithApprovedList
-import no.nav.aap.verdityper.dokument.DokumentInfoId
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.feilhåndtering.ElementNotFoundException
 import no.nav.aap.verdityper.sakogbehandling.Ident

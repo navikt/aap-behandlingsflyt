@@ -6,7 +6,6 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.OnBehalfOfTokenProvider
-import no.nav.aap.verdityper.dokument.DokumentInfoId
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.slf4j.LoggerFactory
 import java.io.InputStream
@@ -14,6 +13,8 @@ import java.net.URI
 import java.net.http.HttpHeaders
 
 private val log = LoggerFactory.getLogger(SafHentDokumentGateway::class.java)
+
+data class DokumentInfoId(val dokumentInfoId: String)
 
 class SafHentDokumentGateway(private val restClient: RestClient<InputStream>) {
     private val restUrl = URI.create(requiredConfigForKey("integrasjon.saf.url.rest"))
