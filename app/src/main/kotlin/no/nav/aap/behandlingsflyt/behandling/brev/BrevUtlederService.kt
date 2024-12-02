@@ -29,7 +29,7 @@ class BrevUtlederService(
 
         val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
 
-        return if (vilkårsresultat.alle().all { it.harPerioderSomErOppfylt() }) { // !!
+        return if (vilkårsresultat.alle().all { it.harPerioderSomErOppfylt() }) {
             BrevBehov(TypeBrev.VEDTAK_INNVILGELSE)
         } else {
             BrevBehov(TypeBrev.VEDTAK_AVSLAG)

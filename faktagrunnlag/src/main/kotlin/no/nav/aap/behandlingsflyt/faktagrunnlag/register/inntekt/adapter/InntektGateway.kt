@@ -14,22 +14,6 @@ import no.nav.aap.komponenter.verdityper.Beløp
 import java.net.URI
 import java.time.Year
 
-class InntektRequest(
-    val fnr: String,
-    val fomAr: Int,
-    val tomAr: Int
-)
-
-class InntektResponse(
-    val inntekter: List<SumPi>
-)
-
-class SumPi(
-    val inntektAr: Int,
-    val belop: Long, //TODO: Vi prøver å se om belop klarer seg uten nullable
-    val inntektType: String
-)
-
 
 object InntektGateway : InntektRegisterGateway {
     private val url = URI.create(requiredConfigForKey("integrasjon.inntekt.url"))
