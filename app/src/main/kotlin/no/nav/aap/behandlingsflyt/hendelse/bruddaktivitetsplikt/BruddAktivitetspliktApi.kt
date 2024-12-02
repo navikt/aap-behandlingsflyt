@@ -7,7 +7,6 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktService
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingId
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
@@ -57,28 +56,13 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
     }
 }
 
-private fun opprettDokument(connection: DBConnection, navIdent: Bruker, saksnummer: Saksnummer, req: OppdaterAktivitetspliktDTOV2) {
-    val aktivitetspliktServce = AktivitetspliktService(
-        repository = AktivitetspliktRepository(connection)
-    )
-
-    val sak = SakService(SakRepositoryImpl(connection)).hent(saksnummer)
-
-    val aktivitetspliktDokumenter = req.tilDomene(sak, navIdent)
-    val innsendingId = aktivitetspliktServce.registrerBrudd(aktivitetspliktDokumenter)
-
-    registrerDokumentjobb(innsendingId, aktivitetspliktDokumenter, connection, sak)
-}
-
 private fun opprettDokument(connection: DBConnection, navIdent: Bruker, saksnummer: Saksnummer, req: AktivitetspliktDTO) {
-    val aktivitetspliktServce = AktivitetspliktService(
-        repository = AktivitetspliktRepository(connection)
-    )
+    val repository = AktivitetspliktRepository(connection)
 
     val sak = SakService(SakRepositoryImpl(connection)).hent(saksnummer)
 
     val aktivitetspliktDokumenter = req.tilDomene(sak, navIdent)
-    val innsendingId = aktivitetspliktServce.registrerBrudd(aktivitetspliktDokumenter)
+    val innsendingId = repository.lagreBrudd(sak.id, aktivitetspliktDokumenter)
 
     registrerDokumentjobb(innsendingId, aktivitetspliktDokumenter, connection, sak)
 }

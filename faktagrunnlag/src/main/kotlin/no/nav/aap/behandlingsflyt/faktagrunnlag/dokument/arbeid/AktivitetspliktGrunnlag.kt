@@ -20,7 +20,12 @@ data class AktivitetspliktGrunnlag(
 
     fun tidslinje(paragraf: Brudd.Paragraf): Tidslinje<AktivitetspliktRegistrering> {
         return dokumentTidslinje(paragraf)
-            .filterIsInstance<Segment<AktivitetspliktRegistrering>>()
+            .mapNotNull {
+                when (val dokument = it.verdi) {
+                    is AktivitetspliktFeilregistrering -> null
+                    is AktivitetspliktRegistrering -> Segment(it.periode, dokument)
+                }
+            }
             .let(::Tidslinje)
     }
 }

@@ -47,7 +47,7 @@ class AktivitetspliktRepositoryTest {
                 assertEquals(periode, it.brudd.periode)
             }
 
-            repo.hentBrudd(input.brudd).also {
+            repo.hentBrudd(sak.id, input.brudd).also {
                 val dokument = it.first()
                 dokument as AktivitetspliktFeilregistrering
                 assertEquals(IKKE_AKTIVT_BIDRAG, dokument.brudd.bruddType)
@@ -182,10 +182,10 @@ fun nyeBrudd(
 ): List<AktivitetspliktDokument> {
     val repo = AktivitetspliktRepository(connection)
     val innsendingId = repo.lagreBrudd(
+        sak.id,
         perioder.map { periode ->
             AktivitetspliktRepository.RegistreringInput(
                 brudd = Brudd(
-                    sakId = sak.id,
                     bruddType = bruddType,
                     paragraf = paragraf,
                     periode = periode,
@@ -209,10 +209,10 @@ fun nyeFeilregistrering(
 ): List<AktivitetspliktDokument> {
     val repo = AktivitetspliktRepository(connection)
     val innsendingId = repo.lagreBrudd(
+        sak.id,
         listOf(
             AktivitetspliktRepository.FeilregistreringInput(
                 brudd = Brudd(
-                    sakId = sak.id,
                     bruddType = bruddType,
                     paragraf = paragraf,
                     periode = periode,

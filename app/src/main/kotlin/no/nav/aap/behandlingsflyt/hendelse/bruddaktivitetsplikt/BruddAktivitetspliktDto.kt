@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.hendelse.bruddaktivitetsplikt
 import com.papsign.ktor.openapigen.annotations.parameters.PathParam
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktFeilregistrering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRegistrering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd
@@ -11,39 +12,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
-
-class OppdaterAktivitetspliktDTOV2(
-    val brudd: BruddType,
-    val paragraf: Brudd.Paragraf,
-    val periode: Periode,
-    val grunn: GrunnDTO,
-    val begrunnelse: String,
-) {
-    fun tilDomene(sak: Sak, innsender: Bruker): List<AktivitetspliktRepository.DokumentInput> {
-        val brudd = Brudd.nyttBrudd(
-            sak = sak,
-            periode = periode,
-            bruddType = brudd,
-            paragraf = brudd.paragraf(paragraf),
-        )
-        if (grunn == GrunnDTO.FEILREGISTRERING) {
-            return listOf(
-                AktivitetspliktRepository.FeilregistreringInput(
-                    brudd = brudd,
-                    innsender = innsender,
-                    begrunnelse = begrunnelse,
-                )
-            )
-        }
-        return listOf(AktivitetspliktRepository.RegistreringInput(
-            brudd = brudd,
-            innsender = innsender,
-            begrunnelse = begrunnelse,
-            grunn = grunn.tilDomene(),
-        ))
-    }
-}
-
 
 interface AktivitetspliktDTO {
     fun tilDomene(sak: Sak, innsender: Bruker): List<AktivitetspliktRepository.DokumentInput>
@@ -75,6 +43,40 @@ data class OpprettAktivitetspliktDTO(
     }
 }
 
+class OppdaterAktivitetspliktDTOV2(
+    val brudd: BruddType,
+    val paragraf: Brudd.Paragraf,
+    val periode: Periode,
+    val grunn: GrunnDTO,
+    val begrunnelse: String,
+) : AktivitetspliktDTO {
+    override fun tilDomene(sak: Sak, innsender: Bruker): List<AktivitetspliktRepository.DokumentInput> {
+        val brudd = Brudd.nyttBrudd(
+            sak = sak,
+            periode = periode,
+            bruddType = brudd,
+            paragraf = brudd.paragraf(paragraf),
+        )
+        if (grunn == GrunnDTO.FEILREGISTRERING) {
+            return listOf(
+                AktivitetspliktRepository.FeilregistreringInput(
+                    brudd = brudd,
+                    innsender = innsender,
+                    begrunnelse = begrunnelse,
+                )
+            )
+        }
+        return listOf(
+            AktivitetspliktRepository.RegistreringInput(
+                brudd = brudd,
+                innsender = innsender,
+                begrunnelse = begrunnelse,
+                grunn = grunn.tilDomene(),
+            )
+        )
+    }
+}
+
 data class BruddAktivitetspliktResponse(
     val hendelser: List<BruddAktivitetspliktHendelseDto>
 )
@@ -90,29 +92,29 @@ data class BruddAktivitetspliktHendelseDto(
 )
 
 fun List<AktivitetspliktDokument>.utledBruddTilstand(): List<BruddAktivitetspliktHendelseDto> {
-    return this
-        .groupBy { it.brudd }
-        .mapNotNull { (_, brudd) ->
-            requireNotNull(brudd.maxByOrNull { it.metadata.opprettetTid }) {
-                "bug: skal ikke få null fra liste vi fikk fra groupBy "
+    val grunnlag = AktivitetspliktGrunnlag(this.toSet())
+    val segmenter = grunnlag.dokumentTidslinje(Brudd.Paragraf.PARAGRAF_11_7).asSequence() +
+            grunnlag.dokumentTidslinje(Brudd.Paragraf.PARAGRAF_11_8).asSequence() +
+            grunnlag.dokumentTidslinje(Brudd.Paragraf.PARAGRAF_11_9).asSequence()
+
+    return segmenter.map { segment ->
+        val dokument = segment.verdi
+        BruddAktivitetspliktHendelseDto(
+            brudd = dokument.brudd.bruddType,
+            paragraf = dokument.brudd.paragraf,
+            grunn = when (dokument) {
+                is AktivitetspliktFeilregistrering -> GrunnDTO.FEILREGISTRERING
+                is AktivitetspliktRegistrering -> GrunnDTO.fraDomene(dokument.grunn)
+            },
+            periode = segment.periode,
+            begrunnelse = when (dokument) {
+                is AktivitetspliktFeilregistrering -> dokument.begrunnelse
+                is AktivitetspliktRegistrering -> dokument.begrunnelse
             }
-        }
-        .sortedBy { it.brudd.periode }
-        .map {
-            BruddAktivitetspliktHendelseDto(
-                brudd = it.brudd.bruddType,
-                paragraf = it.brudd.paragraf,
-                grunn = when (it) {
-                    is AktivitetspliktFeilregistrering -> GrunnDTO.FEILREGISTRERING
-                    is AktivitetspliktRegistrering -> GrunnDTO.fraDomene(it.grunn)
-                },
-                periode = it.brudd.periode,
-                begrunnelse = when (it) {
-                    is AktivitetspliktFeilregistrering -> it.begrunnelse
-                    is AktivitetspliktRegistrering -> it.begrunnelse
-                }
-            )
-        }
+        )
+    }
+        .sortedBy { it.periode }
+        .toList()
 }
 
 enum class GrunnDTO(private val tilDomene: Grunn?) {

@@ -5,21 +5,18 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.P
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.PARAGRAF_11_9
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
 import java.time.Instant
 import java.util.*
 
-/** Identifikator for en periode med brudd på aktivitetsplikten.
+/** Informasjon om et brudd.
  *
  *  Data class fordi:
  *  - ønsker eqyals og hash som sjekker alle feilt
  *  - Trygt på printe (ingen personopplysninger)
  * */
 data class Brudd(
-    val sakId: SakId,
-
     /** De dagene hvor det har vært et brudd. */
     val periode: Periode,
 
@@ -45,7 +42,6 @@ data class Brudd(
                 "Brudd før søknadstidspunktet(${sak.opprettetTidspunkt.toLocalDate()} kan ikke registreres: brudd-perioden er $periode"
             }
             return Brudd(
-                sakId = sak.id,
                 periode = periode,
                 bruddType = bruddType,
                 paragraf = paragraf,

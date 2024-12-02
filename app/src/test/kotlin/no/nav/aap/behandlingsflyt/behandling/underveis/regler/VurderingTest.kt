@@ -23,7 +23,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.HendelseId
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingId
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
@@ -42,7 +41,6 @@ class VurderingTest {
             opprettetTid = Instant.now(),
         ),
         brudd = Brudd(
-            sakId = SakId(0),
             periode = Periode(LocalDate.EPOCH, LocalDate.EPOCH),
             bruddType = BruddType.IKKE_AKTIVT_BIDRAG,
             paragraf = Brudd.Paragraf.PARAGRAF_11_7,

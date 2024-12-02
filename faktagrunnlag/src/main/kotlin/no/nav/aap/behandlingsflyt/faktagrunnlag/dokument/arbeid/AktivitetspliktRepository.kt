@@ -39,7 +39,7 @@ class AktivitetspliktRepository(private val connection: DBConnection) {
         FEILREGISTRERING,
     }
 
-    fun lagreBrudd(brudd: List<DokumentInput>): InnsendingId {
+    fun lagreBrudd(sakId: SakId, brudd: List<DokumentInput>): InnsendingId {
         val query = """
             INSERT INTO BRUDD_AKTIVITETSPLIKT
             (SAK_ID, PERIODE, NAV_IDENT, OPPRETTET_TID, HENDELSE_ID, INNSENDING_ID, BRUDD, DOKUMENT_TYPE, BEGRUNNELSE, PARAGRAF, GRUNN)
@@ -50,7 +50,7 @@ class AktivitetspliktRepository(private val connection: DBConnection) {
 
         connection.executeBatch(query, brudd) {
             setParams { request ->
-                setLong(1, request.brudd.sakId.toLong())
+                setLong(1, sakId.toLong())
                 setPeriode(2, request.brudd.periode)
                 setString(3, request.innsender.ident)
                 setUUID(4, HendelseId.ny().id)
@@ -139,6 +139,7 @@ class AktivitetspliktRepository(private val connection: DBConnection) {
         }
 
     fun hentBrudd(
+        sakId: SakId,
         brudd: Brudd,
     ): List<AktivitetspliktDokument> {
         val query = """
@@ -150,7 +151,7 @@ class AktivitetspliktRepository(private val connection: DBConnection) {
             | """.trimMargin()
         return connection.queryList(query) {
             setParams {
-                setLong(1, brudd.sakId.toLong())
+                setLong(1, sakId.toLong())
                 setPeriode(2, brudd.periode)
                 setEnumName(3, brudd.paragraf)
                 setEnumName(4, brudd.bruddType)
@@ -190,7 +191,6 @@ class AktivitetspliktRepository(private val connection: DBConnection) {
 
     private fun mapBruddAktivitetsplikt(row: Row): AktivitetspliktDokument {
         val brudd = Brudd(
-            sakId = SakId(row.getLong("SAK_ID")),
             periode = row.getPeriode("PERIODE"),
             bruddType = row.getEnum("BRUDD"),
             paragraf = row.getEnum("PARAGRAF"),
