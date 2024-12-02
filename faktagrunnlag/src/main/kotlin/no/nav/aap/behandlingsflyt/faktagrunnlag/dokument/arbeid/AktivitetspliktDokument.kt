@@ -120,25 +120,7 @@ enum class Grunn {
     STERKE_VELFERDSGRUNNER,
     RIMELIG_GRUNN,
     INGEN_GYLDIG_GRUNN,
-}
-
-/** Regn ut effektiv liste over brudd (altså uten feilregistrete brudd).
- *
- * @return Liste med brudd som ikke er feilregistret, og sortert på fom-dato til brudd-perioden.
- */
-fun List<AktivitetspliktDokument>.aktiveBrudd(): List<AktivitetspliktRegistrering> {
-    return this
-        .groupBy { it.brudd }
-        .mapNotNull { (_, brudd) ->
-            val sisteBrudd = requireNotNull(brudd.maxByOrNull { it.metadata.opprettetTid }) {
-                "bug: skal ikke få null fra liste vi fikk fra groupBy "
-            }
-            when (sisteBrudd) {
-                is AktivitetspliktFeilregistrering -> null
-                is AktivitetspliktRegistrering -> sisteBrudd
-            }
-        }
-        .sortedBy { it.brudd.periode }
+    FEILREGISTRERING,
 }
 
 data class BruddAktivitetspliktId(internal val id: Long)

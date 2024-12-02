@@ -8,7 +8,6 @@ import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.aktiveBrudd
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingId
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
@@ -37,6 +36,14 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
                 respond("{}", HttpStatusCode.Accepted)
             }
 
+            route("/v2/oppdater").post<SaksnummerParameter, String, OppdaterAktivitetspliktDTOV2> { params, req ->
+                val navIdent = bruker()
+                dataSource.transaction { connection ->
+                    opprettDokument(connection, navIdent, Saksnummer(params.saksnummer), req)
+                }
+                respond("{}", HttpStatusCode.Accepted)
+            }
+
             route("/oppdater").post<SaksnummerParameter, String, OppdaterAktivitetspliktDTO> { params, req ->
                 val navIdent = bruker()
                 dataSource.transaction { connection ->
@@ -57,16 +64,7 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
                 val response = dataSource.transaction { connection ->
                     val repository = AktivitetspliktRepository(connection)
                     val sak = SakService(SakRepositoryImpl(connection)).hent(Saksnummer(params.saksnummer))
-                    val alleBrudd = repository.hentBrudd(sak.id)
-                        .aktiveBrudd()
-                        .map { dokument ->
-                            BruddAktivitetspliktHendelseDto(
-                                brudd = dokument.brudd.bruddType,
-                                paragraf = dokument.brudd.paragraf,
-                                periode = dokument.brudd.periode,
-                                grunn = dokument.grunn,
-                            )
-                        }
+                    val alleBrudd = repository.hentBrudd(sak.id).utledBruddTilstand()
                     BruddAktivitetspliktResponse(alleBrudd)
                 }
                 respond(response)
@@ -81,6 +79,19 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
             respond("{}", HttpStatusCode.Accepted)
         }
     }
+}
+
+private fun opprettDokument(connection: DBConnection, navIdent: Bruker, saksnummer: Saksnummer, req: OppdaterAktivitetspliktDTOV2) {
+    val aktivitetspliktServce = AktivitetspliktService(
+        repository = AktivitetspliktRepository(connection)
+    )
+
+    val sak = SakService(SakRepositoryImpl(connection)).hent(saksnummer)
+
+    val aktivitetspliktDokumenter = req.tilDomene(sak, navIdent)
+    val innsendingId = aktivitetspliktServce.registrerBrudd(aktivitetspliktDokumenter)
+
+    registrerDokumentjobb(innsendingId, aktivitetspliktDokumenter, connection, sak)
 }
 
 private fun opprettDokument(connection: DBConnection, navIdent: Bruker, saksnummer: Saksnummer, req: AktivitetspliktDTO) {
