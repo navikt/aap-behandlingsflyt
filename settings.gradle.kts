@@ -8,7 +8,6 @@ include(
     "sakogbehandling",
     "faktagrunnlag",
     "dbflyway",
-    "integrasjon",
     "lib-test",
     "kontrakt",
     "pip"
