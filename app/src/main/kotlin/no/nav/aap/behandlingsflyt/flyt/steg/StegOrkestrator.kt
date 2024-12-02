@@ -20,15 +20,15 @@ private val log = LoggerFactory.getLogger(StegOrkestrator::class.java)
  * Håndterer den definerte prosessen i et gitt steg, flytter behandlingen gjennom de forskjellige fasene internt i et
  * steg. Et steg beveger seg gjennom flere faser som har forskjellig ansvar.
  *
- * @see no.nav.aap.verdityper.flyt.StegStatus.START:            Teknisk markør for at flyten har flyttet seg til et gitt steg
+ * @see no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus.START:            Teknisk markør for at flyten har flyttet seg til et gitt steg
  *
- * @see no.nav.aap.verdityper.flyt.StegStatus.UTFØRER:          Utfører forrettningslogikken i steget ved å kalle på
- * @see no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg#utfør()
+ * @see no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus.UTFØRER:          Utfører forrettningslogikken i steget ved å kalle på
+ * @see no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg.utfør
  *
- * @see no.nav.aap.verdityper.flyt.StegStatus.AVKLARINGSPUNKT:  Vurderer om maskinen har bedt om besluttningstøtte fra
+ * @see no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus.AVKLARINGSPUNKT:  Vurderer om maskinen har bedt om besluttningstøtte fra
  * et menneske og stopper prosessen hvis det er et punkt som krever stopp i dette steget.
  *
- * @see no.nav.aap.verdityper.flyt.StegStatus.AVSLUTTER:        Teknisk markør for avslutting av steget
+ * @see no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus.AVSLUTTER:        Teknisk markør for avslutting av steget
  */
 class StegOrkestrator(
     private val aktivtSteg: FlytSteg,
