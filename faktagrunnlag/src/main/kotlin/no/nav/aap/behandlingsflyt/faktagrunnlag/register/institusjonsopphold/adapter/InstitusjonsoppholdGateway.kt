@@ -1,9 +1,10 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.adapter
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonsopphold
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.institusjon.InstitusjonoppholdRequest
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
@@ -12,6 +13,48 @@ import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 import java.net.URI
+import java.time.LocalDate
+import java.time.LocalDateTime
+
+data class InstitusjonoppholdRequest(
+    val foedselsnumre: String
+)
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class InstitusjonsoppholdJSON(
+    private val oppholdId: Long? = null,
+
+    private val tssEksternId: String? = null,
+
+    val organisasjonsnummer: String? = null,
+
+    val institusjonstype: String? = null,
+
+    private val varighet: String? = null,
+
+    val kategori: String? = null,
+
+    val startdato: LocalDate? = null,
+
+    val faktiskSluttdato: LocalDate? = null,
+
+    val forventetSluttdato: LocalDate? = null,
+
+    private val kilde: String? = null,
+
+    private val registrertAv: String? = null,
+
+    private val overfoert: Boolean? = null,
+
+    private val endretAv: String? = null,
+
+    private val endringstidspunkt: LocalDateTime? = null,
+
+    val institusjonsnavn: String? = null,
+
+    private val avdelingsnavn: String? = null,
+)
 
 object InstitusjonsoppholdGateway : InstitusjonsoppholdGateway {
     private val url =
@@ -22,7 +65,7 @@ object InstitusjonsoppholdGateway : InstitusjonsoppholdGateway {
         tokenProvider = ClientCredentialsTokenProvider
     )
 
-    private fun query(request: InstitusjonoppholdRequest): List<no.nav.aap.institusjon.Institusjonsopphold> {
+    private fun query(request: InstitusjonoppholdRequest): List<InstitusjonsoppholdJSON> {
         val httpRequest = GetRequest(
             additionalHeaders = listOf(
                 Header("Nav-Personident", request.foedselsnumre),

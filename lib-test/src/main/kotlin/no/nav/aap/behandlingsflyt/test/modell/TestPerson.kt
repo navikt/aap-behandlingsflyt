@@ -2,11 +2,11 @@ package no.nav.aap.behandlingsflyt.test.modell
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.adapter.InstitusjonsoppholdJSON
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.test.FiktivtNavnGenerator
 import no.nav.aap.behandlingsflyt.test.FødselsnummerGenerator
 import no.nav.aap.behandlingsflyt.test.PersonNavn
-import no.nav.aap.institusjon.Institusjonsopphold
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.verdityper.sakogbehandling.Ident
@@ -27,7 +27,7 @@ class TestPerson(
     val barn: List<TestPerson> = emptyList(),
     val navn: PersonNavn = FiktivtNavnGenerator.genererNavn(),
     val yrkesskade: List<TestYrkesskade> = emptyList(),
-    val institusjonsopphold: List<Institusjonsopphold> = emptyList(),
+    val institusjonsopphold: List<InstitusjonsoppholdJSON> = emptyList(),
     val uføre: Prosent? = Prosent(0),
     inntekter: List<InntektPerÅr> = defaultInntekt()
 ) {

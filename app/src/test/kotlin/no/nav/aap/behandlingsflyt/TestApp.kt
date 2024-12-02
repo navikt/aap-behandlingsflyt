@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søkna
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.adapter.InstitusjonsoppholdJSON
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.TestHendelsesMottak
@@ -23,7 +24,6 @@ import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.behandlingsflyt.test.modell.defaultInntekt
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
-import no.nav.aap.institusjon.Institusjonsopphold
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -125,7 +125,7 @@ fun main() {
     }.start(wait = true)
 }
 
-private fun genererFengselsopphold() = Institusjonsopphold(
+private fun genererFengselsopphold() = InstitusjonsoppholdJSON(
     organisasjonsnummer = "12345",
     kategori = Oppholdstype.S.name,
     institusjonstype = Institusjonstype.FO.name,
@@ -134,7 +134,7 @@ private fun genererFengselsopphold() = Institusjonsopphold(
     institusjonsnavn = "Azkaban"
 )
 
-private fun genererSykehusopphold() = Institusjonsopphold(
+private fun genererSykehusopphold() = InstitusjonsoppholdJSON(
     organisasjonsnummer = "12345",
     kategori = Oppholdstype.H.name,
     institusjonstype = Institusjonstype.HS.name,

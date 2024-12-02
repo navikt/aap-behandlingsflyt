@@ -11,10 +11,37 @@ import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 import no.nav.aap.verdityper.sakogbehandling.Ident
-import no.nav.aap.yrkesskade.YrkesskadeModell
-import no.nav.aap.yrkesskade.YrkesskadeRequest
-import no.nav.aap.yrkesskade.Yrkesskader
 import java.net.URI
+import java.time.LocalDate
+
+class YrkesskadeRequest(
+    val foedselsnumre: List<String>,
+    val fomDato: LocalDate
+)
+
+class Yrkesskader(
+    //FIXME: Kan denne være null?? Når da? Ser ut som at yrkesskade-saker alltid returnerer en liste med mindre det er en feil i responsen
+    val skader: List<YrkesskadeModell>?
+)
+
+
+class YrkesskadeModell(
+    val kommunenr: String,
+    val saksblokk: String,
+    val saksnr: Int,
+    val sakstype: String,
+    val mottattdato: LocalDate,
+    val resultat: String,
+    val resultattekst: String,
+    val vedtaksdato: LocalDate,
+    val skadeart: String,
+    val diagnose: String,
+    val skadedato: LocalDate,
+    val kildetabell: String,
+    val kildesystem: String,
+    val saksreferanse: String
+)
+
 
 object YrkesskadeRegisterGateway {
     private val url = URI.create(requiredConfigForKey("integrasjon.yrkesskade.url")).resolve("/api/v1/saker/")
