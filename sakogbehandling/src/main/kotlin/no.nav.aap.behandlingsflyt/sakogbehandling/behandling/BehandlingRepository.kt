@@ -3,8 +3,7 @@ package no.nav.aap.behandlingsflyt.sakogbehandling.behandling
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.verdityper.sakogbehandling.BehandlingId
-import no.nav.aap.verdityper.sakogbehandling.SakId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 
 interface BehandlingRepository {
 

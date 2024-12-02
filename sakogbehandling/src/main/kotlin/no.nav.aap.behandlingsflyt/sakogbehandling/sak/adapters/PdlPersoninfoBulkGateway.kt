@@ -12,7 +12,7 @@ import no.nav.aap.pdl.PdlNavnData
 import no.nav.aap.pdl.PdlPersonNavnDataResponse
 import no.nav.aap.pdl.PdlRequest
 import no.nav.aap.pdl.PdlResponseHandler
-import no.nav.aap.verdityper.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import java.net.URI
 import kotlin.collections.map
 

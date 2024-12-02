@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.flyt.flate.visning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegGruppe
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.verdityper.sakogbehandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 
 class BarnetilleggVisningUtleder(connection: DBConnection) : StegGruppeVisningUtleder {
 

@@ -9,7 +9,6 @@ plugins {
 dependencies {
     implementation(project(":sakogbehandling"))
     implementation(project(":faktagrunnlag"))
-    implementation(project(":verdityper"))
     implementation(project(":integrasjon"))
     implementation(project(":app"))
     implementation(project(":kontrakt"))

@@ -1,4 +1,4 @@
-package no.nav.aap.verdityper.flyt
+package no.nav.aap.behandlingsflyt.sakogbehandling.flyt
 
 enum class StegStatus {
     /**

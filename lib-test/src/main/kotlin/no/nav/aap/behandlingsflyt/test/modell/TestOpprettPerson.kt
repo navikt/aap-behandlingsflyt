@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.test.modell
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.verdityper.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 
 class TestOpprettPerson (
     val identer: Set<Ident>,

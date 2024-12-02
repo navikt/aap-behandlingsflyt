@@ -1,9 +1,9 @@
-package no.nav.aap.verdityper.flyt
+package no.nav.aap.behandlingsflyt.sakogbehandling.flyt
 
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.verdityper.sakogbehandling.BehandlingId
-import no.nav.aap.verdityper.sakogbehandling.SakId
 import java.util.*
 
 /**

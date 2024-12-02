@@ -25,8 +25,8 @@ import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPostWithApprovedList
 import no.nav.aap.verdityper.dokument.JournalpostId
-import no.nav.aap.verdityper.feilhåndtering.ElementNotFoundException
-import no.nav.aap.verdityper.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.ElementNotFoundException
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {

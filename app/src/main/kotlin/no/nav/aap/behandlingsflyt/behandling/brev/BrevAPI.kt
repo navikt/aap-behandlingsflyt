@@ -27,7 +27,7 @@ import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.authorizedPost
-import no.nav.aap.verdityper.feilhåndtering.ElementNotFoundException
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.ElementNotFoundException
 import org.slf4j.MDC
 import tilgang.Operasjon
 import javax.sql.DataSource

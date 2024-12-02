@@ -3,7 +3,7 @@ package no.nav.aap.motor.help
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.verdityper.sakogbehandling.SakId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import java.util.*
 
 class TestSakRepository(private val connection: DBConnection) {

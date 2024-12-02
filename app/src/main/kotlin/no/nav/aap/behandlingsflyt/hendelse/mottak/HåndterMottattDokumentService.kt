@@ -10,8 +10,8 @@ import no.nav.aap.behandlingsflyt.server.prosessering.ProsesserBehandlingService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.FlytJobbRepository
-import no.nav.aap.verdityper.flyt.ÅrsakTilBehandling
-import no.nav.aap.verdityper.sakogbehandling.SakId
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import java.time.LocalDate
 
 class HåndterMottattDokumentService(connection: DBConnection) {

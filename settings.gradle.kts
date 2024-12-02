@@ -7,7 +7,6 @@ include(
     "app",
     "sakogbehandling",
     "faktagrunnlag",
-    "verdityper",
     "dbflyway",
     "integrasjon",
     "lib-test",

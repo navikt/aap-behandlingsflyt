@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning
 
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.verdityper.Beløp
-import no.nav.aap.verdityper.sakogbehandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 
 class BeregningVurderingRepository(private val connection: DBConnection) {
 

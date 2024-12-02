@@ -10,10 +10,10 @@ import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.verdityper.flyt.FlytKontekst
-import no.nav.aap.verdityper.flyt.Vurdering
-import no.nav.aap.verdityper.flyt.VurderingType
-import no.nav.aap.verdityper.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurdering
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 
 class PerioderTilVurderingService(
     private val sakService: SakService, private val behandlingRepository: BehandlingRepository

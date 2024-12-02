@@ -64,7 +64,7 @@ import no.nav.aap.motor.Motor
 import no.nav.aap.motor.api.motorApi
 import no.nav.aap.motor.retry.RetryService
 import no.nav.aap.pip.behandlingsflytPip
-import no.nav.aap.verdityper.feilhåndtering.ElementNotFoundException
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.ElementNotFoundException
 import org.slf4j.LoggerFactory
 import java.util.*
 import javax.sql.DataSource

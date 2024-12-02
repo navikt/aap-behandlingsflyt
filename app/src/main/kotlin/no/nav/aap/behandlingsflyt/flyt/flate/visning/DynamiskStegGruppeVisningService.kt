@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.flyt.flate.visning
 
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegGruppe
-import no.nav.aap.verdityper.sakogbehandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import kotlin.reflect.full.primaryConstructor
 
 class DynamiskStegGruppeVisningService(private val connection: DBConnection) {

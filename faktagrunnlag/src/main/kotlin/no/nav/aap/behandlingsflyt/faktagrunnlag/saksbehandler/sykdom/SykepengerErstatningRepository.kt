@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom
 
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.verdityper.dokument.JournalpostId
-import no.nav.aap.verdityper.sakogbehandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 
 class SykepengerErstatningRepository(private val connection: DBConnection) {
 

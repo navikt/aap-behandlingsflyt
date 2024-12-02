@@ -11,9 +11,9 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-databind:2.18.1")
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
 
-    implementation(project(":verdityper"))
     implementation(project(":dbflyway"))
     implementation(project(":integrasjon"))
+    implementation(project(":kontrakt"))
 
     api("no.nav.aap.tilgang:plugin:$tilgangVersjon")
     api("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")

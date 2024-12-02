@@ -13,7 +13,7 @@ import no.nav.aap.pdl.PdlGruppe
 import no.nav.aap.pdl.PdlIdenterDataResponse
 import no.nav.aap.pdl.PdlRequest
 import no.nav.aap.pdl.PdlResponseHandler
-import no.nav.aap.verdityper.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import java.net.URI
 
 object PdlIdentGateway : IdentGateway {

@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.brev.bestilling
 
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
-import no.nav.aap.verdityper.sakogbehandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 
 class BrevbestillingRepository(private val connection: DBConnection) {
 

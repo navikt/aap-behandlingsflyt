@@ -55,9 +55,9 @@ import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.pip.PipRepository
 import no.nav.aap.verdityper.dokument.Kanal
-import no.nav.aap.verdityper.sakogbehandling.BehandlingId
-import no.nav.aap.verdityper.sakogbehandling.Ident
-import no.nav.aap.verdityper.sakogbehandling.SakId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate

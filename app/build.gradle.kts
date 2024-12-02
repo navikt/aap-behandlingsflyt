@@ -79,7 +79,7 @@ dependencies {
     implementation(project(":integrasjon"))
     implementation(project(":sakogbehandling"))
     implementation(project(":faktagrunnlag"))
-    implementation(project(":verdityper"))
+    implementation(project(":kontrakt"))
     implementation(project(":dbflyway"))
     implementation(project(":pip"))
     implementation("com.zaxxer:HikariCP:6.2.1")
