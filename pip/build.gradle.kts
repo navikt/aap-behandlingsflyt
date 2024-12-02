@@ -16,7 +16,7 @@ dependencies {
     implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:infrastructure:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:dbconnect:$komponenterVersjon")
-    implementation("no.nav:ktor-openapi-generator:1.0.46")
+    implementation("no.nav:ktor-openapi-generator:1.0.50")
     implementation("io.ktor:ktor-http-jvm:$ktorVersion")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.3")

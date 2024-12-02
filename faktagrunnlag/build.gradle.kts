@@ -17,7 +17,7 @@ dependencies {
     implementation("no.nav.aap.kelvin:dbmigrering:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:verdityper:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:tidslinje:$komponenterVersjon")
-    implementation("no.nav:ktor-openapi-generator:1.0.46")
+    implementation("no.nav:ktor-openapi-generator:1.0.50")
     implementation("io.ktor:ktor-http-jvm:$ktorVersion")
     implementation("com.zaxxer:HikariCP:6.2.1")
 
