@@ -11,10 +11,10 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
-import no.nav.aap.pdl.IdentVariables
-import no.nav.aap.pdl.PdlPersoninfoDataResponse
-import no.nav.aap.pdl.PdlRequest
-import no.nav.aap.pdl.PdlResponseHandler
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.IdentVariables
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoDataResponse
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlRequest
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlResponseHandler
 import java.net.URI
 
 object PdlPersonopplysningGateway : PersonopplysningGateway {

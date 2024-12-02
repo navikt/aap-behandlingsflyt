@@ -7,11 +7,6 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
-import no.nav.aap.pdl.IdentVariables
-import no.nav.aap.pdl.PdlNavnData
-import no.nav.aap.pdl.PdlPersonNavnDataResponse
-import no.nav.aap.pdl.PdlRequest
-import no.nav.aap.pdl.PdlResponseHandler
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import java.net.URI
 import kotlin.collections.map

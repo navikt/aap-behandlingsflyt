@@ -12,7 +12,6 @@ import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.miljo.MiljøKode
-import no.nav.aap.uføre.UføreRequest
 import no.nav.aap.komponenter.verdityper.Prosent
 import java.net.URI
 import java.time.LocalDate

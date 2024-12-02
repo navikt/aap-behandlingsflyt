@@ -76,7 +76,7 @@ dependencies {
     implementation("no.nav.aap.kelvin:verdityper:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:tidslinje:$komponenterVersjon")
 
-    implementation(project(":integrasjon"))
+
     implementation(project(":sakogbehandling"))
     implementation(project(":faktagrunnlag"))
     implementation(project(":kontrakt"))

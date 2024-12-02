@@ -8,11 +8,6 @@ import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.OnBehalfOfTokenProvider
-import no.nav.aap.saf.Journalposttype
-import no.nav.aap.saf.SafDokumentoversiktFagsakDataResponse
-import no.nav.aap.saf.SafRequest
-import no.nav.aap.saf.SafResponseHandler
-import no.nav.aap.saf.Variantformat
 import org.slf4j.LoggerFactory
 import java.net.URI
 import java.time.LocalDateTime
@@ -37,7 +32,7 @@ object SafListDokumentGateway {
         return requireNotNull(client.post(uri = graphqlUrl, request = httpRequest))
     }
 
-    fun hentDokumenterForSak(saksnummer: Saksnummer, currentToken: OidcToken): List<Dokument> {
+    fun hentDokumenterForSak(saksnummer: Saksnummer, currentToken: OidcToken): List<SafListDokument> {
         val request = SafRequest(dokumentOversiktQuery.asQuery(), SafRequest.Variables(saksnummer.toString()))
         val response = query(request, currentToken)
 
@@ -49,7 +44,7 @@ object SafListDokumentGateway {
                 dok.dokumentvarianter
                     .filter { it.variantformat === Variantformat.ARKIV }
                     .map {
-                        Dokument(
+                        SafListDokument(
                             journalpostId = journalpost.journalpostId,
                             dokumentInfoId = dok.dokumentInfoId,
                             tittel = dok.tittel,
@@ -68,7 +63,7 @@ object SafListDokumentGateway {
     }
 }
 
-data class Dokument(
+data class SafListDokument(
     val dokumentInfoId: String,
     val journalpostId: String,
     val brevkode: String?,

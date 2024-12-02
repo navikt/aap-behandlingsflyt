@@ -1,27 +1,26 @@
-package no.nav.aap.saf
+package no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters
 
 import no.nav.aap.komponenter.httpklient.httpclient.error.DefaultResponseHandler
 import no.nav.aap.komponenter.httpklient.httpclient.error.RestResponseHandler
-import no.nav.aap.pdl.GraphQLError
 import java.io.InputStream
 import java.net.http.HttpHeaders
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 
-class SafResponseHandler() : RestResponseHandler<InputStream> {
+class PdlResponseHandler() : RestResponseHandler<InputStream> {
 
-    private val defaultResponseHandler = DefaultResponseHandler()
+    private val defaultErrorHandler = DefaultResponseHandler()
 
     override fun <R> håndter(
         request: HttpRequest,
         response: HttpResponse<InputStream>,
         mapper: (InputStream, HttpHeaders) -> R
     ): R? {
-        val respons = defaultResponseHandler.håndter(request, response, mapper)
+        val respons = defaultErrorHandler.håndter(request, response, mapper)
 
-        if (respons != null && respons is SafResponse) {
+        if (respons != null && respons is PdlResponse) {
             if (respons.errors?.isNotEmpty() == true) {
-                throw SafQueryException(
+                throw PdlQueryException(
                     String.format(
                         "Feil %s ved GraphQL oppslag mot %s",
                         respons.errors.map(GraphQLError::message).joinToString(), request.uri()
@@ -34,8 +33,8 @@ class SafResponseHandler() : RestResponseHandler<InputStream> {
     }
 
     override fun bodyHandler(): HttpResponse.BodyHandler<InputStream> {
-        return defaultResponseHandler.bodyHandler()
+        return defaultErrorHandler.bodyHandler()
     }
 }
 
-class SafQueryException(msg: String) : RuntimeException(msg)
+class PdlQueryException(msg: String) : RuntimeException(msg)

@@ -27,6 +27,7 @@ import no.nav.aap.tilgang.authorizedPostWithApprovedList
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.ElementNotFoundException
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.SafListDokument
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
@@ -125,7 +126,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 )
             }
             route("/{saksnummer}/dokumenter") {
-                authorizedGet<HentSakDTO, List<Dokument>>(
+                authorizedGet<HentSakDTO, List<SafListDokument>>(
                     AuthorizationParamPathConfig(
                         sakPathParam = SakPathParam("saksnummer")
                     )

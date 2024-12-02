@@ -9,7 +9,7 @@ plugins {
 dependencies {
     implementation(project(":sakogbehandling"))
     implementation(project(":faktagrunnlag"))
-    implementation(project(":integrasjon"))
+
     implementation(project(":app"))
     implementation(project(":kontrakt"))
     implementation("no.nav.aap.brev:kontrakt:0.0.25")

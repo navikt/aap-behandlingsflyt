@@ -12,7 +12,7 @@ dependencies {
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
 
     implementation(project(":dbflyway"))
-    implementation(project(":integrasjon"))
+
     implementation(project(":kontrakt"))
 
     api("no.nav.aap.tilgang:plugin:$tilgangVersjon")

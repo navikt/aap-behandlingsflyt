@@ -7,7 +7,7 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":integrasjon"))
+
     implementation(project(":kontrakt"))
     implementation(project(":sakogbehandling"))
     implementation(project(":faktagrunnlag"))

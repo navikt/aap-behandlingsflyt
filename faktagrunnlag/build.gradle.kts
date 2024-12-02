@@ -9,7 +9,7 @@ dependencies {
     implementation(project(":sakogbehandling"))
     implementation(project(":dbflyway"))
     implementation(project(":kontrakt"))
-    implementation(project(":integrasjon"))
+
 
     implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:infrastructure:$komponenterVersjon")

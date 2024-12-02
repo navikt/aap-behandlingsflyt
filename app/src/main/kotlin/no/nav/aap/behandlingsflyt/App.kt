@@ -47,7 +47,6 @@ import no.nav.aap.behandlingsflyt.flyt.flate.torsHammerApi
 import no.nav.aap.behandlingsflyt.hendelse.bruddaktivitetsplikt.aktivitetspliktApi
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.server.exception.FlytOperasjonException
 import no.nav.aap.behandlingsflyt.server.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.server.prosessering.ProsesseringsJobber
@@ -65,6 +64,7 @@ import no.nav.aap.motor.api.motorApi
 import no.nav.aap.motor.retry.RetryService
 import no.nav.aap.pip.behandlingsflytPip
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.ElementNotFoundException
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import org.slf4j.LoggerFactory
 import java.util.*
 import javax.sql.DataSource

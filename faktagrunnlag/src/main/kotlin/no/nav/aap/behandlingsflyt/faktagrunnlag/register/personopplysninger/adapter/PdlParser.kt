@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.pdl.PdlFoedsel
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlFoedsel
 import java.time.Year
 import kotlin.text.toInt
 

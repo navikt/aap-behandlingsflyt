@@ -1,4 +1,4 @@
-package no.nav.aap.pdl
+package no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters
 
 data class PdlRequest(
     val query: String,
@@ -52,35 +52,6 @@ data class PdlNavn(
     val fornavn: String?,
     val mellomnavn: String?,
     val etternavn: String?
-)
-
-data class GraphQLError(
-    val message: String,
-    val locations: List<GraphQLErrorLocation>,
-    val path: List<String>?,
-    val extensions: GraphQLErrorExtension
-)
-
-data class GraphQLErrorExtension(
-    val code: String?,
-    val classification: String
-)
-
-data class GraphQLErrorLocation(
-    val line: Int?,
-    val column: Int?
-)
-
-data class GraphQLExtensions(
-    val warnings: List<GraphQLWarning>?
-)
-
-class GraphQLWarning(
-    val query: String?,
-    val id: String?,
-    val code: String?,
-    val message: String?,
-    val details: String?,
 )
 
 data class PdlRelasjonData(

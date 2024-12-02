@@ -1,7 +1,5 @@
-package no.nav.aap.saf
+package no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters
 
-import no.nav.aap.pdl.GraphQLError
-import no.nav.aap.pdl.GraphQLExtensions
 import java.time.LocalDateTime
 
 data class SafRequest(val query: String, val variables: Variables) {
