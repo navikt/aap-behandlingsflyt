@@ -44,22 +44,6 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
                 respond("{}", HttpStatusCode.Accepted)
             }
 
-            route("/oppdater").post<SaksnummerParameter, String, OppdaterAktivitetspliktDTO> { params, req ->
-                val navIdent = bruker()
-                dataSource.transaction { connection ->
-                    opprettDokument(connection, navIdent, Saksnummer(params.saksnummer), req)
-                }
-                respond("{}", HttpStatusCode.Accepted)
-            }
-
-            route("/feilregistrer").post<SaksnummerParameter, String, FeilregistrerAktivitetspliktDTO> { params, req ->
-                val navIdent = bruker()
-                dataSource.transaction { connection ->
-                    opprettDokument(connection, navIdent, Saksnummer(params.saksnummer), req)
-                }
-                respond("{}", HttpStatusCode.Accepted)
-            }
-
             get<SaksnummerParameter, BruddAktivitetspliktResponse> { params ->
                 val response = dataSource.transaction { connection ->
                     val repository = AktivitetspliktRepository(connection)
@@ -69,14 +53,6 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
                 }
                 respond(response)
             }
-        }
-
-        route("/slett").post<Unit, String, String> { _, _ ->
-            dataSource.transaction { connection ->
-                val repository = AktivitetspliktRepository(connection)
-                repository.deleteAll()
-            }
-            respond("{}", HttpStatusCode.Accepted)
         }
     }
 }

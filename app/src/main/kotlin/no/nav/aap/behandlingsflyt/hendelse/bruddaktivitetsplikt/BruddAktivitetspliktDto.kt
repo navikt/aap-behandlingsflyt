@@ -75,63 +75,6 @@ data class OpprettAktivitetspliktDTO(
     }
 }
 
-data class OppdaterAktivitetspliktDTO(
-    val brudd: BruddType,
-    val paragraf: Brudd.Paragraf,
-    val periode: Periode,
-    val grunn: GrunnDTO,
-) : AktivitetspliktDTO {
-    override fun tilDomene(sak: Sak, innsender: Bruker): List<AktivitetspliktRepository.DokumentInput> {
-        val brudd = Brudd.nyttBrudd(
-            sak = sak,
-            periode = periode,
-            bruddType = brudd,
-            paragraf = brudd.paragraf(paragraf),
-        )
-
-        if (grunn == GrunnDTO.FEILREGISTRERING) {
-            return listOf(
-                AktivitetspliktRepository.FeilregistreringInput(
-                    brudd = brudd,
-                    innsender = innsender,
-                    begrunnelse = "",
-                )
-            )
-        }
-
-        return listOf(
-            AktivitetspliktRepository.RegistreringInput(
-                brudd = brudd,
-                innsender = innsender,
-                begrunnelse = "",
-                grunn = grunn.tilDomene(),
-            )
-        )
-    }
-}
-
-data class FeilregistrerAktivitetspliktDTO(
-    val brudd: BruddType,
-    val paragraf: Brudd.Paragraf,
-    val periode: Periode,
-) : AktivitetspliktDTO {
-    override fun tilDomene(sak: Sak, innsender: Bruker): List<AktivitetspliktRepository.DokumentInput> {
-        val brudd = Brudd.nyttBrudd(
-            sak = sak,
-            periode = periode,
-            bruddType = brudd,
-            paragraf = brudd.paragraf(paragraf),
-        )
-        return listOf(
-            AktivitetspliktRepository.FeilregistreringInput(
-                brudd = brudd,
-                innsender = innsender,
-                begrunnelse = "",
-            )
-        )
-    }
-}
-
 data class BruddAktivitetspliktResponse(
     val hendelser: List<BruddAktivitetspliktHendelseDto>
 )

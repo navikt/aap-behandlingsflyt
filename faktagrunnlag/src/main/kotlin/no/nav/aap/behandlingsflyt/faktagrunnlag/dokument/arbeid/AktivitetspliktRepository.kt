@@ -188,14 +188,6 @@ class AktivitetspliktRepository(private val connection: DBConnection) {
         nyttGrunnlag(tilBehandlingId, eksisterendeGrunnlag.bruddene)
     }
 
-    fun deleteAll() {
-        connection.execute(
-            """
-                DELETE FROM BRUDD_AKTIVITETSPLIKT
-            """.trimIndent()
-        ) {}
-    }
-
     private fun mapBruddAktivitetsplikt(row: Row): AktivitetspliktDokument {
         val brudd = Brudd(
             sakId = SakId(row.getLong("SAK_ID")),
