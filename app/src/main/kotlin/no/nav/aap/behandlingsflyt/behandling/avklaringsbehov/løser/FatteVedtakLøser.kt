@@ -43,6 +43,7 @@ class FatteVedtakLøser(private val connection: DBConnection) : Avklaringsbehovs
                         Definisjon.KVALITETSSIKRING
                     )
                 }
+                .filterNot { flyt.erStegFør(it.definisjon.løsesISteg, tidligsteStegMedRetur) }
                 .filter { vurdering ->
                     vurderingerSomErSendtTilbake.none { it.definisjon == vurdering.definisjon.kode } &&
                             vurderingerFørRetur.none { it.definisjon == vurdering.definisjon.kode }
@@ -63,7 +64,7 @@ class FatteVedtakLøser(private val connection: DBConnection) : Avklaringsbehovs
                     begrunnelse = vurdering.begrunnelse(),
                     godkjent = vurdering.godkjent!!,
                     årsakTilRetur = vurdering.grunner ?: listOf(),
-                    vurdertAv = kontekst.bruker.ident // TODO: Hente fra context
+                    vurdertAv = kontekst.bruker.ident
                 )
             }
 
@@ -76,7 +77,7 @@ class FatteVedtakLøser(private val connection: DBConnection) : Avklaringsbehovs
                     definisjon = Definisjon.forKode(vurdering.definisjon),
                     godkjent = vurdering.godkjent!!,
                     begrunnelse = vurdering.begrunnelse(),
-                    vurdertAv = kontekst.bruker.ident // TODO: Hente fra context
+                    vurdertAv = kontekst.bruker.ident
                 )
             }
         }
