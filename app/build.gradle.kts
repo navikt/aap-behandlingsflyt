@@ -2,7 +2,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.gradle.kotlin.dsl.processResources
 import java.io.ByteArrayOutputStream
 
-val ktorVersion = "3.0.1"
+val ktorVersion = "3.0.2"
 
 plugins {
     id("behandlingsflyt.conventions")
