@@ -16,6 +16,10 @@ class FatteVedtakLøser(
     private val behandlingRepository: BehandlingRepository
 ) : AvklaringsbehovsLøser<FatteVedtakLøsning> {
 
+    /**
+     * Brukes i [no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklaringsbehovsLøserTest]
+     */
+    @Suppress("unused")
     constructor(dbConnection: DBConnection) : this(
         AvklaringsbehovRepositoryImpl(dbConnection),
         BehandlingRepositoryImpl(dbConnection)
