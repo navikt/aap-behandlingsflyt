@@ -2,16 +2,24 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
+import no.nav.aap.komponenter.dbconnect.DBConnection
 
 class FatteVedtakLøser(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val behandlingRepository: BehandlingRepository
 ) : AvklaringsbehovsLøser<FatteVedtakLøsning> {
+
+    constructor(dbConnection: DBConnection) : this(
+        AvklaringsbehovRepositoryImpl(dbConnection),
+        BehandlingRepositoryImpl(dbConnection)
+    )
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: FatteVedtakLøsning): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
