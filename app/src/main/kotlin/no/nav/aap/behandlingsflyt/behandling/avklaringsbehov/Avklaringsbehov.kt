@@ -36,9 +36,9 @@ class Avklaringsbehov(
     fun erKvalitetssikretTidligere(): Boolean {
         return Status.KVALITETSSIKRET == historikk.filter {
             it.status in setOf(
-                Status.OPPRETTET, Status.KVALITETSSIKRET, Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER
+                Status.KVALITETSSIKRET, Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER
             )
-        }.maxOf { it }.status
+        }.maxOfOrNull { it }?.status
     }
 
     internal fun vurderTotrinn(
