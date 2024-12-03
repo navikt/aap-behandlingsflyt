@@ -132,13 +132,19 @@ class AvklaringsbehovOrkestrator(
     }
 
     private fun løsFaktiskAvklaringsbehov(
-        kontekst: FlytKontekst, avklaringsbehovene: Avklaringsbehovene, it: AvklaringsbehovLøsning, bruker: Bruker
+        kontekst: FlytKontekst,
+        avklaringsbehovene: Avklaringsbehovene,
+        avklaringsbehovLøsning: AvklaringsbehovLøsning,
+        bruker: Bruker
     ) {
-        avklaringsbehovene.leggTilFrivilligHvisMangler(it.definisjon(), bruker)
-        val løsningsResultat = it.løs(connection, AvklaringsbehovKontekst(bruker, kontekst))
+        avklaringsbehovene.leggTilFrivilligHvisMangler(avklaringsbehovLøsning.definisjon(), bruker)
+        val løsningsResultat = avklaringsbehovLøsning.løs(connection, AvklaringsbehovKontekst(bruker, kontekst))
 
         avklaringsbehovene.løsAvklaringsbehov(
-            it.definisjon(), løsningsResultat.begrunnelse, bruker.ident, løsningsResultat.kreverToTrinn
+            avklaringsbehovLøsning.definisjon(),
+            løsningsResultat.begrunnelse,
+            bruker.ident,
+            løsningsResultat.kreverToTrinn
         )
     }
 
