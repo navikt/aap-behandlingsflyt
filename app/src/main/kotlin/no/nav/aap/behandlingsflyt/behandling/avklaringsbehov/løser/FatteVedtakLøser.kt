@@ -2,10 +2,10 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.flyt.utledType
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
 
@@ -34,10 +34,10 @@ class FatteVedtakLøser(private val connection: DBConnection) : Avklaringsbehovs
                 .filter { it.godkjent == true }
                 .filter { flyt.erStegFør(Definisjon.forKode(it.definisjon).løsesISteg, tidligsteStegMedRetur) }
 
-            val vurderingerSomMåReåpnes = løsning.vurderinger
+            val vurderingerSomMåReåpnes = avklaringsbehovene.alle()
                 .filter { vurdering ->
-                    vurderingerSomErSendtTilbake.none { it.definisjon == vurdering.definisjon } &&
-                            vurderingerFørRetur.none { it.definisjon == vurdering.definisjon }
+                    vurderingerSomErSendtTilbake.none { it.definisjon == vurdering.definisjon.kode } &&
+                            vurderingerFørRetur.none { it.definisjon == vurdering.definisjon.kode }
                 }
 
             vurderingerFørRetur.forEach { vurdering ->
@@ -60,7 +60,7 @@ class FatteVedtakLøser(private val connection: DBConnection) : Avklaringsbehovs
             }
 
             vurderingerSomMåReåpnes.forEach { vurdering ->
-                avklaringsbehovene.reåpne(definisjon = Definisjon.forKode(vurdering.definisjon))
+                avklaringsbehovene.reåpne(definisjon = vurdering.definisjon)
             }
         } else {
             løsning.vurderinger.forEach { vurdering ->
