@@ -53,7 +53,7 @@ import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.motor.JobbInput
-import no.nav.aap.pip.PipRepository
+import no.nav.aap.behandlingsflyt.pip.PipRepository
 import no.nav.aap.verdityper.dokument.Kanal
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident

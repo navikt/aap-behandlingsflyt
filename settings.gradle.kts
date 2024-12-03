@@ -9,6 +9,5 @@ include(
     "faktagrunnlag",
     "dbflyway",
     "lib-test",
-    "kontrakt",
-    "pip"
+    "kontrakt"
 )

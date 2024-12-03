@@ -21,7 +21,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.get
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.pip.IdenterDTO
+import no.nav.aap.behandlingsflyt.pip.IdenterDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import org.assertj.core.api.Assertions.assertThat

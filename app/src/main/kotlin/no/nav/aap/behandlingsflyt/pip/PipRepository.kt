@@ -1,4 +1,4 @@
-package no.nav.aap.pip
+package no.nav.aap.behandlingsflyt.pip
 
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer

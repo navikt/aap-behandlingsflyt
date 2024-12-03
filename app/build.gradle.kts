@@ -81,7 +81,6 @@ dependencies {
     implementation(project(":faktagrunnlag"))
     implementation(project(":kontrakt"))
     implementation(project(":dbflyway"))
-    implementation(project(":pip"))
     implementation("com.zaxxer:HikariCP:6.2.1")
     implementation("org.flywaydb:flyway-database-postgresql:10.22.0")
     runtimeOnly("org.postgresql:postgresql:42.7.4")

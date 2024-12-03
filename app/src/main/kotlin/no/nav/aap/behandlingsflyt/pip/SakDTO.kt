@@ -1,4 +1,4 @@
-package no.nav.aap.pip
+package no.nav.aap.behandlingsflyt.pip
 
 import com.papsign.ktor.openapigen.annotations.parameters.PathParam
 

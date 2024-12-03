@@ -1,4 +1,4 @@
-package no.nav.aap.pip
+package no.nav.aap.behandlingsflyt.pip
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.pip.PipRepository.IdentPåSak.Companion.filterDistinctIdent
+import no.nav.aap.behandlingsflyt.pip.PipRepository.IdentPåSak.Companion.filterDistinctIdent
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.SakPathParam
