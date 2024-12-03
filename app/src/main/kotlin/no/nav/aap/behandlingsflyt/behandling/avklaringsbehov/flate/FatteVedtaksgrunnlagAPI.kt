@@ -8,6 +8,8 @@ import com.zaxxer.hikari.HikariDataSource
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
+import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
+import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -28,8 +30,9 @@ fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(dataSource: HikariDataSource) {
                         BehandlingReferanseService(BehandlingRepositoryImpl(connection)).behandling(req)
                     val avklaringsbehovene =
                         AvklaringsbehovRepositoryImpl(connection).hentAvklaringsbehovene(behandling.id)
+                    val flyt = utledType(behandling.typeBehandling()).flyt()
 
-                    val vurderinger = kvalitetssikringsVurdering(avklaringsbehovene)
+                    val vurderinger = beslutterVurdering(avklaringsbehovene, flyt)
                     FatteVedtakGrunnlagDto(vurderinger = vurderinger, historikk = utledHistorikk(avklaringsbehovene))
                 }
                 respond(dto)
@@ -85,9 +88,10 @@ private fun utledEndringerSidenSist(
     }.flatten()
 }
 
-private fun kvalitetssikringsVurdering(avklaringsbehovene: Avklaringsbehovene): List<TotrinnsVurdering> {
+private fun beslutterVurdering(avklaringsbehovene: Avklaringsbehovene, flyt: BehandlingFlyt): List<TotrinnsVurdering> {
     return avklaringsbehovene.alle()
         .filter { it.erTotrinn() }
+        .sortedWith { o1, o2 -> flyt.compareable().compare(o1.løsesISteg(), o2.løsesISteg()) }
         .map { tilKvalitetssikring(it) }
 }
 
