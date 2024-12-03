@@ -29,7 +29,7 @@ public data class StoppetBehandling(
     val soknadsFormat: Kanal = Kanal.DIGITAL,
     val ident: String,
     val versjon: String,
-    val årsakTilBehandling: String? = null,
+    val årsakTilBehandling: ÅrsakTilBehandling? = null,
     val avklaringsbehov: List<AvklaringsbehovHendelseDto>,
     val hendelsesTidspunkt: LocalDateTime,
     val avsluttetBehandling: AvsluttetBehandlingDTO? = null,
