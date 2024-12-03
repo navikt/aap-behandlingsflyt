@@ -16,7 +16,8 @@ class FatteVedtakLøser(private val connection: DBConnection) : Avklaringsbehovs
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: FatteVedtakLøsning): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId = kontekst.kontekst.behandlingId)
+        val avklaringsbehovene =
+            avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId = kontekst.kontekst.behandlingId)
 
         løsning.vurderinger.all { it.valider() }
 
@@ -35,6 +36,13 @@ class FatteVedtakLøser(private val connection: DBConnection) : Avklaringsbehovs
                 .filter { flyt.erStegFør(Definisjon.forKode(it.definisjon).løsesISteg, tidligsteStegMedRetur) }
 
             val vurderingerSomMåReåpnes = avklaringsbehovene.alle()
+                .filterNot { behov ->
+                    behov.definisjon in setOf(
+                        Definisjon.FORESLÅ_VEDTAK,
+                        Definisjon.FATTE_VEDTAK,
+                        Definisjon.KVALITETSSIKRING
+                    )
+                }
                 .filter { vurdering ->
                     vurderingerSomErSendtTilbake.none { it.definisjon == vurdering.definisjon.kode } &&
                             vurderingerFørRetur.none { it.definisjon == vurdering.definisjon.kode }
