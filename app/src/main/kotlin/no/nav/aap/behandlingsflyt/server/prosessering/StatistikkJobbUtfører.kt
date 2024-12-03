@@ -39,6 +39,7 @@ import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.behandlingsflyt.pip.PipRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -98,7 +99,18 @@ class StatistikkJobbUtfører(
             sakStatus = sak.status(),
             hendelsesTidspunkt = hendelse.hendelsesTidspunkt,
             avsluttetBehandling = if (hendelse.status == AVSLUTTET) hentAvsluttetBehandlingDTO(hendelse) else null,
-            identerForSak = hentIdenterPåSak(sak.saksnummer)
+            identerForSak = hentIdenterPåSak(sak.saksnummer),
+            årsakTilBehandling = behandling.årsaker().map {
+                when (it.type) {
+                    ÅrsakTilBehandling.MOTTATT_SØKNAD -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.SØKNAD
+                    ÅrsakTilBehandling.MOTTATT_AKTIVITETSMELDING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.AKTIVITETSMELDING
+                    ÅrsakTilBehandling.MOTTATT_MELDEKORT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.MELDEKORT
+                    ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.LEGEERKLÆRING
+                    ÅrsakTilBehandling.MOTTATT_AVVIST_LEGEERKLÆRING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.AVVIST_LEGEERKLÆRING
+                    ÅrsakTilBehandling.MOTTATT_DIALOGMELDING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.DIALOGMELDING
+                    ÅrsakTilBehandling.G_REGULERING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.G_REGULERING
+                }
+            }
         )
         return statistikkHendelse
     }

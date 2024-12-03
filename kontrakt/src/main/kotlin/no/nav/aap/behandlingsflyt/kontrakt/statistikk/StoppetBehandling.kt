@@ -29,7 +29,7 @@ public data class StoppetBehandling(
     val soknadsFormat: Kanal = Kanal.DIGITAL,
     val ident: String,
     val versjon: String,
-    val årsakTilBehandling: ÅrsakTilBehandling? = null,
+    val årsakTilBehandling: List<ÅrsakTilBehandling>,
     val avklaringsbehov: List<AvklaringsbehovHendelseDto>,
     val hendelsesTidspunkt: LocalDateTime,
     val avsluttetBehandling: AvsluttetBehandlingDTO? = null,
@@ -54,5 +54,6 @@ public enum class ÅrsakTilBehandling {
     MELDEKORT,
     LEGEERKLÆRING,
     AVVIST_LEGEERKLÆRING,
-    DIALOGMELDING
+    DIALOGMELDING,
+    G_REGULERING
 }

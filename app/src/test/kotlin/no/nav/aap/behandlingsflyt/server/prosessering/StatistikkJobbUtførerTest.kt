@@ -37,6 +37,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.TilkjentYtelseDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsPeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsResultatDTO
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -57,6 +58,7 @@ import no.nav.aap.behandlingsflyt.pip.PipRepository
 import no.nav.aap.verdityper.dokument.Kanal
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -300,24 +302,26 @@ class StatistikkJobbUtførerTest {
                     )
                 ),
                 vilkårsResultat =
-                VilkårsResultatDTO(
-                    typeBehandling = TypeBehandling.Førstegangsbehandling,
-                    vilkår = listOf(
-                        VilkårDTO(
-                            vilkårType = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype.valueOf(Vilkårtype.MEDLEMSKAP.toString()),
-                            perioder = listOf(
-                                VilkårsPeriodeDTO(
-                                    fraDato = LocalDate.now().minusDays(1),
-                                    tilDato = LocalDate.now().plusDays(1),
-                                    utfall = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Utfall.valueOf(Utfall.OPPFYLT.toString()),
-                                    manuellVurdering = false,
-                                    avslagsårsak = null,
-                                    innvilgelsesårsak = "null",
+                    VilkårsResultatDTO(
+                        typeBehandling = TypeBehandling.Førstegangsbehandling,
+                        vilkår = listOf(
+                            VilkårDTO(
+                                vilkårType = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype.valueOf(
+                                    Vilkårtype.MEDLEMSKAP.toString()
+                                ),
+                                perioder = listOf(
+                                    VilkårsPeriodeDTO(
+                                        fraDato = LocalDate.now().minusDays(1),
+                                        tilDato = LocalDate.now().plusDays(1),
+                                        utfall = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Utfall.valueOf(Utfall.OPPFYLT.toString()),
+                                        manuellVurdering = false,
+                                        avslagsårsak = null,
+                                        innvilgelsesårsak = "null",
+                                    )
                                 )
                             )
                         )
-                    )
-                ),
+                    ),
             ).toString()
         )
     }
@@ -339,7 +343,13 @@ class StatistikkJobbUtførerTest {
                 sakId = sakId,
                 typeBehandling = TypeBehandling.Klage,
                 versjon = 1,
-                forrigeBehandlingId = null
+                forrigeBehandlingId = null,
+                årsaker = listOf(
+                    Årsak(
+                        type = no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling.MOTTATT_SØKNAD,
+                        periode = Periode(LocalDate.now(), LocalDate.now().plusDays(1))
+                    )
+                )
             )
         )
 
@@ -458,9 +468,10 @@ class StatistikkJobbUtførerTest {
                 versjon = ApplikasjonsVersjon.versjon,
                 soknadsFormat = Kanal.PAPIR,
                 mottattTid = tidligsteMottattTid,
-                sakStatus = no.nav.aap.behandlingsflyt.kontrakt.sak.Status.UTREDES,
+                sakStatus = UTREDES,
                 hendelsesTidspunkt = hendelsesTidspunkt,
-                identerForSak = listOf("123")
+                identerForSak = listOf("123"),
+                årsakTilBehandling = listOf(ÅrsakTilBehandling.SØKNAD)
             )
         )
 
