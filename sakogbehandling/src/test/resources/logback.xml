@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <appender name="pretty" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%cyan(%d{HH:mm:ss.SSS}) %gray([%thread]) %highlight(%-5level) %magenta(%logger{36}) [jobb='%X{jobbType}', sakId='%X{sakId}', behandlingId='%X{behandlingId}'] - %msg%n
+            </pattern>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="pretty"/>
+    </root>
+
+    <logger name="secureLog" level="TRACE" additivity="false">
+        <appender-ref ref="pretty"/>
+    </logger>
+
+    <logger name="io.netty" level="INFO" />
+    <logger name="no.nav" level="INFO" />
+
+</configuration>

@@ -110,7 +110,7 @@ class StatistikkJobbUtfører(
                     ÅrsakTilBehandling.MOTTATT_DIALOGMELDING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.DIALOGMELDING
                     ÅrsakTilBehandling.G_REGULERING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.G_REGULERING
                 }
-            }
+            }.distinct()
         )
         return statistikkHendelse
     }
