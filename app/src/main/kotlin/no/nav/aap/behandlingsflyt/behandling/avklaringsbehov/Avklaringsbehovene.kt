@@ -7,8 +7,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.komponenter.httpklient.auth.Bruker
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 
@@ -134,6 +134,7 @@ class Avklaringsbehovene(
     fun reåpne(definisjon: Definisjon) {
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
         avklaringsbehov.reåpne()
+        repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
     override fun alle(): List<Avklaringsbehov> {
