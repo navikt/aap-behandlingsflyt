@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak
 
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 
 class PersonOgSakService(
     private val connection: DBConnection,

@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak.db
 
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
-import java.util.UUID
+import java.util.*
 
 class PersonRepositoryImpl(private val connection: DBConnection) : PersonRepository {
 
