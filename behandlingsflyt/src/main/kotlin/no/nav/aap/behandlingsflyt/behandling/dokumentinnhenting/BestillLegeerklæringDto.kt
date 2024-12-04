@@ -7,6 +7,7 @@ import java.util.*
 data class BestillLegeerklæringDto (
     val behandlerRef: String,
     val behandlerNavn: String,
+    val behandlerHprNr: String,
     val veilederNavn: String,
     val fritekst: String,
     val saksnummer: String,

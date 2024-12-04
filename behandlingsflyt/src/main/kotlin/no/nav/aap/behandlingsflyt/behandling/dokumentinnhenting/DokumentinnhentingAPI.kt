@@ -61,6 +61,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
                         LegeerklæringBestillingRequest(
                             req.behandlerRef,
                             req.behandlerNavn,
+                            req.behandlerHprNr,
                             req.veilederNavn,
                             personIdent.identifikator,
                             personinfo.fulltNavn(),

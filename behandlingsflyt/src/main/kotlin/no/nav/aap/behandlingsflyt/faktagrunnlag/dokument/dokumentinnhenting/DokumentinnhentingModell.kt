@@ -6,6 +6,7 @@ import java.util.*
 data class LegeerklæringBestillingRequest (
     val behandlerRef: String,
     val behandlerNavn: String,
+    val behandlerHprNr: String,
     val veilederNavn: String,
     val personIdent: String,
     val personNavn: String,
