@@ -7,9 +7,16 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.P
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_AKTIVT_BIDRAG
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_MØTT_TIL_MØTE
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_MØTT_TIL_TILTAK
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_SENDT_INN_DOKUMENTASJON
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn.BIDRAR_AKTIVT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn.INGEN_GYLDIG_GRUNN
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn.RIMELIG_GRUNN
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn.STERKE_VELFERDSGRUNNER
+import no.nav.aap.behandlingsflyt.help.assertTidslinje
+import no.nav.aap.behandlingsflyt.test.desember
+import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.tidslinje.JoinStyle
+import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
@@ -50,12 +57,20 @@ class SammenstiltAktivitetspliktRegelTest {
         )
 
         aktivitetsbruddVurderinger.segment(fraværFastsattAktivitetPeriode.fom).also {
-            assertEquals(Periode(fraværFastsattAktivitetPeriode.fom, aktivitetspliktBruddPeriode.fom.minusDays(1)), it?.periode)
+            assertEquals(
+                Periode(fraværFastsattAktivitetPeriode.fom, aktivitetspliktBruddPeriode.fom.minusDays(1)),
+                it?.periode
+            )
             assertNotNull(it?.verdi?.fraværFastsattAktivitetVurdering)
             assertNull(it?.verdi?.aktivitetspliktVurdering)
         }
 
-        aktivitetsbruddVurderinger.kombiner<_, Nothing>(Tidslinje(Periode(aktivitetspliktBruddPeriode.fom, rettighetsperiode.tom), Unit),
+        aktivitetsbruddVurderinger.kombiner<_, Nothing>(Tidslinje(
+            Periode(
+                aktivitetspliktBruddPeriode.fom,
+                rettighetsperiode.tom
+            ), Unit
+        ),
             JoinStyle.RIGHT_JOIN { _, vurdering, _ ->
                 assertNotNull(vurdering?.verdi?.aktivitetspliktVurdering)
                 assertNull(vurdering?.verdi?.fraværFastsattAktivitetVurdering)
@@ -119,6 +134,48 @@ class SammenstiltAktivitetspliktRegelTest {
         aktivitetsbruddVurderinger.segment(aktivitetspliktBruddPeriode.fom).also {
             assertNull(it?.verdi?.reduksjonAktivitetspliktVurdering)
         }
+    }
+
+    @Test
+    fun `11-7 med AKTIVT_BIDRAG overskriver ikke 11-8 og 11-9`() {
+        val aktivitetsbruddVurderinger = aktivitetsbruddVurderinger(
+            rettighetsperiode = Periode(1 januar 2020, 31 desember 2022),
+            startTidslinje = Tidslinje(),
+            brudd(
+                bruddType = IKKE_AKTIVT_BIDRAG,
+                paragraf = PARAGRAF_11_7,
+                periode = Periode(1 januar 2020, Tid.MAKS),
+                opprettet = LocalDate.of(2020, 1, 1),
+                grunn = BIDRAR_AKTIVT,
+            ),
+            brudd(
+                bruddType = IKKE_MØTT_TIL_TILTAK,
+                paragraf = PARAGRAF_11_8,
+                periode = Periode(1 januar 2020, 3 januar 2020),
+                opprettet = LocalDate.of(2020, 1, 1),
+                grunn = STERKE_VELFERDSGRUNNER,
+            ),
+            brudd(
+                bruddType = IKKE_SENDT_INN_DOKUMENTASJON,
+                paragraf = PARAGRAF_11_9,
+                periode = Periode(4 januar 2020, 6 januar 2020),
+                opprettet = LocalDate.of(2020, 1, 1),
+                grunn = RIMELIG_GRUNN,
+            )
+        )
+
+        aktivitetsbruddVurderinger.assertTidslinje(
+            Segment(Periode(1 januar 2020, 3 januar 2020)) {
+                assertNotNull(it.fraværFastsattAktivitetVurdering)
+                assertNull(it.aktivitetspliktVurdering)
+                assertNull(it.reduksjonAktivitetspliktVurdering)
+            },
+            Segment(Periode(4 januar 2020, 6 januar 2020)) {
+                assertNotNull(it.reduksjonAktivitetspliktVurdering)
+                assertNull(it.aktivitetspliktVurdering)
+                assertNull(it.fraværFastsattAktivitetVurdering)
+            }
+        )
     }
 }
 
