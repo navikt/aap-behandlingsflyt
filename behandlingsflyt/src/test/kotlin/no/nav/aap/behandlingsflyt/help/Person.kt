@@ -1,0 +1,36 @@
+package no.nav.aap.behandlingsflyt.help
+
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import java.util.*
+
+class Person(val id: Long, val identifikator: UUID, private var identer: List<Ident>) {
+
+    fun er(ident: Ident): Boolean {
+        return identer.any { it == ident }
+    }
+
+    fun aktivIdent(): Ident {
+        return identer().first { it.aktivIdent}
+    }
+
+    fun identer(): List<Ident> {
+        return identer.toList()
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Person
+
+        return identifikator == other.identifikator
+    }
+
+    override fun hashCode(): Int {
+        return identifikator.hashCode()
+    }
+
+    override fun toString(): String {
+        return "Person(identifikator=$identifikator, identer=$identer)"
+    }
+}

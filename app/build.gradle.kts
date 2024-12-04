@@ -1,5 +1,4 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import org.gradle.kotlin.dsl.processResources
 import java.io.ByteArrayOutputStream
 
 val ktorVersion = "3.0.2"
@@ -60,7 +59,6 @@ dependencies {
     implementation("io.ktor:ktor-server-cors:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
 
-
     implementation("io.micrometer:micrometer-registry-prometheus:1.14.1")
     implementation("ch.qos.logback:logback-classic:1.5.12")
     implementation("net.logstash.logback:logstash-logback-encoder:8.0")
@@ -77,10 +75,10 @@ dependencies {
     implementation("no.nav.aap.kelvin:tidslinje:$komponenterVersjon")
 
 
-    implementation(project(":sakogbehandling"))
-    implementation(project(":faktagrunnlag"))
+    implementation(project(":api"))
+    implementation(project(":behandlingsflyt"))
     implementation(project(":kontrakt"))
-    implementation(project(":dbflyway"))
+    implementation(project(":repository"))
     implementation("com.zaxxer:HikariCP:6.2.1")
     implementation("org.flywaydb:flyway-database-postgresql:10.22.0")
     runtimeOnly("org.postgresql:postgresql:42.7.4")
@@ -97,6 +95,5 @@ dependencies {
             because("https://github.com/advisories/GHSA-4g9r-vxhx-9pgx")
         }
     }
-    testImplementation("io.mockk:mockk:1.13.13")
     testImplementation(kotlin("test"))
 }

@@ -1,0 +1,42 @@
+package no.nav.aap.behandlingsflyt.forretningsflyt.steg
+
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
+import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
+import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
+import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
+import no.nav.aap.behandlingsflyt.flyt.steg.TilbakeføresFraKvalitetsikrer
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.komponenter.dbconnect.DBConnection
+
+class KvalitetssikringsSteg private constructor(
+    private val avklaringsbehovRepository: AvklaringsbehovRepository
+) : BehandlingSteg {
+
+    override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+
+        if (avklaringsbehov.skalTilbakeføresEtterKvalitetssikring()) {
+            return TilbakeføresFraKvalitetsikrer
+        }
+        if (avklaringsbehov.harHattAvklaringsbehovSomKreverKvalitetssikring()) {
+            return FantAvklaringsbehov(Definisjon.KVALITETSSIKRING)
+        }
+
+        return Fullført
+    }
+
+    companion object : FlytSteg {
+        override fun konstruer(connection: DBConnection): BehandlingSteg {
+            return KvalitetssikringsSteg(AvklaringsbehovRepositoryImpl(connection))
+        }
+
+        override fun type(): StegType {
+            return StegType.KVALITETSSIKRING
+        }
+    }
+}

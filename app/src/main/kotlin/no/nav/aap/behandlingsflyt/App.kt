@@ -10,7 +10,7 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.ktor.http.*
 import io.ktor.server.application.*
-import io.ktor.server.auth.authenticate
+import io.ktor.server.auth.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.cors.routing.*
@@ -29,6 +29,8 @@ import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.dokumentinnhenti
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.institusjonAPI
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.flate.tilkjentYtelseAPI
 import no.nav.aap.behandlingsflyt.behandling.vilkår.alder.flate.aldersGrunnlagApi
+import no.nav.aap.behandlingsflyt.exception.ErrorRespons
+import no.nav.aap.behandlingsflyt.exception.FlytOperasjonException
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.flate.underveisVurderingerAPI
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.flate.arbeidsevneGrunnlagApi
@@ -47,12 +49,14 @@ import no.nav.aap.behandlingsflyt.flyt.flate.torsHammerApi
 import no.nav.aap.behandlingsflyt.hendelse.bruddaktivitetsplikt.aktivitetspliktApi
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.server.exception.FlytOperasjonException
-import no.nav.aap.behandlingsflyt.server.prosessering.BehandlingsflytLogInfoProvider
-import no.nav.aap.behandlingsflyt.server.prosessering.ProsesseringsJobber
+import no.nav.aap.behandlingsflyt.pip.behandlingsflytPip
+import no.nav.aap.behandlingsflyt.prosessering.BehandlingsflytLogInfoProvider
+import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.ElementNotFoundException
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbmigrering.Migrering
-import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.httpklient.httpclient.error.IkkeFunnetException
 import no.nav.aap.komponenter.httpklient.httpclient.error.ManglerTilgangException
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureConfig
@@ -62,16 +66,10 @@ import no.nav.aap.komponenter.server.commonKtorModule
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.api.motorApi
 import no.nav.aap.motor.retry.RetryService
-import no.nav.aap.behandlingsflyt.pip.behandlingsflytPip
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.ElementNotFoundException
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import org.slf4j.LoggerFactory
-import java.util.*
 import javax.sql.DataSource
 
 class App
-
-val SYSTEMBRUKER = Bruker("Kelvin")
 
 private const val ANTALL_WORKERS = 4
 
@@ -144,6 +142,8 @@ internal fun Application.server(dbConfig: DbConfig) {
     Migrering.migrate(dataSource)
     val motor = module(dataSource)
 
+    registerRepositories()
+
     routing {
         authenticate(AZURE) {
             apiRouting {
@@ -181,6 +181,10 @@ internal fun Application.server(dbConfig: DbConfig) {
         actuator(prometheus, motor)
     }
 
+}
+
+private fun registerRepositories() {
+    RepositoryRegistry.register(BehandlingRepositoryImpl::class)
 }
 
 fun Application.module(dataSource: DataSource): Motor {

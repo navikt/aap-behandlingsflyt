@@ -1,0 +1,268 @@
+package no.nav.aap.behandlingsflyt.faktagrunnlag.arbeidsevne
+
+import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneVurdering
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.ident
+import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Prosent
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertDoesNotThrow
+import java.time.LocalDate
+import java.time.LocalDateTime
+
+class ArbeidsevneRepositoryTest {
+
+    @Test
+    fun `Finner ikke arbeidsevne hvis ikke lagret`() {
+        InitTestDatabase.dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val behandling = behandling(connection, sak)
+
+            val arbeidsevneRepository = ArbeidsevneRepository(connection)
+            val arbeidsevneGrunnlag = arbeidsevneRepository.hentHvisEksisterer(behandling.id)
+            assertThat(arbeidsevneGrunnlag).isNull()
+        }
+    }
+
+    @Test
+    fun `Lagrer og henter arbeidsevne`() {
+        InitTestDatabase.dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val behandling = behandling(connection, sak)
+            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null)
+
+            val arbeidsevneRepository = ArbeidsevneRepository(connection)
+            arbeidsevneRepository.lagre(behandling.id, listOf(arbeidsevne))
+            val vurderinger = arbeidsevneRepository.hentHvisEksisterer(behandling.id)?.vurderinger
+            assertThat(vurderinger).hasSize(1)
+            assertThat(vurderinger).containsExactly(arbeidsevne.copy(opprettetTid = vurderinger?.first()?.opprettetTid))
+        }
+    }
+
+    @Test
+    fun `Kopierer arbeidsevne fra en behandling til en annen`() {
+        InitTestDatabase.dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val behandling1 = behandling(connection, sak)
+            val arbeidsevneRepository = ArbeidsevneRepository(connection)
+            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null)
+
+            arbeidsevneRepository.lagre(behandling1.id, listOf(arbeidsevne))
+            connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
+                setParams {
+                    setLong(1, behandling1.id.toLong())
+                }
+            }
+
+            val behandling2 = behandling(connection, sak)
+
+            val vurderinger = arbeidsevneRepository.hentHvisEksisterer(behandling2.id)?.vurderinger
+            assertThat(vurderinger).hasSize(1)
+            assertThat(vurderinger).containsExactly(arbeidsevne.copy(opprettetTid = vurderinger?.first()?.opprettetTid))
+        }
+    }
+
+    @Test
+    fun `Kopiering av arbeidsevne fra en behandling uten opplysningene skal ikke føre til feil`() {
+        InitTestDatabase.dataSource.transaction { connection ->
+            val arbeidsevneRepository = ArbeidsevneRepository(connection)
+            assertDoesNotThrow {
+                arbeidsevneRepository.kopier(BehandlingId(Long.MAX_VALUE - 1), BehandlingId(Long.MAX_VALUE))
+            }
+        }
+    }
+
+    @Test
+    fun `Kopierer arbeidsevne fra en behandling til en annen der fraBehandlingen har to versjoner av opplysningene`() {
+        InitTestDatabase.dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val behandling1 = behandling(connection, sak)
+            val arbeidsevneRepository = ArbeidsevneRepository(connection)
+            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null)
+            val arbeidsevne2 = arbeidsevne.copy(begrunnelse = "annen begrunnelse")
+
+            arbeidsevneRepository.lagre(behandling1.id, listOf(arbeidsevne))
+            arbeidsevneRepository.lagre(behandling1.id, listOf(arbeidsevne2))
+            connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
+                setParams {
+                    setLong(1, behandling1.id.toLong())
+                }
+            }
+
+            val behandling2 = behandling(connection, sak)
+
+            val vurderinger = arbeidsevneRepository.hentHvisEksisterer(behandling2.id)?.vurderinger
+            assertThat(vurderinger).hasSize(1)
+            assertThat(vurderinger).containsExactly(arbeidsevne2.copy(opprettetTid = vurderinger?.first()?.opprettetTid))
+        }
+    }
+
+    @Test
+    fun `Lagrer nye arbeidsevneopplysninger som ny rad og deaktiverer forrige versjon av opplysningene`() {
+        InitTestDatabase.dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val behandling = behandling(connection, sak)
+            val arbeidsevneRepository = ArbeidsevneRepository(connection)
+            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null)
+            val arbeidsevne2 = arbeidsevne.copy("annen begrunnelse")
+
+            arbeidsevneRepository.lagre(behandling.id, listOf(arbeidsevne))
+            val originaleVurderinger = arbeidsevneRepository.hentHvisEksisterer(behandling.id)?.vurderinger
+
+            assertThat(originaleVurderinger).hasSize(1)
+            assertThat(originaleVurderinger).containsExactly(
+                arbeidsevne.copy(opprettetTid = originaleVurderinger?.first()?.opprettetTid)
+            )
+
+            arbeidsevneRepository.lagre(behandling.id, listOf(arbeidsevne2))
+            val oppdaterteVurderinger = arbeidsevneRepository.hentHvisEksisterer(behandling.id)?.vurderinger
+            assertThat(oppdaterteVurderinger).hasSize(1)
+            assertThat(oppdaterteVurderinger).containsExactly(
+                arbeidsevne2.copy(opprettetTid = oppdaterteVurderinger?.first()?.opprettetTid)
+            )
+
+            data class Opplysning(
+                val aktiv: Boolean,
+                val begrunnelse: String,
+                val andelArbeidsevne: Prosent
+            )
+
+            val opplysninger =
+                connection.queryList(
+                    """
+                    SELECT g.AKTIV, v.BEGRUNNELSE, v.ANDEL_ARBEIDSEVNE
+                    FROM BEHANDLING b
+                    INNER JOIN ARBEIDSEVNE_GRUNNLAG g ON b.ID = g.BEHANDLING_ID
+                    INNER JOIN ARBEIDSEVNE a ON g.ARBEIDSEVNE_ID = a.ID
+                    INNER JOIN ARBEIDSEVNE_VURDERING v ON a.ID = v.ARBEIDSEVNE_ID
+                    WHERE b.SAK_ID = ?
+                    """.trimIndent()
+                ) {
+                    setParams {
+                        setLong(1, sak.id.toLong())
+                    }
+                    setRowMapper { row ->
+                        Opplysning(
+                            aktiv = row.getBoolean("AKTIV"),
+                            begrunnelse = row.getString("BEGRUNNELSE"),
+                            andelArbeidsevne = Prosent(row.getInt("ANDEL_ARBEIDSEVNE"))
+                        )
+                    }
+                }
+            assertThat(opplysninger)
+                .hasSize(2)
+                .containsExactly(
+                    Opplysning(aktiv = false, begrunnelse = "begrunnelse", andelArbeidsevne = Prosent(100)),
+                    Opplysning(aktiv = true, begrunnelse = "annen begrunnelse", andelArbeidsevne = Prosent(100))
+                )
+        }
+    }
+
+    @Test
+    fun `Ved kopiering av arbeidsevneopplysninger fra en avsluttet behandling til en ny skal kun referansen kopieres, ikke hele raden`() {
+        InitTestDatabase.dataSource.transaction { connection ->
+
+            val sak = sak(connection)
+            val behandling1 = behandling(connection, sak)
+            val arbeidsevneRepository = ArbeidsevneRepository(connection)
+            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), LocalDateTime.now())
+            val arbeidsevne2 = arbeidsevne.copy("annen begrunnelse")
+
+            arbeidsevneRepository.lagre(behandling1.id, listOf(arbeidsevne))
+            arbeidsevneRepository.lagre(behandling1.id, listOf(arbeidsevne2))
+            connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
+                setParams {
+                    setLong(1, behandling1.id.toLong())
+                }
+            }
+            val behandling2 = behandling(connection, sak)
+
+            data class Opplysning(
+                val behandlingId: Long,
+                val aktiv: Boolean,
+                val begrunnelse: String,
+                val andelArbeidsevne: Prosent
+            )
+
+            data class Grunnlag(val arbeidsevneId: Long, val opplysning: Opplysning)
+
+            val opplysninger =
+                connection.queryList(
+                    """
+                    SELECT b.ID AS BEHANDLING_ID, a.ID AS ARBEIDSEVNE_ID, g.AKTIV, v.BEGRUNNELSE, v.ANDEL_ARBEIDSEVNE
+                    FROM BEHANDLING b
+                    INNER JOIN ARBEIDSEVNE_GRUNNLAG g ON b.ID = g.BEHANDLING_ID
+                    INNER JOIN ARBEIDSEVNE a ON g.ARBEIDSEVNE_ID = a.ID
+                    INNER JOIN ARBEIDSEVNE_VURDERING v ON a.ID = v.ARBEIDSEVNE_ID
+                    WHERE b.SAK_ID = ?
+                    """.trimIndent()
+                ) {
+                    setParams {
+                        setLong(1, sak.id.toLong())
+                    }
+                    setRowMapper { row ->
+                        Grunnlag(
+                            arbeidsevneId = row.getLong("ARBEIDSEVNE_ID"),
+                            opplysning = Opplysning(
+                                behandlingId = row.getLong("BEHANDLING_ID"),
+                                aktiv = row.getBoolean("AKTIV"),
+                                begrunnelse = row.getString("BEGRUNNELSE"),
+                                andelArbeidsevne = Prosent(row.getInt("ANDEL_ARBEIDSEVNE"))
+                            )
+                        )
+                    }
+                }
+            assertThat(opplysninger.map(Grunnlag::arbeidsevneId).distinct())
+                .hasSize(2)
+            assertThat(opplysninger.map(Grunnlag::opplysning))
+                .hasSize(3)
+                .containsExactly(
+                    Opplysning(
+                        behandlingId = behandling1.id.toLong(),
+                        aktiv = false,
+                        begrunnelse = arbeidsevne.begrunnelse,
+                        andelArbeidsevne = Prosent(100)
+                    ),
+                    Opplysning(
+                        behandlingId = behandling1.id.toLong(),
+                        aktiv = true,
+                        begrunnelse = arbeidsevne2.begrunnelse,
+                        andelArbeidsevne = Prosent(100)
+                    ),
+                    Opplysning(
+                        behandlingId = behandling2.id.toLong(),
+                        aktiv = true,
+                        begrunnelse = arbeidsevne2.begrunnelse,
+                        andelArbeidsevne = Prosent(100)
+                    )
+                )
+        }
+    }
+
+    private companion object {
+        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+    }
+
+    private fun sak(connection: DBConnection): Sak {
+        return PersonOgSakService(connection, FakePdlGateway).finnEllerOpprett(ident(), periode)
+    }
+
+    private fun behandling(connection: DBConnection, sak: Sak): Behandling {
+        return SakOgBehandlingService(connection).finnEllerOpprettBehandling(
+            sak.saksnummer,
+            listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
+        ).behandling
+    }
+}

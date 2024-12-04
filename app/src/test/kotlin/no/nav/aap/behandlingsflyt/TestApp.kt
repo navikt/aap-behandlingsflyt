@@ -6,7 +6,6 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
@@ -14,9 +13,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Ins
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.adapter.InstitusjonsoppholdJSON
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
-import no.nav.aap.behandlingsflyt.flyt.internals.TestHendelsesMottak
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.test.AzurePortHolder
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FakeServers
@@ -24,15 +26,16 @@ import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.behandlingsflyt.test.modell.defaultInntekt
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
+import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.verdityper.dokument.JournalpostId
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.verdityper.dokument.Kanal
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
 import java.time.Duration
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
 // Kjøres opp for å få logback i console uten json
@@ -88,18 +91,28 @@ fun main() {
                             LocalDate.now(),
                             LocalDate.now().plusYears(3)
                         )
+                        datasource.transaction { connection ->
+                            val sakService = PersonOgSakService(connection, PdlIdentGateway)
+                            val sak = sakService.finnEllerOpprett(ident, periode)
 
-                        TestHendelsesMottak(datasource).håndtere(
-                            ident, DokumentMottattPersonHendelse(
-                                journalpost = JournalpostId("" + System.currentTimeMillis()),
-                                mottattTidspunkt = LocalDateTime.now(),
-                                strukturertDokument = StrukturertDokument(
-                                    mapTilSøknad(dto, urelaterteBarn),
-                                    InnsendingType.SØKNAD
-                                ),
-                                periode = periode
+                            val flytJobbRepository = FlytJobbRepository(connection)
+
+                            val periode = Periode(
+                                LocalDate.now(),
+                                LocalDate.now()
                             )
-                        )
+                            flytJobbRepository.leggTil(
+                                HendelseMottattHåndteringJobbUtfører.nyJobb(
+                                    sakId = sak.id,
+                                    dokumentReferanse = InnsendingReferanse(JournalpostId("" + System.currentTimeMillis())),
+                                    brevkategori = InnsendingType.SØKNAD,
+                                    kanal = Kanal.DIGITAL,
+                                    periode = periode,
+                                    payload = mapTilSøknad(dto, urelaterteBarn)
+                                )
+                            )
+                        }
+
                         respond(dto)
                     }
                 }
@@ -108,14 +121,23 @@ fun main() {
 
                         val ident = Ident(dto.ident)
 
-                        TestHendelsesMottak(datasource).håndtere(
-                            ident, DokumentMottattPersonHendelse(
-                                journalpost = JournalpostId("" + System.currentTimeMillis()),
-                                mottattTidspunkt = LocalDateTime.now(),
-                                strukturertDokument = StrukturertDokument(dto.pliktkort, InnsendingType.PLIKTKORT),
-                                periode = dto.pliktkort.periode()
+                        datasource.transaction { connection ->
+                            val sakService = PersonOgSakService(connection, PdlIdentGateway)
+                            val sak = sakService.finnEllerOpprett(ident, dto.pliktkort.periode())
+
+                            val flytJobbRepository = FlytJobbRepository(connection)
+
+                            flytJobbRepository.leggTil(
+                                HendelseMottattHåndteringJobbUtfører.nyJobb(
+                                    sakId = sak.id,
+                                    dokumentReferanse = InnsendingReferanse(JournalpostId("" + System.currentTimeMillis())),
+                                    brevkategori = InnsendingType.PLIKTKORT,
+                                    kanal = Kanal.DIGITAL,
+                                    periode = dto.pliktkort.periode(),
+                                    payload = dto.pliktkort
+                                )
                             )
-                        )
+                        }
                         respond(dto)
                     }
                 }

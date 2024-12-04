@@ -1,0 +1,29 @@
+package no.nav.aap.behandlingsflyt.help
+
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.komponenter.dbconnect.DBConnection
+import java.util.*
+
+class TestBehandlingRepository(private val connection: DBConnection) {
+
+    fun opprettBehandling(sakId: SakId, typeBehandling: TypeBehandling): BehandlingId {
+
+        val query = """
+            INSERT INTO BEHANDLING (sak_id, referanse, status, type)
+                 VALUES (?, ?, ?, ?)
+            """.trimIndent()
+        val behandlingId = connection.executeReturnKey(query) {
+            setParams {
+                setLong(1, sakId.toLong())
+                setUUID(2, UUID.randomUUID())
+                setEnumName(3, Status.OPPRETTET)
+                setString(4, typeBehandling.identifikator())
+            }
+        }
+
+        return BehandlingId(behandlingId)
+    }
+}
