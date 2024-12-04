@@ -1,8 +1,6 @@
-package no.nav.aap.behandlingsflyt
+package no.nav.aap.repository
 
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.repository.Factory
-import no.nav.aap.repository.Repository
 import kotlin.reflect.KClass
 import kotlin.reflect.full.companionObject
 import kotlin.reflect.full.starProjectedType
