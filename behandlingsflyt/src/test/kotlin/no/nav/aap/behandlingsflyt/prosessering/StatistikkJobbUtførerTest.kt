@@ -51,6 +51,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -85,7 +86,11 @@ class StatistikkJobbUtførerTest {
                 }
             }
 
-            val sak = PersonOgSakService(connection, identGateway).finnEllerOpprett(
+            val sak = PersonOgSakService(
+                identGateway,
+                PersonRepositoryImpl(connection),
+                SakRepositoryImpl(connection)
+            ).finnEllerOpprett(
                 ident, periode = Periode(LocalDate.now().minusDays(10), LocalDate.now().plusDays(1))
             )
 
@@ -186,7 +191,11 @@ class StatistikkJobbUtførerTest {
                 }
             }
 
-            val sak = PersonOgSakService(connection, identGateway).finnEllerOpprett(
+            val sak = PersonOgSakService(
+                identGateway,
+                PersonRepositoryImpl(connection),
+                SakRepositoryImpl(connection)
+            ).finnEllerOpprett(
                 ident, periode = Periode(LocalDate.now().minusDays(10), LocalDate.now().plusDays(1))
             )
 

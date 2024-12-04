@@ -26,6 +26,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.FinnEllerOpprettSakDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksinfoDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.UtvidetSaksinfoDTO
@@ -130,7 +132,11 @@ class ApiTest {
         val ds = initDatasource(dbConfig)
 
         val opprettetBehandling = ds.transaction { connection ->
-            val personOgSakService = PersonOgSakService(connection, FakePdlGateway)
+            val personOgSakService = PersonOgSakService(
+                FakePdlGateway,
+                PersonRepositoryImpl(connection),
+                SakRepositoryImpl(connection)
+            )
             val behandlingRepo = BehandlingRepositoryImpl(connection)
 
             val sak =
@@ -175,7 +181,11 @@ class ApiTest {
     fun `kalle beregningsgrunnlag-api`() {
         val ds = initDatasource(dbConfig)
         val referanse = ds.transaction { connection ->
-            val personOgSakService = PersonOgSakService(connection, FakePdlGateway)
+            val personOgSakService = PersonOgSakService(
+                FakePdlGateway,
+                PersonRepositoryImpl(connection),
+                SakRepositoryImpl(connection)
+            )
             val behandlingRepo = BehandlingRepositoryImpl(connection)
             val sak =
                 personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))

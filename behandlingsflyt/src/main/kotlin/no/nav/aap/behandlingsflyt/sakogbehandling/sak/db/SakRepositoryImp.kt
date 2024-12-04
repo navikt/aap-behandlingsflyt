@@ -10,11 +10,18 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.repository.Factory
 import org.slf4j.LoggerFactory
 
 private val logger = LoggerFactory.getLogger(SakRepositoryImpl::class.java)
 
 class SakRepositoryImpl(private val connection: DBConnection) : SakRepository, SakFlytRepository {
+
+    companion object : Factory<SakRepositoryImpl> {
+        override fun konstruer(connection: DBConnection): SakRepositoryImpl {
+            return SakRepositoryImpl(connection)
+        }
+    }
 
     private val personRepository = PersonRepositoryImpl(connection)
 

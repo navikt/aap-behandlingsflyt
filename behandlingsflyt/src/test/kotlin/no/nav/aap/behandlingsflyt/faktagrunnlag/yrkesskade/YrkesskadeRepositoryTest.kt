@@ -11,6 +11,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.mai
@@ -300,7 +302,11 @@ class YrkesskadeRepositoryTest {
     }
 
     private fun sak(connection: DBConnection): Sak {
-        return PersonOgSakService(connection, FakePdlGateway).finnEllerOpprett(ident(), periode)
+        return PersonOgSakService(
+            FakePdlGateway,
+            PersonRepositoryImpl(connection),
+            SakRepositoryImpl(connection)
+        ).finnEllerOpprett(ident(), periode)
     }
 
     private fun behandling(connection: DBConnection, sak: Sak): Behandling {

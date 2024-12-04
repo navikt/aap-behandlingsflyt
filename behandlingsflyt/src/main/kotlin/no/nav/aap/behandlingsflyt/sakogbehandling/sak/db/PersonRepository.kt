@@ -2,9 +2,10 @@ package no.nav.aap.behandlingsflyt.sakogbehandling.sak.db
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.repository.Repository
 import java.util.*
 
-interface PersonRepository {
+interface PersonRepository : Repository {
     fun finnEllerOpprett(identer: List<Ident>): Person
     fun oppdater(person: Person, identer: List<Ident>)
     fun hent(identifikator: UUID): Person

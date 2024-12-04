@@ -7,21 +7,22 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.ElementNotFoundException
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.DokumentInfoId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.SafHentDokumentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.SafListDokument
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.SafListDokumentGateway
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.repository.RepositoryFactory
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
@@ -35,13 +36,14 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
     route("/api/sak") {
         route("/finn").post<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO> { _, dto ->
             val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
+                val repositoryFactory = RepositoryFactory(connection)
                 val ident = Ident(dto.ident)
-                val person = PersonRepositoryImpl(connection).finn(ident)
+                val person = repositoryFactory.create(PersonRepository::class).finn(ident)
 
                 if (person == null) {
                     throw ElementNotFoundException()
                 } else {
-                    SakRepositoryImpl(connection).finnSakerFor(person).map { sak ->
+                    repositoryFactory.create(SakRepository::class).finnSakerFor(person).map { sak ->
                         SaksinfoDTO(
                             saksnummer = sak.saksnummer.toString(),
                             opprettetTidspunkt = sak.opprettetTidspunkt,
@@ -59,12 +61,15 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
             postmottakAzp
         ) { _, dto ->
             val saken: SaksinfoDTO = dataSource.transaction { connection ->
+                val repositoryFactory = RepositoryFactory(connection)
                 val ident = Ident(dto.ident)
                 val periode = Periode(
                     dto.søknadsdato, dto.søknadsdato.plusYears(1)
                 ) // Setter til et år frem i tid som er tilsvarende "vedtakslengde" i forskriften
                 val sak = PersonOgSakService(
-                    connection = connection, pdlGateway = PdlIdentGateway
+                    pdlGateway = PdlIdentGateway,
+                    personRepository = repositoryFactory.create(PersonRepository::class),
+                    sakRepository = repositoryFactory.create(SakRepository::class)
                 ).finnEllerOpprett(ident = ident, periode = periode)
 
                 SaksinfoDTO(
@@ -79,7 +84,8 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
         route("") {
             route("/alle").get<Unit, List<SaksinfoDTO>> {
                 val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
-                    SakRepositoryImpl(connection).finnAlle().map { sak ->
+                    val repositoryFactory = RepositoryFactory(connection)
+                    repositoryFactory.create(SakRepository::class).finnAlle().map { sak ->
                         SaksinfoDTO(
                             saksnummer = sak.saksnummer.toString(),
                             opprettetTidspunkt = sak.opprettetTidspunkt,
@@ -99,9 +105,11 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 val saksnummer = req.saksnummer
 
                 val (sak, behandlinger) = dataSource.transaction(readOnly = true) { connection ->
-                    val sak = SakRepositoryImpl(connection).hent(saksnummer = Saksnummer(saksnummer))
+                    val repositoryFactory = RepositoryFactory(connection)
+                    val sak = repositoryFactory.create(SakRepository::class).hent(saksnummer = Saksnummer(saksnummer))
 
-                    val behandlinger = BehandlingRepositoryImpl(connection).hentAlleFor(sak.id).map { behandling ->
+                    val behandlinger =
+                        repositoryFactory.create(BehandlingRepository::class).hentAlleFor(sak.id).map { behandling ->
                         BehandlinginfoDTO(
                             referanse = behandling.referanse.referanse,
                             type = behandling.typeBehandling().identifikator(),
@@ -166,7 +174,9 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                     val saksnummer = req.saksnummer
 
                     val ident = dataSource.transaction(readOnly = true) { connection ->
-                        val sak = SakRepositoryImpl(connection).hent(saksnummer = Saksnummer(saksnummer))
+                        val repositoryFactory = RepositoryFactory(connection)
+                        val sak =
+                            repositoryFactory.create(SakRepository::class).hent(saksnummer = Saksnummer(saksnummer))
                         sak.person.aktivIdent()
                     }
 

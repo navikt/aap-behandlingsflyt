@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
@@ -35,7 +36,13 @@ class StegOrkestratorTest {
             val ident = Ident("123123123126")
             val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
-            val sak = runBlocking { PersonOgSakService(connection, FakePdlGateway).finnEllerOpprett(ident, periode) }
+            val sak = runBlocking {
+                PersonOgSakService(
+                    FakePdlGateway,
+                    PersonRepositoryImpl(connection),
+                    SakRepositoryImpl(connection)
+                ).finnEllerOpprett(ident, periode)
+            }
             val behandling = SakOgBehandlingService(connection).finnEllerOpprettBehandling(
                 sak.saksnummer,
                 listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))

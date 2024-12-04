@@ -2,7 +2,7 @@ package no.nav.aap.repository
 
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import kotlin.reflect.KClass
-import kotlin.reflect.full.companionObject
+import kotlin.reflect.full.companionObjectInstance
 import kotlin.reflect.full.starProjectedType
 
 class RepositoryFactory(val connection: DBConnection) {
@@ -10,6 +10,14 @@ class RepositoryFactory(val connection: DBConnection) {
     @Suppress("UNCHECKED_CAST")
     inline fun <reified T : Repository> create(type: KClass<T>): T {
         val repositoryKlass = RepositoryRegistry.fetch(type.starProjectedType)
-        return (repositoryKlass.companionObject as Factory<T>).konstruer(connection)
+
+        val companionObject = repositoryKlass.companionObjectInstance
+        requireNotNull(companionObject) {
+            "Repository må ha companion object"
+        }
+        if (companionObject is Factory<*>) {
+            return companionObject.konstruer(connection) as T
+        }
+        throw IllegalStateException("Repository må ha et companion object som implementerer Factory<T> interfacet.")
     }
 }

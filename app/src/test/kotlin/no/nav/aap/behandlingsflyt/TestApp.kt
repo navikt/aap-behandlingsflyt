@@ -19,6 +19,8 @@ import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtf
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdentGateway
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.AzurePortHolder
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FakeServers
@@ -92,7 +94,11 @@ fun main() {
                             LocalDate.now().plusYears(3)
                         )
                         datasource.transaction { connection ->
-                            val sakService = PersonOgSakService(connection, PdlIdentGateway)
+                            val sakService = PersonOgSakService(
+                                PdlIdentGateway,
+                                PersonRepositoryImpl(connection),
+                                SakRepositoryImpl(connection)
+                            )
                             val sak = sakService.finnEllerOpprett(ident, periode)
 
                             val flytJobbRepository = FlytJobbRepository(connection)
@@ -122,7 +128,11 @@ fun main() {
                         val ident = Ident(dto.ident)
 
                         datasource.transaction { connection ->
-                            val sakService = PersonOgSakService(connection, PdlIdentGateway)
+                            val sakService = PersonOgSakService(
+                                PdlIdentGateway,
+                                PersonRepositoryImpl(connection),
+                                SakRepositoryImpl(connection)
+                            )
                             val sak = sakService.finnEllerOpprett(ident, dto.pliktkort.periode())
 
                             val flytJobbRepository = FlytJobbRepository(connection)

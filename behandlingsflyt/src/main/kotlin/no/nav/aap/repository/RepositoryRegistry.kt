@@ -9,10 +9,11 @@ import kotlin.reflect.full.starProjectedType
 
 object RepositoryRegistry {
     private val registry = HashSet<KClass<Repository>>()
-    fun register(repository: KClass<*>) {
+    fun register(repository: KClass<*>): RepositoryRegistry {
         validater(repository)
 
         registry.add(repository as KClass<Repository>)
+        return this
     }
 
     private fun validater(klass: KClass<*>) {
@@ -29,6 +30,10 @@ object RepositoryRegistry {
     }
 
     fun fetch(ktype: KType): KClass<Repository> {
-        return registry.single { klass -> klass.starProjectedType.isSubtypeOf(ktype) }
+        val singleOrNull = registry.singleOrNull { klass -> klass.starProjectedType.isSubtypeOf(ktype) }
+        if (singleOrNull == null) {
+            throw IllegalStateException("Repository av typen '$ktype' er ikke registrert")
+        }
+        return singleOrNull
     }
 }

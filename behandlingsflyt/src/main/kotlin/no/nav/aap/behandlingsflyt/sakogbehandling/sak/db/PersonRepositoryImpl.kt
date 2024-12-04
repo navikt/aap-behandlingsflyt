@@ -4,9 +4,16 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
+import no.nav.aap.repository.Factory
 import java.util.*
 
 class PersonRepositoryImpl(private val connection: DBConnection) : PersonRepository {
+
+    companion object : Factory<PersonRepository> {
+        override fun konstruer(connection: DBConnection): PersonRepository {
+            return PersonRepositoryImpl(connection)
+        }
+    }
 
     override fun finnEllerOpprett(identer: List<Ident>): Person {
         require(identer.isNotEmpty())

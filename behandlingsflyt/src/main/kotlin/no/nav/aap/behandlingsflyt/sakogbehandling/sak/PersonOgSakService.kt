@@ -1,14 +1,13 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
-import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.type.Periode
 
 class PersonOgSakService(
-    private val connection: DBConnection,
-    private val pdlGateway: IdentGateway
+    private val pdlGateway: IdentGateway,
+    private val personRepository: PersonRepository,
+    private val sakRepository: SakRepository
 ) {
 
     fun finnEllerOpprett(ident: Ident, periode: Periode): Sak {
@@ -17,10 +16,8 @@ class PersonOgSakService(
             throw IllegalStateException("Fikk ingen treff på ident i PDL")
         }
 
-        val personRepository = PersonRepositoryImpl(connection)
         val person = personRepository.finnEllerOpprett(identliste)
 
-        val sakRepository = SakRepositoryImpl(connection)
         return sakRepository.finnEllerOpprett(person, periode)
     }
 }

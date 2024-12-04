@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdentGateway
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.motor.FlytJobbRepository
@@ -21,7 +22,11 @@ class TestHendelsesMottak(private val dataSource: DataSource) {
 
     fun håndtere(key: Ident, hendelse: PersonHendelse) {
         val saksnummer: Saksnummer = dataSource.transaction { connection ->
-            val sak = PersonOgSakService(connection, PdlIdentGateway).finnEllerOpprett(key, hendelse.periode())
+            val sak = PersonOgSakService(
+                PdlIdentGateway,
+                PersonRepositoryImpl(connection),
+                SakRepositoryImpl(connection)
+            ).finnEllerOpprett(key, hendelse.periode())
             sak.saksnummer
         }
         // Legg til kø for sak, men mocker ved å kalle videre bare

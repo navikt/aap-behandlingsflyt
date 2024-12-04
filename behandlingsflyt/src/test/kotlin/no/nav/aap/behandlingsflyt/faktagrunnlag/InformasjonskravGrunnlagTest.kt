@@ -9,6 +9,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.ident
@@ -99,7 +101,11 @@ class InformasjonskravGrunnlagTest {
 
     private fun klargjør(connection: DBConnection): Pair<Ident, FlytKontekstMedPerioder> {
         val ident = ident()
-        val sak = PersonOgSakService(connection, FakePdlGateway).finnEllerOpprett(ident, periode)
+        val sak = PersonOgSakService(
+            FakePdlGateway,
+            PersonRepositoryImpl(connection),
+            SakRepositoryImpl(connection)
+        ).finnEllerOpprett(ident, periode)
         val behandling = SakOgBehandlingService(connection).finnEllerOpprettBehandling(
             sak.saksnummer,
             listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
