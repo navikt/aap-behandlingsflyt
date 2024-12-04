@@ -30,6 +30,7 @@ fun brudd(
     periode: Periode,
     opprettet: LocalDate = periode.tom.plusMonths(4),
     grunn: Grunn = INGEN_GYLDIG_GRUNN,
+    innsendingId: InnsendingId = InnsendingId.ny(),
 ) = AktivitetspliktRegistrering(
     brudd = Brudd(
         periode = periode,
@@ -39,7 +40,7 @@ fun brudd(
     metadata = AktivitetspliktDokument.Metadata(
         id = BruddAktivitetspliktId(0),
         hendelseId = HendelseId.ny(),
-        innsendingId = InnsendingId.ny(),
+        innsendingId = innsendingId,
         innsender = Bruker(""),
         opprettetTid = opprettet.atStartOfDay(ZoneId.of("Europe/Oslo")).toInstant(),
     ),

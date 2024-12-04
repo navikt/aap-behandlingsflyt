@@ -9,28 +9,30 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktR
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn
-import no.nav.aap.behandlingsflyt.hendelse.bruddaktivitetsplikt.GrunnDTO.entries
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
+import java.time.LocalDate
 
 interface AktivitetspliktDTO {
     fun tilDomene(sak: Sak, innsender: Bruker): List<AktivitetspliktRepository.DokumentInput>
 }
+
 
 data class OpprettAktivitetspliktDTO(
     val brudd: BruddType,
     val paragraf: Brudd.Paragraf?,
     val begrunnelse: String,
     val grunn: GrunnDTO?,
-    val perioder: List<Periode>,
+    val perioder: List<PeriodeDTO>,
 ) : AktivitetspliktDTO {
     override fun tilDomene(sak: Sak, innsender: Bruker): List<AktivitetspliktRepository.DokumentInput> {
         require(grunn != GrunnDTO.FEILREGISTRERING)
         return perioder.map { periode ->
             val brudd = Brudd.nyttBrudd(
                 sak = sak,
-                periode = periode,
+                periode = periode.tilDomene(),
                 bruddType = brudd,
                 paragraf = brudd.paragraf(paragraf),
             )
@@ -47,14 +49,14 @@ data class OpprettAktivitetspliktDTO(
 class OppdaterAktivitetspliktDTOV2(
     val brudd: BruddType,
     val paragraf: Brudd.Paragraf,
-    val periode: Periode,
+    val periode: PeriodeDTO,
     val grunn: GrunnDTO,
     val begrunnelse: String,
 ) : AktivitetspliktDTO {
     override fun tilDomene(sak: Sak, innsender: Bruker): List<AktivitetspliktRepository.DokumentInput> {
         val brudd = Brudd.nyttBrudd(
             sak = sak,
-            periode = periode,
+            periode = periode.tilDomene(),
             bruddType = brudd,
             paragraf = brudd.paragraf(paragraf),
         )
@@ -88,7 +90,7 @@ data class BruddAktivitetspliktHendelseDto(
     val brudd: BruddType,
     val paragraf: Brudd.Paragraf,
     val grunn: GrunnDTO,
-    val periode: Periode,
+    val periode: PeriodeDTO,
     val begrunnelse: String,
 )
 
@@ -107,14 +109,14 @@ fun List<AktivitetspliktDokument>.utledBruddTilstand(): List<BruddAktivitetsplik
                 is AktivitetspliktFeilregistrering -> GrunnDTO.FEILREGISTRERING
                 is AktivitetspliktRegistrering -> GrunnDTO.fraDomene(dokument.grunn)
             },
-            periode = segment.periode,
+            periode = PeriodeDTO.fraDomene(segment.periode),
             begrunnelse = when (dokument) {
                 is AktivitetspliktFeilregistrering -> dokument.begrunnelse
                 is AktivitetspliktRegistrering -> dokument.begrunnelse
             }
         )
     }
-        .sortedBy { it.periode }
+        .sortedBy { it.periode.tilDomene() }
         .toList()
 }
 
@@ -123,6 +125,7 @@ enum class GrunnDTO(private val tilDomene: Grunn?) {
     STERKE_VELFERDSGRUNNER(Grunn.STERKE_VELFERDSGRUNNER),
     RIMELIG_GRUNN(Grunn.RIMELIG_GRUNN),
     INGEN_GYLDIG_GRUNN(Grunn.INGEN_GYLDIG_GRUNN),
+    BIDRAR_AKTIVT(Grunn.BIDRAR_AKTIVT),
     FEILREGISTRERING(null);
 
     fun tilDomene(): Grunn {
@@ -136,6 +139,24 @@ enum class GrunnDTO(private val tilDomene: Grunn?) {
             return requireNotNull(entries.find { it.tilDomene == grunn }) {
                 "$grunn kan ikke representeres som GrunnDTO"
             }
+        }
+    }
+}
+
+data class PeriodeDTO(
+    val fom: LocalDate,
+    val tom: LocalDate?,
+) {
+    fun tilDomene(): Periode {
+        return Periode(fom, tom ?: Tid.MAKS)
+    }
+
+    companion object {
+        fun fraDomene(periode: Periode): PeriodeDTO {
+            return PeriodeDTO(
+                fom = periode.fom,
+                tom = periode.tom.takeUnless { it == Tid.MAKS },
+            )
         }
     }
 }

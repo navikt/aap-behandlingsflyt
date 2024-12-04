@@ -7,12 +7,18 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.P
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.PARAGRAF_11_9
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_AKTIVT_BIDRAG
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_MØTT_TIL_TILTAK
+import no.nav.aap.behandlingsflyt.help.assertTidslinje
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingId
+import no.nav.aap.behandlingsflyt.test.desember
+import no.nav.aap.behandlingsflyt.test.februar
+import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import kotlin.test.assertNull
 
 class AktivitetspliktRegelTest {
 
@@ -23,49 +29,52 @@ class AktivitetspliktRegelTest {
             brudd(
                 bruddType = IKKE_AKTIVT_BIDRAG,
                 paragraf = PARAGRAF_11_7,
-                periode = Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 1, 1)),
+                periode = Periode(LocalDate.of(2020, 1, 1), Tid.MAKS),
                 opprettet = LocalDate.of(2020, 1, 2)
             ),
         )
-        assertEquals(1, vurderinger.segmenter().size)
-        (1..5).forEach { dag ->
-            vurderinger.segment(LocalDate.of(2020, 1, dag))!!.verdi.also {
+
+        vurderinger.assertTidslinje(
+            Segment(Periode(1 januar 2020, 31 desember 2022)) {
                 assertEquals(AKTIVT_BIDRAG_IKKE_OPPFYLT, it.vilkårsvurdering)
             }
-        }
+        )
     }
 
     @Test
     fun `11_7 brudd stopper når et annet starter`() {
-        val periode1 = Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 1, 1))
-        val periode2 = Periode(LocalDate.of(2020, 2, 1), LocalDate.of(2020, 2, 1))
+        val dokument1 = InnsendingId.ny()
+        val dokument2 = InnsendingId.ny()
+        val periode1 = Periode(LocalDate.of(2020, 1, 1), Tid.MAKS)
+        val periode2 = Periode(LocalDate.of(2020, 2, 1), Tid.MAKS)
         val vurderinger = vurder(
             rettighetsperiode = Periode(fom = LocalDate.of(2020, 1, 1), tom = LocalDate.of(2022, 12, 31)),
             brudd(
                 bruddType = IKKE_AKTIVT_BIDRAG,
                 paragraf = PARAGRAF_11_7,
                 periode = periode1,
-                opprettet = LocalDate.of(2020, 1, 2)
+                opprettet = LocalDate.of(2020, 1, 2),
+                innsendingId = dokument1,
             ),
             brudd(
                 bruddType = IKKE_AKTIVT_BIDRAG,
                 paragraf = PARAGRAF_11_7,
                 periode = periode2,
-                opprettet = LocalDate.of(2020, 1, 2)
+                opprettet = LocalDate.of(2020, 1, 3),
+                innsendingId = dokument2,
             ),
         )
-        assertEquals(2, vurderinger.segmenter().size)
-        assertNull(vurderinger.segment(periode1.fom.minusDays(1)))
 
-        vurderinger.segment(periode1.fom)!!.verdi.also {
-            assertEquals(periode1, it.dokument.brudd.periode)
-        }
-        vurderinger.segment(periode2.fom.minusDays(1))!!.verdi.also {
-            assertEquals(periode1, it.dokument.brudd.periode)
-        }
-        vurderinger.segment(periode2.fom)!!.verdi.also {
-            assertEquals(periode2, it.dokument.brudd.periode)
-        }
+        vurderinger.assertTidslinje(
+            Segment(Periode(1 januar 2020, 31 januar 2020)) {
+                assertEquals(AKTIVT_BIDRAG_IKKE_OPPFYLT, it.vilkårsvurdering)
+                assertEquals(dokument1, it.dokument.metadata.innsendingId)
+            },
+            Segment(Periode(1 februar 2020, 31 desember  2022)) {
+                assertEquals(AKTIVT_BIDRAG_IKKE_OPPFYLT, it.vilkårsvurdering)
+                assertEquals(dokument2, it.dokument.metadata.innsendingId)
+            }
+        )
     }
 
     @Test

@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.P
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_MØTT_TIL_ANNEN_AKTIVITET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_MØTT_TIL_BEHANDLING_ELLER_UTREDNING
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_MØTT_TIL_TILTAK
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn.BIDRAR_AKTIVT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn.INGEN_GYLDIG_GRUNN
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn.RIMELIG_GRUNN
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn.STERKE_VELFERDSGRUNNER
@@ -155,6 +156,7 @@ class FraværFastsattAktivitetRegel : UnderveisRegel {
                 }
 
                 RIMELIG_GRUNN,
+                BIDRAR_AKTIVT,
                 INGEN_GYLDIG_GRUNN ->
                     Tidslinje(
                         vurderingSegment.periode,

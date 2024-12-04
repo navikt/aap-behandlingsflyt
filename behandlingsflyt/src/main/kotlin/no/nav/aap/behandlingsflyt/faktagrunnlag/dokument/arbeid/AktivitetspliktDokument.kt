@@ -116,6 +116,7 @@ enum class Grunn {
     STERKE_VELFERDSGRUNNER,
     RIMELIG_GRUNN,
     INGEN_GYLDIG_GRUNN,
+    BIDRAR_AKTIVT,
 }
 
 data class BruddAktivitetspliktId(internal val id: Long)

@@ -11,19 +11,16 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.In
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.IKKE_OPPFYLT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.november
-import no.nav.aap.komponenter.tidslinje.JoinStyle.OUTER_JOIN
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.opentest4j.AssertionFailedError
-import java.util.*
 
 class VarighetRegelTest {
     private val regel = VarighetRegel()
@@ -45,7 +42,7 @@ class VarighetRegelTest {
             )
         )
 
-        vurderinger.assert(
+        vurderinger.assertTidslinje(
             Segment(Periode(18 november 2024, 21 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
             Segment(Periode(22 november 2024, 22 november 2024)) { vurdering ->
                 assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP, STANDARDKVOTE_BRUKT_OPP)
@@ -70,7 +67,7 @@ class VarighetRegelTest {
             )
         )
 
-        vurderinger.assert(
+        vurderinger.assertTidslinje(
             Segment(Periode(18 november 2024, 24 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
             Segment(Periode(25 november 2024, 25 november 2024)) { vurdering ->
                 assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP, STANDARDKVOTE_BRUKT_OPP)
@@ -95,7 +92,7 @@ class VarighetRegelTest {
             )
         )
 
-        vurderinger.assert(
+        vurderinger.assertTidslinje(
             Segment(Periode(22 november 2024, 25 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
             Segment(Periode(26 november 2024, 26 november 2024)) { vurdering ->
                 assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP, STANDARDKVOTE_BRUKT_OPP)
@@ -120,7 +117,7 @@ class VarighetRegelTest {
             )
         )
 
-        vurderinger.assert(
+        vurderinger.assertTidslinje(
             Segment(Periode(18 november 2024, 19 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
             Segment(Periode(20 november 2024, 26 januar 2025)) { vurdering ->
                 assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP, STANDARDKVOTE_BRUKT_OPP)
@@ -158,7 +155,7 @@ class VarighetRegelTest {
             ).let { Tidslinje(it) }
         )
 
-        vurderinger.assert(
+        vurderinger.assertTidslinje(
             Segment(Periode(18 november 2024, 18 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
             Segment(Periode(19 november 2024, 20 november 2024)) { vurdering ->
                 assertStansGrunnet(vurdering, IKKE_GRUNNLEGGENDE_RETT)
@@ -213,7 +210,7 @@ class VarighetRegelTest {
             )
         )
 
-        vurderinger.assert(
+        vurderinger.assertTidslinje(
             Segment(Periode(18 november 2024, 21 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
             Segment(Periode(22 november 2024, 22 november 2024)) { vurdering ->
                 assertStansGrunnet(
@@ -264,7 +261,7 @@ class VarighetRegelTest {
             )
         )
 
-        vurderinger.assert(
+        vurderinger.assertTidslinje(
             Segment(Periode(18 november 2024, 19 november 2024)) { vurdering ->
                 assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP, SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP)
             },
@@ -315,7 +312,7 @@ class VarighetRegelTest {
             )
         )
 
-        vurderinger.assert(
+        vurderinger.assertTidslinje(
             Segment(Periode(18 november 2024, 19 november 2024)) { vurdering ->
                 assertStansGrunnet(
                     vurdering,
@@ -379,7 +376,7 @@ class VarighetRegelTest {
             )
         )
 
-        vurderinger.assert(
+        vurderinger.assertTidslinje(
             Segment(Periode(18 november 2024, 20 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
             Segment(Periode(21 november 2024, 22 november 2024)) { vurdering ->
                 assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP, STANDARDKVOTE_BRUKT_OPP)
@@ -437,7 +434,7 @@ class VarighetRegelTest {
             )
         )
 
-        vurderinger.assert(
+        vurderinger.assertTidslinje(
             Segment(Periode(18 november 2024, 21 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
             Segment(Periode(22 november 2024, 22 november 2024)) { vurdering ->
                 assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP, STANDARDKVOTE_BRUKT_OPP)
@@ -479,7 +476,7 @@ class VarighetRegelTest {
             ).let(::Tidslinje)
         )
 
-        vurderinger.assert(
+        vurderinger.assertTidslinje(
             Segment(Periode(18 november 2024, 19 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
             Segment(Periode(20 november 2024, 21 november 2024)) { vurdering ->
                 assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP, STUDENTKVOTE_BRUKT_OPP)
@@ -525,7 +522,7 @@ class VarighetRegelTest {
             ).let(::Tidslinje)
         )
 
-        vurderinger.assert(
+        vurderinger.assertTidslinje(
             Segment(Periode(18 november 2024, 19 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
             Segment(Periode(20 november 2024, 21 november 2024)) { vurdering ->
                 assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP, STANDARDKVOTE_BRUKT_OPP)
@@ -556,7 +553,7 @@ class VarighetRegelTest {
             )
         )
 
-        vurderinger.assert(
+        vurderinger.assertTidslinje(
             Segment(Periode(8 november 2024, 10 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
         )
     }
@@ -597,7 +594,7 @@ class VarighetRegelTest {
                 ).let(::Tidslinje)
             )
 
-            vurderinger.assert(
+            vurderinger.assertTidslinje(
                 Segment(Periode(11 november 2024, 14 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
                 Segment(Periode(15 november 2024, 26 november 2024)) { vurdering ->
                     assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP, STANDARDKVOTE_BRUKT_OPP)
@@ -642,7 +639,7 @@ class VarighetRegelTest {
                 ).let(::Tidslinje)
             )
 
-            vurderinger.assert(
+            vurderinger.assertTidslinje(
                 Segment(Periode(11 november 2024, 17 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
                 Segment(Periode(18 november 2024, 26 november 2024)) { vurdering ->
                     assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP, STANDARDKVOTE_BRUKT_OPP)
@@ -714,7 +711,7 @@ class VarighetRegelTest {
             ).let(::Tidslinje)
         )
 
-        vurderinger.assert(
+        vurderinger.assertTidslinje(
             Segment(Periode(11 november 2024, 13 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
             Segment(Periode(14 november 2024, 18 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
             Segment(Periode(19 november 2024, 21 november 2024)) { vurdering -> assertTrue(vurdering.harRett()) },
@@ -744,19 +741,3 @@ private fun assertStansGrunnet(
     }
 }
 
-inline fun <reified T> Tidslinje<T>.assert(vararg assertions: Segment<(T) -> Unit>) {
-    this.kombiner(
-        Tidslinje(assertions.toList()), OUTER_JOIN<_, _, Nothing?> { periode, tsegment, assertion ->
-            assertNotNull(tsegment, "Verdi av type ${T::class.simpleName} mangler for periode $periode")
-            assertNotNull(assertion, "Assert mangler for periode $periode")
-
-            try {
-                assertion!!.verdi.invoke(tsegment!!.verdi)
-            } catch (e: AssertionFailedError) {
-                println("Assert feilet for periode: $periode")
-                throw e
-            }
-            null
-        }
-    )
-}

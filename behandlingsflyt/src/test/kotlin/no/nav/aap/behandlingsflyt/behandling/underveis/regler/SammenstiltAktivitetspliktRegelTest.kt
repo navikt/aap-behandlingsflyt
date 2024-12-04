@@ -7,10 +7,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.P
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_AKTIVT_BIDRAG
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_MØTT_TIL_MØTE
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_MØTT_TIL_TILTAK
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn.INGEN_GYLDIG_GRUNN
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn.STERKE_VELFERDSGRUNNER
 import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
@@ -25,7 +27,7 @@ class SammenstiltAktivitetspliktRegelTest {
             fom = LocalDate.of(2020, 1, 4),
             tom = LocalDate.of(2020, 1, 8),
         )
-        val aktivitetspliktBruddPeriode = Periode(LocalDate.of(2020, 1, 7), LocalDate.of(2020, 1, 7))
+        val aktivitetspliktBruddPeriode = Periode(LocalDate.of(2020, 1, 7), Tid.MAKS)
 
         val rettighetsperiode = Periode(fom = LocalDate.of(2020, 1, 1), tom = LocalDate.of(2022, 12, 31))
         val aktivitetsbruddVurderinger = aktivitetsbruddVurderinger(
@@ -36,7 +38,7 @@ class SammenstiltAktivitetspliktRegelTest {
                 paragraf = PARAGRAF_11_7,
                 periode = aktivitetspliktBruddPeriode,
                 opprettet = LocalDate.of(2020, 1, 1),
-                grunn = STERKE_VELFERDSGRUNNER,
+                grunn = INGEN_GYLDIG_GRUNN,
             ),
             brudd(
                 bruddType = IKKE_MØTT_TIL_TILTAK,
@@ -68,7 +70,7 @@ class SammenstiltAktivitetspliktRegelTest {
             fom = LocalDate.of(2020, 1, 4),
             tom = LocalDate.of(2020, 1, 6),
         )
-        val aktivitetspliktBruddPeriode = Periode(LocalDate.of(2020, 1, 7), LocalDate.of(2020, 1, 7))
+        val aktivitetspliktBruddPeriode = Periode(LocalDate.of(2020, 1, 7), Tid.MAKS)
         val reduksjonAktivitetspliktPeriode = Periode(
             fom = LocalDate.of(2020, 1, 2),
             tom = LocalDate.of(2020, 1, 8),
@@ -82,7 +84,7 @@ class SammenstiltAktivitetspliktRegelTest {
                 paragraf = PARAGRAF_11_7,
                 periode = aktivitetspliktBruddPeriode,
                 opprettet = LocalDate.of(2020, 1, 1),
-                grunn = STERKE_VELFERDSGRUNNER,
+                grunn = INGEN_GYLDIG_GRUNN,
             ),
             brudd(
                 bruddType = IKKE_MØTT_TIL_TILTAK,
