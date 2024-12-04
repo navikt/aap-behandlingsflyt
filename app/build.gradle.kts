@@ -82,6 +82,7 @@ dependencies {
     implementation("com.zaxxer:HikariCP:6.2.1")
     implementation("org.flywaydb:flyway-database-postgresql:10.22.0")
     runtimeOnly("org.postgresql:postgresql:42.7.4")
+    implementation("ch.qos.logback:logback-classic:1.5.12")
 
     testImplementation(project(":lib-test"))
     testImplementation("no.nav.aap.kelvin:dbtest:$komponenterVersjon")

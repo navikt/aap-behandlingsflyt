@@ -1,0 +1,403 @@
+package no.nav.aap.behandlingsflyt
+
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.SøknadStudentDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.medlemskap.flate.MedlemskapGrunnlagDto
+import no.nav.aap.behandlingsflyt.flyt.flate.SøknadSendDto
+import no.nav.aap.behandlingsflyt.flyt.flate.VilkårDTO
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.FinnEllerOpprettSakDTO
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksinfoDTO
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.UtvidetSaksinfoDTO
+import no.nav.aap.behandlingsflyt.test.FakePersoner
+import no.nav.aap.behandlingsflyt.test.FakeServers
+import no.nav.aap.behandlingsflyt.test.Fakes
+import no.nav.aap.behandlingsflyt.test.ident
+import no.nav.aap.behandlingsflyt.test.modell.TestPerson
+import no.nav.aap.komponenter.config.requiredConfigForKey
+import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
+import no.nav.aap.komponenter.httpklient.httpclient.RestClient
+import no.nav.aap.komponenter.httpklient.httpclient.error.DefaultResponseHandler
+import no.nav.aap.komponenter.httpklient.httpclient.get
+import no.nav.aap.komponenter.httpklient.httpclient.post
+import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
+import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.NoTokenTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.OnBehalfOfTokenProvider
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.GUnit
+import org.assertj.core.api.Assertions
+import org.intellij.lang.annotations.Language
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Test
+import org.slf4j.LoggerFactory
+import java.io.BufferedWriter
+import java.io.FileWriter
+import java.io.InputStream
+import java.net.URI
+import java.nio.charset.StandardCharsets
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.Year
+import java.util.*
+import kotlin.test.fail
+
+@Fakes
+class ApiTest {
+    private val logger = LoggerFactory.getLogger(ApiTest::class.java)
+
+    companion object {
+        private val postgres = postgreSQLContainer()
+        private lateinit var port: Number
+
+        private val dbConfig = DbConfig(
+            host = "sdg",
+            port = "sdf",
+            database = "sdf",
+            url = postgres.jdbcUrl,
+            username = postgres.username,
+            password = postgres.password
+        )
+
+        private val client: RestClient<InputStream> = RestClient(
+            config = ClientConfig(scope = "behandlingsflyt"),
+            tokenProvider = OnBehalfOfTokenProvider,
+            responseHandler = DefaultResponseHandler()
+        )
+
+        private var token: OidcToken? = null
+        private fun getToken(): OidcToken {
+            val client = RestClient(
+                config = ClientConfig(scope = "behandlingsflyt"),
+                tokenProvider = NoTokenTokenProvider(),
+                responseHandler = DefaultResponseHandler()
+            )
+            return token ?: OidcToken(
+                client.post<Unit, FakeServers.TestToken>(
+                    URI.create(requiredConfigForKey("azure.openid.config.token.endpoint")),
+                    PostRequest(Unit)
+                )!!.access_token
+            )
+        }
+
+        // Starter server
+        private val server = embeddedServer(Netty, port = 0) {
+            server(dbConfig = dbConfig)
+        }
+
+        @JvmStatic
+        @BeforeAll
+        fun beforeall() {
+            server.start()
+            port =
+                runBlocking { server.engine.resolvedConnectors().filter { it.type == ConnectorType.HTTP }.first().port }
+        }
+
+        @JvmStatic
+        @AfterAll
+        fun afterAll() {
+            server.stop()
+            postgres.close()
+        }
+    }
+
+    @Test
+    fun `kalle medlemsskaps-api`() {
+        val ds = initDatasource(dbConfig)
+
+        val opprettetBehandling = ds.transaction { connection ->
+            val personOgSakService = PersonOgSakService(connection, FakePdlGateway)
+            val behandlingRepo = BehandlingRepositoryImpl(connection)
+
+            val sak =
+                personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
+            val behandling = behandlingRepo.opprettBehandling(
+                sak.id,
+                listOf(Årsak(type = ÅrsakTilBehandling.MOTTATT_SØKNAD)),
+                TypeBehandling.Førstegangsbehandling, null
+            )
+            val medlRepo = MedlemskapRepository(connection)
+            medlRepo.lagreUnntakMedlemskap(
+                behandlingId = behandling.id,
+                listOf(
+                    MedlemskapResponse(
+                        unntakId = 123,
+                        fraOgMed = "2017-02-13",
+                        tilOgMed = "2018-02-13",
+                        grunnlag = "grunnlag",
+                        helsedel = true,
+                        ident = "02429118789",
+                        lovvalg = "lovvalg",
+                        medlem = true,
+                        status = "GYLD",
+                        statusaarsak = null
+                    )
+                )
+            )
+            return@transaction behandling
+        }
+
+        val medlemskapGrunnlag: MedlemskapGrunnlagDto? = client.get(
+            URI.create("http://localhost:$port/")
+                .resolve("api/behandling/${opprettetBehandling.referanse}/grunnlag/medlemskap"),
+            GetRequest(currentToken = getToken())
+        )
+
+        Assertions.assertThat(medlemskapGrunnlag).isNotNull
+        Assertions.assertThat(medlemskapGrunnlag?.medlemskap?.unntak).isNotEmpty
+    }
+
+    @Test
+    fun `kalle beregningsgrunnlag-api`() {
+        val ds = initDatasource(dbConfig)
+        val referanse = ds.transaction { connection ->
+            val personOgSakService = PersonOgSakService(connection, FakePdlGateway)
+            val behandlingRepo = BehandlingRepositoryImpl(connection)
+            val sak =
+                personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
+            val behandling = behandlingRepo.opprettBehandling(
+                sak.id,
+                listOf(Årsak(type = ÅrsakTilBehandling.MOTTATT_SØKNAD)),
+                TypeBehandling.Førstegangsbehandling, null
+            )
+            val beregningsgrunnlagRepository = BeregningsgrunnlagRepository(connection)
+            beregningsgrunnlagRepository.lagre(
+                behandlingId = behandling.id,
+                Grunnlag11_19(
+                    grunnlaget = GUnit(3),
+                    erGjennomsnitt = false,
+                    gjennomsnittligInntektIG = GUnit(3),
+                    inntekter = listOf(
+                        GrunnlagInntekt(
+                            år = Year.of(2023),
+                            inntektIKroner = Beløp(200000),
+                            grunnbeløp = Beløp(100000),
+                            inntektIG = GUnit(3),
+                            inntekt6GBegrenset = GUnit(3),
+                            er6GBegrenset = false
+                        ),
+                        GrunnlagInntekt(
+                            år = Year.of(2022),
+                            inntektIKroner = Beløp(200000),
+                            grunnbeløp = Beløp(100000),
+                            inntektIG = GUnit(3),
+                            inntekt6GBegrenset = GUnit(3),
+                            er6GBegrenset = false
+                        ),
+                        GrunnlagInntekt(
+                            år = Year.of(2021),
+                            inntektIKroner = Beløp(200000),
+                            grunnbeløp = Beløp(100000),
+                            inntektIG = GUnit(3),
+                            inntekt6GBegrenset = GUnit(3),
+                            er6GBegrenset = false
+                        )
+                    )
+                )
+            )
+            behandling.referanse
+        }
+
+        val asJSON: JsonNode? = client.get(
+            URI.create("http://localhost:$port/api/beregning/grunnlag/").resolve(referanse.toString()),
+            GetRequest(currentToken = getToken()),
+        ) { x, _ -> ObjectMapper().readTree(x) }
+
+        @Language("JSON") val expectedJSON =
+            """{
+  "beregningstypeDTO": "STANDARD",
+  "grunnlag11_19": {
+    "nedsattArbeidsevneÅr": "2024",
+    "inntekter": [
+      {
+        "år": "2023",
+        "inntektIKroner": 200000.0,
+        "inntektIG": 3.0,
+        "justertTilMaks6G": 3.0
+      },
+      {
+        "år": "2022",
+        "inntektIKroner": 200000.0,
+        "inntektIG": 3.0,
+        "justertTilMaks6G": 3.0
+      },
+      {
+        "år": "2021",
+        "inntektIKroner": 200000.0,
+        "inntektIG": 3.0,
+        "justertTilMaks6G": 3.0
+      }
+    ],
+    "gjennomsnittligInntektSiste3år": 3.0,
+    "inntektSisteÅr": {
+      "år": "2023",
+      "inntektIKroner": 200000.0,
+      "inntektIG": 3.0,
+      "justertTilMaks6G": 3.0
+    },
+    "grunnlag": 3.0
+  },
+  "grunnlagYrkesskade": null,
+  "grunnlagUføre": null,
+  "grunnlagYrkesskadeUføre": null
+}"""
+        Assertions.assertThat(asJSON).isEqualTo(ObjectMapper().readTree(expectedJSON))
+    }
+
+    @Test
+    fun test() {
+        FakePersoner.leggTil(
+            TestPerson(
+                identer = setOf(Ident("12345678910")),
+                fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
+                yrkesskade = emptyList()
+            )
+        )
+
+        val responseSak: SaksinfoDTO? = client.post(
+            URI.create("http://localhost:$port/").resolve("api/sak/finnEllerOpprett"),
+            PostRequest(
+                body = FinnEllerOpprettSakDTO("12345678910", LocalDate.now()),
+                currentToken = getToken()
+            )
+        )
+
+        requireNotNull(responseSak)
+
+        client.post<_, Unit>(
+            URI.create("http://localhost:$port/").resolve("api/soknad/send"),
+            PostRequest(
+                body = SøknadSendDto(responseSak.saksnummer, "123", Søknad(SøknadStudentDto("NEI"), "NEI", null)),
+                currentToken = getToken()
+            )
+        )
+
+
+        val utvidetSak = kallInntilKlar { hentUtivdedSaksInfo(responseSak) }
+
+        requireNotNull(utvidetSak)
+
+        data class EndringDTO(
+            val status: Status,
+            val tidsstempel: LocalDateTime = LocalDateTime.now(),
+            val begrunnelse: String,
+            val endretAv: String
+        )
+
+        data class AvklaringsbehovDTO(
+            val definisjon: Any,
+            val status: Status,
+            val endringer: List<EndringDTO>
+        )
+
+        data class DetaljertBehandlingDTO(
+            val referanse: UUID,
+            val type: String,
+            val status: no.nav.aap.behandlingsflyt.kontrakt.behandling.Status,
+            val opprettet: LocalDateTime,
+            val avklaringsbehov: List<AvklaringsbehovDTO>,
+            val vilkår: List<VilkårDTO>,
+            val aktivtSteg: StegType,
+            val versjon: Long
+        )
+
+        val behandling = kallInntilKlar {
+            client.get<DetaljertBehandlingDTO>(
+                URI.create("http://localhost:$port/")
+                    .resolve("api/behandling/")
+                    .resolve(utvidetSak.behandlinger.first().referanse.toString()),
+                GetRequest()
+            )
+        }
+
+        logger.info("Behandling: $behandling")
+    }
+
+    @Test
+    fun `skal lager openapi som fil`() {
+        val openApiDoc =
+            requireNotNull(
+                client.get<String>(
+                    URI.create("http://localhost:$port/openapi.json"),
+                    GetRequest(currentToken = getToken())
+                ) { body, _ ->
+                    String(body.readAllBytes(), StandardCharsets.UTF_8)
+                }
+            )
+
+        try {
+            val writer = BufferedWriter(FileWriter("../openapi.json"));
+            writer.write(openApiDoc);
+
+            writer.close();
+        } catch (_: Exception) {
+            fail()
+        }
+
+    }
+
+    private fun <E> kallInntilKlar(block: () -> E): E? {
+        return runBlocking {
+            suspend {
+                var utvidedSak: E? = null
+                val maxTries = 10
+                var tries = 0
+                while (tries < maxTries) {
+                    try {
+                        utvidedSak = block()
+                        delay(100)
+                    } catch (e: Exception) {
+                        println("Exception: $e")
+                    } finally {
+                        tries++
+                    }
+                }
+                utvidedSak
+            }.invoke()
+        }
+    }
+
+    private fun hentUtivdedSaksInfo(
+        responseSak: SaksinfoDTO,
+    ): UtvidetSaksinfoDTO? {
+        val utvidetSak3: UtvidetSaksinfoDTO? = client.get(
+            URI.create("http://localhost:$port/").resolve("api/sak/").resolve(responseSak.saksnummer),
+            GetRequest(currentToken = getToken())
+        )
+        if (utvidetSak3?.behandlinger?.isNotEmpty() == true) {
+            return utvidetSak3
+        }
+        return null
+    }
+}
+
+
+object FakePdlGateway : IdentGateway {
+    override fun hentAlleIdenterForPerson(ident: Ident): List<Ident> {
+        return listOf(ident)
+    }
+}

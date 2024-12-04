@@ -194,7 +194,7 @@ fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>): S�
     return Søknad(student = SøknadStudentDto(erStudent), harYrkesskade, oppgitteBarn)
 }
 
-private fun postgreSQLContainer(): PostgreSQLContainer<Nothing> {
+internal fun postgreSQLContainer(): PostgreSQLContainer<Nothing> {
     val postgres = PostgreSQLContainer<Nothing>("postgres:16")
     postgres.waitingFor(HostPortWaitStrategy().withStartupTimeout(Duration.of(60L, ChronoUnit.SECONDS)))
     postgres.start()
