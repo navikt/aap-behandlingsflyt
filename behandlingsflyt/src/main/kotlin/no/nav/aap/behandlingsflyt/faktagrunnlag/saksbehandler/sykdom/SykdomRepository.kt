@@ -146,13 +146,13 @@ class SykdomRepository(private val connection: DBConnection) {
         }
 
         vurdering.bidiagnoser?.forEach {
-            lagreBidiagnoser(id, it)
+            lagreBidiagnose(id, it)
         }
 
         return id
     }
 
-    private fun lagreBidiagnoser(sykdomsId: Long, kode: String) {
+    private fun lagreBidiagnose(sykdomsId: Long, kode: String) {
         val query = """
             INSERT INTO SYKDOM_VURDERING_BIDIAGNOSER (VURDERING_ID, KODE) 
             VALUES (?, ?)
