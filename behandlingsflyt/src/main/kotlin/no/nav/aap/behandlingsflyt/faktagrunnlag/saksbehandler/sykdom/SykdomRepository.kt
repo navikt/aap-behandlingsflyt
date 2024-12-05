@@ -145,8 +145,27 @@ class SykdomRepository(private val connection: DBConnection) {
             lagreSykdomDokument(id, it)
         }
 
+        vurdering.bidiagnoser?.forEach {
+            lagreBidiagnoser(id, it)
+        }
+
         return id
     }
+
+    private fun lagreBidiagnoser(sykdomsId: Long, kode: String) {
+        val query = """
+            INSERT INTO SYKDOM_VURDERING_BIDIAGNOSER (VURDERING_ID, KODE) 
+            VALUES (?, ?)
+        """.trimIndent()
+
+        connection.execute(query) {
+            setParams {
+                setLong(1, sykdomsId)
+                setString(2, kode)
+            }
+        }
+    }
+
 
     private fun lagreSykdomDokument(sykdomsId: Long, journalpostId: JournalpostId) {
         val query = """
@@ -225,8 +244,20 @@ class SykdomRepository(private val connection: DBConnection) {
                     erArbeidsevnenNedsatt = row.getBooleanOrNull("ER_ARBEIDSEVNE_NEDSATT"),
                     yrkesskadeBegrunnelse = row.getStringOrNull("YRKESSKADE_BEGRUNNELSE"),
                     kodeverk = row.getStringOrNull("KODEVERK"),
-                    diagnose = row.getStringOrNull("DIAGNOSE")
+                    diagnose = row.getStringOrNull("DIAGNOSE"),
+                    bidiagnoser = hentBidiagnoser(vurderingId = row.getLong("ID")),
                 )
+            }
+        }
+    }
+
+    private fun hentBidiagnoser(vurderingId: Long): List<String> {
+        return connection.queryList("SELECT KODE FROM SYKDOM_VURDERING_BIDIAGNOSER WHERE VURDERING_ID = ?") {
+            setParams {
+                setLong(1, vurderingId)
+            }
+            setRowMapper { row ->
+                row.getString("KODE")
             }
         }
     }

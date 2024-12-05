@@ -35,7 +35,8 @@ data class SykdomsvurderingDto(
     val erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean?,
     val yrkesskadeBegrunnelse: String?,
     val kodeverk: String? = null,
-    val diagnose: String? = null
+    val diagnose: String? = null,
+    val bidiagnoser: List<String>? = emptyList()
 ) {
 
     fun toSykdomsvurdering(): Sykdomsvurdering {
@@ -50,7 +51,8 @@ data class SykdomsvurderingDto(
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
             yrkesskadeBegrunnelse = yrkesskadeBegrunnelse,
             kodeverk = kodeverk,
-            diagnose = diagnose
+            diagnose = diagnose,
+            bidiagnoser = bidiagnoser
         )
     }
 }

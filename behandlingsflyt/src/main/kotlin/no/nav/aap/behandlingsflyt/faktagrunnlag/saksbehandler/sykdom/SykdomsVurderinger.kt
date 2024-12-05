@@ -17,7 +17,8 @@ class Sykdomsvurdering(
     val yrkesskadeBegrunnelse: String?,
     val erArbeidsevnenNedsatt: Boolean?,
     val kodeverk: String? = null,
-    val diagnose: String? = null
+    val diagnose: String? = null,
+    val bidiagnoser: List<String>? = emptyList()
 ) {
     fun toDto(): SykdomsvurderingDto {
         return SykdomsvurderingDto(
@@ -32,6 +33,7 @@ class Sykdomsvurdering(
             yrkesskadeBegrunnelse = yrkesskadeBegrunnelse,
             kodeverk = kodeverk,
             diagnose = diagnose,
+            bidiagnoser = bidiagnoser
         )
     }
 }
