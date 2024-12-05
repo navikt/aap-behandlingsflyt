@@ -7,7 +7,7 @@ val ktorVersion = "3.0.2"
 val tilgangVersjon = "0.0.46"
 
 dependencies {
-    implementation(project(":behandlingsflyt"))
+    api(project(":behandlingsflyt"))
     implementation("no.nav.aap.kelvin:dbconnect:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:infrastructure:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
