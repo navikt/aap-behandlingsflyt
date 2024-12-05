@@ -137,7 +137,7 @@ class SykdomRepository(private val connection: DBConnection) {
                 setBoolean(7, vurdering.erNedsettelseIArbeidsevneAvEnVissVarighet)
                 setString(8, vurdering.yrkesskadeBegrunnelse)
                 setString(9, vurdering.kodeverk)
-                setString(10, vurdering.diagnose)
+                setString(10, vurdering.hoveddiagnose)
             }
         }
 
@@ -244,7 +244,7 @@ class SykdomRepository(private val connection: DBConnection) {
                     erArbeidsevnenNedsatt = row.getBooleanOrNull("ER_ARBEIDSEVNE_NEDSATT"),
                     yrkesskadeBegrunnelse = row.getStringOrNull("YRKESSKADE_BEGRUNNELSE"),
                     kodeverk = row.getStringOrNull("KODEVERK"),
-                    diagnose = row.getStringOrNull("DIAGNOSE"),
+                    hoveddiagnose = row.getStringOrNull("DIAGNOSE"),
                     bidiagnoser = hentBidiagnoser(vurderingId = row.getLong("ID")),
                 )
             }

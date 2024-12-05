@@ -35,7 +35,7 @@ data class SykdomsvurderingDto(
     val erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean?,
     val yrkesskadeBegrunnelse: String?,
     val kodeverk: String? = null,
-    val diagnose: String? = null,
+    val hoveddiagnose: String? = null,
     val bidiagnoser: List<String>? = emptyList()
 ) {
 
@@ -51,7 +51,7 @@ data class SykdomsvurderingDto(
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
             yrkesskadeBegrunnelse = yrkesskadeBegrunnelse,
             kodeverk = kodeverk,
-            diagnose = diagnose,
+            hoveddiagnose = hoveddiagnose,
             bidiagnoser = bidiagnoser
         )
     }
