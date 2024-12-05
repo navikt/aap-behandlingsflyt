@@ -6,22 +6,6 @@ import no.nav.aap.komponenter.dbconnect.Row
 
 class BrevbestillingRepository(private val connection: DBConnection) {
 
-    fun hent(referanse: BrevbestillingReferanse): Brevbestilling {
-        val query =
-            """
-                SELECT *
-                FROM BREVBESTILLING
-                WHERE REFERANSE = ?
-            """.trimIndent()
-
-        return connection.queryFirst(query) {
-            setParams {
-                setUUID(1, referanse.brevbestillingReferanse)
-            }
-            setRowMapper { rowMapper(it) }
-        }
-    }
-
     fun hent(behandlingId: BehandlingId, typeBrev: TypeBrev): Brevbestilling? {
         val query =
             """

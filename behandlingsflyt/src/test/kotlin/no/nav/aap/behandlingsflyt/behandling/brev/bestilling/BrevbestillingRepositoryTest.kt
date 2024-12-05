@@ -12,7 +12,6 @@ import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
 import java.util.*
 
@@ -28,31 +27,33 @@ class BrevbestillingRepositoryTest {
             val brevbestillingRepository = BrevbestillingRepository(connection)
 
             val behandlingId = opprettBehandling(connection)
+            val typeBrev = TypeBrev.VEDTAK_INNVILGELSE
             val referanse = BrevbestillingReferanse(UUID.randomUUID())
 
-            assertThrows<NoSuchElementException> { brevbestillingRepository.hent(referanse) }
-            assertThat(brevbestillingRepository.hent(behandlingId, TypeBrev.VEDTAK_INNVILGELSE)).isNull()
+            assertThat(brevbestillingRepository.hent(behandlingId, typeBrev) ).isNull()
+            assertThat(brevbestillingRepository.hent(behandlingId, typeBrev)).isNull()
 
-            brevbestillingRepository.lagre(behandlingId, TypeBrev.VEDTAK_INNVILGELSE, referanse, Status.SENDT)
+            brevbestillingRepository.lagre(behandlingId, typeBrev, referanse, Status.SENDT)
 
-            val brevbestilling = brevbestillingRepository.hent(referanse)
+            val brevbestilling = brevbestillingRepository.hent(behandlingId, typeBrev)
+            assertThat(brevbestilling).isNotNull()
             assertThat(brevbestilling)
                 .isEqualTo(
                     Brevbestilling(
-                        brevbestilling.id,
+                        brevbestilling!!.id,
                         behandlingId,
-                        TypeBrev.VEDTAK_INNVILGELSE,
+                        typeBrev,
                         referanse,
                         Status.SENDT
                     )
                 )
-            assertThat(brevbestillingRepository.hent(behandlingId, TypeBrev.VEDTAK_INNVILGELSE))
+            assertThat(brevbestillingRepository.hent(behandlingId, typeBrev))
                 .isEqualTo(brevbestilling)
             assertThat(brevbestillingRepository.hent(behandlingId, TypeBrev.VEDTAK_AVSLAG)).isNull()
 
             brevbestillingRepository.oppdaterStatus(behandlingId, referanse, Status.FORHÅNDSVISNING_KLAR)
 
-            assertThat(brevbestillingRepository.hent(referanse).status).isEqualTo(Status.FORHÅNDSVISNING_KLAR)
+            assertThat(brevbestillingRepository.hent(behandlingId, typeBrev)?.status).isEqualTo(Status.FORHÅNDSVISNING_KLAR)
         }
     }
 

@@ -510,7 +510,7 @@ class FlytOrkestratorTest {
                 )
             )
             // Brevet er klar for forhåndsvisning og editering
-            assertThat(BrevbestillingRepository(connection).hent(brevbestilling.referanse).status)
+            assertThat(BrevbestillingRepository(connection).hent(behandling.id, TypeBrev.VEDTAK_INNVILGELSE)?.status)
                 .isEqualTo(no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FORHÅNDSVISNING_KLAR)
         }
 
@@ -535,7 +535,7 @@ class FlytOrkestratorTest {
             )
 
             // Brevet er fullført
-            assertThat(BrevbestillingRepository(connection).hent(brevbestilling.referanse).status)
+            assertThat(BrevbestillingRepository(connection).hent(behandling.id, TypeBrev.VEDTAK_INNVILGELSE)?.status)
                 .isEqualTo(no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FULLFØRT)
         }
 
@@ -811,7 +811,7 @@ class FlytOrkestratorTest {
                 )
             )
             // Brevet er klar for forhåndsvisning og editering
-            assertThat(BrevbestillingRepository(connection).hent(brevbestilling.referanse).status)
+            assertThat(BrevbestillingRepository(connection).hent(behandling.id, TypeBrev.VEDTAK_INNVILGELSE)?.status)
                 .isEqualTo(no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FORHÅNDSVISNING_KLAR)
         }
 
@@ -836,7 +836,7 @@ class FlytOrkestratorTest {
             )
 
             // Brevet er fullført
-            assertThat(BrevbestillingRepository(connection).hent(brevbestilling.referanse).status)
+            assertThat(BrevbestillingRepository(connection).hent(behandling.id, TypeBrev.VEDTAK_INNVILGELSE)?.status)
                 .isEqualTo(no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FULLFØRT)
         }
 
