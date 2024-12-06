@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.flyt.testutil.InMemoryBehandlingRepository
+import no.nav.aap.behandlingsflyt.flyt.testutil.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -48,8 +49,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -338,7 +337,10 @@ class StatistikkJobbUtførerTest {
         // Blir ikke kalt i denne metoden, så derfor bare mock
         val vilkårsResultatRepository = mockk<VilkårsresultatRepositoryImpl>()
         val behandlingRepository = InMemoryBehandlingRepository
-        val sakId = SakId(1)
+
+        val sak = InMemorySakRepository.finnEllerOpprett(mockk(), mockk())
+        InMemorySakRepository.oppdaterSakStatus(sak.id, no.nav.aap.behandlingsflyt.kontrakt.sak.Status.UTREDES)
+        val sakId = sak.id
         val behandling = behandlingRepository.opprettBehandling(
             sakId = sakId,
             årsaker = listOf(
@@ -355,16 +357,9 @@ class StatistikkJobbUtførerTest {
 
         val tilkjentYtelseRepository = mockk<TilkjentYtelseRepository>()
         val beregningsgrunnlagRepository = mockk<BeregningsgrunnlagRepositoryImpl>()
-        val sakService = mockk<SakService>()
 
-        every { sakService.hent(Saksnummer.valueOf(sakId.id)) } returns Sak(
-            id = sakId,
-            saksnummer = Saksnummer.valueOf(sakId.id),
-            person = mockk(),
-            rettighetsperiode = mockk(),
-            status = UTREDES,
-            opprettetTidspunkt = LocalDateTime.now(),
-        )
+        val sakService = SakService(InMemorySakRepository)
+
         val dokumentRepository = mockk<MottattDokumentRepository>()
 
         val nå = LocalDateTime.now()
@@ -476,7 +471,6 @@ class StatistikkJobbUtførerTest {
         )
 
         checkUnnecessaryStub(
-            sakService,
             beregningsgrunnlagRepository,
             tilkjentYtelseRepository,
             vilkårsResultatRepository,
