@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.UnparsedStrukturertDoku
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterMottattDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
-import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
@@ -24,7 +24,7 @@ private const val MOTTATT_TIDSPUNKT = "mottattTidspunkt"
 private const val PERIODE = "periode"
 
 class HendelseMottattHåndteringJobbUtfører(connection: DBConnection) : JobbUtfører {
-    private val låsRepository = TaSkriveLåsRepository(connection)
+    private val låsRepository = TaSkriveLåsRepositoryImpl(connection)
     private val hånderMottattDokumentService = HåndterMottattDokumentService(connection)
     private val mottaDokumentService = MottaDokumentService(MottattDokumentRepository(connection))
 

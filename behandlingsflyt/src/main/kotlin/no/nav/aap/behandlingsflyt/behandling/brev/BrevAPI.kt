@@ -17,7 +17,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.LøsBrevbestillingDto
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.ElementNotFoundException
-import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
@@ -85,9 +85,9 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                     )
                 ) { _, request ->
                     dataSource.transaction { connection ->
-                        val taSkriveLåsRepository = TaSkriveLåsRepository(connection)
+                        val taSkriveLåsRepositoryImpl = TaSkriveLåsRepositoryImpl(connection)
 
-                        val lås = taSkriveLåsRepository.lås(request.behandlingReferanse)
+                        val lås = taSkriveLåsRepositoryImpl.lås(request.behandlingReferanse)
 
                         MDC.putCloseable("sakId", lås.sakSkrivelås.id.toString()).use {
                             MDC.putCloseable("behandlingId", lås.behandlingSkrivelås.id.toString()).use {
@@ -102,7 +102,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                                     )
                                 )
 
-                                taSkriveLåsRepository.verifiserSkrivelås(lås)
+                                taSkriveLåsRepositoryImpl.verifiserSkrivelås(lås)
                             }
                         }
                     }

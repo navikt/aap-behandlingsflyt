@@ -32,7 +32,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
-import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -153,8 +153,8 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
         route("/{referanse}/sett-på-vent") {
             post<BehandlingReferanse, BehandlingResultatDto, SettPåVentRequest> { request, body ->
                 dataSource.transaction { connection ->
-                    val taSkriveLåsRepository = TaSkriveLåsRepository(connection)
-                    val lås = taSkriveLåsRepository.lås(request.referanse)
+                    val taSkriveLåsRepositoryImpl = TaSkriveLåsRepositoryImpl(connection)
+                    val lås = taSkriveLåsRepositoryImpl.lås(request.referanse)
                     BehandlingTilstandValidator(connection).validerTilstand(
                         request,
                         body.behandlingVersjon
@@ -180,7 +180,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
                                     bruker = bruker()
                                 )
                             )
-                            taSkriveLåsRepository.verifiserSkrivelås(lås)
+                            taSkriveLåsRepositoryImpl.verifiserSkrivelås(lås)
                         }
                     }
                 }

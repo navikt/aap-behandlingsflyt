@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovHend
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.BehandlingTilstandValidator
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehovHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
-import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.bruker
 import org.slf4j.MDC
@@ -20,8 +20,8 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource) {
         route("/løs-behov") {
             post<Unit, LøsAvklaringsbehovPåBehandling, LøsAvklaringsbehovPåBehandling> { _, request ->
                 dataSource.transaction { connection ->
-                    val taSkriveLåsRepository = TaSkriveLåsRepository(connection)
-                    val lås = taSkriveLåsRepository.lås(request.referanse)
+                    val taSkriveLåsRepositoryImpl = TaSkriveLåsRepositoryImpl(connection)
+                    val lås = taSkriveLåsRepositoryImpl.lås(request.referanse)
                         MDC.putCloseable("sakId", lås.sakSkrivelås.id.toString()).use {
                             MDC.putCloseable("behandlingId", lås.behandlingSkrivelås.id.toString()).use {
                                 BehandlingTilstandValidator(connection).validerTilstand(
@@ -36,7 +36,7 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource) {
                                     bruker()
                                 )
                             )
-                            taSkriveLåsRepository.verifiserSkrivelås(lås)
+                            taSkriveLåsRepositoryImpl.verifiserSkrivelås(lås)
                         }
                     }
                 }

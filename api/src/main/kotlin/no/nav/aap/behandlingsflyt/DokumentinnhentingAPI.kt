@@ -5,7 +5,7 @@ import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.BestillLegeerklæringDto
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.ForhåndsvisBrevRequest
@@ -21,11 +21,11 @@ import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoGateway
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.komponenter.httpklient.auth.token
@@ -38,21 +38,18 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
         route("/bestill") {
             post<Unit, String, BestillLegeerklæringDto> { _, req ->
                 val bestillingUuid = dataSource.transaction { connection ->
-                    //Todo: oppdatere denne til å bruke repositoryFactory når klart
-                    val taSkriveLåsRepository = TaSkriveLåsRepository(connection)
-                    val lås = taSkriveLåsRepository.lås(req.behandlingsReferanse)
-                    val avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection)
-                    val behandlingRepository = BehandlingRepositoryImpl(connection)
-                    val sakService = SakService(SakRepositoryImpl(connection))
-                    val behandlingHendelseService =
-                        BehandlingHendelseServiceImpl(FlytJobbRepository((connection)), sakService)
+                    val repositoryFactory = RepositoryFactory(connection)
 
-                    val sak = sakService.hent(Saksnummer(req.saksnummer))
+                    val låsRepository = repositoryFactory.create(TaSkriveLåsRepository::class)
+                    val lås = låsRepository.lås(req.behandlingsReferanse)
+
+                    val sak = repositoryFactory.create(SakRepository::class).hent((Saksnummer(req.saksnummer)))
+                    val behandling = repositoryFactory.create(BehandlingRepository::class).hent(BehandlingReferanse(req.behandlingsReferanse))
+                    val avklaringsbehovene = repositoryFactory.create(AvklaringsbehovRepository::class).hentAvklaringsbehovene(behandling.id)
+
                     val personIdent = sak.person.aktivIdent()
-
                     val personinfo = PdlPersoninfoGateway.hentPersoninfoForIdent(personIdent, token())
-                    val behandling = behandlingRepository.hent(BehandlingReferanse(req.behandlingsReferanse))
-                    val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+
                     avklaringsbehovene.validateTilstand(behandling = behandling)
                     avklaringsbehovene.leggTil(
                         definisjoner = listOf(Definisjon.BESTILL_LEGEERKLÆRING),
@@ -61,6 +58,10 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
                         bruker = bruker()
                     )
                     avklaringsbehovene.validerPlassering(behandling = behandling)
+
+                    val sakService = SakService(repositoryFactory.create(SakRepository::class))
+                    val behandlingHendelseService = BehandlingHendelseServiceImpl(FlytJobbRepository((connection)), sakService)
+
                     behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
 
                     val bestillingUUID = DokumeninnhentingGateway().bestillLegeerklæring(
@@ -78,7 +79,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
                         )
                     )
 
-                    taSkriveLåsRepository.verifiserSkrivelås(lås)
+                    låsRepository.verifiserSkrivelås(lås)
                     bestillingUUID
                 }
 
@@ -94,8 +95,8 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
         route("/brevpreview") {
             post<Unit, BrevResponse, ForhåndsvisBrevRequest> { _, req ->
                 val brevPreview = dataSource.transaction(readOnly = true) { connection ->
-                    val sakService = SakService(SakRepositoryImpl(connection))
-                    val sak = sakService.hent(Saksnummer(req.saksnummer))
+                    val repositoryFactory = RepositoryFactory(connection).create(SakRepository::class)
+                    val sak = repositoryFactory.hent((Saksnummer(req.saksnummer)))
 
                     val personIdent = sak.person.aktivIdent()
                     val personinfo = PdlPersoninfoGateway.hentPersoninfoForIdent(personIdent, token())
@@ -114,13 +115,9 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
         }
         route("/purring/{dialogmeldinguuid}") {
             post<PurringLegeerklæring, String, Unit> { par, _ ->
-                val bestillingUuid = dataSource.transaction { connection ->
-                    val bestillingUUID = DokumeninnhentingGateway().purrPåLegeerklæring(
-                        LegeerklæringPurringRequest(par.dialogmeldingPurringUUID)
-                    )
-                    bestillingUUID
-                }
-                respond(bestillingUuid)
+                val request = LegeerklæringPurringRequest(par.dialogmeldingPurringUUID)
+                val bestillingUUID = DokumeninnhentingGateway().purrPåLegeerklæring(request)
+                respond(bestillingUUID)
             }
         }
     }

@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.periodisering.PerioderTilVurderingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
@@ -20,7 +20,7 @@ import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 
 class ProsesserBehandlingJobbUtfører(
-    private val låsRepository: TaSkriveLåsRepository,
+    private val låsRepository: TaSkriveLåsRepositoryImpl,
     private val kontroller: FlytOrkestrator
 ) : JobbUtfører {
 
@@ -42,7 +42,7 @@ class ProsesserBehandlingJobbUtfører(
             val behandlingRepository = BehandlingRepositoryImpl(connection)
             val sakRepository = SakRepositoryImpl(connection)
             return ProsesserBehandlingJobbUtfører(
-                TaSkriveLåsRepository(connection),
+                TaSkriveLåsRepositoryImpl(connection),
                 FlytOrkestrator(
                     stegKonstruktør = StegKonstruktørImpl(connection),
                     ventebehovEvaluererService = VentebehovEvaluererServiceImpl(connection),

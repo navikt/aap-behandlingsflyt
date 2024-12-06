@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
@@ -18,7 +18,7 @@ class HåndterMottattDokumentService(connection: DBConnection) {
 
     private val sakService = SakService(SakRepositoryImpl(connection))
     private val sakOgBehandlingService = SakOgBehandlingService(connection)
-    private val låsRepository = TaSkriveLåsRepository(connection)
+    private val låsRepository = TaSkriveLåsRepositoryImpl(connection)
     private val prosesserBehandling = ProsesserBehandlingService(FlytJobbRepository(connection))
 
     fun håndterMottatteDokumenter(

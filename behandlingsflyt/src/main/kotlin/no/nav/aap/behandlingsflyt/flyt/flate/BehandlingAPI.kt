@@ -20,7 +20,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
-import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoBulkGateway
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -90,8 +90,8 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
         route("/{referanse}/forbered") {
             get<BehandlingReferanse, DetaljertBehandlingDTO> { req ->
                 dataSource.transaction { connection ->
-                    val taSkriveLåsRepository = TaSkriveLåsRepository(connection)
-                    val lås = taSkriveLåsRepository.lås(req.referanse)
+                    val taSkriveLåsRepositoryImpl = TaSkriveLåsRepositoryImpl(connection)
+                    val lås = taSkriveLåsRepositoryImpl.lås(req.referanse)
                     val behandling = behandling(connection, req)
                     val flytJobbRepository = FlytJobbRepository(connection)
                     if (!behandling.status()
@@ -106,7 +106,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
                             )
                         )
                     }
-                    taSkriveLåsRepository.verifiserSkrivelås(lås)
+                    taSkriveLåsRepositoryImpl.verifiserSkrivelås(lås)
                 }
                 respondWithStatus(HttpStatusCode.Accepted)
             }
