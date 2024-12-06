@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.BeregningService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
@@ -20,11 +20,12 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.repository.RepositoryFactory
 import org.slf4j.LoggerFactory
 
 class FastsettGrunnlagSteg(
     private val beregningService: BeregningService,
-    private val vilkårsresultatRepository: VilkårsresultatRepositoryImpl,
+    private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val avklarFaktaBeregningService: AvklarFaktaBeregningService
 ) : BehandlingSteg {
     private val log = LoggerFactory.getLogger(FastsettGrunnlagSteg::class.java)
@@ -78,7 +79,8 @@ class FastsettGrunnlagSteg(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val vilkårsresultatRepository = VilkårsresultatRepositoryImpl(connection)
+            val repositoryFactory = RepositoryFactory(connection)
+            val vilkårsresultatRepository = repositoryFactory.create(VilkårsresultatRepository::class)
             return FastsettGrunnlagSteg(
                 BeregningService(
                     InntektGrunnlagRepository(connection),

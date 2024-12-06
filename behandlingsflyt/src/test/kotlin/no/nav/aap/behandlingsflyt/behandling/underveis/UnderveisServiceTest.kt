@@ -9,7 +9,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortRepository
@@ -17,7 +16,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Ins
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.MockDataSource
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -38,7 +37,7 @@ class UnderveisServiceTest {
             val underveisService =
                 UnderveisService(
                     SakOgBehandlingService(
-                        GrunnlagKopierer(connection, PersonRepositoryImpl(connection)), SakRepositoryImpl(connection),
+                        GrunnlagKopierer(connection), SakRepositoryImpl(connection),
                         BehandlingRepositoryImpl(connection)
                     ),
                     VilkårsresultatRepositoryImpl(connection),
@@ -49,7 +48,7 @@ class UnderveisServiceTest {
                         BarnetilleggRepository(connection),
                         InstitusjonsoppholdRepository(connection),
                         SakOgBehandlingService(
-                            GrunnlagKopierer(connection, PersonRepositoryImpl(connection)),
+                            GrunnlagKopierer(connection),
                             SakRepositoryImpl(connection),
                             BehandlingRepositoryImpl(connection)
                         )

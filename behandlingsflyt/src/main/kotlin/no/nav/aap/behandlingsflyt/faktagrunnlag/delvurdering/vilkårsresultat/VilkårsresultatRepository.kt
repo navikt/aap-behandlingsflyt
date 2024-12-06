@@ -6,5 +6,5 @@ import no.nav.aap.repository.Repository
 interface VilkårsresultatRepository : Repository{
     fun lagre(behandlingId: BehandlingId, vilkårsresultat: Vilkårsresultat)
     fun hent(behandlingId: BehandlingId): Vilkårsresultat
-    fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
+    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
 }

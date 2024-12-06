@@ -1,11 +1,15 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeService
+import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.lås.TaSkriveLåsRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.pip.PipRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -37,10 +41,15 @@ class InformasjonskravGrunnlagTest {
 
     @BeforeEach
     fun setUp() {
-        RepositoryRegistry.register(PersonRepositoryImpl::class)
-        RepositoryRegistry.register(SakRepositoryImpl::class)
         RepositoryRegistry.register(BehandlingRepositoryImpl::class)
-        RepositoryRegistry.register(AvklaringsbehovRepositoryImpl::class)
+            .register(PersonRepositoryImpl::class)
+            .register(SakRepositoryImpl::class)
+            .register(AvklaringsbehovRepositoryImpl::class)
+            .register(VilkårsresultatRepositoryImpl::class)
+            .register(PipRepositoryImpl::class)
+            .register(TaSkriveLåsRepositoryImpl::class)
+            .register(BeregningsgrunnlagRepositoryImpl::class)
+            .register(PersonopplysningRepositoryImpl::class)
     }
 
     @Test
@@ -123,13 +132,13 @@ class InformasjonskravGrunnlagTest {
             SakRepositoryImpl(connection)
         ).finnEllerOpprett(ident, periode)
         val behandling = SakOgBehandlingService(
-            GrunnlagKopierer(connection, PersonRepositoryImpl(connection)), SakRepositoryImpl(connection),
+            GrunnlagKopierer(connection), SakRepositoryImpl(connection),
             BehandlingRepositoryImpl(connection)
         ).finnEllerOpprettBehandling(
             sak.saksnummer,
             listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
         ).behandling
-        val personopplysningRepository = PersonopplysningRepository(
+        val personopplysningRepository = PersonopplysningRepositoryImpl(
             connection,
             PersonRepositoryImpl(connection)
         )

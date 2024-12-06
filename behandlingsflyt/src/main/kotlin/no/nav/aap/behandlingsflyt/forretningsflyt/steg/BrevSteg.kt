@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevGateway
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FantVentebehov
@@ -72,11 +72,12 @@ class BrevSteg private constructor(
             val repositoryFactory = RepositoryFactory(connection)
             val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
             val sakRepository = repositoryFactory.create(SakRepository::class)
+            val vilkårsresultatRepository = repositoryFactory.create(VilkårsresultatRepository::class)
 
             return BrevSteg(
                 BrevUtlederService(
                     behandlingRepository = behandlingRepository,
-                    vilkårsresultatRepository = VilkårsresultatRepositoryImpl(connection)
+                    vilkårsresultatRepository = vilkårsresultatRepository
                 ),
                 BrevbestillingService(
                     brevbestillingGateway = BrevGateway(),

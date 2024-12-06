@@ -13,7 +13,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
@@ -101,13 +100,12 @@ class HendelseMottattHåndteringJobbUtfører(
             val låsRepository = repositoryFactory.create(TaSkriveLåsRepository::class)
             val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
             val sakRepository = repositoryFactory.create(SakRepository::class)
-            val personRepository = repositoryFactory.create(PersonRepository::class)
             return HendelseMottattHåndteringJobbUtfører(
                 låsRepository,
                 HåndterMottattDokumentService(
                     SakService(sakRepository),
                     SakOgBehandlingService(
-                        GrunnlagKopierer(connection, personRepository),
+                        GrunnlagKopierer(connection),
                         sakRepository,
                         behandlingRepository
                     ),

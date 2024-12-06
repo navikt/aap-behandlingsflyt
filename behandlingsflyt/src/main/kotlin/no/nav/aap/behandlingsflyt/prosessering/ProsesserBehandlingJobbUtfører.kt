@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlagImpl
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.steg.internal.StegKonstruktørImpl
@@ -48,6 +48,7 @@ class ProsesserBehandlingJobbUtfører(
             val sakRepository = repositoryFactory.create(SakRepository::class)
             val sakFlytRepository = repositoryFactory.create(SakFlytRepository::class)
             val låsRepository = repositoryFactory.create(TaSkriveLåsRepository::class)
+            val avklaringsbehovRepository = repositoryFactory.create(AvklaringsbehovRepository::class)
             return ProsesserBehandlingJobbUtfører(
                 låsRepository,
                 FlytOrkestrator(
@@ -55,7 +56,7 @@ class ProsesserBehandlingJobbUtfører(
                     ventebehovEvaluererService = VentebehovEvaluererServiceImpl(connection),
                     behandlingRepository = behandlingRepository,
                     behandlingFlytRepository = behandlingFlytRepository,
-                    avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection),
+                    avklaringsbehovRepository = avklaringsbehovRepository,
                     informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(connection),
                     sakRepository = sakFlytRepository,
                     perioderTilVurderingService = PerioderTilVurderingService(

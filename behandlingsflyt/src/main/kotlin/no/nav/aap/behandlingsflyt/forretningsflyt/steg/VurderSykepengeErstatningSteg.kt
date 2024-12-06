@@ -1,12 +1,12 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykepengerErstatningFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykepengerErstatningVilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -23,10 +23,10 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.repository.RepositoryFactory
 
 class VurderSykepengeErstatningSteg private constructor(
-    private val vilkårsresultatRepository: VilkårsresultatRepositoryImpl,
+    private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val sykepengerErstatningRepository: SykepengerErstatningRepository,
     private val sakService: SakService,
-    private val avklaringsbehovRepository: AvklaringsbehovRepositoryImpl
+    private val avklaringsbehovRepository: AvklaringsbehovRepository
 ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -74,11 +74,14 @@ class VurderSykepengeErstatningSteg private constructor(
         override fun konstruer(connection: DBConnection): BehandlingSteg {
             val repositoryFactory = RepositoryFactory(connection)
             val sakRepository = repositoryFactory.create(SakRepository::class)
+            val avklaringsbehovRepository = repositoryFactory.create(AvklaringsbehovRepository::class)
+            val vilkårsresultatRepository = repositoryFactory.create(VilkårsresultatRepository::class)
+
             return VurderSykepengeErstatningSteg(
-                VilkårsresultatRepositoryImpl(connection),
+                vilkårsresultatRepository,
                 SykepengerErstatningRepository(connection),
                 SakService(sakRepository),
-                AvklaringsbehovRepositoryImpl(connection)
+                avklaringsbehovRepository
             )
         }
 

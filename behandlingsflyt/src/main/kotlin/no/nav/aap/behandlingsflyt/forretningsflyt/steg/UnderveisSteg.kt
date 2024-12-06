@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
@@ -20,7 +20,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.repository.RepositoryFactory
 import org.slf4j.LoggerFactory
@@ -41,17 +40,17 @@ class UnderveisSteg(private val underveisService: UnderveisService) : Behandling
             val repositoryFactory = RepositoryFactory(connection)
             val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
             val sakRepository = repositoryFactory.create(SakRepository::class)
-            val personRepository = repositoryFactory.create(PersonRepository::class)
+            val vilkårsresultatRepository = repositoryFactory.create(VilkårsresultatRepository::class)
             val behandlingService =
                 SakOgBehandlingService(
-                    GrunnlagKopierer(connection, personRepository),
+                    GrunnlagKopierer(connection),
                     sakRepository,
                     behandlingRepository
                 )
             return UnderveisSteg(
                 UnderveisService(
                     behandlingService = behandlingService,
-                    vilkårsresultatRepository = VilkårsresultatRepositoryImpl(connection),
+                    vilkårsresultatRepository = vilkårsresultatRepository,
                     pliktkortRepository = PliktkortRepository(connection),
                     underveisRepository = UnderveisRepository(connection),
                     aktivitetspliktRepository = AktivitetspliktRepository(connection),

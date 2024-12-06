@@ -119,7 +119,7 @@ class MeldepliktRepositoryTest {
         dataSource.transaction { connection ->
             val meldepliktRepository = MeldepliktRepository(connection)
             val sak = SakOgBehandlingService(
-                GrunnlagKopierer(connection, PersonRepositoryImpl(connection)), SakRepositoryImpl(connection),
+                GrunnlagKopierer(connection), SakRepositoryImpl(connection),
                 BehandlingRepositoryImpl(connection)
             ).hentSakFor(behandling1.id)
             val behandling2 = behandling(connection, sak)
@@ -321,7 +321,7 @@ class MeldepliktRepositoryTest {
 
     private fun behandling(connection: DBConnection, sak: Sak): Behandling {
         val behandling = SakOgBehandlingService(
-            GrunnlagKopierer(connection, PersonRepositoryImpl(connection)), SakRepositoryImpl(connection),
+            GrunnlagKopierer(connection), SakRepositoryImpl(connection),
             BehandlingRepositoryImpl(connection)
         ).finnEllerOpprettBehandling(
             sak.saksnummer,

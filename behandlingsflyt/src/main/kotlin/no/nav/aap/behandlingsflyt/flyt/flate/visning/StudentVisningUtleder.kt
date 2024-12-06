@@ -1,16 +1,18 @@
 package no.nav.aap.behandlingsflyt.flyt.flate.visning
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegGruppe
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.repository.RepositoryFactory
 
 
 class StudentVisningUtleder(connection: DBConnection) : StegGruppeVisningUtleder {
 
-    private val avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection)
+    private val repositoryFactory = RepositoryFactory(connection)
+    private val avklaringsbehovRepository = repositoryFactory.create(AvklaringsbehovRepository::class)
     private val studentRepository = StudentRepository(connection)
 
     override fun skalVises(behandlingId: BehandlingId): Boolean {

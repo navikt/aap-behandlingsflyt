@@ -12,6 +12,10 @@ class RepositoryFactory(val connection: DBConnection) {
     inline fun <reified T : Repository> create(type: KClass<T>): T {
         val repositoryKlass = RepositoryRegistry.fetch(type.starProjectedType)
 
+        return internalCreate(repositoryKlass)
+    }
+
+    inline fun <reified T : Repository> internalCreate(repositoryKlass: KClass<Repository>): T {
         val companionObjectType = repositoryKlass.companionObject
         if (companionObjectType == null && repositoryKlass.objectInstance != null && repositoryKlass.isSubclassOf(
                 Repository::class
@@ -28,5 +32,9 @@ class RepositoryFactory(val connection: DBConnection) {
             return companionObject.konstruer(connection) as T
         }
         throw IllegalStateException("Repository må ha et companion object som implementerer Factory<T> interfacet.")
+    }
+
+    fun createAlle(): List<Repository> {
+        return RepositoryRegistry.alle().map { klass -> internalCreate(klass) }
     }
 }

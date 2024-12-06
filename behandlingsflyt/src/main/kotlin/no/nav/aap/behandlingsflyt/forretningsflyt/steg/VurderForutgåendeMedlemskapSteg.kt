@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -11,9 +11,10 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.repository.RepositoryFactory
 
 class VurderForutgåendeMedlemskapSteg private constructor(
-    private val vilkårsresultatRepository: VilkårsresultatRepositoryImpl
+    private val vilkårsresultatRepository: VilkårsresultatRepository
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
 
@@ -38,8 +39,10 @@ class VurderForutgåendeMedlemskapSteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
+            val repositoryFactory = RepositoryFactory(connection)
+            val vilkårsresultatRepository = repositoryFactory.create(VilkårsresultatRepository::class)
             return VurderForutgåendeMedlemskapSteg(
-                VilkårsresultatRepositoryImpl(connection)
+                vilkårsresultatRepository
             )
         }
 

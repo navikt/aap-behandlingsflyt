@@ -21,7 +21,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.repository.RepositoryFactory
@@ -35,14 +34,13 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource) {
                     val repositoryFactory = RepositoryFactory(connection)
                     val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
                     val sakRepository = repositoryFactory.create(SakRepository::class)
-                    val personRepository = repositoryFactory.create(PersonRepository::class)
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                     val institusjonsoppholdRepository = InstitusjonsoppholdRepository(connection)
                     val utlederService =
                         EtAnnetStedUtlederService(
                             BarnetilleggRepository(connection), institusjonsoppholdRepository,
                             SakOgBehandlingService(
-                                GrunnlagKopierer(connection, personRepository),
+                                GrunnlagKopierer(connection),
                                 sakRepository,
                                 behandlingRepository
                             )
@@ -83,14 +81,13 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource) {
                     val repositoryFactory = RepositoryFactory(connection)
                     val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
                     val sakRepository = repositoryFactory.create(SakRepository::class)
-                    val personRepository = repositoryFactory.create(PersonRepository::class)
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                     val institusjonsoppholdRepository = InstitusjonsoppholdRepository(connection)
                     val utlederService =
                         EtAnnetStedUtlederService(
                             BarnetilleggRepository(connection), institusjonsoppholdRepository,
                             SakOgBehandlingService(
-                                GrunnlagKopierer(connection, personRepository),
+                                GrunnlagKopierer(connection),
                                 sakRepository,
                                 behandlingRepository
                             )

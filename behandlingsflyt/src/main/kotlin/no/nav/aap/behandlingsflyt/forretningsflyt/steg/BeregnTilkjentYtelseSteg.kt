@@ -14,7 +14,6 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.repository.RepositoryFactory
 import org.slf4j.LoggerFactory
@@ -48,11 +47,11 @@ class BeregnTilkjentYtelseSteg private constructor(
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
             val repositoryFactory = RepositoryFactory(connection)
-            val personRepository = repositoryFactory.create(PersonRepository::class)
+            val personopplysningRepository = repositoryFactory.create(PersonopplysningRepository::class)
             return BeregnTilkjentYtelseSteg(
                 UnderveisRepository(connection),
                 BeregningsgrunnlagRepositoryImpl(connection),
-                PersonopplysningRepository(connection, personRepository),
+                personopplysningRepository,
                 BarnetilleggRepository(connection),
                 TilkjentYtelseRepository(connection),
                 SamordningRepository(connection)

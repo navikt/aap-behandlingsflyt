@@ -1,11 +1,10 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.beregning.AvklarFaktaBeregningService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
@@ -21,11 +20,12 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.repository.RepositoryFactory
 
 class BeregningAvklarFaktaSteg private constructor(
     private val beregningVurderingRepository: BeregningVurderingRepository,
     private val sykdomRepository: SykdomRepository,
-    private val vilkårsresultatRepository1: VilkårsresultatRepositoryImpl,
+    private val vilkårsresultatRepository1: VilkårsresultatRepository,
     private val avklarFaktaBeregningService: AvklarFaktaBeregningService,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val yrkesskadeRepository: YrkesskadeRepository
@@ -82,13 +82,15 @@ class BeregningAvklarFaktaSteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val vilkårsresultatRepository = VilkårsresultatRepositoryImpl(connection)
+            val repositoryFactory = RepositoryFactory(connection)
+            val avklaringsbehovRepository = repositoryFactory.create(AvklaringsbehovRepository::class)
+            val vilkårsresultatRepository = repositoryFactory.create(VilkårsresultatRepository::class)
             return BeregningAvklarFaktaSteg(
                 BeregningVurderingRepository(connection),
                 SykdomRepository(connection),
                 vilkårsresultatRepository,
                 AvklarFaktaBeregningService(vilkårsresultatRepository),
-                AvklaringsbehovRepositoryImpl(connection),
+                avklaringsbehovRepository,
                 YrkesskadeRepository(connection)
             )
         }

@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Input
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
@@ -30,7 +30,7 @@ import java.time.LocalDate
 class InntektService private constructor(
     private val sakService: SakService,
     private val inntektGrunnlagRepository: InntektGrunnlagRepository,
-    private val vilkårsresultatRepository: VilkårsresultatRepositoryImpl,
+    private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val sykdomRepository: SykdomRepository,
     private val studentRepository: StudentRepository,
     private val beregningVurderingRepository: BeregningVurderingRepository,
@@ -107,10 +107,11 @@ class InntektService private constructor(
         override fun konstruer(connection: DBConnection): InntektService {
             val repositoryFactory = RepositoryFactory(connection)
             val sakRepository = repositoryFactory.create(SakRepository::class)
+            val vilkårsresultatRepository = repositoryFactory.create(VilkårsresultatRepository::class)
             return InntektService(
                 SakService(sakRepository),
                 InntektGrunnlagRepository(connection),
-                VilkårsresultatRepositoryImpl(connection),
+                vilkårsresultatRepository,
                 SykdomRepository(connection),
                 StudentRepository(connection),
                 BeregningVurderingRepository(connection),

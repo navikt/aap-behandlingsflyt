@@ -15,7 +15,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.repository.RepositoryFactory
@@ -92,10 +91,11 @@ class YrkesskadeService private constructor(
         override fun konstruer(connection: DBConnection): YrkesskadeService {
             val repositoryFactory = RepositoryFactory(connection)
             val sakRepository = repositoryFactory.create(SakRepository::class)
+            val personopplysningRepository = repositoryFactory.create(PersonopplysningRepository::class)
             return YrkesskadeService(
                 SakService(sakRepository),
                 YrkesskadeRepository(connection),
-                PersonopplysningRepository(connection, repositoryFactory.create(PersonRepository::class)),
+                personopplysningRepository,
                 YrkesskadeRegisterGateway,
                 MottattDokumentRepository(connection),
             )

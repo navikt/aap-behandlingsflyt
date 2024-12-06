@@ -5,8 +5,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -22,12 +22,21 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.repository.RepositoryRegistry
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 
 class PersonopplysningRepositoryTest {
+
+    @BeforeEach
+    fun setUp() {
+        RepositoryRegistry
+            .register(PersonopplysningRepositoryImpl::class)
+            .status()
+    }
 
     @Test
     fun `Finner ikke personopplysninger hvis ikke lagret`() {
@@ -35,7 +44,7 @@ class PersonopplysningRepositoryTest {
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val personopplysningRepository = PersonopplysningRepository(
+            val personopplysningRepository = PersonopplysningRepositoryImpl(
                 connection,
                 PersonRepositoryImpl(connection)
             )
@@ -50,7 +59,7 @@ class PersonopplysningRepositoryTest {
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val personopplysningRepository = PersonopplysningRepository(
+            val personopplysningRepository = PersonopplysningRepositoryImpl(
                 connection,
                 PersonRepositoryImpl(connection)
             )
@@ -66,7 +75,7 @@ class PersonopplysningRepositoryTest {
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val personopplysningRepository = PersonopplysningRepository(
+            val personopplysningRepository = PersonopplysningRepositoryImpl(
                 connection,
                 PersonRepositoryImpl(connection)
             )
@@ -100,7 +109,7 @@ class PersonopplysningRepositoryTest {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
-            val personopplysningRepository = PersonopplysningRepository(
+            val personopplysningRepository = PersonopplysningRepositoryImpl(
                 connection,
                 PersonRepositoryImpl(connection)
             )
@@ -120,7 +129,7 @@ class PersonopplysningRepositoryTest {
     @Test
     fun `Kopiering av personopplysninger fra en behandling uten opplysningene skal ikke føre til feil`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val personopplysningRepository = PersonopplysningRepository(
+            val personopplysningRepository = PersonopplysningRepositoryImpl(
                 connection,
                 PersonRepositoryImpl(connection)
             )
@@ -135,7 +144,7 @@ class PersonopplysningRepositoryTest {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
-            val personopplysningRepository = PersonopplysningRepository(
+            val personopplysningRepository = PersonopplysningRepositoryImpl(
                 connection,
                 PersonRepositoryImpl(connection)
             )
@@ -159,7 +168,7 @@ class PersonopplysningRepositoryTest {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
-            val personopplysningRepository = PersonopplysningRepository(
+            val personopplysningRepository = PersonopplysningRepositoryImpl(
                 connection,
                 PersonRepositoryImpl(connection)
             )
@@ -209,7 +218,7 @@ class PersonopplysningRepositoryTest {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
-            val personopplysningRepository = PersonopplysningRepository(
+            val personopplysningRepository = PersonopplysningRepositoryImpl(
                 connection,
                 PersonRepositoryImpl(connection)
             )
@@ -288,7 +297,7 @@ class PersonopplysningRepositoryTest {
 
     private fun behandling(connection: DBConnection, sak: Sak): Behandling {
         return SakOgBehandlingService(
-            GrunnlagKopierer(connection, PersonRepositoryImpl(connection)), SakRepositoryImpl(connection),
+            GrunnlagKopierer(connection), SakRepositoryImpl(connection),
             BehandlingRepositoryImpl(connection)
         ).finnEllerOpprettBehandling(
             sak.saksnummer,

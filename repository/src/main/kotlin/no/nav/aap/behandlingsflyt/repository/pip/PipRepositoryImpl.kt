@@ -1,7 +1,9 @@
-package no.nav.aap.behandlingsflyt.pip
+package no.nav.aap.behandlingsflyt.repository.pip
 
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.pip.IdentPåSak
+import no.nav.aap.behandlingsflyt.pip.PipRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.repository.Factory
 

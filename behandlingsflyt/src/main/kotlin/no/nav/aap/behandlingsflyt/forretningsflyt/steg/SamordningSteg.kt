@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.samordning.AvklaringsType
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningPeriode
@@ -17,6 +16,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.repository.RepositoryFactory
 import org.slf4j.LoggerFactory
 
 class SamordningSteg(
@@ -65,13 +65,15 @@ class SamordningSteg(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
+            val repositoryFactory = RepositoryFactory(connection)
+            val avklaringsbehovRepository = repositoryFactory.create(AvklaringsbehovRepository::class)
             return SamordningSteg(
                 SamordningService(
                     SamordningYtelseVurderingRepository(connection),
                     UnderveisRepository(connection)
                 ),
                 SamordningRepository(connection),
-                AvklaringsbehovRepositoryImpl(connection)
+                avklaringsbehovRepository
             )
         }
 

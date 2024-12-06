@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FakePdlGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapResponse
@@ -33,7 +33,7 @@ class MedlemskapRepositoryTest {
                 Periode(fom = LocalDate.now().minusYears(2), tom = LocalDate.now())
             )
             val behandling = SakOgBehandlingService(
-                GrunnlagKopierer(connection, PersonRepositoryImpl(connection)), SakRepositoryImpl(connection),
+                GrunnlagKopierer(connection), SakRepositoryImpl(connection),
                 BehandlingRepositoryImpl(connection)
             ).finnEllerOpprettBehandling(
                 sak.saksnummer,

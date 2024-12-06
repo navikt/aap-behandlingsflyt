@@ -269,7 +269,7 @@ class ArbeidsevneRepositoryTest {
 
     private fun behandling(connection: DBConnection, sak: Sak): Behandling {
         return SakOgBehandlingService(
-            GrunnlagKopierer(connection, PersonRepositoryImpl(connection)), SakRepositoryImpl(connection),
+            GrunnlagKopierer(connection), SakRepositoryImpl(connection),
             BehandlingRepositoryImpl(connection)
         ).finnEllerOpprettBehandling(
             sak.saksnummer,

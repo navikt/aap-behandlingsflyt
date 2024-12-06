@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -18,7 +18,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.repository.RepositoryFactory
 import org.slf4j.LoggerFactory
@@ -57,20 +56,18 @@ class BarnetilleggSteg(
             val repositoryFactory = RepositoryFactory(connection)
             val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
             val sakRepository = repositoryFactory.create(SakRepository::class)
-            val personRepository = repositoryFactory.create(PersonRepository::class)
+            val personopplysningRepository = repositoryFactory.create(PersonopplysningRepository::class)
+            val vilkårsresultatRepository = repositoryFactory.create(VilkårsresultatRepository::class)
             return BarnetilleggSteg(
                 BarnetilleggService(
                     SakOgBehandlingService(
-                        GrunnlagKopierer(connection, personRepository),
+                        GrunnlagKopierer(connection),
                         sakRepository,
                         behandlingRepository
                     ),
                     BarnRepository(connection),
-                    PersonopplysningRepository(
-                        connection,
-                        personRepository
-                    ),
-                    VilkårsresultatRepositoryImpl(connection)
+                    personopplysningRepository,
+                    vilkårsresultatRepository
                 ),
                 BarnetilleggRepository(connection)
             )

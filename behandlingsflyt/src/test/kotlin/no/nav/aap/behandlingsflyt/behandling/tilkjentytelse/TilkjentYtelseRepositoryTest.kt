@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 
 import kotlinx.coroutines.runBlocking
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FakePdlGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
@@ -111,7 +111,7 @@ class TilkjentYtelseRepositoryTest {
 
     private fun behandling(connection: DBConnection, sak: Sak): Behandling {
         return SakOgBehandlingService(
-            GrunnlagKopierer(connection, PersonRepositoryImpl(connection)), SakRepositoryImpl(connection),
+            GrunnlagKopierer(connection), SakRepositoryImpl(connection),
             BehandlingRepositoryImpl(connection)
         ).finnEllerOpprettBehandling(
             sak.saksnummer,

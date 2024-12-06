@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
 import no.nav.aap.behandlingsflyt.flyt.utledType
@@ -14,11 +14,12 @@ class KvalitetssikrerLøser(val connection: DBConnection) : AvklaringsbehovsLøs
 
     private val repositoryFactory = RepositoryFactory(connection)
     private val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
-    private val avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection)
+    private val avklaringsbehovRepository = repositoryFactory.create(AvklaringsbehovRepository::class)
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: KvalitetssikringLøsning): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId = kontekst.kontekst.behandlingId)
+        val avklaringsbehovene =
+            avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId = kontekst.kontekst.behandlingId)
 
         val relevanteVurderinger = løsning.vurderinger.filter { Definisjon.forKode(it.definisjon).kvalitetssikres }
         relevanteVurderinger.all { it.valider() }

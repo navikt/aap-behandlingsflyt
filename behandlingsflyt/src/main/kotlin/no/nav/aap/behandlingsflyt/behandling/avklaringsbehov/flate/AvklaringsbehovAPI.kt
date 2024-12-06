@@ -7,7 +7,7 @@ import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovHendelseHåndterer
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.BehandlingTilstandValidator
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehovHendelse
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
@@ -33,6 +33,7 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource) {
                     val sakRepository = repositoryFactory.create(SakRepository::class)
                     val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
                     val taSkriveLåsRepository = repositoryFactory.create(TaSkriveLåsRepository::class)
+                    val avklaringsbehovRepository = repositoryFactory.create(AvklaringsbehovRepository::class)
 
                     val lås = taSkriveLåsRepository.lås(request.referanse)
                     MDC.putCloseable("sakId", lås.sakSkrivelås.id.toString()).use {
@@ -50,7 +51,7 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource) {
                                     connection, BehandlingHendelseServiceImpl(
                                         flytJobbRepository, SakService(sakRepository)
                                     )
-                                ), AvklaringsbehovRepositoryImpl(connection), behandlingRepository
+                                ), avklaringsbehovRepository, behandlingRepository
                             ).håndtere(
                                 key = lås.behandlingSkrivelås.id, hendelse = LøsAvklaringsbehovHendelse(
                                     request.behov,

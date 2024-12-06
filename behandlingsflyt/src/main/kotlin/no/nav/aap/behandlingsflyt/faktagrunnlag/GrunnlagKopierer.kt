@@ -1,17 +1,14 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
@@ -22,18 +19,17 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRep
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.repository.RepositoryFactory
 
 /**
  * Har som ansvar å sette i stand en behandling etter opprettelse
  *
  * Knytter alle opplysninger fra forrige til den nye i en immutable state
  */
-class GrunnlagKopierer(connection: DBConnection, personRepository: PersonRepository) {
+class GrunnlagKopierer(connection: DBConnection) {
 
-    private val vilkårsresultatRepository: VilkårsresultatRepositoryImpl = VilkårsresultatRepositoryImpl(connection)
-    private val personopplysningRepository = PersonopplysningRepository(connection, personRepository)
+    private val repositoryFactory = RepositoryFactory(connection)
     private val yrkesskadeRepository = YrkesskadeRepository(connection)
     private val sykdomRepository = SykdomRepository(connection)
     private val studentRepository = StudentRepository(connection)
@@ -46,7 +42,6 @@ class GrunnlagKopierer(connection: DBConnection, personRepository: PersonReposit
     private val underveisRepository = UnderveisRepository(connection)
     private val barnRepository = BarnRepository(connection)
     private val barnetilleggRepository = BarnetilleggRepository(connection)
-    private val beregningsgrunnlagRepository = BeregningsgrunnlagRepositoryImpl(connection)
     private val beregningVurderingRepository = BeregningVurderingRepository(connection)
     private val institusjonsoppholdRepository = InstitusjonsoppholdRepository(connection)
     private val inntektGrunnlagRepository = InntektGrunnlagRepository(connection)
@@ -57,8 +52,8 @@ class GrunnlagKopierer(connection: DBConnection, personRepository: PersonReposit
     fun overfør(fraBehandlingId: BehandlingId, tilBehandlingId: BehandlingId) {
         require(fraBehandlingId != tilBehandlingId)
 
-        vilkårsresultatRepository.kopier(fraBehandlingId, tilBehandlingId)
-        personopplysningRepository.kopier(fraBehandlingId, tilBehandlingId)
+        repositoryFactory.createAlle().forEach { repository -> repository.kopier(fraBehandlingId, tilBehandlingId) }
+
         yrkesskadeRepository.kopier(fraBehandlingId, tilBehandlingId)
         sykdomRepository.kopier(fraBehandlingId, tilBehandlingId)
         studentRepository.kopier(fraBehandlingId, tilBehandlingId)
@@ -72,7 +67,6 @@ class GrunnlagKopierer(connection: DBConnection, personRepository: PersonReposit
         barnRepository.kopier(fraBehandlingId, tilBehandlingId)
         barnetilleggRepository.kopier(fraBehandlingId, tilBehandlingId)
         beregningVurderingRepository.kopier(fraBehandlingId, tilBehandlingId)
-        beregningsgrunnlagRepository.kopier(fraBehandlingId, tilBehandlingId)
         institusjonsoppholdRepository.kopier(fraBehandlingId, tilBehandlingId)
         aktivitetspliktRepository.kopier(fraBehandlingId, tilBehandlingId)
         inntektGrunnlagRepository.kopier(fraBehandlingId, tilBehandlingId)

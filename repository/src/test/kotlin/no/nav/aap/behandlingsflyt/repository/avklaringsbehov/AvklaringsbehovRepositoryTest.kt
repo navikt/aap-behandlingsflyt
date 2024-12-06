@@ -1,7 +1,7 @@
-package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
+package no.nav.aap.behandlingsflyt.repository.avklaringsbehov
 
-import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -30,7 +30,7 @@ class AvklaringsbehovRepositoryTest {
     @Test
     fun `løs avklaringsbehov skal avslutte avklaringsbehovet`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val sak = runBlocking { sak(connection) }
+            val sak = sak(connection)
             val behandling = behandling(connection, sak)
             val repository = AvklaringsbehovRepositoryImpl(connection)
             val avklaringsbehovene = Avklaringsbehovene(repository, behandling.id)
@@ -68,7 +68,7 @@ class AvklaringsbehovRepositoryTest {
 
     private fun behandling(connection: DBConnection, sak: Sak): Behandling {
         return SakOgBehandlingService(
-            GrunnlagKopierer(connection, PersonRepositoryImpl(connection)), SakRepositoryImpl(connection),
+            GrunnlagKopierer(connection), SakRepositoryImpl(connection),
             BehandlingRepositoryImpl(connection)
         ).finnEllerOpprettBehandling(
             sak.saksnummer,

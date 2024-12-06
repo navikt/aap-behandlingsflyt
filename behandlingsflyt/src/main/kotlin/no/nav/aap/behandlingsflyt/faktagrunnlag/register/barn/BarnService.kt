@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.BarnInnhentingRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.PdlBarnGateway
@@ -28,7 +28,7 @@ class BarnService private constructor(
     private val personRepository: PersonRepository,
     private val barnGateway: BarnGateway,
     private val pdlGateway: IdentGateway,
-    private val vilkårsresultatRepository: VilkårsresultatRepositoryImpl
+    private val vilkårsresultatRepository: VilkårsresultatRepository
 ) : Informasjonskrav {
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
@@ -113,14 +113,16 @@ class BarnService private constructor(
             val repositoryFactory = RepositoryFactory(connection)
             val sakRepository = repositoryFactory.create(SakRepository::class)
             val personRepository = repositoryFactory.create(PersonRepository::class)
+            val personopplysningRepository = repositoryFactory.create(PersonopplysningRepository::class)
+            val vilkårsresultatRepository = repositoryFactory.create(VilkårsresultatRepository::class)
             return BarnService(
                 SakService(sakRepository),
                 BarnRepository(connection),
-                PersonopplysningRepository(connection, RepositoryFactory(connection).create(PersonRepository::class)),
+                personopplysningRepository,
                 personRepository,
                 PdlBarnGateway,
                 PdlIdentGateway,
-                VilkårsresultatRepositoryImpl(connection)
+                vilkårsresultatRepository
             )
         }
     }

@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 
 class Personopplysning(
     val fødselsdato: Fødselsdato,
-    internal val id: Long? = null,
+    val id: Long? = null,
     val dødsdato: Dødsdato? = null
 ) {
 

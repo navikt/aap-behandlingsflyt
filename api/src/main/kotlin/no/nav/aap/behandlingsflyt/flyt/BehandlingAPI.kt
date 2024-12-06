@@ -14,7 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.flyt.flate.VilkårDTO
 import no.nav.aap.behandlingsflyt.flyt.flate.VilkårsperiodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
-import no.nav.aap.behandlingsflyt.pip.PipRepositoryImpl
+import no.nav.aap.behandlingsflyt.pip.PipRepository
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -130,7 +130,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
 
                 val identer = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryFactory = RepositoryFactory(connection)
-                    val pipRepository = repositoryFactory.create(PipRepositoryImpl::class)
+                    val pipRepository = repositoryFactory.create(PipRepository::class)
                     pipRepository.finnIdenterPåBehandling(BehandlingReferanse(referanse))
                 }
 

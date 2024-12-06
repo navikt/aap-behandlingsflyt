@@ -8,7 +8,6 @@ import no.nav.aap.behandlingsflyt.behandling.barnetillegg.BarnetilleggService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningGrunnlag
@@ -19,7 +18,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.repository.RepositoryFactory
 import javax.sql.DataSource
@@ -33,19 +31,14 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource) {
                     val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
                     val vilkårsresultatRepository = repositoryFactory.create(VilkårsresultatRepository::class)
                     val sakRepository = repositoryFactory.create(SakRepository::class)
-                    val personRepository = repositoryFactory.create(PersonRepository::class)
+                    val personopplysningRepository = repositoryFactory.create(PersonopplysningRepository::class)
 
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
-
-                    val personopplysningRepository = PersonopplysningRepository(
-                        connection,
-                        personRepository
-                    )
                     val barnRepository = BarnRepository(connection)
 
                     val sakOgBehandlingService = SakOgBehandlingService(
-                        GrunnlagKopierer(connection, personRepository), sakRepository, behandlingRepository
+                        GrunnlagKopierer(connection), sakRepository, behandlingRepository
                     )
                     val barnetilleggService = BarnetilleggService(
                         sakOgBehandlingService,

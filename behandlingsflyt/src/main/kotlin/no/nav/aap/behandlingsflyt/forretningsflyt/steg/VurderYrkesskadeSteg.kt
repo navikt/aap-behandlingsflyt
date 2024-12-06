@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
@@ -17,12 +17,13 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.repository.RepositoryFactory
 
 class VurderYrkesskadeSteg private constructor(
-    private val vilkårsresultatRepository: VilkårsresultatRepositoryImpl,
+    private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val sykdomRepository: SykdomRepository,
     private val yrkesskadeRepository: YrkesskadeRepository,
-    private val avklaringsbehovRepository: AvklaringsbehovRepositoryImpl
+    private val avklaringsbehovRepository: AvklaringsbehovRepository
 ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -54,7 +55,7 @@ class VurderYrkesskadeSteg private constructor(
         if (yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() != true) {
             return false
         }
-        if (sykdomGrunnlag?.sykdomsvurdering?.erNedsettelseIArbeidsevneMerEnnHalvparten == false && sykdomGrunnlag.sykdomsvurdering?.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == false) {
+        if (sykdomGrunnlag?.sykdomsvurdering?.erNedsettelseIArbeidsevneMerEnnHalvparten == false && sykdomGrunnlag.sykdomsvurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == false) {
             return false
         }
 
@@ -63,11 +64,14 @@ class VurderYrkesskadeSteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
+            val repositoryFactory = RepositoryFactory(connection)
+            val avklaringsbehovRepository = repositoryFactory.create(AvklaringsbehovRepository::class)
+            val vilkårsresultatRepository = repositoryFactory.create(VilkårsresultatRepository::class)
             return VurderYrkesskadeSteg(
-                VilkårsresultatRepositoryImpl(connection),
+                vilkårsresultatRepository,
                 SykdomRepository(connection),
                 YrkesskadeRepository(connection),
-                AvklaringsbehovRepositoryImpl(connection)
+                avklaringsbehovRepository
             )
         }
 

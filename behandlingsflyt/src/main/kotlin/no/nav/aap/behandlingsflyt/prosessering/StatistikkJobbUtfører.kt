@@ -8,7 +8,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag1
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
@@ -31,7 +30,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsPeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsResultatDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype
 import no.nav.aap.behandlingsflyt.pip.PipRepository
-import no.nav.aap.behandlingsflyt.pip.PipRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
@@ -275,10 +273,11 @@ class StatistikkJobbUtfører(
 
     companion object : Jobb {
         override fun konstruer(connection: DBConnection): JobbUtfører {
-            val vilkårsresultatRepository = VilkårsresultatRepositoryImpl(connection)
             val repositoryFactory = RepositoryFactory(connection)
+            val vilkårsresultatRepository = repositoryFactory.create(VilkårsresultatRepository::class)
             val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
             val sakRepository = repositoryFactory.create(SakRepository::class)
+            val pipRepository = repositoryFactory.create(PipRepository::class)
             val sakService = SakService(sakRepository)
 
             return StatistikkJobbUtfører(
@@ -288,7 +287,7 @@ class StatistikkJobbUtfører(
                 sakService,
                 TilkjentYtelseRepository(connection),
                 BeregningsgrunnlagRepositoryImpl(connection),
-                pipRepository = PipRepositoryImpl(connection),
+                pipRepository = pipRepository,
                 dokumentRepository = MottattDokumentRepository(connection)
             )
         }

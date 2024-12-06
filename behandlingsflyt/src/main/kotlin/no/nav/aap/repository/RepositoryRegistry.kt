@@ -59,4 +59,15 @@ object RepositoryRegistry {
             return singleOrNull
         }
     }
+
+    internal fun alle(): List<KClass<Repository>> {
+        return registry.toList()
+    }
+
+    fun status() {
+        logger.info(
+            "{} repositories registrert har følgende '{}'",
+            registry.size,
+            registry.map { kclass -> kclass.starProjectedType })
+    }
 }

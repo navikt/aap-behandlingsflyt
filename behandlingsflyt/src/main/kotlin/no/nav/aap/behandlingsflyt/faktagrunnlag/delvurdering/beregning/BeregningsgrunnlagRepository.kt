@@ -6,6 +6,6 @@ import no.nav.aap.repository.Repository
 interface BeregningsgrunnlagRepository : Repository{
     fun hentHvisEksisterer(behandlingId: BehandlingId): Beregningsgrunnlag?
     fun lagre(behandlingId: BehandlingId, beregningsgrunnlag: Beregningsgrunnlag)
-    fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
+    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
     fun deaktiver(behandlingId: BehandlingId)
 }

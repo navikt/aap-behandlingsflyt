@@ -1,14 +1,14 @@
 package no.nav.aap.behandlingsflyt.behandling.brev
 
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 
 class BrevUtlederService(
     private val behandlingRepository: BehandlingRepository,
-    private val vilkårsresultatRepository: VilkårsresultatRepositoryImpl,
+    private val vilkårsresultatRepository: VilkårsresultatRepository,
 ) {
 
     fun utledBrevbehov(behandlingId: BehandlingId): BrevBehov {
