@@ -60,6 +60,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -124,9 +125,10 @@ class FlytOrkestratorTest {
     @BeforeEach
     fun setUp() {
         RepositoryRegistry.register(PersonRepositoryImpl::class)
-        RepositoryRegistry.register(SakRepositoryImpl::class)
-        RepositoryRegistry.register(BehandlingRepositoryImpl::class)
-        RepositoryRegistry.register(AvklaringsbehovRepositoryImpl::class)
+            .register(SakRepositoryImpl::class)
+            .register(BehandlingRepositoryImpl::class)
+            .register(AvklaringsbehovRepositoryImpl::class)
+            .register(TaSkriveLåsRepositoryImpl::class)
     }
 
     @Test

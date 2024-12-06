@@ -10,7 +10,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -98,8 +97,8 @@ class HendelseMottattHåndteringJobbUtfører(
             }
 
         override fun konstruer(connection: DBConnection): JobbUtfører {
-            val låsRepository = TaSkriveLåsRepositoryImpl(connection)
             val repositoryFactory = RepositoryFactory(connection)
+            val låsRepository = repositoryFactory.create(TaSkriveLåsRepository::class)
             val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
             val sakRepository = repositoryFactory.create(SakRepository::class)
             val personRepository = repositoryFactory.create(PersonRepository::class)

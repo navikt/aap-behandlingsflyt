@@ -14,7 +14,7 @@ import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
-import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -32,8 +32,8 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource) {
                     val repositoryFactory = RepositoryFactory(connection)
                     val sakRepository = repositoryFactory.create(SakRepository::class)
                     val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+                    val taSkriveLåsRepository = repositoryFactory.create(TaSkriveLåsRepository::class)
 
-                    val taSkriveLåsRepository = TaSkriveLåsRepositoryImpl(connection)
                     val lås = taSkriveLåsRepository.lås(request.referanse)
                     MDC.putCloseable("sakId", lås.sakSkrivelås.id.toString()).use {
                         MDC.putCloseable("behandlingId", lås.behandlingSkrivelås.id.toString()).use {

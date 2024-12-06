@@ -1,7 +1,11 @@
-package no.nav.aap.behandlingsflyt.sakogbehandling.lås
+package no.nav.aap.behandlingsflyt.repository.lås
 
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.lås.BehandlingSkrivelås
+import no.nav.aap.behandlingsflyt.sakogbehandling.lås.SakSkrivelås
+import no.nav.aap.behandlingsflyt.sakogbehandling.lås.Skrivelås
+import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.repository.Factory

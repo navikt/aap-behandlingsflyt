@@ -30,7 +30,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
-import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -161,7 +161,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
             post<BehandlingReferanse, BehandlingResultatDto, SettPåVentRequest> { request, body ->
                 dataSource.transaction { connection ->
                     val repositoryFactory = RepositoryFactory(connection)
-                    val taSkriveLåsRepository = TaSkriveLåsRepositoryImpl(connection)
+                    val taSkriveLåsRepository = repositoryFactory.create(TaSkriveLåsRepository::class)
                     val lås = taSkriveLåsRepository.lås(request.referanse)
                     val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
                     val sakRepository = repositoryFactory.create(SakRepository::class)

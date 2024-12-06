@@ -21,7 +21,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.LøsBrevbestillingDto
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.ElementNotFoundException
-import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoGateway
@@ -102,11 +102,11 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                     )
                 ) { _, request ->
                     dataSource.transaction { connection ->
-                        val taSkriveLåsRepository = TaSkriveLåsRepositoryImpl(connection)
+                        val repositoryFactory = RepositoryFactory(connection)
+                        val taSkriveLåsRepository = repositoryFactory.create(TaSkriveLåsRepository::class)
 
                         val lås = taSkriveLåsRepository.lås(request.behandlingReferanse)
 
-                        val repositoryFactory = RepositoryFactory(connection)
                         val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
                         val sakRepository = repositoryFactory.create(SakRepository::class)
 

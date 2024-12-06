@@ -11,7 +11,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingFlytRepos
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakFlytRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -48,8 +47,9 @@ class ProsesserBehandlingJobbUtfører(
             val behandlingFlytRepository = repositoryFactory.create(BehandlingFlytRepository::class)
             val sakRepository = repositoryFactory.create(SakRepository::class)
             val sakFlytRepository = repositoryFactory.create(SakFlytRepository::class)
+            val låsRepository = repositoryFactory.create(TaSkriveLåsRepository::class)
             return ProsesserBehandlingJobbUtfører(
-                TaSkriveLåsRepositoryImpl(connection),
+                låsRepository,
                 FlytOrkestrator(
                     stegKonstruktør = StegKonstruktørImpl(connection),
                     ventebehovEvaluererService = VentebehovEvaluererServiceImpl(connection),

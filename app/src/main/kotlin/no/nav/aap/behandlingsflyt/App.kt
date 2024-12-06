@@ -54,6 +54,7 @@ import no.nav.aap.behandlingsflyt.pip.behandlingsflytPip
 import no.nav.aap.behandlingsflyt.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.ElementNotFoundException
