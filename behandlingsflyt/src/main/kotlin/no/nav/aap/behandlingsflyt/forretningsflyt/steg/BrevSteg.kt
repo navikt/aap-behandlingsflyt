@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevUtlederService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevGateway
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
@@ -80,7 +80,7 @@ class BrevSteg private constructor(
                 ),
                 BrevbestillingService(
                     brevbestillingGateway = BrevGateway(),
-                    brevbestillingRepository = BrevbestillingRepository(connection),
+                    brevbestillingRepository = BrevbestillingRepositoryImpl(connection),
                     behandlingRepository = behandlingRepository,
                     sakRepository = sakRepository
                 )

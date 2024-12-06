@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.util.*
 
-class BrevbestillingRepositoryTest {
+class BrevbestillingRepositoryImplTest {
 
     companion object {
         val dataSource = InitTestDatabase.dataSource
@@ -24,7 +24,7 @@ class BrevbestillingRepositoryTest {
     @Test
     fun `lagrer, henter og oppdaterer status`() {
         dataSource.transaction { connection ->
-            val brevbestillingRepository = BrevbestillingRepository(connection)
+            val brevbestillingRepository = BrevbestillingRepositoryImpl(connection)
 
             val behandlingId = opprettBehandling(connection)
             val typeBrev = TypeBrev.VEDTAK_INNVILGELSE

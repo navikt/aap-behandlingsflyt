@@ -197,6 +197,7 @@ private fun registerRepositories() {
         .register(VilkårsresultatRepositoryImpl::class)
         .register(PipRepositoryImpl::class)
         .register(TaSkriveLåsRepositoryImpl::class)
+        .register(PersonRepositoryImpl::class)
         .register(BeregningsgrunnlagRepositoryImpl::class)
 }
 

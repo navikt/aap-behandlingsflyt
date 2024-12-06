@@ -31,7 +31,7 @@ class AvklaringsbehovOrkestrator(
     private val connection: DBConnection, private val behandlingHendelseService: BehandlingHendelseServiceImpl
 ) {
     private val repositoryFactory = RepositoryFactory(connection)
-    private val avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection)
+    private val avklaringsbehovRepository = repositoryFactory.create(AvklaringsbehovRepository::class)
     private val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
     private val sakFlytRepository = repositoryFactory.create(SakFlytRepository::class)
     private val sakRepository = repositoryFactory.create(SakRepository::class)

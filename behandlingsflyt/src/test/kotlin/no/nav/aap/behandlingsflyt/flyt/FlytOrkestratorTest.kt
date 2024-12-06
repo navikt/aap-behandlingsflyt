@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrke
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehovHendelse
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.BREV_SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.ÅrsakTilReturKode
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
@@ -21,8 +22,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVe
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.ÅrsakTilRetur
-import no.nav.aap.behandlingsflyt.behandling.brev.BREV_SYSTEMBRUKER
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
@@ -598,7 +598,7 @@ class FlytOrkestratorTest {
             assertThat(avklaringsbehov.alle()).anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.BESTILL_BREV) }
             assertThat(behandling.status()).isEqualTo(Status.IVERKSETTES)
 
-            val brevbestilling = BrevbestillingRepository(connection).hent(behandling.id, TypeBrev.VEDTAK_INNVILGELSE)!!
+            val brevbestilling = BrevbestillingRepositoryImpl(connection).hent(behandling.id, TypeBrev.VEDTAK_INNVILGELSE)!!
             AvklaringsbehovHendelseHåndterer(
                 AvklaringsbehovOrkestrator(
                     connection,
@@ -625,7 +625,7 @@ class FlytOrkestratorTest {
                 )
             )
             // Brevet er klar for forhåndsvisning og editering
-            assertThat(BrevbestillingRepository(connection).hent(behandling.id, TypeBrev.VEDTAK_INNVILGELSE)?.status)
+            assertThat(BrevbestillingRepositoryImpl(connection).hent(behandling.id, TypeBrev.VEDTAK_INNVILGELSE)?.status)
                 .isEqualTo(no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FORHÅNDSVISNING_KLAR)
         }
 
@@ -639,7 +639,7 @@ class FlytOrkestratorTest {
             // Venter på at brevet skal fullføres
             assertThat(avklaringsbehov.alle()).anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.SKRIV_BREV) }
 
-            val brevbestilling = BrevbestillingRepository(connection).hent(behandling.id, TypeBrev.VEDTAK_INNVILGELSE)!!
+            val brevbestilling = BrevbestillingRepositoryImpl(connection).hent(behandling.id, TypeBrev.VEDTAK_INNVILGELSE)!!
             AvklaringsbehovHendelseHåndterer(
                 AvklaringsbehovOrkestrator(
                     connection,
@@ -661,7 +661,7 @@ class FlytOrkestratorTest {
             )
 
             // Brevet er fullført
-            assertThat(BrevbestillingRepository(connection).hent(behandling.id, TypeBrev.VEDTAK_INNVILGELSE)?.status)
+            assertThat(BrevbestillingRepositoryImpl(connection).hent(behandling.id, TypeBrev.VEDTAK_INNVILGELSE)?.status)
                 .isEqualTo(no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FULLFØRT)
         }
 
@@ -976,7 +976,7 @@ class FlytOrkestratorTest {
             assertThat(avklaringsbehov.alle()).anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.BESTILL_BREV) }
             assertThat(behandling.status()).isEqualTo(Status.IVERKSETTES)
 
-            val brevbestilling = BrevbestillingRepository(connection).hent(behandling.id, TypeBrev.VEDTAK_INNVILGELSE)!!
+            val brevbestilling = BrevbestillingRepositoryImpl(connection).hent(behandling.id, TypeBrev.VEDTAK_INNVILGELSE)!!
             AvklaringsbehovHendelseHåndterer(
                 AvklaringsbehovOrkestrator(
                     connection,
@@ -1003,7 +1003,7 @@ class FlytOrkestratorTest {
                 )
             )
             // Brevet er klar for forhåndsvisning og editering
-            assertThat(BrevbestillingRepository(connection).hent(behandling.id, TypeBrev.VEDTAK_INNVILGELSE)?.status)
+            assertThat(BrevbestillingRepositoryImpl(connection).hent(behandling.id, TypeBrev.VEDTAK_INNVILGELSE)?.status)
                 .isEqualTo(no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FORHÅNDSVISNING_KLAR)
         }
 
@@ -1017,7 +1017,7 @@ class FlytOrkestratorTest {
             // Venter på at brevet skal fullføres
             assertThat(avklaringsbehov.alle()).anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.SKRIV_BREV) }
 
-            val brevbestilling = BrevbestillingRepository(connection).hent(behandling.id, TypeBrev.VEDTAK_INNVILGELSE)!!
+            val brevbestilling = BrevbestillingRepositoryImpl(connection).hent(behandling.id, TypeBrev.VEDTAK_INNVILGELSE)!!
             AvklaringsbehovHendelseHåndterer(
                 AvklaringsbehovOrkestrator(
                     connection,
@@ -1039,7 +1039,7 @@ class FlytOrkestratorTest {
             )
 
             // Brevet er fullført
-            assertThat(BrevbestillingRepository(connection).hent(behandling.id, TypeBrev.VEDTAK_INNVILGELSE)?.status)
+            assertThat(BrevbestillingRepositoryImpl(connection).hent(behandling.id, TypeBrev.VEDTAK_INNVILGELSE)?.status)
                 .isEqualTo(no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FULLFØRT)
         }
 
@@ -1630,7 +1630,7 @@ class FlytOrkestratorTest {
         }
 
         dataSource.transaction { connection ->
-            val brevbestilling = BrevbestillingRepository(connection).hent(behandling.id, TypeBrev.VEDTAK_AVSLAG)!!
+            val brevbestilling = BrevbestillingRepositoryImpl(connection).hent(behandling.id, TypeBrev.VEDTAK_AVSLAG)!!
             AvklaringsbehovHendelseHåndterer(
                 AvklaringsbehovOrkestrator(
                     connection,
@@ -1661,7 +1661,7 @@ class FlytOrkestratorTest {
         util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
 
         dataSource.transaction { connection ->
-            val brevbestilling = BrevbestillingRepository(connection).hent(behandling.id, TypeBrev.VEDTAK_AVSLAG)!!
+            val brevbestilling = BrevbestillingRepositoryImpl(connection).hent(behandling.id, TypeBrev.VEDTAK_AVSLAG)!!
             AvklaringsbehovHendelseHåndterer(
                 AvklaringsbehovOrkestrator(
                     connection,
