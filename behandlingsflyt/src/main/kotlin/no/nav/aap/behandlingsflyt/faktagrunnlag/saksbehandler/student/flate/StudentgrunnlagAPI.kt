@@ -7,9 +7,10 @@ import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.repository.RepositoryFactory
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.studentgrunnlagApi(dataSource: DataSource) {
@@ -17,7 +18,9 @@ fun NormalOpenAPIRoute.studentgrunnlagApi(dataSource: DataSource) {
         route("/{referanse}/grunnlag/student") {
             get<BehandlingReferanse, StudentGrunnlagDto> { req ->
                 val studentGrunnlag: StudentGrunnlag? = dataSource.transaction { connection ->
-                    val behandling = BehandlingReferanseService(BehandlingRepositoryImpl(connection)).behandling(req)
+                    val repositoryFactory = RepositoryFactory(connection)
+                    val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+                    val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
 
                     StudentRepository(connection).hentHvisEksisterer(behandlingId = behandling.id)
                 }

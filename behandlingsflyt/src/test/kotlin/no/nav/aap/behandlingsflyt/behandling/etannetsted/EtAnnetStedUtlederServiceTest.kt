@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.etannetsted
 
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
@@ -10,6 +11,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Ins
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soningsvurdering
+import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.test.MockConnection
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -23,7 +27,10 @@ class EtAnnetStedUtlederServiceTest {
     val utlederService = EtAnnetStedUtlederService(
         BarnetilleggRepository(connection),
         InstitusjonsoppholdRepository(connection),
-        SakOgBehandlingService(connection)
+        SakOgBehandlingService(
+            GrunnlagKopierer(connection, PersonRepositoryImpl(connection)), SakRepositoryImpl(connection),
+            BehandlingRepositoryImpl(connection)
+        )
     )
 
     @Test

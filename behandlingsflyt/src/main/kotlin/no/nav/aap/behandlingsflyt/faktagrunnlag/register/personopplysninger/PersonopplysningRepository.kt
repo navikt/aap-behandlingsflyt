@@ -3,13 +3,13 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 
-class PersonopplysningRepository(private val connection: DBConnection) {
-
-    private val personRepository = PersonRepositoryImpl(connection)
+class PersonopplysningRepository(
+    private val connection: DBConnection, private val personRepository: PersonRepository
+) {
 
     fun hentHvisEksisterer(behandlingId: BehandlingId): PersonopplysningGrunnlag? {
         return connection.queryFirstOrNull(
@@ -44,22 +44,23 @@ class PersonopplysningRepository(private val connection: DBConnection) {
             return null
         }
 
-        return RelatertePersonopplysninger(id = id, personopplysninger = connection.queryList(
-            """
+        return RelatertePersonopplysninger(
+            id = id, personopplysninger = connection.queryList(
+                """
             SELECT * FROM PERSONOPPLYSNING 
             WHERE personopplysninger_id = ?
         """.trimIndent()
-        ) {
-            setParams {
-                setLong(1, id)
-            }
-            setRowMapper {
-                RelatertPersonopplysning(
-                    person = personRepository.hent(it.getLong("person_id")),
-                    fødselsdato = Fødselsdato(it.getLocalDate("FODSELSDATO")),
-                    dødsdato = it.getLocalDateOrNull("dodsdato")?.let { Dødsdato(it) })
-            }
-        })
+            ) {
+                setParams {
+                    setLong(1, id)
+                }
+                setRowMapper {
+                    RelatertPersonopplysning(
+                        person = personRepository.hent(it.getLong("person_id")),
+                        fødselsdato = Fødselsdato(it.getLocalDate("FODSELSDATO")),
+                        dødsdato = it.getLocalDateOrNull("dodsdato")?.let { Dødsdato(it) })
+                }
+            })
     }
 
     private fun hentBrukerPersonopplysninger(id: Long): Personopplysning {

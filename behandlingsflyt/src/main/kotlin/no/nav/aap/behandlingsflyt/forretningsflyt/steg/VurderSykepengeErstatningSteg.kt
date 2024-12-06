@@ -17,9 +17,10 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.repository.RepositoryFactory
 
 class VurderSykepengeErstatningSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
@@ -35,8 +36,8 @@ class VurderSykepengeErstatningSteg private constructor(
 
         // TODO: Dette må gjøres mye mer robust og sjekkes konsistent mot 11-6...
         if (bistandsvilkåret.vilkårsperioder().all { !it.erOppfylt() } && (
-            sykdomsvilkåret.vilkårsperioder()
-                .any { it.erOppfylt() || avslagPåVissVarighet(it) })) {
+                    sykdomsvilkåret.vilkårsperioder()
+                        .any { it.erOppfylt() || avslagPåVissVarighet(it) })) {
 
             val grunnlag = sykepengerErstatningRepository.hentHvisEksisterer(kontekst.behandlingId)
 
@@ -71,10 +72,12 @@ class VurderSykepengeErstatningSteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
+            val repositoryFactory = RepositoryFactory(connection)
+            val sakRepository = repositoryFactory.create(SakRepository::class)
             return VurderSykepengeErstatningSteg(
                 VilkårsresultatRepository(connection),
                 SykepengerErstatningRepository(connection),
-                SakService(SakRepositoryImpl(connection)),
+                SakService(sakRepository),
                 AvklaringsbehovRepositoryImpl(connection)
             )
         }

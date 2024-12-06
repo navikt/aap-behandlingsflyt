@@ -2,18 +2,19 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.gjenopptak
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FakePdlGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingFlytRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -34,7 +35,7 @@ class GjenopptakRepositoryTest {
         dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
-            BehandlingFlytRepository(connection).oppdaterBehandlingStatus(
+            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(
                 behandlingId = behandling.id,
                 status = Status.UTREDES
             )
@@ -48,7 +49,7 @@ class GjenopptakRepositoryTest {
         dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
-            BehandlingFlytRepository(connection).oppdaterBehandlingStatus(
+            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(
                 behandlingId = behandling.id,
                 status = Status.UTREDES
             )
@@ -82,7 +83,10 @@ class GjenopptakRepositoryTest {
     }
 
     private fun behandling(connection: DBConnection, sak: Sak): Behandling {
-        return SakOgBehandlingService(connection).finnEllerOpprettBehandling(
+        return SakOgBehandlingService(
+            GrunnlagKopierer(connection, PersonRepositoryImpl(connection)), SakRepositoryImpl(connection),
+            BehandlingRepositoryImpl(connection)
+        ).finnEllerOpprettBehandling(
             sak.saksnummer,
             listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
         ).behandling

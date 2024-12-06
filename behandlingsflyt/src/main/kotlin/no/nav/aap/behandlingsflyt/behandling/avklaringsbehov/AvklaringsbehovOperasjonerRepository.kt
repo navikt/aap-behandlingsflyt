@@ -5,12 +5,13 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSet
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.repository.Repository
 import java.time.LocalDate
 
 /**
  * Kun for bruk innad i Avklaringsbehovene
  */
-interface AvklaringsbehovOperasjonerRepository {
+interface AvklaringsbehovOperasjonerRepository : Repository {
     fun hent(behandlingId: BehandlingId): List<Avklaringsbehov>
     fun opprett(
         behandlingId: BehandlingId,

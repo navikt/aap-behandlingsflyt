@@ -9,11 +9,18 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
+import no.nav.aap.repository.Factory
 import java.time.LocalDate
 import java.time.LocalDateTime
 
 class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : AvklaringsbehovRepository,
     AvklaringsbehovOperasjonerRepository {
+
+    companion object : Factory<AvklaringsbehovRepositoryImpl> {
+        override fun konstruer(connection: DBConnection): AvklaringsbehovRepositoryImpl {
+            return AvklaringsbehovRepositoryImpl(connection)
+        }
+    }
 
     override fun hentAvklaringsbehovene(behandlingId: BehandlingId): Avklaringsbehovene {
         return Avklaringsbehovene(

@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRep
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 
 /**
@@ -29,10 +30,10 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
  *
  * Knytter alle opplysninger fra forrige til den nye i en immutable state
  */
-class GrunnlagKopierer(connection: DBConnection) {
+class GrunnlagKopierer(connection: DBConnection, personRepository: PersonRepository) {
 
     private val vilkårsresultatRepository: VilkårsresultatRepository = VilkårsresultatRepository(connection)
-    private val personopplysningRepository = PersonopplysningRepository(connection)
+    private val personopplysningRepository = PersonopplysningRepository(connection, personRepository)
     private val yrkesskadeRepository = YrkesskadeRepository(connection)
     private val sykdomRepository = SykdomRepository(connection)
     private val studentRepository = StudentRepository(connection)

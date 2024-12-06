@@ -14,22 +14,27 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.periodisering.PerioderTilVurderingService
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingFlytRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakFlytRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.motor.FlytJobbRepository
+import no.nav.aap.repository.RepositoryFactory
 import org.slf4j.LoggerFactory
 
 class AvklaringsbehovOrkestrator(
     private val connection: DBConnection, private val behandlingHendelseService: BehandlingHendelseServiceImpl
 ) {
-
+    private val repositoryFactory = RepositoryFactory(connection)
     private val avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection)
-    private val behandlingRepository = BehandlingRepositoryImpl(connection)
+    private val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+    private val sakFlytRepository = repositoryFactory.create(SakFlytRepository::class)
+    private val sakRepository = repositoryFactory.create(SakRepository::class)
     private val prosesserBehandling = ProsesserBehandlingService(FlytJobbRepository(connection))
 
     private val log = LoggerFactory.getLogger(AvklaringsbehovOrkestrator::class.java)
@@ -113,13 +118,13 @@ class AvklaringsbehovOrkestrator(
             stegKonstruktør = StegKonstruktørImpl(connection),
             ventebehovEvaluererService = VentebehovEvaluererServiceImpl(connection),
             behandlingRepository = behandlingRepository,
-            behandlingFlytRepository = behandlingRepository,
+            behandlingFlytRepository = repositoryFactory.create(BehandlingFlytRepository::class),
             avklaringsbehovRepository = avklaringsbehovRepository,
             informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(connection),
-            sakRepository = SakRepositoryImpl(connection),
+            sakRepository = sakFlytRepository,
             perioderTilVurderingService = PerioderTilVurderingService(
-                SakService(SakRepositoryImpl(connection)),
-                BehandlingRepositoryImpl(connection)
+                SakService(sakRepository),
+                behandlingRepository
             ),
             behandlingHendelseService = behandlingHendelseService
         )

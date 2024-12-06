@@ -4,12 +4,15 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBeregningstidspunktLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.repository.RepositoryFactory
 
-class FastsettBeregningstidspunktLøser(connection: DBConnection) : AvklaringsbehovsLøser<FastsettBeregningstidspunktLøsning> {
+class FastsettBeregningstidspunktLøser(connection: DBConnection) :
+    AvklaringsbehovsLøser<FastsettBeregningstidspunktLøsning> {
 
-    private val behandlingRepository = BehandlingRepositoryImpl(connection)
+    private val repositoryFactory = RepositoryFactory(connection)
+    private val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
     private val beregningVurderingRepository = BeregningVurderingRepository(connection)
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: FastsettBeregningstidspunktLøsning): LøsningsResultat {

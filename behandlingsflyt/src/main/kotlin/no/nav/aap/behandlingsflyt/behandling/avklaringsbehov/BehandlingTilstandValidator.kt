@@ -1,14 +1,13 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.motor.FlytJobbRepository
 
-class BehandlingTilstandValidator(connection: DBConnection) {
-    private val flytJobbRepository = FlytJobbRepository(connection)
-    private val behandlingReferanseService = BehandlingReferanseService(BehandlingRepositoryImpl(connection))
+class BehandlingTilstandValidator(
+    private val behandlingReferanseService: BehandlingReferanseService,
+    private val flytJobbRepository: FlytJobbRepository
+) {
 
     fun validerTilstand(behandlingReferanse: BehandlingReferanse, behandlingVersjon: Long) {
         val behandling = behandlingReferanseService.behandling(behandlingReferanse)

@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FakeAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
+import no.nav.aap.behandlingsflyt.flyt.testutil.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.flyt.testutil.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.flyt.testutil.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
@@ -14,19 +14,32 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.MockDataSource
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
+import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.repository.RepositoryRegistry
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.util.*
 
 class FatteVedtakLøserTest {
+
+    @BeforeEach
+    fun setUp() {
+        RepositoryRegistry.register(InMemorySakRepository::class)
+        RepositoryRegistry.register(InMemoryAvklaringsbehovRepository::class)
+        RepositoryRegistry.register(InMemoryBehandlingRepository::class)
+    }
+
     @Test
     fun `Skal ikke reåpne behov før det som det returneres til`() {
+
         val (sak, behandling) = opprettPersonBehandlingOgSak()
-        val avklaringsbehovRepository = FakeAvklaringsbehovRepository()
+        val avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
 
         // Oppretter avklaringsbehov på soning
         avklaringsbehovRepository.opprett(
@@ -53,10 +66,9 @@ class FatteVedtakLøserTest {
             endretAv = "xxx",
         )
 
-        val fatteVedtakLøser = FatteVedtakLøser(
-            avklaringsbehovRepository = avklaringsbehovRepository,
-            behandlingRepository = InMemoryBehandlingRepository
-        )
+        val fatteVedtakLøser = MockDataSource().transaction {
+            FatteVedtakLøser(it)
+        }
 
         // Totrinnsvurdering ikke godkjent.
         fatteVedtakLøser.løs(
@@ -100,7 +112,7 @@ class FatteVedtakLøserTest {
             sakId = sak.id,
             årsaker = listOf(),
             typeBehandling = TypeBehandling.Førstegangsbehandling,
-            orginalBehandling = null
+            forrigeBehandlingId = null
         )
         return Pair(sak, behandling)
     }

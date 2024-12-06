@@ -12,9 +12,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Meldepl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.repository.RepositoryFactory
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
@@ -22,8 +23,10 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(dataSource: DataSource) {
     route("/api/behandling/{referanse}/grunnlag/fritak-meldeplikt") {
         get<BehandlingReferanse, FritakMeldepliktGrunnlagDto> { req ->
             val meldepliktGrunnlag = dataSource.transaction { connection ->
+                val repositoryFactory = RepositoryFactory(connection)
+                val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
                 val behandling: Behandling =
-                    BehandlingReferanseService(BehandlingRepositoryImpl(connection)).behandling(req)
+                    BehandlingReferanseService(behandlingRepository).behandling(req)
                 val meldepliktRepository = MeldepliktRepository(connection)
                 val nåTilstand = meldepliktRepository.hentHvisEksisterer(behandling.id)?.vurderinger
 
@@ -54,8 +57,10 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(dataSource: DataSource) {
     route("/api/behandling/{referanse}/grunnlag/fritak-meldeplikt/simulering") {
         post<BehandlingReferanse, SimulertFritakMeldepliktDto, SimulerFritakMeldepliktDto> { req, dto ->
             val meldepliktGrunnlag = dataSource.transaction { connection ->
+                val repositoryFactory = RepositoryFactory(connection)
+                val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
                 val behandling: Behandling =
-                    BehandlingReferanseService(BehandlingRepositoryImpl(connection)).behandling(req)
+                    BehandlingReferanseService(behandlingRepository).behandling(req)
                 val meldepliktRepository = MeldepliktRepository(connection)
 
                 val vedtatteVerdier =

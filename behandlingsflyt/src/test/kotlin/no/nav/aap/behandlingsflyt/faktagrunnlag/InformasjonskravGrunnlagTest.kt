@@ -1,16 +1,18 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeService
+import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.ident
@@ -20,7 +22,9 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.repository.RepositoryRegistry
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -31,17 +35,27 @@ class InformasjonskravGrunnlagTest {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 
+    @BeforeEach
+    fun setUp() {
+        RepositoryRegistry.register(PersonRepositoryImpl::class)
+        RepositoryRegistry.register(SakRepositoryImpl::class)
+        RepositoryRegistry.register(BehandlingRepositoryImpl::class)
+        RepositoryRegistry.register(AvklaringsbehovRepositoryImpl::class)
+    }
+
     @Test
     fun `Yrkesskadedata er oppdatert`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val (ident, kontekst) = klargjør(connection)
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(connection)
 
-            FakePersoner.leggTil(TestPerson(
-                identer = setOf(ident),
-                fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
-                yrkesskade = listOf(TestYrkesskade())
-            ))
+            FakePersoner.leggTil(
+                TestPerson(
+                    identer = setOf(ident),
+                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
+                    yrkesskade = listOf(TestYrkesskade())
+                )
+            )
 
             val initiell = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
                 listOf(YrkesskadeService),
@@ -67,11 +81,13 @@ class InformasjonskravGrunnlagTest {
             val (ident, kontekst) = klargjør(connection)
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(connection)
 
-            FakePersoner.leggTil(TestPerson(
-                identer = setOf(ident),
-                fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
-                yrkesskade = listOf(TestYrkesskade())
-            ))
+            FakePersoner.leggTil(
+                TestPerson(
+                    identer = setOf(ident),
+                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
+                    yrkesskade = listOf(TestYrkesskade())
+                )
+            )
 
             val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
                 listOf(YrkesskadeService),
@@ -106,14 +122,25 @@ class InformasjonskravGrunnlagTest {
             PersonRepositoryImpl(connection),
             SakRepositoryImpl(connection)
         ).finnEllerOpprett(ident, periode)
-        val behandling = SakOgBehandlingService(connection).finnEllerOpprettBehandling(
+        val behandling = SakOgBehandlingService(
+            GrunnlagKopierer(connection, PersonRepositoryImpl(connection)), SakRepositoryImpl(connection),
+            BehandlingRepositoryImpl(connection)
+        ).finnEllerOpprettBehandling(
             sak.saksnummer,
             listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
         ).behandling
-        val personopplysningRepository = PersonopplysningRepository(connection)
+        val personopplysningRepository = PersonopplysningRepository(
+            connection,
+            PersonRepositoryImpl(connection)
+        )
         personopplysningRepository.lagre(behandling.id, Personopplysning(Fødselsdato(LocalDate.now().minusYears(20))))
 
         val flytKontekst = behandling.flytKontekst()
-        return ident to FlytKontekstMedPerioder(flytKontekst.sakId, flytKontekst.behandlingId, behandling.typeBehandling(), emptySet())
+        return ident to FlytKontekstMedPerioder(
+            flytKontekst.sakId,
+            flytKontekst.behandlingId,
+            behandling.typeBehandling(),
+            emptySet()
+        )
     }
 }

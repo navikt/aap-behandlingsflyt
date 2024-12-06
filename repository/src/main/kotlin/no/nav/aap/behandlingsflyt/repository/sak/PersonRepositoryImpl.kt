@@ -1,7 +1,8 @@
-package no.nav.aap.behandlingsflyt.sakogbehandling.sak.db
+package no.nav.aap.behandlingsflyt.repository.sak
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.repository.Factory

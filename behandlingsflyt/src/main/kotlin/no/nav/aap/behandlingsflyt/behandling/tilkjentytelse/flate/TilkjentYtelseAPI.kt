@@ -7,9 +7,10 @@ import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.repository.RepositoryFactory
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource) {
@@ -18,8 +19,10 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource) {
             get<BehandlingReferanse, TilkjentYtelseDto> { req ->
 
                 val tilkjentYtelseDto = dataSource.transaction { connection ->
+                    val repositoryFactory = RepositoryFactory(connection)
+                    val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
                     val behandling: Behandling =
-                        BehandlingReferanseService(BehandlingRepositoryImpl(connection)).behandling(req)
+                        BehandlingReferanseService(behandlingRepository).behandling(req)
                     val tilkjentYtelse = TilkjentYtelseRepository(connection).hentHvisEksisterer(behandling.id)
 
                     if (tilkjentYtelse == null) return@transaction TilkjentYtelseDto(emptyList())

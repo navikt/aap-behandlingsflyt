@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.sakogbehandling.sak.db
+package no.nav.aap.behandlingsflyt.repository.sak
 
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
@@ -182,7 +182,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository, S
         opprettetTidspunkt = row.getLocalDateTime("opprettet_tid")
     )
 
-    fun oppdaterRettighetsperiode(sakId: SakId, periode: Periode) {
+    override fun oppdaterRettighetsperiode(sakId: SakId, periode: Periode) {
         val query = """
             UPDATE SAK SET rettighetsperiode = ?::daterange WHERE id = ?
         """.trimIndent()

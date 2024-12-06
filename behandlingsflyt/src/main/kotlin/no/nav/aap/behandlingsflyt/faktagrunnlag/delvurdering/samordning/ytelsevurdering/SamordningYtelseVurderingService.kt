@@ -10,20 +10,20 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerResponse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.repository.RepositoryFactory
 import java.time.LocalDate
 
 class SamordningYtelseVurderingService(
-    connection: DBConnection
+    private val samordningYtelseVurderingRepository: SamordningYtelseVurderingRepository,
+    private val sakService: SakService
 ) : Informasjonskrav {
     private val fpGateway = ForeldrepengerGateway()
     private val spGateway = SykepengerGateway()
-    private val sakService = SakService(SakRepositoryImpl(connection))
-    private val samordningYtelseVurderingRepository = SamordningYtelseVurderingRepository(connection)
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
@@ -122,7 +122,12 @@ class SamordningYtelseVurderingService(
         }
 
         override fun konstruer(connection: DBConnection): SamordningYtelseVurderingService {
-            return SamordningYtelseVurderingService(connection)
+            val repositoryFactory = RepositoryFactory(connection)
+            val sakRepository = repositoryFactory.create(SakRepository::class)
+            return SamordningYtelseVurderingService(
+                SamordningYtelseVurderingRepository(connection),
+                SakService(sakRepository)
+            )
         }
     }
 }

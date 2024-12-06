@@ -7,18 +7,21 @@ import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.repository.RepositoryFactory
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.medlemskapsgrunnlagApi(dataSource: DataSource) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/medlemskap") {
             get<BehandlingReferanse, MedlemskapGrunnlagDto> { req ->
-                val medlemskap = dataSource.transaction(readOnly = true) {
-                    val behandling = BehandlingReferanseService(BehandlingRepositoryImpl(it)).behandling(req)
-                    MedlemskapRepository(it).hentHvisEksisterer(behandling.id)
+                val medlemskap = dataSource.transaction(readOnly = true) { connection ->
+                    val repositoryFactory = RepositoryFactory(connection)
+                    val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+                    val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
+                    MedlemskapRepository(connection).hentHvisEksisterer(behandling.id)
                         ?: MedlemskapUnntakGrunnlag(unntak = listOf())
                 }
                 respond(MedlemskapGrunnlagDto(medlemskap = medlemskap))

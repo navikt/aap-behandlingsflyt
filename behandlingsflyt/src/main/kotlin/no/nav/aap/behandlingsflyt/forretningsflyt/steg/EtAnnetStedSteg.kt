@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
@@ -14,8 +15,12 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.repository.RepositoryFactory
 import org.slf4j.LoggerFactory
 
 class EtAnnetStedSteg(
@@ -61,11 +66,19 @@ class EtAnnetStedSteg(
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
             val institusjonsoppholdRepository = InstitusjonsoppholdRepository(connection)
+            val repositoryFactory = RepositoryFactory(connection)
+            val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+            val sakRepository = repositoryFactory.create(SakRepository::class)
+            val personRepository = repositoryFactory.create(PersonRepository::class)
             return EtAnnetStedSteg(
                 AvklaringsbehovRepositoryImpl(connection), EtAnnetStedUtlederService(
                     BarnetilleggRepository(connection),
                     institusjonsoppholdRepository,
-                    SakOgBehandlingService(connection)
+                    SakOgBehandlingService(
+                        GrunnlagKopierer(connection, personRepository),
+                        sakRepository,
+                        behandlingRepository
+                    )
                 )
             )
         }

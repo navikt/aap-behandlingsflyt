@@ -66,6 +66,13 @@ object InMemorySakRepository : SakRepository, SakFlytRepository {
         TODO("Not yet implemented")
     }
 
+    override fun oppdaterRettighetsperiode(
+        sakId: SakId,
+        periode: Periode
+    ) {
+        TODO("Not yet implemented")
+    }
+
     override fun oppdaterSakStatus(
         sakId: SakId,
         status: Status

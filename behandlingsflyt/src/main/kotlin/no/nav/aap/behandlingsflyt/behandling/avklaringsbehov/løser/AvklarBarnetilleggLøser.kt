@@ -12,7 +12,9 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 
-class AvklarBarnetilleggLøser(val connection: DBConnection) : AvklaringsbehovsLøser<AvklarBarnetilleggLøsning> {
+class AvklarBarnetilleggLøser(
+    val connection: DBConnection
+) : AvklaringsbehovsLøser<AvklarBarnetilleggLøsning> {
 
     private val barnRepository = BarnRepository(connection)
 

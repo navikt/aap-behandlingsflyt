@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.underveis
 
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.tomUnderveisInput
+import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
@@ -15,6 +16,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortReposit
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
+import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.MockDataSource
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
@@ -33,7 +37,10 @@ class UnderveisServiceTest {
         dataSource.transaction { connection ->
             val underveisService =
                 UnderveisService(
-                    SakOgBehandlingService(connection),
+                    SakOgBehandlingService(
+                        GrunnlagKopierer(connection, PersonRepositoryImpl(connection)), SakRepositoryImpl(connection),
+                        BehandlingRepositoryImpl(connection)
+                    ),
                     VilkårsresultatRepository(connection),
                     PliktkortRepository(connection),
                     UnderveisRepository(connection),
@@ -41,7 +48,11 @@ class UnderveisServiceTest {
                     EtAnnetStedUtlederService(
                         BarnetilleggRepository(connection),
                         InstitusjonsoppholdRepository(connection),
-                        SakOgBehandlingService(connection)
+                        SakOgBehandlingService(
+                            GrunnlagKopierer(connection, PersonRepositoryImpl(connection)),
+                            SakRepositoryImpl(connection),
+                            BehandlingRepositoryImpl(connection)
+                        )
                     ),
                     ArbeidsevneRepository(connection),
                     MeldepliktRepository(connection),

@@ -8,7 +8,12 @@ import no.nav.aap.repository.Repository
 
 interface BehandlingRepository : Repository {
 
-    fun opprettBehandling(sakId: SakId, årsaker: List<Årsak>, typeBehandling: TypeBehandling, orginalBehandling: BehandlingId?): Behandling
+    fun opprettBehandling(
+        sakId: SakId,
+        årsaker: List<Årsak>,
+        typeBehandling: TypeBehandling,
+        forrigeBehandlingId: BehandlingId?
+    ): Behandling
 
     fun finnSisteBehandlingFor(sakId: SakId): Behandling?
 

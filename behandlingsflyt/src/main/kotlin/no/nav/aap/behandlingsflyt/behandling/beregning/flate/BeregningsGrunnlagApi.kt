@@ -15,10 +15,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagY
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.UføreInntekt
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.verdityper.GUnit
+import no.nav.aap.repository.RepositoryFactory
 import java.time.format.DateTimeFormatter
 import javax.sql.DataSource
 
@@ -29,8 +30,10 @@ fun NormalOpenAPIRoute.beregningsGrunnlagApi(dataSource: DataSource) {
         route("/grunnlag/{referanse}") {
             get<BehandlingReferanse, BeregningDTO> { req ->
                 val begregningsgrunnlag = dataSource.transaction { connection ->
+                    val repositoryFactory = RepositoryFactory(connection)
+                    val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
                     val behandling: Behandling =
-                        BehandlingReferanseService(BehandlingRepositoryImpl(connection)).behandling(req)
+                        BehandlingReferanseService(behandlingRepository).behandling(req)
                     val beregning = BeregningsgrunnlagRepository(connection).hentHvisEksisterer(behandling.id)
                     if (beregning == null) {
                         return@transaction null
@@ -111,7 +114,7 @@ private fun grunnlag11_19_to_DTO(grunnlag: Grunnlag11_19): Grunnlag11_19DTO {
         inntektSisteÅr = inntekter.maxBy(InntektDTO::år),
         grunnlag = grunnlag.grunnlaget().verdi(),
         nedsattArbeidsevneÅr =
-        grunnlag.inntekter().maxOf { inntekt -> inntekt.år }.plusYears(1).format(årFormatter)
+            grunnlag.inntekter().maxOf { inntekt -> inntekt.år }.plusYears(1).format(årFormatter)
     )
 }
 
@@ -160,11 +163,11 @@ private fun uføreGrunnlagDTO(grunnlag: GrunnlagUføre): UføreGrunnlagDTO {
         inntektSisteÅr = inntekter.maxBy(InntektDTO::år),
         uføreInntekter = uføreInntekter,
         gjennomsnittligInntektSiste3årUfør =
-        grunnlag.underliggendeYtterligereNedsatt().gjennomsnittligInntektIG().verdi(),
+            grunnlag.underliggendeYtterligereNedsatt().gjennomsnittligInntektIG().verdi(),
         inntektSisteÅrUfør = uføreInntekter.maxBy(UføreInntektDTO::år),
         grunnlag = grunnlag.grunnlaget().verdi(),
         nedsattArbeidsevneÅr =
-        grunnlag.underliggende().inntekter().maxOf { inntekt -> inntekt.år }.plusYears(1).format(årFormatter),
+            grunnlag.underliggende().inntekter().maxOf { inntekt -> inntekt.år }.plusYears(1).format(årFormatter),
         ytterligereNedsattArbeidsevneÅr = grunnlag.uføreYtterligereNedsattArbeidsevneÅr().format(årFormatter)
     )
 }
@@ -206,7 +209,7 @@ private fun yrkesskadeGrunnlagDTO(
         gjennomsnittligInntektSiste3år = gjennomsnittligInntektIG.verdi(),
         inntektSisteÅr = inntekterDTO.maxBy(InntektDTO::år),
         nedsattArbeidsevneÅr =
-        inntekter.maxOf { inntekt -> inntekt.år }.plusYears(1).format(årFormatter),
+            inntekter.maxOf { inntekt -> inntekt.år }.plusYears(1).format(årFormatter),
         yrkesskadeTidspunkt = beregning.yrkesskadeTidspunkt().format(årFormatter),
         yrkesskadeGrunnlag = beregning.grunnlaget().verdi(),
         grunnlag = beregning.grunnlaget().verdi()

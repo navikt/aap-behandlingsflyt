@@ -11,9 +11,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.OppgittStu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.repository.RepositoryFactory
 
 class SøknadService private constructor(
     private val mottaDokumentService: MottaDokumentService,
@@ -27,13 +28,16 @@ class SøknadService private constructor(
             // Skal alltid innhentes
             return true
         }
+
         override fun konstruer(connection: DBConnection): SøknadService {
+            val repositoryFactory = RepositoryFactory(connection)
+            val sakRepository = repositoryFactory.create(SakRepository::class)
             return SøknadService(
                 MottaDokumentService(
                     MottattDokumentRepository(connection)
                 ),
                 StudentRepository(connection),
-                SakService(SakRepositoryImpl(connection)),
+                SakService(sakRepository),
                 BarnRepository(connection)
             )
         }

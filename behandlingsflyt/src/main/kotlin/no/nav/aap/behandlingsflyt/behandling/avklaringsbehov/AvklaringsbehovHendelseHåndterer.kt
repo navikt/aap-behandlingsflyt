@@ -1,21 +1,14 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
-import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
-import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.motor.FlytJobbRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 
-class AvklaringsbehovHendelseHåndterer(connection: DBConnection) {
+class AvklaringsbehovHendelseHåndterer(
+    private val avklaringsbehovOrkestrator: AvklaringsbehovOrkestrator,
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val behandlingRepository: BehandlingRepository,
+) {
 
-    private val behandlingRepository = BehandlingRepositoryImpl(connection)
-    private val avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection)
-    private val avklaringsbehovOrkestrator = AvklaringsbehovOrkestrator(
-        connection,
-        BehandlingHendelseServiceImpl(FlytJobbRepository(connection), SakService(SakRepositoryImpl(connection)))
-    )
 
     fun håndtere(key: BehandlingId, hendelse: LøsAvklaringsbehovHendelse) {
         val behandling = behandlingRepository.hent(key)

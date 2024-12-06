@@ -2,12 +2,13 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsev
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -25,7 +26,11 @@ class SamordningYtelseVurderingServiceTest {
     fun kreverAvklaringNårEndringerKommer() {
         InitTestDatabase.dataSource.transaction { connection ->
             val repo = SamordningYtelseVurderingRepository(connection)
-            val service = SamordningYtelseVurderingService(connection)
+            val sakRepository = SakRepositoryImpl(connection)
+            val service = SamordningYtelseVurderingService(
+                SamordningYtelseVurderingRepository(connection),
+                SakService(sakRepository)
+            )
             val kontekst = opprettSakdata(connection)
 
             //Når det ikke finnes data

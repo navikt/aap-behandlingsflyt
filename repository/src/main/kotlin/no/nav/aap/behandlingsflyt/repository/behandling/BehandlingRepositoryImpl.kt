@@ -1,11 +1,17 @@
-package no.nav.aap.behandlingsflyt.sakogbehandling.behandling
+package no.nav.aap.behandlingsflyt.repository.behandling
 
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingFlytRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.repository.Factory
@@ -79,7 +85,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             id = behandlingId,
             referanse = BehandlingReferanse(row.getUUID("referanse")),
             sakId = SakId(row.getLong("sak_id")),
-            typeBehandling = TypeBehandling.from(row.getString("type")),
+            typeBehandling = TypeBehandling.Companion.from(row.getString("type")),
             status = row.getEnum("status"),
             stegHistorikk = hentStegHistorikk(behandlingId),
             versjon = row.getLong("versjon"),
@@ -206,7 +212,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                 setLong(1, behandlingId.toLong())
             }
             setRowMapper { row ->
-                TypeBehandling.from(row.getString("type"))
+                TypeBehandling.Companion.from(row.getString("type"))
             }
         }
     }

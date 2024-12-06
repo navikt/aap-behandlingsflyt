@@ -14,12 +14,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.repository.RepositoryFactory
 
 class BarnService private constructor(
     private val sakService: SakService,
@@ -108,12 +108,16 @@ class BarnService private constructor(
             // Skal alltid innhentes
             return true
         }
+
         override fun konstruer(connection: DBConnection): BarnService {
+            val repositoryFactory = RepositoryFactory(connection)
+            val sakRepository = repositoryFactory.create(SakRepository::class)
+            val personRepository = repositoryFactory.create(PersonRepository::class)
             return BarnService(
-                SakService(SakRepositoryImpl(connection)),
+                SakService(sakRepository),
                 BarnRepository(connection),
-                PersonopplysningRepository(connection),
-                PersonRepositoryImpl(connection),
+                PersonopplysningRepository(connection, RepositoryFactory(connection).create(PersonRepository::class)),
+                personRepository,
                 PdlBarnGateway,
                 PdlIdentGateway,
                 VilkårsresultatRepository(connection)

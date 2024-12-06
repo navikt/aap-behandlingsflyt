@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedInput
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
@@ -12,6 +13,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Ins
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
+import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MockConnection
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -30,7 +34,10 @@ class InstitusjonRegelTest {
     val utlederService = EtAnnetStedUtlederService(
         BarnetilleggRepository(mockConnection),
         InstitusjonsoppholdRepository(mockConnection),
-        SakOgBehandlingService(mockConnection)
+        SakOgBehandlingService(
+            GrunnlagKopierer(mockConnection, PersonRepositoryImpl(mockConnection)), SakRepositoryImpl(mockConnection),
+            BehandlingRepositoryImpl(mockConnection)
+        )
     )
 
     val regel = InstitusjonRegel()

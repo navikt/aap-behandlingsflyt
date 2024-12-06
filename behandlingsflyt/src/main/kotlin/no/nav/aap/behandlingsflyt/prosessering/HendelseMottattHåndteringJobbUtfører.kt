@@ -1,19 +1,28 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
+import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.UnparsedStrukturertDokument
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterMottattDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
+import no.nav.aap.repository.RepositoryFactory
 import no.nav.aap.verdityper.dokument.Kanal
 import java.time.LocalDateTime
 
@@ -23,10 +32,11 @@ private const val MOTTATT_DOKUMENT_REFERANSE = "referanse"
 private const val MOTTATT_TIDSPUNKT = "mottattTidspunkt"
 private const val PERIODE = "periode"
 
-class HendelseMottattHåndteringJobbUtfører(connection: DBConnection) : JobbUtfører {
-    private val låsRepository = TaSkriveLåsRepositoryImpl(connection)
-    private val hånderMottattDokumentService = HåndterMottattDokumentService(connection)
-    private val mottaDokumentService = MottaDokumentService(MottattDokumentRepository(connection))
+class HendelseMottattHåndteringJobbUtfører(
+    private val låsRepository: TaSkriveLåsRepository,
+    private val hånderMottattDokumentService: HåndterMottattDokumentService,
+    private val mottaDokumentService: MottaDokumentService
+) : JobbUtfører {
 
     override fun utfør(input: JobbInput) {
         val sakId = SakId(input.sakId())
@@ -88,8 +98,24 @@ class HendelseMottattHåndteringJobbUtfører(connection: DBConnection) : JobbUtf
             }
 
         override fun konstruer(connection: DBConnection): JobbUtfører {
+            val låsRepository = TaSkriveLåsRepositoryImpl(connection)
+            val repositoryFactory = RepositoryFactory(connection)
+            val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+            val sakRepository = repositoryFactory.create(SakRepository::class)
+            val personRepository = repositoryFactory.create(PersonRepository::class)
             return HendelseMottattHåndteringJobbUtfører(
-                connection
+                låsRepository,
+                HåndterMottattDokumentService(
+                    SakService(sakRepository),
+                    SakOgBehandlingService(
+                        GrunnlagKopierer(connection, personRepository),
+                        sakRepository,
+                        behandlingRepository
+                    ),
+                    låsRepository,
+                    ProsesserBehandlingService(FlytJobbRepository(connection))
+                ),
+                MottaDokumentService(MottattDokumentRepository(connection))
             )
         }
 

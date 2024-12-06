@@ -31,15 +31,15 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype
 import no.nav.aap.behandlingsflyt.pip.PipRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
+import no.nav.aap.repository.RepositoryFactory
 import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -273,8 +273,10 @@ class StatistikkJobbUtfører(
     companion object : Jobb {
         override fun konstruer(connection: DBConnection): JobbUtfører {
             val vilkårsresultatRepository = VilkårsresultatRepository(connection)
-            val behandlingRepository = BehandlingRepositoryImpl(connection)
-            val sakService = SakService(SakRepositoryImpl(connection))
+            val repositoryFactory = RepositoryFactory(connection)
+            val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+            val sakRepository = repositoryFactory.create(SakRepository::class)
+            val sakService = SakService(sakRepository)
 
             return StatistikkJobbUtfører(
                 StatistikkGateway(),

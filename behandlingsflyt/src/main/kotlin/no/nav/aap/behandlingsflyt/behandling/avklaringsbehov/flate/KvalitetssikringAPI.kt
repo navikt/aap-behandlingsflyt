@@ -11,10 +11,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.verdityper.Interval
+import no.nav.aap.repository.RepositoryFactory
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
@@ -24,8 +25,12 @@ fun NormalOpenAPIRoute.kvalitetssikringApi(dataSource: DataSource) {
             get<BehandlingReferanse, KvalitetssikringGrunnlagDto> { req ->
 
                 val dto = dataSource.transaction { connection ->
+
+                    val repositoryFactory = RepositoryFactory(connection)
+                    val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+
                     val behandling: Behandling =
-                        BehandlingReferanseService(BehandlingRepositoryImpl(connection)).behandling(req)
+                        BehandlingReferanseService(behandlingRepository).behandling(req)
                     val avklaringsbehovene =
                         AvklaringsbehovRepositoryImpl(connection).hentAvklaringsbehovene(behandling.id)
 

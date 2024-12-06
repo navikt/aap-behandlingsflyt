@@ -3,11 +3,8 @@ package no.nav.aap.behandlingsflyt.behandling.brev.bestilling
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
-import no.nav.aap.komponenter.dbconnect.DBConnection
 
 class BrevbestillingService(
     private val brevbestillingGateway: BrevbestillingGateway,
@@ -15,17 +12,6 @@ class BrevbestillingService(
     private val behandlingRepository: BehandlingRepository,
     private val sakRepository: SakRepository,
 ) {
-
-    companion object {
-        fun konstruer(connection: DBConnection): BrevbestillingService {
-            return BrevbestillingService(
-                BrevGateway(),
-                BrevbestillingRepository(connection),
-                BehandlingRepositoryImpl(connection),
-                SakRepositoryImpl(connection)
-            )
-        }
-    }
 
     fun eksisterendeBestilling(behandlingId: BehandlingId, typeBrev: TypeBrev): Brevbestilling? {
         return brevbestillingRepository.hent(behandlingId, typeBrev)
@@ -54,7 +40,8 @@ class BrevbestillingService(
     fun hentSisteBrevbestilling(behandlingReferanse: BehandlingReferanse): BrevbestillingResponse? {
         val behandling = behandlingRepository.hent(behandlingReferanse)
 
-        val brevbestilling = // TODO Bør ha en mer robust logikk for å finne relevant brev for editering, gitt en behandlingreferanse
+        val brevbestilling =
+            // TODO Bør ha en mer robust logikk for å finne relevant brev for editering, gitt en behandlingreferanse
             brevbestillingRepository.hent(behandling.id).maxByOrNull { it.id }!!
 
         return brevbestillingGateway.hent(brevbestilling.referanse)

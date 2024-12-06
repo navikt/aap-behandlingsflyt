@@ -19,4 +19,6 @@ interface SakRepository : Repository {
     fun finnSøker(saksnummer: Saksnummer): Person
 
     fun finnSøker(sakId: SakId): Person
+
+    fun oppdaterRettighetsperiode(sakId: SakId, periode: Periode)
 }

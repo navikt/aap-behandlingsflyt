@@ -13,10 +13,12 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.repository.RepositoryFactory
 import java.time.LocalDate
 
 class YrkesskadeService private constructor(
@@ -88,10 +90,12 @@ class YrkesskadeService private constructor(
         }
 
         override fun konstruer(connection: DBConnection): YrkesskadeService {
+            val repositoryFactory = RepositoryFactory(connection)
+            val sakRepository = repositoryFactory.create(SakRepository::class)
             return YrkesskadeService(
-                SakService(SakRepositoryImpl(connection)),
+                SakService(sakRepository),
                 YrkesskadeRepository(connection),
-                PersonopplysningRepository(connection),
+                PersonopplysningRepository(connection, repositoryFactory.create(PersonRepository::class)),
                 YrkesskadeRegisterGateway,
                 MottattDokumentRepository(connection),
             )

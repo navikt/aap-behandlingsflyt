@@ -9,9 +9,10 @@ import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.repository.RepositoryFactory
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.underveisVurderingerAPI(datasource: DataSource) {
@@ -26,7 +27,9 @@ fun NormalOpenAPIRoute.underveisVurderingerAPI(datasource: DataSource) {
         )
     ) { behandlingReferanse ->
         val underveisGrunnlag = datasource.transaction(readOnly = true) { conn ->
-            val behandling = BehandlingReferanseService(BehandlingRepositoryImpl(conn)).behandling(behandlingReferanse)
+            val repositoryFactory = RepositoryFactory(conn)
+            val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+            val behandling = BehandlingReferanseService(behandlingRepository).behandling(behandlingReferanse)
             UnderveisRepository(conn).hentHvisEksisterer(behandling.id)
         }
 

@@ -23,19 +23,19 @@ object InMemoryBehandlingRepository : BehandlingRepository, BehandlingFlytReposi
         sakId: SakId,
         årsaker: List<Årsak>,
         typeBehandling: TypeBehandling,
-        orginalBehandling: BehandlingId?
+        forrigeBehandlingId: BehandlingId?
     ): Behandling {
         synchronized(lock) {
             val id = BehandlingId(idSeq.andIncrement)
             if (memory.containsKey(id)) {
                 throw IllegalArgumentException("Behandling id finnes allerede $id")
             }
-            if (orginalBehandling != null && !memory.containsKey(orginalBehandling)) {
+            if (forrigeBehandlingId != null && !memory.containsKey(forrigeBehandlingId)) {
                 throw IllegalArgumentException("Behandling id finnes allerede $id")
             }
             val behandling = Behandling(
                 id = id,
-                forrigeBehandlingId = orginalBehandling,
+                forrigeBehandlingId = forrigeBehandlingId,
                 sakId = sakId,
                 typeBehandling = typeBehandling,
                 versjon = 1

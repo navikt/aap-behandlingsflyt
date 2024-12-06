@@ -5,21 +5,18 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.motor.FlytJobbRepository
 import java.time.LocalDate
 
-class HåndterMottattDokumentService(connection: DBConnection) {
-
-    private val sakService = SakService(SakRepositoryImpl(connection))
-    private val sakOgBehandlingService = SakOgBehandlingService(connection)
-    private val låsRepository = TaSkriveLåsRepositoryImpl(connection)
-    private val prosesserBehandling = ProsesserBehandlingService(FlytJobbRepository(connection))
+class HåndterMottattDokumentService(
+    private val sakService: SakService,
+    private val sakOgBehandlingService: SakOgBehandlingService,
+    private val låsRepository: TaSkriveLåsRepository,
+    private val prosesserBehandling: ProsesserBehandlingService
+) {
 
     fun håndterMottatteDokumenter(
         sakId: SakId,

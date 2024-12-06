@@ -10,10 +10,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRe
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.repository.RepositoryFactory
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource) {
@@ -21,7 +22,9 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource) {
         route("/{referanse}/grunnlag/beregning/tidspunkt") {
             get<BehandlingReferanse, BeregningTidspunktAvklaringDto> { req ->
                 val responsDto = dataSource.transaction(readOnly = true) {
-                    val behandling = BehandlingReferanseService(BehandlingRepositoryImpl(it)).behandling(req)
+                    val repositoryFactory = RepositoryFactory(it)
+                    val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+                    val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                     val skalVurdereUføre = UføreRepository(it).hentHvisEksisterer(behandling.id)?.vurdering != null
                     val beregningGrunnlag =
                         BeregningVurderingRepository(it).hentHvisEksisterer(behandlingId = behandling.id)
@@ -40,7 +43,9 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource) {
         route("/{referanse}/grunnlag/beregning/yrkesskade") {
             get<BehandlingReferanse, BeregningYrkesskadeAvklaringDto> { req ->
                 val responsDto = dataSource.transaction(readOnly = true) {
-                    val behandling = BehandlingReferanseService(BehandlingRepositoryImpl(it)).behandling(req)
+                    val repositoryFactory = RepositoryFactory(it)
+                    val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+                    val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                     val yrkesskadevurdering =
                         SykdomRepository(it).hentHvisEksisterer(behandling.id)?.yrkesskadevurdering
                     val registerYrkeskade =

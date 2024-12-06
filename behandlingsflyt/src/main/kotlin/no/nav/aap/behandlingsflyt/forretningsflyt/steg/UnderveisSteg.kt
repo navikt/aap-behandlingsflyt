@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederService
 import no.nav.aap.behandlingsflyt.behandling.underveis.UnderveisService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
@@ -16,8 +17,12 @@ import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.repository.RepositoryFactory
 import org.slf4j.LoggerFactory
 
 class UnderveisSteg(private val underveisService: UnderveisService) : BehandlingSteg {
@@ -33,7 +38,16 @@ class UnderveisSteg(private val underveisService: UnderveisService) : Behandling
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val behandlingService = SakOgBehandlingService(connection)
+            val repositoryFactory = RepositoryFactory(connection)
+            val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+            val sakRepository = repositoryFactory.create(SakRepository::class)
+            val personRepository = repositoryFactory.create(PersonRepository::class)
+            val behandlingService =
+                SakOgBehandlingService(
+                    GrunnlagKopierer(connection, personRepository),
+                    sakRepository,
+                    behandlingRepository
+                )
             return UnderveisSteg(
                 UnderveisService(
                     behandlingService = behandlingService,

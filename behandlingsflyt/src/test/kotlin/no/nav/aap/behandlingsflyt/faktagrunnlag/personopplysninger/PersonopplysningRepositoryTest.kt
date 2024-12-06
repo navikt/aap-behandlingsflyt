@@ -1,18 +1,20 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.personopplysninger
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
+import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.mars
@@ -33,7 +35,10 @@ class PersonopplysningRepositoryTest {
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val personopplysningRepository = PersonopplysningRepository(connection)
+            val personopplysningRepository = PersonopplysningRepository(
+                connection,
+                PersonRepositoryImpl(connection)
+            )
             val personopplysningGrunnlag = personopplysningRepository.hentHvisEksisterer(behandling.id)
             assertThat(personopplysningGrunnlag).isNull()
         }
@@ -45,7 +50,10 @@ class PersonopplysningRepositoryTest {
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val personopplysningRepository = PersonopplysningRepository(connection)
+            val personopplysningRepository = PersonopplysningRepository(
+                connection,
+                PersonRepositoryImpl(connection)
+            )
             personopplysningRepository.lagre(behandling.id, Personopplysning(Fødselsdato(17 mars 1992)))
             val personopplysningGrunnlag = personopplysningRepository.hentHvisEksisterer(behandling.id)
             assertThat(personopplysningGrunnlag?.brukerPersonopplysning).isEqualTo(Personopplysning(Fødselsdato(17 mars 1992)))
@@ -58,7 +66,10 @@ class PersonopplysningRepositoryTest {
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val personopplysningRepository = PersonopplysningRepository(connection)
+            val personopplysningRepository = PersonopplysningRepository(
+                connection,
+                PersonRepositoryImpl(connection)
+            )
             personopplysningRepository.lagre(behandling.id, Personopplysning(Fødselsdato(17 mars 1992)))
             personopplysningRepository.lagre(behandling.id, Personopplysning(Fødselsdato(18 mars 1992)))
             personopplysningRepository.lagre(behandling.id, Personopplysning(Fødselsdato(18 mars 1992)))
@@ -89,7 +100,10 @@ class PersonopplysningRepositoryTest {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
-            val personopplysningRepository = PersonopplysningRepository(connection)
+            val personopplysningRepository = PersonopplysningRepository(
+                connection,
+                PersonRepositoryImpl(connection)
+            )
             personopplysningRepository.lagre(behandling1.id, Personopplysning(Fødselsdato(17 mars 1992)))
             connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
                 setParams {
@@ -106,7 +120,10 @@ class PersonopplysningRepositoryTest {
     @Test
     fun `Kopiering av personopplysninger fra en behandling uten opplysningene skal ikke føre til feil`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val personopplysningRepository = PersonopplysningRepository(connection)
+            val personopplysningRepository = PersonopplysningRepository(
+                connection,
+                PersonRepositoryImpl(connection)
+            )
             assertDoesNotThrow {
                 personopplysningRepository.kopier(BehandlingId(Long.MAX_VALUE - 1), BehandlingId(Long.MAX_VALUE))
             }
@@ -118,7 +135,10 @@ class PersonopplysningRepositoryTest {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
-            val personopplysningRepository = PersonopplysningRepository(connection)
+            val personopplysningRepository = PersonopplysningRepository(
+                connection,
+                PersonRepositoryImpl(connection)
+            )
             personopplysningRepository.lagre(behandling1.id, Personopplysning(Fødselsdato(16 mars 1992)))
             personopplysningRepository.lagre(behandling1.id, Personopplysning(Fødselsdato(17 mars 1992)))
             connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
@@ -139,7 +159,10 @@ class PersonopplysningRepositoryTest {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
-            val personopplysningRepository = PersonopplysningRepository(connection)
+            val personopplysningRepository = PersonopplysningRepository(
+                connection,
+                PersonRepositoryImpl(connection)
+            )
 
             personopplysningRepository.lagre(behandling.id, Personopplysning(Fødselsdato(17 mars 1992)))
             val orginaltGrunnlag = personopplysningRepository.hentHvisEksisterer(behandling.id)
@@ -186,7 +209,10 @@ class PersonopplysningRepositoryTest {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
-            val personopplysningRepository = PersonopplysningRepository(connection)
+            val personopplysningRepository = PersonopplysningRepository(
+                connection,
+                PersonRepositoryImpl(connection)
+            )
             personopplysningRepository.lagre(behandling1.id, Personopplysning(Fødselsdato(17 mars 1992)))
             personopplysningRepository.lagre(behandling1.id, Personopplysning(Fødselsdato(17 april 1992)))
             connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
@@ -261,7 +287,10 @@ class PersonopplysningRepositoryTest {
     }
 
     private fun behandling(connection: DBConnection, sak: Sak): Behandling {
-        return SakOgBehandlingService(connection).finnEllerOpprettBehandling(
+        return SakOgBehandlingService(
+            GrunnlagKopierer(connection, PersonRepositoryImpl(connection)), SakRepositoryImpl(connection),
+            BehandlingRepositoryImpl(connection)
+        ).finnEllerOpprettBehandling(
             sak.saksnummer,
             listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
         ).behandling

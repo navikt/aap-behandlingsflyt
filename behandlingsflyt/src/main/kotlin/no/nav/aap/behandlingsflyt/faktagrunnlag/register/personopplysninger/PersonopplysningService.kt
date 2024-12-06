@@ -6,9 +6,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_END
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PdlPersonopplysningGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.repository.RepositoryFactory
 
 class PersonopplysningService private constructor(
     private val sakService: SakService,
@@ -35,10 +37,13 @@ class PersonopplysningService private constructor(
             // Skal alltid innhente ferske opplysninger
             return true
         }
+
         override fun konstruer(connection: DBConnection): PersonopplysningService {
+            val repositoryFactory = RepositoryFactory(connection)
+            val sakRepository = repositoryFactory.create(SakRepository::class)
             return PersonopplysningService(
-                SakService(SakRepositoryImpl(connection)),
-                PersonopplysningRepository(connection),
+                SakService(sakRepository),
+                PersonopplysningRepository(connection, repositoryFactory.create(PersonRepository::class)),
                 PdlPersonopplysningGateway
             )
         }

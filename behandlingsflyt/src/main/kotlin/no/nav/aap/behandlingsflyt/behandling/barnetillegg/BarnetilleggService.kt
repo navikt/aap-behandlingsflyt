@@ -32,8 +32,7 @@ class BarnetilleggService(
 
         val barnGrunnlag = barnRepository.hent(behandlingId)
         val folkeregisterBarn =
-            barnGrunnlag.registerbarn?.identer?.map { ident -> mapTilBarn(ident, personopplysningerGrunnlag) }
-                ?.filterNotNull()
+            barnGrunnlag.registerbarn?.identer?.mapNotNull { ident -> mapTilBarn(ident, personopplysningerGrunnlag) }
                 ?: emptyList()
         val folkeregisterBarnTidslinje = tilTidslinje(folkeregisterBarn)
 
@@ -47,8 +46,7 @@ class BarnetilleggService(
             })
 
         val oppgittBarn =
-            barnGrunnlag.oppgitteBarn?.identer?.map { ident -> mapTilBarn(ident, personopplysningerGrunnlag) }
-                ?.filterNotNull()
+            barnGrunnlag.oppgitteBarn?.identer?.mapNotNull { ident -> mapTilBarn(ident, personopplysningerGrunnlag) }
                 ?: emptyList()
         val oppgittBarnTidslinje = tilTidslinje(oppgittBarn)
         resultat =

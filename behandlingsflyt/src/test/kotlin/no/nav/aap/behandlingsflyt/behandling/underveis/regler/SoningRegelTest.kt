@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedInput
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
@@ -13,6 +14,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Ins
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soningsvurdering
+import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MockConnection
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -32,7 +36,10 @@ class SoningRegelTest {
     val utlederService = EtAnnetStedUtlederService(
         BarnetilleggRepository(mockConnection),
         InstitusjonsoppholdRepository(mockConnection),
-        SakOgBehandlingService(mockConnection)
+        SakOgBehandlingService(
+            GrunnlagKopierer(mockConnection, PersonRepositoryImpl(mockConnection)), SakRepositoryImpl(mockConnection),
+            BehandlingRepositoryImpl(mockConnection)
+        )
     )
 
     val regel = SoningRegel()
@@ -52,7 +59,7 @@ class SoningRegelTest {
                 gradering = Prosent.`100_PROSENT`
             ), grenseverdi = Prosent(60)
         ).leggTilVurdering(EnkelVurdering(Vilkårtype.ALDERSVILKÅRET, Utfall.OPPFYLT))
-        val tidligereResultatTidslinje = Tidslinje(listOf( Segment(periode, vurderingFraTidligereResultat)))
+        val tidligereResultatTidslinje = Tidslinje(listOf(Segment(periode, vurderingFraTidligereResultat)))
 
         val utlederInput = EtAnnetStedInput(
             institusjonsOpphold = listOf(
@@ -71,15 +78,18 @@ class SoningRegelTest {
                     skalOpphøre = true,
                     begrunnelse = "Formue under forvaring",
                     fraDato = LocalDate.of(2024, 1, 6)
-                ),Soningsvurdering(
+                ),
+                Soningsvurdering(
                     skalOpphøre = true,
                     begrunnelse = "Soner i fengsel",
                     fraDato = LocalDate.of(2024, 1, 11)
-                ),Soningsvurdering(
+                ),
+                Soningsvurdering(
                     skalOpphøre = false,
                     begrunnelse = "Jobber utenfor anstalten",
                     fraDato = LocalDate.of(2024, 1, 16)
-                ),Soningsvurdering(
+                ),
+                Soningsvurdering(
                     skalOpphøre = false,
                     begrunnelse = "Fotlenke",
                     fraDato = LocalDate.of(2024, 2, 6)
@@ -103,17 +113,26 @@ class SoningRegelTest {
         assertEquals(3, resultat.count())
 
         //Soner ikke
-        assertEquals(Periode(LocalDate.of(2024, 1, 1), (LocalDate.of(2024, 1, 5))), resultat.segmenter().elementAt(0).periode)
+        assertEquals(
+            Periode(LocalDate.of(2024, 1, 1), (LocalDate.of(2024, 1, 5))),
+            resultat.segmenter().elementAt(0).periode
+        )
         assertEquals(Prosent.`100_PROSENT`, resultat.segmenter().elementAt(0).verdi.gradering().gradering)
         assertEquals(null, resultat.segmenter().elementAt(0).verdi.avslagsårsak())
 
         //Formue under forvaltning og soner i fengsel
-        assertEquals(Periode(LocalDate.of(2024, 1, 6), (LocalDate.of(2024, 1, 15))), resultat.segmenter().elementAt(1).periode)
+        assertEquals(
+            Periode(LocalDate.of(2024, 1, 6), (LocalDate.of(2024, 1, 15))),
+            resultat.segmenter().elementAt(1).periode
+        )
         assertEquals(Prosent.`0_PROSENT`, resultat.segmenter().elementAt(1).verdi.gradering().gradering)
         assertEquals(UnderveisÅrsak.SONER_STRAFF, resultat.segmenter().elementAt(1).verdi.avslagsårsak())
 
         // Arbeider utenfor anstalten og soner i ved frigang
-        assertEquals(Periode(LocalDate.of(2024, 1, 16), (LocalDate.of(2024, 12, 1))), resultat.segmenter().elementAt(2).periode)
+        assertEquals(
+            Periode(LocalDate.of(2024, 1, 16), (LocalDate.of(2024, 12, 1))),
+            resultat.segmenter().elementAt(2).periode
+        )
         assertEquals(Prosent.`100_PROSENT`, resultat.segmenter().elementAt(2).verdi.gradering().gradering)
 
     }

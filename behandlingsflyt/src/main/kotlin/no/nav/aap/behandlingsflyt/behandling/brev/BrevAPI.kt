@@ -7,25 +7,31 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovHendelseHåndterer
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehovHendelse
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.BrevbestillingLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevGateway
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
+import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.LøsBrevbestillingDto
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.ElementNotFoundException
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoGateway
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.httpklient.auth.token
+import no.nav.aap.motor.FlytJobbRepository
+import no.nav.aap.repository.RepositoryFactory
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.authorizedPost
 import org.slf4j.MDC
@@ -42,11 +48,22 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
             route("/{referanse}/grunnlag/brev") {
                 get<BehandlingReferanse, BrevGrunnlag> { behandlingReferanse ->
                     val grunnlag = dataSource.transaction { connection ->
+
+                        val repositoryFactory = RepositoryFactory(connection)
+                        val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+                        val sakRepository = repositoryFactory.create(SakRepository::class)
+
                         val brevbestilling =
-                            BrevbestillingService.konstruer(connection).hentSisteBrevbestilling(behandlingReferanse)
+                            BrevbestillingService(
+                                brevbestillingGateway = BrevGateway(),
+                                brevbestillingRepository = BrevbestillingRepository(connection),
+                                behandlingRepository = behandlingRepository,
+                                sakRepository = sakRepository
+                            ).hentSisteBrevbestilling(behandlingReferanse)
                                 ?: throw ElementNotFoundException()
-                        val behandling = BehandlingRepositoryImpl(connection).hent(behandlingReferanse)
-                        val sak = SakService(SakRepositoryImpl(connection)).hent(behandling.sakId)
+                        val behandling = behandlingRepository.hent(behandlingReferanse)
+
+                        val sak = SakService(sakRepository).hent(behandling.sakId)
                         val personIdent = sak.person.aktivIdent()
                         val personinfo = PdlPersoninfoGateway.hentPersoninfoForIdent(personIdent, token())
                         BrevGrunnlag(
@@ -85,15 +102,29 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                     )
                 ) { _, request ->
                     dataSource.transaction { connection ->
-                        val taSkriveLåsRepositoryImpl = TaSkriveLåsRepositoryImpl(connection)
+                        val taSkriveLåsRepository = TaSkriveLåsRepositoryImpl(connection)
 
-                        val lås = taSkriveLåsRepositoryImpl.lås(request.behandlingReferanse)
+                        val lås = taSkriveLåsRepository.lås(request.behandlingReferanse)
+
+                        val repositoryFactory = RepositoryFactory(connection)
+                        val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+                        val sakRepository = repositoryFactory.create(SakRepository::class)
 
                         MDC.putCloseable("sakId", lås.sakSkrivelås.id.toString()).use {
                             MDC.putCloseable("behandlingId", lås.behandlingSkrivelås.id.toString()).use {
-                                val behandling = BehandlingRepositoryImpl(connection).hent(lås.behandlingSkrivelås.id)
+                                val behandling = behandlingRepository.hent(lås.behandlingSkrivelås.id)
 
-                                AvklaringsbehovHendelseHåndterer(connection).håndtere(
+                                AvklaringsbehovHendelseHåndterer(
+                                    AvklaringsbehovOrkestrator(
+                                        connection,
+                                        BehandlingHendelseServiceImpl(
+                                            FlytJobbRepository(connection),
+                                            SakService(sakRepository)
+                                        )
+                                    ),
+                                    AvklaringsbehovRepositoryImpl(connection),
+                                    behandlingRepository,
+                                ).håndtere(
                                     key = lås.behandlingSkrivelås.id,
                                     hendelse = LøsAvklaringsbehovHendelse(
                                         løsning = BrevbestillingLøsning(request),
@@ -102,7 +133,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                                     )
                                 )
 
-                                taSkriveLåsRepositoryImpl.verifiserSkrivelås(lås)
+                                taSkriveLåsRepository.verifiserSkrivelås(lås)
                             }
                         }
                     }

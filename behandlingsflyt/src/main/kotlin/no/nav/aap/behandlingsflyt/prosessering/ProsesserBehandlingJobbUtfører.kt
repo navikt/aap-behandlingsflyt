@@ -7,20 +7,24 @@ import no.nav.aap.behandlingsflyt.flyt.steg.internal.StegKonstruktørImpl
 import no.nav.aap.behandlingsflyt.flyt.ventebehov.VentebehovEvaluererServiceImpl
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.periodisering.PerioderTilVurderingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingFlytRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakFlytRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
+import no.nav.aap.repository.RepositoryFactory
 
 class ProsesserBehandlingJobbUtfører(
-    private val låsRepository: TaSkriveLåsRepositoryImpl,
+    private val låsRepository: TaSkriveLåsRepository,
     private val kontroller: FlytOrkestrator
 ) : JobbUtfører {
 
@@ -39,21 +43,24 @@ class ProsesserBehandlingJobbUtfører(
 
     companion object : Jobb {
         override fun konstruer(connection: DBConnection): JobbUtfører {
-            val behandlingRepository = BehandlingRepositoryImpl(connection)
-            val sakRepository = SakRepositoryImpl(connection)
+            val repositoryFactory = RepositoryFactory(connection)
+            val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+            val behandlingFlytRepository = repositoryFactory.create(BehandlingFlytRepository::class)
+            val sakRepository = repositoryFactory.create(SakRepository::class)
+            val sakFlytRepository = repositoryFactory.create(SakFlytRepository::class)
             return ProsesserBehandlingJobbUtfører(
                 TaSkriveLåsRepositoryImpl(connection),
                 FlytOrkestrator(
                     stegKonstruktør = StegKonstruktørImpl(connection),
                     ventebehovEvaluererService = VentebehovEvaluererServiceImpl(connection),
                     behandlingRepository = behandlingRepository,
-                    behandlingFlytRepository = behandlingRepository,
+                    behandlingFlytRepository = behandlingFlytRepository,
                     avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection),
                     informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(connection),
-                    sakRepository = sakRepository,
+                    sakRepository = sakFlytRepository,
                     perioderTilVurderingService = PerioderTilVurderingService(
                         SakService(sakRepository),
-                        BehandlingRepositoryImpl(connection)
+                        behandlingRepository
                     ),
                     behandlingHendelseService = BehandlingHendelseServiceImpl(
                         FlytJobbRepository(connection),

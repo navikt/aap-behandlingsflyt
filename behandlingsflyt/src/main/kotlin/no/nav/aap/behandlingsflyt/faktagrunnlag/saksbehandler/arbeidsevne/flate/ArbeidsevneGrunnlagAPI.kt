@@ -11,9 +11,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.Arbeid
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.repository.RepositoryFactory
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.arbeidsevneGrunnlagApi(dataSource: DataSource) {
@@ -38,8 +39,10 @@ private fun arbeidsevneGrunnlag(
     behandlingReferanse: BehandlingReferanse
 ): ArbeidsevneGrunnlagDto? {
     return dataSource.transaction { connection ->
+        val repositoryFactory = RepositoryFactory(connection)
+        val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
         val behandling: Behandling =
-            BehandlingReferanseService(BehandlingRepositoryImpl(connection)).behandling(behandlingReferanse)
+            BehandlingReferanseService(behandlingRepository).behandling(behandlingReferanse)
         val arbeidsevneRepository = ArbeidsevneRepository(connection)
 
         val nåTilstand = arbeidsevneRepository.hentHvisEksisterer(behandling.id)?.vurderinger ?: return@transaction null
@@ -62,8 +65,10 @@ private fun simuleringsresulat(
     dto: SimulerArbeidsevneDto
 ): SimulertArbeidsevneResultatDto {
     return dataSource.transaction { con ->
+        val repositoryFactory = RepositoryFactory(con)
+        val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
         val arbeidsevneRepository = ArbeidsevneRepository(con)
-        val behandling = BehandlingReferanseService(BehandlingRepositoryImpl(con)).behandling(behandlingReferanse)
+        val behandling = BehandlingReferanseService(behandlingRepository).behandling(behandlingReferanse)
 
         val vedtatteArbeidsevner =
             behandling.forrigeBehandlingId?.let { arbeidsevneRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()

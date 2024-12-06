@@ -1,19 +1,20 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.meldeplikt
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
+import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -67,7 +68,8 @@ class MeldepliktRepositoryTest {
                 behandling1.id,
                 listOf(fritaksvurdering)
             )
-            val behandling1Grunnlag = meldepliktRepository.hentHvisEksisterer(behandling1.id)?.vurderinger ?: emptyList()
+            val behandling1Grunnlag =
+                meldepliktRepository.hentHvisEksisterer(behandling1.id)?.vurderinger ?: emptyList()
             connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
                 setParams {
                     setLong(1, behandling1.id.toLong())
@@ -116,7 +118,10 @@ class MeldepliktRepositoryTest {
         }
         dataSource.transaction { connection ->
             val meldepliktRepository = MeldepliktRepository(connection)
-            val sak = SakOgBehandlingService(connection).hentSakFor(behandling1.id)
+            val sak = SakOgBehandlingService(
+                GrunnlagKopierer(connection, PersonRepositoryImpl(connection)), SakRepositoryImpl(connection),
+                BehandlingRepositoryImpl(connection)
+            ).hentSakFor(behandling1.id)
             val behandling2 = behandling(connection, sak)
             assertThat(behandling1.id).isNotEqualTo(behandling2.id)
             assertThat(behandling1.opprettetTidspunkt).isBefore(behandling2.opprettetTidspunkt)
@@ -124,7 +129,8 @@ class MeldepliktRepositoryTest {
             val meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling2.id)
             assertThat(meldepliktGrunnlag?.vurderinger).hasSize(1)
 
-            val alleVurderingerFørBehandling = meldepliktRepository.hentAlleVurderinger(behandling2.sakId, behandling2.id)
+            val alleVurderingerFørBehandling =
+                meldepliktRepository.hentAlleVurderinger(behandling2.sakId, behandling2.id)
 
             assertThat(alleVurderingerFørBehandling).hasSize(1)
         }
@@ -314,7 +320,10 @@ class MeldepliktRepositoryTest {
     }
 
     private fun behandling(connection: DBConnection, sak: Sak): Behandling {
-        val behandling = SakOgBehandlingService(connection).finnEllerOpprettBehandling(
+        val behandling = SakOgBehandlingService(
+            GrunnlagKopierer(connection, PersonRepositoryImpl(connection)), SakRepositoryImpl(connection),
+            BehandlingRepositoryImpl(connection)
+        ).finnEllerOpprettBehandling(
             sak.saksnummer,
             listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
         ).behandling

@@ -2,28 +2,19 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.repository.RepositoryFactory
 
-class FatteVedtakLøser(
-    private val avklaringsbehovRepository: AvklaringsbehovRepository,
-    private val behandlingRepository: BehandlingRepository
-) : AvklaringsbehovsLøser<FatteVedtakLøsning> {
+class FatteVedtakLøser(dbConnection: DBConnection) : AvklaringsbehovsLøser<FatteVedtakLøsning> {
 
-    /**
-     * Brukes i [no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklaringsbehovsLøserTest]
-     */
-    @Suppress("unused")
-    constructor(dbConnection: DBConnection) : this(
-        AvklaringsbehovRepositoryImpl(dbConnection),
-        BehandlingRepositoryImpl(dbConnection)
-    )
+    private val repositoryFactory = RepositoryFactory(dbConnection)
+    private val avklaringsbehovRepository = repositoryFactory.create(AvklaringsbehovRepository::class)
+    private val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: FatteVedtakLøsning): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)

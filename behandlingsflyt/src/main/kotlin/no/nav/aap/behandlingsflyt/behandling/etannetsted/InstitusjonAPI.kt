@@ -4,6 +4,7 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
@@ -17,10 +18,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.SoningsGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.Soningsforhold
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.repository.RepositoryFactory
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource) {
@@ -28,12 +32,20 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource) {
         route("/{referanse}/grunnlag/institusjon/soning") {
             get<BehandlingReferanse, SoningsGrunnlag> { req ->
                 val soningsgrunnlag = dataSource.transaction(readOnly = true) { connection ->
-                    val behandling = BehandlingReferanseService(BehandlingRepositoryImpl(connection)).behandling(req)
+                    val repositoryFactory = RepositoryFactory(connection)
+                    val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+                    val sakRepository = repositoryFactory.create(SakRepository::class)
+                    val personRepository = repositoryFactory.create(PersonRepository::class)
+                    val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                     val institusjonsoppholdRepository = InstitusjonsoppholdRepository(connection)
                     val utlederService =
                         EtAnnetStedUtlederService(
                             BarnetilleggRepository(connection), institusjonsoppholdRepository,
-                            SakOgBehandlingService(connection)
+                            SakOgBehandlingService(
+                                GrunnlagKopierer(connection, personRepository),
+                                sakRepository,
+                                behandlingRepository
+                            )
                         )
                     val behov = utlederService.utled(behandling.id)
 
@@ -68,12 +80,20 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource) {
         route("/{referanse}/grunnlag/institusjon/helse") {
             get<BehandlingReferanse, HelseinstitusjonGrunnlag> { req ->
                 val grunnlagDto = dataSource.transaction(readOnly = true) { connection ->
-                    val behandling = BehandlingReferanseService(BehandlingRepositoryImpl(connection)).behandling(req)
+                    val repositoryFactory = RepositoryFactory(connection)
+                    val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+                    val sakRepository = repositoryFactory.create(SakRepository::class)
+                    val personRepository = repositoryFactory.create(PersonRepository::class)
+                    val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                     val institusjonsoppholdRepository = InstitusjonsoppholdRepository(connection)
                     val utlederService =
                         EtAnnetStedUtlederService(
                             BarnetilleggRepository(connection), institusjonsoppholdRepository,
-                            SakOgBehandlingService(connection)
+                            SakOgBehandlingService(
+                                GrunnlagKopierer(connection, personRepository),
+                                sakRepository,
+                                behandlingRepository
+                            )
                         )
                     val behov = utlederService.utled(behandling.id)
 

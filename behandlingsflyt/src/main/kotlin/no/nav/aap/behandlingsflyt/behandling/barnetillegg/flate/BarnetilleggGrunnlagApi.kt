@@ -5,6 +5,7 @@ import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.BarnetilleggService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
@@ -14,9 +15,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Pers
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.repository.RepositoryFactory
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource) {
@@ -24,11 +28,21 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource) {
         route("/grunnlag/{referanse}") {
             get<BehandlingReferanse, BarnetilleggDto> { req ->
                 val dto = dataSource.transaction { connection ->
+                    val repositoryFactory = RepositoryFactory(connection)
+                    val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
                     val behandling: Behandling =
-                        BehandlingReferanseService(BehandlingRepositoryImpl(connection)).behandling(req)
-                    val personopplysningRepository = PersonopplysningRepository(connection)
+                        BehandlingReferanseService(behandlingRepository).behandling(req)
+                    val personRepository = repositoryFactory.create(PersonRepository::class)
+                    val personopplysningRepository = PersonopplysningRepository(
+                        connection,
+                        personRepository
+                    )
                     val barnRepository = BarnRepository(connection)
-                    val sakOgBehandlingService = SakOgBehandlingService(connection)
+                    val sakRepository = repositoryFactory.create(SakRepository::class)
+
+                    val sakOgBehandlingService = SakOgBehandlingService(
+                        GrunnlagKopierer(connection, personRepository), sakRepository, behandlingRepository
+                    )
                     val barnetilleggService = BarnetilleggService(
                         sakOgBehandlingService,
                         barnRepository,

@@ -7,9 +7,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.adapter.InstitusjonsoppholdGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.repository.RepositoryFactory
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGateway as IInstitusjonsoppholdGateway
 
 class InstitusjonsoppholdService private constructor(
@@ -49,9 +50,12 @@ class InstitusjonsoppholdService private constructor(
         override fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
             return true
         }
+
         override fun konstruer(connection: DBConnection): InstitusjonsoppholdService {
+            val repositoryFactory = RepositoryFactory(connection)
+            val sakRepository = repositoryFactory.create(SakRepository::class)
             return InstitusjonsoppholdService(
-                SakService(SakRepositoryImpl(connection)),
+                SakService(sakRepository),
                 InstitusjonsoppholdRepository(connection),
                 InstitusjonsoppholdGateway
             )

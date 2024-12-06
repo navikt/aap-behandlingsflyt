@@ -13,14 +13,15 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.SakRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.FlytJobbRepository
+import no.nav.aap.repository.RepositoryFactory
 import no.nav.aap.verdityper.dokument.Kanal
 import javax.sql.DataSource
 
@@ -45,8 +46,10 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
 
             get<SaksnummerParameter, BruddAktivitetspliktResponse> { params ->
                 val response = dataSource.transaction { connection ->
+                    val repositoryFactory = RepositoryFactory(connection)
+                    val sakRepository = repositoryFactory.create(SakRepository::class)
                     val repository = AktivitetspliktRepository(connection)
-                    val sak = SakService(SakRepositoryImpl(connection)).hent(Saksnummer(params.saksnummer))
+                    val sak = SakService(sakRepository).hent(Saksnummer(params.saksnummer))
                     val alleBrudd = repository.hentBrudd(sak.id).utledBruddTilstand()
                     BruddAktivitetspliktResponse(alleBrudd)
                 }
@@ -56,10 +59,17 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
     }
 }
 
-private fun opprettDokument(connection: DBConnection, navIdent: Bruker, saksnummer: Saksnummer, req: AktivitetspliktDTO) {
+private fun opprettDokument(
+    connection: DBConnection,
+    navIdent: Bruker,
+    saksnummer: Saksnummer,
+    req: AktivitetspliktDTO
+) {
+    val repositoryFactory = RepositoryFactory(connection)
+    val sakRepository = repositoryFactory.create(SakRepository::class)
     val repository = AktivitetspliktRepository(connection)
 
-    val sak = SakService(SakRepositoryImpl(connection)).hent(saksnummer)
+    val sak = SakService(sakRepository).hent(saksnummer)
 
     val aktivitetspliktDokumenter = req.tilDomene(sak, navIdent)
     val innsendingId = repository.lagreBrudd(sak.id, aktivitetspliktDokumenter)
