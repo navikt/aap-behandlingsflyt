@@ -24,7 +24,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.fatteVedtakGr
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.kvalitetssikringApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.utledSubtypes
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.flate.barnetilleggApi
-import no.nav.aap.behandlingsflyt.behandling.beregning.flate.beregningsGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.beregning.beregningsGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.brev.brevApi
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.institusjonAPI
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.flate.tilkjentYtelseAPI

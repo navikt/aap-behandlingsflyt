@@ -13,8 +13,8 @@ class RettTilBarnetillegg(barn: Set<Ident> = emptySet()) {
         return this
     }
 
-    fun leggTilOppgitteBarn(ident: Set<Ident>): RettTilBarnetillegg {
-        uavklarteBarn.addAll(ident.filter { ident -> !barnMedFolkeregisterRelasjonTil.any { it.er(ident) } })
+    fun leggTilOppgitteBarn(identer: Set<Ident>): RettTilBarnetillegg {
+        uavklarteBarn.addAll(identer.filter { ident -> !barnMedFolkeregisterRelasjonTil.any { it.er(ident) } })
         return this
     }
 
@@ -50,6 +50,7 @@ class RettTilBarnetillegg(barn: Set<Ident> = emptySet()) {
     fun registerBarn(): Set<Ident> {
         return barnMedFolkeregisterRelasjonTil
     }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

@@ -9,7 +9,7 @@ import java.time.Year
 class Beregning(
     private val input: Inntektsbehov
 ) {
-    internal fun beregneMedInput(): Beregningsgrunnlag {
+    fun beregneMedInput(): Beregningsgrunnlag {
         //6G begrensning ligger her samt gjennomsnitt
         val grunnlag11_19 = beregn11_19Grunnlag(input.utledForOrdinær())
 

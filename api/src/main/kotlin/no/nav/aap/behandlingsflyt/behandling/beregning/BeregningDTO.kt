@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.behandling.beregning.flate
+package no.nav.aap.behandlingsflyt.behandling.beregning
 
 import java.math.BigDecimal
 

@@ -7,6 +7,7 @@ import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.BarnetilleggService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
@@ -30,15 +31,18 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource) {
                 val dto = dataSource.transaction { connection ->
                     val repositoryFactory = RepositoryFactory(connection)
                     val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+                    val vilkårsresultatRepository = repositoryFactory.create(VilkårsresultatRepository::class)
+                    val sakRepository = repositoryFactory.create(SakRepository::class)
+                    val personRepository = repositoryFactory.create(PersonRepository::class)
+
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
-                    val personRepository = repositoryFactory.create(PersonRepository::class)
+
                     val personopplysningRepository = PersonopplysningRepository(
                         connection,
                         personRepository
                     )
                     val barnRepository = BarnRepository(connection)
-                    val sakRepository = repositoryFactory.create(SakRepository::class)
 
                     val sakOgBehandlingService = SakOgBehandlingService(
                         GrunnlagKopierer(connection, personRepository), sakRepository, behandlingRepository
@@ -47,7 +51,7 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource) {
                         sakOgBehandlingService,
                         barnRepository,
                         personopplysningRepository,
-                        VilkårsresultatRepositoryImpl(connection)
+                        vilkårsresultatRepository,
                     )
                     val barnetilleggTidslinje = barnetilleggService.beregn(behandling.id)
 
