@@ -20,8 +20,8 @@ import io.ktor.server.routing.*
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.avklaringsbehovApi
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.fatteVedtakGrunnlagApi
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.kvalitetssikringApi
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.fatteVedtakGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.kvalitetssikring.kvalitetssikringApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.utledSubtypes
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.flate.barnetilleggApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.beregningsGrunnlagApi

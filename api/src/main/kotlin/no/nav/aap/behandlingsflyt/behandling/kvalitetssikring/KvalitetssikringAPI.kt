@@ -1,14 +1,15 @@
-package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate
+package no.nav.aap.behandlingsflyt.behandling.kvalitetssikring
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.Aksjon
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.DefinisjonEndring
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.Historikk
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
-import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
-import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -21,24 +22,26 @@ import no.nav.aap.repository.RepositoryFactory
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(dataSource: DataSource) {
+fun NormalOpenAPIRoute.kvalitetssikringApi(dataSource: DataSource) {
     route("/api/behandling") {
-        route("/{referanse}/grunnlag/fatte-vedtak") {
-            get<BehandlingReferanse, FatteVedtakGrunnlagDto> { req ->
+        route("/{referanse}/grunnlag/kvalitetssikring") {
+            get<BehandlingReferanse, KvalitetssikringGrunnlagDto> { req ->
 
                 val dto = dataSource.transaction { connection ->
-
                     val repositoryFactory = RepositoryFactory(connection)
                     val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+                    val avklaringsbehovRepository = repositoryFactory.create(AvklaringsbehovRepository::class)
 
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
                     val avklaringsbehovene =
-                        AvklaringsbehovRepositoryImpl(connection).hentAvklaringsbehovene(behandling.id)
-                    val flyt = utledType(behandling.typeBehandling()).flyt()
+                        avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
 
-                    val vurderinger = beslutterVurdering(avklaringsbehovene, flyt)
-                    FatteVedtakGrunnlagDto(vurderinger = vurderinger, historikk = utledHistorikk(avklaringsbehovene))
+                    val vurderinger = kvalitetssikringsVurdering(avklaringsbehovene)
+                    KvalitetssikringGrunnlagDto(
+                        vurderinger = vurderinger,
+                        historikk = utledKvalitetssikringHistorikk(avklaringsbehovene)
+                    )
                 }
                 respond(dto)
             }
@@ -46,33 +49,34 @@ fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(dataSource: DataSource) {
     }
 }
 
-fun utledHistorikk(avklaringsbehovene: Avklaringsbehovene): List<Historikk> {
+private fun utledKvalitetssikringHistorikk(avklaringsbehovene: Avklaringsbehovene): List<Historikk> {
     val relevanteBehov =
-        avklaringsbehovene.hentBehovForDefinisjon(listOf(Definisjon.FORESLÅ_VEDTAK, Definisjon.FATTE_VEDTAK))
+        avklaringsbehovene.hentBehovForDefinisjon(listOf(Definisjon.KVALITETSSIKRING))
     val alleBehov = avklaringsbehovene.alle()
-        .filterNot { behov -> behov.definisjon in listOf(Definisjon.FORESLÅ_VEDTAK, Definisjon.FATTE_VEDTAK) }
+        .filter { behov -> behov.definisjon in Definisjon.entries.filter { it.kvalitetssikres } }
     var tidsstempelForrigeBehov = LocalDateTime.MIN
 
     return relevanteBehov
         .asSequence()
         .flatMap { behov ->
-            behov.historikk.filter { e -> e.status in listOf(Status.AVSLUTTET) }
+            behov.historikk.filter { e -> e.status in listOf(Status.OPPRETTET, Status.AVSLUTTET) }
                 .map { endring -> DefinisjonEndring(behov.definisjon, endring) }
         }
         .sorted()
         .map { behov ->
-            val aksjon = if (behov.definisjon == Definisjon.FORESLÅ_VEDTAK) {
-                Aksjon.SENDT_TIL_BESLUTTER
+            val aksjon = if (behov.endring.status == Status.OPPRETTET) {
+                Aksjon.SENDT_TIL_KVALITETSSIKRER
             } else {
                 val endringerSidenSist =
                     utledEndringerSidenSist(alleBehov, tidsstempelForrigeBehov, behov.endring.tidsstempel)
-                if (endringerSidenSist.any { it.endring.status == Status.SENDT_TILBAKE_FRA_BESLUTTER }) {
-                    Aksjon.RETURNERT_FRA_BESLUTTER
+                tidsstempelForrigeBehov = behov.endring.tidsstempel
+                if (endringerSidenSist.any { it.endring.status == Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER }) {
+                    Aksjon.RETURNERT_FRA_KVALITETSSIKRER
                 } else {
-                    Aksjon.FATTET_VEDTAK
+                    Aksjon.KVALITETSSIKRET
                 }
             }
-            tidsstempelForrigeBehov = behov.endring.tidsstempel
+
             Historikk(aksjon, behov.endring.tidsstempel, behov.endring.endretAv)
         }.sorted()
         .toList()
@@ -93,18 +97,22 @@ private fun utledEndringerSidenSist(
     }.flatten()
 }
 
-private fun beslutterVurdering(avklaringsbehovene: Avklaringsbehovene, flyt: BehandlingFlyt): List<TotrinnsVurdering> {
+private fun kvalitetssikringsVurdering(avklaringsbehovene: Avklaringsbehovene): List<TotrinnsVurdering> {
     return avklaringsbehovene.alle()
-        .filter { it.erTotrinn() }
-        .sortedWith { o1, o2 -> flyt.compareable().compare(o1.løsesISteg(), o2.løsesISteg()) }
+        .filter { it.definisjon.kvalitetssikres }
         .map { tilKvalitetssikring(it) }
 }
 
 private fun tilKvalitetssikring(it: no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov): TotrinnsVurdering {
-    return if (it.erTotrinnsVurdert() || it.harVærtSendtTilbakeFraBeslutterTidligere()) {
+    return if (it.erKvalitetssikretTidligere() || it.harVærtSendtTilbakeFraKvalitetssikrerTidligere()) {
         val sisteVurdering =
-            it.historikk.lastOrNull { it.status in setOf(Status.SENDT_TILBAKE_FRA_BESLUTTER, Status.TOTRINNS_VURDERT) }
-        val godkjent = it.status() == Status.TOTRINNS_VURDERT
+            it.historikk.lastOrNull {
+                it.status in setOf(
+                    Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER,
+                    Status.KVALITETSSIKRET
+                )
+            }
+        val godkjent = it.status() == Status.KVALITETSSIKRET
 
         TotrinnsVurdering(
             it.definisjon.kode,
