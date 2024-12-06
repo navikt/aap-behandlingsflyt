@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -15,7 +15,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.repository.RepositoryFactory
 
 class StartBehandlingSteg private constructor(
-    private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val vilkårsresultatRepository: VilkårsresultatRepositoryImpl,
     private val sakService: SakService
 ) : BehandlingSteg {
 
@@ -43,7 +43,7 @@ class StartBehandlingSteg private constructor(
             val repositoryFactory = RepositoryFactory(connection)
             val sakRepository = repositoryFactory.create(SakRepository::class)
             return StartBehandlingSteg(
-                VilkårsresultatRepository(connection),
+                VilkårsresultatRepositoryImpl(connection),
                 SakService(sakRepository)
             )
         }

@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
@@ -19,7 +19,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.dbconnect.DBConnection
 
 class VurderYrkesskadeSteg private constructor(
-    private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val vilkårsresultatRepository: VilkårsresultatRepositoryImpl,
     private val sykdomRepository: SykdomRepository,
     private val yrkesskadeRepository: YrkesskadeRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepositoryImpl
@@ -64,7 +64,7 @@ class VurderYrkesskadeSteg private constructor(
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
             return VurderYrkesskadeSteg(
-                VilkårsresultatRepository(connection),
+                VilkårsresultatRepositoryImpl(connection),
                 SykdomRepository(connection),
                 YrkesskadeRepository(connection),
                 AvklaringsbehovRepositoryImpl(connection)

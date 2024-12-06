@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
@@ -51,7 +51,7 @@ class UnderveisSteg(private val underveisService: UnderveisService) : Behandling
             return UnderveisSteg(
                 UnderveisService(
                     behandlingService = behandlingService,
-                    vilkårsresultatRepository = VilkårsresultatRepository(connection),
+                    vilkårsresultatRepository = VilkårsresultatRepositoryImpl(connection),
                     pliktkortRepository = PliktkortRepository(connection),
                     underveisRepository = UnderveisRepository(connection),
                     aktivitetspliktRepository = AktivitetspliktRepository(connection),

@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
@@ -22,7 +22,7 @@ class VurderSykdomSteg private constructor(
     private val sykdomRepository: SykdomRepository,
     private val studentRepository: StudentRepository,
     private val yrkesskadeRepository: YrkesskadeRepository,
-    private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val vilkårsresultatRepository: VilkårsresultatRepositoryImpl,
     private val avklaringsbehovRepository: AvklaringsbehovRepository
 ) : BehandlingSteg {
 
@@ -61,7 +61,7 @@ class VurderSykdomSteg private constructor(
                 SykdomRepository(connection),
                 StudentRepository(connection),
                 YrkesskadeRepository(connection),
-                VilkårsresultatRepository(connection),
+                VilkårsresultatRepositoryImpl(connection),
                 AvklaringsbehovRepositoryImpl(connection)
             )
         }

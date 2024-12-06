@@ -4,9 +4,16 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.repository.Factory
 import java.util.*
 
 class TaSkriveLåsRepositoryImpl(private val connection: DBConnection): TaSkriveLåsRepository {
+
+    companion object : Factory<TaSkriveLåsRepositoryImpl> {
+        override fun konstruer(connection: DBConnection): TaSkriveLåsRepositoryImpl {
+            return TaSkriveLåsRepositoryImpl(connection)
+        }
+    }
 
     override fun lås(sakId: SakId, behandlingId: BehandlingId): Skrivelås {
         val sakSkrivelås = låsSak(sakId)

@@ -8,7 +8,7 @@ import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.BehandlingTilstandValidator
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FrivilligeAvklaringsbehov
@@ -35,7 +35,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.motor.FlytJobbRepository
@@ -51,7 +50,12 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
         route("/{referanse}/flyt") {
             get<BehandlingReferanse, BehandlingFlytOgTilstandDto> { req ->
                 val dto = dataSource.transaction(readOnly = true) { connection ->
-                    var behandling = behandling(connection, req)
+                    val repositoryFactory = RepositoryFactory(connection)
+                    val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+                    val vilkårsresultatRepository = repositoryFactory.create(VilkårsresultatRepository::class)
+                    val avklaringsbehovRepository = repositoryFactory.create(AvklaringsbehovRepository::class)
+
+                    var behandling = behandling(behandlingRepository, req)
                     val flytJobbRepository = FlytJobbRepository(connection)
                     val gruppeVisningService = DynamiskStegGruppeVisningService(connection)
 
@@ -77,7 +81,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
                                 )
                             })
                     // Henter denne ut etter status er utledet for å være sikker på at dataene er i rett tilstand
-                    behandling = behandling(connection, req)
+                    behandling = behandling(behandlingRepository, req)
                     val flyt = utledType(behandling.typeBehandling()).flyt()
 
                     val stegGrupper: Map<StegGruppe, List<StegType>> =
@@ -85,7 +89,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
                     val aktivtSteg = behandling.aktivtSteg()
                     var erFullført = true
                     val avklaringsbehovene = avklaringsbehov(
-                        connection,
+                        avklaringsbehovRepository,
                         behandling.id
                     )
                     val alleAvklaringsbehovInkludertFrivillige = FrivilligeAvklaringsbehov(
@@ -93,7 +97,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
                         flyt, aktivtSteg
                     )
                     val vurdertStegPair = utledVurdertGruppe(prosessering, aktivtSteg, flyt, avklaringsbehovene)
-                    val vilkårsresultat = vilkårResultat(connection, behandling.id)
+                    val vilkårsresultat = vilkårResultat(vilkårsresultatRepository, behandling.id)
                     val alleAvklaringsbehov = alleAvklaringsbehovInkludertFrivillige.alle()
                     BehandlingFlytOgTilstandDto(
                         flyt = stegGrupper.map { (gruppe, steg) ->
@@ -142,9 +146,13 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
         route("/{referanse}/resultat") {
             get<BehandlingReferanse, BehandlingResultatDto> { req ->
                 val dto = dataSource.transaction(readOnly = true) { connection ->
-                    val behandling = behandling(connection, req)
+                    val repositoryFactory = RepositoryFactory(connection)
+                    val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+                    val vilkårsresultatRepository = repositoryFactory.create(VilkårsresultatRepository::class)
 
-                    val vilkårResultat = vilkårResultat(connection, behandling.id)
+                    val behandling = behandling(behandlingRepository, req)
+
+                    val vilkårResultat = vilkårResultat(vilkårsresultatRepository, behandling.id)
 
                     BehandlingResultatDto(alleVilkår(vilkårResultat))
                 }
@@ -194,8 +202,12 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
         route("/{referanse}/vente-informasjon") {
             get<BehandlingReferanse, Venteinformasjon> { request ->
                 val dto = dataSource.transaction(readOnly = true) { connection ->
-                    val behandling = behandling(connection, request)
-                    val avklaringsbehovene = avklaringsbehov(connection, behandling.id)
+                    val repositoryFactory = RepositoryFactory(connection)
+                    val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+                    val avklaringsbehovRepository = repositoryFactory.create(AvklaringsbehovRepository::class)
+
+                    val behandling = behandling(behandlingRepository, request)
+                    val avklaringsbehovene = avklaringsbehov(avklaringsbehovRepository, behandling.id)
 
                     val ventepunkter = avklaringsbehovene.hentÅpneVentebehov()
                     if (avklaringsbehovene.erSattPåVent()) {
@@ -338,18 +350,16 @@ private fun alleVilkår(vilkårResultat: Vilkårsresultat): List<VilkårDTO> {
     }
 }
 
-private fun behandling(connection: DBConnection, req: BehandlingReferanse): Behandling {
-    val repositoryFactory = RepositoryFactory(connection)
-    val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+private fun behandling(behandlingRepository: BehandlingRepository, req: BehandlingReferanse): Behandling {
     return BehandlingReferanseService(behandlingRepository).behandling(req)
 }
 
-private fun avklaringsbehov(connection: DBConnection, behandlingId: BehandlingId): Avklaringsbehovene {
-    return AvklaringsbehovRepositoryImpl(connection).hentAvklaringsbehovene(behandlingId)
+private fun avklaringsbehov(avklaringsbehovRepository: AvklaringsbehovRepository, behandlingId: BehandlingId): Avklaringsbehovene {
+    return avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
 }
 
-private fun vilkårResultat(connection: DBConnection, behandlingId: BehandlingId): Vilkårsresultat {
-    return VilkårsresultatRepository(connection).hent(behandlingId)
+private fun vilkårResultat(vilkårsresultatRepository: VilkårsresultatRepository, behandlingId: BehandlingId): Vilkårsresultat {
+    return vilkårsresultatRepository.hent(behandlingId)
 }
 
 private fun hentUtRelevantVilkårForSteg(vilkårsresultat: Vilkårsresultat, stegType: StegType): VilkårDTO? {

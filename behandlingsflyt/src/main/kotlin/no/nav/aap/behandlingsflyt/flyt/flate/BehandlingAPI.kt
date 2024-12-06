@@ -6,23 +6,22 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FrivilligeAvklaringsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
-import no.nav.aap.behandlingsflyt.pip.PipRepository
+import no.nav.aap.behandlingsflyt.pip.PipRepositoryImpl
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
-import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoBulkGateway
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
@@ -37,7 +36,12 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
         route("/{referanse}") {
             get<BehandlingReferanse, DetaljertBehandlingDTO> { req ->
                 val dto = dataSource.transaction(readOnly = true) { connection ->
-                    val behandling = behandling(connection, req)
+                    val repositoryFactory = RepositoryFactory(connection)
+                    val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+                    val avklaringsbehovRepository = repositoryFactory.create(AvklaringsbehovRepository::class)
+                    val vilkårsresultatRepository = repositoryFactory.create(VilkårsresultatRepository::class)
+
+                    val behandling = behandling(behandlingRepository, req)
                     val flyt = utledType(behandling.typeBehandling()).flyt()
                     DetaljertBehandlingDTO(
                         referanse = behandling.referanse.referanse,
@@ -47,7 +51,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
                         skalForberede = behandling.harIkkeVærtAktivitetIDetSiste(),
                         avklaringsbehov = FrivilligeAvklaringsbehov(
                             avklaringsbehov(
-                                connection,
+                                avklaringsbehovRepository,
                                 behandling.id
                             ),
                             flyt,
@@ -66,7 +70,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
                                 }
                             )
                         },
-                        vilkår = vilkårResultat(connection, behandling.id).alle().map { vilkår ->
+                        vilkår = vilkårResultat(vilkårsresultatRepository, behandling.id).alle().map { vilkår ->
                             VilkårDTO(
                                 vilkårtype = vilkår.type,
                                 perioder = vilkår.vilkårsperioder()
@@ -91,9 +95,11 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
         route("/{referanse}/forbered") {
             get<BehandlingReferanse, DetaljertBehandlingDTO> { req ->
                 dataSource.transaction { connection ->
-                    val taSkriveLåsRepositoryImpl = TaSkriveLåsRepositoryImpl(connection)
-                    val lås = taSkriveLåsRepositoryImpl.lås(req.referanse)
-                    val behandling = behandling(connection, req)
+                    val repositoryFactory = RepositoryFactory(connection)
+                    val taSkriveLåsRepository = repositoryFactory.create(TaSkriveLåsRepository::class)
+                    val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+                    val lås = taSkriveLåsRepository.lås(req.referanse)
+                    val behandling = behandling(behandlingRepository, req)
                     val flytJobbRepository = FlytJobbRepository(connection)
                     if (!behandling.status()
                             .erAvsluttet() && behandling.harIkkeVærtAktivitetIDetSiste() && flytJobbRepository.hentJobberForBehandling(
@@ -107,7 +113,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
                             )
                         )
                     }
-                    taSkriveLåsRepositoryImpl.verifiserSkrivelås(lås)
+                    taSkriveLåsRepository.verifiserSkrivelås(lås)
                 }
                 respondWithStatus(HttpStatusCode.Accepted)
             }
@@ -122,12 +128,16 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
                 val referanse = req.referanse
 
                 val identer = dataSource.transaction(readOnly = true) { connection ->
-                    PipRepository(connection).finnIdenterPåBehandling(BehandlingReferanse(referanse))
+                    val repositoryFactory = RepositoryFactory(connection)
+                    val pipRepository = repositoryFactory.create(PipRepositoryImpl::class)
+                    pipRepository.finnIdenterPåBehandling(BehandlingReferanse(referanse))
                 }
 
                 val response = HashMap<String, String>()
                 val personInfoListe = PdlPersoninfoBulkGateway.hentPersoninfoForIdenter(identer.map { Ident(it.ident) })
-                personInfoListe.forEach { personinfo -> response[personinfo.ident.identifikator] = personinfo.fulltNavn() }
+                personInfoListe.forEach { personinfo ->
+                    response[personinfo.ident.identifikator] = personinfo.fulltNavn()
+                }
 
                 respond(
                     BehandlingPersoninfo(response)
@@ -137,16 +147,17 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
     }
 }
 
-private fun behandling(connection: DBConnection, req: BehandlingReferanse): Behandling {
-    val repositoryFactory = RepositoryFactory(connection)
-    val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+private fun behandling(behandlingRepository: BehandlingRepository, req: BehandlingReferanse): Behandling {
     return BehandlingReferanseService(behandlingRepository).behandling(req)
 }
 
-private fun avklaringsbehov(connection: DBConnection, behandlingId: BehandlingId): Avklaringsbehovene {
-    return AvklaringsbehovRepositoryImpl(connection).hentAvklaringsbehovene(behandlingId)
+private fun avklaringsbehov(
+    avklaringsbehovRepository: AvklaringsbehovRepository,
+    behandlingId: BehandlingId
+): Avklaringsbehovene {
+    return avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
 }
 
-private fun vilkårResultat(connection: DBConnection, behandlingId: BehandlingId): Vilkårsresultat {
-    return VilkårsresultatRepository(connection).hent(behandlingId)
+private fun vilkårResultat(vilkårsResultatRepository: VilkårsresultatRepository, behandlingId: BehandlingId): Vilkårsresultat {
+    return vilkårsResultatRepository.hent(behandlingId)
 }

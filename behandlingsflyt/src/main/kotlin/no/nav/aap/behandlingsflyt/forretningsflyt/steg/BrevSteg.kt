@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevGateway
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FantVentebehov
@@ -76,7 +76,7 @@ class BrevSteg private constructor(
             return BrevSteg(
                 BrevUtlederService(
                     behandlingRepository = behandlingRepository,
-                    vilkårsresultatRepository = VilkårsresultatRepository(connection)
+                    vilkårsresultatRepository = VilkårsresultatRepositoryImpl(connection)
                 ),
                 BrevbestillingService(
                     brevbestillingGateway = BrevGateway(),

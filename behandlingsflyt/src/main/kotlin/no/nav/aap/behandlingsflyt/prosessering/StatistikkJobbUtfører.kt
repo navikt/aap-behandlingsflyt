@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
@@ -28,7 +28,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsPeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsResultatDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype
-import no.nav.aap.behandlingsflyt.pip.PipRepository
+import no.nav.aap.behandlingsflyt.pip.PipRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
@@ -49,12 +49,12 @@ private val log = LoggerFactory.getLogger(StatistikkJobbUtfører::class.java)
 
 class StatistikkJobbUtfører(
     private val statistikkGateway: StatistikkGateway,
-    private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val vilkårsresultatRepository: VilkårsresultatRepositoryImpl,
     private val behandlingRepository: BehandlingRepository,
     private val sakService: SakService,
     private val tilkjentYtelseRepository: TilkjentYtelseRepository,
     private val beregningsgrunnlagRepository: BeregningsgrunnlagRepository,
-    private val pipRepository: PipRepository,
+    private val pipRepository: PipRepositoryImpl,
     private val dokumentRepository: MottattDokumentRepository,
 ) : JobbUtfører {
     override fun utfør(input: JobbInput) {
@@ -272,7 +272,7 @@ class StatistikkJobbUtfører(
 
     companion object : Jobb {
         override fun konstruer(connection: DBConnection): JobbUtfører {
-            val vilkårsresultatRepository = VilkårsresultatRepository(connection)
+            val vilkårsresultatRepository = VilkårsresultatRepositoryImpl(connection)
             val repositoryFactory = RepositoryFactory(connection)
             val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
             val sakRepository = repositoryFactory.create(SakRepository::class)
@@ -285,7 +285,7 @@ class StatistikkJobbUtfører(
                 sakService,
                 TilkjentYtelseRepository(connection),
                 BeregningsgrunnlagRepository(connection),
-                pipRepository = PipRepository(connection),
+                pipRepository = PipRepositoryImpl(connection),
                 dokumentRepository = MottattDokumentRepository(connection)
             )
         }

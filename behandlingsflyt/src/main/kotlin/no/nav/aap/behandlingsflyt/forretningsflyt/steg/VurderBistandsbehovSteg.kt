@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.bistand.Bistandsvilkåret
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
@@ -26,7 +26,7 @@ class VurderBistandsbehovSteg private constructor(
     private val bistandRepository: BistandRepository,
     private val studentRepository: StudentRepository,
     private val sykdomsRepository: SykdomRepository,
-    private val vilkårsresultatRepository: VilkårsresultatRepository
+    private val vilkårsresultatRepository: VilkårsresultatRepositoryImpl
 ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -99,7 +99,7 @@ class VurderBistandsbehovSteg private constructor(
                 BistandRepository(connection),
                 StudentRepository(connection),
                 SykdomRepository(connection),
-                VilkårsresultatRepository(connection)
+                VilkårsresultatRepositoryImpl(connection)
             )
         }
 

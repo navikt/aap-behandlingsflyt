@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykepengerErstatning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -23,7 +23,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.repository.RepositoryFactory
 
 class VurderSykepengeErstatningSteg private constructor(
-    private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val vilkårsresultatRepository: VilkårsresultatRepositoryImpl,
     private val sykepengerErstatningRepository: SykepengerErstatningRepository,
     private val sakService: SakService,
     private val avklaringsbehovRepository: AvklaringsbehovRepositoryImpl
@@ -75,7 +75,7 @@ class VurderSykepengeErstatningSteg private constructor(
             val repositoryFactory = RepositoryFactory(connection)
             val sakRepository = repositoryFactory.create(SakRepository::class)
             return VurderSykepengeErstatningSteg(
-                VilkårsresultatRepository(connection),
+                VilkårsresultatRepositoryImpl(connection),
                 SykepengerErstatningRepository(connection),
                 SakService(sakRepository),
                 AvklaringsbehovRepositoryImpl(connection)

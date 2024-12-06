@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.BarnInnhentingRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.PdlBarnGateway
@@ -28,7 +28,7 @@ class BarnService private constructor(
     private val personRepository: PersonRepository,
     private val barnGateway: BarnGateway,
     private val pdlGateway: IdentGateway,
-    private val vilkårsresultatRepository: VilkårsresultatRepository
+    private val vilkårsresultatRepository: VilkårsresultatRepositoryImpl
 ) : Informasjonskrav {
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
@@ -120,7 +120,7 @@ class BarnService private constructor(
                 personRepository,
                 PdlBarnGateway,
                 PdlIdentGateway,
-                VilkårsresultatRepository(connection)
+                VilkårsresultatRepositoryImpl(connection)
             )
         }
     }

@@ -5,7 +5,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
@@ -34,7 +34,7 @@ class BehandlingHendelseServiceTest {
         val flytJobbRepository = mockk<FlytJobbRepository>()
 
         every { flytJobbRepository.leggTil(any()) } returns Unit
-        val vilkårsresultatRepository = mockk<VilkårsresultatRepository>()
+        val vilkårsresultatRepository = mockk<VilkårsresultatRepositoryImpl>()
         val behandlingHendelseService =
             BehandlingHendelseServiceImpl(flytJobbRepository, sakService)
 

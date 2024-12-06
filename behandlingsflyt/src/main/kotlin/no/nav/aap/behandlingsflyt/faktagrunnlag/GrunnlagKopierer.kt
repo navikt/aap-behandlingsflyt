@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
@@ -32,7 +32,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
  */
 class GrunnlagKopierer(connection: DBConnection, personRepository: PersonRepository) {
 
-    private val vilkårsresultatRepository: VilkårsresultatRepository = VilkårsresultatRepository(connection)
+    private val vilkårsresultatRepository: VilkårsresultatRepositoryImpl = VilkårsresultatRepositoryImpl(connection)
     private val personopplysningRepository = PersonopplysningRepository(connection, personRepository)
     private val yrkesskadeRepository = YrkesskadeRepository(connection)
     private val sykdomRepository = SykdomRepository(connection)

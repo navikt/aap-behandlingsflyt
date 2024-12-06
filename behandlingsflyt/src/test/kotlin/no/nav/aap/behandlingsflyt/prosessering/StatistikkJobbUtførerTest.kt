@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
@@ -39,7 +39,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsPeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsResultatDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.pip.PipRepository
+import no.nav.aap.behandlingsflyt.pip.IdentPåSak
+import no.nav.aap.behandlingsflyt.pip.PipRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
@@ -144,7 +145,7 @@ class StatistikkJobbUtførerTest {
 
         InitTestDatabase.dataSource.transaction { connection ->
             val sakService = SakService(SakRepositoryImpl(connection))
-            val vilkårsResultatRepository = VilkårsresultatRepository(connection = connection)
+            val vilkårsResultatRepository = VilkårsresultatRepositoryImpl(connection = connection)
             val behandlingRepository = BehandlingRepositoryImpl(connection)
             val beregningsgrunnlagRepository = BeregningsgrunnlagRepository(connection)
 
@@ -156,7 +157,7 @@ class StatistikkJobbUtførerTest {
                 TilkjentYtelseRepository(connection),
                 beregningsgrunnlagRepository,
                 dokumentRepository = MottattDokumentRepository(connection),
-                pipRepository = PipRepository(connection)
+                pipRepository = PipRepositoryImpl(connection)
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
             )
@@ -176,7 +177,7 @@ class StatistikkJobbUtførerTest {
     @Test
     fun `statistikk-jobb avgir avsluttet behandling-data korrekt`(hendelser: List<StoppetBehandling>) {
         val (behandling, sak, ident) = InitTestDatabase.dataSource.transaction { connection ->
-            val vilkårsResultatRepository = VilkårsresultatRepository(connection = connection)
+            val vilkårsResultatRepository = VilkårsresultatRepositoryImpl(connection = connection)
             val behandlingRepository = BehandlingRepositoryImpl(connection)
 
             val beregningsgrunnlagRepository = BeregningsgrunnlagRepository(connection)
@@ -278,7 +279,7 @@ class StatistikkJobbUtførerTest {
 
         InitTestDatabase.dataSource.transaction { connection ->
             val sakService = SakService(SakRepositoryImpl(connection))
-            val vilkårsResultatRepository = VilkårsresultatRepository(connection = connection)
+            val vilkårsResultatRepository = VilkårsresultatRepositoryImpl(connection = connection)
             val behandlingRepository = BehandlingRepositoryImpl(connection)
             val beregningsgrunnlagRepository = BeregningsgrunnlagRepository(connection)
 
@@ -289,7 +290,7 @@ class StatistikkJobbUtførerTest {
                 sakService,
                 TilkjentYtelseRepository(connection),
                 beregningsgrunnlagRepository,
-                PipRepository(connection),
+                PipRepositoryImpl(connection),
                 MottattDokumentRepository(connection)
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
@@ -340,7 +341,7 @@ class StatistikkJobbUtførerTest {
         val referanse = BehandlingReferanse()
 
         // Blir ikke kalt i denne metoden, så derfor bare mock
-        val vilkårsResultatRepository = mockk<VilkårsresultatRepository>()
+        val vilkårsResultatRepository = mockk<VilkårsresultatRepositoryImpl>()
         val behandlingRepository = mockk<BehandlingRepository>()
         val behandlingId = BehandlingId(0)
         val sakId = SakId(1)
@@ -404,11 +405,11 @@ class StatistikkJobbUtførerTest {
             )
         )
 
-        val pipRepository = mockk<PipRepository>()
+        val pipRepository = mockk<PipRepositoryImpl>()
         every { pipRepository.finnIdenterPåSak(any()) } returns listOf(
-            PipRepository.IdentPåSak(
+            IdentPåSak(
                 ident = "123",
-                opprinnelse = PipRepository.IdentPåSak.Opprinnelse.PERSON
+                opprinnelse = IdentPåSak.Opprinnelse.PERSON
             )
         )
 

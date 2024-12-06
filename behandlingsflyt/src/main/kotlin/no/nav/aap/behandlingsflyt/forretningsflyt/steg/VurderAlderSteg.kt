@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.vilkår.alder.Aldersgrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.alder.Aldersvilkåret
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -15,7 +15,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.repository.RepositoryFactory
 
 class VurderAlderSteg private constructor(
-    private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val vilkårsresultatRepository: VilkårsresultatRepositoryImpl,
     private val personopplysningRepository: PersonopplysningRepository
 ) : BehandlingSteg {
 
@@ -41,7 +41,7 @@ class VurderAlderSteg private constructor(
             val repositoryFactory = RepositoryFactory(connection)
             val personRepository = repositoryFactory.create(PersonRepository::class)
             return VurderAlderSteg(
-                VilkårsresultatRepository(connection),
+                VilkårsresultatRepositoryImpl(connection),
                 PersonopplysningRepository(connection, personRepository)
             )
         }

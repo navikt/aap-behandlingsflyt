@@ -5,7 +5,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
-import no.nav.aap.behandlingsflyt.pip.PipRepository.IdentPåSak.Companion.filterDistinctIdent
+import no.nav.aap.behandlingsflyt.pip.IdentPåSak.Companion.filterDistinctIdent
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -27,12 +27,12 @@ fun NormalOpenAPIRoute.behandlingsflytPip(dataSource: DataSource) {
             ) { req ->
                 val saksnummer = req.saksnummer
                 val identer = dataSource.transaction(readOnly = true) { connection ->
-                    PipRepository(connection).finnIdenterPåSak(Saksnummer(saksnummer))
+                    PipRepositoryImpl(connection).finnIdenterPåSak(Saksnummer(saksnummer))
                 }
                 respond(
                     IdenterDTO(
-                        søker = identer.filterDistinctIdent(PipRepository.IdentPåSak.Opprinnelse.PERSON),
-                        barn = identer.filterDistinctIdent(PipRepository.IdentPåSak.Opprinnelse.BARN)
+                        søker = identer.filterDistinctIdent(IdentPåSak.Opprinnelse.PERSON),
+                        barn = identer.filterDistinctIdent(IdentPåSak.Opprinnelse.BARN)
                     )
                 )
             }
@@ -48,12 +48,12 @@ fun NormalOpenAPIRoute.behandlingsflytPip(dataSource: DataSource) {
             ) { req ->
                 val behandlingsnummer = req.behandlingsnummer
                 val identer = dataSource.transaction(readOnly = true) { connection ->
-                    PipRepository(connection).finnIdenterPåBehandling(BehandlingReferanse(behandlingsnummer))
+                    PipRepositoryImpl(connection).finnIdenterPåBehandling(BehandlingReferanse(behandlingsnummer))
                 }
                 respond(
                     IdenterDTO(
-                        søker = identer.filterDistinctIdent(PipRepository.IdentPåSak.Opprinnelse.PERSON),
-                        barn = identer.filterDistinctIdent(PipRepository.IdentPåSak.Opprinnelse.BARN)
+                        søker = identer.filterDistinctIdent(IdentPåSak.Opprinnelse.PERSON),
+                        barn = identer.filterDistinctIdent(IdentPåSak.Opprinnelse.BARN)
                     )
                 )
             }

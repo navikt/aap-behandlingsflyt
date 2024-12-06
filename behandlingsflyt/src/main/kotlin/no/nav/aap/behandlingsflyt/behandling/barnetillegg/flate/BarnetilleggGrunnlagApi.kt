@@ -7,7 +7,7 @@ import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.BarnetilleggService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningGrunnlag
@@ -47,7 +47,7 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource) {
                         sakOgBehandlingService,
                         barnRepository,
                         personopplysningRepository,
-                        VilkårsresultatRepository(connection)
+                        VilkårsresultatRepositoryImpl(connection)
                     )
                     val barnetilleggTidslinje = barnetilleggService.beregn(behandling.id)
 

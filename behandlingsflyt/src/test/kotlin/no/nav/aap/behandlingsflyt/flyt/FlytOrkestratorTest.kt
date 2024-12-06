@@ -28,7 +28,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.dokumentinnhenting.Legeerklæring
@@ -1559,7 +1559,7 @@ class FlytOrkestratorTest {
 
     private fun hentVilkårsresultat(behandlingId: BehandlingId): Vilkårsresultat {
         return dataSource.transaction { connection ->
-            VilkårsresultatRepository(connection).hent(behandlingId)
+            VilkårsresultatRepositoryImpl(connection).hent(behandlingId)
         }
     }
 

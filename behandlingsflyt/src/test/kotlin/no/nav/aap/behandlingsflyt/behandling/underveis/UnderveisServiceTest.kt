@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortRepository
@@ -41,7 +41,7 @@ class UnderveisServiceTest {
                         GrunnlagKopierer(connection, PersonRepositoryImpl(connection)), SakRepositoryImpl(connection),
                         BehandlingRepositoryImpl(connection)
                     ),
-                    VilkårsresultatRepository(connection),
+                    VilkårsresultatRepositoryImpl(connection),
                     PliktkortRepository(connection),
                     UnderveisRepository(connection),
                     AktivitetspliktRepository(connection),

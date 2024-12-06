@@ -14,7 +14,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class VilkårsresultatRepositoryTest {
+class VilkårsresultatRepositoryImplTest {
     @Test
     fun `Test oprett vilkårsresultat og hent ut igjen`() {
         InitTestDatabase.dataSource.transaction { connection ->
@@ -26,7 +26,7 @@ class VilkårsresultatRepositoryTest {
                 SakRepositoryImpl(connection)
             )
             val behandlingRepo = BehandlingRepositoryImpl(connection)
-            val repo = VilkårsresultatRepository(connection)
+            val repo = VilkårsresultatRepositoryImpl(connection)
 
             val sak =
                 personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))

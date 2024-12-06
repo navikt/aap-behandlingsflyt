@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.beregning.AvklarFaktaBeregningService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
@@ -25,7 +25,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 class BeregningAvklarFaktaSteg private constructor(
     private val beregningVurderingRepository: BeregningVurderingRepository,
     private val sykdomRepository: SykdomRepository,
-    private val vilkårsresultatRepository1: VilkårsresultatRepository,
+    private val vilkårsresultatRepository1: VilkårsresultatRepositoryImpl,
     private val avklarFaktaBeregningService: AvklarFaktaBeregningService,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val yrkesskadeRepository: YrkesskadeRepository
@@ -82,7 +82,7 @@ class BeregningAvklarFaktaSteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val vilkårsresultatRepository = VilkårsresultatRepository(connection)
+            val vilkårsresultatRepository = VilkårsresultatRepositoryImpl(connection)
             return BeregningAvklarFaktaSteg(
                 BeregningVurderingRepository(connection),
                 SykdomRepository(connection),

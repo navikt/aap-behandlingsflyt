@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.barnetillegg
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
@@ -17,7 +17,7 @@ class BarnetilleggService(
     private val sakOgBehandlingService: SakOgBehandlingService,
     private val barnRepository: BarnRepository,
     private val personopplysningRepository: PersonopplysningRepository,
-    private val vilkårsresultatRepository: VilkårsresultatRepository
+    private val vilkårsresultatRepository: VilkårsresultatRepositoryImpl
 ) {
     fun beregn(behandlingId: BehandlingId): Tidslinje<RettTilBarnetillegg> {
         val sak = sakOgBehandlingService.hentSakFor(behandlingId)
