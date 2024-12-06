@@ -19,14 +19,14 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepositoryImpl
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.avklaringsbehovApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.fatteVedtakGrunnlagApi
-import no.nav.aap.behandlingsflyt.behandling.kvalitetssikring.kvalitetssikringApi
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.avklaringsbehovApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.utledSubtypes
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.flate.barnetilleggApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.beregningsGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.brev.brevApi
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.institusjonAPI
+import no.nav.aap.behandlingsflyt.behandling.kvalitetssikring.kvalitetssikringApi
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.flate.tilkjentYtelseAPI
 import no.nav.aap.behandlingsflyt.behandling.vilkår.alder.flate.aldersGrunnlagApi
 import no.nav.aap.behandlingsflyt.exception.ErrorRespons
@@ -146,7 +146,7 @@ internal fun Application.server(dbConfig: DbConfig) {
 
     val dataSource = initDatasource(dbConfig)
     Migrering.migrate(dataSource)
-    val motor = module(dataSource)
+    val motor = startMotor(dataSource)
 
     registerRepositories()
 
@@ -201,12 +201,13 @@ private fun registerRepositories() {
         .register(BeregningsgrunnlagRepositoryImpl::class)
 }
 
-fun Application.module(dataSource: DataSource): Motor {
+fun Application.startMotor(dataSource: DataSource): Motor {
     val motor = Motor(
         dataSource = dataSource,
         antallKammer = ANTALL_WORKERS,
         logInfoProvider = BehandlingsflytLogInfoProvider,
-        jobber = ProsesseringsJobber.alle()
+        jobber = ProsesseringsJobber.alle(),
+        prometheus = prometheus,
     )
 
     dataSource.transaction { dbConnection ->
