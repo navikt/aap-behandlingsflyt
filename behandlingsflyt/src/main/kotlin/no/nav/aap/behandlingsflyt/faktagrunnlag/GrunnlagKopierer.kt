@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
@@ -46,7 +46,7 @@ class GrunnlagKopierer(connection: DBConnection, personRepository: PersonReposit
     private val underveisRepository = UnderveisRepository(connection)
     private val barnRepository = BarnRepository(connection)
     private val barnetilleggRepository = BarnetilleggRepository(connection)
-    private val beregningsgrunnlagRepository = BeregningsgrunnlagRepository(connection)
+    private val beregningsgrunnlagRepository = BeregningsgrunnlagRepositoryImpl(connection)
     private val beregningVurderingRepository = BeregningVurderingRepository(connection)
     private val institusjonsoppholdRepository = InstitusjonsoppholdRepository(connection)
     private val inntektGrunnlagRepository = InntektGrunnlagRepository(connection)

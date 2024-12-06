@@ -4,7 +4,7 @@ import io.mockk.checkUnnecessaryStub
 import io.mockk.every
 import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
@@ -15,10 +15,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.flyt.testutil.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
@@ -45,9 +45,6 @@ import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
@@ -147,7 +144,7 @@ class StatistikkJobbUtførerTest {
             val sakService = SakService(SakRepositoryImpl(connection))
             val vilkårsResultatRepository = VilkårsresultatRepositoryImpl(connection = connection)
             val behandlingRepository = BehandlingRepositoryImpl(connection)
-            val beregningsgrunnlagRepository = BeregningsgrunnlagRepository(connection)
+            val beregningsgrunnlagRepository = BeregningsgrunnlagRepositoryImpl(connection)
 
             StatistikkJobbUtfører(
                 StatistikkGateway(),
@@ -180,7 +177,7 @@ class StatistikkJobbUtførerTest {
             val vilkårsResultatRepository = VilkårsresultatRepositoryImpl(connection = connection)
             val behandlingRepository = BehandlingRepositoryImpl(connection)
 
-            val beregningsgrunnlagRepository = BeregningsgrunnlagRepository(connection)
+            val beregningsgrunnlagRepository = BeregningsgrunnlagRepositoryImpl(connection)
 
             val ident = Ident(
                 identifikator = "123",
@@ -281,7 +278,7 @@ class StatistikkJobbUtførerTest {
             val sakService = SakService(SakRepositoryImpl(connection))
             val vilkårsResultatRepository = VilkårsresultatRepositoryImpl(connection = connection)
             val behandlingRepository = BehandlingRepositoryImpl(connection)
-            val beregningsgrunnlagRepository = BeregningsgrunnlagRepository(connection)
+            val beregningsgrunnlagRepository = BeregningsgrunnlagRepositoryImpl(connection)
 
             StatistikkJobbUtfører(
                 StatistikkGateway(),
@@ -338,33 +335,26 @@ class StatistikkJobbUtførerTest {
 
     @Test
     fun `prosesserings-kall avgir statistikk korrekt`(hendelser: List<StoppetBehandling>) {
-        val referanse = BehandlingReferanse()
-
         // Blir ikke kalt i denne metoden, så derfor bare mock
         val vilkårsResultatRepository = mockk<VilkårsresultatRepositoryImpl>()
-        val behandlingRepository = mockk<BehandlingRepository>()
-        val behandlingId = BehandlingId(0)
+        val behandlingRepository = InMemoryBehandlingRepository
         val sakId = SakId(1)
-        every {
-            behandlingRepository.hent(referanse)
-        }.returns(
-            Behandling(
-                id = behandlingId,
-                sakId = sakId,
-                typeBehandling = TypeBehandling.Klage,
-                versjon = 1,
-                forrigeBehandlingId = null,
-                årsaker = listOf(
-                    Årsak(
-                        type = no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling.MOTTATT_SØKNAD,
-                        periode = Periode(LocalDate.now(), LocalDate.now().plusDays(1))
-                    )
+        val behandling = behandlingRepository.opprettBehandling(
+            sakId = sakId,
+            årsaker = listOf(
+                Årsak(
+                    type = no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling.MOTTATT_SØKNAD,
+                    periode = Periode(LocalDate.now(), LocalDate.now().plusDays(1))
                 )
-            )
+            ),
+            typeBehandling = TypeBehandling.Klage,
+            forrigeBehandlingId = null
         )
+        val behandlingId = behandling.id
+        val referanse = behandling.referanse
 
         val tilkjentYtelseRepository = mockk<TilkjentYtelseRepository>()
-        val beregningsgrunnlagRepository = mockk<BeregningsgrunnlagRepository>()
+        val beregningsgrunnlagRepository = mockk<BeregningsgrunnlagRepositoryImpl>()
         val sakService = mockk<SakService>()
 
         every { sakService.hent(Saksnummer.valueOf(sakId.id)) } returns Sak(
@@ -489,7 +479,6 @@ class StatistikkJobbUtførerTest {
             sakService,
             beregningsgrunnlagRepository,
             tilkjentYtelseRepository,
-            behandlingRepository,
             vilkårsResultatRepository,
             dokumentRepository
         )

@@ -11,7 +11,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicLong
+
+private val logger = LoggerFactory.getLogger(InMemoryBehandlingRepository::class.java.name)
 
 object InMemoryBehandlingRepository : BehandlingRepository, BehandlingFlytRepository {
 
@@ -38,7 +41,8 @@ object InMemoryBehandlingRepository : BehandlingRepository, BehandlingFlytReposi
                 forrigeBehandlingId = forrigeBehandlingId,
                 sakId = sakId,
                 typeBehandling = typeBehandling,
-                versjon = 1
+                versjon = 1,
+                årsaker = årsaker
             )
             memory[id] = behandling
 
@@ -66,6 +70,7 @@ object InMemoryBehandlingRepository : BehandlingRepository, BehandlingFlytReposi
 
     override fun hent(referanse: BehandlingReferanse): Behandling {
         synchronized(lock) {
+            logger.info("Henter behandling med referanse $referanse.")
             return memory.values.single { behandling -> behandling.referanse == referanse }
         }
     }

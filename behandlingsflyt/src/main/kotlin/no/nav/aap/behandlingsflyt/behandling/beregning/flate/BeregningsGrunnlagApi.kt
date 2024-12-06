@@ -18,8 +18,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.repository.RepositoryFactory
+import java.math.BigDecimal
 import java.time.format.DateTimeFormatter
 import javax.sql.DataSource
 
@@ -32,9 +32,10 @@ fun NormalOpenAPIRoute.beregningsGrunnlagApi(dataSource: DataSource) {
                 val begregningsgrunnlag = dataSource.transaction { connection ->
                     val repositoryFactory = RepositoryFactory(connection)
                     val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+                    val beregningsgrunnlagRepository = repositoryFactory.create(BeregningsgrunnlagRepository::class)
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
-                    val beregning = BeregningsgrunnlagRepository(connection).hentHvisEksisterer(behandling.id)
+                    val beregning = beregningsgrunnlagRepository.hentHvisEksisterer(behandling.id)
                     if (beregning == null) {
                         return@transaction null
                     }
@@ -60,7 +61,7 @@ internal fun beregningDTO(beregning: Beregningsgrunnlag): BeregningDTO {
                     val gjennomsnittligInntektIG = underliggende.underliggende().gjennomsnittligInntektIG()
                     val uføre = uføreGrunnlagDTO(underliggende)
                     val yrkesskade =
-                        yrkesskadeGrunnlagDTO(inntekter, beregning, underliggende, gjennomsnittligInntektIG)
+                        yrkesskadeGrunnlagDTO(inntekter, beregning, underliggende, gjennomsnittligInntektIG.verdi())
                     BeregningDTO(
                         beregningstypeDTO = BeregningstypeDTO.YRKESSKADE_UFØRE,
                         grunnlagYrkesskadeUføre = YrkesskadeUføreGrunnlagDTO(
@@ -80,7 +81,7 @@ internal fun beregningDTO(beregning: Beregningsgrunnlag): BeregningDTO {
                             inntekter,
                             beregning,
                             underliggende,
-                            gjennomsnittligInntektIG
+                            gjennomsnittligInntektIG.verdi()
                         )
                     )
 
@@ -176,7 +177,7 @@ private fun yrkesskadeGrunnlagDTO(
     inntekter: List<GrunnlagInntekt>,
     beregning: GrunnlagYrkesskade,
     underliggende: Beregningsgrunnlag,
-    gjennomsnittligInntektIG: GUnit
+    gjennomsnittligInntektIG: BigDecimal
 ): YrkesskadeGrunnlagDTO {
     val inntekterDTO = inntekterTilDTO(inntekter)
     return YrkesskadeGrunnlagDTO(
@@ -206,7 +207,7 @@ private fun yrkesskadeGrunnlagDTO(
             andelGangerInntekt = underliggende.grunnlaget().multiplisert(beregning.andelYrkesskade()).verdi(),
             andelGangerInntektIG = underliggende.grunnlaget().multiplisert(beregning.andelYrkesskade()).verdi(),
         ),
-        gjennomsnittligInntektSiste3år = gjennomsnittligInntektIG.verdi(),
+        gjennomsnittligInntektSiste3år = gjennomsnittligInntektIG,
         inntektSisteÅr = inntekterDTO.maxBy(InntektDTO::år),
         nedsattArbeidsevneÅr =
             inntekter.maxOf { inntekt -> inntekt.år }.plusYears(1).format(årFormatter),

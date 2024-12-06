@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.beregning.AvklarFaktaBeregningService
 import no.nav.aap.behandlingsflyt.behandling.beregning.BeregningService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
@@ -85,7 +85,7 @@ class FastsettGrunnlagSteg(
                     SykdomRepository(connection),
                     StudentRepository(connection),
                     UføreRepository(connection),
-                    BeregningsgrunnlagRepository(connection),
+                    BeregningsgrunnlagRepositoryImpl(connection),
                     BeregningVurderingRepository(connection),
                     YrkesskadeRepository(connection)
                 ),

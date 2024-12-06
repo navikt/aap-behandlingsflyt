@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.Year
 
-class BeregningsgrunnlagRepositoryTest {
+class BeregningsgrunnlagRepositoryImplTest {
 
     @Test
     fun `Lagre og hente opp beregningsgrunnlaget med uføre og yrkesskade`() {
@@ -114,14 +114,14 @@ class BeregningsgrunnlagRepositoryTest {
             uføreYtterligereNedsattArbeidsevneÅr = Year.of(2022)
         )
         InitTestDatabase.dataSource.transaction { connection ->
-            val beregningsgrunnlagRepository = BeregningsgrunnlagRepository(connection)
+            val beregningsgrunnlagRepository = BeregningsgrunnlagRepositoryImpl(connection)
 
             beregningsgrunnlagRepository.lagre(behandling.id, grunnlagUføre)
         }
 
         InitTestDatabase.dataSource.transaction { connection ->
             val beregningsgrunnlag: GrunnlagUføre =
-                BeregningsgrunnlagRepository(connection).hentHvisEksisterer(behandling.id) as GrunnlagUføre
+                BeregningsgrunnlagRepositoryImpl(connection).hentHvisEksisterer(behandling.id) as GrunnlagUføre
 
             assertThat(beregningsgrunnlag).isEqualTo(grunnlagUføre)
             assertThat(beregningsgrunnlag.underliggende().inntekter()).isEqualTo(inntektPerÅr)
@@ -217,13 +217,13 @@ class BeregningsgrunnlagRepositoryTest {
         )
 
         InitTestDatabase.dataSource.transaction { connection ->
-            val beregningsgrunnlagRepository = BeregningsgrunnlagRepository(connection)
+            val beregningsgrunnlagRepository = BeregningsgrunnlagRepositoryImpl(connection)
 
             beregningsgrunnlagRepository.lagre(behandling.id, grunnlagUføre)
         }
 
         InitTestDatabase.dataSource.transaction { connection ->
-            val beregningsgrunnlag = BeregningsgrunnlagRepository(connection).hentHvisEksisterer(behandling.id)
+            val beregningsgrunnlag = BeregningsgrunnlagRepositoryImpl(connection).hentHvisEksisterer(behandling.id)
 
             assertThat(beregningsgrunnlag).isEqualTo(grunnlagUføre)
         }
@@ -243,12 +243,12 @@ class BeregningsgrunnlagRepositoryTest {
             inntekter = emptyList()
         )
         InitTestDatabase.dataSource.transaction { connection ->
-            val beregningsgrunnlagRepository = BeregningsgrunnlagRepository(connection)
+            val beregningsgrunnlagRepository = BeregningsgrunnlagRepositoryImpl(connection)
             beregningsgrunnlagRepository.lagre(behandling.id, grunnlag11_19Standard)
         }
 
         InitTestDatabase.dataSource.transaction { connection ->
-            val beregningsgrunnlag = BeregningsgrunnlagRepository(connection).hentHvisEksisterer(behandling.id)
+            val beregningsgrunnlag = BeregningsgrunnlagRepositoryImpl(connection).hentHvisEksisterer(behandling.id)
             assertThat(beregningsgrunnlag).isEqualTo(grunnlag11_19Standard)
         }
     }
@@ -268,7 +268,7 @@ class BeregningsgrunnlagRepositoryTest {
         )
 
         InitTestDatabase.dataSource.transaction { connection ->
-            val beregningsgrunnlagRepository = BeregningsgrunnlagRepository(connection)
+            val beregningsgrunnlagRepository = BeregningsgrunnlagRepositoryImpl(connection)
             beregningsgrunnlagRepository.lagre(behandling.id, grunnlag11_19Standard)
         }
 
@@ -354,17 +354,17 @@ class BeregningsgrunnlagRepositoryTest {
         )
 
         InitTestDatabase.dataSource.transaction { connection ->
-            val beregningsgrunnlagRepository = BeregningsgrunnlagRepository(connection)
+            val beregningsgrunnlagRepository = BeregningsgrunnlagRepositoryImpl(connection)
 
             beregningsgrunnlagRepository.lagre(behandling2.id, grunnlagUføre)
         }
 
         val uthentet = InitTestDatabase.dataSource.transaction {
-            BeregningsgrunnlagRepository(it).hentHvisEksisterer(behandling.id)
+            BeregningsgrunnlagRepositoryImpl(it).hentHvisEksisterer(behandling.id)
         }
 
         val uthentet2 = InitTestDatabase.dataSource.transaction {
-            BeregningsgrunnlagRepository(it).hentHvisEksisterer(behandling2.id)
+            BeregningsgrunnlagRepositoryImpl(it).hentHvisEksisterer(behandling2.id)
         }
 
         assertThat(uthentet).isEqualTo(grunnlag11_19Standard)

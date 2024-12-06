@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelse
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
@@ -50,7 +51,7 @@ class BeregnTilkjentYtelseSteg private constructor(
             val personRepository = repositoryFactory.create(PersonRepository::class)
             return BeregnTilkjentYtelseSteg(
                 UnderveisRepository(connection),
-                BeregningsgrunnlagRepository(connection),
+                BeregningsgrunnlagRepositoryImpl(connection),
                 PersonopplysningRepository(connection, personRepository),
                 BarnetilleggRepository(connection),
                 TilkjentYtelseRepository(connection),
