@@ -12,6 +12,7 @@ dependencies {
     implementation("no.nav.aap.kelvin:infrastructure:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:server:$komponenterVersjon")
+    implementation("no.nav.aap.kelvin:motor-api:$komponenterVersjon")
     api("no.nav.aap.tilgang:plugin:$tilgangVersjon")
     api("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
     compileOnly("io.ktor:ktor-http-jvm:$ktorVersion")

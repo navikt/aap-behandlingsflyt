@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.flyt.flate
+package no.nav.aap.behandlingsflyt.flyt
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent

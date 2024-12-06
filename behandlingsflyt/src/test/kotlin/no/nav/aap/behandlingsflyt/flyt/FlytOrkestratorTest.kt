@@ -43,7 +43,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.Bist
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.YrkesskadevurderingDto
-import no.nav.aap.behandlingsflyt.flyt.flate.Venteinformasjon
 import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.TestHendelsesMottak
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
@@ -1741,18 +1740,18 @@ class FlytOrkestratorTest {
                 grunn = ÅrsakTilSettPåVent.VENTER_PÅ_OPPLYSNINGER
             )
         )
-        val dto = dataSource.transaction(readOnly = true) { connection ->
+        val frist = dataSource.transaction(readOnly = true) { connection ->
             val avklaringsbehovene = hentAvklaringsbehov(behandling.id, connection)
 
             if (avklaringsbehovene.erSattPåVent()) {
                 val avklaringsbehov = avklaringsbehovene.hentÅpneVentebehov().first()
-                Venteinformasjon(avklaringsbehov.frist(), avklaringsbehov.begrunnelse(), avklaringsbehov.grunn())
+                avklaringsbehov.frist()
             } else {
                 null
             }
         }
-        assertThat(dto).isNotNull
-        assertThat(dto?.frist).isNotNull
+        assertThat(frist).isNotNull
+        assertThat(frist).isNotNull
         behandling = hentBehandling(sak.id)
         dataSource.transaction { connection ->
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)

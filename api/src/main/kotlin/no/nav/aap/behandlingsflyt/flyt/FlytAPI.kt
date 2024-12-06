@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.flyt.flate
+package no.nav.aap.behandlingsflyt.flyt
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
@@ -16,12 +16,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
+import no.nav.aap.behandlingsflyt.flyt.flate.*
 import no.nav.aap.behandlingsflyt.flyt.flate.visning.DynamiskStegGruppeVisningService
-import no.nav.aap.behandlingsflyt.flyt.flate.visning.Prosessering
 import no.nav.aap.behandlingsflyt.flyt.flate.visning.ProsesseringStatus
 import no.nav.aap.behandlingsflyt.flyt.flate.visning.Visning
-import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon

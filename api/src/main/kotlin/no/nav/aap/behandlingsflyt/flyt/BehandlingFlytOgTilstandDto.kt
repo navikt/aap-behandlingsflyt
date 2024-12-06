@@ -1,6 +1,5 @@
-package no.nav.aap.behandlingsflyt.flyt.flate
+package no.nav.aap.behandlingsflyt.flyt
 
-import no.nav.aap.behandlingsflyt.flyt.flate.visning.Prosessering
 import no.nav.aap.behandlingsflyt.flyt.flate.visning.Visning
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegGruppe
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType

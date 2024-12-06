@@ -42,8 +42,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.m
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.flate.studentgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.sykdomsgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.sykepengerGrunnlagApi
-import no.nav.aap.behandlingsflyt.flyt.flate.behandlingApi
-import no.nav.aap.behandlingsflyt.flyt.flate.flytApi
+import no.nav.aap.behandlingsflyt.flyt.behandlingApi
+import no.nav.aap.behandlingsflyt.flyt.flytApi
 import no.nav.aap.behandlingsflyt.flyt.flate.søknadApi
 import no.nav.aap.behandlingsflyt.flyt.flate.torsHammerApi
 import no.nav.aap.behandlingsflyt.hendelse.bruddaktivitetsplikt.aktivitetspliktApi

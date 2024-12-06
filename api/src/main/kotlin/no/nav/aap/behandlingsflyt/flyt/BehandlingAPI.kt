@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.flyt.flate
+package no.nav.aap.behandlingsflyt.flyt
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
@@ -11,7 +11,8 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FrivilligeAvklaringsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.flyt.utledType
+import no.nav.aap.behandlingsflyt.flyt.flate.VilkårDTO
+import no.nav.aap.behandlingsflyt.flyt.flate.VilkårsperiodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.pip.PipRepositoryImpl
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingJobbUtfører
