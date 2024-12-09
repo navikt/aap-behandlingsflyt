@@ -49,9 +49,10 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
                 val response = dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
                     val sakRepository = repositoryProvider.provide(SakRepository::class)
-                    val repository = AktivitetspliktRepository(connection)
+                    val aktivitetspliktRepository = repositoryProvider.provide(AktivitetspliktRepository::class)
+
                     val sak = SakService(sakRepository).hent(Saksnummer(params.saksnummer))
-                    val alleBrudd = repository.hentBrudd(sak.id).utledBruddTilstand()
+                    val alleBrudd = aktivitetspliktRepository.hentBrudd(sak.id).utledBruddTilstand()
                     BruddAktivitetspliktResponse(alleBrudd)
                 }
                 respond(response)
@@ -68,7 +69,7 @@ private fun opprettDokument(
 ) {
     val repositoryProvider = RepositoryProvider(connection)
     val sakRepository = repositoryProvider.provide(SakRepository::class)
-    val repository = AktivitetspliktRepository(connection)
+    val repository = repositoryProvider.provide(AktivitetspliktRepository::class)
 
     val sak = SakService(sakRepository).hent(saksnummer)
 

@@ -23,12 +23,12 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class AktivitetspliktRepositoryTest {
+class AktivitetspliktRepositoryImplTest {
     @Test
     fun `kan lagre feilregistrering brudd på sak`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = nySak(connection)
-            val repo = AktivitetspliktRepository(connection)
+            val repo = AktivitetspliktRepositoryImpl(connection)
             val periode = Periode(LocalDate.now(), LocalDate.now().plusDays(5))
 
             val input = nyeFeilregistrering(
@@ -64,7 +64,7 @@ class AktivitetspliktRepositoryTest {
     fun `kan lagre brudd på sak`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = nySak(connection)
-            val repo = AktivitetspliktRepository(connection)
+            val repo = AktivitetspliktRepositoryImpl(connection)
             val periode = Periode(LocalDate.now(), LocalDate.now().plusDays(5))
 
             nyeBrudd(
@@ -91,7 +91,7 @@ class AktivitetspliktRepositoryTest {
     fun `kan lagre flere hendelser på samme sak hver for seg`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = nySak(connection)
-            val repo = AktivitetspliktRepository(connection)
+            val repo = AktivitetspliktRepositoryImpl(connection)
             nyeBrudd(
                 connection, sak,
                 bruddType = IKKE_MØTT_TIL_BEHANDLING_ELLER_UTREDNING,
@@ -117,7 +117,7 @@ class AktivitetspliktRepositoryTest {
     fun `kan lagre flere hendelser på samme sak samtidig`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = nySak(connection)
-            val repo = AktivitetspliktRepository(connection)
+            val repo = AktivitetspliktRepositoryImpl(connection)
             nyeBrudd(
                 connection, sak,
                 bruddType = IKKE_MØTT_TIL_BEHANDLING_ELLER_UTREDNING,
@@ -152,7 +152,7 @@ class AktivitetspliktRepositoryTest {
             nyttGrunnlag(connection, behandling, førsteBrudd + andreBrudd)
             val andreInnsendingId = andreBrudd.first().metadata.id
 
-            val alleGrunnlag = AktivitetspliktRepository(connection).hentAlleGrunnlagKunTestIkkeProd(behandling.id)
+            val alleGrunnlag = AktivitetspliktRepositoryImpl(connection).hentAlleGrunnlagKunTestIkkeProd(behandling.id)
 
             assertEquals(
                 setOf(
@@ -186,7 +186,7 @@ fun nyeBrudd(
     begrunnelse: String = "En begrunnnelse",
     perioder: List<Periode> = listOf(Periode(LocalDate.now(), LocalDate.now().plusDays(5))),
 ): List<AktivitetspliktDokument> {
-    val repo = AktivitetspliktRepository(connection)
+    val repo = AktivitetspliktRepositoryImpl(connection)
     val innsendingId = repo.lagreBrudd(
         sak.id,
         perioder.map { periode ->
@@ -213,7 +213,7 @@ fun nyeFeilregistrering(
     begrunnelse: String = "En begrunnnelse",
     periode: Periode = Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
 ): List<AktivitetspliktDokument> {
-    val repo = AktivitetspliktRepository(connection)
+    val repo = AktivitetspliktRepositoryImpl(connection)
     val innsendingId = repo.lagreBrudd(
         sak.id,
         listOf(
@@ -236,7 +236,7 @@ fun nyttGrunnlag(
     behandling: Behandling,
     brudd: Set<AktivitetspliktDokument>
 ): AktivitetspliktGrunnlag {
-    val repo = AktivitetspliktRepository(connection)
+    val repo = AktivitetspliktRepositoryImpl(connection)
     repo.nyttGrunnlag(behandling.id, brudd)
     return repo.hentGrunnlagHvisEksisterer(behandling.id)!!
 }

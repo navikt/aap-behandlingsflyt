@@ -45,19 +45,19 @@ class AktivitetspliktInformasjonskravTest {
 
 
             // Før vi oppdaterer kravinformasjonen, så finnes det ingen grunnlag
-            AktivitetspliktRepository(connection).hentGrunnlagHvisEksisterer(behandling.id).also {
+            AktivitetspliktRepositoryImpl(connection).hentGrunnlagHvisEksisterer(behandling.id).also {
                 assertNull(it)
             }
 
             // Etter første oppdatering av kravinformasjonen, skal bruddet vi la inn over dukke opp
             aktivitetspliktInformasjonskrav.oppdater(flytKontekst)
-            AktivitetspliktRepository(connection).hentGrunnlagHvisEksisterer(behandling.id).also {
+            AktivitetspliktRepositoryImpl(connection).hentGrunnlagHvisEksisterer(behandling.id).also {
                 assertEquals(1, it?.bruddene?.size)
             }
 
             // Ved oppdatering av kravinformasjonen uten ny brudd, skal grunnlaget være uendret
             aktivitetspliktInformasjonskrav.oppdater(flytKontekst)
-            AktivitetspliktRepository(connection).hentGrunnlagHvisEksisterer(behandling.id).also {
+            AktivitetspliktRepositoryImpl(connection).hentGrunnlagHvisEksisterer(behandling.id).also {
                 assertEquals(1, it?.bruddene?.size)
             }
         }

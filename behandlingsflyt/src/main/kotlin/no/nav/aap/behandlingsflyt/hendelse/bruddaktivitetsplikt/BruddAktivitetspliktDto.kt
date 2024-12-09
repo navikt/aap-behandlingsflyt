@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktD
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktFeilregistrering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRegistrering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.DokumentInput

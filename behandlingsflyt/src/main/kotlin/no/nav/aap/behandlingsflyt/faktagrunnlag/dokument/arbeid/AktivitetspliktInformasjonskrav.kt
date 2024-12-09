@@ -23,7 +23,7 @@ class AktivitetspliktInformasjonskrav (
         override fun konstruer(connection: DBConnection): AktivitetspliktInformasjonskrav {
             return AktivitetspliktInformasjonskrav(
                 MottaDokumentService(MottattDokumentRepositoryImpl(connection)),
-                AktivitetspliktRepository(connection)
+                AktivitetspliktRepositoryImpl(connection)
             )
         }
     }
