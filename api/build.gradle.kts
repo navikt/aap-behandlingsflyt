@@ -4,7 +4,7 @@ plugins {
 
 val komponenterVersjon = "1.0.79"
 val ktorVersion = "3.0.2"
-val tilgangVersjon = "0.0.52"
+val tilgangVersjon = "0.0.54"
 
 dependencies {
     api(project(":behandlingsflyt"))
@@ -14,6 +14,7 @@ dependencies {
     implementation("no.nav.aap.kelvin:server:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:motor-api:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:verdityper:$komponenterVersjon")
+    implementation("no.nav.aap.kelvin:tidslinje:$komponenterVersjon")
     api("no.nav.aap.tilgang:plugin:$tilgangVersjon")
     api("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
     compileOnly("io.ktor:ktor-http-jvm:$ktorVersion")

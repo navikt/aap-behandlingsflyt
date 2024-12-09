@@ -16,9 +16,12 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.repository.RepositoryProvider
 import no.nav.aap.verdityper.dokument.Kanal
+import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import java.time.LocalDate
 import javax.sql.DataSource
+
+private val logger = LoggerFactory.getLogger("hendelse.MottattHendelseAPI")
 
 fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource) {
     route("/api/hendelse") {
@@ -26,7 +29,9 @@ fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource) {
             MDC.putCloseable("saksnummer", dto.saksnummer.toString()).use {
                 dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
-                    val sak = repositoryProvider.provide(SakRepository::class).hent((dto.saksnummer))
+                    val sak = repositoryProvider.provide(SakRepository::class).hent(dto.saksnummer)
+
+                    logger.info("Mottok hendelse. Brevkategori: ${dto.type}.")
 
                     val flytJobbRepository = FlytJobbRepository(connection)
                     flytJobbRepository.leggTil(

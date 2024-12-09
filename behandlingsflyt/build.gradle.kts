@@ -4,7 +4,7 @@ plugins {
 
 val komponenterVersjon = "1.0.79"
 val ktorVersion = "3.0.2"
-val tilgangVersjon = "0.0.52"
+val tilgangVersjon = "0.0.54"
 
 dependencies {
     api(project(":kontrakt"))

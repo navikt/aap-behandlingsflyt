@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.hendelse.bruddaktivitetsplikt
+package no.nav.aap.behandlingsflyt.behandling.bruddaktivitetsplikt
 
 import com.papsign.ktor.openapigen.annotations.parameters.PathParam
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktDokument

@@ -60,7 +60,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
         }
 
         route("/finnEllerOpprett").authorizedPostWithApprovedList<Unit, SaksinfoDTO, FinnEllerOpprettSakDTO>(
-            postmottakAzp
+            postmottakAzp, modules = listOf(TagModule(listOf(Tags.Sak)))
         ) { _, dto ->
             val saken: SaksinfoDTO = dataSource.transaction { connection ->
                 val repositoryProvider = RepositoryProvider(connection)

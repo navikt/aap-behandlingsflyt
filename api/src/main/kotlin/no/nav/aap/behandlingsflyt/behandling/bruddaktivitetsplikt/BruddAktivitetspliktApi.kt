@@ -1,11 +1,13 @@
-package no.nav.aap.behandlingsflyt.hendelse.bruddaktivitetsplikt
+package no.nav.aap.behandlingsflyt.behandling.bruddaktivitetsplikt
 
+import com.papsign.ktor.openapigen.route.TagModule
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
+import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.DokumentInput
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingId
@@ -29,7 +31,7 @@ import javax.sql.DataSource
 fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
     route("/api/aktivitetsplikt") {
         route("{saksnummer}") {
-            route("/opprett").post<SaksnummerParameter, String, OpprettAktivitetspliktDTO> { params, req ->
+            route("/opprett").post<SaksnummerParameter, String, OpprettAktivitetspliktDTO>(TagModule(listOf(Tags.Aktivitetsplikt))) { params, req ->
                 val navIdent = bruker()
                 dataSource.transaction { connection ->
                     opprettDokument(connection, navIdent, Saksnummer(params.saksnummer), req)
@@ -37,7 +39,7 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
                 respond("{}", HttpStatusCode.Accepted)
             }
 
-            route("/v2/oppdater").post<SaksnummerParameter, String, OppdaterAktivitetspliktDTOV2> { params, req ->
+            route("/v2/oppdater").post<SaksnummerParameter, String, OppdaterAktivitetspliktDTOV2>(TagModule(listOf(Tags.Aktivitetsplikt))) { params, req ->
                 val navIdent = bruker()
                 dataSource.transaction { connection ->
                     opprettDokument(connection, navIdent, Saksnummer(params.saksnummer), req)
@@ -45,7 +47,7 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
                 respond("{}", HttpStatusCode.Accepted)
             }
 
-            get<SaksnummerParameter, BruddAktivitetspliktResponse> { params ->
+            get<SaksnummerParameter, BruddAktivitetspliktResponse>(TagModule(listOf(Tags.Aktivitetsplikt))) { params ->
                 val response = dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
                     val sakRepository = repositoryProvider.provide(SakRepository::class)

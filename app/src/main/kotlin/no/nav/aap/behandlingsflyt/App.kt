@@ -46,7 +46,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.sykep
 import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
 import no.nav.aap.behandlingsflyt.flyt.søknadApi
-import no.nav.aap.behandlingsflyt.hendelse.bruddaktivitetsplikt.aktivitetspliktApi
+import no.nav.aap.behandlingsflyt.behandling.bruddaktivitetsplikt.aktivitetspliktApi
 import no.nav.aap.behandlingsflyt.hendelse.mottattHendelseApi
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
