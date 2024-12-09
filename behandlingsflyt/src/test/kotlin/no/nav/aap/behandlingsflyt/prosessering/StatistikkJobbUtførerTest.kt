@@ -1,11 +1,9 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import io.mockk.checkUnnecessaryStub
-import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.beregning.InMemoryBeregningsgrunnlagRepository
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
@@ -64,6 +62,7 @@ import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.motor.JobbInput
@@ -161,7 +160,7 @@ class StatistikkJobbUtførerTest {
                 vilkårsResultatRepository,
                 behandlingRepository,
                 sakService,
-                TilkjentYtelseRepository(connection),
+                TilkjentYtelseRepositoryImpl(connection),
                 beregningsgrunnlagRepository,
                 dokumentRepository = MottattDokumentRepositoryImpl(connection),
                 pipRepository = PipRepositoryImpl(connection)
@@ -295,7 +294,7 @@ class StatistikkJobbUtførerTest {
                 vilkårsResultatRepository,
                 behandlingRepository,
                 sakService,
-                TilkjentYtelseRepository(connection),
+                TilkjentYtelseRepositoryImpl(connection),
                 beregningsgrunnlagRepository,
                 PipRepositoryImpl(connection),
                 MottattDokumentRepositoryImpl(connection)
@@ -388,7 +387,15 @@ class StatistikkJobbUtførerTest {
         val behandlingId = behandling.id
         val referanse = behandling.referanse
 
-        val tilkjentYtelseRepository = mockk<TilkjentYtelseRepository>()
+        val tilkjentYtelseRepository = object : TilkjentYtelseRepository {
+            override fun hentHvisEksisterer(behandlingId: BehandlingId): Tidslinje<Tilkjent>? {
+                TODO("Not yet implemented")
+            }
+
+            override fun lagre(behandlingId: BehandlingId, tilkjent: Tidslinje<Tilkjent>) {
+                TODO("Not yet implemented")
+            }
+        }
 
         val beregningsgrunnlagRepository = InMemoryBeregningsgrunnlagRepository
         val sakService = SakService(InMemorySakRepository)
@@ -536,10 +543,6 @@ class StatistikkJobbUtførerTest {
                 identerForSak = listOf("123"),
                 årsakTilBehandling = listOf(ÅrsakTilBehandling.SØKNAD)
             )
-        )
-
-        checkUnnecessaryStub(
-            tilkjentYtelseRepository,
         )
     }
 }

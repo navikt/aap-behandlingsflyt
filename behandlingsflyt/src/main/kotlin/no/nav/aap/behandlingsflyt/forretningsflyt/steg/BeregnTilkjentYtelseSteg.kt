@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelseService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
@@ -53,7 +54,7 @@ class BeregnTilkjentYtelseSteg private constructor(
                 BeregningsgrunnlagRepositoryImpl(connection),
                 personopplysningRepository,
                 BarnetilleggRepository(connection),
-                TilkjentYtelseRepository(connection),
+                TilkjentYtelseRepositoryImpl(connection),
                 SamordningRepository(connection)
             )
         }

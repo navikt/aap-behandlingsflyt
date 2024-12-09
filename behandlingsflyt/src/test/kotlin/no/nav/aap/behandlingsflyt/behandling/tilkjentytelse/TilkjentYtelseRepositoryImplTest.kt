@@ -28,14 +28,14 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class TilkjentYtelseRepositoryTest {
+class TilkjentYtelseRepositoryImplTest {
     @Test
     fun `kan lagre og hente tilkjentYtelse`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val tilkjentYtelseRepository = TilkjentYtelseRepository(connection)
+            val tilkjentYtelseRepository = TilkjentYtelseRepositoryImpl(connection)
             val tilkjentYtelse = Tidslinje(
                 listOf(
                     Segment(
@@ -87,7 +87,7 @@ class TilkjentYtelseRepositoryTest {
             val sak = runBlocking { sak(connection) }
             val behandling = behandling(connection, sak)
 
-            val tilkjentYtelseRepository = TilkjentYtelseRepository(connection)
+            val tilkjentYtelseRepository = TilkjentYtelseRepositoryImpl(connection)
             val tilkjentYtelseHentet = tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)
             assertNull(tilkjentYtelseHentet)
         }

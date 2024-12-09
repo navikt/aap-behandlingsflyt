@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
@@ -286,7 +287,7 @@ class StatistikkJobbUtfører(
                 vilkårsresultatRepository,
                 behandlingRepository,
                 sakService,
-                TilkjentYtelseRepository(connection),
+                TilkjentYtelseRepositoryImpl(connection),
                 BeregningsgrunnlagRepositoryImpl(connection),
                 pipRepository = pipRepository,
                 dokumentRepository = MottattDokumentRepositoryImpl(connection)
