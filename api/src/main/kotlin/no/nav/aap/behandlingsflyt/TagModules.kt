@@ -6,4 +6,5 @@ enum class Tags(override val description: String) : APITag {
     Behandling(
         "Endepunkter relatert til behanddling."
     ),
+    MottaHendelse("Endepunkter relatert til innsending av dokumenter.")
 }

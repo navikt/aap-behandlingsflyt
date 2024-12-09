@@ -1,11 +1,13 @@
 package no.nav.aap.behandlingsflyt.flyt
 
+import com.papsign.ktor.openapigen.route.TagModule
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.EMPTY_JSON_RESPONSE
+import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
@@ -24,7 +26,7 @@ import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.søknadApi(dataSource: DataSource) {
     route("/api/soknad") {
-        route("/send").post<Unit, String, SøknadSendDto> { _, dto ->
+        route("/send").post<Unit, String, SøknadSendDto>(TagModule(listOf(Tags.MottaHendelse))) { _, dto ->
             MDC.putCloseable("saksnummer", dto.saksnummer).use {
                 dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)

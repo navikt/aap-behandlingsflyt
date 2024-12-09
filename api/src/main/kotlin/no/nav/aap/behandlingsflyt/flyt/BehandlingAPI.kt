@@ -1,11 +1,13 @@
 package no.nav.aap.behandlingsflyt.flyt
 
+import com.papsign.ktor.openapigen.route.TagModule
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
+import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FrivilligeAvklaringsbehov
@@ -35,7 +37,7 @@ import javax.sql.DataSource
 fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
     route("/api/behandling") {
         route("/{referanse}") {
-            get<BehandlingReferanse, DetaljertBehandlingDTO> { req ->
+            get<BehandlingReferanse, DetaljertBehandlingDTO>(TagModule(listOf(Tags.Behandling))) { req ->
                 val dto = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
                     val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
@@ -94,7 +96,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
             }
         }
         route("/{referanse}/forbered") {
-            get<BehandlingReferanse, DetaljertBehandlingDTO> { req ->
+            get<BehandlingReferanse, DetaljertBehandlingDTO>(TagModule(listOf(Tags.Behandling))) { req ->
                 dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
                     val taSkriveLåsRepository = repositoryProvider.provide(TaSkriveLåsRepository::class)
@@ -159,6 +161,9 @@ private fun avklaringsbehov(
     return avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
 }
 
-private fun vilkårResultat(vilkårsResultatRepository: VilkårsresultatRepository, behandlingId: BehandlingId): Vilkårsresultat {
+private fun vilkårResultat(
+    vilkårsResultatRepository: VilkårsresultatRepository,
+    behandlingId: BehandlingId
+): Vilkårsresultat {
     return vilkårsResultatRepository.hent(behandlingId)
 }
