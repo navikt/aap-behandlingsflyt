@@ -2,9 +2,11 @@ package no.nav.aap.behandlingsflyt.kontrakt.hendelse
 
 public enum class InnsendingType {
     SØKNAD,
-    AKTIVITETSKORT,
+    AKTIVITETSKORT, // <-- alltid digital, egentlig ikke dokument
     PLIKTKORT,
-    LEGEERKLÆRING,
+    LEGEERKLÆRING, // fra lege
     LEGEERKLÆRING_AVVIST,
-    DIALOGMELDING
+    DIALOGMELDING // også fra lege
 }
+
+// tilleggsopplysninger

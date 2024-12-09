@@ -100,7 +100,7 @@ private fun registrerDokumentjobb(
             kanal = Kanal.DIGITAL,
             dokumentReferanse = dokumentReferanse,
             periode = Periode(fom, tom),
-            payload = innsendingId
+            payload = innsendingId // bort
         )
     )
 }

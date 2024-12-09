@@ -20,26 +20,26 @@ class SøknadStudentDto(
     val kommeTilbake: String? = null
 ) {
     fun erStudent(): ErStudentStatus {
-      if (erStudent.uppercase() == "JA"){
-          return ErStudentStatus.JA
-      } else if (erStudent.uppercase() == "AVBRUTT") {
-          return ErStudentStatus.AVBRUTT
-      } else if (erStudent.uppercase() == "NEI") {
-          return ErStudentStatus.NEI
-      } else {
-          return ErStudentStatus.IKKE_OPPGITT
-      }
+        return if (erStudent.uppercase() == "JA"){
+            ErStudentStatus.JA
+        } else if (erStudent.uppercase() == "AVBRUTT") {
+            ErStudentStatus.AVBRUTT
+        } else if (erStudent.uppercase() == "NEI") {
+            ErStudentStatus.NEI
+        } else {
+            ErStudentStatus.IKKE_OPPGITT // bort
+        }
     }
 
     fun skalGjennopptaStudie(): SkalGjenopptaStudieStatus {
-        if (kommeTilbake?.uppercase() == "JA"){
-            return SkalGjenopptaStudieStatus.JA
+        return if (kommeTilbake?.uppercase() == "JA"){
+            SkalGjenopptaStudieStatus.JA
         } else if (kommeTilbake?.uppercase() == "NEI"){
-            return SkalGjenopptaStudieStatus.NEI
+            SkalGjenopptaStudieStatus.NEI
         } else if (kommeTilbake?.uppercase() == "VET IKKE"){
-            return SkalGjenopptaStudieStatus.VET_IKKE
+            SkalGjenopptaStudieStatus.VET_IKKE
         } else {
-            return SkalGjenopptaStudieStatus.IKKE_OPPGITT
+            SkalGjenopptaStudieStatus.IKKE_OPPGITT
         }
     }
 }
