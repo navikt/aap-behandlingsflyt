@@ -190,7 +190,7 @@ fun nyeBrudd(
     val innsendingId = repo.lagreBrudd(
         sak.id,
         perioder.map { periode ->
-            AktivitetspliktRepository.RegistreringInput(
+            RegistreringInput(
                 brudd = Brudd(
                     bruddType = bruddType,
                     paragraf = paragraf,
@@ -217,7 +217,7 @@ fun nyeFeilregistrering(
     val innsendingId = repo.lagreBrudd(
         sak.id,
         listOf(
-            AktivitetspliktRepository.FeilregistreringInput(
+            FeilregistreringInput(
                 brudd = Brudd(
                     bruddType = bruddType,
                     paragraf = paragraf,

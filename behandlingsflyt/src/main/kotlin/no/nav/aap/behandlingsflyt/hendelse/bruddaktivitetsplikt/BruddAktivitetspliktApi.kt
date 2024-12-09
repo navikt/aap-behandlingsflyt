@@ -7,6 +7,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.DokumentInput
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingId
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
@@ -79,7 +80,7 @@ private fun opprettDokument(
 
 private fun registrerDokumentjobb(
     innsendingId: InnsendingId,
-    bruddAktivitetsplikt: List<AktivitetspliktRepository.DokumentInput>,
+    bruddAktivitetsplikt: List<DokumentInput>,
     connection: DBConnection,
     sak: Sak
 ) {

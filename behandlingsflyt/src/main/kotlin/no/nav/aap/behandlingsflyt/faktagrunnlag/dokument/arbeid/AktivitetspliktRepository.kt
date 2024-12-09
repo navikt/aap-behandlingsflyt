@@ -9,36 +9,7 @@ import no.nav.aap.komponenter.httpklient.auth.Bruker
 import org.jetbrains.annotations.TestOnly
 
 class AktivitetspliktRepository(private val connection: DBConnection) {
-
-    sealed interface DokumentInput {
-        val brudd: Brudd
-        val innsender: Bruker
-        val dokumentType: DokumentType
-        val begrunnelse: String
-    }
-
-    class RegistreringInput(
-        override val brudd: Brudd,
-        override val innsender: Bruker,
-        override val begrunnelse: String,
-        val grunn: Grunn
-    ): DokumentInput {
-        override val dokumentType = DokumentType.REGISTRERING
-    }
-
-    class FeilregistreringInput(
-        override val brudd: Brudd,
-        override val innsender: Bruker,
-        override val begrunnelse: String,
-    ): DokumentInput {
-        override val dokumentType = DokumentType.FEILREGISTRERING
-    }
-
-    enum class DokumentType {
-        REGISTRERING,
-        FEILREGISTRERING,
-    }
-
+    
     fun lagreBrudd(sakId: SakId, brudd: List<DokumentInput>): InnsendingId {
         val query = """
             INSERT INTO BRUDD_AKTIVITETSPLIKT

@@ -8,7 +8,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktR
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.DokumentInput
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.FeilregistreringInput
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Grunn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.RegistreringInput
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
@@ -16,7 +19,7 @@ import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
 
 interface AktivitetspliktDTO {
-    fun tilDomene(sak: Sak, innsender: Bruker): List<AktivitetspliktRepository.DokumentInput>
+    fun tilDomene(sak: Sak, innsender: Bruker): List<DokumentInput>
 }
 
 
@@ -27,7 +30,7 @@ data class OpprettAktivitetspliktDTO(
     val grunn: GrunnDTO?,
     val perioder: List<PeriodeDTO>,
 ) : AktivitetspliktDTO {
-    override fun tilDomene(sak: Sak, innsender: Bruker): List<AktivitetspliktRepository.DokumentInput> {
+    override fun tilDomene(sak: Sak, innsender: Bruker): List<DokumentInput> {
         require(grunn != GrunnDTO.FEILREGISTRERING)
         return perioder.map { periode ->
             val brudd = Brudd.nyttBrudd(
@@ -36,7 +39,7 @@ data class OpprettAktivitetspliktDTO(
                 bruddType = brudd,
                 paragraf = brudd.paragraf(paragraf),
             )
-            AktivitetspliktRepository.RegistreringInput(
+            RegistreringInput(
                 brudd = brudd,
                 innsender = innsender,
                 begrunnelse = begrunnelse,
@@ -53,7 +56,7 @@ class OppdaterAktivitetspliktDTOV2(
     val grunn: GrunnDTO,
     val begrunnelse: String,
 ) : AktivitetspliktDTO {
-    override fun tilDomene(sak: Sak, innsender: Bruker): List<AktivitetspliktRepository.DokumentInput> {
+    override fun tilDomene(sak: Sak, innsender: Bruker): List<DokumentInput> {
         val brudd = Brudd.nyttBrudd(
             sak = sak,
             periode = periode.tilDomene(),
@@ -62,7 +65,7 @@ class OppdaterAktivitetspliktDTOV2(
         )
         if (grunn == GrunnDTO.FEILREGISTRERING) {
             return listOf(
-                AktivitetspliktRepository.FeilregistreringInput(
+                FeilregistreringInput(
                     brudd = brudd,
                     innsender = innsender,
                     begrunnelse = begrunnelse,
@@ -70,7 +73,7 @@ class OppdaterAktivitetspliktDTOV2(
             )
         }
         return listOf(
-            AktivitetspliktRepository.RegistreringInput(
+            RegistreringInput(
                 brudd = brudd,
                 innsender = innsender,
                 begrunnelse = begrunnelse,
