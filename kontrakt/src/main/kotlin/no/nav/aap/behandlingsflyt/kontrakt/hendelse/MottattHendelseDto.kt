@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.kontrakt.hendelse
 
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.verdityper.dokument.Kanal
 import java.time.LocalDate
@@ -13,6 +15,7 @@ public data class MottattHendelseDto(
     val payload: Any?
 )
 
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "behovstype", visible = true)
 public sealed interface Innsending {
     public val saksnummer: Saksnummer
     public val type: InnsendingType

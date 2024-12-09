@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test
 class AvklaringsbehovLøsningTest {
     @Test
     fun `alle subtyper skal ha behovstype field `() {
-        val løsningSubtypes = utledSubtypes()
+        val løsningSubtypes = utledSubtypesTilAvklaringsbehovLøsning()
 
         assertThat(løsningSubtypes).allMatch { validerAlleKlasserHarFelt(it) }
     }
@@ -38,14 +38,14 @@ class AvklaringsbehovLøsningTest {
 
     @Test
     fun `alle subtyper skal ha annotasjon`() {
-        val løsningSubtypes = utledSubtypes()
+        val løsningSubtypes = utledSubtypesTilAvklaringsbehovLøsning()
 
         assertThat(løsningSubtypes).allMatch { it.isAnnotationPresent(JsonTypeName::class.java) }
     }
 
     @Test
     fun `alle subtyper skal ha unik verdi på annotasjonen`() {
-        val utledSubtypes = utledSubtypes()
+        val utledSubtypes = utledSubtypesTilAvklaringsbehovLøsning()
         val løsningSubtypes = utledSubtypes.map { it.getAnnotation(JsonTypeName::class.java).value }.toSet()
 
         assertThat(løsningSubtypes).hasSize(utledSubtypes.size)
@@ -53,7 +53,7 @@ class AvklaringsbehovLøsningTest {
 
     @Test
     fun `alle subtyper skal ha tilhørende definisjon`() {
-        val utledSubtypes = utledSubtypes()
+        val utledSubtypes = utledSubtypesTilAvklaringsbehovLøsning()
         val løsningSubtypes =
             utledSubtypes.map { Definisjon.forKode(it.getAnnotation(JsonTypeName::class.java).value) }.toSet()
 

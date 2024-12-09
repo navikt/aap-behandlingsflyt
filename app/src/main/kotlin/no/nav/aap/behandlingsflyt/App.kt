@@ -20,7 +20,7 @@ import io.ktor.server.routing.*
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.fatteVedtakGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.avklaringsbehovApi
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.utledSubtypes
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.utledSubtypesTilAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.flate.barnetilleggApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.beregningsGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepositoryImpl
@@ -55,6 +55,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoBulkGateway
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Innsending
 import no.nav.aap.behandlingsflyt.pip.behandlingsflytPip
 import no.nav.aap.behandlingsflyt.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
@@ -84,6 +85,10 @@ import no.nav.aap.motor.retry.RetryService
 import org.slf4j.LoggerFactory
 import javax.sql.DataSource
 
+fun utledSubtypesTilMottattHendelseDTO(): List<Class<*>> {
+    return Innsending::class.sealedSubclasses.map { it.java }.toList()
+}
+
 class App
 
 private const val ANTALL_WORKERS = 4
@@ -104,7 +109,8 @@ fun main() {
 }
 
 internal fun Application.server(dbConfig: DbConfig) {
-    DefaultJsonMapper.objectMapper().registerSubtypes(utledSubtypes())
+    DefaultJsonMapper.objectMapper()
+        .registerSubtypes(utledSubtypesTilAvklaringsbehovLøsning() + utledSubtypesTilMottattHendelseDTO())
 
     commonKtorModule(
         prometheus,
