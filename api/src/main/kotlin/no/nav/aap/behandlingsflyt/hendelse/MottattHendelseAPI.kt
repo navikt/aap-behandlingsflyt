@@ -8,7 +8,11 @@ import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.EMPTY_JSON_RESPONSE
 import no.nav.aap.behandlingsflyt.Tags
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Innsending
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Legeærklaring
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.MottattHendelseDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Pliktkort
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Søknad
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -25,7 +29,7 @@ private val logger = LoggerFactory.getLogger("hendelse.MottattHendelseAPI")
 
 fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource) {
     route("/api/hendelse") {
-        route("/send").post<Unit, String, MottattHendelseDto>(TagModule(listOf(Tags.MottaHendelse))) { _, dto ->
+        route("/send").post<Unit, String, Innsending>(TagModule(listOf(Tags.MottaHendelse))) { _, dto ->
             MDC.putCloseable("saksnummer", dto.saksnummer.toString()).use {
                 dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
@@ -37,14 +41,18 @@ fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource) {
                     flytJobbRepository.leggTil(
                         HendelseMottattHåndteringJobbUtfører.nyJobb(
                             sakId = sak.id,
-                            dokumentReferanse = dto.hendelseId,
+                            dokumentReferanse = dto.referanse,
                             brevkategori = dto.type,
                             kanal = Kanal.DIGITAL,
                             periode = Periode(
                                 LocalDate.now(),
                                 LocalDate.now().plusWeeks(4)
-                            ),
-                            payload = dto.payload
+                            ), // TODO: la jobben få inn dto som JSON, og kun sak-id
+                            payload = when (dto) {
+                                is Legeærklaring -> TODO()
+                                is Pliktkort -> TODO()
+                                is Søknad -> TODO()
+                            }
                         )
                     )
                 }

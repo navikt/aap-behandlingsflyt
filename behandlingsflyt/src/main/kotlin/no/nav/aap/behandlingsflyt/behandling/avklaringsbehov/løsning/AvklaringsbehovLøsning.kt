@@ -20,6 +20,6 @@ sealed interface AvklaringsbehovLøsning {
     fun løs(connection: DBConnection, kontekst: AvklaringsbehovKontekst): LøsningsResultat
 }
 
-fun utledSubtypes(): List<Class<*>> {
+fun utledSubtypesTilAvklaringsbehovLøsning(): List<Class<*>> {
     return AvklaringsbehovLøsning::class.sealedSubclasses.map { it.java }.toList()
 }
