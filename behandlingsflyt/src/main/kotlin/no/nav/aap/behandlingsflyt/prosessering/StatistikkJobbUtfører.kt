@@ -1,10 +1,8 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
@@ -280,6 +278,8 @@ class StatistikkJobbUtfører(
             val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
             val sakRepository = repositoryProvider.provide(SakRepository::class)
             val pipRepository = repositoryProvider.provide(PipRepository::class)
+            val tilkjentYtelseRepository = repositoryProvider.provide(TilkjentYtelseRepository::class)
+            val beregningsgrunnlagRepository = repositoryProvider.provide(BeregningsgrunnlagRepository::class)
             val sakService = SakService(sakRepository)
 
             return StatistikkJobbUtfører(
@@ -287,8 +287,8 @@ class StatistikkJobbUtfører(
                 vilkårsresultatRepository,
                 behandlingRepository,
                 sakService,
-                TilkjentYtelseRepositoryImpl(connection),
-                BeregningsgrunnlagRepositoryImpl(connection),
+                tilkjentYtelseRepository,
+                beregningsgrunnlagRepository,
                 pipRepository = pipRepository,
                 dokumentRepository = MottattDokumentRepositoryImpl(connection)
             )

@@ -49,12 +49,13 @@ class BeregnTilkjentYtelseSteg private constructor(
         override fun konstruer(connection: DBConnection): BehandlingSteg {
             val repositoryProvider = RepositoryProvider(connection)
             val personopplysningRepository = repositoryProvider.provide(PersonopplysningRepository::class)
+            val tilkjentYtelseRepository = repositoryProvider.provide(TilkjentYtelseRepository::class)
             return BeregnTilkjentYtelseSteg(
                 UnderveisRepository(connection),
                 BeregningsgrunnlagRepositoryImpl(connection),
                 personopplysningRepository,
                 BarnetilleggRepository(connection),
-                TilkjentYtelseRepositoryImpl(connection),
+                tilkjentYtelseRepository,
                 SamordningRepository(connection)
             )
         }
