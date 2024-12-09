@@ -5,6 +5,7 @@ import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
+import no.nav.aap.behandlingsflyt.EMPTY_JSON_RESPONSE
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
@@ -51,7 +52,7 @@ fun NormalOpenAPIRoute.søknadApi(dataSource: DataSource) {
                 }
             }
             // Må ha String-respons på grunn av Accept-header. Denne må returnere json
-            respond("{}", HttpStatusCode.Accepted)
+            respond(EMPTY_JSON_RESPONSE, HttpStatusCode.Accepted)
         }
     }
 }

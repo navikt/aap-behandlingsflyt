@@ -1,9 +1,11 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
+import com.papsign.ktor.openapigen.route.TagModule
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.Aksjon
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.DefinisjonEndring
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.Historikk
@@ -25,7 +27,7 @@ import javax.sql.DataSource
 fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(dataSource: DataSource) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/fatte-vedtak") {
-            get<BehandlingReferanse, FatteVedtakGrunnlagDto> { req ->
+            get<BehandlingReferanse, FatteVedtakGrunnlagDto>(TagModule(listOf(Tags.Behandling))) { req ->
 
                 val dto = dataSource.transaction { connection ->
 

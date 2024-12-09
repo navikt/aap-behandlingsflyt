@@ -1,10 +1,11 @@
-package no.nav.aap.behandlingsflyt
+package no.nav.aap.behandlingsflyt.hendelse
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
+import no.nav.aap.behandlingsflyt.EMPTY_JSON_RESPONSE
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.MottattHendelseDto
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -41,7 +42,7 @@ fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource) {
                     )
                 }
             }
-            respond("{}", HttpStatusCode.Accepted)
+            respond(EMPTY_JSON_RESPONSE, HttpStatusCode.Accepted)
         }
     }
 }
