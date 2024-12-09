@@ -15,7 +15,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 import java.time.LocalDate
 
 class SamordningYtelseVurderingService(
@@ -122,8 +122,8 @@ class SamordningYtelseVurderingService(
         }
 
         override fun konstruer(connection: DBConnection): SamordningYtelseVurderingService {
-            val repositoryFactory = RepositoryFactory(connection)
-            val sakRepository = repositoryFactory.create(SakRepository::class)
+            val repositoryProvider = RepositoryProvider(connection)
+            val sakRepository = repositoryProvider.provide(SakRepository::class)
             return SamordningYtelseVurderingService(
                 SamordningYtelseVurderingRepository(connection),
                 SakService(sakRepository)

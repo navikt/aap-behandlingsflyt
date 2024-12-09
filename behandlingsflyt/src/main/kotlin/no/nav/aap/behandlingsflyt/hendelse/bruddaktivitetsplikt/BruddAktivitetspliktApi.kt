@@ -21,7 +21,7 @@ import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.FlytJobbRepository
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 import no.nav.aap.verdityper.dokument.Kanal
 import javax.sql.DataSource
 
@@ -46,8 +46,8 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
 
             get<SaksnummerParameter, BruddAktivitetspliktResponse> { params ->
                 val response = dataSource.transaction { connection ->
-                    val repositoryFactory = RepositoryFactory(connection)
-                    val sakRepository = repositoryFactory.create(SakRepository::class)
+                    val repositoryProvider = RepositoryProvider(connection)
+                    val sakRepository = repositoryProvider.provide(SakRepository::class)
                     val repository = AktivitetspliktRepository(connection)
                     val sak = SakService(sakRepository).hent(Saksnummer(params.saksnummer))
                     val alleBrudd = repository.hentBrudd(sak.id).utledBruddTilstand()
@@ -65,8 +65,8 @@ private fun opprettDokument(
     saksnummer: Saksnummer,
     req: AktivitetspliktDTO
 ) {
-    val repositoryFactory = RepositoryFactory(connection)
-    val sakRepository = repositoryFactory.create(SakRepository::class)
+    val repositoryProvider = RepositoryProvider(connection)
+    val sakRepository = repositoryProvider.provide(SakRepository::class)
     val repository = AktivitetspliktRepository(connection)
 
     val sak = SakService(sakRepository).hent(saksnummer)

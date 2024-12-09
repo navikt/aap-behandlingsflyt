@@ -19,7 +19,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.HentSakDTO
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.FlytJobbRepository
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 import no.nav.aap.verdityper.dokument.Kanal
 import javax.sql.DataSource
 
@@ -27,8 +27,8 @@ fun NormalOpenAPIRoute.torsHammerApi(dataSource: DataSource) {
     route("/api/hammer") {
         route("/send").post<Unit, String, TorsHammerDto> { _, dto ->
             dataSource.transaction { connection ->
-                val repositoryFactory = RepositoryFactory(connection)
-                val sakRepository = repositoryFactory.create(SakRepository::class)
+                val repositoryProvider = RepositoryProvider(connection)
+                val sakRepository = repositoryProvider.provide(SakRepository::class)
                 val sakService = SakService(sakRepository)
 
                 val sak = sakService.hent(Saksnummer(dto.saksnummer))
@@ -49,8 +49,8 @@ fun NormalOpenAPIRoute.torsHammerApi(dataSource: DataSource) {
         }
         route("/{saksnummer}").get<HentSakDTO, AlleHammereDto> { dto ->
             val response = dataSource.transaction(readOnly = true) { connection ->
-                val repositoryFactory = RepositoryFactory(connection)
-                val sakRepository = repositoryFactory.create(SakRepository::class)
+                val repositoryProvider = RepositoryProvider(connection)
+                val sakRepository = repositoryProvider.provide(SakRepository::class)
                 val sakService = SakService(sakRepository)
                 val sak = sakService.hent(Saksnummer(dto.saksnummer))
 

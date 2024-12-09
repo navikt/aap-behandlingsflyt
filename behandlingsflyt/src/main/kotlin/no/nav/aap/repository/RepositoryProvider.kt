@@ -7,9 +7,9 @@ import kotlin.reflect.full.companionObjectInstance
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.starProjectedType
 
-class RepositoryFactory(val connection: DBConnection) {
+class RepositoryProvider(val connection: DBConnection) {
 
-    inline fun <reified T : Repository> create(type: KClass<T>): T {
+    inline fun <reified T : Repository> provide(type: KClass<T>): T {
         val repositoryKlass = RepositoryRegistry.fetch(type.starProjectedType)
 
         return internalCreate(repositoryKlass)
@@ -34,7 +34,7 @@ class RepositoryFactory(val connection: DBConnection) {
         throw IllegalStateException("Repository må ha et companion object som implementerer Factory<T> interfacet.")
     }
 
-    fun createAlle(): List<Repository> {
+    fun provideAlle(): List<Repository> {
         return RepositoryRegistry.alle().map { klass -> internalCreate(klass) }
     }
 }

@@ -8,13 +8,13 @@ import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 
 class KvalitetssikrerLøser(val connection: DBConnection) : AvklaringsbehovsLøser<KvalitetssikringLøsning> {
 
-    private val repositoryFactory = RepositoryFactory(connection)
-    private val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
-    private val avklaringsbehovRepository = repositoryFactory.create(AvklaringsbehovRepository::class)
+    private val repositoryProvider = RepositoryProvider(connection)
+    private val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+    private val avklaringsbehovRepository = repositoryProvider.provide(AvklaringsbehovRepository::class)
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: KvalitetssikringLøsning): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)

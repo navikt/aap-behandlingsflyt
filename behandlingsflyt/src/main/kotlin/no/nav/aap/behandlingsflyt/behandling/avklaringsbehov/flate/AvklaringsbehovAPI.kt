@@ -20,7 +20,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.motor.FlytJobbRepository
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 import org.slf4j.MDC
 import javax.sql.DataSource
 
@@ -29,11 +29,11 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource) {
         route("/løs-behov") {
             post<Unit, LøsAvklaringsbehovPåBehandling, LøsAvklaringsbehovPåBehandling> { _, request ->
                 dataSource.transaction { connection ->
-                    val repositoryFactory = RepositoryFactory(connection)
-                    val sakRepository = repositoryFactory.create(SakRepository::class)
-                    val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
-                    val taSkriveLåsRepository = repositoryFactory.create(TaSkriveLåsRepository::class)
-                    val avklaringsbehovRepository = repositoryFactory.create(AvklaringsbehovRepository::class)
+                    val repositoryProvider = RepositoryProvider(connection)
+                    val sakRepository = repositoryProvider.provide(SakRepository::class)
+                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+                    val taSkriveLåsRepository = repositoryProvider.provide(TaSkriveLåsRepository::class)
+                    val avklaringsbehovRepository = repositoryProvider.provide(AvklaringsbehovRepository::class)
 
                     val lås = taSkriveLåsRepository.lås(request.referanse)
                     MDC.putCloseable("sakId", lås.sakSkrivelås.id.toString()).use {

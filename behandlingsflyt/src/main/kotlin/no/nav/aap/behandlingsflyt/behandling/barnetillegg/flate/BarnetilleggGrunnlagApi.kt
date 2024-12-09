@@ -19,7 +19,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource) {
@@ -27,11 +27,11 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource) {
         route("/grunnlag/{referanse}") {
             get<BehandlingReferanse, BarnetilleggDto> { req ->
                 val dto = dataSource.transaction { connection ->
-                    val repositoryFactory = RepositoryFactory(connection)
-                    val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
-                    val vilkårsresultatRepository = repositoryFactory.create(VilkårsresultatRepository::class)
-                    val sakRepository = repositoryFactory.create(SakRepository::class)
-                    val personopplysningRepository = repositoryFactory.create(PersonopplysningRepository::class)
+                    val repositoryProvider = RepositoryProvider(connection)
+                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+                    val vilkårsresultatRepository = repositoryProvider.provide(VilkårsresultatRepository::class)
+                    val sakRepository = repositoryProvider.provide(SakRepository::class)
+                    val personopplysningRepository = repositoryProvider.provide(PersonopplysningRepository::class)
 
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)

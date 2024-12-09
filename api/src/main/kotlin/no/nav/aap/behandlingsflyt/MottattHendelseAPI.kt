@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.FlytJobbRepository
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.MDC
 import java.time.LocalDate
@@ -22,8 +22,8 @@ fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource) {
         route("/send").post<Unit, String, MottattHendelseDto> { _, dto ->
             MDC.putCloseable("saksnummer", dto.saksnummer.toString()).use {
                 dataSource.transaction { connection ->
-                    val repositoryFactory = RepositoryFactory(connection)
-                    val sak = repositoryFactory.create(SakRepository::class).hent((dto.saksnummer))
+                    val repositoryProvider = RepositoryProvider(connection)
+                    val sak = repositoryProvider.provide(SakRepository::class).hent((dto.saksnummer))
 
                     val flytJobbRepository = FlytJobbRepository(connection)
                     flytJobbRepository.leggTil(

@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 
 class VurderAlderSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
@@ -38,9 +38,9 @@ class VurderAlderSteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val repositoryFactory = RepositoryFactory(connection)
-            val personopplysningRepository = repositoryFactory.create(PersonopplysningRepository::class)
-            val vilkårsresultatRepository = repositoryFactory.create(VilkårsresultatRepository::class)
+            val repositoryProvider = RepositoryProvider(connection)
+            val personopplysningRepository = repositoryProvider.provide(PersonopplysningRepository::class)
+            val vilkårsresultatRepository = repositoryProvider.provide(VilkårsresultatRepository::class)
             return VurderAlderSteg(
                 vilkårsresultatRepository,
                 personopplysningRepository

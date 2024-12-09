@@ -20,7 +20,7 @@ import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 import no.nav.aap.verdityper.dokument.Kanal
 import java.time.LocalDateTime
 
@@ -96,10 +96,10 @@ class HendelseMottattHåndteringJobbUtfører(
             }
 
         override fun konstruer(connection: DBConnection): JobbUtfører {
-            val repositoryFactory = RepositoryFactory(connection)
-            val låsRepository = repositoryFactory.create(TaSkriveLåsRepository::class)
-            val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
-            val sakRepository = repositoryFactory.create(SakRepository::class)
+            val repositoryProvider = RepositoryProvider(connection)
+            val låsRepository = repositoryProvider.provide(TaSkriveLåsRepository::class)
+            val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+            val sakRepository = repositoryProvider.provide(SakRepository::class)
             return HendelseMottattHåndteringJobbUtfører(
                 låsRepository,
                 HåndterMottattDokumentService(

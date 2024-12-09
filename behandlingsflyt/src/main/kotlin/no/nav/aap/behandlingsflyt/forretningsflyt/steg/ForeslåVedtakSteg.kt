@@ -10,7 +10,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 
 class ForeslåVedtakSteg internal constructor(
     private val avklaringsbehovRepository: AvklaringsbehovRepository
@@ -39,8 +39,8 @@ class ForeslåVedtakSteg internal constructor(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val repositoryFactory = RepositoryFactory(connection)
-            val avklaringsbehovRepository = repositoryFactory.create(AvklaringsbehovRepository::class)
+            val repositoryProvider = RepositoryProvider(connection)
+            val avklaringsbehovRepository = repositoryProvider.provide(AvklaringsbehovRepository::class)
             return ForeslåVedtakSteg(avklaringsbehovRepository)
         }
 

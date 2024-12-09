@@ -18,7 +18,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.verdityper.Interval
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
@@ -29,9 +29,9 @@ fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(dataSource: DataSource) {
 
                 val dto = dataSource.transaction { connection ->
 
-                    val repositoryFactory = RepositoryFactory(connection)
-                    val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
-                    val avklaringsbehovRepository = repositoryFactory.create(AvklaringsbehovRepository::class)
+                    val repositoryProvider = RepositoryProvider(connection)
+                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+                    val avklaringsbehovRepository = repositoryProvider.provide(AvklaringsbehovRepository::class)
 
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)

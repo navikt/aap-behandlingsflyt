@@ -20,7 +20,7 @@ import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 
 class ProsesserBehandlingJobbUtfører(
     private val låsRepository: TaSkriveLåsRepository,
@@ -42,13 +42,13 @@ class ProsesserBehandlingJobbUtfører(
 
     companion object : Jobb {
         override fun konstruer(connection: DBConnection): JobbUtfører {
-            val repositoryFactory = RepositoryFactory(connection)
-            val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
-            val behandlingFlytRepository = repositoryFactory.create(BehandlingFlytRepository::class)
-            val sakRepository = repositoryFactory.create(SakRepository::class)
-            val sakFlytRepository = repositoryFactory.create(SakFlytRepository::class)
-            val låsRepository = repositoryFactory.create(TaSkriveLåsRepository::class)
-            val avklaringsbehovRepository = repositoryFactory.create(AvklaringsbehovRepository::class)
+            val repositoryProvider = RepositoryProvider(connection)
+            val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+            val behandlingFlytRepository = repositoryProvider.provide(BehandlingFlytRepository::class)
+            val sakRepository = repositoryProvider.provide(SakRepository::class)
+            val sakFlytRepository = repositoryProvider.provide(SakFlytRepository::class)
+            val låsRepository = repositoryProvider.provide(TaSkriveLåsRepository::class)
+            val avklaringsbehovRepository = repositoryProvider.provide(AvklaringsbehovRepository::class)
             return ProsesserBehandlingJobbUtfører(
                 låsRepository,
                 FlytOrkestrator(

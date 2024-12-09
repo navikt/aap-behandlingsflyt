@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.pip.IdentPåSak.Companion.filterDistinctIdent
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.SakPathParam
@@ -28,7 +28,8 @@ fun NormalOpenAPIRoute.behandlingsflytPip(dataSource: DataSource) {
             ) { req ->
                 val saksnummer = req.saksnummer
                 val identer = dataSource.transaction(readOnly = true) { connection ->
-                    RepositoryFactory(connection).create(PipRepository::class).finnIdenterPåSak(Saksnummer(saksnummer))
+                    RepositoryProvider(connection).provide(PipRepository::class)
+                        .finnIdenterPåSak(Saksnummer(saksnummer))
                 }
                 respond(
                     IdenterDTO(
@@ -49,7 +50,7 @@ fun NormalOpenAPIRoute.behandlingsflytPip(dataSource: DataSource) {
             ) { req ->
                 val behandlingsnummer = req.behandlingsnummer
                 val identer = dataSource.transaction(readOnly = true) { connection ->
-                    RepositoryFactory(connection).create(PipRepository::class)
+                    RepositoryProvider(connection).provide(PipRepository::class)
                         .finnIdenterPåBehandling(BehandlingReferanse(behandlingsnummer))
                 }
                 respond(

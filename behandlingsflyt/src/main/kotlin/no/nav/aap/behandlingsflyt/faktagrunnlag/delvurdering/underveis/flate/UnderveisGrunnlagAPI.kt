@@ -12,7 +12,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.underveisVurderingerAPI(datasource: DataSource) {
@@ -27,8 +27,8 @@ fun NormalOpenAPIRoute.underveisVurderingerAPI(datasource: DataSource) {
         )
     ) { behandlingReferanse ->
         val underveisGrunnlag = datasource.transaction(readOnly = true) { conn ->
-            val repositoryFactory = RepositoryFactory(conn)
-            val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+            val repositoryProvider = RepositoryProvider(conn)
+            val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
             val behandling = BehandlingReferanseService(behandlingRepository).behandling(behandlingReferanse)
             UnderveisRepository(conn).hentHvisEksisterer(behandling.id)
         }

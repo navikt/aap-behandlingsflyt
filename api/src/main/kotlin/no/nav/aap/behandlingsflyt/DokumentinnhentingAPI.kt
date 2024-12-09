@@ -30,7 +30,7 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.motor.FlytJobbRepository
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
@@ -38,14 +38,16 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
         route("/bestill") {
             post<Unit, String, BestillLegeerklæringDto> { _, req ->
                 val bestillingUuid = dataSource.transaction { connection ->
-                    val repositoryFactory = RepositoryFactory(connection)
+                    val repositoryProvider = RepositoryProvider(connection)
 
-                    val låsRepository = repositoryFactory.create(TaSkriveLåsRepository::class)
+                    val låsRepository = repositoryProvider.provide(TaSkriveLåsRepository::class)
                     val lås = låsRepository.lås(req.behandlingsReferanse)
 
-                    val sak = repositoryFactory.create(SakRepository::class).hent((Saksnummer(req.saksnummer)))
-                    val behandling = repositoryFactory.create(BehandlingRepository::class).hent(BehandlingReferanse(req.behandlingsReferanse))
-                    val avklaringsbehovene = repositoryFactory.create(AvklaringsbehovRepository::class).hentAvklaringsbehovene(behandling.id)
+                    val sak = repositoryProvider.provide(SakRepository::class).hent((Saksnummer(req.saksnummer)))
+                    val behandling = repositoryProvider.provide(BehandlingRepository::class)
+                        .hent(BehandlingReferanse(req.behandlingsReferanse))
+                    val avklaringsbehovene = repositoryProvider.provide(AvklaringsbehovRepository::class)
+                        .hentAvklaringsbehovene(behandling.id)
 
                     val personIdent = sak.person.aktivIdent()
                     val personinfo = PdlPersoninfoGateway.hentPersoninfoForIdent(personIdent, token())
@@ -59,7 +61,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
                     )
                     avklaringsbehovene.validerPlassering(behandling = behandling)
 
-                    val sakService = SakService(repositoryFactory.create(SakRepository::class))
+                    val sakService = SakService(repositoryProvider.provide(SakRepository::class))
                     val behandlingHendelseService = BehandlingHendelseServiceImpl(FlytJobbRepository((connection)), sakService)
 
                     behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
@@ -95,8 +97,8 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
         route("/brevpreview") {
             post<Unit, BrevResponse, ForhåndsvisBrevRequest> { _, req ->
                 val brevPreview = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryFactory = RepositoryFactory(connection).create(SakRepository::class)
-                    val sak = repositoryFactory.hent((Saksnummer(req.saksnummer)))
+                    val repositoryProvider = RepositoryProvider(connection).provide(SakRepository::class)
+                    val sak = repositoryProvider.hent((Saksnummer(req.saksnummer)))
 
                     val personIdent = sak.person.aktivIdent()
                     val personinfo = PdlPersoninfoGateway.hentPersoninfoForIdent(personIdent, token())

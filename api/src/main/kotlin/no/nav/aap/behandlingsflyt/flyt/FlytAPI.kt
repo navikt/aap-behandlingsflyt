@@ -16,7 +16,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.flyt.flate.*
+import no.nav.aap.behandlingsflyt.flyt.flate.VilkårDTO
+import no.nav.aap.behandlingsflyt.flyt.flate.VilkårsperiodeDTO
 import no.nav.aap.behandlingsflyt.flyt.flate.visning.DynamiskStegGruppeVisningService
 import no.nav.aap.behandlingsflyt.flyt.flate.visning.ProsesseringStatus
 import no.nav.aap.behandlingsflyt.flyt.flate.visning.Visning
@@ -39,7 +40,7 @@ import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbStatus
 import no.nav.aap.motor.api.JobbInfoDto
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 import org.slf4j.MDC
 import javax.sql.DataSource
 
@@ -48,10 +49,10 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
         route("/{referanse}/flyt") {
             get<BehandlingReferanse, BehandlingFlytOgTilstandDto> { req ->
                 val dto = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryFactory = RepositoryFactory(connection)
-                    val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
-                    val vilkårsresultatRepository = repositoryFactory.create(VilkårsresultatRepository::class)
-                    val avklaringsbehovRepository = repositoryFactory.create(AvklaringsbehovRepository::class)
+                    val repositoryProvider = RepositoryProvider(connection)
+                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+                    val vilkårsresultatRepository = repositoryProvider.provide(VilkårsresultatRepository::class)
+                    val avklaringsbehovRepository = repositoryProvider.provide(AvklaringsbehovRepository::class)
 
                     var behandling = behandling(behandlingRepository, req)
                     val flytJobbRepository = FlytJobbRepository(connection)
@@ -144,9 +145,9 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
         route("/{referanse}/resultat") {
             get<BehandlingReferanse, BehandlingResultatDto> { req ->
                 val dto = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryFactory = RepositoryFactory(connection)
-                    val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
-                    val vilkårsresultatRepository = repositoryFactory.create(VilkårsresultatRepository::class)
+                    val repositoryProvider = RepositoryProvider(connection)
+                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+                    val vilkårsresultatRepository = repositoryProvider.provide(VilkårsresultatRepository::class)
 
                     val behandling = behandling(behandlingRepository, req)
 
@@ -160,11 +161,11 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
         route("/{referanse}/sett-på-vent") {
             post<BehandlingReferanse, BehandlingResultatDto, SettPåVentRequest> { request, body ->
                 dataSource.transaction { connection ->
-                    val repositoryFactory = RepositoryFactory(connection)
-                    val taSkriveLåsRepository = repositoryFactory.create(TaSkriveLåsRepository::class)
+                    val repositoryProvider = RepositoryProvider(connection)
+                    val taSkriveLåsRepository = repositoryProvider.provide(TaSkriveLåsRepository::class)
                     val lås = taSkriveLåsRepository.lås(request.referanse)
-                    val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
-                    val sakRepository = repositoryFactory.create(SakRepository::class)
+                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+                    val sakRepository = repositoryProvider.provide(SakRepository::class)
                     BehandlingTilstandValidator(
                         BehandlingReferanseService(behandlingRepository),
                         FlytJobbRepository(connection)
@@ -200,9 +201,9 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
         route("/{referanse}/vente-informasjon") {
             get<BehandlingReferanse, Venteinformasjon> { request ->
                 val dto = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryFactory = RepositoryFactory(connection)
-                    val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
-                    val avklaringsbehovRepository = repositoryFactory.create(AvklaringsbehovRepository::class)
+                    val repositoryProvider = RepositoryProvider(connection)
+                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+                    val avklaringsbehovRepository = repositoryProvider.provide(AvklaringsbehovRepository::class)
 
                     val behandling = behandling(behandlingRepository, request)
                     val avklaringsbehovene = avklaringsbehov(avklaringsbehovRepository, behandling.id)

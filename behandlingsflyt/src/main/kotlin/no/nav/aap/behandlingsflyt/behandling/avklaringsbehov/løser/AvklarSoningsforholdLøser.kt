@@ -13,12 +13,12 @@ import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 
 class AvklarSoningsforholdLøser(connection: DBConnection) : AvklaringsbehovsLøser<AvklarSoningsforholdLøsning> {
 
-    private val repositoryFactory = RepositoryFactory(connection)
-    private val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+    private val repositoryProvider = RepositoryProvider(connection)
+    private val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
     private val soningRepository = InstitusjonsoppholdRepository(connection)
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarSoningsforholdLøsning): LøsningsResultat {

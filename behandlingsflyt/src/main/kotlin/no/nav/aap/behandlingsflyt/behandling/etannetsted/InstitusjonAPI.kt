@@ -23,7 +23,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource) {
@@ -31,9 +31,9 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource) {
         route("/{referanse}/grunnlag/institusjon/soning") {
             get<BehandlingReferanse, SoningsGrunnlag> { req ->
                 val soningsgrunnlag = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryFactory = RepositoryFactory(connection)
-                    val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
-                    val sakRepository = repositoryFactory.create(SakRepository::class)
+                    val repositoryProvider = RepositoryProvider(connection)
+                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+                    val sakRepository = repositoryProvider.provide(SakRepository::class)
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                     val institusjonsoppholdRepository = InstitusjonsoppholdRepository(connection)
                     val utlederService =
@@ -78,9 +78,9 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource) {
         route("/{referanse}/grunnlag/institusjon/helse") {
             get<BehandlingReferanse, HelseinstitusjonGrunnlag> { req ->
                 val grunnlagDto = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryFactory = RepositoryFactory(connection)
-                    val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
-                    val sakRepository = repositoryFactory.create(SakRepository::class)
+                    val repositoryProvider = RepositoryProvider(connection)
+                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+                    val sakRepository = repositoryProvider.provide(SakRepository::class)
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                     val institusjonsoppholdRepository = InstitusjonsoppholdRepository(connection)
                     val utlederService =

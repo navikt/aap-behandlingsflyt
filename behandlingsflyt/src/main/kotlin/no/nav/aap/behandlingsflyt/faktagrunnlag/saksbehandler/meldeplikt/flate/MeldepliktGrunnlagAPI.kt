@@ -15,7 +15,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
@@ -23,8 +23,8 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(dataSource: DataSource) {
     route("/api/behandling/{referanse}/grunnlag/fritak-meldeplikt") {
         get<BehandlingReferanse, FritakMeldepliktGrunnlagDto> { req ->
             val meldepliktGrunnlag = dataSource.transaction { connection ->
-                val repositoryFactory = RepositoryFactory(connection)
-                val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+                val repositoryProvider = RepositoryProvider(connection)
+                val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
                 val behandling: Behandling =
                     BehandlingReferanseService(behandlingRepository).behandling(req)
                 val meldepliktRepository = MeldepliktRepository(connection)
@@ -57,8 +57,8 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(dataSource: DataSource) {
     route("/api/behandling/{referanse}/grunnlag/fritak-meldeplikt/simulering") {
         post<BehandlingReferanse, SimulertFritakMeldepliktDto, SimulerFritakMeldepliktDto> { req, dto ->
             val meldepliktGrunnlag = dataSource.transaction { connection ->
-                val repositoryFactory = RepositoryFactory(connection)
-                val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+                val repositoryProvider = RepositoryProvider(connection)
+                val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
                 val behandling: Behandling =
                     BehandlingReferanseService(behandlingRepository).behandling(req)
                 val meldepliktRepository = MeldepliktRepository(connection)

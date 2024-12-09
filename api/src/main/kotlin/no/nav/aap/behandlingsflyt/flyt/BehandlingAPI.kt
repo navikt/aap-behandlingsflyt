@@ -26,7 +26,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoBulk
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
@@ -37,10 +37,10 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
         route("/{referanse}") {
             get<BehandlingReferanse, DetaljertBehandlingDTO> { req ->
                 val dto = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryFactory = RepositoryFactory(connection)
-                    val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
-                    val avklaringsbehovRepository = repositoryFactory.create(AvklaringsbehovRepository::class)
-                    val vilkårsresultatRepository = repositoryFactory.create(VilkårsresultatRepository::class)
+                    val repositoryProvider = RepositoryProvider(connection)
+                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+                    val avklaringsbehovRepository = repositoryProvider.provide(AvklaringsbehovRepository::class)
+                    val vilkårsresultatRepository = repositoryProvider.provide(VilkårsresultatRepository::class)
 
                     val behandling = behandling(behandlingRepository, req)
                     val flyt = utledType(behandling.typeBehandling()).flyt()
@@ -96,9 +96,9 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
         route("/{referanse}/forbered") {
             get<BehandlingReferanse, DetaljertBehandlingDTO> { req ->
                 dataSource.transaction { connection ->
-                    val repositoryFactory = RepositoryFactory(connection)
-                    val taSkriveLåsRepository = repositoryFactory.create(TaSkriveLåsRepository::class)
-                    val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+                    val repositoryProvider = RepositoryProvider(connection)
+                    val taSkriveLåsRepository = repositoryProvider.provide(TaSkriveLåsRepository::class)
+                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
                     val lås = taSkriveLåsRepository.lås(req.referanse)
                     val behandling = behandling(behandlingRepository, req)
                     val flytJobbRepository = FlytJobbRepository(connection)
@@ -129,8 +129,8 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
                 val referanse = req.referanse
 
                 val identer = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryFactory = RepositoryFactory(connection)
-                    val pipRepository = repositoryFactory.create(PipRepository::class)
+                    val repositoryProvider = RepositoryProvider(connection)
+                    val pipRepository = repositoryProvider.provide(PipRepository::class)
                     pipRepository.finnIdenterPåBehandling(BehandlingReferanse(referanse))
                 }
 

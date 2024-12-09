@@ -7,12 +7,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRep
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 
 class AvklarStudentLøser(val connection: DBConnection) : AvklaringsbehovsLøser<AvklarStudentLøsning> {
 
-    private val repositoryFactory = RepositoryFactory(connection)
-    private val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+    private val repositoryProvider = RepositoryProvider(connection)
+    private val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
     private val studentRepository = StudentRepository(connection)
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarStudentLøsning): LøsningsResultat {

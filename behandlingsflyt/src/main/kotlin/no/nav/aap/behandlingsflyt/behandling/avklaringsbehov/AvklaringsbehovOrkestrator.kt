@@ -24,17 +24,17 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.motor.FlytJobbRepository
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
 class AvklaringsbehovOrkestrator(
     private val connection: DBConnection, private val behandlingHendelseService: BehandlingHendelseServiceImpl
 ) {
-    private val repositoryFactory = RepositoryFactory(connection)
-    private val avklaringsbehovRepository = repositoryFactory.create(AvklaringsbehovRepository::class)
-    private val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
-    private val sakFlytRepository = repositoryFactory.create(SakFlytRepository::class)
-    private val sakRepository = repositoryFactory.create(SakRepository::class)
+    private val repositoryProvider = RepositoryProvider(connection)
+    private val avklaringsbehovRepository = repositoryProvider.provide(AvklaringsbehovRepository::class)
+    private val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+    private val sakFlytRepository = repositoryProvider.provide(SakFlytRepository::class)
+    private val sakRepository = repositoryProvider.provide(SakRepository::class)
     private val prosesserBehandling = ProsesserBehandlingService(FlytJobbRepository(connection))
 
     private val log = LoggerFactory.getLogger(AvklaringsbehovOrkestrator::class.java)
@@ -118,7 +118,7 @@ class AvklaringsbehovOrkestrator(
             stegKonstruktør = StegKonstruktørImpl(connection),
             ventebehovEvaluererService = VentebehovEvaluererServiceImpl(connection),
             behandlingRepository = behandlingRepository,
-            behandlingFlytRepository = repositoryFactory.create(BehandlingFlytRepository::class),
+            behandlingFlytRepository = repositoryProvider.provide(BehandlingFlytRepository::class),
             avklaringsbehovRepository = avklaringsbehovRepository,
             informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(connection),
             sakRepository = sakFlytRepository,

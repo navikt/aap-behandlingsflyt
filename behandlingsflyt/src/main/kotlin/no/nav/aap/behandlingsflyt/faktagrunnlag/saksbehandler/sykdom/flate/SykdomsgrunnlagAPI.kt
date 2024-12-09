@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: DataSource) {
@@ -19,8 +19,8 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: DataSource) {
         route("/{referanse}/grunnlag/sykdom/sykdom") {
             get<BehandlingReferanse, SykdomGrunnlagDto> { req ->
                 val (yrkesskadeGrunnlag, sykdomGrunnlag) = dataSource.transaction { connection ->
-                    val repositoryFactory = RepositoryFactory(connection)
-                    val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+                    val repositoryProvider = RepositoryProvider(connection)
+                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
 
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
@@ -54,8 +54,8 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: DataSource) {
         route("/{referanse}/grunnlag/sykdom/yrkesskade") {
             get<BehandlingReferanse, YrkesskadeVurderingGrunnlagDto> { req ->
                 val (yrkesskadeGrunnlag, sykdomGrunnlag) = dataSource.transaction { connection ->
-                    val repositoryFactory = RepositoryFactory(connection)
-                    val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+                    val repositoryProvider = RepositoryProvider(connection)
+                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
 

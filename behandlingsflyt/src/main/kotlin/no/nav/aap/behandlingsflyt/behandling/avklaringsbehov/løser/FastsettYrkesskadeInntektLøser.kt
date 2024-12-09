@@ -6,13 +6,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 
 class FastsettYrkesskadeInntektLøser(connection: DBConnection) :
     AvklaringsbehovsLøser<FastsettYrkesskadeInntektLøsning> {
 
-    private val repositoryFactory = RepositoryFactory(connection)
-    private val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+    private val repositoryProvider = RepositoryProvider(connection)
+    private val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
     private val beregningVurderingRepository = BeregningVurderingRepository(connection)
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: FastsettYrkesskadeInntektLøsning): LøsningsResultat {

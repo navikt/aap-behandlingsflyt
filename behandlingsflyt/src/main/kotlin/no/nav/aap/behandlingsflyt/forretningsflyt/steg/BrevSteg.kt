@@ -21,7 +21,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 
 class BrevSteg private constructor(
     private val brevUtlederService: BrevUtlederService,
@@ -69,10 +69,10 @@ class BrevSteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val repositoryFactory = RepositoryFactory(connection)
-            val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
-            val sakRepository = repositoryFactory.create(SakRepository::class)
-            val vilkårsresultatRepository = repositoryFactory.create(VilkårsresultatRepository::class)
+            val repositoryProvider = RepositoryProvider(connection)
+            val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+            val sakRepository = repositoryProvider.provide(SakRepository::class)
+            val vilkårsresultatRepository = repositoryProvider.provide(VilkårsresultatRepository::class)
 
             return BrevSteg(
                 BrevUtlederService(

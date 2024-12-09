@@ -12,7 +12,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.verdityper.Prosent
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 
 class UføreService(
     private val sakService: SakService,
@@ -51,8 +51,8 @@ class UføreService(
         }
 
         override fun konstruer(connection: DBConnection): UføreService {
-            val repositoryFactory = RepositoryFactory(connection)
-            val sakRepository = repositoryFactory.create(SakRepository::class)
+            val repositoryProvider = RepositoryProvider(connection)
+            val sakRepository = repositoryProvider.provide(SakRepository::class)
             return UføreService(
                 SakService(sakRepository),
                 UføreRepository(connection),

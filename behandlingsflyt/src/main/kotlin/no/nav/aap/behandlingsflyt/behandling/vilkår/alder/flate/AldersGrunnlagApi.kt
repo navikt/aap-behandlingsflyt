@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.aldersGrunnlagApi(dataSource: DataSource) {
@@ -19,10 +19,10 @@ fun NormalOpenAPIRoute.aldersGrunnlagApi(dataSource: DataSource) {
         route("/{referanse}/grunnlag/alder") {
             get<BehandlingReferanse, AlderDTO> { req ->
                 val alderDTO = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryFactory = RepositoryFactory(connection)
-                    val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
-                    val personopplysningRepository = repositoryFactory.create(PersonopplysningRepository::class)
-                    val vilkårsresultatRepository = repositoryFactory.create(VilkårsresultatRepository::class)
+                    val repositoryProvider = RepositoryProvider(connection)
+                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+                    val personopplysningRepository = repositoryProvider.provide(PersonopplysningRepository::class)
+                    val vilkårsresultatRepository = repositoryProvider.provide(VilkårsresultatRepository::class)
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                     val aldersvilkårperioder =
                         vilkårsresultatRepository.hent(behandling.id).finnVilkår(Vilkårtype.ALDERSVILKÅRET)

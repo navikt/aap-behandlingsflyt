@@ -24,7 +24,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.verdityper.Prosent
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 import java.time.LocalDate
 
 class InntektService private constructor(
@@ -105,9 +105,9 @@ class InntektService private constructor(
         }
 
         override fun konstruer(connection: DBConnection): InntektService {
-            val repositoryFactory = RepositoryFactory(connection)
-            val sakRepository = repositoryFactory.create(SakRepository::class)
-            val vilkårsresultatRepository = repositoryFactory.create(VilkårsresultatRepository::class)
+            val repositoryProvider = RepositoryProvider(connection)
+            val sakRepository = repositoryProvider.provide(SakRepository::class)
+            val vilkårsresultatRepository = repositoryProvider.provide(VilkårsresultatRepository::class)
             return InntektService(
                 SakService(sakRepository),
                 InntektGrunnlagRepository(connection),

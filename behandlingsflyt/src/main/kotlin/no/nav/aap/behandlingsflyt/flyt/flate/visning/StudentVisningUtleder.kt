@@ -6,13 +6,13 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegGruppe
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 
 
 class StudentVisningUtleder(connection: DBConnection) : StegGruppeVisningUtleder {
 
-    private val repositoryFactory = RepositoryFactory(connection)
-    private val avklaringsbehovRepository = repositoryFactory.create(AvklaringsbehovRepository::class)
+    private val repositoryProvider = RepositoryProvider(connection)
+    private val avklaringsbehovRepository = repositoryProvider.provide(AvklaringsbehovRepository::class)
     private val studentRepository = StudentRepository(connection)
 
     override fun skalVises(behandlingId: BehandlingId): Boolean {

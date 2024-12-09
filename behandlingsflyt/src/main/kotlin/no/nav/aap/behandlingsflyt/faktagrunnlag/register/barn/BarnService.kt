@@ -19,7 +19,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 
 class BarnService private constructor(
     private val sakService: SakService,
@@ -110,11 +110,11 @@ class BarnService private constructor(
         }
 
         override fun konstruer(connection: DBConnection): BarnService {
-            val repositoryFactory = RepositoryFactory(connection)
-            val sakRepository = repositoryFactory.create(SakRepository::class)
-            val personRepository = repositoryFactory.create(PersonRepository::class)
-            val personopplysningRepository = repositoryFactory.create(PersonopplysningRepository::class)
-            val vilkårsresultatRepository = repositoryFactory.create(VilkårsresultatRepository::class)
+            val repositoryProvider = RepositoryProvider(connection)
+            val sakRepository = repositoryProvider.provide(SakRepository::class)
+            val personRepository = repositoryProvider.provide(PersonRepository::class)
+            val personopplysningRepository = repositoryProvider.provide(PersonopplysningRepository::class)
+            val vilkårsresultatRepository = repositoryProvider.provide(VilkårsresultatRepository::class)
             return BarnService(
                 SakService(sakRepository),
                 BarnRepository(connection),

@@ -10,7 +10,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 
 class MedlemskapService private constructor(
     private val medlemskapGateway: MedlemskapGateway,
@@ -45,8 +45,8 @@ class MedlemskapService private constructor(
         }
 
         override fun konstruer(connection: DBConnection): MedlemskapService {
-            val repositoryFactory = RepositoryFactory(connection)
-            val sakRepository = repositoryFactory.create(SakRepository::class)
+            val repositoryProvider = RepositoryProvider(connection)
+            val sakRepository = repositoryProvider.provide(SakRepository::class)
             return MedlemskapService(
                 MedlemskapGateway(),
                 SakService(sakRepository),

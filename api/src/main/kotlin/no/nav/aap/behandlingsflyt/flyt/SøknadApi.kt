@@ -14,7 +14,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.FlytJobbRepository
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.MDC
@@ -26,8 +26,8 @@ fun NormalOpenAPIRoute.søknadApi(dataSource: DataSource) {
         route("/send").post<Unit, String, SøknadSendDto> { _, dto ->
             MDC.putCloseable("saksnummer", dto.saksnummer).use {
                 dataSource.transaction { connection ->
-                    val repositoryFactory = RepositoryFactory(connection)
-                    val sakRepository = repositoryFactory.create(SakRepository::class)
+                    val repositoryProvider = RepositoryProvider(connection)
+                    val sakRepository = repositoryProvider.provide(SakRepository::class)
                     val sakService = SakService(sakRepository)
 
                     val sak = sakService.hent(Saksnummer(dto.saksnummer))

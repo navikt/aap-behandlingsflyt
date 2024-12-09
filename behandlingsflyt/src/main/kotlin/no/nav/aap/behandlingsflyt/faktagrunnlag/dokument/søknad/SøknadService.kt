@@ -14,7 +14,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 
 class SøknadService private constructor(
     private val mottaDokumentService: MottaDokumentService,
@@ -30,8 +30,8 @@ class SøknadService private constructor(
         }
 
         override fun konstruer(connection: DBConnection): SøknadService {
-            val repositoryFactory = RepositoryFactory(connection)
-            val sakRepository = repositoryFactory.create(SakRepository::class)
+            val repositoryProvider = RepositoryProvider(connection)
+            val sakRepository = repositoryProvider.provide(SakRepository::class)
             return SøknadService(
                 MottaDokumentService(
                     MottattDokumentRepositoryImpl(connection)

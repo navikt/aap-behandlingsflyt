@@ -18,7 +18,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 import java.math.BigDecimal
 import java.time.format.DateTimeFormatter
 import javax.sql.DataSource
@@ -30,9 +30,9 @@ fun NormalOpenAPIRoute.beregningsGrunnlagApi(dataSource: DataSource) {
         route("/grunnlag/{referanse}") {
             get<BehandlingReferanse, BeregningDTO> { req ->
                 val begregningsgrunnlag = dataSource.transaction { connection ->
-                    val repositoryFactory = RepositoryFactory(connection)
-                    val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
-                    val beregningsgrunnlagRepository = repositoryFactory.create(BeregningsgrunnlagRepository::class)
+                    val repositoryProvider = RepositoryProvider(connection)
+                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+                    val beregningsgrunnlagRepository = repositoryProvider.provide(BeregningsgrunnlagRepository::class)
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
                     val beregning = beregningsgrunnlagRepository.hentHvisEksisterer(behandling.id)

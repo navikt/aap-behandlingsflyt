@@ -10,7 +10,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 import javax.sql.DataSource
 
 
@@ -19,8 +19,8 @@ fun NormalOpenAPIRoute.sykepengerGrunnlagApi(dataSource: DataSource) {
         route("/{referanse}/grunnlag/sykdom/sykepengergrunnlag") {
             get<BehandlingReferanse, SykepengerGrunnlagDto> { req ->
                 val sykepengerErstatningGrunnlag = dataSource.transaction { connection ->
-                    val repositoryFactory = RepositoryFactory(connection)
-                    val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+                    val repositoryProvider = RepositoryProvider(connection)
+                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
                     SykepengerErstatningRepository(connection).hentHvisEksisterer(behandling.id)

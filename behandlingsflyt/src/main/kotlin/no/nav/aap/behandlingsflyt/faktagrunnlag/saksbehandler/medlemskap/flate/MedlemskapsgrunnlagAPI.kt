@@ -10,7 +10,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.medlemskapsgrunnlagApi(dataSource: DataSource) {
@@ -18,8 +18,8 @@ fun NormalOpenAPIRoute.medlemskapsgrunnlagApi(dataSource: DataSource) {
         route("/{referanse}/grunnlag/medlemskap") {
             get<BehandlingReferanse, MedlemskapGrunnlagDto> { req ->
                 val medlemskap = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryFactory = RepositoryFactory(connection)
-                    val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+                    val repositoryProvider = RepositoryProvider(connection)
+                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                     MedlemskapRepository(connection).hentHvisEksisterer(behandling.id)
                         ?: MedlemskapUnntakGrunnlag(unntak = listOf())

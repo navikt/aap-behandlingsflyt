@@ -14,7 +14,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.verdityper.Beløp
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource) {
@@ -22,8 +22,8 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource) {
         route("/{referanse}/grunnlag/beregning/tidspunkt") {
             get<BehandlingReferanse, BeregningTidspunktAvklaringDto> { req ->
                 val responsDto = dataSource.transaction(readOnly = true) {
-                    val repositoryFactory = RepositoryFactory(it)
-                    val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+                    val repositoryProvider = RepositoryProvider(it)
+                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                     val skalVurdereUføre = UføreRepository(it).hentHvisEksisterer(behandling.id)?.vurdering != null
                     val beregningGrunnlag =
@@ -43,8 +43,8 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource) {
         route("/{referanse}/grunnlag/beregning/yrkesskade") {
             get<BehandlingReferanse, BeregningYrkesskadeAvklaringDto> { req ->
                 val responsDto = dataSource.transaction(readOnly = true) {
-                    val repositoryFactory = RepositoryFactory(it)
-                    val behandlingRepository = repositoryFactory.create(BehandlingRepository::class)
+                    val repositoryProvider = RepositoryProvider(it)
+                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                     val yrkesskadevurdering =
                         SykdomRepository(it).hentHvisEksisterer(behandling.id)?.yrkesskadevurdering

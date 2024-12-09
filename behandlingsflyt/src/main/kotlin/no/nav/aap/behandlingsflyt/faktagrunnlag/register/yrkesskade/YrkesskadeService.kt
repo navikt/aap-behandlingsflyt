@@ -17,7 +17,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 import java.time.LocalDate
 
 class YrkesskadeService private constructor(
@@ -89,9 +89,9 @@ class YrkesskadeService private constructor(
         }
 
         override fun konstruer(connection: DBConnection): YrkesskadeService {
-            val repositoryFactory = RepositoryFactory(connection)
-            val sakRepository = repositoryFactory.create(SakRepository::class)
-            val personopplysningRepository = repositoryFactory.create(PersonopplysningRepository::class)
+            val repositoryProvider = RepositoryProvider(connection)
+            val sakRepository = repositoryProvider.provide(SakRepository::class)
+            val personopplysningRepository = repositoryProvider.provide(PersonopplysningRepository::class)
             return YrkesskadeService(
                 SakService(sakRepository),
                 YrkesskadeRepository(connection),

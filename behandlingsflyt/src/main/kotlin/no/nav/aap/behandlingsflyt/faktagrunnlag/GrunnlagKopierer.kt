@@ -20,7 +20,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepos
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.repository.RepositoryFactory
+import no.nav.aap.repository.RepositoryProvider
 
 /**
  * Har som ansvar å sette i stand en behandling etter opprettelse
@@ -29,7 +29,7 @@ import no.nav.aap.repository.RepositoryFactory
  */
 class GrunnlagKopierer(connection: DBConnection) {
 
-    private val repositoryFactory = RepositoryFactory(connection)
+    private val repositoryProvider = RepositoryProvider(connection)
     private val yrkesskadeRepository = YrkesskadeRepository(connection)
     private val sykdomRepository = SykdomRepository(connection)
     private val studentRepository = StudentRepository(connection)
@@ -52,7 +52,7 @@ class GrunnlagKopierer(connection: DBConnection) {
     fun overfør(fraBehandlingId: BehandlingId, tilBehandlingId: BehandlingId) {
         require(fraBehandlingId != tilBehandlingId)
 
-        repositoryFactory.createAlle().forEach { repository -> repository.kopier(fraBehandlingId, tilBehandlingId) }
+        repositoryProvider.provideAlle().forEach { repository -> repository.kopier(fraBehandlingId, tilBehandlingId) }
 
         yrkesskadeRepository.kopier(fraBehandlingId, tilBehandlingId)
         sykdomRepository.kopier(fraBehandlingId, tilBehandlingId)
