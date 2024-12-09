@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.Ubeh
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.UbehandletLegeerklæring
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.pliktkort.Pliktkort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.adapter.StudentData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.adapter.UbehandletSøknad
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingId
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
@@ -127,8 +128,12 @@ class MottaDokumentService(
         return UbehandletSøknad(
             mottattDokument.referanse.asJournalpostId,
             Periode(mottattDato, mottattDato),
-            søknad.student.erStudent(),
-            søknad.student.skalGjennopptaStudie(),
+            søknad.student.let {
+                StudentData(
+                    erStudent = it.erStudent(),
+                    skalGjenopptaStudie = it.skalGjennopptaStudie()
+                )
+            },
             søknad.harYrkesskade(),
             søknad.oppgitteBarn
         )

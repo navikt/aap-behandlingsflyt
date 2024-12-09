@@ -12,14 +12,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRep
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class SøknadService private constructor(
     private val mottaDokumentService: MottaDokumentService,
     private val studentRepository: StudentRepository,
-    private val sakService: SakService,
     private val barnRepository: BarnRepository
 ) : Informasjonskrav {
 
@@ -30,14 +28,11 @@ class SøknadService private constructor(
         }
 
         override fun konstruer(connection: DBConnection): SøknadService {
-            val repositoryProvider = RepositoryProvider(connection)
-            val sakRepository = repositoryProvider.provide(SakRepository::class)
             return SøknadService(
                 MottaDokumentService(
                     MottattDokumentRepositoryImpl(connection)
                 ),
                 StudentRepository(connection),
-                SakService(sakRepository),
                 BarnRepository(connection)
             )
         }
@@ -50,14 +45,13 @@ class SøknadService private constructor(
         }
 
         val behandlingId = kontekst.behandlingId
-        val sak = sakService.hent(kontekst.sakId)
 
         for (ubehandletSøknad in ubehandletSøknader) {
             studentRepository.lagre(
                 behandlingId = behandlingId,
                 OppgittStudent(
-                    erStudentStatus = ubehandletSøknad.erStudent,
-                    skalGjenopptaStudieStatus = ubehandletSøknad.skalGjenopptaStudie
+                    erStudentStatus = ubehandletSøknad.studentData.erStudent,
+                    skalGjenopptaStudieStatus = ubehandletSøknad.studentData.skalGjenopptaStudie
                 )
             )
 
