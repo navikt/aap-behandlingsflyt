@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagY
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
@@ -288,7 +289,7 @@ class StatistikkJobbUtfører(
                 TilkjentYtelseRepository(connection),
                 BeregningsgrunnlagRepositoryImpl(connection),
                 pipRepository = pipRepository,
-                dokumentRepository = MottattDokumentRepository(connection)
+                dokumentRepository = MottattDokumentRepositoryImpl(connection)
             )
         }
 

@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd.Paragraf.PARAGRAF_11_7
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_AKTIVT_BIDRAG
@@ -69,7 +69,7 @@ class AktivitetspliktInformasjonskravTest {
         sak: Sak
     ) {
         val dokument = StrukturertDokument(brudd.metadata.innsendingId, InnsendingType.AKTIVITETSKORT)
-        MottaDokumentService(MottattDokumentRepository(connection)).mottattDokument(
+        MottaDokumentService(MottattDokumentRepositoryImpl(connection)).mottattDokument(
             InnsendingReferanse(brudd.metadata.innsendingId),
             sak.id,
             LocalDateTime.ofInstant(brudd.metadata.opprettetTid, ZoneId.of("Europe/Oslo")),

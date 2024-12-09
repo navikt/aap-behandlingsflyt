@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.UnparsedStrukturertDokument
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterMottattDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
@@ -82,7 +82,7 @@ class HendelseMottattHåndteringJobbUtfører(
             brevkategori: InnsendingType,
             kanal: Kanal,
             periode: Periode?,
-            payload: Any,
+            payload: Any?,
         ) = JobbInput(HendelseMottattHåndteringJobbUtfører)
             .apply {
                 forSak(sakId.toLong())
@@ -112,7 +112,7 @@ class HendelseMottattHåndteringJobbUtfører(
                     låsRepository,
                     ProsesserBehandlingService(FlytJobbRepository(connection))
                 ),
-                MottaDokumentService(MottattDokumentRepository(connection))
+                MottaDokumentService(MottattDokumentRepositoryImpl(connection))
             )
         }
 

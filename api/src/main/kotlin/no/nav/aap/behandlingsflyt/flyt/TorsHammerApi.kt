@@ -6,7 +6,7 @@ import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.aktivitet.TorsHammerDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingId
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
@@ -54,7 +54,7 @@ fun NormalOpenAPIRoute.torsHammerApi(dataSource: DataSource) {
                 val sakService = SakService(sakRepository)
                 val sak = sakService.hent(Saksnummer(dto.saksnummer))
 
-                val mottattDokumentRepository = MottattDokumentRepository(connection)
+                val mottattDokumentRepository = MottattDokumentRepositoryImpl(connection)
 
                 val hentDokumenterAvType =
                     mottattDokumentRepository.hentDokumenterAvType(sak.id, InnsendingType.AKTIVITETSKORT)

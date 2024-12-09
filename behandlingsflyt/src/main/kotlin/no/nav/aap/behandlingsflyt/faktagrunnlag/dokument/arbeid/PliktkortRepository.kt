@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -11,7 +11,7 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 
 class PliktkortRepository(private val connection: DBConnection) {
 
-    private val mottattDokumentRepository = MottattDokumentRepository(connection)
+    private val mottattDokumentRepository = MottattDokumentRepositoryImpl(connection)
 
     fun hent(behandlingId: BehandlingId): PliktkortGrunnlag {
         return requireNotNull(hentHvisEksisterer(behandlingId))

@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt.ventebehov
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -14,7 +14,7 @@ class LegeerklæringVentebehovEvaluerer(private val connection: DBConnection): S
     }
 
     override fun ansesSomLøst(behandlingId: BehandlingId, avklaringsbehov: Avklaringsbehov, sakId: SakId): Boolean {
-        val mottattDokumentRepository = MottattDokumentRepository(connection)
+        val mottattDokumentRepository = MottattDokumentRepositoryImpl(connection)
         val sisteLegeerklæringBestilling = avklaringsbehov.historikk.maxBy { it.tidsstempel }
 
         val avvistDokumenter =

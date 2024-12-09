@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeModell
@@ -25,7 +25,7 @@ class YrkesskadeService private constructor(
     private val yrkesskadeRepository: YrkesskadeRepository,
     private val personopplysningRepository: PersonopplysningRepository,
     private val yrkesskadeRegisterGateway: YrkesskadeRegisterGateway,
-    private val mottattDokumentRepository: MottattDokumentRepository
+    private val mottattDokumentRepository: MottattDokumentRepositoryImpl
 ) : Informasjonskrav {
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
@@ -97,7 +97,7 @@ class YrkesskadeService private constructor(
                 YrkesskadeRepository(connection),
                 personopplysningRepository,
                 YrkesskadeRegisterGateway,
-                MottattDokumentRepository(connection),
+                MottattDokumentRepositoryImpl(connection),
             )
         }
     }

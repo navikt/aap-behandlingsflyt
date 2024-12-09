@@ -1,9 +1,11 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import io.mockk.checkUnnecessaryStub
-import io.mockk.every
 import io.mockk.mockk
+import no.nav.aap.behandlingsflyt.behandling.beregning.InMemoryBeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
@@ -11,14 +13,18 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.DokumentRekkefølge
 import no.nav.aap.behandlingsflyt.flyt.testutil.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.flyt.testutil.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
@@ -40,15 +46,19 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsResultatDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.pip.IdentPåSak
+import no.nav.aap.behandlingsflyt.pip.PipRepository
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.pip.PipRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -63,6 +73,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
+import java.util.*
 
 @Fakes
 class StatistikkJobbUtførerTest {
@@ -107,7 +118,7 @@ class StatistikkJobbUtførerTest {
 
             opprettetTidspunkt = revurdering.opprettetTidspunkt
 
-            MottattDokumentRepository(connection).lagre(
+            MottattDokumentRepositoryImpl(connection).lagre(
                 MottattDokument(
                     referanse = InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, "xxx"),
                     sakId = sak.id,
@@ -152,7 +163,7 @@ class StatistikkJobbUtførerTest {
                 sakService,
                 TilkjentYtelseRepository(connection),
                 beregningsgrunnlagRepository,
-                dokumentRepository = MottattDokumentRepository(connection),
+                dokumentRepository = MottattDokumentRepositoryImpl(connection),
                 pipRepository = PipRepositoryImpl(connection)
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
@@ -237,7 +248,7 @@ class StatistikkJobbUtførerTest {
                 opprettetBehandling.id, vilkårsresultat
             )
 
-            MottattDokumentRepository(connection).lagre(
+            MottattDokumentRepositoryImpl(connection).lagre(
                 MottattDokument(
                     referanse = InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, "xxx"),
                     sakId = sak.id,
@@ -287,7 +298,7 @@ class StatistikkJobbUtførerTest {
                 TilkjentYtelseRepository(connection),
                 beregningsgrunnlagRepository,
                 PipRepositoryImpl(connection),
-                MottattDokumentRepository(connection)
+                MottattDokumentRepositoryImpl(connection)
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
             )
@@ -335,11 +346,33 @@ class StatistikkJobbUtførerTest {
     @Test
     fun `prosesserings-kall avgir statistikk korrekt`(hendelser: List<StoppetBehandling>) {
         // Blir ikke kalt i denne metoden, så derfor bare mock
-        val vilkårsResultatRepository = mockk<VilkårsresultatRepositoryImpl>()
+        val vilkårsResultatRepository = object : VilkårsresultatRepository {
+            override fun lagre(behandlingId: BehandlingId, vilkårsresultat: Vilkårsresultat) {
+                TODO("Not yet implemented")
+            }
+
+            override fun hent(behandlingId: BehandlingId): Vilkårsresultat {
+                TODO("Not yet implemented")
+            }
+
+            override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+                TODO("Not yet implemented")
+            }
+        }
         val behandlingRepository = InMemoryBehandlingRepository
 
-        val sak = InMemorySakRepository.finnEllerOpprett(mockk(), mockk())
-        InMemorySakRepository.oppdaterSakStatus(sak.id, no.nav.aap.behandlingsflyt.kontrakt.sak.Status.UTREDES)
+        val sak = InMemorySakRepository.finnEllerOpprett(Person(
+            id = 1,
+            identifikator = UUID.randomUUID(),
+            identer = listOf(
+                Ident(
+                    identifikator = "1234",
+                    aktivIdent = true
+                )
+            )
+        ), Periode(LocalDate.now(), LocalDate.now().plusDays(1))
+        )
+        InMemorySakRepository.oppdaterSakStatus(sak.id, UTREDES)
         val sakId = sak.id
         val behandling = behandlingRepository.opprettBehandling(
             sakId = sakId,
@@ -356,47 +389,82 @@ class StatistikkJobbUtførerTest {
         val referanse = behandling.referanse
 
         val tilkjentYtelseRepository = mockk<TilkjentYtelseRepository>()
-        val beregningsgrunnlagRepository = mockk<BeregningsgrunnlagRepositoryImpl>()
 
+        val beregningsgrunnlagRepository = InMemoryBeregningsgrunnlagRepository
         val sakService = SakService(InMemorySakRepository)
-
-        val dokumentRepository = mockk<MottattDokumentRepository>()
 
         val nå = LocalDateTime.now()
         val tidligsteMottattTid = nå.minusDays(3)
-        // Mottatt tid defineres som tidligste mottatt-tidspunkt på innsendte søknader.
-        every {
-            dokumentRepository.hentDokumenterAvType(sakId, InnsendingType.SØKNAD)
-        }.returns(
-            setOf(
-                MottattDokument(
-                    referanse = InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, "xxx"),
-                    sakId = sakId,
-                    behandlingId = behandlingId,
-                    mottattTidspunkt = nå.minusDays(1),
-                    type = InnsendingType.SØKNAD,
-                    kanal = Kanal.DIGITAL,
-                    strukturertDokument = null
-                ),
-                MottattDokument(
-                    referanse = InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, "xxx2"),
-                    sakId = sakId,
-                    behandlingId = behandlingId,
-                    mottattTidspunkt = tidligsteMottattTid,
-                    type = InnsendingType.SØKNAD,
-                    kanal = Kanal.PAPIR,
-                    strukturertDokument = null
-                )
-            )
-        )
 
-        val pipRepository = mockk<PipRepositoryImpl>()
-        every { pipRepository.finnIdenterPåSak(any()) } returns listOf(
-            IdentPåSak(
-                ident = "123",
-                opprinnelse = IdentPåSak.Opprinnelse.PERSON
-            )
-        )
+        val dokumentRepository = object : MottattDokumentRepository {
+            override fun lagre(mottattDokument: MottattDokument) {
+                TODO("Not yet implemented")
+            }
+
+            override fun oppdaterStatus(
+                dokumentReferanse: InnsendingReferanse,
+                behandlingId: BehandlingId,
+                sakId: SakId,
+                status: no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
+            ) {
+                TODO("Not yet implemented")
+            }
+
+            override fun hentUbehandledeDokumenterAvType(
+                sakId: SakId,
+                dokumentType: InnsendingType
+            ): Set<MottattDokument> {
+                TODO("Not yet implemented")
+            }
+
+            override fun hentDokumentRekkefølge(sakId: SakId, type: InnsendingType): Set<DokumentRekkefølge> {
+                TODO("Not yet implemented")
+            }
+
+            override fun hentDokumenterAvType(sakId: SakId, type: InnsendingType): Set<MottattDokument> {
+                return setOf(
+                    MottattDokument(
+                        referanse = InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, "xxx"),
+                        sakId = sakId,
+                        behandlingId = behandlingId,
+                        mottattTidspunkt = nå.minusDays(1),
+                        type = InnsendingType.SØKNAD,
+                        kanal = Kanal.DIGITAL,
+                        strukturertDokument = null
+                    ),
+                    MottattDokument(
+                        referanse = InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, "xxx2"),
+                        sakId = sakId,
+                        behandlingId = behandlingId,
+                        mottattTidspunkt = tidligsteMottattTid,
+                        type = InnsendingType.SØKNAD,
+                        kanal = Kanal.PAPIR,
+                        strukturertDokument = null
+                    )
+                )
+            }
+
+            override fun hentDokumenterAvType(behandlingId: BehandlingId, type: InnsendingType): Set<MottattDokument> {
+                TODO("Not yet implemented")
+            }
+
+        }
+
+        val pipRepository = object : PipRepository {
+            override fun finnIdenterPåSak(saksnummer: Saksnummer): List<IdentPåSak> {
+                return listOf(
+                    IdentPåSak(
+                        ident = "123",
+                        opprinnelse = IdentPåSak.Opprinnelse.PERSON
+                    )
+                )
+            }
+
+            override fun finnIdenterPåBehandling(behandlingReferanse: BehandlingReferanse): List<IdentPåSak> {
+                TODO("Not yet implemented")
+            }
+
+        }
 
         val utfører =
             StatistikkJobbUtfører(
@@ -471,10 +539,7 @@ class StatistikkJobbUtførerTest {
         )
 
         checkUnnecessaryStub(
-            beregningsgrunnlagRepository,
             tilkjentYtelseRepository,
-            vilkårsResultatRepository,
-            dokumentRepository
         )
     }
 }

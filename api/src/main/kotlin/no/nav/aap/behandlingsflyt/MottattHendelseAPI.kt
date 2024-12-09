@@ -36,7 +36,7 @@ fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource) {
                                 LocalDate.now(),
                                 LocalDate.now().plusWeeks(4)
                             ),
-                            payload = dto.payload ?: dto
+                            payload = dto.payload
                         )
                     )
                 }

@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-class MottattDokumentRepositoryTest {
+class MottattDokumentRepositoryImplTest {
 
     @Test
     fun `lagre og hent ut igjen`() {
@@ -88,7 +88,7 @@ class MottattDokumentRepositoryTest {
 
         // VERIFY
         InitTestDatabase.dataSource.transaction {
-            MottattDokumentRepository(it).oppdaterStatus(
+            MottattDokumentRepositoryImpl(it).oppdaterStatus(
                 dokumentReferanse = mottattDokument.referanse,
                 behandlingId = behandling.id,
                 sakId = sak.id,
@@ -163,7 +163,7 @@ class MottattDokumentRepositoryTest {
 
     private fun settInnDokument(mottattDokument: MottattDokument) {
         InitTestDatabase.dataSource.transaction {
-            MottattDokumentRepository(it).lagre(
+            MottattDokumentRepositoryImpl(it).lagre(
                 mottattDokument
             )
         }
@@ -171,7 +171,7 @@ class MottattDokumentRepositoryTest {
 
     private fun hentDokumenterAvType(sak: Sak, brevkategori: InnsendingType): Set<MottattDokument> {
         val res = InitTestDatabase.dataSource.transaction {
-            MottattDokumentRepository(it).hentDokumenterAvType(sak.id, brevkategori)
+            MottattDokumentRepositoryImpl(it).hentDokumenterAvType(sak.id, brevkategori)
         }
         return res
     }
