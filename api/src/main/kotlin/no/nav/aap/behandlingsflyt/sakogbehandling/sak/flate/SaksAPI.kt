@@ -1,10 +1,12 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate
 
+import com.papsign.ktor.openapigen.route.TagModule
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -34,7 +36,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
     val postmottakAzp = requiredConfigForKey("integrasjon.postmottak.azp")
     val brevAzp = requiredConfigForKey("integrasjon.brev.azp")
     route("/api/sak") {
-        route("/finn").post<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO> { _, dto ->
+        route("/finn").post<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO>(TagModule(listOf(Tags.Sak))) { _, dto ->
             val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = RepositoryProvider(connection)
                 val ident = Ident(dto.ident)
@@ -82,7 +84,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
             respond(saken)
         }
         route("") {
-            route("/alle").get<Unit, List<SaksinfoDTO>> {
+            route("/alle").get<Unit, List<SaksinfoDTO>>(TagModule(listOf(Tags.Sak))) {
                 val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
                     repositoryProvider.provide(SakRepository::class).finnAlle().map { sak ->
@@ -100,7 +102,8 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
             route("/{saksnummer}").authorizedGet<HentSakDTO, UtvidetSaksinfoDTO>(
                 AuthorizationParamPathConfig(
                     sakPathParam = SakPathParam("saksnummer")
-                )
+                ),
+                TagModule(listOf(Tags.Sak))
             ) { req ->
                 val saksnummer = req.saksnummer
 
@@ -110,13 +113,13 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
 
                     val behandlinger =
                         repositoryProvider.provide(BehandlingRepository::class).hentAlleFor(sak.id).map { behandling ->
-                        BehandlinginfoDTO(
-                            referanse = behandling.referanse.referanse,
-                            type = behandling.typeBehandling().identifikator(),
-                            status = behandling.status(),
-                            opprettet = behandling.opprettetTidspunkt
-                        )
-                    }
+                            BehandlinginfoDTO(
+                                referanse = behandling.referanse.referanse,
+                                type = behandling.typeBehandling().identifikator(),
+                                status = behandling.status(),
+                                opprettet = behandling.opprettetTidspunkt
+                            )
+                        }
 
                     sak to behandlinger
                 }
@@ -136,7 +139,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 authorizedGet<HentSakDTO, List<SafListDokument>>(
                     AuthorizationParamPathConfig(
                         sakPathParam = SakPathParam("saksnummer")
-                    )
+                    ), TagModule(listOf(Tags.Sak))
                 ) { req ->
                     val token = token()
                     val safRespons = SafListDokumentGateway.hentDokumenterForSak(Saksnummer(req.saksnummer), token)
@@ -146,7 +149,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 }
             }
             route("/dokument/{journalpostId}/{dokumentinfoId}") {
-                get<HentDokumentDTO, DokumentResponsDTO> { req ->
+                get<HentDokumentDTO, DokumentResponsDTO>(TagModule(listOf(Tags.Sak))) { req ->
                     val journalpostId = req.journalpostId
                     val dokumentInfoId = req.dokumentinfoId
 

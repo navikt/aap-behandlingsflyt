@@ -125,7 +125,8 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
             authorizedGet<BehandlingReferanse, BehandlingPersoninfo>(
                 AuthorizationParamPathConfig(
                     behandlingPathParam = BehandlingPathParam("referanse")
-                )
+                ),
+                TagModule(listOf(Tags.Behandling))
             ) { req ->
 
                 val referanse = req.referanse

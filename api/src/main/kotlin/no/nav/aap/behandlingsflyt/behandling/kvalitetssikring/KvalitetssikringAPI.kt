@@ -1,9 +1,11 @@
 package no.nav.aap.behandlingsflyt.behandling.kvalitetssikring
 
+import com.papsign.ktor.openapigen.route.TagModule
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.Aksjon
@@ -25,7 +27,7 @@ import javax.sql.DataSource
 fun NormalOpenAPIRoute.kvalitetssikringApi(dataSource: DataSource) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/kvalitetssikring") {
-            get<BehandlingReferanse, KvalitetssikringGrunnlagDto> { req ->
+            get<BehandlingReferanse, KvalitetssikringGrunnlagDto>(TagModule(listOf(Tags.Grunnlag))) { req ->
 
                 val dto = dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)

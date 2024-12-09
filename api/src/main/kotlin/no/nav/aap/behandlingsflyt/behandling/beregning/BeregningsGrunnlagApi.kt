@@ -1,11 +1,13 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning
 
+import com.papsign.ktor.openapigen.route.TagModule
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
+import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
@@ -28,7 +30,7 @@ private val årFormatter = DateTimeFormatter.ofPattern("yyyy")
 fun NormalOpenAPIRoute.beregningsGrunnlagApi(dataSource: DataSource) {
     route("/api/beregning") {
         route("/grunnlag/{referanse}") {
-            get<BehandlingReferanse, BeregningDTO> { req ->
+            get<BehandlingReferanse, BeregningDTO>(TagModule(listOf(Tags.Grunnlag))) { req ->
                 val begregningsgrunnlag = dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
                     val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
