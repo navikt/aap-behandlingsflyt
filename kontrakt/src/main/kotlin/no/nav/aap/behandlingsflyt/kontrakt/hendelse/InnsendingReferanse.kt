@@ -51,6 +51,6 @@ public data class AvvistLegeerklæringId(@JsonValue val value: UUID) {
     public constructor(value: String) : this(UUID.fromString(value))
 
     public companion object {
-        public fun ny() = AvvistLegeerklæringId(UUID.randomUUID())
+        public fun ny(): AvvistLegeerklæringId = AvvistLegeerklæringId(UUID.randomUUID())
     }
 }

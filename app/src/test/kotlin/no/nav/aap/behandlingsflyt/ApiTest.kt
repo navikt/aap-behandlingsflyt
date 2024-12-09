@@ -348,10 +348,10 @@ class ApiTest {
     }
 
     @Test
-    fun `skal lager openapi som fil`() {
+    fun `skal lagre openapi som fil`() {
         val openApiDoc =
             requireNotNull(
-                client.get<String>(
+                client.get(
                     URI.create("http://localhost:$port/openapi.json"),
                     GetRequest(currentToken = getToken())
                 ) { body, _ ->
