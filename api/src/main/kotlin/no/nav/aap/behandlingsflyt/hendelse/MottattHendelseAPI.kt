@@ -9,10 +9,6 @@ import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.EMPTY_JSON_RESPONSE
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Innsending
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Legeærklaring
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.MottattHendelseDto
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Pliktkort
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.Søknad
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -35,24 +31,20 @@ fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource) {
                     val repositoryProvider = RepositoryProvider(connection)
                     val sak = repositoryProvider.provide(SakRepository::class).hent(dto.saksnummer)
 
-                    logger.info("Mottok hendelse. Brevkategori: ${dto.type}.")
+//                    logger.info("Mottok hendelse. Brevkategori: ${dto.type}.")
 
                     val flytJobbRepository = FlytJobbRepository(connection)
                     flytJobbRepository.leggTil(
                         HendelseMottattHåndteringJobbUtfører.nyJobb(
                             sakId = sak.id,
                             dokumentReferanse = dto.referanse,
-                            brevkategori = dto.type,
+                            brevkategori = TODO(),
                             kanal = Kanal.DIGITAL,
                             periode = Periode(
                                 LocalDate.now(),
                                 LocalDate.now().plusWeeks(4)
                             ), // TODO: la jobben få inn dto som JSON, og kun sak-id
-                            payload = when (dto) {
-                                is Legeærklaring -> TODO()
-                                is Pliktkort -> TODO()
-                                is Søknad -> TODO()
-                            }
+                            payload = TODO()
                         )
                     )
                 }
