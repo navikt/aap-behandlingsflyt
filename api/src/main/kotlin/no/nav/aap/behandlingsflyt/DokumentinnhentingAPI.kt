@@ -29,8 +29,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoGate
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.komponenter.httpklient.auth.token
+import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
-import no.nav.aap.repository.RepositoryProvider
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {

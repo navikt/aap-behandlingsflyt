@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegGruppe
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 
 class StudentVisningUtleder(connection: DBConnection) : StegGruppeVisningUtleder {

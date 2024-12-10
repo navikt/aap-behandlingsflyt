@@ -8,7 +8,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
-import no.nav.aap.repository.Factory
+import no.nav.aap.lookup.repository.Factory
 
 class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) : TilkjentYtelseRepository {
     companion object : Factory<TilkjentYtelseRepositoryImpl> {

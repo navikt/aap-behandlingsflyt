@@ -19,7 +19,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryProvider
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource) {

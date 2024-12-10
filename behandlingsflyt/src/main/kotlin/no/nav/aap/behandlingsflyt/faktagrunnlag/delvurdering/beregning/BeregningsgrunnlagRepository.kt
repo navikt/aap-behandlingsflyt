@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.repository.Repository
+import no.nav.aap.lookup.repository.Repository
 
 interface BeregningsgrunnlagRepository : Repository{
     fun hentHvisEksisterer(behandlingId: BehandlingId): Beregningsgrunnlag?

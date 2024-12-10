@@ -13,8 +13,8 @@ import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtf
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
-import no.nav.aap.repository.RepositoryProvider
 import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC

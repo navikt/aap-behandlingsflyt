@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryProvider
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.aldersGrunnlagApi(dataSource: DataSource) {

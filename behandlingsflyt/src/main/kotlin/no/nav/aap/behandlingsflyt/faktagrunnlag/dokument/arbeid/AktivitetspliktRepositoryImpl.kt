@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.httpklient.auth.Bruker
-import no.nav.aap.repository.Factory
+import no.nav.aap.lookup.repository.Factory
 import org.jetbrains.annotations.TestOnly
 
 class AktivitetspliktRepositoryImpl(private val connection: DBConnection) : AktivitetspliktRepository {

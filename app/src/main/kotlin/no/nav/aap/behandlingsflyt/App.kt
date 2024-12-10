@@ -24,6 +24,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.utledSubty
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.flate.barnetilleggApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.beregningsGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.brev.brevApi
+import no.nav.aap.behandlingsflyt.behandling.bruddaktivitetsplikt.aktivitetspliktApi
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.institusjonAPI
 import no.nav.aap.behandlingsflyt.behandling.kvalitetssikring.kvalitetssikringApi
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
@@ -46,8 +47,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.sykep
 import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
 import no.nav.aap.behandlingsflyt.flyt.søknadApi
-import no.nav.aap.behandlingsflyt.behandling.bruddaktivitetsplikt.aktivitetspliktApi
 import no.nav.aap.behandlingsflyt.hendelse.mottattHendelseApi
+import no.nav.aap.behandlingsflyt.integrasjon.barn.PdlBarnGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.pip.behandlingsflytPip
@@ -71,10 +72,11 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureC
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 import no.nav.aap.komponenter.server.AZURE
 import no.nav.aap.komponenter.server.commonKtorModule
+import no.nav.aap.lookup.gateway.GatewayRegistry
+import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.api.motorApi
 import no.nav.aap.motor.retry.RetryService
-import no.nav.aap.repository.RepositoryRegistry
 import org.slf4j.LoggerFactory
 import javax.sql.DataSource
 
@@ -151,6 +153,7 @@ internal fun Application.server(dbConfig: DbConfig) {
     Migrering.migrate(dataSource)
     val motor = startMotor(dataSource)
 
+    registerGateways()
     registerRepositories()
 
     routing {
@@ -189,6 +192,10 @@ internal fun Application.server(dbConfig: DbConfig) {
         actuator(prometheus, motor)
     }
 
+}
+
+private fun Application.registerGateways() {
+    GatewayRegistry.register<PdlBarnGateway>()
 }
 
 private fun registerRepositories() {

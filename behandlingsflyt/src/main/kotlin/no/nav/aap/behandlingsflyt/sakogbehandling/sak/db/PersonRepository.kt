@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.sakogbehandling.sak.db
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.repository.Repository
+import no.nav.aap.lookup.repository.Repository
 import java.util.*
 
 interface PersonRepository : Repository {

@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak
 
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
-import no.nav.aap.repository.Repository
+import no.nav.aap.lookup.repository.Repository
 
 interface SakFlytRepository : Repository {
 

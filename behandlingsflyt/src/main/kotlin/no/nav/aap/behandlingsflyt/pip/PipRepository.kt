@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.pip
 
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
-import no.nav.aap.repository.Repository
+import no.nav.aap.lookup.repository.Repository
 
 interface PipRepository : Repository {
     fun finnIdenterPåSak(saksnummer: Saksnummer): List<IdentPåSak>

@@ -15,7 +15,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.repository.RepositoryProvider
+import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDateTime
 import javax.sql.DataSource
 

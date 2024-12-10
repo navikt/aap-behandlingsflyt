@@ -30,8 +30,8 @@ import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.token
+import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
-import no.nav.aap.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.authorizedPost
 import org.slf4j.MDC

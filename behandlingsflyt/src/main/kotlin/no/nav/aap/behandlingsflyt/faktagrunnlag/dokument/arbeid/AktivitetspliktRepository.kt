@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.repository.Repository
+import no.nav.aap.lookup.repository.Repository
 
 interface AktivitetspliktRepository : Repository {
     fun lagreBrudd(sakId: SakId, brudd: List<DokumentInput>): InnsendingId

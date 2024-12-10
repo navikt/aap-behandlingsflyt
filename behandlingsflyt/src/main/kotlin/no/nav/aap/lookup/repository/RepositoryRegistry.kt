@@ -1,4 +1,4 @@
-package no.nav.aap.repository
+package no.nav.aap.lookup.repository
 
 import org.slf4j.LoggerFactory
 import kotlin.reflect.KClass

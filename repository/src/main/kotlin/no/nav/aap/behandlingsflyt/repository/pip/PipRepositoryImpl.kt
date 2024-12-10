@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.pip.IdentPåSak
 import no.nav.aap.behandlingsflyt.pip.PipRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.repository.Factory
+import no.nav.aap.lookup.repository.Factory
 
 class PipRepositoryImpl(private val connection: DBConnection) : PipRepository {
     companion object : Factory<PipRepositoryImpl> {

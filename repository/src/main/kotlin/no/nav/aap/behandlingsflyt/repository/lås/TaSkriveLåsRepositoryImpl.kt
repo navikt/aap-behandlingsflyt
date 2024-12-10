@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.lås.Skrivelås
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.repository.Factory
+import no.nav.aap.lookup.repository.Factory
 import java.util.*
 
 class TaSkriveLåsRepositoryImpl(private val connection: DBConnection): TaSkriveLåsRepository {

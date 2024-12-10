@@ -7,7 +7,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.BarnInnhentingRespons
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.PdlBarnGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.RelatertPersonopplysning
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -19,7 +18,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.repository.RepositoryProvider
+import no.nav.aap.lookup.gateway.GatewayProvider
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 class BarnService private constructor(
     private val sakService: SakService,
@@ -115,12 +115,13 @@ class BarnService private constructor(
             val personRepository = repositoryProvider.provide(PersonRepository::class)
             val personopplysningRepository = repositoryProvider.provide(PersonopplysningRepository::class)
             val vilkårsresultatRepository = repositoryProvider.provide(VilkårsresultatRepository::class)
+            val barnGateway = GatewayProvider.provide(BarnGateway::class)
             return BarnService(
                 SakService(sakRepository),
                 BarnRepository(connection),
                 personopplysningRepository,
                 personRepository,
-                PdlBarnGateway,
+                barnGateway,
                 PdlIdentGateway,
                 vilkårsresultatRepository
             )

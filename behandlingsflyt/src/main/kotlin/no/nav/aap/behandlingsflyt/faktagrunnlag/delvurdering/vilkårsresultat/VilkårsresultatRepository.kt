@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.repository.Repository
+import no.nav.aap.lookup.repository.Repository
 
 interface VilkårsresultatRepository : Repository{
     fun lagre(behandlingId: BehandlingId, vilkårsresultat: Vilkårsresultat)

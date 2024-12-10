@@ -10,7 +10,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.repository.Factory
+import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 
 private val logger = LoggerFactory.getLogger(SakRepositoryImpl::class.java)

@@ -1,4 +1,4 @@
-package no.nav.aap.repository
+package no.nav.aap.lookup.repository
 
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import kotlin.reflect.KClass

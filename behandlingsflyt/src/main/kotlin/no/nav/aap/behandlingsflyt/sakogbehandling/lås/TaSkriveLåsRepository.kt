@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.sakogbehandling.lås
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.repository.Repository
+import no.nav.aap.lookup.repository.Repository
 import java.util.*
 
 interface TaSkriveLåsRepository: Repository {

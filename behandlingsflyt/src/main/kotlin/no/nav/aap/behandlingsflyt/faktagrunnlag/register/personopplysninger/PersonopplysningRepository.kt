@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.repository.Repository
+import no.nav.aap.lookup.repository.Repository
 
 interface PersonopplysningRepository : Repository {
     fun hentHvisEksisterer(behandlingId: BehandlingId): PersonopplysningGrunnlag?

@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.brev.bestilling
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.repository.Repository
+import no.nav.aap.lookup.repository.Repository
 
 interface BrevbestillingRepository : Repository{
     fun hent(behandlingId: BehandlingId, typeBrev: TypeBrev): Brevbestilling?

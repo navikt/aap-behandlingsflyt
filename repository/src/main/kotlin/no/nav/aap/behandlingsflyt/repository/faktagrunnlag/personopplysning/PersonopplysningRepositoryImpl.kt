@@ -13,7 +13,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
-import no.nav.aap.repository.Factory
+import no.nav.aap.lookup.repository.Factory
 
 class PersonopplysningRepositoryImpl(
     private val connection: DBConnection, private val personRepository: PersonRepository

@@ -5,7 +5,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
-import no.nav.aap.repository.Factory
+import no.nav.aap.lookup.repository.Factory
 import java.time.Year
 
 class BeregningsgrunnlagRepositoryImpl(private val connection: DBConnection) : BeregningsgrunnlagRepository {

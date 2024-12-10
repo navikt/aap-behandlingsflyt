@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
-import no.nav.aap.repository.Factory
+import no.nav.aap.lookup.repository.Factory
 import java.util.*
 
 class PersonRepositoryImpl(private val connection: DBConnection) : PersonRepository {
