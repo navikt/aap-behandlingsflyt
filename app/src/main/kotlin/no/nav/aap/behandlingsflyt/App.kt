@@ -192,17 +192,17 @@ internal fun Application.server(dbConfig: DbConfig) {
 }
 
 private fun registerRepositories() {
-    RepositoryRegistry.register(BehandlingRepositoryImpl::class)
-        .register(PersonRepositoryImpl::class)
-        .register(SakRepositoryImpl::class)
-        .register(AvklaringsbehovRepositoryImpl::class)
-        .register(VilkårsresultatRepositoryImpl::class)
-        .register(PipRepositoryImpl::class)
-        .register(TaSkriveLåsRepositoryImpl::class)
-        .register(BeregningsgrunnlagRepositoryImpl::class)
-        .register(PersonopplysningRepositoryImpl::class)
-        .register(TilkjentYtelseRepositoryImpl::class)
-        .register(AktivitetspliktRepositoryImpl::class)
+    RepositoryRegistry.register<BehandlingRepositoryImpl>()
+        .register<PersonRepositoryImpl>()
+        .register<SakRepositoryImpl>()
+        .register<AvklaringsbehovRepositoryImpl>()
+        .register<VilkårsresultatRepositoryImpl>()
+        .register<PipRepositoryImpl>()
+        .register<TaSkriveLåsRepositoryImpl>()
+        .register<BeregningsgrunnlagRepositoryImpl>()
+        .register<PersonopplysningRepositoryImpl>()
+        .register<TilkjentYtelseRepositoryImpl>()
+        .register<AktivitetspliktRepositoryImpl>()
         .status()
 }
 

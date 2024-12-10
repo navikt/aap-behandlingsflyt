@@ -17,9 +17,8 @@ class RepositoryProvider(val connection: DBConnection) {
 
     inline fun <reified T : Repository> internalCreate(repositoryKlass: KClass<Repository>): T {
         val companionObjectType = repositoryKlass.companionObject
-        if (companionObjectType == null && repositoryKlass.objectInstance != null && repositoryKlass.isSubclassOf(
-                Repository::class
-            )
+        if (companionObjectType == null && repositoryKlass.objectInstance != null
+            && repositoryKlass.isSubclassOf(Repository::class)
         ) {
             return repositoryKlass.objectInstance as T
         }

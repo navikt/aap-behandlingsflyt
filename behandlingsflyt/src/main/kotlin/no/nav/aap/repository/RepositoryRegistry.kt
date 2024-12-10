@@ -14,8 +14,11 @@ object RepositoryRegistry {
     private val registry = HashSet<KClass<Repository>>()
     private val lock = Object()
 
-    @Suppress("UNCHECKED_CAST")
-    fun register(repository: KClass<*>): RepositoryRegistry {
+    inline fun <reified T : Repository> register(): RepositoryRegistry  {
+        return register(T::class)
+    }
+
+    fun <T: Repository> register(repository: KClass<T>): RepositoryRegistry {
         validater(repository)
 
         synchronized(lock) {
