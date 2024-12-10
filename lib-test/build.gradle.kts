@@ -8,6 +8,7 @@ plugins {
 
 dependencies {
     implementation(project(":behandlingsflyt"))
+    implementation(project(":repository"))
     implementation(project(":kontrakt"))
     implementation("no.nav.aap.brev:kontrakt:0.0.25")
     implementation("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
