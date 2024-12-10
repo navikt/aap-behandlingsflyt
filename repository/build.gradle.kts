@@ -2,7 +2,7 @@ plugins {
     id("behandlingsflyt.conventions")
 }
 
-val komponenterVersjon = "1.0.79"
+val komponenterVersjon = "1.0.83"
 
 dependencies {
     implementation(project(":behandlingsflyt"))
