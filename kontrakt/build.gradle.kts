@@ -6,9 +6,12 @@ plugins {
     `java-library`
 }
 
+val tilgangVersjon = "0.0.56"
+
 dependencies {
     api("com.fasterxml.jackson.core:jackson-annotations:2.18.1")
     api("no.nav:ktor-openapi-generator:1.0.50")
+    implementation("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.3")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.3")

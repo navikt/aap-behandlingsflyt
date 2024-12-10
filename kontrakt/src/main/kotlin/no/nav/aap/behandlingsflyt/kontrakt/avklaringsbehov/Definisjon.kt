@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import tilgang.Rolle
 import java.time.LocalDate
 import java.time.Period
 import java.util.*
@@ -19,125 +20,146 @@ public enum class Definisjon(
     @JsonIgnore private val defaultFrist: Period = Period.ZERO,
     @JsonProperty("løsesISteg") public val løsesISteg: StegType = StegType.UDEFINERT,
     public val kreverToTrinn: Boolean = false,
-    public val kvalitetssikres: Boolean = false
+    public val kvalitetssikres: Boolean = false,
+    public val løsesAv: List<Rolle>
 ) {
     MANUELT_SATT_PÅ_VENT(
         kode = AvklaringsbehovKode.`9001`,
         type = BehovType.VENTEPUNKT,
         defaultFrist = Period.ofWeeks(3),
+        løsesAv = listOf(Rolle.SAKSBEHANDLER, Rolle.VEILEDER)
     ),
     BESTILL_BREV(
         kode = AvklaringsbehovKode.`9002`,
         løsesISteg = StegType.BREV,
         type = BehovType.VENTEPUNKT,
         defaultFrist = Period.ofDays(1),
+        løsesAv = listOf(Rolle.SAKSBEHANDLER, Rolle.VEILEDER)
     ),
     BESTILL_LEGEERKLÆRING(
         kode = AvklaringsbehovKode.`9003`,
         løsesISteg = StegType.AVKLAR_SYKDOM,
         type = BehovType.VENTEPUNKT,
-        defaultFrist = Period.ofWeeks(4)
+        defaultFrist = Period.ofWeeks(4),
+        løsesAv = listOf(Rolle.SAKSBEHANDLER, Rolle.VEILEDER)
     ),
     SKRIV_BREV(
         kode = AvklaringsbehovKode.`5050`,
         løsesISteg = StegType.BREV,
         type = BehovType.MANUELT_PÅKREVD,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER, Rolle.VEILEDER)
     ),
     AVKLAR_STUDENT(
         kode = AvklaringsbehovKode.`5001`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.AVKLAR_STUDENT,
-        kreverToTrinn = true
+        kreverToTrinn = true,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER)
     ),
     AVKLAR_SYKDOM(
         kode = AvklaringsbehovKode.`5003`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.AVKLAR_SYKDOM,
         kreverToTrinn = true,
-        kvalitetssikres = true
+        kvalitetssikres = true,
+        løsesAv = listOf(Rolle.VEILEDER)
     ),
     KVALITETSSIKRING(
         kode = AvklaringsbehovKode.`5097`,
         type = BehovType.MANUELT_PÅKREVD,
-        løsesISteg = StegType.KVALITETSSIKRING
+        løsesISteg = StegType.KVALITETSSIKRING,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER)
     ),
     FASTSETT_ARBEIDSEVNE(
         kode = AvklaringsbehovKode.`5004`,
         type = BehovType.MANUELT_FRIVILLIG,
         løsesISteg = StegType.FASTSETT_ARBEIDSEVNE,
         kreverToTrinn = true,
-        kvalitetssikres = true
+        kvalitetssikres = true,
+        løsesAv = listOf(Rolle.VEILEDER)
     ),
     FASTSETT_BEREGNINGSTIDSPUNKT(
         kode = AvklaringsbehovKode.`5008`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.FASTSETT_BEREGNINGSTIDSPUNKT,
-        kreverToTrinn = true
+        kreverToTrinn = true,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER)
     ),
     FASTSETT_YRKESSKADEINNTEKT(
         kode = AvklaringsbehovKode.`5014`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.FASTSETT_BEREGNINGSTIDSPUNKT,
-        kreverToTrinn = true
+        kreverToTrinn = true,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER)
     ),
     FRITAK_MELDEPLIKT(
         kode = AvklaringsbehovKode.`5005`,
         type = BehovType.MANUELT_FRIVILLIG,
         løsesISteg = StegType.FRITAK_MELDEPLIKT,
         kreverToTrinn = true,
-        kvalitetssikres = true
+        kvalitetssikres = true,
+        løsesAv = listOf(Rolle.VEILEDER)
     ),
     AVKLAR_BISTANDSBEHOV(
         kode = AvklaringsbehovKode.`5006`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.VURDER_BISTANDSBEHOV,
         kreverToTrinn = true,
-        kvalitetssikres = true
+        kvalitetssikres = true,
+        løsesAv = listOf(Rolle.VEILEDER)
     ),
     AVKLAR_SYKEPENGEERSTATNING(
         kode = AvklaringsbehovKode.`5007`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.VURDER_SYKEPENGEERSTATNING,
-        kreverToTrinn = true
+        kreverToTrinn = true,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER)
     ),
     AVKLAR_YRKESSKADE(
         kode = AvklaringsbehovKode.`5013`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.VURDER_YRKESSKADE,
-        kreverToTrinn = true
+        kreverToTrinn = true,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER)
     ),
     AVKLAR_BARNETILLEGG(
         kode = AvklaringsbehovKode.`5009`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.BARNETILLEGG,
-        kreverToTrinn = true
+        kreverToTrinn = true,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER)
     ),
     AVKLAR_SONINGSFORRHOLD(
         kode = AvklaringsbehovKode.`5010`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.DU_ER_ET_ANNET_STED,
-        kreverToTrinn = true
+        kreverToTrinn = true,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER)
     ),
     AVKLAR_HELSEINSTITUSJON(
         kode = AvklaringsbehovKode.`5011`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.DU_ER_ET_ANNET_STED,
-        kreverToTrinn = true
+        kreverToTrinn = true,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER)
     ),
     AVKLAR_SAMORDNING_GRADERING(
         kode = AvklaringsbehovKode.`5012`,
         type = BehovType.MANUELT_PÅKREVD,
-        løsesISteg = StegType.SAMORDNING_GRADERING
+        løsesISteg = StegType.SAMORDNING_GRADERING,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER)
     ),
     FORESLÅ_VEDTAK(
         kode = AvklaringsbehovKode.`5098`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.FORESLÅ_VEDTAK,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER)
     ),
     FATTE_VEDTAK(
         kode = AvklaringsbehovKode.`5099`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.FATTE_VEDTAK,
+        løsesAv = listOf(Rolle.BESLUTTER)
     );
 
     public companion object {
