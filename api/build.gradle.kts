@@ -5,6 +5,7 @@ plugins {
 val komponenterVersjon = "1.0.83"
 val ktorVersion = "3.0.2"
 val tilgangVersjon = "0.0.56"
+val junitVersjon = "5.11.3"
 
 dependencies {
     api(project(":behandlingsflyt"))
@@ -19,7 +20,7 @@ dependencies {
     api("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
     compileOnly("io.ktor:ktor-http-jvm:$ktorVersion")
 
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.3")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.3")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersjon")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersjon")
     testImplementation("org.assertj:assertj-core:3.26.3")
 }

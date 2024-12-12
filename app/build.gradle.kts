@@ -1,11 +1,14 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import java.io.ByteArrayOutputStream
 
+
 val ktorVersion = "3.0.2"
+val komponenterVersjon = "1.0.83"
+val junitVersjon = "5.11.3"
 
 plugins {
     id("behandlingsflyt.conventions")
-    id("io.ktor.plugin") version "3.0.1"
+    id("io.ktor.plugin") version "3.0.2"
 }
 
 application {
@@ -52,9 +55,6 @@ fun getCheckedOutGitCommitHash(): String {
     return runCommand("git rev-parse --verify HEAD")
 }
 
-
-val komponenterVersjon = "1.0.83"
-
 dependencies {
     implementation("io.ktor:ktor-server-cors:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
@@ -87,8 +87,8 @@ dependencies {
     testImplementation(project(":lib-test"))
     testImplementation("no.nav.aap.kelvin:dbtest:$komponenterVersjon")
     testImplementation("no.nav.aap.kelvin:motor-test-utils:$komponenterVersjon")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.3")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.3")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersjon")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersjon")
     testImplementation("org.assertj:assertj-core:3.26.3")
     testImplementation("org.testcontainers:postgresql:1.20.4")
     constraints {

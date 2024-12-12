@@ -5,6 +5,7 @@ plugins {
 val komponenterVersjon = "1.0.83"
 val ktorVersion = "3.0.2"
 val tilgangVersjon = "0.0.56"
+val junitVersjon = "5.11.3"
 
 dependencies {
     api(project(":kontrakt"))
@@ -34,9 +35,9 @@ dependencies {
     testImplementation(project(":repository"))
     testImplementation("no.nav.aap.kelvin:dbtest:$komponenterVersjon")
     testImplementation("no.nav.aap.kelvin:motor-test-utils:$komponenterVersjon")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.3")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.11.3")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.3")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersjon")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:$junitVersjon")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersjon")
     testImplementation("org.assertj:assertj-core:3.26.3")
     testImplementation("org.testcontainers:postgresql:1.20.4")
     constraints {
