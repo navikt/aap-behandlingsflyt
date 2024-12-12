@@ -19,7 +19,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.test.AzurePortHolder
 import no.nav.aap.behandlingsflyt.test.FakePersoner
@@ -119,35 +118,6 @@ fun main() {
                             )
                         }
 
-                        respond(dto)
-                    }
-                }
-                route("/pliktkort") {
-                    post<Unit, PliktkortTestDTO, PliktkortTestDTO> { _, dto ->
-
-                        val ident = Ident(dto.ident)
-
-                        datasource.transaction { connection ->
-                            val sakService = PersonOgSakService(
-                                PdlIdentGateway,
-                                PersonRepositoryImpl(connection),
-                                SakRepositoryImpl(connection)
-                            )
-                            val sak = sakService.finnEllerOpprett(ident, dto.pliktkort.periode())
-
-                            val flytJobbRepository = FlytJobbRepository(connection)
-
-                            flytJobbRepository.leggTil(
-                                HendelseMottattHåndteringJobbUtfører.nyJobb(
-                                    sakId = sak.id,
-                                    dokumentReferanse = InnsendingReferanse(JournalpostId("" + System.currentTimeMillis())),
-                                    brevkategori = InnsendingType.PLIKTKORT,
-                                    kanal = Kanal.DIGITAL,
-                                    periode = dto.pliktkort.periode(),
-                                    payload = dto.pliktkort
-                                )
-                            )
-                        }
                         respond(dto)
                     }
                 }

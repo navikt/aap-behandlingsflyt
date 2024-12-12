@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.papsign.ktor.openapigen.annotations.Response
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.pliktkort.Pliktkort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.komponenter.verdityper.Beløp
 import org.jetbrains.annotations.NotNull
@@ -36,8 +35,3 @@ data class InntektPerÅrDto(val år: Int, val beløp: Beløp) {
     }
 }
 
-@Response(statusCode = 202)
-data class PliktkortTestDTO(
-    @JsonProperty(value = "ident", required = true) val ident: String,
-    @JsonProperty(value = "pliktkort", required = true) @NotNull val pliktkort: Pliktkort
-)

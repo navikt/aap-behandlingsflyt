@@ -13,7 +13,7 @@ import java.util.*
 /** Informasjon om et brudd.
  *
  *  Data class fordi:
- *  - ønsker eqyals og hash som sjekker alle feilt
+ *  - ønsker equals og hash som sjekker alle feilt
  *  - Trygt på printe (ingen personopplysninger)
  * */
 data class Brudd(
@@ -31,8 +31,19 @@ data class Brudd(
     }
 
     enum class Paragraf {
+        /**
+         * Medlemmets aktivitetsplikt.
+         */
         PARAGRAF_11_7,
+
+        /**
+         * Fravær fra fastsatt aktivitet.
+         */
         PARAGRAF_11_8,
+
+        /**
+         * Reduksjon av arbeidsavklaringspenger ved brudd på nærmere bestemte aktivitetsplikter.
+         */
         PARAGRAF_11_9
     }
 
@@ -66,7 +77,7 @@ enum class BruddType(val gyldigeParagrafer: Collection<Brudd.Paragraf>) {
             }
 
             in this.gyldigeParagrafer -> paragraf
-            else -> error("$paragraf er ikke gydlig for $this")
+            else -> error("$paragraf er ikke gyldig for $this")
         }
     }
 }
