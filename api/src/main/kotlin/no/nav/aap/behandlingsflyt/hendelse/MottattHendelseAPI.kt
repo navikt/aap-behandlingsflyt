@@ -9,18 +9,13 @@ import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.EMPTY_JSON_RESPONSE
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MottattHendelseDto
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
-import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
-import java.time.LocalDate
 import javax.sql.DataSource
 
 private val logger = LoggerFactory.getLogger("hendelse.MottattHendelseAPI")
@@ -41,14 +36,11 @@ fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource) {
                             sakId = sak.id,
                             dokumentReferanse = dto.referanse,
                             brevkategori = dto.type,
-                            kanal = Kanal.DIGITAL, // fix
-                            periode = Periode(
-                                LocalDate.now(),
-                                LocalDate.now().plusWeeks(4)
-                            ), // TODO: la jobben få inn dto som JSON, og kun sak-id
-                            payload = dto.melding
-                        )
+                            kanal = dto.kanal,
+                            melding = dto.melding,
+                        ),
                     )
+
                 }
             }
             respond(EMPTY_JSON_RESPONSE, HttpStatusCode.Accepted)

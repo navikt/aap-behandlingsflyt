@@ -51,11 +51,7 @@ fun NormalOpenAPIRoute.søknadApi(dataSource: DataSource) {
                             brevkategori = InnsendingType.SØKNAD,
                             // TODO få kanal fra payload i stedet
                             kanal = Kanal.DIGITAL,
-                            periode = Periode(
-                                LocalDate.now(),
-                                LocalDate.now().plusYears(3)
-                            ), // TODO: Sette innsendingsdato
-                            payload = SøknadV0(
+                            melding = SøknadV0(
                                 student = SøknadStudentDto(
                                     erStudent = dto.søknad.student.erStudent,
                                     kommeTilbake = dto.søknad.student.kommeTilbake,

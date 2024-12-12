@@ -8,6 +8,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.UnparsedStrukturertDoku
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterMottattDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Aktivitetskort
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AktivitetskortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
@@ -29,7 +31,6 @@ private const val BREVKODE = "brevkode"
 private const val KANAL = "kanal"
 private const val MOTTATT_DOKUMENT_REFERANSE = "referanse"
 private const val MOTTATT_TIDSPUNKT = "mottattTidspunkt"
-private const val PERIODE = "periode"
 
 class HendelseMottattHåndteringJobbUtfører(
     private val låsRepository: TaSkriveLåsRepository,
@@ -41,10 +42,14 @@ class HendelseMottattHåndteringJobbUtfører(
         val sakId = SakId(input.sakId())
         val sakSkrivelås = låsRepository.låsSak(sakId)
 
-        val brevkategori = InnsendingType.valueOf(input.parameter(BREVKODE))
+        val innsendingType = InnsendingType.valueOf(input.parameter(BREVKODE))
         val kanal = Kanal.valueOf(input.parameter(KANAL))
         val payloadAsString = if (input.harPayload()) input.payload() else ""
         val mottattTidspunkt = DefaultJsonMapper.fromJson<LocalDateTime>(input.parameter(MOTTATT_TIDSPUNKT))
+
+        val parsedMelding = if (payloadAsString.isNotBlank()) {
+            DefaultJsonMapper.fromJson<Melding>(payloadAsString)
+        } else null
 
         val referanse = DefaultJsonMapper.fromJson<InnsendingReferanse>(input.parameter(MOTTATT_DOKUMENT_REFERANSE))
 
@@ -53,27 +58,44 @@ class HendelseMottattHåndteringJobbUtfører(
             referanse = referanse,
             sakId = sakId,
             mottattTidspunkt = mottattTidspunkt,
-            brevkategori = brevkategori,
+            brevkategori = innsendingType,
             kanal = kanal,
             strukturertDokument = UnparsedStrukturertDokument(payloadAsString)
         )
 
         hånderMottattDokumentService.håndterMottatteDokumenter(
             sakId,
-            brevkategori,
-            utledPeriode(input.parameter(PERIODE)),
+            innsendingType,
+            utledPeriode(innsendingType, mottattTidspunkt, parsedMelding),
             mottattTidspunkt.toLocalDate()
         )
 
         låsRepository.verifiserSkrivelås(sakSkrivelås)
     }
 
-    private fun utledPeriode(parameter: String): Periode? {
-        if (parameter.isEmpty()) {
-            return null
-        }
+    /**
+     * Denne logikken burde kanskje flyttes til en testbar stateless klasse.
+     */
+    private fun utledPeriode(
+        innsendingType: InnsendingType,
+        mottattTidspunkt: LocalDateTime,
+        melding: Melding?,
+    ): Periode? {
+        return when (innsendingType) {
+            InnsendingType.SØKNAD -> Periode(
+                mottattTidspunkt.toLocalDate(),
+                mottattTidspunkt.plusYears(3).toLocalDate()
+            )
 
-        return DefaultJsonMapper.fromJson(parameter)
+            InnsendingType.AKTIVITETSKORT -> if (melding is Aktivitetskort) {
+                when (melding) {
+                    is AktivitetskortV0 -> Periode(fom = melding.fraOgMed, tom = melding.tilOgMed)
+                }
+
+            } else error("Må være aktivitetskort")
+
+           else -> null
+        }
     }
 
     companion object : Jobb {
@@ -82,8 +104,7 @@ class HendelseMottattHåndteringJobbUtfører(
             dokumentReferanse: InnsendingReferanse,
             brevkategori: InnsendingType,
             kanal: Kanal,
-            periode: Periode?,
-            payload: Melding? = null,
+            melding: Melding? = null,
         ) = JobbInput(HendelseMottattHåndteringJobbUtfører)
             .apply {
                 forSak(sakId.toLong())
@@ -91,9 +112,8 @@ class HendelseMottattHåndteringJobbUtfører(
                 medParameter(MOTTATT_DOKUMENT_REFERANSE, DefaultJsonMapper.toJson(dokumentReferanse))
                 medParameter(BREVKODE, brevkategori.name)
                 medParameter(KANAL, kanal.name)
-                medParameter(PERIODE, if (periode == null) "" else DefaultJsonMapper.toJson(periode))
                 medParameter(MOTTATT_TIDSPUNKT, DefaultJsonMapper.toJson(LocalDateTime.now()))
-                medPayload(payload?.let { DefaultJsonMapper.toJson(it) })
+                medPayload(melding?.let { DefaultJsonMapper.toJson(it) })
             }
 
         override fun konstruer(connection: DBConnection): JobbUtfører {

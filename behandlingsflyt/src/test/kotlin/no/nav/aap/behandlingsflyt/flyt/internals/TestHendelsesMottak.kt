@@ -7,7 +7,6 @@ import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
@@ -64,8 +63,7 @@ class TestHendelsesMottak(private val dataSource: DataSource) {
                         dokumentReferanse = referanse,
                         brevkategori = hendelse.strukturertDokument.brevkategori,
                         kanal = Kanal.DIGITAL,
-                        periode = null,
-                        payload = when (hendelse.strukturertDokument.brevkategori) {
+                        melding = when (hendelse.strukturertDokument.brevkategori) {
                             InnsendingType.SØKNAD -> (hendelse.strukturertDokument.data as Søknad).let {
                                 SøknadV0(
                                     student = SøknadStudentDto(it.student.erStudent, it.student.kommeTilbake),
