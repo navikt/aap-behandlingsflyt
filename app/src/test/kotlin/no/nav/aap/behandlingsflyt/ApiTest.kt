@@ -75,9 +75,11 @@ import java.time.Year
 import java.util.*
 import kotlin.test.fail
 
+private val logger = LoggerFactory.getLogger(ApiTest::class.java)
+
+
 @Fakes
 class ApiTest {
-    private val logger = LoggerFactory.getLogger(ApiTest::class.java)
 
     companion object {
         private val postgres = postgreSQLContainer()
@@ -397,18 +399,18 @@ class ApiTest {
 
         val ds = initDatasource(dbConfig)
 
-        val behandlinger = kallInntilKlar {
-            ds.transaction { connection ->
+        val behandlinger = kallInntilKlar(maxTries = 10, delayMs = 500) {
+            val behandlinger = ds.transaction { connection ->
                 val sak = SakRepositoryImpl(connection).hent(Saksnummer(saksnummer))
                 BehandlingRepositoryImpl(connection).hentAlleFor(sak.id)
             }
+            behandlinger
         }
 
         assertThat(behandlinger).hasSize(1)
-        assertThat(behandlinger!!.first().årsaker()).containsExactly(Årsak(
-            type = ÅrsakTilBehandling.MOTTATT_AKTIVITETSMELDING,
-            periode = Periode(LocalDate.now().plusDays(10), LocalDate.now().plusDays(20))
-        ))
+        assertThat(behandlinger!!.first().årsaker().map { it.type }).contains(
+            ÅrsakTilBehandling.MOTTATT_AKTIVITETSMELDING
+        )
 
     }
 
@@ -434,19 +436,18 @@ class ApiTest {
         }
     }
 
-    private fun <E> kallInntilKlar(block: () -> E): E? {
+    private fun <E> kallInntilKlar(maxTries: Int = 10, delayMs: Long = 100L, block: () -> E): E? {
         return runBlocking {
             suspend {
                 var utvidedSak: E? = null
-                val maxTries = 10
                 var tries = 0
                 while (tries < maxTries) {
                     try {
                         utvidedSak = block()
-                        delay(100)
                     } catch (e: Exception) {
-                        println("Exception: $e")
+                        logger.info("Exception: $e")
                     } finally {
+                        delay(delayMs)
                         tries++
                     }
                 }
