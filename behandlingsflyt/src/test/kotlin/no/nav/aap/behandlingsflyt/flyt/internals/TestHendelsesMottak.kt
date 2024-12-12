@@ -1,10 +1,16 @@
 package no.nav.aap.behandlingsflyt.flyt.internals
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
@@ -59,7 +65,24 @@ class TestHendelsesMottak(private val dataSource: DataSource) {
                         brevkategori = hendelse.strukturertDokument.brevkategori,
                         kanal = Kanal.DIGITAL,
                         periode = null,
-                        payload = hendelse.strukturertDokument.data!!
+                        payload = when (hendelse.strukturertDokument.brevkategori) {
+                            InnsendingType.SØKNAD -> (hendelse.strukturertDokument.data as Søknad).let {
+                                SøknadV0(
+                                    student = SøknadStudentDto(it.student.erStudent, it.student.kommeTilbake),
+                                    yrkesskade = it.yrkesskade,
+                                    oppgitteBarn = OppgitteBarn(
+                                        identer = it.oppgitteBarn?.identer?.map { it.identifikator }?.toSet()
+                                            ?: emptySet()
+                                    )
+                                )
+                            }
+
+                            InnsendingType.AKTIVITETSKORT -> TODO()
+                            InnsendingType.PLIKTKORT -> TODO()
+                            InnsendingType.LEGEERKLÆRING -> TODO()
+                            InnsendingType.LEGEERKLÆRING_AVVIST -> TODO()
+                            InnsendingType.DIALOGMELDING -> TODO()
+                        }
                     )
                 )
             }

@@ -99,8 +99,7 @@ private fun registrerDokumentjobb(
             brevkategori = InnsendingType.AKTIVITETSKORT,
             kanal = Kanal.DIGITAL,
             dokumentReferanse = dokumentReferanse,
-            periode = Periode(fom, tom),
-            payload = innsendingId // bort
+            periode = Periode(fom, tom)
         )
     )
 }

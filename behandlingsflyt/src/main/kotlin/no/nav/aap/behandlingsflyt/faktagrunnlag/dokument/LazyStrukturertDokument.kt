@@ -36,7 +36,7 @@ class LazyStrukturertDokument(
         return when (brevkategori) {
             InnsendingType.SØKNAD -> DefaultJsonMapper.fromJson(strukturerteData, Søknad::class.java) as T
             InnsendingType.PLIKTKORT -> DefaultJsonMapper.fromJson(strukturerteData, Pliktkort::class.java) as T
-            InnsendingType.AKTIVITETSKORT -> DefaultJsonMapper.fromJson(strukturerteData, InnsendingId::class.java) as T
+            InnsendingType.AKTIVITETSKORT -> DefaultJsonMapper.fromJson(strukturerteData, InnsendingId::class.java) as T // fjern/fix denne
             InnsendingType.LEGEERKLÆRING_AVVIST -> DefaultJsonMapper.fromJson(
                 strukturerteData,
                 AvvistLegeerklæringId::class.java
