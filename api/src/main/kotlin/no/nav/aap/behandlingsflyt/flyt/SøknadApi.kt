@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt
 
+import com.papsign.ktor.openapigen.route.EndpointInfo
 import com.papsign.ktor.openapigen.route.TagModule
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.post
@@ -10,6 +11,9 @@ import no.nav.aap.behandlingsflyt.EMPTY_JSON_RESPONSE
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -26,7 +30,10 @@ import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.søknadApi(dataSource: DataSource) {
     route("/api/soknad") {
-        route("/send").post<Unit, String, SøknadSendDto>(TagModule(listOf(Tags.MottaHendelse))) { _, dto ->
+        route("/send").post<Unit, String, SøknadSendDto>(
+            TagModule(listOf(Tags.MottaHendelse)),
+            EndpointInfo(deprecated = true, summary = "Bruk /api/hendelse/send i stedet.")
+        ) { _, dto ->
             MDC.putCloseable("saksnummer", dto.saksnummer).use {
                 dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
@@ -48,7 +55,16 @@ fun NormalOpenAPIRoute.søknadApi(dataSource: DataSource) {
                                 LocalDate.now(),
                                 LocalDate.now().plusYears(3)
                             ), // TODO: Sette innsendingsdato
-                            payload = dto.søknad,
+                            payload = SøknadV0(
+                                student = SøknadStudentDto(
+                                    erStudent = dto.søknad.student.erStudent,
+                                    kommeTilbake = dto.søknad.student.kommeTilbake,
+                                ),
+                                yrkesskade = dto.søknad.yrkesskade,
+                                oppgitteBarn = dto.søknad.oppgitteBarn.let { OppgitteBarn(
+                                    identer = it?.identer?.map { it.identifikator }?.toSet() ?: emptySet(),
+                                ) }
+                            )
                         )
                     )
                 }

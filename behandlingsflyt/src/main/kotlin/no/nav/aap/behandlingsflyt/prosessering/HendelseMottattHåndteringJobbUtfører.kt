@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.UnparsedStrukturertDoku
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterMottattDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -42,7 +43,7 @@ class HendelseMottattHåndteringJobbUtfører(
 
         val brevkategori = InnsendingType.valueOf(input.parameter(BREVKODE))
         val kanal = Kanal.valueOf(input.parameter(KANAL))
-        val payloadAsString = input.payload()
+        val payloadAsString = if (input.harPayload()) input.payload() else ""
         val mottattTidspunkt = DefaultJsonMapper.fromJson<LocalDateTime>(input.parameter(MOTTATT_TIDSPUNKT))
 
         val referanse = DefaultJsonMapper.fromJson<InnsendingReferanse>(input.parameter(MOTTATT_DOKUMENT_REFERANSE))
@@ -82,7 +83,7 @@ class HendelseMottattHåndteringJobbUtfører(
             brevkategori: InnsendingType,
             kanal: Kanal,
             periode: Periode?,
-            payload: Any?,
+            payload: Melding? = null,
         ) = JobbInput(HendelseMottattHåndteringJobbUtfører)
             .apply {
                 forSak(sakId.toLong())

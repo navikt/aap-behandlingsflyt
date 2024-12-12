@@ -7,8 +7,6 @@ import com.papsign.ktor.openapigen.route.route
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.SøknadStudentDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.adapter.InstitusjonsoppholdJSON
@@ -16,6 +14,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fød
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
@@ -155,7 +156,7 @@ private fun genererBarn(dto: TestBarn): TestPerson {
     )
 }
 
-fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>): Søknad {
+fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>): SøknadV0 {
     val erStudent = if (dto.student) {
         "JA"
     } else {
@@ -167,11 +168,11 @@ fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>): S�
         "NEI"
     }
     val oppgitteBarn = if (urelaterteBarn.isNotEmpty()) {
-        OppgitteBarn(identer = urelaterteBarn.flatMap { it.identer.filter { it.aktivIdent } }.toSet())
+        OppgitteBarn(identer = urelaterteBarn.flatMap { it.identer.filter { it.aktivIdent } }.map { it.identifikator }.toSet())
     } else {
         null
     }
-    return Søknad(student = SøknadStudentDto(erStudent), harYrkesskade, oppgitteBarn)
+    return SøknadV0(student = SøknadStudentDto(erStudent), harYrkesskade, oppgitteBarn)
 }
 
 internal fun postgreSQLContainer(): PostgreSQLContainer<Nothing> {

@@ -31,7 +31,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepositoryImpl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.dokumentinnhenting.Legeerklæring
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
@@ -723,7 +722,7 @@ class FlytOrkestratorTest {
         }
 
         assertThat(underveisGrunnlag.perioder).isNotEmpty
-        assertThat(underveisGrunnlag.perioder.any { (it.gradering?.gradering?.prosentverdi() ?: 0) > 0 }).isTrue()
+        assertThat(underveisGrunnlag.perioder.any { it.gradering.gradering.prosentverdi() > 0 }).isTrue()
 
         // Saken er avsluttet, så det skal ikke være flere åpne avklaringsbehov
         dataSource.transaction { connection ->
@@ -1901,7 +1900,6 @@ class FlytOrkestratorTest {
                         LocalDate.now(),
                         LocalDate.now().plusWeeks(4)
                     ),
-                    payload = {}
                 )
             )
         }
@@ -1985,7 +1983,6 @@ class FlytOrkestratorTest {
                         LocalDate.now(),
                         LocalDate.now().plusWeeks(4)
                     ),
-                    payload = Legeerklæring(JournalpostId("1234"))
                 )
             )
         }
@@ -2068,7 +2065,6 @@ class FlytOrkestratorTest {
                         LocalDate.now(),
                         LocalDate.now().plusWeeks(4)
                     ),
-                    payload = Legeerklæring(JournalpostId("1234"))
                 )
             )
         }
