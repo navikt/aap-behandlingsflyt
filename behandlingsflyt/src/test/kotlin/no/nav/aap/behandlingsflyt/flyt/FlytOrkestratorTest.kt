@@ -144,6 +144,7 @@ class FlytOrkestratorTest {
             .register(PersonopplysningRepositoryImpl::class)
             .register(TilkjentYtelseRepositoryImpl::class)
             .register(AktivitetspliktRepositoryImpl::class)
+            .register(BrevbestillingRepositoryImpl::class)
             .status()
         GatewayRegistry.register<PdlBarnGateway>()
             .register<PdlIdentGateway>()
