@@ -6,7 +6,6 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.adapter.InstitusjonsoppholdJSON
@@ -103,18 +102,13 @@ fun main() {
 
                             val flytJobbRepository = FlytJobbRepository(connection)
 
-                            val periode = Periode(
-                                LocalDate.now(),
-                                LocalDate.now()
-                            )
                             flytJobbRepository.leggTil(
                                 HendelseMottattHåndteringJobbUtfører.nyJobb(
                                     sakId = sak.id,
                                     dokumentReferanse = InnsendingReferanse(JournalpostId("" + System.currentTimeMillis())),
                                     brevkategori = InnsendingType.SØKNAD,
                                     kanal = Kanal.DIGITAL,
-                                    periode = periode,
-                                    payload = mapTilSøknad(dto, urelaterteBarn)
+                                    melding = mapTilSøknad(dto, urelaterteBarn)
                                 )
                             )
                         }

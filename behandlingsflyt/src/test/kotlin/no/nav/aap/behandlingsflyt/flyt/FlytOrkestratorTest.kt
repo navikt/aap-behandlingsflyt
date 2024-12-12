@@ -1896,10 +1896,6 @@ class FlytOrkestratorTest {
                     ),
                     brevkategori = InnsendingType.LEGEERKLÆRING_AVVIST,
                     kanal = Kanal.DIGITAL,
-                    periode = Periode(
-                        LocalDate.now(),
-                        LocalDate.now().plusWeeks(4)
-                    ),
                 )
             )
         }
@@ -1979,10 +1975,6 @@ class FlytOrkestratorTest {
                     ),
                     brevkategori = InnsendingType.LEGEERKLÆRING,
                     kanal = Kanal.DIGITAL,
-                    periode = Periode(
-                        LocalDate.now(),
-                        LocalDate.now().plusWeeks(4)
-                    ),
                 )
             )
         }
@@ -2061,10 +2053,6 @@ class FlytOrkestratorTest {
                     ),
                     brevkategori = InnsendingType.DIALOGMELDING,
                     kanal = Kanal.DIGITAL,
-                    periode = Periode(
-                        LocalDate.now(),
-                        LocalDate.now().plusWeeks(4)
-                    ),
                 )
             )
         }

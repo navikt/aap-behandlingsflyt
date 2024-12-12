@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.DokumentInput
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingId
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AktivitetskortV0
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -99,7 +100,7 @@ private fun registrerDokumentjobb(
             brevkategori = InnsendingType.AKTIVITETSKORT,
             kanal = Kanal.DIGITAL,
             dokumentReferanse = dokumentReferanse,
-            periode = Periode(fom, tom)
+            melding = AktivitetskortV0(fraOgMed = fom, tilOgMed = tom),
         )
     )
 }

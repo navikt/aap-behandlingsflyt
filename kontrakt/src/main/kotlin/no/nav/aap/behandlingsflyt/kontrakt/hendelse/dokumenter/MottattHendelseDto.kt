@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.verdityper.dokument.Kanal
+import java.time.LocalDateTime
 
 @Deprecated(message = "Bruk Innsending i stedet", replaceWith = ReplaceWith("Innsending"))
 public data class MottattHendelseDto(
@@ -20,6 +21,7 @@ public data class MottattHendelseDto(
  * @param referanse Referanse til hvordan hendte ut innsendingen igjen. Dette avhenger av [type].
  * @param type Hvilken innsendingtype. [referanse] og [type] går hånd i hånd.
  * @param kanal Om innsendingen kom via digitale kanaler eller via papir. Dette er relevant for statistikkformål.
+ * @param mottattTidspunkt Tidspunktet da dokumentet ble mottatt.
  * @param melding Strukturert melding.
  */
 public class Innsending(
@@ -27,6 +29,7 @@ public class Innsending(
     public val referanse: InnsendingReferanse,
     public val type: InnsendingType,
     public val kanal: Kanal = Kanal.DIGITAL,
+    public val mottattTidspunkt: LocalDateTime,
     public val melding: Melding?,
 ) {
     init {
@@ -38,7 +41,9 @@ public class Innsending(
             }
 
             InnsendingType.AKTIVITETSKORT -> {
-                require(melding == null) { "Aktivitetskort kommer ikke som egen InnsendingType via kontrakt, så dette burde ikke skje." }
+                requireNotNull(melding)
+                require(melding is Aktivitetskort)
+                require(referanse.type == InnsendingReferanse.Type.BRUDD_AKTIVITETSPLIKT_INNSENDING_ID)
             }
 
             InnsendingType.PLIKTKORT -> {
