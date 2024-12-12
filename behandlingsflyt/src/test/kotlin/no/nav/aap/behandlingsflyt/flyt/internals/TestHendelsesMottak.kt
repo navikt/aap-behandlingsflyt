@@ -69,7 +69,12 @@ class TestHendelsesMottak(private val dataSource: DataSource) {
                                     student = SøknadStudentDto(it.student.erStudent, it.student.kommeTilbake),
                                     yrkesskade = it.yrkesskade,
                                     oppgitteBarn = OppgitteBarn(
-                                        identer = it.oppgitteBarn?.identer?.map { it.identifikator }?.toSet()
+                                        identer = it.oppgitteBarn?.identer?.map {
+                                            no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Ident(
+                                                identifikator = it.identifikator,
+                                                aktivIdent = it.aktivIdent
+                                            )
+                                        }?.toSet()
                                             ?: emptySet()
                                     )
                                 )

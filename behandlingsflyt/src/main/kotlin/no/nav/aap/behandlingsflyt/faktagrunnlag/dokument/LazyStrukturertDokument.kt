@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvvistLegeerklæringId
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingId
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AktivitetskortV0
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 
@@ -36,14 +37,15 @@ class LazyStrukturertDokument(
         return when (brevkategori) {
             InnsendingType.SØKNAD -> DefaultJsonMapper.fromJson(strukturerteData, Søknad::class.java) as T
             InnsendingType.PLIKTKORT -> DefaultJsonMapper.fromJson(strukturerteData, Pliktkort::class.java) as T
-            InnsendingType.AKTIVITETSKORT -> DefaultJsonMapper.fromJson(strukturerteData, InnsendingId::class.java) as T // fjern/fix denne
-            InnsendingType.LEGEERKLÆRING_AVVIST -> DefaultJsonMapper.fromJson(
+            InnsendingType.AKTIVITETSKORT -> DefaultJsonMapper.fromJson(
                 strukturerteData,
-                AvvistLegeerklæringId::class.java
-            ) as T
+                AktivitetskortV0::class.java
+            ) as T // TODO, håndter versjonering eget sted?
 
-            InnsendingType.LEGEERKLÆRING -> DefaultJsonMapper.fromJson(strukturerteData, Legeerklæring::class.java) as T
-            InnsendingType.DIALOGMELDING -> DefaultJsonMapper.fromJson(strukturerteData, Dialogmelding::class.java) as T
+            // Disse har ikke payload
+            InnsendingType.LEGEERKLÆRING_AVVIST -> null
+            InnsendingType.LEGEERKLÆRING -> null
+            InnsendingType.DIALOGMELDING -> null
         }
     }
 

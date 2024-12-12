@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fød
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Ident
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
@@ -162,7 +163,8 @@ fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>): S�
         "NEI"
     }
     val oppgitteBarn = if (urelaterteBarn.isNotEmpty()) {
-        OppgitteBarn(identer = urelaterteBarn.flatMap { it.identer.filter { it.aktivIdent } }.map { it.identifikator }.toSet())
+        OppgitteBarn(identer = urelaterteBarn.flatMap { it.identer.filter { it.aktivIdent } }
+            .map { Ident(it.identifikator, it.aktivIdent) }.toSet())
     } else {
         null
     }

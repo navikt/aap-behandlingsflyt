@@ -94,10 +94,6 @@ private fun example(innsending: Innsending) {
             is PliktkortV0 -> TODO()
         }
 
-        is Legeerklærling -> when (innsending.melding) {
-            is LegeerklæringV0 -> TODO()
-        }
-
         is Aktivitetskort -> TODO()
         null -> TODO()
     }
