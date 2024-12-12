@@ -31,13 +31,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.Yrke
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.Yrkesskader
 import no.nav.aap.behandlingsflyt.integrasjon.barn.BARN_RELASJON_QUERY
 import no.nav.aap.behandlingsflyt.integrasjon.barn.PERSON_BOLK_QUERY
+import no.nav.aap.behandlingsflyt.integrasjon.ident.IDENT_QUERY
+import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoGateway
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.BrevbestillingLøsningStatus
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.LøsBrevbestillingDto
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.HentPerson
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.HentPersonBolkResult
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.IDENT_QUERY
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PDLDødsfall
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlFoedsel
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlGruppe
@@ -51,7 +52,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersonNavnData
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfo
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoData
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoDataResponse
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlRelasjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlRelasjonData
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlRelasjonDataResponse

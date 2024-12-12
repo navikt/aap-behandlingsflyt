@@ -23,13 +23,14 @@ import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.LøsBrevbestillingDto
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.ElementNotFoundException
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoGateway
 import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.token
+import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
@@ -67,7 +68,8 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                         val sak = SakService(sakRepository).hent(behandling.sakId)
                         val personIdent = sak.person.aktivIdent()
                         val personinfo =
-                            PdlPersoninfoGateway.hentPersoninfoForIdent(personIdent, token())
+                            GatewayProvider.provide(PersoninfoGateway::class)
+                                .hentPersoninfoForIdent(personIdent, token())
                         BrevGrunnlag(
                             brevbestillingReferanse = brevbestilling.referanse,
                             brev = brevbestilling.brev,
@@ -109,7 +111,8 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                     dataSource.transaction { connection ->
                         val repositoryProvider = RepositoryProvider(connection)
                         val avklaringsbehovRepository = repositoryProvider.provide(
-                            AvklaringsbehovRepository::class)
+                            AvklaringsbehovRepository::class
+                        )
                         val taSkriveLåsRepository =
                             repositoryProvider.provide(TaSkriveLåsRepository::class)
 

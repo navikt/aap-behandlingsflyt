@@ -23,12 +23,13 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.komponenter.httpklient.auth.token
+import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import javax.sql.DataSource
@@ -50,7 +51,8 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
                         .hentAvklaringsbehovene(behandling.id)
 
                     val personIdent = sak.person.aktivIdent()
-                    val personinfo = PdlPersoninfoGateway.hentPersoninfoForIdent(personIdent, token())
+                    val personinfo =
+                        GatewayProvider.provide(PersoninfoGateway::class).hentPersoninfoForIdent(personIdent, token())
 
                     avklaringsbehovene.validateTilstand(behandling = behandling)
                     avklaringsbehovene.leggTil(
@@ -101,7 +103,8 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
                     val sak = repositoryProvider.hent((Saksnummer(req.saksnummer)))
 
                     val personIdent = sak.person.aktivIdent()
-                    val personinfo = PdlPersoninfoGateway.hentPersoninfoForIdent(personIdent, token())
+                    val personinfo =
+                        GatewayProvider.provide(PersoninfoGateway::class).hentPersoninfoForIdent(personIdent, token())
 
                     val brevRequest = BrevRequest(
                         personinfo.fulltNavn(),

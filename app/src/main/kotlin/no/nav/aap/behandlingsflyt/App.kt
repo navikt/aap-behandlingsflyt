@@ -49,6 +49,9 @@ import no.nav.aap.behandlingsflyt.flyt.flytApi
 import no.nav.aap.behandlingsflyt.flyt.søknadApi
 import no.nav.aap.behandlingsflyt.hendelse.mottattHendelseApi
 import no.nav.aap.behandlingsflyt.integrasjon.barn.PdlBarnGateway
+import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
+import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoBulkGateway
+import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.pip.behandlingsflytPip
@@ -196,6 +199,9 @@ internal fun Application.server(dbConfig: DbConfig) {
 
 private fun Application.registerGateways() {
     GatewayRegistry.register<PdlBarnGateway>()
+        .register<PdlIdentGateway>()
+        .register<PdlPersoninfoBulkGateway>()
+        .register<PdlPersoninfoGateway>()
 }
 
 private fun registerRepositories() {

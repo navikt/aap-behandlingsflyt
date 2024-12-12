@@ -1,7 +1,12 @@
-package no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters
+package no.nav.aap.behandlingsflyt.integrasjon.ident
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.IdentVariables
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlGruppe
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdenterDataResponse
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlRequest
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlResponseHandler
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header

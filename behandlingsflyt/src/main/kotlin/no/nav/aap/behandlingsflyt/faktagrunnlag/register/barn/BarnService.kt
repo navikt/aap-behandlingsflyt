@@ -15,7 +15,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.gateway.GatewayProvider
@@ -116,13 +115,14 @@ class BarnService private constructor(
             val personopplysningRepository = repositoryProvider.provide(PersonopplysningRepository::class)
             val vilkårsresultatRepository = repositoryProvider.provide(VilkårsresultatRepository::class)
             val barnGateway = GatewayProvider.provide(BarnGateway::class)
+            val identGateway = GatewayProvider.provide(IdentGateway::class)
             return BarnService(
                 SakService(sakRepository),
                 BarnRepository(connection),
                 personopplysningRepository,
                 personRepository,
                 barnGateway,
-                PdlIdentGateway,
+                identGateway,
                 vilkårsresultatRepository
             )
         }

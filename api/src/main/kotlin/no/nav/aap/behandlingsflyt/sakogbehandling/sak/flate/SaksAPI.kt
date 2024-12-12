@@ -11,11 +11,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.ElementNotFoundException
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.DokumentInfoId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdentGateway
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.SafHentDokumentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.SafListDokument
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.SafListDokumentGateway
@@ -24,6 +24,7 @@ import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.SakPathParam
@@ -69,7 +70,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                     dto.søknadsdato, dto.søknadsdato.plusYears(1)
                 ) // Setter til et år frem i tid som er tilsvarende "vedtakslengde" i forskriften
                 val sak = PersonOgSakService(
-                    pdlGateway = PdlIdentGateway,
+                    pdlGateway = GatewayProvider.provide(IdentGateway::class),
                     personRepository = repositoryProvider.provide(PersonRepository::class),
                     sakRepository = repositoryProvider.provide(SakRepository::class)
                 ).finnEllerOpprett(ident = ident, periode = periode)
@@ -183,7 +184,8 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                         sak.person.aktivIdent()
                     }
 
-                    val personinfo = PdlPersoninfoGateway.hentPersoninfoForIdent(ident, token())
+                    val personinfo =
+                        GatewayProvider.provide(PersoninfoGateway::class).hentPersoninfoForIdent(ident, token())
 
                     respond(
                         SakPersoninfoDTO(

@@ -1,7 +1,12 @@
-package no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters
+package no.nav.aap.behandlingsflyt.integrasjon.ident
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.IdentVariables
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersonNavnDataResponse
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlRequest
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlResponseHandler
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.Personinfo
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header

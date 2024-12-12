@@ -1,6 +1,13 @@
-package no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters
+package no.nav.aap.behandlingsflyt.integrasjon.ident
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoBulkGateway
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.IdentVariables
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlNavnData
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersonNavnDataResponse
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlRequest
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlResponseHandler
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.Personinfo
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
@@ -10,7 +17,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.Client
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 import java.net.URI
 
-object PdlPersoninfoBulkGateway {
+object PdlPersoninfoBulkGateway : PersoninfoBulkGateway {
 
     private const val identer = "\$identer"
     val PERSONINFO_BOLK_QUERY = """
@@ -47,7 +54,7 @@ object PdlPersoninfoBulkGateway {
         }))
     }
 
-    fun hentPersoninfoForIdenter(identer: List<Ident>): List<Personinfo> {
+    override fun hentPersoninfoForIdenter(identer: List<Ident>): List<Personinfo> {
         val request = PdlRequest(PERSONINFO_BOLK_QUERY, IdentVariables(identer = identer.map { it.identifikator }))
         val response: PdlPersonNavnDataResponse = query(request)
 
