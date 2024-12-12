@@ -22,5 +22,6 @@ dependencies {
 
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersjon")
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersjon")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:$junitVersjon")
     testImplementation("org.assertj:assertj-core:3.26.3")
 }

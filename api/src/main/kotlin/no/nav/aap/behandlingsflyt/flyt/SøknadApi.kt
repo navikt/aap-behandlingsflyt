@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.EMPTY_JSON_RESPONSE
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Ident
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
@@ -57,9 +58,16 @@ fun NormalOpenAPIRoute.søknadApi(dataSource: DataSource) {
                                     kommeTilbake = dto.søknad.student.kommeTilbake,
                                 ),
                                 yrkesskade = dto.søknad.yrkesskade,
-                                oppgitteBarn = dto.søknad.oppgitteBarn.let { OppgitteBarn(
-                                    identer = it?.identer?.map { it.identifikator }?.toSet() ?: emptySet(),
-                                ) }
+                                oppgitteBarn = dto.søknad.oppgitteBarn.let {
+                                    OppgitteBarn(
+                                        identer = it?.identer?.map {
+                                            Ident(
+                                                identifikator = it.identifikator,
+                                                aktivIdent = it.aktivIdent
+                                            )
+                                        }?.toSet() ?: emptySet(),
+                                    )
+                                }
                             )
                         )
                     )

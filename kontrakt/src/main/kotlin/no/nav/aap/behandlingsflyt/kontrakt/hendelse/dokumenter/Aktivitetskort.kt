@@ -7,4 +7,4 @@ import java.time.LocalDate
  */
 public sealed interface Aktivitetskort : Melding
 
-public data class AktivitetskortV0(val fraOgMed: LocalDate, val tilOgMed: LocalDate) : Aktivitetskort {}
+public data class AktivitetskortV0(val fraOgMed: LocalDate, val tilOgMed: LocalDate) : Aktivitetskort

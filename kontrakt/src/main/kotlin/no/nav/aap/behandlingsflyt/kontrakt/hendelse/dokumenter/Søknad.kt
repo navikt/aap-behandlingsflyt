@@ -22,4 +22,6 @@ public data class SøknadStudentDto(
     public val kommeTilbake: String? = null
 )
 
-public data class OppgitteBarn(public val identer: Set<String>)
+public data class OppgitteBarn(public val identer: Set<Ident>)
+
+public data class Ident(val identifikator: String, val aktivIdent: Boolean)
