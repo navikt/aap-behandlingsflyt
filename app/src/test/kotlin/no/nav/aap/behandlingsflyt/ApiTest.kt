@@ -6,9 +6,14 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import no.nav.aap.behandlingsflyt.behandling.bruddaktivitetsplikt.GrunnDTO
+import no.nav.aap.behandlingsflyt.behandling.bruddaktivitetsplikt.OpprettAktivitetspliktDTO
+import no.nav.aap.behandlingsflyt.behandling.bruddaktivitetsplikt.PeriodeDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapRepository
@@ -19,6 +24,7 @@ import no.nav.aap.behandlingsflyt.flyt.SøknadSendDto
 import no.nav.aap.behandlingsflyt.flyt.flate.VilkårDTO
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
@@ -52,6 +58,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -116,7 +123,7 @@ class ApiTest {
         fun beforeall() {
             server.start()
             port =
-                runBlocking { server.engine.resolvedConnectors().filter { it.type == ConnectorType.HTTP }.first().port }
+                runBlocking { server.engine.resolvedConnectors().first { it.type == ConnectorType.HTTP }.port }
         }
 
         @JvmStatic
@@ -173,7 +180,7 @@ class ApiTest {
             GetRequest(currentToken = getToken())
         )
 
-        Assertions.assertThat(medlemskapGrunnlag).isNotNull
+        assertThat(medlemskapGrunnlag).isNotNull
         Assertions.assertThat(medlemskapGrunnlag?.medlemskap?.unntak).isNotEmpty
     }
 
@@ -348,6 +355,64 @@ class ApiTest {
     }
 
     @Test
+    fun `registrere aktivetsplikt, får opprettet ny behandling`() {
+        FakePersoner.leggTil(
+            TestPerson(
+                identer = setOf(Ident("12345678910")),
+                fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
+                yrkesskade = emptyList()
+            )
+        )
+
+        val responseSak: SaksinfoDTO? = client.post(
+            URI.create("http://localhost:$port/").resolve("api/sak/finnEllerOpprett"),
+            PostRequest(
+                body = FinnEllerOpprettSakDTO("12345678910", LocalDate.now().minusDays(30)),
+                currentToken = getToken()
+            )
+        )
+
+        requireNotNull(responseSak)
+
+        val saksnummer = responseSak.saksnummer
+
+        client.post<Any, Map<String, String>>(
+            URI.create("http://localhost:$port/").resolve("api/aktivitetsplikt/$saksnummer/opprett"),
+            PostRequest(
+                body = OpprettAktivitetspliktDTO(
+                    brudd = BruddType.IKKE_AKTIVT_BIDRAG,
+                    paragraf = Brudd.Paragraf.PARAGRAF_11_7,
+                    begrunnelse = "heya",
+                    grunn = GrunnDTO.INGEN_GYLDIG_GRUNN,
+                    perioder = listOf(
+                        PeriodeDTO(
+                            fom = LocalDate.now().plusDays(10),
+                            tom = LocalDate.now().plusDays(20)
+                        )
+                    )
+                ),
+                currentToken = getToken()
+            )
+        )
+
+        val ds = initDatasource(dbConfig)
+
+        val behandlinger = kallInntilKlar {
+            ds.transaction { connection ->
+                val sak = SakRepositoryImpl(connection).hent(Saksnummer(saksnummer))
+                BehandlingRepositoryImpl(connection).hentAlleFor(sak.id)
+            }
+        }
+
+        assertThat(behandlinger).hasSize(1)
+        assertThat(behandlinger!!.first().årsaker()).containsExactly(Årsak(
+            type = ÅrsakTilBehandling.MOTTATT_AKTIVITETSMELDING,
+            periode = Periode(LocalDate.now().plusDays(10), LocalDate.now().plusDays(20))
+        ))
+
+    }
+
+    @Test
     fun `skal lagre openapi som fil`() {
         val openApiDoc =
             requireNotNull(
@@ -367,7 +432,6 @@ class ApiTest {
         } catch (_: Exception) {
             fail()
         }
-
     }
 
     private fun <E> kallInntilKlar(block: () -> E): E? {
