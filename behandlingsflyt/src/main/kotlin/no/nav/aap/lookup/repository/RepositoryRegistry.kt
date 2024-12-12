@@ -31,6 +31,7 @@ object RepositoryRegistry {
             if (removedSomething) {
                 logger.warn("Repository '{}' hadde en variant allerede registrert", repository)
             }
+            @Suppress("UNCHECKED_CAST")
             registry.add(repository as KClass<Repository>)
         }
         return this

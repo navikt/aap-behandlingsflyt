@@ -23,6 +23,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.avklaringsbeh
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.utledSubtypes
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.flate.barnetilleggApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.beregningsGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.brev.brevApi
 import no.nav.aap.behandlingsflyt.behandling.bruddaktivitetsplikt.aktivitetspliktApi
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.institusjonAPI
@@ -216,6 +217,7 @@ private fun registerRepositories() {
         .register<PersonopplysningRepositoryImpl>()
         .register<TilkjentYtelseRepositoryImpl>()
         .register<AktivitetspliktRepositoryImpl>()
+        .register<BrevbestillingRepositoryImpl>()
         .status()
 }
 

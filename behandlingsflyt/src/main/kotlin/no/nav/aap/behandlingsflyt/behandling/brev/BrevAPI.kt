@@ -47,7 +47,6 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
             route("/{referanse}/grunnlag/brev") {
                 get<BehandlingReferanse, BrevGrunnlag> { behandlingReferanse ->
                     val grunnlag = dataSource.transaction { connection ->
-
                         val repositoryProvider = RepositoryProvider(connection)
                         val behandlingRepository =
                             repositoryProvider.provide(BehandlingRepository::class)
