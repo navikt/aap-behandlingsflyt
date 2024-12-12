@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.SkalGjenop
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 
-// mål få denne
 data class UbehandletSøknad(
     val journalpostId: JournalpostId,
     val periode: Periode,

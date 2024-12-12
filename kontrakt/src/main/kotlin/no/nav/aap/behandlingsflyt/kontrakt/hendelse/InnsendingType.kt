@@ -8,7 +8,7 @@ public enum class InnsendingType {
      */
     AKTIVITETSKORT,
     PLIKTKORT,
-    LEGEERKLÆRING, // fra lege
+    LEGEERKLÆRING,
     LEGEERKLÆRING_AVVIST,
-    DIALOGMELDING // også fra lege
+    DIALOGMELDING
 }
