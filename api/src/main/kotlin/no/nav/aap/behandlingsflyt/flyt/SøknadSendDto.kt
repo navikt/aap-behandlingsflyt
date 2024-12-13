@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
 
+@Deprecated(message = "Bruk motta hendelse-endepunktet")
 class SøknadSendDto(
     val saksnummer: String,
     val journalpostId: String,

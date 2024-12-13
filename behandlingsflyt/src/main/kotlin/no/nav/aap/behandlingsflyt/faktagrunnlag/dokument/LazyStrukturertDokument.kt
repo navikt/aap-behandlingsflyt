@@ -1,12 +1,11 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Pliktkort
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvvistLegeerklæringId
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingId
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AktivitetskortV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 
@@ -34,7 +33,11 @@ class LazyStrukturertDokument(
         @Suppress("UNCHECKED_CAST")
         return when (brevkategori) {
             // todo, parse som Melding
-            InnsendingType.SØKNAD -> DefaultJsonMapper.fromJson(strukturerteData, Søknad::class.java) as T
+            InnsendingType.SØKNAD -> DefaultJsonMapper.fromJson(
+                strukturerteData,
+                SøknadV0::class.java
+            ) as T
+
             InnsendingType.PLIKTKORT -> DefaultJsonMapper.fromJson(strukturerteData, Pliktkort::class.java) as T
             InnsendingType.AKTIVITETSKORT -> DefaultJsonMapper.fromJson(
                 strukturerteData,

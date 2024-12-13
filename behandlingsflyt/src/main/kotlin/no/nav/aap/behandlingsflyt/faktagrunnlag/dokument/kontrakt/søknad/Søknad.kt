@@ -2,11 +2,15 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.ErStudentStatus
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.SkalGjenopptaStudieStatus
 
 // duplisert
+@Deprecated(
+    "Bruk Innsending-objekt i stedet. Og et annet endepunkt.", replaceWith = ReplaceWith(
+        expression = "no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0"
+    )
+)
 class Søknad(
-    val student: SøknadStudentDto,
+    val student: SøknadStudentDto?,
     val yrkesskade: String,
     val oppgitteBarn: OppgitteBarn?
 ) {
@@ -21,7 +25,7 @@ class SøknadStudentDto(
     val kommeTilbake: String? = null
 ) {
     fun erStudent(): ErStudentStatus? {
-        return if (erStudent.uppercase() == "JA"){
+        return if (erStudent.uppercase() == "JA") {
             ErStudentStatus.JA
         } else if (erStudent.uppercase() == "AVBRUTT") {
             ErStudentStatus.AVBRUTT
@@ -32,15 +36,4 @@ class SøknadStudentDto(
         }
     }
 
-    fun skalGjennopptaStudie(): SkalGjenopptaStudieStatus {
-        return if (kommeTilbake?.uppercase() == "JA"){
-            SkalGjenopptaStudieStatus.JA
-        } else if (kommeTilbake?.uppercase() == "NEI"){
-            SkalGjenopptaStudieStatus.NEI
-        } else if (kommeTilbake?.uppercase() == "VET IKKE"){
-            SkalGjenopptaStudieStatus.VET_IKKE
-        } else {
-            SkalGjenopptaStudieStatus.IKKE_OPPGITT
-        }
-    }
 }

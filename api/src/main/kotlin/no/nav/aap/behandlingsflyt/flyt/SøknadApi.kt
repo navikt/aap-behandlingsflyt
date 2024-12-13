@@ -45,6 +45,7 @@ fun NormalOpenAPIRoute.søknadApi(dataSource: DataSource) {
 
                     val flytJobbRepository = FlytJobbRepository(connection)
                     val dokumentReferanse = InnsendingReferanse(JournalpostId(dto.journalpostId))
+                    val studentverdi = dto.søknad.student
                     flytJobbRepository.leggTil(
                         HendelseMottattHåndteringJobbUtfører.nyJobb(
                             sakId = sak.id,
@@ -53,10 +54,10 @@ fun NormalOpenAPIRoute.søknadApi(dataSource: DataSource) {
                             // TODO få kanal fra payload i stedet
                             kanal = Kanal.DIGITAL,
                             melding = SøknadV0(
-                                student = SøknadStudentDto(
-                                    erStudent = dto.søknad.student.erStudent,
-                                    kommeTilbake = dto.søknad.student.kommeTilbake,
-                                ),
+                                student = if (studentverdi != null) SøknadStudentDto(
+                                    erStudent = studentverdi.erStudent,
+                                    kommeTilbake = studentverdi.kommeTilbake,
+                                ) else null,
                                 yrkesskade = dto.søknad.yrkesskade,
                                 oppgitteBarn = dto.søknad.oppgitteBarn.let {
                                     OppgitteBarn(

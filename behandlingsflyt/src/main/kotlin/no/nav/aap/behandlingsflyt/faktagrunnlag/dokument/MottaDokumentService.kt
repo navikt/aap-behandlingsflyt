@@ -5,12 +5,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.adapter.UbehandletPliktkort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.UbehandletDialogmelding
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.UbehandletLegeerklæring
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.adapter.StudentData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.adapter.UbehandletSøknad
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingId
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.type.Periode
@@ -122,25 +121,14 @@ class MottaDokumentService(
     }
 
     private fun mapSøknad(mottattDokument: MottattDokument): UbehandletSøknad {
-        val søknad = requireNotNull(mottattDokument.strukturerteData<Søknad>()).data
-
+        val søknad =
+            requireNotNull(mottattDokument.strukturerteData<Søknad>()).data
         val mottattDato = mottattDokument.mottattTidspunkt.toLocalDate()
-        return UbehandletSøknad(
-            mottattDokument.referanse.asJournalpostId,
-            Periode(mottattDato, mottattDato),
-            søknad.student.let {
-                val erStudent = it.erStudent()
-                if (erStudent == null) {
-                    null
-                } else {
-                    StudentData(
-                        erStudent = erStudent,
-                        skalGjenopptaStudie = it.skalGjennopptaStudie()
-                    )
-                }
-            },
-            søknad.harYrkesskade(),
-            søknad.oppgitteBarn
+
+        return UbehandletSøknad.fraKontrakt(
+            søknad = søknad,
+            mottattDato = mottattDato,
+            journalPostId = mottattDokument.referanse.asJournalpostId,
         )
     }
 

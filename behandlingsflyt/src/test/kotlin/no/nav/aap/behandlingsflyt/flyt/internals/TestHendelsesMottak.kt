@@ -65,8 +65,12 @@ class TestHendelsesMottak(private val dataSource: DataSource) {
                         kanal = Kanal.DIGITAL,
                         melding = when (hendelse.strukturertDokument.brevkategori) {
                             InnsendingType.SØKNAD -> (hendelse.strukturertDokument.data as Søknad).let {
+                                val erStudent = it.student
                                 SøknadV0(
-                                    student = SøknadStudentDto(it.student.erStudent, it.student.kommeTilbake),
+                                    student = if (erStudent == null) null else SøknadStudentDto(
+                                        erStudent.erStudent,
+                                        erStudent.kommeTilbake
+                                    ),
                                     yrkesskade = it.yrkesskade,
                                     oppgitteBarn = OppgitteBarn(
                                         identer = it.oppgitteBarn?.identer?.map {
