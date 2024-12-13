@@ -7,15 +7,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.verdityper.dokument.Kanal
 import java.time.LocalDateTime
 
-@Deprecated(message = "Bruk Innsending i stedet", replaceWith = ReplaceWith("Innsending"))
-public data class MottattHendelseDto(
-    val saksnummer: Saksnummer,
-    val type: InnsendingType,
-    val kanal: Kanal,
-    val hendelseId: InnsendingReferanse,
-    val payload: Any?
-)
-
 /**
  * @param saksnummer Hvilken sak innsendingen skal knyttes.
  * @param referanse Referanse til hvordan hendte ut innsendingen igjen. Dette avhenger av [type].
@@ -30,7 +21,7 @@ public class Innsending(
     public val type: InnsendingType,
     public val kanal: Kanal = Kanal.DIGITAL,
     public val mottattTidspunkt: LocalDateTime,
-    public val melding: Melding?,
+    public val melding: Melding? = null,
 ) {
     init {
         when (type) {
