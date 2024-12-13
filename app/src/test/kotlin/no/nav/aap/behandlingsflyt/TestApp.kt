@@ -164,7 +164,7 @@ fun mapTilSÃ¸knad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>): SÃ
     }
     val oppgitteBarn = if (urelaterteBarn.isNotEmpty()) {
         OppgitteBarn(identer = urelaterteBarn.flatMap { it.identer.filter { it.aktivIdent } }
-            .map { Ident(it.identifikator, it.aktivIdent) }.toSet())
+            .map { Ident(it.identifikator) }.toSet())
     } else {
         null
     }

@@ -33,6 +33,7 @@ class LazyStrukturertDokument(
 
         @Suppress("UNCHECKED_CAST")
         return when (brevkategori) {
+            // todo, parse som Melding
             InnsendingType.SØKNAD -> DefaultJsonMapper.fromJson(strukturerteData, Søknad::class.java) as T
             InnsendingType.PLIKTKORT -> DefaultJsonMapper.fromJson(strukturerteData, Pliktkort::class.java) as T
             InnsendingType.AKTIVITETSKORT -> DefaultJsonMapper.fromJson(

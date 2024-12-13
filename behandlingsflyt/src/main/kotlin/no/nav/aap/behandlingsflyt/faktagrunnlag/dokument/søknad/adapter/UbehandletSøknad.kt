@@ -9,7 +9,7 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 data class UbehandletSøknad(
     val journalpostId: JournalpostId,
     val periode: Periode,
-    val studentData: StudentData,
+    val studentData: StudentData?,
     val harYrkesskade: Boolean,
     val oppgitteBarn: OppgitteBarn?
 )
