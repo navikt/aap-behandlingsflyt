@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Pliktkort
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.adapter.UbehandletPliktkort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.UbehandletDialogmelding
@@ -9,46 +9,27 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.adapter.Ubehand
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingId
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Pliktkort
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PliktkortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.verdityper.dokument.Kanal
+import java.math.BigDecimal
 import java.time.LocalDateTime
 
 class MottaDokumentService(
     private val mottattDokumentRepository: MottattDokumentRepository,
 ) {
-
     fun mottattDokument(
         referanse: InnsendingReferanse,
         sakId: SakId,
         mottattTidspunkt: LocalDateTime,
         brevkategori: InnsendingType,
         kanal: Kanal,
-        strukturertDokument: StrukturertDokument<*>
-    ) {
-        mottattDokumentRepository.lagre(
-            MottattDokument(
-                referanse = referanse,
-                sakId = sakId,
-                mottattTidspunkt = mottattTidspunkt,
-                type = brevkategori,
-                status = Status.MOTTATT,
-                behandlingId = null,
-                strukturertDokument = strukturertDokument,
-                kanal = kanal
-            )
-        )
-    }
-
-    fun mottattDokument(
-        referanse: InnsendingReferanse,
-        sakId: SakId,
-        mottattTidspunkt: LocalDateTime,
-        brevkategori: InnsendingType,
-        kanal: Kanal,
-        strukturertDokument: UnparsedStrukturertDokument
+        strukturertDokument: StrukturerteData?
     ) {
         mottattDokumentRepository.lagre(
             MottattDokument(
@@ -68,12 +49,23 @@ class MottaDokumentService(
         val ubehandledePliktkort =
             mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, InnsendingType.PLIKTKORT)
 
-        return ubehandledePliktkort.map {
-            UbehandletPliktkort(
-                it.referanse.asJournalpostId,
-                it.strukturerteData<Pliktkort>()!!.data.timerArbeidPerPeriode
-            )
-        }.toSet()
+        return ubehandledePliktkort
+            .map { Pair(it.referanse.asJournalpostId, it.strukturerteData<Pliktkort>()?.data) }
+            .map { Pair(it.first, it.second as Pliktkort) }
+            .map {
+                UbehandletPliktkort(
+                    it.first,
+                    timerArbeidPerPeriode = when (it.second) {
+                        is PliktkortV0 -> (it.second as PliktkortV0).timerArbeidPerPeriode.map {
+                            ArbeidIPeriode(
+                                periode = Periode(it.fraOgMedDato, it.tilOgMedDato),
+                                timerArbeid = TimerArbeid(BigDecimal.valueOf(it.timerArbeid))
+                            )
+                        }.toSet()
+                    },
+                )
+            }
+            .toSet()
     }
 
     fun aktivitetskortSomIkkeErBehandlet(sakId: SakId): Set<InnsendingId> {
@@ -123,6 +115,7 @@ class MottaDokumentService(
     private fun mapSøknad(mottattDokument: MottattDokument): UbehandletSøknad {
         val søknad =
             requireNotNull(mottattDokument.strukturerteData<Søknad>()).data
+
         val mottattDato = mottattDokument.mottattTidspunkt.toLocalDate()
 
         return UbehandletSøknad.fraKontrakt(

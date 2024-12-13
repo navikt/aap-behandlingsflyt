@@ -1,21 +1,20 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Pliktkort
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AktivitetskortV0
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 
 class LazyStrukturertDokument(
     private val referanse: InnsendingReferanse,
-    internal val brevkategori: InnsendingType,
     private val connection: DBConnection
 ) : StrukturerteData {
 
-    fun <T> hent(): T? {
+    inline fun <reified T : Melding> hentReified(): T {
+        return hent() as T
+    }
+
+    fun hent(): Melding? {
         val strukturerteData =
             connection.queryFirstOrNull("SELECT strukturert_dokument FROM MOTTATT_DOKUMENT WHERE referanse_type = ? AND referanse = ?") {
                 setParams {
@@ -26,30 +25,11 @@ class LazyStrukturertDokument(
                     it.getStringOrNull("strukturert_dokument")
                 }
             }
+
         if (strukturerteData == null) {
             return null
         }
 
-        @Suppress("UNCHECKED_CAST")
-        return when (brevkategori) {
-            // todo, parse som Melding
-            InnsendingType.SØKNAD -> DefaultJsonMapper.fromJson(
-                strukturerteData,
-                SøknadV0::class.java
-            ) as T
-
-            InnsendingType.PLIKTKORT -> DefaultJsonMapper.fromJson(strukturerteData, Pliktkort::class.java) as T
-            InnsendingType.AKTIVITETSKORT -> DefaultJsonMapper.fromJson(
-                strukturerteData,
-                AktivitetskortV0::class.java
-            ) as T // TODO, håndter versjonering eget sted?
-
-            // Disse har ikke payload
-            InnsendingType.LEGEERKLÆRING_AVVIST -> null
-            InnsendingType.LEGEERKLÆRING -> null
-            InnsendingType.DIALOGMELDING -> null
-        }
+        return DefaultJsonMapper.fromJson(strukturerteData, Melding::class.java)
     }
-
-
 }

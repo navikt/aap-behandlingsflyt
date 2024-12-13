@@ -44,10 +44,10 @@ class HendelseMottattHåndteringJobbUtfører(
 
         val innsendingType = InnsendingType.valueOf(input.parameter(BREVKODE))
         val kanal = Kanal.valueOf(input.parameter(KANAL))
-        val payloadAsString = if (input.harPayload()) input.payload() else ""
+        val payloadAsString = if (input.harPayload()) input.payload() else null
         val mottattTidspunkt = DefaultJsonMapper.fromJson<LocalDateTime>(input.parameter(MOTTATT_TIDSPUNKT))
 
-        val parsedMelding = if (payloadAsString.isNotBlank()) {
+        val parsedMelding = if (payloadAsString != null) {
             DefaultJsonMapper.fromJson<Melding>(payloadAsString)
         } else null
 
@@ -60,7 +60,7 @@ class HendelseMottattHåndteringJobbUtfører(
             mottattTidspunkt = mottattTidspunkt,
             brevkategori = innsendingType,
             kanal = kanal,
-            strukturertDokument = UnparsedStrukturertDokument(payloadAsString)
+            strukturertDokument = if (payloadAsString != null) UnparsedStrukturertDokument(payloadAsString) else null
         )
 
         hånderMottattDokumentService.håndterMottatteDokumenter(
@@ -94,7 +94,7 @@ class HendelseMottattHåndteringJobbUtfører(
 
             } else error("Må være aktivitetskort")
 
-           else -> null
+            else -> null
         }
     }
 

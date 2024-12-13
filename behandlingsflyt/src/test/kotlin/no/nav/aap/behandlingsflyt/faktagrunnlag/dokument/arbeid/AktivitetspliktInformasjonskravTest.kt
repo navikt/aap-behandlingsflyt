@@ -8,6 +8,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType.IKKE_A
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AktivitetskortV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.innsendingType
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -29,7 +31,12 @@ class AktivitetspliktInformasjonskravTest {
     fun `detekterer nye dokumenter og legger dem til i grunnlaget`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = nySak(connection)
-            val behandling = BehandlingRepositoryImpl(connection).opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
+            val behandling = BehandlingRepositoryImpl(connection).opprettBehandling(
+                sak.id,
+                listOf(),
+                TypeBehandling.Førstegangsbehandling,
+                null
+            )
             val aktivitetspliktInformasjonskrav = AktivitetspliktInformasjonskrav.konstruer(connection)
             val flytKontekst = flytKontekstMedPerioder(behandling)
 
@@ -68,12 +75,17 @@ class AktivitetspliktInformasjonskravTest {
         brudd: AktivitetspliktDokument,
         sak: Sak
     ) {
-        val dokument = StrukturertDokument(brudd.metadata.innsendingId, InnsendingType.AKTIVITETSKORT)
+        val dokument = StrukturertDokument(
+            AktivitetskortV0(
+                fraOgMed = brudd.brudd.periode.fom,
+                tilOgMed = brudd.brudd.periode.tom,
+            )
+        )
         MottaDokumentService(MottattDokumentRepositoryImpl(connection)).mottattDokument(
             InnsendingReferanse(brudd.metadata.innsendingId),
             sak.id,
             LocalDateTime.ofInstant(brudd.metadata.opprettetTid, ZoneId.of("Europe/Oslo")),
-            dokument.brevkategori,
+            dokument.data.innsendingType(),
             kanal = Kanal.PAPIR,
             dokument,
         )
