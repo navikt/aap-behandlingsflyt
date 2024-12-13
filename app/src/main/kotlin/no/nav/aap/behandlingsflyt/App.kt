@@ -209,6 +209,7 @@ private fun Application.registerGateways() {
         .register<PdlIdentGateway>()
         .register<PdlPersoninfoBulkGateway>()
         .register<PdlPersoninfoGateway>()
+        .status()
 }
 
 private fun registerRepositories() {
