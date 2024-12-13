@@ -2,8 +2,6 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedInput
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
@@ -33,10 +31,8 @@ class InstitusjonRegelTest {
     val utlederService = EtAnnetStedUtlederService(
         BarnetilleggRepository(mockConnection),
         InstitusjonsoppholdRepository(mockConnection),
-        SakOgBehandlingService(
-            GrunnlagKopierer(mockConnection), SakRepositoryImpl(mockConnection),
-            BehandlingRepositoryImpl(mockConnection)
-        )
+        SakRepositoryImpl(mockConnection),
+        BehandlingRepositoryImpl(mockConnection)
     )
 
     val regel = InstitusjonRegel()

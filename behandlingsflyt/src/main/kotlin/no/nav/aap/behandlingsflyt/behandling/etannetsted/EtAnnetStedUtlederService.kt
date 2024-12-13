@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.etannetsted
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
@@ -8,6 +7,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Helsei
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soningsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.OppholdVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.komponenter.tidslinje.JoinStyle
@@ -27,13 +28,17 @@ import kotlin.time.toDuration
 class EtAnnetStedUtlederService(
     private val barnetilleggRepository: BarnetilleggRepository,
     private val institusjonsoppholdRepository: InstitusjonsoppholdRepository,
-    private val sakService: SakOgBehandlingService
+    private val sakRepository: SakRepository,
+    private val behandlingRepository: BehandlingRepository
 ) {
     private val log = LoggerFactory.getLogger(EtAnnetStedUtlederService::class.java)
     private val grenseverdi = (3 * 30).toDuration(DurationUnit.DAYS)
 
-    fun utled(behandlingId: BehandlingId): BehovForAvklaringer {
-        val input = konstruerInput(behandlingId)
+    fun utled(
+        behandlingId: BehandlingId,
+        basertPåVurderingerFørDenneBehandlingen: Boolean = false
+    ): BehovForAvklaringer {
+        val input = konstruerInput(behandlingId, basertPåVurderingerFørDenneBehandlingen)
 
         return utledBehov(input)
     }
@@ -129,7 +134,7 @@ class EtAnnetStedUtlederService(
             val oppholdSomKanGiReduksjon = Tidslinje(
                 oppholdSomLiggerMindreEnnTreMånederFraForrigeSomGaReduksjon(
                     helseoppholdUtenBarnetillegg, perioderSomTrengerVurdering
-                ).map {
+                ).mapNotNull {
                     val fom = it.fom().withDayOfMonth(1).plusMonths(1)
 
                     if (fom.isAfter(it.tom())) {
@@ -144,7 +149,7 @@ class EtAnnetStedUtlederService(
                             )
                         )
                     }
-                }.filterNotNull()
+                }
             ).kombiner(helsevurderingerTidslinje, helsevurderingSammenslåer())
 
             result = result.kombiner(oppholdSomKanGiReduksjon, sammenslåer())
@@ -244,7 +249,8 @@ class EtAnnetStedUtlederService(
         helseOpphold: Tidslinje<Boolean>,
         oppholdUtenBarnetillegg: Tidslinje<InstitusjonsOpphold>
     ): Tidslinje<Boolean> {
-        val tidslinje = Tidslinje(helseOpphold.segmenter()
+        val tidslinje = Tidslinje(
+            helseOpphold.segmenter()
             .filter { segment -> segment.verdi }
             .filter { segment ->
                 segment.periode.tom < LocalDate.now() && oppholdUtenBarnetillegg.segmenter()
@@ -263,7 +269,8 @@ class EtAnnetStedUtlederService(
         oppholdUtenBarnetillegg: Tidslinje<Boolean>,
         femMåneder: Duration
     ): Tidslinje<Boolean> {
-        return Tidslinje(oppholdUtenBarnetillegg.segmenter()
+        return Tidslinje(
+            oppholdUtenBarnetillegg.segmenter()
             .filter { segment -> segment.verdi }
             .filterNotNull()
             .filter { segment ->
@@ -296,14 +303,27 @@ class EtAnnetStedUtlederService(
         }
     }
 
-    private fun konstruerInput(behandlingId: BehandlingId): EtAnnetStedInput {
-        val rettighetsperiode = sakService.hentSakFor(behandlingId).rettighetsperiode
+    private fun konstruerInput(
+        behandlingId: BehandlingId,
+        basertPåVurderingerFørDenneBehandlingen: Boolean
+    ): EtAnnetStedInput {
+        val behandling = behandlingRepository.hent(behandlingId)
+        val rettighetsperiode = sakRepository.hent(behandling.sakId).rettighetsperiode
         val grunnlag = institusjonsoppholdRepository.hentHvisEksisterer(behandlingId)
         val barnetillegg = barnetilleggRepository.hentHvisEksisterer(behandlingId)?.perioder ?: emptyList()
 
         val opphold = grunnlag?.oppholdene?.opphold ?: emptyList()
-        val soningsvurderinger = grunnlag?.soningsVurderinger?.vurderinger ?: emptyList()
-        val helsevurderinger = grunnlag?.helseoppholdvurderinger?.vurderinger ?: emptyList()
+        val soningsvurderinger: List<Soningsvurdering>
+        val helsevurderinger: List<HelseinstitusjonVurdering>
+        if (basertPåVurderingerFørDenneBehandlingen) {
+            val forrigeGrunnlag =
+                behandling.forrigeBehandlingId?.let { institusjonsoppholdRepository.hentHvisEksisterer(behandling.forrigeBehandlingId) }
+            soningsvurderinger = forrigeGrunnlag?.soningsVurderinger?.vurderinger ?: emptyList()
+            helsevurderinger = forrigeGrunnlag?.helseoppholdvurderinger?.vurderinger ?: emptyList()
+        } else {
+            soningsvurderinger = grunnlag?.soningsVurderinger?.vurderinger ?: emptyList()
+            helsevurderinger = grunnlag?.helseoppholdvurderinger?.vurderinger ?: emptyList()
+        }
 
         return EtAnnetStedInput(rettighetsperiode, opphold, soningsvurderinger, barnetillegg, helsevurderinger)
     }

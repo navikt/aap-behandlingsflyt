@@ -47,11 +47,8 @@ class UnderveisServiceTest {
                     EtAnnetStedUtlederService(
                         BarnetilleggRepository(connection),
                         InstitusjonsoppholdRepository(connection),
-                        SakOgBehandlingService(
-                            GrunnlagKopierer(connection),
-                            SakRepositoryImpl(connection),
-                            BehandlingRepositoryImpl(connection)
-                        )
+                        SakRepositoryImpl(connection),
+                        BehandlingRepositoryImpl(connection)
                     ),
                     ArbeidsevneRepository(connection),
                     MeldepliktRepository(connection),

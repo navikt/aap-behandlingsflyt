@@ -3,8 +3,6 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -33,17 +31,23 @@ class EtAnnetStedSteg(
 
         val avklaringsbehov = mutableListOf<Definisjon>()
 
-        val harBehovForAvklaringer = etAnnetStedUtlederService.utled(kontekst.behandlingId)
-        log.info("Perioder til vurdering: {}", harBehovForAvklaringer.perioderTilVurdering)
-        if (harBehovForAvklaringer.harBehovForAvklaring()) {
-            avklaringsbehov += harBehovForAvklaringer.avklaringsbehov()
+        // TODO: Denne må forberedes slik at vi kan vise hva som trengs å ta stilling til basert på vurderinge fra forrige behandling
+        val harBehovForAvklaringer = etAnnetStedUtlederService.utled(kontekst.behandlingId, true)
+        val harBehovForAvklaringerLenger = etAnnetStedUtlederService.utled(kontekst.behandlingId)
+        log.info("Perioder til vurdering: {}", harBehovForAvklaringerLenger.perioderTilVurdering)
+        if (harBehovForAvklaringerLenger.harBehovForAvklaring()) {
+            avklaringsbehov += harBehovForAvklaringerLenger.avklaringsbehov()
         }
 
-        if (!avklaringsbehov.contains(Definisjon.AVKLAR_HELSEINSTITUSJON)) {
+        if (!avklaringsbehov.contains(Definisjon.AVKLAR_HELSEINSTITUSJON) && !harBehovForAvklaringer.avklaringsbehov()
+                .contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
+        ) {
             avbrytHvisFinnesOgIkkeTrengs(avklaringsbehovene, Definisjon.AVKLAR_HELSEINSTITUSJON)
         }
 
-        if (!avklaringsbehov.contains(Definisjon.AVKLAR_SONINGSFORRHOLD)) {
+        if (!avklaringsbehov.contains(Definisjon.AVKLAR_SONINGSFORRHOLD) && !harBehovForAvklaringer.avklaringsbehov()
+                .contains(Definisjon.AVKLAR_SONINGSFORRHOLD)
+        ) {
             avbrytHvisFinnesOgIkkeTrengs(avklaringsbehovene, Definisjon.AVKLAR_SONINGSFORRHOLD)
         }
         if (avklaringsbehov.isNotEmpty()) {
@@ -72,11 +76,8 @@ class EtAnnetStedSteg(
                 avklaringsbehovRepository, EtAnnetStedUtlederService(
                     BarnetilleggRepository(connection),
                     institusjonsoppholdRepository,
-                    SakOgBehandlingService(
-                        GrunnlagKopierer(connection),
-                        sakRepository,
-                        behandlingRepository
-                    )
+                    sakRepository,
+                    behandlingRepository
                 )
             )
         }

@@ -58,7 +58,8 @@ class UnderveisSteg(private val underveisService: UnderveisService) : Behandling
                     etAnnetStedUtlederService = EtAnnetStedUtlederService(
                         BarnetilleggRepository(connection),
                         InstitusjonsoppholdRepository(connection),
-                        behandlingService
+                        sakRepository,
+                        behandlingRepository
                     ),
                     arbeidsevneRepository = ArbeidsevneRepository(connection),
                     meldepliktRepository = MeldepliktRepository(connection),
