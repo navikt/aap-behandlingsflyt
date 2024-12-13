@@ -58,7 +58,6 @@ class YrkesskadeService private constructor(
     ): YrkesskadeModell? {
         val mottattDokumenter = mottattDokumentRepository.hentDokumenterAvType(id, InnsendingType.SØKNAD)
 
-        // TODO! Fix denne: bedre typehåndtering på strukturerteData
         if (mottattDokumenter.any { dokument ->
                 val data = dokument.strukturerteData<Søknad>()?.data
                 val yrkesskadeString = when (data) {
