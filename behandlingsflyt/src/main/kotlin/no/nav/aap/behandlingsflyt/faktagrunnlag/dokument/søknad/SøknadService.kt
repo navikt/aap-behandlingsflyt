@@ -49,10 +49,11 @@ class SøknadService private constructor(
         for (ubehandletSøknad in ubehandletSøknader) {
             studentRepository.lagre(
                 behandlingId = behandlingId,
-                OppgittStudent(
-                    erStudentStatus = ubehandletSøknad.studentData.erStudent,
-                    skalGjenopptaStudieStatus = ubehandletSøknad.studentData.skalGjenopptaStudie
-                )
+                if (ubehandletSøknad.studentData == null) null else
+                    OppgittStudent(
+                        erStudentStatus = ubehandletSøknad.studentData.erStudent,
+                        skalGjenopptaStudieStatus = ubehandletSøknad.studentData.skalGjenopptaStudie
+                    )
             )
 
             if (ubehandletSøknad.oppgitteBarn != null) {

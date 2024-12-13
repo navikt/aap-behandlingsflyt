@@ -72,7 +72,6 @@ class TestHendelsesMottak(private val dataSource: DataSource) {
                                         identer = it.oppgitteBarn?.identer?.map {
                                             no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Ident(
                                                 identifikator = it.identifikator,
-                                                aktivIdent = it.aktivIdent
                                             )
                                         }?.toSet()
                                             ?: emptySet()

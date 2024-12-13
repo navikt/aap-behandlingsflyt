@@ -53,7 +53,7 @@ class InnsendingTest {
             oppgitteBarn = OppgitteBarn(
                 identer = setOf(
                     Ident(
-                        identifikator = "1234", aktivIdent = true
+                        identifikator = "21283126223"
                     )
                 )
             ),

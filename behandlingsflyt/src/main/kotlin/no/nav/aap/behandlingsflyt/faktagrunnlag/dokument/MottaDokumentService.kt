@@ -129,10 +129,15 @@ class MottaDokumentService(
             mottattDokument.referanse.asJournalpostId,
             Periode(mottattDato, mottattDato),
             søknad.student.let {
-                StudentData(
-                    erStudent = it.erStudent(),
-                    skalGjenopptaStudie = it.skalGjennopptaStudie()
-                )
+                val erStudent = it.erStudent()
+                if (erStudent == null) {
+                    null
+                } else {
+                    StudentData(
+                        erStudent = erStudent,
+                        skalGjenopptaStudie = it.skalGjennopptaStudie()
+                    )
+                }
             },
             søknad.harYrkesskade(),
             søknad.oppgitteBarn

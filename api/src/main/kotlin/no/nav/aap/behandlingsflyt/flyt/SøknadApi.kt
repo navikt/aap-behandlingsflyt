@@ -63,7 +63,6 @@ fun NormalOpenAPIRoute.søknadApi(dataSource: DataSource) {
                                         identer = it?.identer?.map {
                                             Ident(
                                                 identifikator = it.identifikator,
-                                                aktivIdent = it.aktivIdent
                                             )
                                         }?.toSet() ?: emptySet(),
                                     )

@@ -74,7 +74,7 @@ class HendelseMottattHåndteringJobbUtfører(
     }
 
     /**
-     * Denne logikken burde kanskje flyttes til en testbar stateless klasse.
+     * TODO Denne logikken burde kanskje flyttes til en testbar stateless klasse.
      */
     private fun utledPeriode(
         innsendingType: InnsendingType,
@@ -84,7 +84,7 @@ class HendelseMottattHåndteringJobbUtfører(
         return when (innsendingType) {
             InnsendingType.SØKNAD -> Periode(
                 mottattTidspunkt.toLocalDate(),
-                mottattTidspunkt.plusYears(3).toLocalDate()
+                mottattTidspunkt.plusYears(1).toLocalDate()
             )
 
             InnsendingType.AKTIVITETSKORT -> if (melding is Aktivitetskort) {

@@ -87,7 +87,6 @@ private fun example(innsending: Innsending) {
     when (innsending.melding) {
         is Søknad -> when (innsending.melding) {
             is SøknadV0 -> TODO()
-            is SøknadV1 -> TODO()
         }
 
         is Pliktkort -> when (innsending.melding) {

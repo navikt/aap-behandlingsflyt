@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.ErStudentStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.SkalGjenopptaStudieStatus
 
+// duplisert
 class Søknad(
     val student: SøknadStudentDto,
     val yrkesskade: String,
@@ -19,7 +20,7 @@ class SøknadStudentDto(
     val erStudent: String,
     val kommeTilbake: String? = null
 ) {
-    fun erStudent(): ErStudentStatus {
+    fun erStudent(): ErStudentStatus? {
         return if (erStudent.uppercase() == "JA"){
             ErStudentStatus.JA
         } else if (erStudent.uppercase() == "AVBRUTT") {
@@ -27,7 +28,7 @@ class SøknadStudentDto(
         } else if (erStudent.uppercase() == "NEI") {
             ErStudentStatus.NEI
         } else {
-            ErStudentStatus.IKKE_OPPGITT // bort
+            null
         }
     }
 

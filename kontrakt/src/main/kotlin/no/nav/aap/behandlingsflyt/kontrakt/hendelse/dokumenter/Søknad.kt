@@ -11,12 +11,6 @@ public data class SøknadV0(
     public val oppgitteBarn: OppgitteBarn?
 ) : Søknad
 
-public data class SøknadV1(
-    public val student: SøknadStudentDto,
-    public val yrkesskade: String,
-    public val oppgitteBarn: OppgitteBarn?
-) : Søknad
-
 public data class SøknadStudentDto(
     public val erStudent: String,
     public val kommeTilbake: String? = null
@@ -24,4 +18,8 @@ public data class SøknadStudentDto(
 
 public data class OppgitteBarn(public val identer: Set<Ident>)
 
-public data class Ident(val identifikator: String, val aktivIdent: Boolean)
+public data class Ident(val identifikator: String) {
+    init {
+        require(identifikator.matches("\\d{11}".toRegex())) { "Ugyldig identifikator" }
+    }
+}

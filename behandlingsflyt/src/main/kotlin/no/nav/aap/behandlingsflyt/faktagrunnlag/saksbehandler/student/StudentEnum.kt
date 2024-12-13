@@ -3,8 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student
 enum class ErStudentStatus {
     JA,
     NEI,
-    AVBRUTT,
-    IKKE_OPPGITT
+    AVBRUTT
 }
 
 enum class SkalGjenopptaStudieStatus {

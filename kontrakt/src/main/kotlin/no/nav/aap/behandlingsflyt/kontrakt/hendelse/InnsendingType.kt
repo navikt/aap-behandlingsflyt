@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.kontrakt.hendelse
 public enum class InnsendingType {
     SØKNAD,
     /**
-     * Dette er egentlig en dokument-type, ikke en egen innsending, da denny
+     * Dette er egentlig en dokument-type, ikke en egen innsending, da denne
      * typen opprettes i Kelvin.
      */
     AKTIVITETSKORT,
