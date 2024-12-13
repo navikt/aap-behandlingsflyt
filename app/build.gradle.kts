@@ -3,7 +3,7 @@ import java.io.ByteArrayOutputStream
 
 
 val ktorVersion = "3.0.2"
-val komponenterVersjon = "1.0.83"
+val komponenterVersjon = "1.0.86"
 val junitVersjon = "5.11.3"
 
 plugins {
