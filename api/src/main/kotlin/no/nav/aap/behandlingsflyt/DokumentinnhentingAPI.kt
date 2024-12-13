@@ -32,6 +32,8 @@ import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
+import java.time.LocalDate
+import java.time.Period
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
@@ -59,7 +61,8 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
                         definisjoner = listOf(Definisjon.BESTILL_LEGEERKLÆRING),
                         funnetISteg = behandling.aktivtSteg(),
                         grunn = ÅrsakTilSettPåVent.VENTER_PÅ_MEDISINSKE_OPPLYSNINGER,
-                        bruker = bruker()
+                        bruker = bruker(),
+                        frist = LocalDate.now() + Period.ofWeeks(4),
                     )
                     avklaringsbehovene.validerPlassering(behandling = behandling)
 
