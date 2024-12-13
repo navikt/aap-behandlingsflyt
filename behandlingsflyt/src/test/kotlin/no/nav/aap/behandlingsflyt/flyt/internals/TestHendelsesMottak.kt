@@ -1,15 +1,14 @@
 package no.nav.aap.behandlingsflyt.flyt.internals
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Aktivitetskort
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PliktkortV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.innsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
@@ -61,43 +60,16 @@ class TestHendelsesMottak(private val dataSource: DataSource) {
                     HendelseMottattHåndteringJobbUtfører.nyJobb(
                         sakId = sak.id,
                         dokumentReferanse = referanse,
-                        brevkategori = hendelse.strukturertDokument.brevkategori,
+                        brevkategori = hendelse.strukturertDokument.data.innsendingType(),
                         kanal = Kanal.DIGITAL,
-                        melding = when (hendelse.strukturertDokument.brevkategori) {
-                            InnsendingType.SØKNAD -> (hendelse.strukturertDokument.data as Søknad).let {
-                                val erStudent = it.student
-                                SøknadV0(
-                                    student = if (erStudent == null) null else SøknadStudentDto(
-                                        erStudent.erStudent,
-                                        erStudent.kommeTilbake
-                                    ),
-                                    yrkesskade = it.yrkesskade,
-                                    oppgitteBarn = OppgitteBarn(
-                                        identer = it.oppgitteBarn?.identer?.map {
-                                            no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Ident(
-                                                identifikator = it.identifikator,
-                                            )
-                                        }?.toSet()
-                                            ?: emptySet()
-                                    )
-                                )
-                            }
-
-                            InnsendingType.AKTIVITETSKORT -> TODO()
-                            InnsendingType.PLIKTKORT -> TODO()
-                            InnsendingType.LEGEERKLÆRING -> TODO()
-                            InnsendingType.LEGEERKLÆRING_AVVIST -> TODO()
-                            InnsendingType.DIALOGMELDING -> TODO()
+                        melding = when (hendelse.strukturertDokument.data) {
+                            is Søknad -> hendelse.strukturertDokument.data
+                            is Aktivitetskort -> TODO()
+                            is PliktkortV0 -> TODO()
                         }
                     )
                 )
             }
-        }
-    }
-
-    fun håndtere(key: BehandlingId, hendelse: BehandlingHendelse) {
-        dataSource.transaction { connection ->
-            BehandlingHendelseHåndterer(connection).håndtere(key, hendelse)
         }
     }
 }

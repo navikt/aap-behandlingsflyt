@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Pers
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeModell
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeRegisterGateway
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -58,7 +59,14 @@ class YrkesskadeService private constructor(
         val mottattDokumenter = mottattDokumentRepository.hentDokumenterAvType(id, InnsendingType.SØKNAD)
 
         // TODO! Fix denne: bedre typehåndtering på strukturerteData
-        if (mottattDokumenter.any { dokument -> dokument.strukturerteData<SøknadV0>()?.data?.yrkesskade == "JA" }) {
+        if (mottattDokumenter.any { dokument ->
+                val data = dokument.strukturerteData<Søknad>()?.data
+                val yrkesskadeString = when (data) {
+                    is SøknadV0 -> data.yrkesskade
+                    null -> error("Søknad kan ikke være null")
+                }
+                yrkesskadeString == "JA"
+            }) {
             return YrkesskadeModell(
                 kommunenr = "0301",
                 saksblokk = "1",

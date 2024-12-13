@@ -69,6 +69,11 @@ public class Innsending(
 )
 public sealed interface Melding
 
+public fun Melding.innsendingType(): InnsendingType = when (this) {
+    is Aktivitetskort -> InnsendingType.AKTIVITETSKORT
+    is Pliktkort -> InnsendingType.PLIKTKORT
+    is Søknad -> InnsendingType.SØKNAD
+}
 
 /**
  * Eksempel på hvordan håndtere meldingtyper.

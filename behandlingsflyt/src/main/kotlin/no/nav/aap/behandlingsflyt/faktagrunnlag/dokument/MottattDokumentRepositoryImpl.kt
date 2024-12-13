@@ -83,7 +83,7 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
             type = brevkategori,
             kanal = row.getEnum("kanal"),
             status = row.getEnum("status"),
-            strukturertDokument = LazyStrukturertDokument(referanse, brevkategori, connection),
+            strukturertDokument = LazyStrukturertDokument(referanse, connection),
         )
     }
 

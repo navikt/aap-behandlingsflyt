@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.ErStudentStatus
 
 // duplisert
 @Deprecated(
@@ -23,17 +22,4 @@ class Søknad(
 class SøknadStudentDto(
     val erStudent: String,
     val kommeTilbake: String? = null
-) {
-    fun erStudent(): ErStudentStatus? {
-        return if (erStudent.uppercase() == "JA") {
-            ErStudentStatus.JA
-        } else if (erStudent.uppercase() == "AVBRUTT") {
-            ErStudentStatus.AVBRUTT
-        } else if (erStudent.uppercase() == "NEI") {
-            ErStudentStatus.NEI
-        } else {
-            null
-        }
-    }
-
-}
+)

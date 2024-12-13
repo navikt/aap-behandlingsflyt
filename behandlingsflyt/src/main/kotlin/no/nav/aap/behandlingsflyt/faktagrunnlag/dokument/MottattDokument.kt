@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
@@ -17,25 +18,23 @@ class MottattDokument(
     val type: InnsendingType,
     val kanal: Kanal,
     val status: Status = Status.MOTTATT,
-    private val strukturertDokument: StrukturerteData?
+    val strukturertDokument: StrukturerteData?
 ) {
 
-    fun <T> strukturerteData(): StrukturertDokument<out T>? {
+    inline fun <reified T : Melding> strukturerteData(): StrukturertDokument<T>? {
         if (strukturertDokument == null) {
             return null
         }
         when (strukturertDokument) {
             is LazyStrukturertDokument -> {
-                val data = strukturertDokument.hent<T>()
-                if (data != null) {
-                    return StrukturertDokument(data, brevkategori = strukturertDokument.brevkategori)
-                }
-                return null
+                val data = strukturertDokument.hentReified<T>()
+
+                return StrukturertDokument(data)
             }
 
             is StrukturertDokument<*> -> {
                 @Suppress("UNCHECKED_CAST")
-                return strukturertDokument as StrukturertDokument<T>
+                return strukturertDokument as StrukturertDokument<*>? as StrukturertDokument<T>?
             }
 
             else -> {
@@ -53,18 +52,19 @@ class MottattDokument(
     }
 
     private fun data(): String? {
-        return if (strukturertDokument is LazyStrukturertDokument) {
-            val data = strukturertDokument.hent<Any>()
-            if (data != null) {
-                DefaultJsonMapper.toJson(data)
-            } else {
-                null
+        return when (strukturertDokument) {
+            is LazyStrukturertDokument -> {
+                val data = strukturertDokument.hent()
+                if (data != null) {
+                    DefaultJsonMapper.toJson(data)
+                } else {
+                    null
+                }
             }
-        } else if (strukturertDokument is UnparsedStrukturertDokument) {
-            strukturertDokument.data
-        } else {
-            @Suppress("UNCHECKED_CAST")
-            DefaultJsonMapper.toJson((strukturertDokument as StrukturertDokument<Any>).data)
+
+            is StrukturertDokument<*> -> DefaultJsonMapper.toJson(strukturertDokument.data)
+            is UnparsedStrukturertDokument -> strukturertDokument.data
+            null -> null
         }
     }
 }

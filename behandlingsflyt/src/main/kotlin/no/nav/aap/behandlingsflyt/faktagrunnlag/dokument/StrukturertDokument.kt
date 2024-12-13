@@ -1,5 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument
 
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 
-class StrukturertDokument<T>(val data: T, val brevkategori: InnsendingType) : StrukturerteData
+class StrukturertDokument<M : Melding>(val data: M) : StrukturerteData
