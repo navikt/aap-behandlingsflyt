@@ -36,6 +36,18 @@ class Sykdomsvurdering(
             bidiagnoser = bidiagnoser
         )
     }
+
+    private fun erAndelNedsattNok(): Boolean {
+        return erNedsettelseIArbeidsevneMerEnnHalvparten == true || erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true
+    }
+
+    fun erOppfylt(): Boolean {
+        return erOppfyltSettBortIfraVissVarighet() && erNedsettelseIArbeidsevneAvEnVissVarighet == true
+    }
+
+    fun erOppfyltSettBortIfraVissVarighet(): Boolean {
+        return harSkadeSykdomEllerLyte && erArbeidsevnenNedsatt == true && erSkadeSykdomEllerLyteVesentligdel == true && erAndelNedsattNok()
+    }
 }
 
 class Yrkesskadevurdering(

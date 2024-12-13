@@ -84,7 +84,7 @@ class VurderBistandsbehovSteg private constructor(
         sykdomsvurdering: Sykdomsvurdering?
     ): Boolean {
         return vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET)
-            .harPerioderSomErOppfylt() && sykdomsvurdering?.erNedsettelseIArbeidsevneAvEnVissVarighet != false
+            .harPerioderSomErOppfylt() && sykdomsvurdering?.erOppfylt() != false
     }
 
 

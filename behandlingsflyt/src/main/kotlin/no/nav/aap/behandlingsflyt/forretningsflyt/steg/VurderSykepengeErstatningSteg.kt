@@ -46,7 +46,7 @@ class VurderSykepengeErstatningSteg private constructor(
                 val vurderingsdato = sak.rettighetsperiode.fom
                 val faktagrunnlag = SykepengerErstatningFaktagrunnlag(
                     vurderingsdato,
-                    vurderingsdato.plusMonths(6),
+                    sak.rettighetsperiode.tom, // TODO: Trenger å finne en god løsning for hvordan vi setter slutt på dette vilkåret ved tom kvote
                     grunnlag.vurdering()!!
                 )
                 SykepengerErstatningVilkår(vilkårsresultat).vurder(faktagrunnlag)

@@ -55,7 +55,7 @@ class VurderYrkesskadeSteg private constructor(
         if (yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() != true) {
             return false
         }
-        if (sykdomGrunnlag?.sykdomsvurdering?.erNedsettelseIArbeidsevneMerEnnHalvparten == false && sykdomGrunnlag.sykdomsvurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == false) {
+        if (sykdomGrunnlag?.sykdomsvurdering?.erOppfyltSettBortIfraVissVarighet() != true) {
             return false
         }
 
