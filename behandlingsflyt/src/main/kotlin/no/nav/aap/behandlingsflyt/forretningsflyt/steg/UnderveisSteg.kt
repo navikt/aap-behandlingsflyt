@@ -30,7 +30,7 @@ class UnderveisSteg(private val underveisService: UnderveisService) : Behandling
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val underveisTidslinje = underveisService.vurder(kontekst.behandlingId)
 
-        log.info("Underveis tidslinje $underveisTidslinje")
+        log.debug("Underveis tidslinje {}", underveisTidslinje)
 
         return Fullført
     }
