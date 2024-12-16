@@ -14,16 +14,17 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag1
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.Søknad
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.kontrakt.søknad.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.medlemskap.flate.MedlemskapGrunnlagDto
-import no.nav.aap.behandlingsflyt.flyt.SøknadSendDto
 import no.nav.aap.behandlingsflyt.flyt.flate.VilkårDTO
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
@@ -57,6 +58,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.OnBeha
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
+import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.intellij.lang.annotations.Language
@@ -308,9 +310,19 @@ class ApiTest {
         requireNotNull(responseSak)
 
         client.post<_, Unit>(
-            URI.create("http://localhost:$port/").resolve("api/soknad/send"),
+            URI.create("http://localhost:$port/").resolve("api/hendelse/send"),
             PostRequest(
-                body = SøknadSendDto(responseSak.saksnummer, "123", Søknad(SøknadStudentDto("NEI"), "NEI", null)),
+                body = Innsending(
+                    saksnummer = Saksnummer(responseSak.saksnummer),
+                    referanse = InnsendingReferanse(JournalpostId("123456789")),
+                    type = InnsendingType.SØKNAD,// Søknad(SøknadStudentDto("NEI"), "NEI", null),
+                    mottattTidspunkt = LocalDateTime.now(),
+                    melding = SøknadV0(
+                        student = null,
+                        yrkesskade = "NEI",
+                        oppgitteBarn = null
+                    )
+                ),
                 currentToken = getToken()
             )
         )
@@ -427,10 +439,10 @@ class ApiTest {
             )
 
         try {
-            val writer = BufferedWriter(FileWriter("../openapi.json"));
-            writer.write(openApiDoc);
+            val writer = BufferedWriter(FileWriter("../openapi.json"))
+            writer.write(openApiDoc)
 
-            writer.close();
+            writer.close()
         } catch (_: Exception) {
             fail()
         }

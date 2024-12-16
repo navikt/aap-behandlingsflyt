@@ -47,7 +47,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.sykdo
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.sykepengerGrunnlagApi
 import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
-import no.nav.aap.behandlingsflyt.flyt.søknadApi
 import no.nav.aap.behandlingsflyt.hendelse.mottattHendelseApi
 import no.nav.aap.behandlingsflyt.integrasjon.barn.PdlBarnGateway
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
@@ -171,7 +170,6 @@ internal fun Application.server(dbConfig: DbConfig) {
             apiRouting {
                 configApi()
                 saksApi(dataSource)
-                søknadApi(dataSource)
                 behandlingApi(dataSource)
                 flytApi(dataSource)
                 fatteVedtakGrunnlagApi(dataSource)
