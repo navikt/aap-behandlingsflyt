@@ -380,7 +380,7 @@ class BeregningsgrunnlagRepositoryImpl(private val connection: DBConnection) : B
                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
         ) {
             setParams {
-                setLong(1, grunnlagId)
+                setLong(1, beregningsId)
                 setBigDecimal(2, beregningsgrunnlag.grunnlaget().verdi())
                 setInt(3, beregningsgrunnlag.terskelverdiForYrkesskade().prosentverdi())
                 setInt(4, beregningsgrunnlag.andelYrkesskade().prosentverdi())
