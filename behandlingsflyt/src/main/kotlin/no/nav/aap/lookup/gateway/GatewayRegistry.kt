@@ -31,6 +31,7 @@ object GatewayRegistry {
             if (removedSomething) {
                 logger.warn("Gateway '{}' var allerede registrert", repository)
             }
+            @Suppress("UNCHECKED_CAST")
             registry.add(repository as KClass<Gateway>)
         }
         return this

@@ -67,12 +67,13 @@ class SamordningSteg(
         override fun konstruer(connection: DBConnection): BehandlingSteg {
             val repositoryProvider = RepositoryProvider(connection)
             val avklaringsbehovRepository = repositoryProvider.provide(AvklaringsbehovRepository::class)
+            val samordningRepository = repositoryProvider.provide(SamordningRepository::class)
             return SamordningSteg(
                 SamordningService(
                     SamordningYtelseVurderingRepository(connection),
                     UnderveisRepository(connection)
                 ),
-                SamordningRepository(connection),
+                samordningRepository,
                 avklaringsbehovRepository
             )
         }

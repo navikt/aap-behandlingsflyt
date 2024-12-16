@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortRepository
@@ -45,7 +44,6 @@ class GrunnlagKopierer(connection: DBConnection) {
     private val institusjonsoppholdRepository = InstitusjonsoppholdRepository(connection)
     private val inntektGrunnlagRepository = InntektGrunnlagRepository(connection)
     private val samordningYtelseVurderingRepository = SamordningYtelseVurderingRepository(connection)
-    private val samordningRepository = SamordningRepository(connection)
 
     fun overfør(fraBehandlingId: BehandlingId, tilBehandlingId: BehandlingId) {
         require(fraBehandlingId != tilBehandlingId)
@@ -68,6 +66,5 @@ class GrunnlagKopierer(connection: DBConnection) {
         institusjonsoppholdRepository.kopier(fraBehandlingId, tilBehandlingId)
         inntektGrunnlagRepository.kopier(fraBehandlingId, tilBehandlingId)
         samordningYtelseVurderingRepository.kopier(fraBehandlingId, tilBehandlingId)
-        samordningRepository.kopier(fraBehandlingId, tilBehandlingId)
     }
 }

@@ -4,6 +4,9 @@ import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 
+/**
+ * @param grunnlag Beregningsgrunnlag som er lagt til grunn før beregning av dagsats og før gradering er beregnet.
+ */
 class Tilkjent(
     val dagsats: Beløp,
     val gradering: Prosent,
