@@ -61,7 +61,8 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
                         definisjoner = listOf(Definisjon.BESTILL_LEGEERKLÆRING),
                         funnetISteg = behandling.aktivtSteg(),
                         grunn = ÅrsakTilSettPåVent.VENTER_PÅ_MEDISINSKE_OPPLYSNINGER,
-                        bruker = bruker()
+                        bruker = bruker(),
+                        frist = LocalDate.now() + Period.ofWeeks(4),
                     )
                     avklaringsbehovene.validerPlassering(behandling = behandling)
 
