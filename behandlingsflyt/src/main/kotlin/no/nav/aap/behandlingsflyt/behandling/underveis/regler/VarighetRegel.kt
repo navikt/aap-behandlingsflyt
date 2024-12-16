@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plusHverdager
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -25,16 +24,9 @@ class VarighetRegel : UnderveisRegel {
     private val log = LoggerFactory.getLogger(VarighetRegel::class.java)
 
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
-        val sykdomVarighetTidslinje = sykdomstidslinje(input.kvoter, resultat)
+        val telleverk = Telleverk(input.kvoter)
 
-        return resultat.leggTilVurderinger(sykdomVarighetTidslinje, Vurdering::leggTilVarighetVurdering)
-    }
-
-    // ønsker vi kvote-info ved avslag i helgen?
-    private fun sykdomstidslinje(kvoter: Kvoter, resultat: Tidslinje<Vurdering>): Tidslinje<VarighetVurdering> {
-        val telleverk = Telleverk(kvoter)
-
-        return resultat.flatMap {
+        val varighetTidslinje = resultat.flatMap {
             val relevanteKvoter = relevanteKvoter(it.verdi)
             when {
                 relevanteKvoter.isNotEmpty() ->
@@ -44,9 +36,11 @@ class VarighetRegel : UnderveisRegel {
                         telleverk = telleverk,
                     )
 
-                else -> Tidslinje()
+                else -> Tidslinje(it.periode, Oppfylt(brukerAvKvoter = emptySet()))
             }
         }
+
+        return resultat.leggTilVurderinger(varighetTidslinje, Vurdering::leggTilVarighetVurdering)
     }
 
     private fun relevanteKvoter(vurdering: Vurdering): Set<Kvote> {
@@ -70,7 +64,7 @@ class VarighetRegel : UnderveisRegel {
             telleverk.øk(relevanteKvoter, periode)
             return Tidslinje(
                 periode,
-                Oppfylt
+                Oppfylt(relevanteKvoter)
             )
         }
 
@@ -79,10 +73,9 @@ class VarighetRegel : UnderveisRegel {
         if (telleverk.erKvoterStanset(relevanteKvoter)) {
             return Tidslinje(
                 periode,
-                Avslag(kvoterSomBlirStanset.map { it.avslagsårsak }.toSet())
+                Avslag(relevanteKvoter, kvoterSomBlirStanset.map { it.avslagsårsak }.toSet())
             )
-        }
-        else if (kvoterStansesIPeriode) {
+        } else if (kvoterStansesIPeriode) {
             telleverk.øk(relevanteKvoter, dagerTilStans)
             telleverk.markereKvoterOversteget(kvoterSomBlirStanset)
 
@@ -94,11 +87,11 @@ class VarighetRegel : UnderveisRegel {
                     null
                 else Segment(
                     Periode(periode.fom, stansDato.minusDays(1)),
-                    Oppfylt
+                    Oppfylt(relevanteKvoter)
                 ),
                 Segment(
                     Periode(stansDato, periode.tom),
-                    Avslag(stansÅrsaker)
+                    Avslag(relevanteKvoter, stansÅrsaker)
                 )
             ).let { Tidslinje(it) }
         } else {

@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
@@ -305,7 +306,8 @@ class BeregnTilkjentYtelseServiceTest {
                         fastsattArbeidsevne = Prosent.`50_PROSENT`,
                         gradering = Prosent.`0_PROSENT`
                     ),
-                    trekk = Dagsatser(0)
+                    trekk = Dagsatser(0),
+                    kvoterBrukt = setOf(Kvote.ORDINÆR),
                 )
             )
         )

@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -69,7 +70,8 @@ class UnderveisRepository(private val connection: DBConnection) {
             it.getEnumOrNull("avslagsarsak"),
             Prosent(it.getInt("grenseverdi")),
             gradering,
-            Dagsatser(it.getInt("trekk_dagsatser"))
+            Dagsatser(it.getInt("trekk_dagsatser")),
+            it.getArray("bruker_av_kvoter", String::class).map { Kvote.valueOf(it) }.toSet(),
         )
     }
 
@@ -102,7 +104,7 @@ class UnderveisRepository(private val connection: DBConnection) {
         val perioderId = connection.executeReturnKey(pliktkorteneQuery)
 
         val query = """
-            INSERT INTO UNDERVEIS_PERIODE (perioder_id, periode, utfall, avslagsarsak, grenseverdi, timer_arbeid, gradering, meldeperiode, trekk_dagsatser, andel_arbeidsevne) VALUES (?, ?::daterange, ?, ?, ?, ?, ?, ?::daterange, ?, ?)
+            INSERT INTO UNDERVEIS_PERIODE (perioder_id, periode, utfall, avslagsarsak, grenseverdi, timer_arbeid, gradering, meldeperiode, trekk_dagsatser, andel_arbeidsevne, bruker_av_kvoter) VALUES (?, ?::daterange, ?, ?, ?, ?, ?, ?::daterange, ?, ?, ?)
             """.trimIndent()
         connection.executeBatch(query, underveisperioder) {
             setParams { periode ->
@@ -116,8 +118,10 @@ class UnderveisRepository(private val connection: DBConnection) {
                 setPeriode(8, periode.meldePeriode)
                 setInt(9, periode.trekk.antall)
                 setInt(10, periode.gradering.fastsattArbeidsevne.prosentverdi())
+                setArray(11, periode.kvoterBrukt.map { it.name })
             }
         }
+
 
         val sporingQuery = """
             INSERT INTO UNDERVEIS_SPORING (FAKTAGRUNNLAG, VERSJON) VALUES (?, ?)

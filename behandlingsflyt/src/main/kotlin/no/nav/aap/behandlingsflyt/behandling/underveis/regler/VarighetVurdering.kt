@@ -4,16 +4,20 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetVurdering.
 
 sealed interface VarighetVurdering {
     enum class Avslagsårsak {
-        STANDARDKVOTE_BRUKT_OPP,
+        ORDINÆRKVOTE_BRUKT_OPP,
         STUDENTKVOTE_BRUKT_OPP,
         ETABLERINGSFASEKVOTE_BRUKT_OPP,
         UTVIKLINGSFASEKVOTE_BRUKT_OPP,
         SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP,
     }
+    val brukerAvKvoter: Set<Kvote>
 }
 
-data object Oppfylt: VarighetVurdering
+data class Oppfylt(
+    override val brukerAvKvoter: Set<Kvote>,
+): VarighetVurdering
 
 data class Avslag(
-    val avslagsårsaker: Set<Avslagsårsak>
+    override val brukerAvKvoter: Set<Kvote>,
+    val avslagsårsaker: Set<Avslagsårsak>,
 ) : VarighetVurdering

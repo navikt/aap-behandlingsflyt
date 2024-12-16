@@ -3,13 +3,13 @@ package no.nav.aap.behandlingsflyt.behandling.underveis
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
 
 class Kvoter(
-    val standardkvote: Hverdager,
+    val ordinærkvote: Hverdager,
     val studentkvote: Hverdager,
     val sykepengeerstatningkvote: Hverdager
 ) {
     companion object {
-        fun create(standardkvote: Int, studentkvote: Int, sykepengeerstatningkvote: Int) = Kvoter(
-            standardkvote = Hverdager(standardkvote),
+        fun create(ordinærkvote: Int, studentkvote: Int, sykepengeerstatningkvote: Int) = Kvoter(
+            ordinærkvote = Hverdager(ordinærkvote),
             studentkvote = Hverdager(studentkvote),
             sykepengeerstatningkvote = Hverdager(sykepengeerstatningkvote)
         )

@@ -48,14 +48,14 @@ value class Hverdager(private val hverdager: Int) : Comparable<Hverdager> {
 }
 
 enum class Kvote(val avslagsårsak: VarighetVurdering.Avslagsårsak, val tellerMotKvote: (Vurdering) -> Boolean) {
-    STANDARD(VarighetVurdering.Avslagsårsak.STANDARDKVOTE_BRUKT_OPP, ::skalTelleMotStandardKvote),
+    ORDINÆR(VarighetVurdering.Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP, ::skalTelleMotOrdinærKvote),
     STUDENT(VarighetVurdering.Avslagsårsak.STUDENTKVOTE_BRUKT_OPP, ::skalTelleMotStudentKvote),
     ETABLERINGSFASE(VarighetVurdering.Avslagsårsak.ETABLERINGSFASEKVOTE_BRUKT_OPP, { false }),
     UTVIKLINGSFASE(VarighetVurdering.Avslagsårsak.UTVIKLINGSFASEKVOTE_BRUKT_OPP, { false }),
     SYKEPENGEERSTATNING(VarighetVurdering.Avslagsårsak.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP, ::skalTelleMotSykepengeKvote);
 }
 
-private fun skalTelleMotStandardKvote(vurdering: Vurdering): Boolean {
+private fun skalTelleMotOrdinærKvote(vurdering: Vurdering): Boolean {
     return vurdering.harRett() &&
             (vurdering.fårAapEtter(Vilkårtype.SYKDOMSVILKÅRET, null) ||
                     vurdering.fårAapEtter(
@@ -83,7 +83,7 @@ data class KvoteTilstand(
     private var hverdagerBrukt: Hverdager = Hverdager(0),
 ) {
     var erKvoteOversteget: Boolean = false
-        set(erKvoteOversteget: Boolean) {
+        set(erKvoteOversteget) {
             require(erKvoteOversteget)
             field = erKvoteOversteget
         }
@@ -97,16 +97,16 @@ data class KvoteTilstand(
 }
 
 class Telleverk private constructor(
-    private val standardkvote: KvoteTilstand,
+    private val ordinærkvote: KvoteTilstand,
     private val studentkvote: KvoteTilstand,
     private val utviklingsfasekvote: KvoteTilstand,
     private val etableringsfasekvote: KvoteTilstand,
     private val sykepengeerstatningkvote: KvoteTilstand
 ) {
     constructor(kvoter: Kvoter) : this(
-        standardkvote = KvoteTilstand(
-            kvote = Kvote.STANDARD,
-            hverdagerTilgjengelig = kvoter.standardkvote,
+        ordinærkvote = KvoteTilstand(
+            kvote = Kvote.ORDINÆR,
+            hverdagerTilgjengelig = kvoter.ordinærkvote,
         ),
         studentkvote = KvoteTilstand(
             kvote = Kvote.STUDENT,
@@ -128,7 +128,7 @@ class Telleverk private constructor(
 
     private fun <T> map(relevanteKvoter: Set<Kvote>, action: (KvoteTilstand) -> T): List<T> {
         return listOfNotNull(
-            if (Kvote.STANDARD in relevanteKvoter) action(standardkvote) else null,
+            if (Kvote.ORDINÆR in relevanteKvoter) action(ordinærkvote) else null,
             if (Kvote.STUDENT in relevanteKvoter) action(studentkvote) else null,
             if (Kvote.ETABLERINGSFASE in relevanteKvoter) action(etableringsfasekvote) else null,
             if (Kvote.UTVIKLINGSFASE in relevanteKvoter) action(utviklingsfasekvote) else null,
