@@ -212,6 +212,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
                     if (avklaringsbehovene.erSattPåVent()) {
                         val avklaringsbehov = ventepunkter.first()
                         Venteinformasjon(
+                            avklaringsbehov.definisjon,
                             avklaringsbehov.frist(),
                             avklaringsbehov.begrunnelse(),
                             avklaringsbehov.grunn()
