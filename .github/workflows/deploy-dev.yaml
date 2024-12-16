@@ -30,7 +30,7 @@ jobs:
         with:
             gradle-version: wrapper
       - name: Bygg & test
-        run: gradle test buildFatJar --continue --no-daemon --configuration-cache --stacktrace --info
+        run: gradle test buildFatJar --continue --configuration-cache --stacktrace --info
 
       - uses: dorny/test-reporter@v1.9.1
         if: success() || failure()
