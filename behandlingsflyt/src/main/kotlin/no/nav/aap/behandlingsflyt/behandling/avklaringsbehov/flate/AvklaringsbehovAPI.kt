@@ -5,6 +5,7 @@ import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovHendelseHåndterer
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
@@ -46,20 +47,27 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource) {
                                 BehandlingReferanse(request.referanse), request.behandlingVersjon
                             )
 
-                            AvklaringsbehovHendelseHåndterer(
+                            val hendelseHåndterer = (AvklaringsbehovHendelseHåndterer(
                                 AvklaringsbehovOrkestrator(
                                     connection, BehandlingHendelseServiceImpl(
                                         flytJobbRepository, SakService(sakRepository)
                                     )
                                 ), avklaringsbehovRepository, behandlingRepository
-                            ).håndtere(
-                                key = lås.behandlingSkrivelås.id, hendelse = LøsAvklaringsbehovHendelse(
-                                    request.behov,
-                                    request.ingenEndringIGruppe ?: false,
-                                    request.behandlingVersjon,
-                                    bruker()
+                            ))
+                            val eksisterendeAvklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(lås.behandlingSkrivelås.id).hentÅpneVentebehov().map { it.definisjon }
+                            val avklaringerSomKanTasAvVent = request.behov.filter { eksisterendeAvklaringsbehov.contains(it.definisjon()) }
+
+                            avklaringerSomKanTasAvVent.forEach{
+                                hendelseHåndterer.håndtere(
+                                    key = lås.behandlingSkrivelås.id, hendelse = LøsAvklaringsbehovHendelse(
+                                        it,
+                                        request.ingenEndringIGruppe ?: false,
+                                        request.behandlingVersjon,
+                                        bruker()
+                                    )
                                 )
-                            )
+                            }
+
                             taSkriveLåsRepository.verifiserSkrivelås(lås)
                         }
                     }
