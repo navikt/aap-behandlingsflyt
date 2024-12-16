@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.UnparsedStrukturertDokument
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterMottattDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
@@ -121,6 +121,7 @@ class HendelseMottattHåndteringJobbUtfører(
             val låsRepository = repositoryProvider.provide(TaSkriveLåsRepository::class)
             val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
             val sakRepository = repositoryProvider.provide(SakRepository::class)
+            val mottattDokumentRepository = repositoryProvider.provide(MottattDokumentRepository::class)
             return HendelseMottattHåndteringJobbUtfører(
                 låsRepository,
                 HåndterMottattDokumentService(
@@ -133,7 +134,7 @@ class HendelseMottattHåndteringJobbUtfører(
                     låsRepository,
                     ProsesserBehandlingService(FlytJobbRepository(connection))
                 ),
-                MottaDokumentService(MottattDokumentRepositoryImpl(connection))
+                MottaDokumentService(mottattDokumentRepository)
             )
         }
 

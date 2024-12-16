@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeModell
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeRegisterGateway
@@ -26,7 +26,7 @@ class YrkesskadeService private constructor(
     private val yrkesskadeRepository: YrkesskadeRepository,
     private val personopplysningRepository: PersonopplysningRepository,
     private val yrkesskadeRegisterGateway: YrkesskadeRegisterGateway,
-    private val mottattDokumentRepository: MottattDokumentRepositoryImpl
+    private val mottattDokumentRepository: MottattDokumentRepository
 ) : Informasjonskrav {
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
@@ -100,12 +100,13 @@ class YrkesskadeService private constructor(
             val repositoryProvider = RepositoryProvider(connection)
             val sakRepository = repositoryProvider.provide(SakRepository::class)
             val personopplysningRepository = repositoryProvider.provide(PersonopplysningRepository::class)
+            val mottattDokumentRepository = repositoryProvider.provide(MottattDokumentRepository::class)
             return YrkesskadeService(
                 SakService(sakRepository),
                 YrkesskadeRepository(connection),
                 personopplysningRepository,
                 YrkesskadeRegisterGateway,
-                MottattDokumentRepositoryImpl(connection),
+                mottattDokumentRepository,
             )
         }
     }

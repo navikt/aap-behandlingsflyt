@@ -5,10 +5,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 class LegeerklæringService private constructor(
     private val mottaDokumentService: MottaDokumentService
@@ -19,11 +20,11 @@ class LegeerklæringService private constructor(
             // Skal alltid innhentes
             return true
         }
+
         override fun konstruer(connection: DBConnection): LegeerklæringService {
+            val mottattDokumentRepository = RepositoryProvider(connection).provide(MottattDokumentRepository::class)
             return LegeerklæringService(
-                MottaDokumentService(
-                    MottattDokumentRepositoryImpl(connection)
-                )
+                MottaDokumentService(mottattDokumentRepository)
             )
         }
     }

@@ -8,8 +8,16 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
+import no.nav.aap.lookup.repository.Factory
 
 class MottattDokumentRepositoryImpl(private val connection: DBConnection) : MottattDokumentRepository {
+
+    companion object : Factory<MottattDokumentRepositoryImpl> {
+        override fun konstruer(connection: DBConnection): MottattDokumentRepositoryImpl {
+            return MottattDokumentRepositoryImpl(connection)
+        }
+    }
+
     override fun lagre(mottattDokument: MottattDokument) {
         val query = """
             INSERT INTO MOTTATT_DOKUMENT (sak_id, MOTTATT_TID, type, status, strukturert_dokument, referanse,

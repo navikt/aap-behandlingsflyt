@@ -1,11 +1,11 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl

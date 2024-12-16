@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
@@ -36,7 +35,6 @@ class GrunnlagKopierer(connection: DBConnection) {
     private val sykepengerErstatningRepository = SykepengerErstatningRepository(connection)
     private val arbeidsevneRepository = ArbeidsevneRepository(connection)
     private val uføreRepository = UføreRepository(connection)
-    private val pliktkortRepository = PliktkortRepository(connection)
     private val underveisRepository = UnderveisRepository(connection)
     private val barnRepository = BarnRepository(connection)
     private val barnetilleggRepository = BarnetilleggRepository(connection)
@@ -58,7 +56,6 @@ class GrunnlagKopierer(connection: DBConnection) {
         sykepengerErstatningRepository.kopier(fraBehandlingId, tilBehandlingId)
         arbeidsevneRepository.kopier(fraBehandlingId, tilBehandlingId)
         uføreRepository.kopier(fraBehandlingId, tilBehandlingId)
-        pliktkortRepository.kopier(fraBehandlingId, tilBehandlingId)
         underveisRepository.kopier(fraBehandlingId, tilBehandlingId)
         barnRepository.kopier(fraBehandlingId, tilBehandlingId)
         barnetilleggRepository.kopier(fraBehandlingId, tilBehandlingId)

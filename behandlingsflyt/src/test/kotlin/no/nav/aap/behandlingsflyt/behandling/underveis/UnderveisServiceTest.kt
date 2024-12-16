@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepositoryImpl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortRepository
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.dokument.arbeid.PliktkortRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
@@ -41,7 +41,7 @@ class UnderveisServiceTest {
                         BehandlingRepositoryImpl(connection)
                     ),
                     VilkårsresultatRepositoryImpl(connection),
-                    PliktkortRepository(connection),
+                    PliktkortRepositoryImpl(connection),
                     UnderveisRepository(connection),
                     AktivitetspliktRepositoryImpl(connection),
                     EtAnnetStedUtlederService(

@@ -36,7 +36,9 @@ import no.nav.aap.behandlingsflyt.exception.FlytOperasjonException
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.flate.underveisVurderingerAPI
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.dokument.arbeid.PliktkortRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.flate.arbeidsevneGrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.flate.beregningVurderingAPI
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.bistandsgrunnlagApi
@@ -203,7 +205,7 @@ internal fun Application.server(dbConfig: DbConfig) {
 
 }
 
-private fun Application.registerGateways() {
+private fun registerGateways() {
     GatewayRegistry.register<PdlBarnGateway>()
         .register<PdlIdentGateway>()
         .register<PdlPersoninfoBulkGateway>()
@@ -225,6 +227,8 @@ private fun registerRepositories() {
         .register<AktivitetspliktRepositoryImpl>()
         .register<BrevbestillingRepositoryImpl>()
         .register<SamordningRepositoryImpl>()
+        .register<MottattDokumentRepositoryImpl>()
+        .register<PliktkortRepositoryImpl>()
         .status()
 }
 

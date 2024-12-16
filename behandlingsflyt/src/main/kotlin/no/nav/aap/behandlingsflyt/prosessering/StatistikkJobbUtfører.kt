@@ -9,7 +9,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagY
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
@@ -280,6 +279,7 @@ class StatistikkJobbUtfører(
             val pipRepository = repositoryProvider.provide(PipRepository::class)
             val tilkjentYtelseRepository = repositoryProvider.provide(TilkjentYtelseRepository::class)
             val beregningsgrunnlagRepository = repositoryProvider.provide(BeregningsgrunnlagRepository::class)
+            val mottattDokumentRepository = repositoryProvider.provide(MottattDokumentRepository::class)
             val sakService = SakService(sakRepository)
 
             return StatistikkJobbUtfører(
@@ -290,7 +290,7 @@ class StatistikkJobbUtfører(
                 tilkjentYtelseRepository,
                 beregningsgrunnlagRepository,
                 pipRepository = pipRepository,
-                dokumentRepository = MottattDokumentRepositoryImpl(connection)
+                dokumentRepository = mottattDokumentRepository
             )
         }
 

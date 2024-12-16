@@ -6,8 +6,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.lookup.repository.Repository
 
-interface MottattDokumentRepository {
+interface MottattDokumentRepository : Repository {
     fun lagre(mottattDokument: MottattDokument)
     fun oppdaterStatus(
         dokumentReferanse: InnsendingReferanse,

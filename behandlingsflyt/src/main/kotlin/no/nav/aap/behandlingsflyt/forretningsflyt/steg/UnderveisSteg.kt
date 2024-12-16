@@ -48,11 +48,12 @@ class UnderveisSteg(private val underveisService: UnderveisService) : Behandling
                     behandlingRepository
                 )
             val aktivitetspliktRepository = repositoryProvider.provide(AktivitetspliktRepository::class)
+            val plikortkortRepository = repositoryProvider.provide(PliktkortRepository::class)
             return UnderveisSteg(
                 UnderveisService(
                     behandlingService = behandlingService,
                     vilkårsresultatRepository = vilkårsresultatRepository,
-                    pliktkortRepository = PliktkortRepository(connection),
+                    pliktkortRepository = plikortkortRepository,
                     underveisRepository = UnderveisRepository(connection),
                     aktivitetspliktRepository = aktivitetspliktRepository,
                     etAnnetStedUtlederService = EtAnnetStedUtlederService(

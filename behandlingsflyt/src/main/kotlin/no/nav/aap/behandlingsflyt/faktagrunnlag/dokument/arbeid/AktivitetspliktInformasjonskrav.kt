@@ -5,10 +5,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 class AktivitetspliktInformasjonskrav (
     private val mottaDokumentService: MottaDokumentService,
@@ -21,8 +22,10 @@ class AktivitetspliktInformasjonskrav (
         }
 
         override fun konstruer(connection: DBConnection): AktivitetspliktInformasjonskrav {
+            val mottattDokumentRepository = RepositoryProvider(connection).provide(MottattDokumentRepository::class)
+
             return AktivitetspliktInformasjonskrav(
-                MottaDokumentService(MottattDokumentRepositoryImpl(connection)),
+                MottaDokumentService(mottattDokumentRepository),
                 AktivitetspliktRepositoryImpl(connection)
             )
         }

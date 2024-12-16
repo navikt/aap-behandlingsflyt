@@ -29,8 +29,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagY
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.dokument.arbeid.PliktkortRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurdering
@@ -146,6 +148,8 @@ class FlytOrkestratorTest {
             .register<AktivitetspliktRepositoryImpl>()
             .register<BrevbestillingRepositoryImpl>()
             .register<SamordningRepositoryImpl>()
+            .register<MottattDokumentRepositoryImpl>()
+            .register<PliktkortRepositoryImpl>()
             .status()
         GatewayRegistry.register<PdlBarnGateway>()
             .register<PdlIdentGateway>()
