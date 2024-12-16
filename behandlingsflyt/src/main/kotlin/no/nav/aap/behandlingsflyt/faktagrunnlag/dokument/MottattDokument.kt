@@ -34,7 +34,7 @@ class MottattDokument(
 
             is StrukturertDokument<*> -> {
                 @Suppress("UNCHECKED_CAST")
-                return strukturertDokument as StrukturertDokument<*>? as StrukturertDokument<T>?
+                return strukturertDokument as StrukturertDokument<T>?
             }
 
             else -> {

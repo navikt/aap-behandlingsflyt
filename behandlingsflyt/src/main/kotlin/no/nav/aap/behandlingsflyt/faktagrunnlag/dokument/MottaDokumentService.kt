@@ -46,11 +46,12 @@ class MottaDokumentService(
             mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, InnsendingType.PLIKTKORT)
 
         return ubehandledePliktkort
-            .map { Pair(it.referanse.asJournalpostId, it.strukturerteData<Pliktkort>()?.data as Pliktkort) }
-            .map {
-                UbehandletPliktkort.fraKontrakt(it.second, it.first)
-            }
+            .map { UbehandletPliktkort.fraKontrakt(pliktkort(it), it.referanse.asJournalpostId) }
             .toSet()
+    }
+
+    private fun pliktkort(dokument: MottattDokument): Pliktkort {
+        return requireNotNull(dokument.strukturerteData<Pliktkort>()?.data)
     }
 
     fun aktivitetskortSomIkkeErBehandlet(sakId: SakId): Set<InnsendingId> {
