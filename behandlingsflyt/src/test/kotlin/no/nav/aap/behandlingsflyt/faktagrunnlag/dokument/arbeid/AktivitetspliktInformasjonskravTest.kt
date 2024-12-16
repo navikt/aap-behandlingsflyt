@@ -18,15 +18,27 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.verdityper.dokument.Kanal
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 
 class AktivitetspliktInformasjonskravTest {
+    companion object {
+        @JvmStatic
+        @BeforeAll
+        fun beforeAll() {
+            RepositoryRegistry
+                .register<MottattDokumentRepositoryImpl>()
+                .status()
+        }
+    }
+
     @Test
     fun `detekterer nye dokumenter og legger dem til i grunnlaget`() {
         InitTestDatabase.dataSource.transaction { connection ->
