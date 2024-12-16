@@ -307,7 +307,7 @@ class BeregnTilkjentYtelseServiceTest {
                         gradering = Prosent.`0_PROSENT`
                     ),
                     trekk = Dagsatser(0),
-                    kvoterBrukt = setOf(Kvote.ORDINÆR),
+                    brukerAvKvoter = setOf(Kvote.ORDINÆR),
                 )
             )
         )

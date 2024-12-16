@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
-import java.util.*
 
 data class Underveisperiode(
     val periode: Periode,
@@ -15,7 +14,7 @@ data class Underveisperiode(
     val grenseverdi: Prosent,
     val gradering: Gradering,
     val trekk: Dagsatser,
-    val kvoterBrukt: Set<Kvote>,
+    val brukerAvKvoter: Set<Kvote>,
 ) : Comparable<Underveisperiode> {
 
     fun utbetalingsgrad(): Prosent {

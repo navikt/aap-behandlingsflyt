@@ -118,7 +118,7 @@ class UnderveisRepository(private val connection: DBConnection) {
                 setPeriode(8, periode.meldePeriode)
                 setInt(9, periode.trekk.antall)
                 setInt(10, periode.gradering.fastsattArbeidsevne.prosentverdi())
-                setArray(11, periode.kvoterBrukt.map { it.name })
+                setArray(11, periode.brukerAvKvoter.map { it.name })
             }
         }
 

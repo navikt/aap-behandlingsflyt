@@ -90,7 +90,7 @@ class UnderveisService(
                         grenseverdi = it.verdi.grenseverdi(),
                         gradering = it.verdi.gradering(),
                         trekk = if (it.verdi.skalReduseresDagsatser()) Dagsatser(1) else Dagsatser(0),
-                        kvoterBrukt = it.verdi.varighetVurdering?.brukerAvKvoter.orEmpty(),
+                        brukerAvKvoter = it.verdi.varighetVurdering?.brukerAvKvoter.orEmpty(),
                     )
                 },
             input
