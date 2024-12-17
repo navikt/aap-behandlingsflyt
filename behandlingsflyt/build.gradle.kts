@@ -27,7 +27,7 @@ dependencies {
     implementation(kotlin("reflect"))
     compileOnly("io.ktor:ktor-http-jvm:$ktorVersion")
     implementation("com.zaxxer:HikariCP:6.2.1")
-    implementation("org.flywaydb:flyway-database-postgresql:10.22.0")
+    implementation("org.flywaydb:flyway-database-postgresql:11.1.0")
     runtimeOnly("org.postgresql:postgresql:42.7.4")
 
 
