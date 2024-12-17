@@ -81,10 +81,7 @@ class InntektService private constructor(
         return sykdomsvilkåret.harPerioderSomErOppfylt() && bistandsvilkåret.harPerioderSomErOppfylt()
     }
 
-    private fun utledNedsettelsesdato(
-        beregningVurdering: BeregningstidspunktVurdering?,
-        studentGrunnlag: StudentGrunnlag?
-    ): LocalDate {
+    private fun utledNedsettelsesdato(beregningVurdering: BeregningstidspunktVurdering?, studentGrunnlag: StudentGrunnlag?): LocalDate {
         val nedsettelsesdatoer = setOf(
             beregningVurdering?.nedsattArbeidsevneDato,
             studentGrunnlag?.studentvurdering?.avbruttStudieDato
@@ -111,7 +108,6 @@ class InntektService private constructor(
             val repositoryProvider = RepositoryProvider(connection)
             val sakRepository = repositoryProvider.provide(SakRepository::class)
             val vilkårsresultatRepository = repositoryProvider.provide(VilkårsresultatRepository::class)
-            val yrkesskadeRepository = repositoryProvider.provide(YrkesskadeRepository::class)
             return InntektService(
                 SakService(sakRepository),
                 InntektGrunnlagRepository(connection),
@@ -119,7 +115,7 @@ class InntektService private constructor(
                 SykdomRepository(connection),
                 StudentRepository(connection),
                 BeregningVurderingRepository(connection),
-                yrkesskadeRepository,
+                YrkesskadeRepository(connection),
                 InntektGateway
             )
         }

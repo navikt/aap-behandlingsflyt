@@ -101,10 +101,9 @@ class YrkesskadeService private constructor(
             val sakRepository = repositoryProvider.provide(SakRepository::class)
             val personopplysningRepository = repositoryProvider.provide(PersonopplysningRepository::class)
             val mottattDokumentRepository = repositoryProvider.provide(MottattDokumentRepository::class)
-            val yrkesskadeRepository = repositoryProvider.provide(YrkesskadeRepository::class)
             return YrkesskadeService(
                 SakService(sakRepository),
-                yrkesskadeRepository,
+                YrkesskadeRepository(connection),
                 personopplysningRepository,
                 YrkesskadeRegisterGateway,
                 mottattDokumentRepository,
