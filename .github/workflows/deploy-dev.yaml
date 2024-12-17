@@ -90,9 +90,9 @@ jobs:
             if: ${{ steps.tag.outputs.changed == 'true' }}
             run: |
                 randomDelimiter=${RANDOM}
-                text=$(git --no-pager log $(git describe --tags --abbrev=0)..HEAD --pretty=format:"%h %s" | sed 'G')
+                text=$(git --no-pager log $(git describe --tags --abbrev=0)..HEAD --pretty=format:"%h %s" | sed ':a;N;$!ba;s/\n/\n\n/g')
                 echo 'CHANGELOG<<$randomDelimiter' >> $GITHUB_OUTPUT
-                echo $text >> $GITHUB_OUTPUT
+                echo -e "$text" >> $GITHUB_OUTPUT
                 echo '$randomDelimiter' >> $GITHUB_OUTPUT
           - if: ${{ steps.tag.outputs.changed == 'true' }}
             env:
