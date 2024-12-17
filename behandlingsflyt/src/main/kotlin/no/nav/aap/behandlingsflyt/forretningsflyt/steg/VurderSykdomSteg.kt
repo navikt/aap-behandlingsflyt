@@ -62,10 +62,12 @@ class VurderSykdomSteg private constructor(
             val repositoryProvider = RepositoryProvider(connection)
             val avklaringsbehovRepository = repositoryProvider.provide(AvklaringsbehovRepository::class)
             val vilkårsresultatRepository = repositoryProvider.provide(VilkårsresultatRepository::class)
+            val yrkesskadeRepository = repositoryProvider.provide(YrkesskadeRepository::class)
+
             return VurderSykdomSteg(
                 SykdomRepository(connection),
                 StudentRepository(connection),
-                YrkesskadeRepository(connection),
+                yrkesskadeRepository,
                 vilkårsresultatRepository,
                 avklaringsbehovRepository
             )

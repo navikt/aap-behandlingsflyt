@@ -21,12 +21,13 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: DataSource) {
                 val (yrkesskadeGrunnlag, sykdomGrunnlag) = dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
                     val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+                    val yrkesskadeRepository = repositoryProvider.provide(YrkesskadeRepository::class)
 
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
 
                     val yrkesskadeGrunnlag =
-                        YrkesskadeRepository(connection).hentHvisEksisterer(behandlingId = behandling.id)
+                        yrkesskadeRepository.hentHvisEksisterer(behandlingId = behandling.id)
                     val sykdomGrunnlag = SykdomRepository(connection).hentHvisEksisterer(behandlingId = behandling.id)
 
                     yrkesskadeGrunnlag to sykdomGrunnlag
@@ -56,11 +57,12 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: DataSource) {
                 val (yrkesskadeGrunnlag, sykdomGrunnlag) = dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
                     val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+                    val yrkesskadeRepository = repositoryProvider.provide(YrkesskadeRepository::class)
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
 
                     val yrkesskadeGrunnlag =
-                        YrkesskadeRepository(connection).hentHvisEksisterer(behandlingId = behandling.id)
+                        yrkesskadeRepository.hentHvisEksisterer(behandlingId = behandling.id)
                     val sykdomGrunnlag = SykdomRepository(connection).hentHvisEksisterer(behandlingId = behandling.id)
 
                     yrkesskadeGrunnlag to sykdomGrunnlag

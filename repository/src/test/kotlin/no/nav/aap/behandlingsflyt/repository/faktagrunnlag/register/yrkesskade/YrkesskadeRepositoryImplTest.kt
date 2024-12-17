@@ -1,11 +1,10 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.yrkesskade
+package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.yrkesskade
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
+import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
@@ -27,7 +26,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 
-class YrkesskadeRepositoryTest {
+class YrkesskadeRepositoryImplTest {
 
     @Test
     fun `Finner ikke yrkesskadeopplysninger hvis ikke lagret`() {
@@ -35,7 +34,7 @@ class YrkesskadeRepositoryTest {
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val yrkesskadeRepository = YrkesskadeRepository(connection)
+            val yrkesskadeRepository = YrkesskadeRepositoryImpl(connection)
             val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandling.id)
             assertThat(yrkesskadeGrunnlag).isNull()
         }
@@ -47,7 +46,7 @@ class YrkesskadeRepositoryTest {
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val yrkesskadeRepository = YrkesskadeRepository(connection)
+            val yrkesskadeRepository = YrkesskadeRepositoryImpl(connection)
             yrkesskadeRepository.lagre(
                 behandling.id,
                 Yrkesskader(listOf(Yrkesskade(ref = "ref", skadedato = 4 juni 2019)))
@@ -65,7 +64,7 @@ class YrkesskadeRepositoryTest {
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val yrkesskadeRepository = YrkesskadeRepository(connection)
+            val yrkesskadeRepository = YrkesskadeRepositoryImpl(connection)
             yrkesskadeRepository.lagre(
                 behandling.id,
                 Yrkesskader(listOf(Yrkesskade(ref = "ref", skadedato = 4 juni 2019)))
@@ -106,7 +105,7 @@ class YrkesskadeRepositoryTest {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
-            val yrkesskadeRepository = YrkesskadeRepository(connection)
+            val yrkesskadeRepository = YrkesskadeRepositoryImpl(connection)
             yrkesskadeRepository.lagre(
                 behandling1.id,
                 Yrkesskader(listOf(Yrkesskade(ref = "ref", skadedato = 4 juni 2019)))
@@ -128,7 +127,7 @@ class YrkesskadeRepositoryTest {
     @Test
     fun `Kopiering av yrkesskadeopplysninger fra en behandling uten opplysningene skal ikke føre til feil`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val yrkesskadeRepository = YrkesskadeRepository(connection)
+            val yrkesskadeRepository = YrkesskadeRepositoryImpl(connection)
             assertDoesNotThrow {
                 yrkesskadeRepository.kopier(BehandlingId(Long.MAX_VALUE - 1), BehandlingId(Long.MAX_VALUE))
             }
@@ -140,7 +139,7 @@ class YrkesskadeRepositoryTest {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
-            val yrkesskadeRepository = YrkesskadeRepository(connection)
+            val yrkesskadeRepository = YrkesskadeRepositoryImpl(connection)
             yrkesskadeRepository.lagre(
                 behandling1.id,
                 Yrkesskader(listOf(Yrkesskade(ref = "ref", skadedato = 4 juni 2019)))
@@ -168,7 +167,7 @@ class YrkesskadeRepositoryTest {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
-            val yrkesskadeRepository = YrkesskadeRepository(connection)
+            val yrkesskadeRepository = YrkesskadeRepositoryImpl(connection)
 
             yrkesskadeRepository.lagre(
                 behandling.id,
@@ -227,7 +226,7 @@ class YrkesskadeRepositoryTest {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
-            val yrkesskadeRepository = YrkesskadeRepository(connection)
+            val yrkesskadeRepository = YrkesskadeRepositoryImpl(connection)
             yrkesskadeRepository.lagre(
                 behandling1.id,
                 Yrkesskader(listOf(Yrkesskade(ref = "ref", skadedato = 4 juni 2019)))
