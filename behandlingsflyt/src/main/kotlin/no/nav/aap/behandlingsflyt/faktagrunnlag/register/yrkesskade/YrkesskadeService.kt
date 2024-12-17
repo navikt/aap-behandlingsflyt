@@ -61,7 +61,7 @@ class YrkesskadeService private constructor(
         if (mottattDokumenter.any { dokument ->
                 val data = dokument.strukturerteData<Søknad>()?.data
                 val yrkesskadeString = when (data) {
-                    is SøknadV0 -> data.yrkesskade
+                    is SøknadV0 -> data.yrkesskade.uppercase()
                     null -> error("Søknad kan ikke være null")
                 }
                 yrkesskadeString == "JA"
