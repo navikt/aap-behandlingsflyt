@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
 import no.nav.aap.brev.kontrakt.Vedlegg
-import no.nav.aap.verdityper.dokument.JournalpostId
+import java.util.*
 
 class BrevbestillingService(
     private val brevbestillingGateway: BrevbestillingGateway,
@@ -19,7 +19,7 @@ class BrevbestillingService(
         return brevbestillingRepository.hent(behandlingId, typeBrev)
     }
 
-    fun bestill(behandlingId: BehandlingId, typeBrev: TypeBrev, vedlegg: Vedlegg? = null) {
+    fun bestill(behandlingId: BehandlingId, typeBrev: TypeBrev, vedlegg: Vedlegg? = null): UUID {
         val behandling = behandlingRepository.hent(behandlingId)
         val sak = sakRepository.hent(behandling.sakId)
         val bestillingReferanse = brevbestillingGateway.bestillBrev(
@@ -34,6 +34,7 @@ class BrevbestillingService(
             bestillingReferanse = bestillingReferanse,
             status = Status.SENDT,
         )
+        return bestillingReferanse.brevbestillingReferanse
     }
 
     fun oppdaterStatus(behandlingId: BehandlingId, referanse: BrevbestillingReferanse, status: Status) {

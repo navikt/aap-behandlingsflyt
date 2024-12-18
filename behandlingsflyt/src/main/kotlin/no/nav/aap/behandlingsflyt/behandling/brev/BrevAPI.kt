@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.brev
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
+import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.path.normal.put
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
@@ -17,9 +18,11 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRefer
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.LøsBrevbestillingDto
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.ElementNotFoundException
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
@@ -27,6 +30,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.brev.kontrakt.Brev
+import no.nav.aap.brev.kontrakt.Brevtype
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.token
@@ -37,6 +41,7 @@ import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.authorizedPost
 import org.slf4j.MDC
 import tilgang.Operasjon
+import java.util.*
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
@@ -93,6 +98,27 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
             }
         }
         route("/brev") {
+            route("/bestillingvarsel") {
+                dataSource.transaction { connection ->
+                    post<Unit, UUID, VarselOmBrevbestillingDto> { _, req ->
+                        val repositoryProvider = RepositoryProvider(connection)
+                        val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+                        val sakRepository = repositoryProvider.provide(SakRepository::class)
+                        val brevbestillingRepository = repositoryProvider.provide(BrevbestillingRepository::class)
+
+                        val behandlingId = behandlingRepository.hent(req.behandlingsReferanse).id
+
+                        val service = BrevbestillingService(BrevGateway(), brevbestillingRepository, behandlingRepository, sakRepository)
+                        val bestillingReferanse = service.bestill(
+                            behandlingId,
+                            TypeBrev.VARSEL_OM_BESTILLING,
+                            req.vedlegg
+                        )
+
+                        respond(bestillingReferanse, HttpStatusCode.Accepted)
+                    }
+                }
+            }
             route("/{brevbestillingReferanse}/oppdater") {
                 put<BrevbestillingReferanse, String, Brev> { brevbestillingReferanse, brev ->
                     BrevGateway().oppdater(brevbestillingReferanse, brev)
