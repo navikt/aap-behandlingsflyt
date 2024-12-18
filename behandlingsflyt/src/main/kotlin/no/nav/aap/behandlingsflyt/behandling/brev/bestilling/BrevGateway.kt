@@ -9,6 +9,7 @@ import no.nav.aap.brev.kontrakt.BrevbestillingResponse
 import no.nav.aap.brev.kontrakt.Brevtype
 import no.nav.aap.brev.kontrakt.FerdigstillBrevRequest
 import no.nav.aap.brev.kontrakt.Språk
+import no.nav.aap.brev.kontrakt.Vedlegg
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
@@ -21,6 +22,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PutRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
+import no.nav.aap.verdityper.dokument.JournalpostId
 import org.slf4j.LoggerFactory
 import java.net.URI
 
@@ -42,13 +44,15 @@ class BrevGateway : BrevbestillingGateway {
         saksnummer: Saksnummer,
         behandlingReferanse: BehandlingReferanse,
         typeBrev: TypeBrev,
+        vedlegg: Vedlegg?
     ): BrevbestillingReferanse {
         // TODO språk
         val request = BestillBrevRequest(
             saksnummer = saksnummer.toString(),
             behandlingReferanse = behandlingReferanse.referanse,
             brevtype = mapTypeBrev(typeBrev),
-            sprak = Språk.NB
+            sprak = Språk.NB,
+            vedlegg = vedlegg?.let { setOf(it) }?: setOf()
         )
 
         val httpRequest = PostRequest<BestillBrevRequest>(
@@ -123,5 +127,6 @@ class BrevGateway : BrevbestillingGateway {
     private fun mapTypeBrev(typeBrev: TypeBrev): Brevtype = when (typeBrev) {
         TypeBrev.VEDTAK_AVSLAG -> Brevtype.AVSLAG
         TypeBrev.VEDTAK_INNVILGELSE -> Brevtype.INNVILGELSE
+        TypeBrev.VARSEL_OM_BESTILLING -> Brevtype.VARSEL_OM_BESTILLING
     }
 }

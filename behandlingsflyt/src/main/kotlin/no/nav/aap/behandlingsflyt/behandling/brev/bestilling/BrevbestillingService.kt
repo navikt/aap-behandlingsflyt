@@ -5,6 +5,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
+import no.nav.aap.brev.kontrakt.Vedlegg
+import no.nav.aap.verdityper.dokument.JournalpostId
 
 class BrevbestillingService(
     private val brevbestillingGateway: BrevbestillingGateway,
@@ -17,13 +19,14 @@ class BrevbestillingService(
         return brevbestillingRepository.hent(behandlingId, typeBrev)
     }
 
-    fun bestill(behandlingId: BehandlingId, typeBrev: TypeBrev) {
+    fun bestill(behandlingId: BehandlingId, typeBrev: TypeBrev, vedlegg: Vedlegg? = null) {
         val behandling = behandlingRepository.hent(behandlingId)
         val sak = sakRepository.hent(behandling.sakId)
         val bestillingReferanse = brevbestillingGateway.bestillBrev(
             saksnummer = sak.saksnummer,
             behandlingReferanse = behandling.referanse,
-            typeBrev = typeBrev
+            typeBrev = typeBrev,
+            vedlegg = vedlegg
         )
         brevbestillingRepository.lagre(
             behandlingId = behandlingId,
