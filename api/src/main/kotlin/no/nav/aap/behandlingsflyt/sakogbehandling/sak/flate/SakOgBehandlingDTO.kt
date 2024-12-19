@@ -6,3 +6,7 @@ data class SakOgBehandlingDTO(
     val status: String,
     val sisteBehandlingStatus: String
 )
+
+data class NullableSakOgBehandlingDTO(
+    val sakOgBehandlingDTO: SakOgBehandlingDTO?
+)

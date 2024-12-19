@@ -62,32 +62,30 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
             respond(saker)
         }
 
-        route("/finnSisteBehandlinger").post<Unit, List<SakOgBehandlingDTO>, FinnBehandlingForIdentDTO>(TagModule(listOf(Tags.Behandling))){ _, dto ->
-            val behandlinger: List<SakOgBehandlingDTO> = dataSource.transaction(readOnly = true) { connection ->
+        route("/finnSisteBehandlinger").post<Unit, NullableSakOgBehandlingDTO, FinnBehandlingForIdentDTO>(TagModule(listOf(Tags.Behandling))){ _, dto ->
+            val behandlinger: SakOgBehandlingDTO? = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = RepositoryProvider(connection)
                 val ident = Ident(dto.ident)
                 val person = repositoryProvider.provide(PersonRepository::class).finn(ident)
 
                 if (person == null){
-                    emptyList()
+                    null
                 } else {
-                    val saker = repositoryProvider.provide(SakRepository::class).finnSakerFor(person).filter { sak ->
+                    val sak = repositoryProvider.provide(SakRepository::class).finnSakerFor(person).filter { sak ->
                         sak.rettighetsperiode.inneholder(dto.mottattTidspunkt) && sak.status() != Status.AVSLUTTET
-                    }
+                    }.sortedBy { it.opprettetTidspunkt }.first()
 
-                    saker.map { sak ->
-                        val behandling = repositoryProvider.provide(BehandlingRepository::class).finnSisteBehandlingFor(sak.id)
-                        SakOgBehandlingDTO(
-                            personIdent = sak.person.aktivIdent().toString(),
-                            saksnummer = sak.saksnummer.toString(),
-                            status = sak.status().toString(),
-                            sisteBehandlingStatus = behandling?.status().toString()
-                        )
-                    }
+                    val behandling = repositoryProvider.provide(BehandlingRepository::class).finnSisteBehandlingFor(sak.id)
 
+                    SakOgBehandlingDTO(
+                        personIdent = sak.person.aktivIdent().toString(),
+                        saksnummer = sak.saksnummer.toString(),
+                        status = sak.status().toString(),
+                        sisteBehandlingStatus = behandling?.status().toString()
+                    )
                 }
             }
-            respond(behandlinger)
+            respond(NullableSakOgBehandlingDTO(behandlinger))
         }
 
         route("/finnEllerOpprett").authorizedPostWithApprovedList<Unit, SaksinfoDTO, FinnEllerOpprettSakDTO>(
