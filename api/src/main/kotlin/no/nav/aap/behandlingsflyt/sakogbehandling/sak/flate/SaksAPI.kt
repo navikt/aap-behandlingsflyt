@@ -62,8 +62,8 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
             respond(saker)
         }
 
-        route("/finnSisteBehandlinger").post<Unit, List<BehandlinginfoDTO>, FinnBehandlingForIdentDTO>(TagModule(listOf(Tags.Behandling))){ _, dto ->
-            val behandlinger: List<BehandlinginfoDTO> = dataSource.transaction(readOnly = true) { connection ->
+        route("/finnSisteBehandlinger").post<Unit, List<SakOgBehandlingDTO>, FinnBehandlingForIdentDTO>(TagModule(listOf(Tags.Behandling))){ _, dto ->
+            val behandlinger: List<SakOgBehandlingDTO> = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = RepositoryProvider(connection)
                 val ident = Ident(dto.ident)
                 val person = repositoryProvider.provide(PersonRepository::class).finn(ident)
@@ -75,18 +75,16 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                         sak.rettighetsperiode.inneholder(dto.mottattTidspunkt) && sak.status() != Status.AVSLUTTET
                     }
 
-                    val behandlinger = saker.mapNotNull { sak ->
-                        repositoryProvider.provide(BehandlingRepository::class).finnSisteBehandlingFor(sak.id)
-                     }.filter { behandling -> !behandling.status().erAvsluttet() }
-
-                    behandlinger.map { behandling ->
-                        BehandlinginfoDTO(
-                            referanse = behandling.referanse.referanse,
-                            type = behandling.typeBehandling().toString(),
-                            status = behandling.status(),
-                            opprettet = behandling.opprettetTidspunkt,
+                    saker.map { sak ->
+                        val behandling = repositoryProvider.provide(BehandlingRepository::class).finnSisteBehandlingFor(sak.id)
+                        SakOgBehandlingDTO(
+                            personIdent = sak.person.aktivIdent().toString(),
+                            saksnummer = sak.saksnummer.toString(),
+                            status = sak.status().toString(),
+                            sisteBehandlingStatus = behandling?.status().toString()
                         )
                     }
+
                 }
             }
             respond(behandlinger)
