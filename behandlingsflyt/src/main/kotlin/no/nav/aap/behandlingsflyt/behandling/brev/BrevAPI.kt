@@ -99,26 +99,24 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
         }
         route("/brev") {
             route("/bestillingvarsel") {
-                    post<Unit, UUID, VarselOmBrevbestillingDto> { _, req ->
-                        val bestillingVarselReferanse = dataSource.transaction { connection ->
-                            val repositoryProvider = RepositoryProvider(connection)
-                            val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-                            val sakRepository = repositoryProvider.provide(SakRepository::class)
-                            val brevbestillingRepository = repositoryProvider.provide(BrevbestillingRepository::class)
+                post<Unit, UUID, VarselOmBrevbestillingDto> { _, req ->
+                    val bestillingVarselReferanse = dataSource.transaction { connection ->
+                        val repositoryProvider = RepositoryProvider(connection)
+                        val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+                        val sakRepository = repositoryProvider.provide(SakRepository::class)
+                        val brevbestillingRepository = repositoryProvider.provide(BrevbestillingRepository::class)
 
-                            val behandlingId = behandlingRepository.hent(req.behandlingsReferanse).id
+                        val behandlingId = behandlingRepository.hent(req.behandlingsReferanse).id
 
-                            val service = BrevbestillingService(BrevGateway(), brevbestillingRepository, behandlingRepository, sakRepository)
-                            val bestillingReferanse = service.bestill(
-                                behandlingId,
-                                TypeBrev.VARSEL_OM_BESTILLING,
-                                req.vedlegg
-                            )
-                            bestillingReferanse
-                        }
-
-                        respond(bestillingVarselReferanse, HttpStatusCode.Accepted)
+                        val service = BrevbestillingService(BrevGateway(), brevbestillingRepository, behandlingRepository, sakRepository)
+                        val bestillingReferanse = service.bestill(
+                            behandlingId,
+                            TypeBrev.VARSEL_OM_BESTILLING,
+                            req.vedlegg
+                        )
+                        bestillingReferanse
                     }
+                    respond(bestillingVarselReferanse, HttpStatusCode.Accepted)
                 }
             }
             route("/{brevbestillingReferanse}/oppdater") {
