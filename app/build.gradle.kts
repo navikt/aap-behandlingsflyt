@@ -2,7 +2,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import java.io.ByteArrayOutputStream
 
 
-val ktorVersion = "3.0.2"
+val ktorVersion = "3.0.3"
 val komponenterVersjon = "1.0.91"
 val junitVersjon = "5.11.3"
 
