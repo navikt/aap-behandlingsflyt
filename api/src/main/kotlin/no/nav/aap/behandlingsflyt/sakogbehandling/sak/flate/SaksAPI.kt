@@ -6,8 +6,10 @@ import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.ElementNotFoundException
@@ -58,6 +60,36 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 }
             }
             respond(saker)
+        }
+
+        route("/finnSisteBehandlinger").post<Unit, List<BehandlinginfoDTO>, FinnBehandlingForIdentDTO>(TagModule(listOf(Tags.Behandling))){ _, dto ->
+            val behandlinger: List<BehandlinginfoDTO> = dataSource.transaction(readOnly = true) { connection ->
+                val repositoryProvider = RepositoryProvider(connection)
+                val ident = Ident(dto.ident)
+                val person = repositoryProvider.provide(PersonRepository::class).finn(ident)
+
+                if (person == null){
+                    emptyList()
+                }else {
+                    val saker = repositoryProvider.provide(SakRepository::class).finnSakerFor(person).filter { sak ->
+                        sak.rettighetsperiode.inneholder(dto.mottattTidspunkt) && sak.status() != Status.AVSLUTTET
+                    }
+
+                    val behandlinger = saker.mapNotNull { sak ->
+                        repositoryProvider.provide(BehandlingRepository::class).finnSisteBehandlingFor(sak.id)
+                     }.filter { behandling -> !behandling.status().erAvsluttet() }
+
+                    behandlinger.map { behandling ->
+                        BehandlinginfoDTO(
+                            referanse = behandling.referanse.referanse,
+                            type = behandling.typeBehandling().toString(),
+                            status = behandling.status(),
+                            opprettet = behandling.opprettetTidspunkt,
+                        )
+                    }
+                }
+            }
+            respond(behandlinger)
         }
 
         route("/finnEllerOpprett").authorizedPostWithApprovedList<Unit, SaksinfoDTO, FinnEllerOpprettSakDTO>(
