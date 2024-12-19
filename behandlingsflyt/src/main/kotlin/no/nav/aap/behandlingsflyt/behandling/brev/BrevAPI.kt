@@ -99,23 +99,25 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
         }
         route("/brev") {
             route("/bestillingvarsel") {
-                dataSource.transaction { connection ->
                     post<Unit, UUID, VarselOmBrevbestillingDto> { _, req ->
-                        val repositoryProvider = RepositoryProvider(connection)
-                        val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-                        val sakRepository = repositoryProvider.provide(SakRepository::class)
-                        val brevbestillingRepository = repositoryProvider.provide(BrevbestillingRepository::class)
+                        val bestillingVarselReferanse = dataSource.transaction { connection ->
+                            val repositoryProvider = RepositoryProvider(connection)
+                            val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+                            val sakRepository = repositoryProvider.provide(SakRepository::class)
+                            val brevbestillingRepository = repositoryProvider.provide(BrevbestillingRepository::class)
 
-                        val behandlingId = behandlingRepository.hent(req.behandlingsReferanse).id
+                            val behandlingId = behandlingRepository.hent(req.behandlingsReferanse).id
 
-                        val service = BrevbestillingService(BrevGateway(), brevbestillingRepository, behandlingRepository, sakRepository)
-                        val bestillingReferanse = service.bestill(
-                            behandlingId,
-                            TypeBrev.VARSEL_OM_BESTILLING,
-                            req.vedlegg
-                        )
+                            val service = BrevbestillingService(BrevGateway(), brevbestillingRepository, behandlingRepository, sakRepository)
+                            val bestillingReferanse = service.bestill(
+                                behandlingId,
+                                TypeBrev.VARSEL_OM_BESTILLING,
+                                req.vedlegg
+                            )
+                            bestillingReferanse
+                        }
 
-                        respond(bestillingReferanse, HttpStatusCode.Accepted)
+                        respond(bestillingVarselReferanse, HttpStatusCode.Accepted)
                     }
                 }
             }
