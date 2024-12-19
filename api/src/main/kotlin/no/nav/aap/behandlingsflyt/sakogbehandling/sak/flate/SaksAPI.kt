@@ -70,7 +70,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
 
                 if (person == null){
                     emptyList()
-                }else {
+                } else {
                     val saker = repositoryProvider.provide(SakRepository::class).finnSakerFor(person).filter { sak ->
                         sak.rettighetsperiode.inneholder(dto.mottattTidspunkt) && sak.status() != Status.AVSLUTTET
                     }
