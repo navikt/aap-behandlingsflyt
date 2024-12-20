@@ -3,7 +3,7 @@ plugins {
 }
 
 val komponenterVersjon = "1.0.91"
-val junitVersjon = "5.11.3"
+val junitVersjon = "5.11.4"
 
 dependencies {
     implementation(project(":behandlingsflyt"))
