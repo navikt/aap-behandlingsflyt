@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
+import no.nav.aap.komponenter.json.DefaultJsonMapper
 
 class LazyStrukturertDokument(
     private val referanse: InnsendingReferanse,

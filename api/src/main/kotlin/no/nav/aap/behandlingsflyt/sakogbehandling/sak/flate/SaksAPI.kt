@@ -6,7 +6,6 @@ import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
@@ -31,7 +30,6 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
-import no.nav.aap.tilgang.authorizedPostWithApprovedList
 import no.nav.aap.verdityper.dokument.JournalpostId
 import javax.sql.DataSource
 
@@ -62,20 +60,25 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
             respond(saker)
         }
 
-        route("/finnSisteBehandlinger").post<Unit, NullableSakOgBehandlingDTO, FinnBehandlingForIdentDTO>(TagModule(listOf(Tags.Behandling))){ _, dto ->
+        route("/finnSisteBehandlinger").post<Unit, NullableSakOgBehandlingDTO, FinnBehandlingForIdentDTO>(
+            TagModule(
+                listOf(Tags.Behandling)
+            )
+        ) { _, dto ->
             val behandlinger: SakOgBehandlingDTO? = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = RepositoryProvider(connection)
                 val ident = Ident(dto.ident)
                 val person = repositoryProvider.provide(PersonRepository::class).finn(ident)
 
-                if (person == null){
+                if (person == null) {
                     null
                 } else {
                     val sak = repositoryProvider.provide(SakRepository::class).finnSakerFor(person).filter { sak ->
                         sak.rettighetsperiode.inneholder(dto.mottattTidspunkt) && sak.status() != Status.AVSLUTTET
                     }.sortedBy { it.opprettetTidspunkt }.first()
 
-                    val behandling = repositoryProvider.provide(BehandlingRepository::class).finnSisteBehandlingFor(sak.id)
+                    val behandling =
+                        repositoryProvider.provide(BehandlingRepository::class).finnSisteBehandlingFor(sak.id)
 
                     SakOgBehandlingDTO(
                         personIdent = sak.person.aktivIdent().toString(),
@@ -87,9 +90,16 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
             }
             respond(NullableSakOgBehandlingDTO(behandlinger))
         }
-
-        route("/finnEllerOpprett").authorizedPostWithApprovedList<Unit, SaksinfoDTO, FinnEllerOpprettSakDTO>(
-            postmottakAzp, modules = listOf(TagModule(listOf(Tags.Sak)))
+//       TODO! midlertidig fjerne authorizedPost. Trenger å sende med journalpost-id i DTO
+//        route("/finnEllerOpprett").authorizedPost<Unit, SaksinfoDTO, FinnEllerOpprettSakDTO>(
+//            AuthorizationBodyPathConfig(
+//                operasjon = Operasjon.SAKSBEHANDLE,
+//                approvedApplications = setOf(postmottakAzp),
+//                applicationsOnly = true
+//            ),
+//            TagModule(listOf(Tags.Sak)),
+        route("/finnEllerOpprett").post<Unit, SaksinfoDTO, FinnEllerOpprettSakDTO>(
+            TagModule(listOf(Tags.Sak))
         ) { _, dto ->
             val saken: SaksinfoDTO = dataSource.transaction { connection ->
                 val repositoryProvider = RepositoryProvider(connection)

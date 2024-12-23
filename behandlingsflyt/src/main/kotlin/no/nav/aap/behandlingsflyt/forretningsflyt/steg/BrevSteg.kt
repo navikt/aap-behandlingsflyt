@@ -22,6 +22,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
+
+private val logger = LoggerFactory.getLogger("BrevSteg")
 
 class BrevSteg private constructor(
     private val brevUtlederService: BrevUtlederService,
@@ -36,6 +39,7 @@ class BrevSteg private constructor(
                 brevbestillingService.eksisterendeBestilling(kontekst.behandlingId, typeBrev)
             if (bestilling == null) {
                 // Bestill hvis ikke bestilt allerede
+                logger.info("Bestiller brev for sak ${kontekst.sakId}.")
                 brevbestillingService.bestill(kontekst.behandlingId, typeBrev)
                 return FantVentebehov(Ventebehov(BESTILL_BREV, ÅrsakTilSettPåVent.VENTER_PÅ_MASKINELL_AVKLARING))
             }

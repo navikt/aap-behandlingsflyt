@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.prosessering.StatistikkJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.StoppetHendelseJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
+import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import org.slf4j.LoggerFactory

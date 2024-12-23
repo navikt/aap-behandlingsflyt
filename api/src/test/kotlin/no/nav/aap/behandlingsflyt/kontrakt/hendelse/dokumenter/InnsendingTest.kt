@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter
 
-import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
+import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.assertj.core.api.Assertions.assertThat
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
