@@ -113,7 +113,7 @@ class HendelseMottattHåndteringJobbUtfører(
                 medParameter(BREVKODE, brevkategori.name)
                 medParameter(KANAL, kanal.name)
                 medParameter(MOTTATT_TIDSPUNKT, DefaultJsonMapper.toJson(LocalDateTime.now()))
-                medPayload(melding?.let { DefaultJsonMapper.toJson(it) })
+                medPayload(melding)
             }
 
         override fun konstruer(connection: DBConnection): JobbUtfører {

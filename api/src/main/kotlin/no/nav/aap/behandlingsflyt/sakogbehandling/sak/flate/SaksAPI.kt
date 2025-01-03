@@ -27,10 +27,13 @@ import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
+import no.nav.aap.tilgang.authorizedPost
 import no.nav.aap.verdityper.dokument.JournalpostId
+import tilgang.Operasjon
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
@@ -90,37 +93,37 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
             }
             respond(NullableSakOgBehandlingDTO(behandlinger))
         }
-//       TODO! midlertidig fjerne authorizedPost. Trenger å sende med journalpost-id i DTO
-//        route("/finnEllerOpprett").authorizedPost<Unit, SaksinfoDTO, FinnEllerOpprettSakDTO>(
-//            AuthorizationBodyPathConfig(
-//                operasjon = Operasjon.SAKSBEHANDLE,
-//                approvedApplications = setOf(postmottakAzp),
-//                applicationsOnly = true
-//            ),
-//            TagModule(listOf(Tags.Sak)),
-        route("/finnEllerOpprett").post<Unit, SaksinfoDTO, FinnEllerOpprettSakDTO>(
-            TagModule(listOf(Tags.Sak))
-        ) { _, dto ->
-            val saken: SaksinfoDTO = dataSource.transaction { connection ->
-                val repositoryProvider = RepositoryProvider(connection)
-                val ident = Ident(dto.ident)
-                val periode = Periode(
-                    dto.søknadsdato, dto.søknadsdato.plusYears(1)
-                ) // Setter til et år frem i tid som er tilsvarende "vedtakslengde" i forskriften
-                val sak = PersonOgSakService(
-                    pdlGateway = GatewayProvider.provide(IdentGateway::class),
-                    personRepository = repositoryProvider.provide(PersonRepository::class),
-                    sakRepository = repositoryProvider.provide(SakRepository::class)
-                ).finnEllerOpprett(ident = ident, periode = periode)
 
-                SaksinfoDTO(
-                    saksnummer = sak.saksnummer.toString(),
-                    opprettetTidspunkt = sak.opprettetTidspunkt,
-                    periode = periode,
-                    ident = sak.person.aktivIdent().identifikator
+        route("/finnEllerOpprett") {
+            authorizedPost<Unit, SaksinfoDTO, FinnEllerOpprettSakDTO>(
+                modules = arrayOf(TagModule(listOf(Tags.Sak))),
+                pathConfig = AuthorizationBodyPathConfig(
+                    operasjon = Operasjon.SAKSBEHANDLE,
+                    applicationsOnly = true,
+                    approvedApplications = setOf(postmottakAzp)
                 )
+            ) { _, dto ->
+                val saken: SaksinfoDTO = dataSource.transaction { connection ->
+                    val repositoryProvider = RepositoryProvider(connection)
+                    val ident = Ident(dto.ident)
+                    val periode = Periode(
+                        dto.søknadsdato, dto.søknadsdato.plusYears(1)
+                    ) // Setter til et år frem i tid som er tilsvarende "vedtakslengde" i forskriften
+                    val sak = PersonOgSakService(
+                        pdlGateway = GatewayProvider.provide(IdentGateway::class),
+                        personRepository = repositoryProvider.provide(PersonRepository::class),
+                        sakRepository = repositoryProvider.provide(SakRepository::class)
+                    ).finnEllerOpprett(ident = ident, periode = periode)
+
+                    SaksinfoDTO(
+                        saksnummer = sak.saksnummer.toString(),
+                        opprettetTidspunkt = sak.opprettetTidspunkt,
+                        periode = periode,
+                        ident = sak.person.aktivIdent().identifikator
+                    )
+                }
+                respond(saken)
             }
-            respond(saken)
         }
         route("") {
             route("/alle").get<Unit, List<SaksinfoDTO>>(TagModule(listOf(Tags.Sak))) {

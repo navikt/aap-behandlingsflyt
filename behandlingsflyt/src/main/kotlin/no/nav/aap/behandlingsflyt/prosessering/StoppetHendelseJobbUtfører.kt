@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.prosessering
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
@@ -14,9 +13,7 @@ private val log = LoggerFactory.getLogger(StoppetHendelseJobbUtfører::class.jav
 class StoppetHendelseJobbUtfører private constructor() : JobbUtfører {
 
     override fun utfør(input: JobbInput) {
-        val payload = input.payload()
-
-        val hendelse = DefaultJsonMapper.fromJson<BehandlingFlytStoppetHendelse>(payload)
+        val hendelse = input.payload<BehandlingFlytStoppetHendelse>()
 
         log.info("Varsler hendelse til OppgaveStyring. ${hendelse.saksnummer} :: ${hendelse.referanse.referanse}")
         OppgavestyringGateway.varsleHendelse(hendelse)

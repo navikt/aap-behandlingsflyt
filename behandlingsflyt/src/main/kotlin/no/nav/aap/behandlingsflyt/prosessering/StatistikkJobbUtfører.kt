@@ -35,7 +35,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
@@ -59,13 +58,12 @@ class StatistikkJobbUtfører(
 ) : JobbUtfører {
     override fun utfør(input: JobbInput) {
         log.info("Utfører jobbinput statistikk: $input")
-        val payload = input.payload()
+        val payload = input.payload<BehandlingFlytStoppetHendelse>()
 
         håndterBehandlingStoppet(payload)
     }
 
-    private fun håndterBehandlingStoppet(payload: String) {
-        val hendelse = DefaultJsonMapper.fromJson<BehandlingFlytStoppetHendelse>(payload)
+    private fun håndterBehandlingStoppet(hendelse: BehandlingFlytStoppetHendelse) {
 
         val statistikkHendelse = oversettHendelseTilKontrakt(hendelse)
 

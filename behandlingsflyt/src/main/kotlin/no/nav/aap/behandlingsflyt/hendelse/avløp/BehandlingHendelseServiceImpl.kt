@@ -11,7 +11,6 @@ import no.nav.aap.behandlingsflyt.prosessering.StatistikkJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.StoppetHendelseJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import org.slf4j.LoggerFactory
@@ -56,14 +55,12 @@ class BehandlingHendelseServiceImpl(
             versjon = ApplikasjonsVersjon.versjon
         )
 
-        val payload = DefaultJsonMapper.toJson(hendelse)
-
         log.info("Legger til flytjobber til statistikk og stoppethendelse for behandling: ${behandling.id}")
         flytJobbRepository.leggTil(
-            JobbInput(jobb = StoppetHendelseJobbUtfører).medPayload(payload)
+            JobbInput(jobb = StoppetHendelseJobbUtfører).medPayload(hendelse)
         )
         flytJobbRepository.leggTil(
-            JobbInput(jobb = StatistikkJobbUtfører).medPayload(payload)
+            JobbInput(jobb = StatistikkJobbUtfører).medPayload(hendelse)
         )
     }
 

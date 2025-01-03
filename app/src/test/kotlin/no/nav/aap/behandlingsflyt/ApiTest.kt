@@ -54,6 +54,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.NoTokenTokenProvider
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.OnBehalfOfTokenProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
@@ -99,6 +100,12 @@ class ApiTest {
         private val client: RestClient<InputStream> = RestClient(
             config = ClientConfig(scope = "behandlingsflyt"),
             tokenProvider = OnBehalfOfTokenProvider,
+            responseHandler = DefaultResponseHandler()
+        )
+
+        private val ccClient: RestClient<InputStream> = RestClient(
+            config = ClientConfig(scope = "behandlingsflyt"),
+            tokenProvider = ClientCredentialsTokenProvider,
             responseHandler = DefaultResponseHandler()
         )
 
@@ -299,7 +306,7 @@ class ApiTest {
             )
         )
 
-        val responseSak: SaksinfoDTO? = client.post(
+        val responseSak: SaksinfoDTO? = ccClient.post(
             URI.create("http://localhost:$port/").resolve("api/sak/finnEllerOpprett"),
             PostRequest(
                 body = FinnEllerOpprettSakDTO("12345678910", LocalDate.now()),
@@ -378,7 +385,7 @@ class ApiTest {
             )
         )
 
-        val responseSak: SaksinfoDTO? = client.post(
+        val responseSak: SaksinfoDTO? = ccClient.post(
             URI.create("http://localhost:$port/").resolve("api/sak/finnEllerOpprett"),
             PostRequest(
                 body = FinnEllerOpprettSakDTO("12345678910", LocalDate.now().minusDays(30)),
