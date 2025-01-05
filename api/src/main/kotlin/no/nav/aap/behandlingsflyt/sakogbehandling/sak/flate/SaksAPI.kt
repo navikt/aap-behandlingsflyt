@@ -97,7 +97,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
         route("/finnEllerOpprett") {
             authorizedPost<Unit, SaksinfoDTO, FinnEllerOpprettSakDTO>(
                 modules = arrayOf(TagModule(listOf(Tags.Sak))),
-                pathConfig = AuthorizationBodyPathConfig(
+                routeConfig = AuthorizationBodyPathConfig(
                     operasjon = Operasjon.SAKSBEHANDLE,
                     applicationsOnly = true,
                     approvedApplications = setOf(postmottakAzp)
