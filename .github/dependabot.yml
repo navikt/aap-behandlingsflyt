@@ -12,16 +12,13 @@ updates:
       directory: /
       schedule:
           interval: daily
-      open-pull-requests-limit: 1
     - package-ecosystem: gradle
       directory: /
       schedule:
           interval: daily
-      open-pull-requests-limit: 1
       registries:
           - maven-github
     - package-ecosystem: docker
       directory: /
       schedule:
           interval: daily
-      open-pull-requests-limit: 1
