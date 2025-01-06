@@ -1,15 +1,18 @@
 package no.nav.aap.behandlingsflyt.behandling.bruddaktivitetsplikt
 
-import com.papsign.ktor.openapigen.route.TagModule
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import com.papsign.ktor.openapigen.route.tag
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.DokumentInput
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingId
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
@@ -23,16 +26,67 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.httpklient.auth.bruker
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.verdityper.dokument.Kanal
+import java.time.LocalDate
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
-    route("/api/aktivitetsplikt") {
+    route("/api").tag(Tags.Aktivitetsplikt) {
+        route("/behandling/{referanse}/aktivitetsplikt/effektuer").get<BehandlingReferanse, Effektuer11_7Dto> { behandlingReferanse ->
+            respond(
+                Effektuer11_7Dto(
+                    null,
+                    null,
+                    BruddAktivitetspliktHendelseDto(
+                        brudd = BruddType.IKKE_AKTIVT_BIDRAG,
+                        paragraf = Brudd.Paragraf.PARAGRAF_11_7,
+                        grunn = GrunnDTO.INGEN_GYLDIG_GRUNN,
+                        periode = PeriodeDTO(LocalDate.now(), LocalDate.now().plusDays(5)),
+                        begrunnelse = "heihei"
+                    )
+                )
+            )
+        }
+
+        route("/sak/{saksnummer}/aktivitetsplikt") {
+            route("/opprett").post<SaksnummerParameter, String, OpprettAktivitetspliktDTO> { params, req ->
+                val navIdent = bruker()
+                dataSource.transaction { connection ->
+                    opprettDokument(connection, navIdent, Saksnummer(params.saksnummer), req)
+                }
+                respond("{}", HttpStatusCode.Accepted)
+            }
+
+            route("/oppdater").post<SaksnummerParameter, String, OppdaterAktivitetspliktDTOV2> { params, req ->
+                val navIdent = bruker()
+                dataSource.transaction { connection ->
+                    opprettDokument(connection, navIdent, Saksnummer(params.saksnummer), req)
+                }
+                respond("{}", HttpStatusCode.Accepted)
+            }
+
+            get<SaksnummerParameter, BruddAktivitetspliktResponse> { params ->
+                val response = dataSource.transaction { connection ->
+                    val repositoryProvider = RepositoryProvider(connection)
+                    val sakRepository = repositoryProvider.provide(SakRepository::class)
+                    val aktivitetspliktRepository = repositoryProvider.provide(AktivitetspliktRepository::class)
+
+                    val sak = SakService(sakRepository).hent(Saksnummer(params.saksnummer))
+                    val alleBrudd = aktivitetspliktRepository.hentBrudd(sak.id).utledBruddTilstand()
+                    BruddAktivitetspliktResponse(alleBrudd)
+                }
+                respond(response)
+            }
+        }
+
+    }
+
+    //TODO - Slett når frontend er over på /sak/{saksnummer}
+    route("/api/aktivitetsplikt").tag(Tags.Aktivitetsplikt) {
         route("{saksnummer}") {
-            route("/opprett").post<SaksnummerParameter, String, OpprettAktivitetspliktDTO>(TagModule(listOf(Tags.Aktivitetsplikt))) { params, req ->
+            route("/opprett").post<SaksnummerParameter, String, OpprettAktivitetspliktDTO> { params, req ->
                 val navIdent = bruker()
                 dataSource.transaction { connection ->
                     opprettDokument(connection, navIdent, Saksnummer(params.saksnummer), req)
@@ -40,7 +94,7 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
                 respond("{}", HttpStatusCode.Accepted)
             }
 
-            route("/v2/oppdater").post<SaksnummerParameter, String, OppdaterAktivitetspliktDTOV2>(TagModule(listOf(Tags.Aktivitetsplikt))) { params, req ->
+            route("/v2/oppdater").post<SaksnummerParameter, String, OppdaterAktivitetspliktDTOV2> { params, req ->
                 val navIdent = bruker()
                 dataSource.transaction { connection ->
                     opprettDokument(connection, navIdent, Saksnummer(params.saksnummer), req)
@@ -48,7 +102,7 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
                 respond("{}", HttpStatusCode.Accepted)
             }
 
-            get<SaksnummerParameter, BruddAktivitetspliktResponse>(TagModule(listOf(Tags.Aktivitetsplikt))) { params ->
+            get<SaksnummerParameter, BruddAktivitetspliktResponse> { params ->
                 val response = dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
                     val sakRepository = repositoryProvider.provide(SakRepository::class)
