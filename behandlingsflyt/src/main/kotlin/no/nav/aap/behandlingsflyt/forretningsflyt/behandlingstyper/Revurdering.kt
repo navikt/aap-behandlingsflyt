@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BarnetilleggSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BeregnTilkjentYtelseSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BeregningAvklarFaktaSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BrevSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.Effektuer11_7Steg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.EtAnnetStedSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettArbeidsevneSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettGrunnlagSteg
@@ -115,6 +116,7 @@ object Revurdering : BehandlingType {
             .medSteg(steg = EtAnnetStedSteg, informasjonskrav = listOf(InstitusjonsoppholdService))
             .medSteg(steg = UnderveisSteg, informasjonskrav = listOf(PliktkortService, AktivitetspliktInformasjonskrav))
             .medSteg(steg = SamordningSteg, informasjonskrav = listOf(SamordningYtelseVurderingService))
+            .medSteg(steg = Effektuer11_7Steg)
             .medSteg(steg = BeregnTilkjentYtelseSteg, årsakRelevanteForSteg = ÅrsakTilBehandling.entries)
             .medSteg(steg = SimulerUtbetalingSteg, årsakRelevanteForSteg = ÅrsakTilBehandling.entries)
             .medSteg(steg = ForeslåVedtakSteg, årsakRelevanteForSteg = ÅrsakTilBehandling.entries) // en-trinn

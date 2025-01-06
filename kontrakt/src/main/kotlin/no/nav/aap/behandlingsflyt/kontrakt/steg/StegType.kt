@@ -83,6 +83,10 @@ public enum class StegType(
         gruppe = StegGruppe.UNDERVEIS,
         status = Status.UTREDES
     ),
+    EFFEKTUER_11_7(
+        gruppe = StegGruppe.UNDERVEIS,
+        status = Status.UTREDES
+    ),
     DU_ER_ET_ANNET_STED(
         gruppe = StegGruppe.ET_ANNET_STED,
         status = Status.UTREDES
