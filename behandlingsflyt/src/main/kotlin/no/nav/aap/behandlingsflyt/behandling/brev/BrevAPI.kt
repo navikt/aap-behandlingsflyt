@@ -8,6 +8,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovHendelseHåndterer
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOperasjonerRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehovHendelse
@@ -20,6 +21,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingServi
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.LøsBrevbestillingDto
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -100,19 +102,46 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                 post<Unit, UUID, VarselOmBrevbestillingDto> { _, req ->
                     val bestillingVarselReferanse = dataSource.transaction { connection ->
                         val repositoryProvider = RepositoryProvider(connection)
-                        val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-                        val sakRepository = repositoryProvider.provide(SakRepository::class)
-                        val brevbestillingRepository = repositoryProvider.provide(BrevbestillingRepository::class)
 
-                        val behandlingId = behandlingRepository.hent(req.behandlingsReferanse).id
+                        val taSkriveLåsRepository =
+                            repositoryProvider.provide(TaSkriveLåsRepository::class)
 
-                        val service = BrevbestillingService(BrevGateway(), brevbestillingRepository, behandlingRepository, sakRepository)
-                        val bestillingReferanse = service.bestill(
-                            behandlingId,
-                            TypeBrev.VARSEL_OM_BESTILLING,
-                            req.vedlegg
+                        val lås = taSkriveLåsRepository.lås(req.behandlingsReferanse.referanse)
+
+                        val avklaringsbehovOperasjonerRepository = repositoryProvider.provide(
+                            AvklaringsbehovOperasjonerRepository::class
                         )
-                        bestillingReferanse
+
+                        MDC.putCloseable("sakId", lås.sakSkrivelås.id.toString()).use {
+                            MDC.putCloseable("behandlingId", lås.behandlingSkrivelås.id.toString())
+                                .use {
+                                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+                                    val sakRepository = repositoryProvider.provide(SakRepository::class)
+                                    val brevbestillingRepository =
+                                        repositoryProvider.provide(BrevbestillingRepository::class)
+
+                                    val behandling = behandlingRepository.hent(req.behandlingsReferanse)
+
+                                    val service = BrevbestillingService(
+                                        BrevGateway(),
+                                        brevbestillingRepository,
+                                        behandlingRepository,
+                                        sakRepository
+                                    )
+                                    avklaringsbehovOperasjonerRepository.opprett(
+                                        behandlingId = behandling.id,
+                                        definisjon = Definisjon.BESTILL_BREV,
+                                        funnetISteg = behandling.aktivtSteg(),
+                                    )
+                                    val bestillingReferanse = service.bestill(
+                                        behandling.id,
+                                        TypeBrev.VARSEL_OM_BESTILLING,
+                                        req.vedlegg
+                                    )
+                                    taSkriveLåsRepository.verifiserSkrivelås(lås)
+                                    bestillingReferanse
+                                }
+                        }
                     }
                     respond(bestillingVarselReferanse, HttpStatusCode.Accepted)
                 }
