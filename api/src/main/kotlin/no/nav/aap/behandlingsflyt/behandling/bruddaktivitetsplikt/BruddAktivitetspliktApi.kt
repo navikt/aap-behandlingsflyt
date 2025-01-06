@@ -82,40 +82,6 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
         }
 
     }
-
-    //TODO - Slett når frontend er over på /sak/{saksnummer}
-    route("/api/aktivitetsplikt").tag(Tags.Aktivitetsplikt) {
-        route("{saksnummer}") {
-            route("/opprett").post<SaksnummerParameter, String, OpprettAktivitetspliktDTO> { params, req ->
-                val navIdent = bruker()
-                dataSource.transaction { connection ->
-                    opprettDokument(connection, navIdent, Saksnummer(params.saksnummer), req)
-                }
-                respond("{}", HttpStatusCode.Accepted)
-            }
-
-            route("/v2/oppdater").post<SaksnummerParameter, String, OppdaterAktivitetspliktDTOV2> { params, req ->
-                val navIdent = bruker()
-                dataSource.transaction { connection ->
-                    opprettDokument(connection, navIdent, Saksnummer(params.saksnummer), req)
-                }
-                respond("{}", HttpStatusCode.Accepted)
-            }
-
-            get<SaksnummerParameter, BruddAktivitetspliktResponse> { params ->
-                val response = dataSource.transaction { connection ->
-                    val repositoryProvider = RepositoryProvider(connection)
-                    val sakRepository = repositoryProvider.provide(SakRepository::class)
-                    val aktivitetspliktRepository = repositoryProvider.provide(AktivitetspliktRepository::class)
-
-                    val sak = SakService(sakRepository).hent(Saksnummer(params.saksnummer))
-                    val alleBrudd = aktivitetspliktRepository.hentBrudd(sak.id).utledBruddTilstand()
-                    BruddAktivitetspliktResponse(alleBrudd)
-                }
-                respond(response)
-            }
-        }
-    }
 }
 
 private fun opprettDokument(

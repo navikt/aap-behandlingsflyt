@@ -398,7 +398,7 @@ class ApiTest {
         val saksnummer = responseSak.saksnummer
 
         client.post<Any, Map<String, String>>(
-            URI.create("http://localhost:$port/").resolve("api/aktivitetsplikt/$saksnummer/opprett"),
+            URI.create("http://localhost:$port/").resolve("api/sak/$saksnummer/aktivitetsplikt/opprett"),
             PostRequest(
                 body = OpprettAktivitetspliktDTO(
                     brudd = BruddType.IKKE_AKTIVT_BIDRAG,
