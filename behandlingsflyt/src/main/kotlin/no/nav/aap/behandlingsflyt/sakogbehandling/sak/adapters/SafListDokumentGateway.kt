@@ -40,7 +40,7 @@ object SafListDokumentGateway {
 
         return dokumentoversiktFagsak.journalposter.flatMap { journalpost ->
             log.info("Original Journalpost:  $journalpost")
-            journalpost.dokumenter.flatMap { dok ->
+             journalpost.dokumenter.flatMap { dok ->
                 dok.dokumentvarianter
                     .filter { it.variantformat === Variantformat.ARKIV }
                     .map {
@@ -58,8 +58,8 @@ object SafListDokumentGateway {
                             }!!
                         )
                     }
-            }.distinctBy { it.dokumentInfoId }
-        }
+            }
+        }.distinctBy { it.dokumentInfoId }
     }
 }
 
