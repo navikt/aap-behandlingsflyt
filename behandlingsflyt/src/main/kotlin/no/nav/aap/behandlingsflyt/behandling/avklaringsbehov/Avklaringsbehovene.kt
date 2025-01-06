@@ -232,4 +232,8 @@ class Avklaringsbehovene(
     fun hentÅpneVentebehov(): List<Avklaringsbehov> {
         return alle().filter { it.erVentepunkt() && it.erÅpent() }
     }
+
+    override fun harÅpentBrevVentebehov(): Boolean {
+        return alle().any { avklaringsbehov -> avklaringsbehov.erBrevVentebehov() && avklaringsbehov.erÅpent() }
+    }
 }

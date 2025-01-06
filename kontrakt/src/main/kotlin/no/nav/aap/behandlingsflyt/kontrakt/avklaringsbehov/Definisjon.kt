@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.entries
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import tilgang.Rolle
 import java.time.LocalDate
@@ -31,8 +32,8 @@ public enum class Definisjon(
     ),
     BESTILL_BREV(
         kode = AvklaringsbehovKode.`9002`,
-        løsesISteg = StegType.BREV,
-        type = BehovType.VENTEPUNKT,
+        løsesISteg = StegType.UDEFINERT,
+        type = BehovType.BREV_VENTEPUNKT,
         defaultFrist = Period.ofDays(1),
         løsesAv = listOf(Rolle.SAKSBEHANDLER, Rolle.VEILEDER)
     ),
@@ -45,8 +46,8 @@ public enum class Definisjon(
     ),
     SKRIV_BREV(
         kode = AvklaringsbehovKode.`5050`,
-        løsesISteg = StegType.BREV,
-        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.UDEFINERT,
+        type = BehovType.BREV,
         løsesAv = listOf(Rolle.SAKSBEHANDLER, Rolle.VEILEDER)
     ),
     AVKLAR_STUDENT(
@@ -205,6 +206,12 @@ public enum class Definisjon(
         MANUELT_FRIVILLIG(Definisjon::validerManuelt),
 
         /**
+         * Brevpunkter
+         */
+        BREV(Definisjon::validerBrevpunkt),
+        BREV_VENTEPUNKT(Definisjon::validerBrevVentepunkt),
+
+        /**
          * Ventebehov kan opprettes av saksbehandler og system, det er et behov som venter på tid og/eller en hendelse
          * (f.eks et dokument)
          */
@@ -222,6 +229,22 @@ public enum class Definisjon(
         if (this.løsesISteg.tekniskSteg) {
             throw IllegalArgumentException(
                 "Avklaringsbehov må være knyttet til et funksjonelt steg"
+            )
+        }
+    }
+
+    private fun validerBrevpunkt() {
+        if (this == SKRIV_BREV && !this.løsesISteg.tekniskSteg) {
+            throw IllegalArgumentException(
+                "Brevbeho må være knyttet til et teknisk steg"
+            )
+        }
+    }
+
+    private fun validerBrevVentepunkt() {
+        if (this == BESTILL_BREV && !this.løsesISteg.tekniskSteg) {
+            throw IllegalArgumentException(
+                "Brev ventebehov må være knyttet til et teknisk steg"
             )
         }
     }
@@ -251,7 +274,11 @@ public enum class Definisjon(
     }
 
     public fun erVentebehov(): Boolean {
-        return type == BehovType.VENTEPUNKT
+        return type == BehovType.VENTEPUNKT || erBrevVentebehov()
+    }
+
+    public fun erBrevVentebehov(): Boolean {
+        return type == BehovType.BREV_VENTEPUNKT
     }
 
     public fun erAutomatisk(): Boolean {

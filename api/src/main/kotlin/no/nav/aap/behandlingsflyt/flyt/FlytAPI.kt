@@ -55,13 +55,17 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
                     val avklaringsbehovRepository = repositoryProvider.provide(AvklaringsbehovRepository::class)
 
                     var behandling = behandling(behandlingRepository, req)
+                    val avklaringsbehovene = avklaringsbehov(
+                        avklaringsbehovRepository,
+                        behandling.id
+                    )
                     val flytJobbRepository = FlytJobbRepository(connection)
                     val gruppeVisningService = DynamiskStegGruppeVisningService(connection)
 
                     val jobber = flytJobbRepository.hentJobberForBehandling(behandling.id.toLong())
                     val prosessering =
                         Prosessering(
-                            utledStatus(jobber),
+                            utledStatus(jobber, avklaringsbehovene),
                             jobber.map {
                                 JobbInfoDto(
                                     id = it.jobbId(),
@@ -87,10 +91,7 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
                         flyt.stegene().groupBy { steg -> steg.gruppe }
                     val aktivtSteg = behandling.aktivtSteg()
                     var erFullført = true
-                    val avklaringsbehovene = avklaringsbehov(
-                        avklaringsbehovRepository,
-                        behandling.id
-                    )
+
                     val alleAvklaringsbehovInkludertFrivillige = FrivilligeAvklaringsbehov(
                         avklaringsbehovene,
                         flyt, aktivtSteg
@@ -273,8 +274,11 @@ private fun hentFeilmeldingHvisBehov(
     return null
 }
 
-private fun utledStatus(oppgaver: List<JobbInput>): ProsesseringStatus {
+private fun utledStatus(oppgaver: List<JobbInput>, avklaringsbehovene: Avklaringsbehovene): ProsesseringStatus {
     if (oppgaver.isEmpty()) {
+        if (avklaringsbehovene.harÅpentBrevVentebehov()) {
+            return ProsesseringStatus.JOBBER
+        }
         return ProsesseringStatus.FERDIG
     }
     if (oppgaver.any { it.status() == JobbStatus.FEILET }) {
@@ -354,11 +358,17 @@ private fun behandling(behandlingRepository: BehandlingRepository, req: Behandli
     return BehandlingReferanseService(behandlingRepository).behandling(req)
 }
 
-private fun avklaringsbehov(avklaringsbehovRepository: AvklaringsbehovRepository, behandlingId: BehandlingId): Avklaringsbehovene {
+private fun avklaringsbehov(
+    avklaringsbehovRepository: AvklaringsbehovRepository,
+    behandlingId: BehandlingId
+): Avklaringsbehovene {
     return avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
 }
 
-private fun vilkårResultat(vilkårsresultatRepository: VilkårsresultatRepository, behandlingId: BehandlingId): Vilkårsresultat {
+private fun vilkårResultat(
+    vilkårsresultatRepository: VilkårsresultatRepository,
+    behandlingId: BehandlingId
+): Vilkårsresultat {
     return vilkårsresultatRepository.hent(behandlingId)
 }
 

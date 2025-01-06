@@ -181,6 +181,10 @@ class Avklaringsbehov(
         return definisjon.erAutomatisk()
     }
 
+    fun erBrevVentebehov(): Boolean {
+        return definisjon.erBrevVentebehov()
+    }
+
     override fun toString(): String {
         return "Avklaringsbehov(definisjon=$definisjon, status=${status()}, løsesISteg=${løsesISteg()})"
     }
