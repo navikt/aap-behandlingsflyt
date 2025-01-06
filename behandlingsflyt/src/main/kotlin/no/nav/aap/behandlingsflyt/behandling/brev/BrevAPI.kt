@@ -22,7 +22,6 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.LøsBrevbestillingDto
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.ElementNotFoundException
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
@@ -30,7 +29,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.brev.kontrakt.Brev
-import no.nav.aap.brev.kontrakt.Brevtype
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.token
@@ -51,7 +49,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
         route("/behandling") {
             route("/{referanse}/grunnlag/brev") {
                 get<BehandlingReferanse, BrevGrunnlag> { behandlingReferanse ->
-                    val grunnlag = dataSource.transaction { connection ->
+                    val grunnlag = dataSource.transaction(readOnly = true) { connection ->
                         val repositoryProvider = RepositoryProvider(connection)
                         val behandlingRepository =
                             repositoryProvider.provide(BehandlingRepository::class)
