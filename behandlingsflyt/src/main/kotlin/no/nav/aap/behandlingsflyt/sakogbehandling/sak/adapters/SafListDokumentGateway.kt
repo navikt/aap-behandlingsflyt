@@ -58,6 +58,7 @@ object SafListDokumentGateway {
                             }!!
                         )
                     }
+                    .distinctBy { it.dokumentInfoId }
             }
         }
     }
