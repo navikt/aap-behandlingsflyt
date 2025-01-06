@@ -149,6 +149,12 @@ public enum class Definisjon(
         løsesISteg = StegType.SAMORDNING_GRADERING,
         løsesAv = listOf(Rolle.SAKSBEHANDLER)
     ),
+    EFFEKTUER_11_7(
+        kode = AvklaringsbehovKode.`5015`,
+        type = BehovType.MANUELT_FRIVILLIG,
+        løsesISteg = StegType.EFFEKTUER_11_7,
+        løsesAv = listOf(Rolle.VEILEDER)
+    ),
     FORESLÅ_VEDTAK(
         kode = AvklaringsbehovKode.`5098`,
         type = BehovType.MANUELT_PÅKREVD,
