@@ -1,0 +1,1 @@
+alter table underveis_periode add column brudd_aktivitetsplikt_id bigint references brudd_aktivitetsplikt(id) DEFAULT NULL;
