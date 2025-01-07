@@ -25,8 +25,6 @@ import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.verdityper.dokument.Kanal
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
 private const val BREVKODE = "brevkode"
@@ -37,8 +35,7 @@ private const val MOTTATT_TIDSPUNKT = "mottattTidspunkt"
 class HendelseMottattHåndteringJobbUtfører(
     private val låsRepository: TaSkriveLåsRepository,
     private val hånderMottattDokumentService: HåndterMottattDokumentService,
-    private val mottaDokumentService: MottaDokumentService,
-    private val templogger: Logger = LoggerFactory.getLogger(HendelseMottattHåndteringJobbUtfører::class.java)
+    private val mottaDokumentService: MottaDokumentService
 ) : JobbUtfører {
 
     override fun utfør(input: JobbInput) {
@@ -73,7 +70,6 @@ class HendelseMottattHåndteringJobbUtfører(
             mottattTidspunkt.toLocalDate()
         )
 
-        templogger.info("kjørte HendelseMottattHåndteringJobbUtfører verifiserSkrivelås")
         låsRepository.verifiserSkrivelås(sakSkrivelås)
     }
 
