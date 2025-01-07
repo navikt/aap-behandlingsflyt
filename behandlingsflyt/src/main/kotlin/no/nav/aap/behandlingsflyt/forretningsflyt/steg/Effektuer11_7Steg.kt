@@ -81,9 +81,9 @@ class Effektuer11_7Steg private constructor(
                     sakRepository = sakRepository
                 )
 
+            val underveisRepository = repositoryProvider.provide(UnderveisRepository::class)
             return Effektuer11_7Steg(
-                //TODO - bruk repository provider?
-                UnderveisRepository(connection),
+                underveisRepository,
                 brevbestillingService
             )
         }

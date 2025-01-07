@@ -26,7 +26,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
@@ -150,6 +150,7 @@ class FlytOrkestratorTest {
             .register<SamordningRepositoryImpl>()
             .register<MottattDokumentRepositoryImpl>()
             .register<PliktkortRepositoryImpl>()
+            .register<UnderveisRepositoryImpl>()
             .status()
         GatewayRegistry.register<PdlBarnGateway>()
             .register<PdlIdentGateway>()
@@ -723,7 +724,7 @@ class FlytOrkestratorTest {
             .allMatch { vilkårsperiode -> vilkårsperiode.erOppfylt() }
 
         val underveisGrunnlag = dataSource.transaction { connection ->
-            UnderveisRepository(connection).hent(behandling.id)
+            UnderveisRepositoryImpl(connection).hent(behandling.id)
         }
 
         assertThat(underveisGrunnlag.perioder).isNotEmpty

@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
@@ -38,7 +38,7 @@ class SamordningServiceTest {
             opprettYtelseData(ytelseVurderingRepo, behandlingId)
             opprettVurderingData(ytelseVurderingRepo, behandlingId)
 
-            val service = SamordningService(ytelseVurderingRepo, UnderveisRepository(connection))
+            val service = SamordningService(ytelseVurderingRepo, UnderveisRepositoryImpl(connection))
             service.vurder(behandlingId)
         }
     }
@@ -50,7 +50,7 @@ class SamordningServiceTest {
             val behandlingId = opprettSakdata(connection)
             opprettYtelseData(ytelseVurderingRepo, behandlingId)
 
-            val service = SamordningService(ytelseVurderingRepo, UnderveisRepository(connection))
+            val service = SamordningService(ytelseVurderingRepo, UnderveisRepositoryImpl(connection))
             service.vurder(behandlingId)
         }
     }
@@ -61,7 +61,7 @@ class SamordningServiceTest {
             val ytelseVurderingRepo = SamordningYtelseVurderingRepository(connection)
             val behandlingId = opprettSakdata(connection)
 
-            val service = SamordningService(ytelseVurderingRepo, UnderveisRepository(connection))
+            val service = SamordningService(ytelseVurderingRepo, UnderveisRepositoryImpl(connection))
             service.vurder(behandlingId)
         }
     }
@@ -73,7 +73,7 @@ class SamordningServiceTest {
             val behandlingId = opprettSakdata(connection)
             opprettYtelseData(ytelseVurderingRepo, behandlingId)
 
-            val service = SamordningService(ytelseVurderingRepo, UnderveisRepository(connection))
+            val service = SamordningService(ytelseVurderingRepo, UnderveisRepositoryImpl(connection))
             assertEquals(false, service.harGjortVurdering(behandlingId))
 
             opprettVurderingData(ytelseVurderingRepo, behandlingId)

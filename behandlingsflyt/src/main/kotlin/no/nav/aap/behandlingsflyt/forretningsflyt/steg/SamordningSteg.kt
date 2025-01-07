@@ -68,10 +68,11 @@ class SamordningSteg(
             val repositoryProvider = RepositoryProvider(connection)
             val avklaringsbehovRepository = repositoryProvider.provide(AvklaringsbehovRepository::class)
             val samordningRepository = repositoryProvider.provide(SamordningRepository::class)
+            val underveisRepository = repositoryProvider.provide(UnderveisRepository::class)
             return SamordningSteg(
                 SamordningService(
                     SamordningYtelseVurderingRepository(connection),
-                    UnderveisRepository(connection)
+                    underveisRepository
                 ),
                 samordningRepository,
                 avklaringsbehovRepository

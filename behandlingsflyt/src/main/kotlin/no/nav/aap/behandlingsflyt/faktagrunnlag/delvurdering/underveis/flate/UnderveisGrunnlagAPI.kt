@@ -30,7 +30,8 @@ fun NormalOpenAPIRoute.underveisVurderingerAPI(datasource: DataSource) {
             val repositoryProvider = RepositoryProvider(conn)
             val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
             val behandling = BehandlingReferanseService(behandlingRepository).behandling(behandlingReferanse)
-            UnderveisRepository(conn).hentHvisEksisterer(behandling.id)
+            val underveisRepository = repositoryProvider.provide(UnderveisRepository::class)
+            underveisRepository.hentHvisEksisterer(behandling.id)
         }
 
         if (underveisGrunnlag == null) {

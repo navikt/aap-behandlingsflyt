@@ -34,6 +34,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.alder.flate.aldersGrunnlagA
 import no.nav.aap.behandlingsflyt.exception.ErrorRespons
 import no.nav.aap.behandlingsflyt.exception.FlytOperasjonException
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.flate.underveisVurderingerAPI
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
@@ -229,6 +230,7 @@ private fun registerRepositories() {
         .register<SamordningRepositoryImpl>()
         .register<MottattDokumentRepositoryImpl>()
         .register<PliktkortRepositoryImpl>()
+        .register<UnderveisRepositoryImpl>()
         .status()
 }
 

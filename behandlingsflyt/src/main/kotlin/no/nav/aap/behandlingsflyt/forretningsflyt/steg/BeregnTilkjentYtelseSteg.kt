@@ -50,8 +50,9 @@ class BeregnTilkjentYtelseSteg private constructor(
             val personopplysningRepository = repositoryProvider.provide(PersonopplysningRepository::class)
             val tilkjentYtelseRepository = repositoryProvider.provide(TilkjentYtelseRepository::class)
             val samordningRepository = repositoryProvider.provide(SamordningRepository::class)
+            val underveisRepository = repositoryProvider.provide(UnderveisRepository::class)
             return BeregnTilkjentYtelseSteg(
-                UnderveisRepository(connection),
+                underveisRepository,
                 BeregningsgrunnlagRepositoryImpl(connection),
                 personopplysningRepository,
                 BarnetilleggRepository(connection),
