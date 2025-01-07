@@ -149,6 +149,14 @@ class AktivitetspliktRepositoryImpl(private val connection: DBConnection) : Akti
         }
     }
 
+    override fun hentBrudd(bruddAktivitetspliktId: BruddAktivitetspliktId): AktivitetspliktDokument {
+        val query = """SELECT * FROM BRUDD_AKTIVITETSPLIKT brudd WHERE ID = ?"""
+        return connection.queryFirst(query) {
+            setParams { setLong(1, bruddAktivitetspliktId.id) }
+            setRowMapper(::mapBruddAktivitetsplikt)
+        }
+    }
+
     override fun hentBruddForInnsending(innsendingId: InnsendingId): List<AktivitetspliktDokument> {
         val query = """
             SELECT *

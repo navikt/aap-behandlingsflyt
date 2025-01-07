@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktId
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -15,6 +16,7 @@ data class Underveisperiode(
     val gradering: Gradering,
     val trekk: Dagsatser,
     val brukerAvKvoter: Set<Kvote>,
+    val bruddAktivitetspliktId: BruddAktivitetspliktId?
 ) : Comparable<Underveisperiode> {
 
     fun utbetalingsgrad(): Prosent {

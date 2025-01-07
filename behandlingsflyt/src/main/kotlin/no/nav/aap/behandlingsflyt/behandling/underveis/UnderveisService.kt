@@ -91,6 +91,7 @@ class UnderveisService(
                         gradering = it.verdi.gradering(),
                         trekk = if (it.verdi.skalReduseresDagsatser()) Dagsatser(1) else Dagsatser(0),
                         brukerAvKvoter = it.verdi.varighetVurdering?.brukerAvKvoter.orEmpty(),
+                        bruddAktivitetspliktId = it.verdi.aktivitetspliktVurdering?.dokument?.metadata?.id
                     )
                 },
             input

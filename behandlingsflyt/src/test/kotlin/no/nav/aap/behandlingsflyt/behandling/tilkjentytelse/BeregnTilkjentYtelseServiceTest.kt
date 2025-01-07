@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -308,6 +309,7 @@ class BeregnTilkjentYtelseServiceTest {
                     ),
                     trekk = Dagsatser(0),
                     brukerAvKvoter = setOf(Kvote.ORDINÆR),
+                    bruddAktivitetspliktId = BruddAktivitetspliktId(1),
                 )
             )
         )

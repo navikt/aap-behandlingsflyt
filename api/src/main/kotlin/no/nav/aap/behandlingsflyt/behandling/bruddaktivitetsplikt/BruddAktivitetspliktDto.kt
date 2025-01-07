@@ -118,23 +118,28 @@ fun List<AktivitetspliktDokument>.utledBruddTilstand(): List<BruddAktivitetsplik
 
     return segmenter.map { segment ->
         val dokument = segment.verdi
-        BruddAktivitetspliktHendelseDto(
-            brudd = dokument.brudd.bruddType,
-            paragraf = dokument.brudd.paragraf,
-            grunn = when (dokument) {
-                is AktivitetspliktFeilregistrering -> GrunnDTO.FEILREGISTRERING
-                is AktivitetspliktRegistrering -> GrunnDTO.fraDomene(dokument.grunn)
-            },
-            periode = PeriodeDTO.fraDomene(segment.periode),
-            begrunnelse = when (dokument) {
-                is AktivitetspliktFeilregistrering -> dokument.begrunnelse
-                is AktivitetspliktRegistrering -> dokument.begrunnelse
-            }
-        )
+        bruddAktivitetspliktHendelseDto(dokument, segment.periode)
     }
         .sortedBy { it.periode.tilDomene() }
         .toList()
 }
+
+fun bruddAktivitetspliktHendelseDto(
+    dokument: AktivitetspliktDokument,
+    periode: Periode
+) = BruddAktivitetspliktHendelseDto(
+    brudd = dokument.brudd.bruddType,
+    paragraf = dokument.brudd.paragraf,
+    grunn = when (dokument) {
+        is AktivitetspliktFeilregistrering -> GrunnDTO.FEILREGISTRERING
+        is AktivitetspliktRegistrering -> GrunnDTO.fraDomene(dokument.grunn)
+    },
+    periode = PeriodeDTO.fraDomene(periode),
+    begrunnelse = when (dokument) {
+        is AktivitetspliktFeilregistrering -> dokument.begrunnelse
+        is AktivitetspliktRegistrering -> dokument.begrunnelse
+    }
+)
 
 enum class GrunnDTO(private val tilDomene: Grunn?) {
     SYKDOM_ELLER_SKADE(Grunn.SYKDOM_ELLER_SKADE),

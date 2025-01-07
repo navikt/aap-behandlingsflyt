@@ -130,7 +130,7 @@ enum class Grunn {
     BIDRAR_AKTIVT,
 }
 
-data class BruddAktivitetspliktId(internal val id: Long)
+data class BruddAktivitetspliktId(val id: Long)
 
 
 data class HendelseId(val id: UUID) {

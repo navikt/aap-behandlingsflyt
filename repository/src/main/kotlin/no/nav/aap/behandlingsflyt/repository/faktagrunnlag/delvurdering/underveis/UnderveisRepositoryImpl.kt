@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Faktagrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
@@ -82,6 +83,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
             gradering,
             Dagsatser(it.getInt("trekk_dagsatser")),
             it.getArray("bruker_av_kvoter", String::class).map { Kvote.valueOf(it) }.toSet(),
+            it.getLongOrNull("brudd_aktivitetsplikt_id")?.let { BruddAktivitetspliktId(it) }
         )
     }
 
@@ -114,7 +116,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
         val perioderId = connection.executeReturnKey(pliktkorteneQuery)
 
         val query = """
-            INSERT INTO UNDERVEIS_PERIODE (perioder_id, periode, utfall, avslagsarsak, grenseverdi, timer_arbeid, gradering, meldeperiode, trekk_dagsatser, andel_arbeidsevne, bruker_av_kvoter) VALUES (?, ?::daterange, ?, ?, ?, ?, ?, ?::daterange, ?, ?, ?)
+            INSERT INTO UNDERVEIS_PERIODE (perioder_id, periode, utfall, avslagsarsak, grenseverdi, timer_arbeid, gradering, meldeperiode, trekk_dagsatser, andel_arbeidsevne, bruker_av_kvoter, brudd_aktivitetsplikt_id) VALUES (?, ?::daterange, ?, ?, ?, ?, ?, ?::daterange, ?, ?, ?, ?)
             """.trimIndent()
         connection.executeBatch(query, underveisperioder) {
             setParams { periode ->
@@ -129,6 +131,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
                 setInt(9, periode.trekk.antall)
                 setInt(10, periode.gradering.fastsattArbeidsevne.prosentverdi())
                 setArray(11, periode.brukerAvKvoter.map { it.name })
+                setLong(12, periode.bruddAktivitetspliktId?.id)
             }
         }
 
@@ -164,8 +167,8 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
         }
     }
 
-    override fun kopier(fraBehandlingId: BehandlingId, tilBehandlingId: BehandlingId) {
-        val eksisterendeGrunnlag = hentHvisEksisterer(fraBehandlingId)
+    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+        val eksisterendeGrunnlag = hentHvisEksisterer(fraBehandling)
         if (eksisterendeGrunnlag == null) {
             return
         }
@@ -175,8 +178,8 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
 
         connection.execute(query) {
             setParams {
-                setLong(1, tilBehandlingId.toLong())
-                setLong(2, fraBehandlingId.toLong())
+                setLong(1, tilBehandling.toLong())
+                setLong(2, fraBehandling.toLong())
             }
         }
     }

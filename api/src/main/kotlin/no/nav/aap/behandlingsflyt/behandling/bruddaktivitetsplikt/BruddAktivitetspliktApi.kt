@@ -8,9 +8,8 @@ import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.Tags
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Brudd
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.DokumentInput
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingId
@@ -19,6 +18,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AktivitetskortV0
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -29,23 +30,35 @@ import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.verdityper.dokument.Kanal
-import java.time.LocalDate
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
     route("/api").tag(Tags.Aktivitetsplikt) {
         route("/behandling/{referanse}/aktivitetsplikt/effektuer").get<BehandlingReferanse, Effektuer11_7Dto> { behandlingReferanse ->
+            val bruddAktivitetspliktHendelseDto = dataSource.transaction { conn ->
+                val repositoryProvider = RepositoryProvider(conn)
+                val underveisRepository = repositoryProvider.provide(UnderveisRepository::class)
+                val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+                val aktivitetspliktRepository = repositoryProvider.provide(AktivitetspliktRepository::class)
+
+
+                val behandlingId = BehandlingReferanseService(behandlingRepository).behandling(behandlingReferanse).id
+
+                val foo = underveisRepository.hent(behandlingId)
+
+                val underveisperiode = foo.perioder.first { it.bruddAktivitetspliktId != null }
+
+                bruddAktivitetspliktHendelseDto(
+                    dokument = aktivitetspliktRepository.hentBrudd(underveisperiode.bruddAktivitetspliktId!!),
+                    periode = underveisperiode.periode
+                )
+            }
+
             respond(
                 Effektuer11_7Dto(
                     null,
                     null,
-                    BruddAktivitetspliktHendelseDto(
-                        brudd = BruddType.IKKE_AKTIVT_BIDRAG,
-                        paragraf = Brudd.Paragraf.PARAGRAF_11_7,
-                        grunn = GrunnDTO.INGEN_GYLDIG_GRUNN,
-                        periode = PeriodeDTO(LocalDate.now(), LocalDate.now().plusDays(5)),
-                        begrunnelse = "heihei"
-                    )
+                    bruddAktivitetspliktHendelseDto
                 )
             )
         }
