@@ -19,7 +19,8 @@ class Effektuer11_7Steg private constructor(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val underveisGrunnlag = underveisRepository.hent(kontekst.behandlingId)
         if (underveisGrunnlag.perioder.any { it.avslagsårsak == UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT }) {
-            return FantAvklaringsbehov(Definisjon.EFFEKTUER_11_7)
+            return Fullført
+            //return FantAvklaringsbehov(Definisjon.EFFEKTUER_11_7)
         }
         return Fullført
     }
