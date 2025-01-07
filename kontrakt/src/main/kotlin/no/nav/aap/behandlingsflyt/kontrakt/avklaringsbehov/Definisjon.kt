@@ -250,12 +250,11 @@ public enum class Definisjon(
     }
 
     private fun validerVentepunkt() {
-        if (this == MANUELT_SATT_PÅ_VENT) {
+        if (this in setOf(MANUELT_SATT_PÅ_VENT, BESTILL_LEGEERKLÆRING)) {
             if (this.løsesISteg != StegType.UDEFINERT) {
-                throw IllegalArgumentException("Manueltsatt på vent er lagt til feil steg")
+                throw IllegalArgumentException("Ventepunkt er lagt til feil steg")
             }
-        }
-        if (this != MANUELT_SATT_PÅ_VENT) {
+        } else {
             if (this.løsesISteg == StegType.UDEFINERT) {
                 throw IllegalArgumentException("Ventepunkt er lagt til feil steg")
             }
