@@ -5,12 +5,12 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
 import no.nav.aap.brev.kontrakt.Vedlegg
-import no.nav.aap.verdityper.dokument.JournalpostId
 
 interface BrevbestillingGateway {
     fun bestillBrev(
         saksnummer: Saksnummer,
         behandlingReferanse: BehandlingReferanse,
+        unikReferanse: String,
         typeBrev: TypeBrev,
         vedlegg: Vedlegg?
     ): BrevbestillingReferanse

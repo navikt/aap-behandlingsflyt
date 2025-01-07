@@ -42,6 +42,7 @@ class BrevGateway : BrevbestillingGateway {
     override fun bestillBrev(
         saksnummer: Saksnummer,
         behandlingReferanse: BehandlingReferanse,
+        unikReferanse: String,
         typeBrev: TypeBrev,
         vedlegg: Vedlegg?
     ): BrevbestillingReferanse {
@@ -49,6 +50,7 @@ class BrevGateway : BrevbestillingGateway {
         val request = BestillBrevRequest(
             saksnummer = saksnummer.toString(),
             behandlingReferanse = behandlingReferanse.referanse,
+            unikReferanse = unikReferanse,
             brevtype = mapTypeBrev(typeBrev),
             sprak = Språk.NB,
             vedlegg = vedlegg?.let { setOf(it) }?: setOf()
