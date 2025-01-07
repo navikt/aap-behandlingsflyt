@@ -39,7 +39,7 @@ public enum class Definisjon(
     ),
     BESTILL_LEGEERKLÆRING(
         kode = AvklaringsbehovKode.`9003`,
-        løsesISteg = StegType.AVKLAR_SYKDOM,
+        løsesISteg = StegType.UDEFINERT,
         type = BehovType.VENTEPUNKT,
         defaultFrist = Period.ofWeeks(4),
         løsesAv = listOf(Rolle.SAKSBEHANDLER, Rolle.VEILEDER)
