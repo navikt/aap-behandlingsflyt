@@ -1,9 +1,11 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevGateway
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
@@ -21,52 +23,71 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
 
 class Effektuer11_7Steg private constructor(
     private val underveisRepository: UnderveisRepository,
     private val brevbestillingService: BrevbestillingService,
-): BehandlingSteg {
+    private val behandlingRepository: BehandlingRepository,
+    private val avklaringsbehovRepository: AvklaringsbehovRepository
+) : BehandlingSteg {
+    // TODO - trenger ny brevtype
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        //hent brudd som har blitt forhåndsvarslet for
+        return Fullført
+
+        val behandling = behandlingRepository.hent(kontekst.behandlingId)
         val underveisGrunnlag = underveisRepository.hent(kontekst.behandlingId)
+        val relevanteBrudd = underveisGrunnlag.perioder.filter { it.avslagsårsak == UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT }
+            .let { Tidslinje(it.map { Segment(it.periode, it)} ) }
 
-        val relevanteBrudd =
-            underveisGrunnlag.perioder.filter { it.avslagsårsak == UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT }
+        val forrigeUnderveisGrunnlag = behandling.forrigeBehandlingId?.let { underveisRepository.hent(it) }
+        val forrigeBrudd = forrigeUnderveisGrunnlag?.perioder.orEmpty().filter { it.avslagsårsak == UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT }
+            .let { Tidslinje(it.map { Segment(it.periode, it ) })}
 
-        //TODO - filtrer ut de som er bestilt forhåndsvarsel for
-        val uvarsledeRelevanteBrudd =
-            underveisGrunnlag.perioder.filter { it.avslagsårsak == UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT }
+        val nyeBrudd = relevanteBrudd.kombiner(forrigeBrudd, StandardSammenslåere.minus())
 
-        if (false && uvarsledeRelevanteBrudd.isNotEmpty()) {
-            //TODO - trenger ny brevtype
-            val bestillingsReferanse = brevbestillingService.bestill(kontekst.behandlingId, TypeBrev.VEDTAK_AVSLAG)
-            //lagre ned bruddene i uvasledeRelevanteBrudd sammen med bestillingsReferansen
+        if (nyeBrudd.isEmpty()) {
+            return Fullført
+        }
+
+        val eksisterendeBrevBestilling = brevbestillingService.eksisterendeBestilling(kontekst.behandlingId, TypeBrev.VEDTAK_AVSLAG)
+
+        if (eksisterendeBrevBestilling == null) {
+            brevbestillingService.bestill(kontekst.behandlingId, TypeBrev.VEDTAK_AVSLAG)
+        }
+
+        if (eksisterendeBrevBestilling == null || eksisterendeBrevBestilling.status != Status.FULLFØRT) {
             return FantVentebehov(Ventebehov(BESTILL_BREV, ÅrsakTilSettPåVent.VENTER_PÅ_MASKINELL_AVKLARING))
         }
 
-        //TODO - frist for å svare har ikke utløp og har ikke fått svar
-        if (false) {
+
+        val frist = LocalDate.of(2025, 12, 1) // TODO
+
+        if (LocalDate.now() <= frist /* TODO: og ikke fått svar (SpesifikkVentebehovEvaluerer) */) {
             return FantVentebehov(
                 Ventebehov(
                     definisjon = EFFEKTUER_11_7,
                     grunn = ÅrsakTilSettPåVent.VENTER_PÅ_SVAR_FRA_BRUKER,
-                    //TODO - sett frist
-                    frist = LocalDate.now()
+                    frist = frist,
                 )
             )
         }
 
-        //TODO - veileder har ikke avklart disse bruddene
-        if (false) {
+        val avklaringsbehovet =  avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+            .alle().singleOrNull { it.definisjon == EFFEKTUER_11_7 }
+
+        if (avklaringsbehovet == null || avklaringsbehovet.erÅpent()) {
             return FantAvklaringsbehov(EFFEKTUER_11_7)
         }
 
         return Fullført
     }
 
-    companion object: FlytSteg {
+    companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
             val repositoryProvider = RepositoryProvider(connection)
             val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
@@ -82,9 +103,12 @@ class Effektuer11_7Steg private constructor(
                 )
 
             val underveisRepository = repositoryProvider.provide(UnderveisRepository::class)
+            val avklaringsbehovRepository = repositoryProvider.provide(AvklaringsbehovRepository::class)
             return Effektuer11_7Steg(
                 underveisRepository,
-                brevbestillingService
+                brevbestillingService,
+                behandlingRepository = behandlingRepository,
+                avklaringsbehovRepository = avklaringsbehovRepository
             )
         }
 
