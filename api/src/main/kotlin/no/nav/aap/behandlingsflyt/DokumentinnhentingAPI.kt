@@ -32,6 +32,7 @@ import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
+import org.slf4j.MDC
 import java.time.LocalDate
 import java.time.Period
 import javax.sql.DataSource
@@ -45,52 +46,60 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
 
                     val låsRepository = repositoryProvider.provide(TaSkriveLåsRepository::class)
                     val lås = låsRepository.lås(req.behandlingsReferanse)
+                    var bestillingUUID: String? = null
 
-                    val sak = repositoryProvider.provide(SakRepository::class).hent((Saksnummer(req.saksnummer)))
-                    val behandling = repositoryProvider.provide(BehandlingRepository::class)
-                        .hent(BehandlingReferanse(req.behandlingsReferanse))
-                    val avklaringsbehovene = repositoryProvider.provide(AvklaringsbehovRepository::class)
-                        .hentAvklaringsbehovene(behandling.id)
+                    MDC.putCloseable("sakId", lås.sakSkrivelås.id.toString()).use {
+                        MDC.putCloseable("behandlingId", lås.behandlingSkrivelås.id.toString()).use {
+                            val sak =
+                                repositoryProvider.provide(SakRepository::class).hent((Saksnummer(req.saksnummer)))
+                            val behandling = repositoryProvider.provide(BehandlingRepository::class)
+                                .hent(BehandlingReferanse(req.behandlingsReferanse))
+                            val avklaringsbehovene = repositoryProvider.provide(AvklaringsbehovRepository::class)
+                                .hentAvklaringsbehovene(behandling.id)
 
-                    val personIdent = sak.person.aktivIdent()
-                    val personinfo =
-                        GatewayProvider.provide(PersoninfoGateway::class).hentPersoninfoForIdent(personIdent, token())
+                            val personIdent = sak.person.aktivIdent()
+                            val personinfo =
+                                GatewayProvider.provide(PersoninfoGateway::class)
+                                    .hentPersoninfoForIdent(personIdent, token())
 
-                    avklaringsbehovene.validateTilstand(behandling = behandling)
-                    avklaringsbehovene.leggTil(
-                        definisjoner = listOf(Definisjon.BESTILL_LEGEERKLÆRING),
-                        funnetISteg = behandling.aktivtSteg(),
-                        grunn = ÅrsakTilSettPåVent.VENTER_PÅ_MEDISINSKE_OPPLYSNINGER,
-                        bruker = bruker(),
-                        frist = LocalDate.now() + Period.ofWeeks(4),
-                    )
-                    avklaringsbehovene.validerPlassering(behandling = behandling)
+                            avklaringsbehovene.validateTilstand(behandling = behandling)
+                            avklaringsbehovene.leggTil(
+                                definisjoner = listOf(Definisjon.BESTILL_LEGEERKLÆRING),
+                                funnetISteg = behandling.aktivtSteg(),
+                                grunn = ÅrsakTilSettPåVent.VENTER_PÅ_MEDISINSKE_OPPLYSNINGER,
+                                bruker = bruker(),
+                                frist = LocalDate.now() + Period.ofWeeks(4),
+                            )
+                            avklaringsbehovene.validerPlassering(behandling = behandling)
 
-                    val sakService = SakService(repositoryProvider.provide(SakRepository::class))
-                    val behandlingHendelseService = BehandlingHendelseServiceImpl(FlytJobbRepository((connection)), sakService)
+                            val sakService = SakService(repositoryProvider.provide(SakRepository::class))
+                            val behandlingHendelseService =
+                                BehandlingHendelseServiceImpl(FlytJobbRepository((connection)), sakService)
 
-                    behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
+                            behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
 
-                    val bestillingUUID = DokumeninnhentingGateway().bestillLegeerklæring(
-                        LegeerklæringBestillingRequest(
-                            req.behandlerRef,
-                            req.behandlerNavn,
-                            req.behandlerHprNr,
-                            req.veilederNavn,
-                            personIdent.identifikator,
-                            personinfo.fulltNavn(),
-                            req.fritekst,
-                            req.saksnummer,
-                            req.dokumentasjonType,
-                            req.behandlingsReferanse
-                        )
-                    )
+                            bestillingUUID = DokumeninnhentingGateway().bestillLegeerklæring(
+                                LegeerklæringBestillingRequest(
+                                    req.behandlerRef,
+                                    req.behandlerNavn,
+                                    req.behandlerHprNr,
+                                    req.veilederNavn,
+                                    personIdent.identifikator,
+                                    personinfo.fulltNavn(),
+                                    req.fritekst,
+                                    req.saksnummer,
+                                    req.dokumentasjonType,
+                                    req.behandlingsReferanse
+                                )
+                            )
 
-                    låsRepository.verifiserSkrivelås(lås)
+                            låsRepository.verifiserSkrivelås(lås)
+                        }
+                    }
                     bestillingUUID
                 }
 
-                respond(bestillingUuid)
+                respond(requireNotNull(bestillingUuid))
             }
         }
         route("/status/{saksnummer}") {
