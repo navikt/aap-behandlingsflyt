@@ -8,7 +8,6 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovHendelseHåndterer
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOperasjonerRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehovHendelse
@@ -108,10 +107,6 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
 
                         val lås = taSkriveLåsRepository.lås(req.behandlingsReferanse.referanse)
 
-                        val avklaringsbehovOperasjonerRepository = repositoryProvider.provide(
-                            AvklaringsbehovOperasjonerRepository::class
-                        )
-
                         MDC.putCloseable("sakId", lås.sakSkrivelås.id.toString()).use {
                             MDC.putCloseable("behandlingId", lås.behandlingSkrivelås.id.toString())
                                 .use {
@@ -128,11 +123,17 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                                         behandlingRepository,
                                         sakRepository
                                     )
-                                    avklaringsbehovOperasjonerRepository.opprett(
-                                        behandlingId = behandling.id,
-                                        definisjon = Definisjon.BESTILL_BREV,
+
+                                    val avklaringsbehovene = repositoryProvider.provide(AvklaringsbehovRepository::class)
+                                        .hentAvklaringsbehovene(behandling.id)
+
+                                    avklaringsbehovene.validateTilstand(behandling = behandling)
+                                    avklaringsbehovene.leggTil(
+                                        definisjoner = listOf(Definisjon.BESTILL_BREV),
                                         funnetISteg = behandling.aktivtSteg(),
                                     )
+                                    avklaringsbehovene.validerPlassering(behandling = behandling)
+
                                     val bestillingReferanse = service.bestill(
                                         behandling.id,
                                         TypeBrev.VARSEL_OM_BESTILLING,
