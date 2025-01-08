@@ -41,17 +41,15 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
                 val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
                 val aktivitetspliktRepository = repositoryProvider.provide(AktivitetspliktRepository::class)
 
-
                 val behandlingId = BehandlingReferanseService(behandlingRepository).behandling(behandlingReferanse).id
 
-                val foo = underveisRepository.hent(behandlingId)
-
-                val underveisperiode = foo.perioder.first { it.bruddAktivitetspliktId != null }
-
-                bruddAktivitetspliktHendelseDto(
-                    dokument = aktivitetspliktRepository.hentBrudd(underveisperiode.bruddAktivitetspliktId!!),
-                    periode = underveisperiode.periode
-                )
+                underveisRepository.hent(behandlingId)
+                    .perioder
+                    .mapNotNull {
+                        val id = it.bruddAktivitetspliktId ?: return@mapNotNull null
+                        val dokument = aktivitetspliktRepository.hentBrudd(id)
+                        bruddAktivitetspliktHendelseDto(dokument, it.periode)
+                    }
             }
 
             respond(

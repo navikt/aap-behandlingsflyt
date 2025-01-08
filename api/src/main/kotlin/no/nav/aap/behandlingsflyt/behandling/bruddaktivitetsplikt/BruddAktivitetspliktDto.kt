@@ -92,7 +92,7 @@ data class Effektuer11_7Dto(
     val begrunnelse: String?,
     val forhåndsvarselDato: LocalDate?,
     val forhåndsvarselSvar: ForhåndsvarselSvar?,
-    val gjeldendeBrudd: BruddAktivitetspliktHendelseDto,
+    val gjeldendeBrudd: List<BruddAktivitetspliktHendelseDto>,
 )
 
 data class ForhåndsvarselSvar(
