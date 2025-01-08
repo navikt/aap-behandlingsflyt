@@ -19,17 +19,14 @@ class BrevbestillingService(
         return brevbestillingRepository.hent(behandlingId, typeBrev)
     }
 
-    fun bestill(behandlingId: BehandlingId, typeBrev: TypeBrev, vedlegg: Vedlegg? = null): UUID {
+    fun bestill(behandlingId: BehandlingId, typeBrev: TypeBrev, vedlegg: Vedlegg? = null, dialogmeldingUUID: UUID? = null): UUID {
         val behandling = behandlingRepository.hent(behandlingId)
         val sak = sakRepository.hent(behandling.sakId)
-
-        // TODO Skal kunne bestille flere TypeBrev.VARSEL_OM_BESTILLING for en behandling
-        val unikReferanse = "${behandling.referanse}-$typeBrev"
 
         val bestillingReferanse = brevbestillingGateway.bestillBrev(
             saksnummer = sak.saksnummer,
             behandlingReferanse = behandling.referanse,
-            unikReferanse = unikReferanse,
+            unikReferanse = dialogmeldingUUID.toString(),
             typeBrev = typeBrev,
             vedlegg = vedlegg
         )
