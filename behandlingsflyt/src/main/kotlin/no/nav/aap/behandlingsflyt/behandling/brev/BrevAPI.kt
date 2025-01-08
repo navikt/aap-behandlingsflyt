@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.behandling.brev
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
-import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.path.normal.put
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
@@ -46,6 +45,7 @@ import javax.sql.DataSource
 fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
 
     val brevAzp = requiredConfigForKey("integrasjon.brev.azp")
+    val dokumentinnhentingAzp = requiredConfigForKey("integrasjon.dokumentinnhenting.azp")
     route("/api") {
         route("/behandling") {
             route("/{referanse}/grunnlag/brev") {
@@ -98,7 +98,13 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
         }
         route("/brev") {
             route("/bestillingvarsel") {
-                post<Unit, UUID, VarselOmBrevbestillingDto> { _, req ->
+                authorizedPost<Unit, UUID, VarselOmBrevbestillingDto>(
+                    AuthorizationBodyPathConfig(
+                        operasjon = Operasjon.SAKSBEHANDLE,
+                        approvedApplications = setOf(dokumentinnhentingAzp),
+                        applicationsOnly = true
+                    )
+                ) { _, req ->
                     val bestillingVarselReferanse = dataSource.transaction { connection ->
                         val repositoryProvider = RepositoryProvider(connection)
 
