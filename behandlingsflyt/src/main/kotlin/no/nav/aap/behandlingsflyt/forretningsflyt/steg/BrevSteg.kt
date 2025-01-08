@@ -34,7 +34,7 @@ class BrevSteg private constructor(
         if (brevBehov.harBehovForBrev()) {
             val typeBrev = brevBehov.typeBrev!!
             val bestilling =
-                brevbestillingService.eksisterendeBestilling(kontekst.behandlingId, typeBrev)
+                brevbestillingService.hentBestillingForSteg(kontekst.behandlingId, typeBrev)
             if (bestilling == null) {
                 val behandling = behandlingRepository.hent(kontekst.behandlingId)
                 // Bestill hvis ikke bestilt allerede

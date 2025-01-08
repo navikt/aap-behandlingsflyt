@@ -15,8 +15,10 @@ class BrevbestillingService(
     private val sakRepository: SakRepository,
 ) {
 
-    fun eksisterendeBestilling(behandlingId: BehandlingId, typeBrev: TypeBrev): Brevbestilling? {
-        return brevbestillingRepository.hent(behandlingId, typeBrev)
+    fun hentBestillingForSteg(behandlingId: BehandlingId, typeBrev: TypeBrev): Brevbestilling? {
+        val bestillinger = brevbestillingRepository.hent(behandlingId).filter { it.typeBrev == typeBrev }
+        check(bestillinger.isEmpty() || bestillinger.size == 1)
+        return bestillinger.firstOrNull()
     }
 
     fun bestill(behandlingId: BehandlingId, typeBrev: TypeBrev, unikReferanse: String, vedlegg: Vedlegg? = null): UUID {

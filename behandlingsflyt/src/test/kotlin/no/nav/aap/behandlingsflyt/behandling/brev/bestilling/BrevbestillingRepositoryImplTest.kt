@@ -30,30 +30,29 @@ class BrevbestillingRepositoryImplTest {
             val typeBrev = TypeBrev.VEDTAK_INNVILGELSE
             val referanse = BrevbestillingReferanse(UUID.randomUUID())
 
-            assertThat(brevbestillingRepository.hent(behandlingId, typeBrev) ).isNull()
-            assertThat(brevbestillingRepository.hent(behandlingId, typeBrev)).isNull()
+            assertThat(brevbestillingRepository.hent(behandlingId)).isEmpty()
 
             brevbestillingRepository.lagre(behandlingId, typeBrev, referanse, Status.SENDT)
 
-            val brevbestilling = brevbestillingRepository.hent(behandlingId, typeBrev)
-            assertThat(brevbestilling).isNotNull()
-            assertThat(brevbestilling)
+            val brevbestilling = brevbestillingRepository.hent(behandlingId)
+            assertThat(brevbestilling).hasSize(1)
+            assertThat(brevbestilling.first())
                 .isEqualTo(
                     Brevbestilling(
-                        brevbestilling!!.id,
+                        brevbestilling.first().id,
                         behandlingId,
                         typeBrev,
                         referanse,
                         Status.SENDT
                     )
                 )
-            assertThat(brevbestillingRepository.hent(behandlingId, typeBrev))
-                .isEqualTo(brevbestilling)
-            assertThat(brevbestillingRepository.hent(behandlingId, TypeBrev.VEDTAK_AVSLAG)).isNull()
 
             brevbestillingRepository.oppdaterStatus(behandlingId, referanse, Status.FORHÅNDSVISNING_KLAR)
 
-            assertThat(brevbestillingRepository.hent(behandlingId, typeBrev)?.status).isEqualTo(Status.FORHÅNDSVISNING_KLAR)
+            val oppdatertBrevbestilling = brevbestillingRepository.hent(behandlingId)
+            assertThat(oppdatertBrevbestilling).hasSize(1)
+            assertThat(oppdatertBrevbestilling.first().status).isEqualTo(Status.FORHÅNDSVISNING_KLAR)
+            assertThat(oppdatertBrevbestilling.first().typeBrev).isEqualTo(typeBrev)
         }
     }
 

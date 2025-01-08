@@ -13,26 +13,6 @@ class BrevbestillingRepositoryImpl(private val connection: DBConnection) : Brevb
         }
     }
 
-    override fun hent(behandlingId: BehandlingId, typeBrev: TypeBrev): Brevbestilling? {
-        val query =
-            """
-                SELECT *
-                FROM BREVBESTILLING
-                WHERE BEHANDLING_ID = ?
-                AND TYPE_BREV = ?
-            """.trimIndent()
-
-        // TODO: noe logikk her for om spørringen returnerer flere?
-        // I.e validere at det bare er én som returnereS?
-        return connection.queryFirstOrNull(query) {
-            setParams {
-                setLong(1, behandlingId.toLong())
-                setEnumName(2, typeBrev)
-            }
-            setRowMapper { rowMapper(it) }
-        }
-    }
-
     override fun hent(behandlingId: BehandlingId): List<Brevbestilling> {
         val query =
             """

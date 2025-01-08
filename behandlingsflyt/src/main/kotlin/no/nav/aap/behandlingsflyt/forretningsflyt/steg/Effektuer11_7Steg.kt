@@ -54,7 +54,7 @@ class Effektuer11_7Steg private constructor(
             return Fullført
         }
 
-        val eksisterendeBrevBestilling = brevbestillingService.eksisterendeBestilling(kontekst.behandlingId, TypeBrev.VEDTAK_AVSLAG)
+        val eksisterendeBrevBestilling = brevbestillingService.hentBestillingForSteg(kontekst.behandlingId, TypeBrev.VEDTAK_AVSLAG)
 
         if (eksisterendeBrevBestilling == null) {
             brevbestillingService.bestill(kontekst.behandlingId, TypeBrev.VEDTAK_AVSLAG, "${behandling.referanse}-${TypeBrev.VEDTAK_AVSLAG}")
