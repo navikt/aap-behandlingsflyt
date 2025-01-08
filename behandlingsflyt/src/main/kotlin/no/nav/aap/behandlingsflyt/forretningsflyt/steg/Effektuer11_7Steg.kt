@@ -57,7 +57,7 @@ class Effektuer11_7Steg private constructor(
         val eksisterendeBrevBestilling = brevbestillingService.eksisterendeBestilling(kontekst.behandlingId, TypeBrev.VEDTAK_AVSLAG)
 
         if (eksisterendeBrevBestilling == null) {
-            brevbestillingService.bestill(kontekst.behandlingId, TypeBrev.VEDTAK_AVSLAG)
+            brevbestillingService.bestill(kontekst.behandlingId, TypeBrev.VEDTAK_AVSLAG, "${behandling.referanse}-${TypeBrev.VEDTAK_AVSLAG}")
         }
 
         if (eksisterendeBrevBestilling == null || eksisterendeBrevBestilling.status != Status.FULLFØRT) {

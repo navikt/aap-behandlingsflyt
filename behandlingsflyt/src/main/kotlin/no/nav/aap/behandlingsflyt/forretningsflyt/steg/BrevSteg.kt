@@ -25,7 +25,8 @@ private val logger = LoggerFactory.getLogger("BrevSteg")
 
 class BrevSteg private constructor(
     private val brevUtlederService: BrevUtlederService,
-    private val brevbestillingService: BrevbestillingService
+    private val brevbestillingService: BrevbestillingService,
+    private val behandlingRepository: BehandlingRepository
 ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -35,9 +36,10 @@ class BrevSteg private constructor(
             val bestilling =
                 brevbestillingService.eksisterendeBestilling(kontekst.behandlingId, typeBrev)
             if (bestilling == null) {
+                val behandling = behandlingRepository.hent(kontekst.behandlingId)
                 // Bestill hvis ikke bestilt allerede
                 logger.info("Bestiller brev for sak ${kontekst.sakId}.")
-                brevbestillingService.bestill(kontekst.behandlingId, typeBrev)
+                brevbestillingService.bestill(kontekst.behandlingId, typeBrev, "${behandling.referanse}-$typeBrev")
                 return FantVentebehov(Ventebehov(BESTILL_BREV, ÅrsakTilSettPåVent.VENTER_PÅ_MASKINELL_AVKLARING))
             }
         }
@@ -62,7 +64,8 @@ class BrevSteg private constructor(
                     brevbestillingRepository = brevbestillingRepository,
                     behandlingRepository = behandlingRepository,
                     sakRepository = sakRepository
-                )
+                ),
+                repositoryProvider.provide(BehandlingRepository::class)
             )
         }
 

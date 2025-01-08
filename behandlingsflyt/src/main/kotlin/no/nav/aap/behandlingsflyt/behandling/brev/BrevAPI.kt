@@ -135,10 +135,10 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                                     avklaringsbehovene.validerPlassering(behandling = behandling)
 
                                     val bestillingReferanse = service.bestill(
-                                        behandling.id,
-                                        TypeBrev.VARSEL_OM_BESTILLING,
-                                        req.vedlegg,
-                                        req.dialogmeldingUuid
+                                        behandlingId = behandling.id,
+                                        typeBrev = TypeBrev.VARSEL_OM_BESTILLING,
+                                        unikReferanse = req.dialogmeldingUuid.toString(),
+                                        vedlegg = req.vedlegg
                                     )
                                     taSkriveLåsRepository.verifiserSkrivelås(lås)
                                     bestillingReferanse

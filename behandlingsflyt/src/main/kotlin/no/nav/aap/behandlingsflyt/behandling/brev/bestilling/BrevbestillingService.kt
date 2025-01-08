@@ -19,14 +19,14 @@ class BrevbestillingService(
         return brevbestillingRepository.hent(behandlingId, typeBrev)
     }
 
-    fun bestill(behandlingId: BehandlingId, typeBrev: TypeBrev, vedlegg: Vedlegg? = null, dialogmeldingUUID: UUID? = null): UUID {
+    fun bestill(behandlingId: BehandlingId, typeBrev: TypeBrev, unikReferanse: String, vedlegg: Vedlegg? = null): UUID {
         val behandling = behandlingRepository.hent(behandlingId)
         val sak = sakRepository.hent(behandling.sakId)
 
         val bestillingReferanse = brevbestillingGateway.bestillBrev(
             saksnummer = sak.saksnummer,
             behandlingReferanse = behandling.referanse,
-            unikReferanse = dialogmeldingUUID.toString(),
+            unikReferanse = unikReferanse,
             typeBrev = typeBrev,
             vedlegg = vedlegg
         )
