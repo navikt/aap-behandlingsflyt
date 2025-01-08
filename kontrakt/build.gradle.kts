@@ -10,7 +10,7 @@ val tilgangVersjon = "0.0.81"
 val junitVersion = "5.11.3"
 
 dependencies {
-    api("com.fasterxml.jackson.core:jackson-annotations:2.18.1")
+    api("com.fasterxml.jackson.core:jackson-annotations:2.18.2")
     api("no.nav:ktor-openapi-generator:1.0.75")
     implementation("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
 
