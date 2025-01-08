@@ -50,7 +50,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
                 AuthorizationBodyPathConfig(
                     operasjon = Operasjon.SAKSBEHANDLE,
                     approvedApplications = setOf(saksbehandlingAzp),
-                    applicationsOnly = true
+                    applicationsOnly = false
                 )
             )
             { _, req ->
@@ -119,7 +119,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
             authorizedGet<HentStatusLegeerklæring, List<LegeerklæringStatusResponse>>(
                 AuthorizationParamPathConfig(
                     approvedApplications = setOf(saksbehandlingAzp),
-                    applicationsOnly = true
+                    applicationsOnly = false
                 )
             ) { par ->
                 val status = DokumeninnhentingGateway().legeerklæringStatus(par.saksnummer)
@@ -131,7 +131,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
                 AuthorizationBodyPathConfig(
                     operasjon = Operasjon.SAKSBEHANDLE,
                     approvedApplications = setOf(saksbehandlingAzp),
-                    applicationsOnly = true,
+                    applicationsOnly = false,
                 )
             ) { _, req ->
                 val brevPreview = dataSource.transaction(readOnly = true) { connection ->
