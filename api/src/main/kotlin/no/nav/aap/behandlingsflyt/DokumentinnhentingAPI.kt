@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
@@ -26,27 +25,41 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
+import no.nav.aap.tilgang.AuthorizationBodyPathConfig
+import no.nav.aap.tilgang.AuthorizationParamPathConfig
+import no.nav.aap.tilgang.authorizedGet
+import no.nav.aap.tilgang.authorizedPost
 import org.slf4j.MDC
+import tilgang.Operasjon
 import java.time.LocalDate
 import java.time.Period
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
+    val saksbehandlingAzp = requiredConfigForKey("integrasjon.saksbehandling.azp")
     route("/api/dokumentinnhenting/syfo") {
         route("/bestill") {
-            post<Unit, String, BestillLegeerklæringDto> { _, req ->
+            authorizedPost<Unit, String, BestillLegeerklæringDto>(
+                AuthorizationBodyPathConfig(
+                    operasjon = Operasjon.SAKSBEHANDLE,
+                    approvedApplications = setOf(saksbehandlingAzp),
+                    applicationsOnly = true
+                )
+            )
+            { _, req ->
                 val bestillingUuid = dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
 
                     val låsRepository = repositoryProvider.provide(TaSkriveLåsRepository::class)
                     val lås = låsRepository.lås(req.behandlingsReferanse)
-                    var bestillingUUID: String? = null
+                    var bestillingUUID: String?
 
                     MDC.putCloseable("sakId", lås.sakSkrivelås.id.toString()).use {
                         MDC.putCloseable("behandlingId", lås.behandlingSkrivelås.id.toString()).use {
@@ -103,13 +116,24 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
             }
         }
         route("/status/{saksnummer}") {
-            get<HentStatusLegeerklæring, List<LegeerklæringStatusResponse>> { par ->
+            authorizedGet<HentStatusLegeerklæring, List<LegeerklæringStatusResponse>>(
+                AuthorizationParamPathConfig(
+                    approvedApplications = setOf(saksbehandlingAzp),
+                    applicationsOnly = true
+                )
+            ) { par ->
                 val status = DokumeninnhentingGateway().legeerklæringStatus(par.saksnummer)
                 respond(status)
             }
         }
         route("/brevpreview") {
-            post<Unit, BrevResponse, ForhåndsvisBrevRequest> { _, req ->
+            authorizedPost<Unit, BrevResponse, ForhåndsvisBrevRequest>(
+                AuthorizationBodyPathConfig(
+                    operasjon = Operasjon.SAKSBEHANDLE,
+                    approvedApplications = setOf(saksbehandlingAzp),
+                    applicationsOnly = true,
+                )
+            ) { _, req ->
                 val brevPreview = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = RepositoryProvider(connection).provide(SakRepository::class)
                     val sak = repositoryProvider.hent((Saksnummer(req.saksnummer)))
@@ -130,6 +154,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
                 respond(brevPreview)
             }
         }
+        //TODO: Fikse denne til å benytte tilgangstyring, mangler journal/sak/behandlingkontekst i request
         route("/purring/{dialogmeldinguuid}") {
             post<PurringLegeerklæring, String, Unit> { par, _ ->
                 val request = LegeerklæringPurringRequest(par.dialogmeldingPurringUUID)
