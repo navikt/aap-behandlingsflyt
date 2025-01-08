@@ -34,6 +34,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
+import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import org.slf4j.MDC
@@ -119,7 +120,8 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
             authorizedGet<HentStatusLegeerklæring, List<LegeerklæringStatusResponse>>(
                 AuthorizationParamPathConfig(
                     approvedApplications = setOf(saksbehandlingAzp),
-                    applicationsOnly = false
+                    applicationsOnly = false,
+                    sakPathParam = SakPathParam("saksnummer")
                 )
             ) { par ->
                 val status = DokumeninnhentingGateway().legeerklæringStatus(par.saksnummer)
