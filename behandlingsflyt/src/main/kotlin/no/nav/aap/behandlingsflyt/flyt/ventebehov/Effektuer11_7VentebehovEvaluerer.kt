@@ -4,9 +4,10 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.komponenter.dbconnect.DBConnection
 import java.time.LocalDate
 
-class Effektuer11_7VentebehovEvaluerer : SpesifikkVentebehovEvaluerer {
+class Effektuer11_7VentebehovEvaluerer(private val connection: DBConnection) : SpesifikkVentebehovEvaluerer {
     override fun definisjon(): Definisjon {
         return Definisjon.EFFEKTUER_11_7
     }
