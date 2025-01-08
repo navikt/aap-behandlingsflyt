@@ -89,6 +89,7 @@ data class BruddAktivitetspliktResponse(
 )
 
 data class Effektuer11_7Dto(
+    val begrunnelse: String,
     val forhåndsvarselDato: LocalDate?,
     val forhåndsvarselSvar: ForhåndsvarselSvar?,
     val gjeldendeBrudd: BruddAktivitetspliktHendelseDto,

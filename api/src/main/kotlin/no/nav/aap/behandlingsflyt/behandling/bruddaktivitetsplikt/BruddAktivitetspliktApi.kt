@@ -56,9 +56,10 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
 
             respond(
                 Effektuer11_7Dto(
-                    null,
-                    null,
-                    bruddAktivitetspliktHendelseDto
+                    begrunnelse = "dette er en vurdering",
+                    forhåndsvarselDato = null,
+                    forhåndsvarselSvar = null,
+                    gjeldendeBrudd = bruddAktivitetspliktHendelseDto
                 )
             )
         }
