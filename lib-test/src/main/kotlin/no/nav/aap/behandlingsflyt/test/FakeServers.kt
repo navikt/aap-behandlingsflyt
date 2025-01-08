@@ -1208,6 +1208,10 @@ object FakeServers : AutoCloseable {
         // Dokumentinnhenting
         System.setProperty("integrasjon.dokumentinnhenting.url", "http://localhost:${dokumentinnhenting.port()}")
         System.setProperty("integrasjon.dokumentinnhenting.scope", "scope")
+        System.setProperty("integrasjon.dokumentinnhenting.azp", "azp")
+
+        // Saksbehandling
+        System.setProperty("integrasjon.saksbehandling.azp", "azp")
     }
 
     override fun close() {
