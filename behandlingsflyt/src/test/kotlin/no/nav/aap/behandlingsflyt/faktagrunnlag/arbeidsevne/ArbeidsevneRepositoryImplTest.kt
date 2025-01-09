@@ -3,9 +3,17 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.arbeidsevne
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneVurdering
+import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.lås.TaSkriveLåsRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.pip.PipRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -20,13 +28,20 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.lookup.repository.RepositoryRegistry
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-class ArbeidsevneRepositoryTest {
+class ArbeidsevneRepositoryImplTest {
+
+    @BeforeEach
+    fun setUp() {
+        RepositoryRegistry.register<ArbeidsevneRepositoryImpl>()
+    }
 
     @Test
     fun `Finner ikke arbeidsevne hvis ikke lagret`() {
@@ -34,7 +49,7 @@ class ArbeidsevneRepositoryTest {
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val arbeidsevneRepository = ArbeidsevneRepository(connection)
+            val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
             val arbeidsevneGrunnlag = arbeidsevneRepository.hentHvisEksisterer(behandling.id)
             assertThat(arbeidsevneGrunnlag).isNull()
         }
@@ -47,7 +62,7 @@ class ArbeidsevneRepositoryTest {
             val behandling = behandling(connection, sak)
             val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null)
 
-            val arbeidsevneRepository = ArbeidsevneRepository(connection)
+            val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
             arbeidsevneRepository.lagre(behandling.id, listOf(arbeidsevne))
             val vurderinger = arbeidsevneRepository.hentHvisEksisterer(behandling.id)?.vurderinger
             assertThat(vurderinger).hasSize(1)
@@ -60,7 +75,7 @@ class ArbeidsevneRepositoryTest {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
-            val arbeidsevneRepository = ArbeidsevneRepository(connection)
+            val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
             val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null)
 
             arbeidsevneRepository.lagre(behandling1.id, listOf(arbeidsevne))
@@ -81,7 +96,7 @@ class ArbeidsevneRepositoryTest {
     @Test
     fun `Kopiering av arbeidsevne fra en behandling uten opplysningene skal ikke føre til feil`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val arbeidsevneRepository = ArbeidsevneRepository(connection)
+            val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
             assertDoesNotThrow {
                 arbeidsevneRepository.kopier(BehandlingId(Long.MAX_VALUE - 1), BehandlingId(Long.MAX_VALUE))
             }
@@ -93,7 +108,7 @@ class ArbeidsevneRepositoryTest {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
-            val arbeidsevneRepository = ArbeidsevneRepository(connection)
+            val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
             val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null)
             val arbeidsevne2 = arbeidsevne.copy(begrunnelse = "annen begrunnelse")
 
@@ -118,7 +133,7 @@ class ArbeidsevneRepositoryTest {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
-            val arbeidsevneRepository = ArbeidsevneRepository(connection)
+            val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
             val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null)
             val arbeidsevne2 = arbeidsevne.copy("annen begrunnelse")
 
@@ -180,7 +195,7 @@ class ArbeidsevneRepositoryTest {
 
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
-            val arbeidsevneRepository = ArbeidsevneRepository(connection)
+            val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
             val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), LocalDateTime.now())
             val arbeidsevne2 = arbeidsevne.copy("annen begrunnelse")
 

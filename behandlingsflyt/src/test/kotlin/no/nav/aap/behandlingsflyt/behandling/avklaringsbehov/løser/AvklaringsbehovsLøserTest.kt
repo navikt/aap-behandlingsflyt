@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -20,6 +21,7 @@ class AvklaringsbehovsLøserTest {
         RepositoryRegistry.register(SakRepositoryImpl::class)
         RepositoryRegistry.register(BehandlingRepositoryImpl::class)
         RepositoryRegistry.register(AvklaringsbehovRepositoryImpl::class)
+        RepositoryRegistry.register(ArbeidsevneRepositoryImpl::class)
     }
 
     @Test

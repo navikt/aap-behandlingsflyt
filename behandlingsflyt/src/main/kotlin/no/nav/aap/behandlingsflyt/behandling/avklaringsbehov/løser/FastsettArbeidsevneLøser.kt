@@ -6,11 +6,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.Arbeid
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 class FastsettArbeidsevneLøser(
     connection: DBConnection,
 ) : AvklaringsbehovsLøser<FastsettArbeidsevneLøsning> {
-    private val arbeidsevneRepository = ArbeidsevneRepository(connection)
+    private val arbeidsevneRepository = RepositoryProvider(connection).provide(ArbeidsevneRepository::class)
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: FastsettArbeidsevneLøsning): LøsningsResultat {
         val arbeidsevneVurderinger = løsning.arbeidsevneVurderinger.map { it.toArbeidsevnevurdering() }

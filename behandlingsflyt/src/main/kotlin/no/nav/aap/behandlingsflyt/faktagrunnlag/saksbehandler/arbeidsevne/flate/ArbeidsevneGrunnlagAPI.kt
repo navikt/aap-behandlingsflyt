@@ -43,7 +43,7 @@ private fun arbeidsevneGrunnlag(
         val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
         val behandling: Behandling =
             BehandlingReferanseService(behandlingRepository).behandling(behandlingReferanse)
-        val arbeidsevneRepository = ArbeidsevneRepository(connection)
+        val arbeidsevneRepository = repositoryProvider.provide(ArbeidsevneRepository::class)
 
         val nåTilstand = arbeidsevneRepository.hentHvisEksisterer(behandling.id)?.vurderinger ?: return@transaction null
         val vedtatteVerdier =
@@ -67,7 +67,7 @@ private fun simuleringsresulat(
     return dataSource.transaction { con ->
         val repositoryProvider = RepositoryProvider(con)
         val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-        val arbeidsevneRepository = ArbeidsevneRepository(con)
+        val arbeidsevneRepository = repositoryProvider.provide(ArbeidsevneRepository::class)
         val behandling = BehandlingReferanseService(behandlingRepository).behandling(behandlingReferanse)
 
         val vedtatteArbeidsevner =

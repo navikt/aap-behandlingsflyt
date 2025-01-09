@@ -63,7 +63,7 @@ class UnderveisSteg(private val underveisService: UnderveisService) : Behandling
                         sakRepository,
                         behandlingRepository
                     ),
-                    arbeidsevneRepository = ArbeidsevneRepository(connection),
+                    arbeidsevneRepository = repositoryProvider.provide(ArbeidsevneRepository::class),
                     meldepliktRepository = MeldepliktRepository(connection),
                 )
             )
