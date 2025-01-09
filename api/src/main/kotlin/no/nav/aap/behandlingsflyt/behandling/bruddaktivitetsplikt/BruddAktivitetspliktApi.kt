@@ -27,6 +27,8 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.httpklient.auth.bruker
+import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.verdityper.dokument.Kanal
@@ -47,8 +49,13 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
                     .perioder
                     .mapNotNull {
                         val id = it.bruddAktivitetspliktId ?: return@mapNotNull null
-                        val dokument = aktivitetspliktRepository.hentBrudd(id)
-                        bruddAktivitetspliktHendelseDto(dokument, it.periode)
+                        Segment(it.periode, id)
+                    }
+                    .let { Tidslinje(it) }
+                    .komprimer()
+                    .map { segment ->
+                        val dokument = aktivitetspliktRepository.hentBrudd(segment.verdi)
+                        bruddAktivitetspliktHendelseDto(dokument, segment.periode)
                     }
             }
 
