@@ -129,5 +129,6 @@ class BrevGateway : BrevbestillingGateway {
         TypeBrev.VEDTAK_AVSLAG -> Brevtype.AVSLAG
         TypeBrev.VEDTAK_INNVILGELSE -> Brevtype.INNVILGELSE
         TypeBrev.VARSEL_OM_BESTILLING -> Brevtype.VARSEL_OM_BESTILLING
+        TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT -> Brevtype.AVSLAG //TODO - erstatt når ny type er i Brev
     }
 }
