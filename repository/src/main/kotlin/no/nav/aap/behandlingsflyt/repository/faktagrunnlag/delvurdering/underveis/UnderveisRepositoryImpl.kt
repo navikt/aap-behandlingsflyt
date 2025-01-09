@@ -41,7 +41,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
         }
     }
 
-    override fun mapGrunnlag(row: Row): UnderveisGrunnlag {
+    private fun mapGrunnlag(row: Row): UnderveisGrunnlag {
         val pliktkorteneId = row.getLong("perioder_id")
 
         val query = """
@@ -60,7 +60,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
         return UnderveisGrunnlag(row.getLong("id"), underveisperioder)
     }
 
-    override fun mapPeriode(it: Row): Underveisperiode {
+    private fun mapPeriode(it: Row): Underveisperiode {
 
         val antallTimer = it.getBigDecimal("timer_arbeid")
         val graderingProsent = it.getInt("gradering")
@@ -105,7 +105,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
         }
     }
 
-    override fun lagreNyttGrunnlag(
+    private fun lagreNyttGrunnlag(
         behandlingId: BehandlingId,
         underveisperioder: List<Underveisperiode>,
         input: Faktagrunnlag
@@ -158,7 +158,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
         }
     }
 
-    override fun deaktiverGrunnlag(behandlingId: BehandlingId) {
+    private fun deaktiverGrunnlag(behandlingId: BehandlingId) {
         connection.execute("UPDATE UNDERVEIS_GRUNNLAG set aktiv = false WHERE behandling_id = ? and aktiv = true") {
             setParams {
                 setLong(1, behandlingId.toLong())
