@@ -131,9 +131,9 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
         route("/brevpreview") {
             authorizedPost<Unit, BrevResponse, ForhåndsvisBrevRequest>(
                 AuthorizationBodyPathConfig(
-                    operasjon = Operasjon.SAKSBEHANDLE,
+                    operasjon = Operasjon.SE,
                     approvedApplications = setOf(saksbehandlingAzp),
-                    applicationsOnly = false,
+                    applicationsOnly = false
                 )
             ) { _, req ->
                 val brevPreview = dataSource.transaction(readOnly = true) { connection ->
