@@ -38,7 +38,6 @@ class Effektuer11_7Steg private constructor(
 ) : BehandlingSteg {
     private val typeBrev = TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT
 
-    // TODO - trenger ny brevtype
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         return Fullført
 
