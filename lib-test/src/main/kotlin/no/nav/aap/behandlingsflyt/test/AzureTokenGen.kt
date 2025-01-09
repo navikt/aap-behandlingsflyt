@@ -31,23 +31,11 @@ internal class AzureTokenGen(private val issuer: String, private val audience: S
             .issuer(issuer)
             .audience(audience)
             .expirationTime(LocalDateTime.now().plusHours(4).toDate())
+            .claim("NAVident", "Lokalsaksbehandler")
+            .claim("azp_name", "azp")
 
         if (isApp) {
-            builder
-                .claim("idtyp", "app")
-                .claim(
-                    "roles",
-                    listOf(
-                        "dokumentinnhenting-api",
-                        "opprett-sak",
-                        "hent-personinfo",
-                        "bestill-varselbrev",
-                        "brev",
-                        "pip-api"
-                    )
-                )
-        } else {
-            builder.claim("NAVident", "Lokalsaksbehandler")
+            builder.claim("idtyp", "app")
         }
 
         return builder.build()

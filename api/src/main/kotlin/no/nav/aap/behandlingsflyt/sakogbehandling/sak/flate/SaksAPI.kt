@@ -100,7 +100,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 routeConfig = AuthorizationBodyPathConfig(
                     operasjon = Operasjon.SAKSBEHANDLE,
                     applicationsOnly = true,
-                    applicationRole = "opprett-sak",
+                    approvedApplications = setOf(postmottakAzp)
                 )
             ) { _, dto ->
                 val saken: SaksinfoDTO = dataSource.transaction { connection ->
@@ -212,7 +212,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 authorizedGet<HentSakDTO, SakPersoninfoDTO>(
                     AuthorizationParamPathConfig(
                         sakPathParam = SakPathParam("saksnummer"),
-                        applicationRole = "hent-personinfo"
+                        approvedApplications = setOf(brevAzp)
                     )
                 ) { req ->
 

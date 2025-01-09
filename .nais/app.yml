@@ -68,26 +68,10 @@ spec:
     inbound:
       rules:
         - application: brev
-          permissions:
-              roles:
-                  - "brev"
-                  - "hent-personinfo"
         - application: saksbehandling
-          permissions:
-              roles:
-                  - "dokumentinnhenting-api"
         - application: tilgang
-          permissions:
-              roles:
-                  - "pip-api"
         - application: postmottak-backend
-          permissions:
-              roles:
-                  - "opprett-sak"
         - application: dokumentinnhenting
-          permissions:
-              roles:
-                  - "bestill-varselbrev"
         - application: paw-patrol
         - application: azure-token-generator # Ikke i prod :)
           namespace: aura

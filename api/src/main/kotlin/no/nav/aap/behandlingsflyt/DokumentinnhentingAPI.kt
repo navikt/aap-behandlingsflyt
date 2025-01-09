@@ -44,12 +44,13 @@ import java.time.Period
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
+    val saksbehandlingAzp = requiredConfigForKey("integrasjon.saksbehandling.azp")
     route("/api/dokumentinnhenting/syfo") {
         route("/bestill") {
             authorizedPost<Unit, String, BestillLegeerklæringDto>(
                 AuthorizationBodyPathConfig(
                     operasjon = Operasjon.SAKSBEHANDLE,
-                    applicationRole = "dokumentinnhenting-api",
+                    approvedApplications = setOf(saksbehandlingAzp),
                     applicationsOnly = false
                 )
             )
@@ -118,7 +119,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
         route("/status/{saksnummer}") {
             authorizedGet<HentStatusLegeerklæring, List<LegeerklæringStatusResponse>>(
                 AuthorizationParamPathConfig(
-                    applicationRole = "dokumentinnhenting-api",
+                    approvedApplications = setOf(saksbehandlingAzp),
                     applicationsOnly = false,
                     sakPathParam = SakPathParam("saksnummer")
                 )
@@ -131,7 +132,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
             authorizedPost<Unit, BrevResponse, ForhåndsvisBrevRequest>(
                 AuthorizationBodyPathConfig(
                     operasjon = Operasjon.SE,
-                    applicationRole = "dokumentinnhenting-api",
+                    approvedApplications = setOf(saksbehandlingAzp),
                     applicationsOnly = false
                 )
             ) { _, req ->
