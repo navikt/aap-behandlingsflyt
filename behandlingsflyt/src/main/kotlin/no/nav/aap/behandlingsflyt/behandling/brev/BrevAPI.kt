@@ -101,7 +101,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                 authorizedPost<Unit, UUID, VarselOmBrevbestillingDto>(
                     AuthorizationBodyPathConfig(
                         operasjon = Operasjon.SAKSBEHANDLE,
-                        approvedApplications = setOf(dokumentinnhentingAzp),
+                        applicationRole = "bestill-varselbrev",
                         applicationsOnly = true
                     )
                 ) { _, req ->
@@ -164,7 +164,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                 authorizedPost<Unit, String, LøsBrevbestillingDto>(
                     AuthorizationBodyPathConfig(
                         operasjon = Operasjon.SAKSBEHANDLE,
-                        approvedApplications = setOf(brevAzp),
+                        applicationRole = "brev",
                         applicationsOnly = true
                     )
                 ) { _, request ->

@@ -22,7 +22,7 @@ fun NormalOpenAPIRoute.behandlingsflytPip(dataSource: DataSource) {
             authorizedGet<SakDTO, IdenterDTO>(
                 AuthorizationParamPathConfig(
                     sakPathParam = SakPathParam("saksnummer"),
-                    approvedApplications = setOf(tilgangAzp),
+                    applicationRole = "pip-api",
                     applicationsOnly = true
                 )
             ) { req ->
@@ -44,7 +44,7 @@ fun NormalOpenAPIRoute.behandlingsflytPip(dataSource: DataSource) {
             authorizedGet<BehandlingDTO, IdenterDTO>(
                 AuthorizationParamPathConfig(
                     behandlingPathParam = BehandlingPathParam("behandlingsnummer"),
-                    approvedApplications = setOf(tilgangAzp),
+                    applicationRole = "pip-api",
                     applicationsOnly = true
                 )
             ) { req ->
