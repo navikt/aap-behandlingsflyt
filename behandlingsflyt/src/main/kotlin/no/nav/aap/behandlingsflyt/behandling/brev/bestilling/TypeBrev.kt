@@ -3,5 +3,6 @@ package no.nav.aap.behandlingsflyt.behandling.brev.bestilling
 enum class TypeBrev {
     VEDTAK_AVSLAG,
     VEDTAK_INNVILGELSE,
-    VARSEL_OM_BESTILLING
+    VARSEL_OM_BESTILLING,
+    FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT
 }

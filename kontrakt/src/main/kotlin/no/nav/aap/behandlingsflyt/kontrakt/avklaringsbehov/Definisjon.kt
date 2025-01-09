@@ -152,7 +152,7 @@ public enum class Definisjon(
     ),
     EFFEKTUER_11_7(
         kode = AvklaringsbehovKode.`5015`,
-        type = BehovType.MANUELT_FRIVILLIG,
+        type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.EFFEKTUER_11_7,
         løsesAv = listOf(Rolle.VEILEDER)
     ),

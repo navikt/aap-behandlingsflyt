@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.flyt.steg.Ventebehov
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.BESTILL_BREV
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.EFFEKTUER_11_7
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.SKRIV_BREV
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -35,6 +36,8 @@ class Effektuer11_7Steg private constructor(
     private val behandlingRepository: BehandlingRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository
 ) : BehandlingSteg {
+    private val typeBrev = TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT
+
     // TODO - trenger ny brevtype
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         return Fullført
@@ -54,15 +57,25 @@ class Effektuer11_7Steg private constructor(
             return Fullført
         }
 
-        val eksisterendeBrevBestilling = brevbestillingService.hentBestillingForSteg(kontekst.behandlingId, TypeBrev.VEDTAK_AVSLAG)
+        val eksisterendeBrevBestilling = brevbestillingService.hentBestillingForSteg(kontekst.behandlingId, typeBrev)
 
         if (eksisterendeBrevBestilling == null) {
-            brevbestillingService.bestill(kontekst.behandlingId, TypeBrev.VEDTAK_AVSLAG, "${behandling.referanse}-${TypeBrev.VEDTAK_AVSLAG}")
+            brevbestillingService.bestill(kontekst.behandlingId, typeBrev, "${behandling.referanse}-$typeBrev")
         }
 
         if (eksisterendeBrevBestilling == null || eksisterendeBrevBestilling.status != Status.FULLFØRT) {
-            return FantVentebehov(Ventebehov(BESTILL_BREV, ÅrsakTilSettPåVent.VENTER_PÅ_MASKINELL_AVKLARING))
+            return FantVentebehov(Ventebehov(
+                definisjon = BESTILL_BREV,
+                grunn = ÅrsakTilSettPåVent.VENTER_PÅ_MASKINELL_AVKLARING
+            ))
         }
+
+        val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+        val skrivBrevAvklaringsbehov = avklaringsbehov.alle().singleOrNull { it.definisjon == SKRIV_BREV }
+        if (skrivBrevAvklaringsbehov != null) {
+            throw IllegalStateException("Brudd aktivitetsplikt-brev skal være helautomatisk (foreløpig)")
+        }
+
 
 
         val frist = LocalDate.of(2025, 12, 1) // TODO
@@ -77,10 +90,9 @@ class Effektuer11_7Steg private constructor(
             )
         }
 
-        val avklaringsbehovet =  avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-            .alle().singleOrNull { it.definisjon == EFFEKTUER_11_7 }
+        val effektuer117avklaringsbehov =  avklaringsbehov.alle().singleOrNull { it.definisjon == EFFEKTUER_11_7 }
 
-        if (avklaringsbehovet == null || avklaringsbehovet.erÅpent()) {
+        if (effektuer117avklaringsbehov == null || effektuer117avklaringsbehov.erÅpent()) {
             return FantAvklaringsbehov(EFFEKTUER_11_7)
         }
 
