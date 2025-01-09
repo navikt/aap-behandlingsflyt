@@ -4,6 +4,7 @@ import com.papsign.ktor.openapigen.annotations.parameters.PathParam
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.DokumentasjonType
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.tilgang.plugin.kontrakt.Behandlingsreferanse
+import no.nav.aap.tilgang.plugin.kontrakt.Saksreferanse
 import java.util.*
 
 data class BestillLegeerklæringDto (
@@ -30,7 +31,11 @@ data class ForhåndsvisBrevRequest (
     val fritekst: String,
     val veilederNavn: String,
     val dokumentasjonType: DokumentasjonType
-)
+) : Saksreferanse {
+    override fun hentSaksreferanse(): String {
+        return saksnummer
+    }
+}
 
 data class HentStatusLegeerklæring(@PathParam("saksnummer") val saksnummer: String)
 
