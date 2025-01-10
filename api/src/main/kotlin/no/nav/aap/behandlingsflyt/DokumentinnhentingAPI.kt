@@ -96,7 +96,6 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
                                     req.behandlerRef,
                                     req.behandlerNavn,
                                     req.behandlerHprNr,
-                                    req.veilederNavn,
                                     personIdent.identifikator,
                                     personinfo.fulltNavn(),
                                     req.fritekst,
