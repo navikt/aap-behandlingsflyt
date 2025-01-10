@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSet
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevGateway
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
@@ -28,27 +27,29 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
 
-class Effektuer11_7Steg private constructor(
+class Effektuer11_7Steg(
     private val underveisRepository: UnderveisRepository,
     private val brevbestillingService: BrevbestillingService,
     private val behandlingRepository: BehandlingRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository
 ) : BehandlingSteg {
+    private val logger = LoggerFactory.getLogger(Effektuer11_7Steg::class.java)
     private val typeBrev = TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        return Fullført
-
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
         val underveisGrunnlag = underveisRepository.hent(kontekst.behandlingId)
-        val relevanteBrudd = underveisGrunnlag.perioder.filter { it.avslagsårsak == UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT }
-            .let { Tidslinje(it.map { Segment(it.periode, it)} ) }
+        val relevanteBrudd =
+            underveisGrunnlag.perioder.filter { it.avslagsårsak == UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT }
+                .let { Tidslinje(it.map { Segment(it.periode, it) }) }
 
         val forrigeUnderveisGrunnlag = behandling.forrigeBehandlingId?.let { underveisRepository.hent(it) }
-        val forrigeBrudd = forrigeUnderveisGrunnlag?.perioder.orEmpty().filter { it.avslagsårsak == UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT }
-            .let { Tidslinje(it.map { Segment(it.periode, it ) })}
+        val forrigeBrudd = forrigeUnderveisGrunnlag?.perioder.orEmpty()
+            .filter { it.avslagsårsak == UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT }
+            .let { Tidslinje(it.map { Segment(it.periode, it) }) }
 
         val nyeBrudd = relevanteBrudd.kombiner(forrigeBrudd, StandardSammenslåere.minus())
 
@@ -58,38 +59,58 @@ class Effektuer11_7Steg private constructor(
 
         val eksisterendeBrevBestilling = brevbestillingService.hentBestillingForSteg(kontekst.behandlingId, typeBrev)
 
-        if (eksisterendeBrevBestilling == null) {
+        if (eksisterendeBrevBestilling == null || false /* TODO: eksisterende varsel er ikke dekkende */) {
+            // XXX: skulle gjerne "avbrutt" tidligere bestilling av brev, men det er ikke mulig i dag.
             brevbestillingService.bestill(kontekst.behandlingId, typeBrev, "${behandling.referanse}-$typeBrev")
-        }
-
-        if (eksisterendeBrevBestilling == null || eksisterendeBrevBestilling.status != Status.FULLFØRT) {
-            return FantVentebehov(Ventebehov(
-                definisjon = BESTILL_BREV,
-                grunn = ÅrsakTilSettPåVent.VENTER_PÅ_MASKINELL_AVKLARING
-            ))
-        }
-
-        val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        val skrivBrevAvklaringsbehov = avklaringsbehov.alle().singleOrNull { it.definisjon == SKRIV_BREV }
-        if (skrivBrevAvklaringsbehov != null) {
-            throw IllegalStateException("Brudd aktivitetsplikt-brev skal være helautomatisk (foreløpig)")
-        }
-
-
-
-        val frist = LocalDate.of(2025, 12, 1) // TODO
-
-        if (LocalDate.now() <= frist /* TODO: og ikke fått svar (SpesifikkVentebehovEvaluerer) */) {
             return FantVentebehov(
                 Ventebehov(
-                    definisjon = EFFEKTUER_11_7,
-                    grunn = ÅrsakTilSettPåVent.VENTER_PÅ_SVAR_FRA_BRUKER,
-                    frist = frist,
+                    definisjon = BESTILL_BREV,
+                    grunn = ÅrsakTilSettPåVent.VENTER_PÅ_MASKINELL_AVKLARING
                 )
             )
         }
 
-        val effektuer117avklaringsbehov =  avklaringsbehov.alle().singleOrNull { it.definisjon == EFFEKTUER_11_7 }
+
+        val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+        // XXX: her ønsker vi egentlig en form for fall-back hvis brev ikke er automatisk?
+        // TODO: blir "forlatte" SKRIV_BREV-avklarings-behov automatisk lukket?
+        val skrivBrevAvklaringsbehov = avklaringsbehov.åpne().any { it.definisjon == SKRIV_BREV }
+        if (skrivBrevAvklaringsbehov) {
+            throw IllegalStateException("Brudd aktivitetsplikt-brev skal være helautomatisk (foreløpig)")
+        }
+
+        val brev = brevbestillingService.hentSisteBrevbestilling(behandling.id) ?: run {
+            // TODO: Dette burde ikke kunne skje: prøv å strukturer koden slik at vi ikke ender opp her
+            logger.error("Finner ikke brev selv om brev er bestillt")
+            return Fullført
+        }
+
+        if (brev.status == no.nav.aap.brev.kontrakt.Status.FERDIGSTILT) {
+            // `oppdatert` er det beste vi har tilgjengelig nå. Ideelt sett skulle vi nok brukt
+            // `ekspedert` fra dokument-distribusjon, men det har vi ikke tilgjengelig i dag.
+            val frist = brev.oppdatert.plusWeeks(3).toLocalDate()
+
+            if (LocalDate.now() <= frist /* TODO: og ikke fått svar (SpesifikkVentebehovEvaluerer) */) {
+                return FantVentebehov(
+                    Ventebehov(
+                        definisjon = EFFEKTUER_11_7,
+                        grunn = ÅrsakTilSettPåVent.VENTER_PÅ_SVAR_FRA_BRUKER,
+                        frist = frist,
+                    )
+                )
+            }
+        } else {
+            /* Brevet er bestilt, men ikke ikke sendt enda. Vi vet derfor ikke fristen, så sjekker igjen i morgen. */
+            return FantVentebehov(
+                Ventebehov(
+                    definisjon = EFFEKTUER_11_7,
+                    grunn = ÅrsakTilSettPåVent.VENTER_PÅ_MASKINELL_AVKLARING, /* Under antagelsen om at varselet er automatisk, så venter vi på at bestillingen blir utført maskinelt. */
+                    frist = LocalDate.now().plusDays(1),
+                )
+            )
+        }
+
+        val effektuer117avklaringsbehov = avklaringsbehov.alle().singleOrNull { it.definisjon == EFFEKTUER_11_7 }
 
         if (effektuer117avklaringsbehov == null || effektuer117avklaringsbehov.erÅpent()) {
             return FantAvklaringsbehov(EFFEKTUER_11_7)

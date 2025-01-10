@@ -47,10 +47,13 @@ class BrevbestillingService(
 
     fun hentSisteBrevbestilling(behandlingReferanse: BehandlingReferanse): BrevbestillingResponse? {
         val behandling = behandlingRepository.hent(behandlingReferanse)
+        return hentSisteBrevbestilling(behandling.id)
+    }
 
+    fun hentSisteBrevbestilling(behandlingId: BehandlingId): BrevbestillingResponse? {
         val brevbestilling =
             // TODO Bør ha en mer robust logikk for å finne relevant brev for editering, gitt en behandlingreferanse
-            brevbestillingRepository.hent(behandling.id).maxByOrNull { it.id }!!
+            brevbestillingRepository.hent(behandlingId).maxByOrNull { it.id }!!
 
         return brevbestillingGateway.hent(brevbestilling.referanse)
     }
