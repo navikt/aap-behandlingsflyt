@@ -156,7 +156,7 @@ public enum class Definisjon(
         løsesAv = listOf(Rolle.VEILEDER),
     ),
     AVKLAR_LOVVALG_MEDLEMSKAP(
-        kode = AvklaringsbehovKode.`5016`,
+        kode = AvklaringsbehovKode.`5017`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.VURDER_LOVVALG,
         løsesAv = listOf(Rolle.SAKSBEHANDLER)
