@@ -155,6 +155,12 @@ public enum class Definisjon(
         løsesISteg = StegType.EFFEKTUER_11_7,
         løsesAv = listOf(Rolle.VEILEDER),
     ),
+    AVKLAR_LOVVALG_MEDLEMSKAP(
+        kode = AvklaringsbehovKode.`5016`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.VURDER_LOVVALG,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER)
+    ),
     EFFEKTUER_11_7(
         kode = AvklaringsbehovKode.`5015`,
         type = BehovType.MANUELT_PÅKREVD,

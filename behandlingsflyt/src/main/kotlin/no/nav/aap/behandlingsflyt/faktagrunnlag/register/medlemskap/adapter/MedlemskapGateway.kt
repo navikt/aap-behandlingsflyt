@@ -57,7 +57,8 @@ class MedlemskapGateway : MedlemskapGateway {
                 medlem = it.medlem,
                 grunnlag = it.grunnlag,
                 lovvalg = it.lovvalg,
-                helsedel = it.helsedel
+                helsedel = it.helsedel,
+                lovvalgsland = it.lovvalgsland?.uppercase(),
             )
         }
     }

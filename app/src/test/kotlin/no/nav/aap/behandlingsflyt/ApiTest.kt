@@ -178,7 +178,8 @@ class ApiTest {
                         lovvalg = "lovvalg",
                         medlem = true,
                         status = "GYLD",
-                        statusaarsak = null
+                        statusaarsak = null,
+                        lovvalgsland = "NORGE"
                     )
                 )
             )

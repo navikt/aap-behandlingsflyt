@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper
 
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortService
@@ -48,7 +49,7 @@ object Revurdering : BehandlingType {
     override fun flyt(): BehandlingFlyt {
         return BehandlingFlytBuilder()
             .medSteg(steg = StartBehandlingSteg, informasjonskrav = listOf(SøknadService))
-            .medSteg(steg = VurderLovvalgSteg)
+            .medSteg(steg = VurderLovvalgSteg, informasjonskrav = listOf(LovvalgService))
             .medSteg(
                 steg = VurderAlderSteg,
                 informasjonskrav = listOf(PersonopplysningService)

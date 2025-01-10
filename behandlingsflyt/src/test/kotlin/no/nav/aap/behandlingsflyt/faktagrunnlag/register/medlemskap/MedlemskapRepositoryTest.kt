@@ -55,7 +55,8 @@ class MedlemskapRepositoryTest {
                         medlem = true,
                         grunnlag = "FLK-TRGD",
                         lovvalg = "FLK_TRGD",
-                        helsedel = true
+                        helsedel = true,
+                        lovvalgsland = "NORGE"
                     )
                 )
             )

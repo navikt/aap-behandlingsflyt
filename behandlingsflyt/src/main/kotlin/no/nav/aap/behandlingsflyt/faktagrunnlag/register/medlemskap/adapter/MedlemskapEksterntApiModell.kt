@@ -15,5 +15,6 @@ data class MedlemskapResponse(
     val medlem: Boolean,
     val grunnlag: String,
     val lovvalg: String,
-    val helsedel: Boolean
+    val helsedel: Boolean,
+    val lovvalgsland: String?
 )
