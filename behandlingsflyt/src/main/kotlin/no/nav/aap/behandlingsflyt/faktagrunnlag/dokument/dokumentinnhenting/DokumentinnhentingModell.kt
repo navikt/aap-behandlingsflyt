@@ -36,7 +36,6 @@ data class BrevRequest(
     val personNavn: String,
     val personIdent: String,
     val dialogmeldingTekst: String,
-    val veilederNavn: String,
     val dokumentasjonType: DokumentasjonType
 )
 

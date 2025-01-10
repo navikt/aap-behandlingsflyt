@@ -147,7 +147,6 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
                         personinfo.fulltNavn(),
                         personIdent.identifikator,
                         req.fritekst,
-                        req.veilederNavn,
                         req.dokumentasjonType,
                     )
                     DokumeninnhentingGateway().forhåndsvisBrev(brevRequest)

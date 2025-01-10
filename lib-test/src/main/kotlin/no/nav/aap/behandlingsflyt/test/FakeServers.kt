@@ -332,9 +332,6 @@ object FakeServers : AutoCloseable {
                     Folketrygdloven § 21-4 andre ledd gir Nav rett til å innhente nødvendige opplysninger. Dette gjelder selv om opplysningene er taushetsbelagte, jf. § 21-4 sjette ledd.\n
                     Pålegget om utlevering av opplysninger kan påklages etter forvaltningsloven § 14.\n
                     Klageadgangen gjelder kun lovligheten i pålegget. Fristen for å klage er tre dager etter at pålegget er mottatt. Klagen kan fremsettes muntlig eller skriftlig.\n
-                    Med vennlig hilsen\n
-                    ${req.veilederNavn}\n
-                    Nav
                 """.trimIndent()
 
                 call.respond(brev)

@@ -29,7 +29,6 @@ data class BestillLegeerklæringDto (
 data class ForhåndsvisBrevRequest (
     val saksnummer: String,
     val fritekst: String,
-    val veilederNavn: String,
     val dokumentasjonType: DokumentasjonType
 ) : Saksreferanse {
     override fun hentSaksreferanse(): String {
