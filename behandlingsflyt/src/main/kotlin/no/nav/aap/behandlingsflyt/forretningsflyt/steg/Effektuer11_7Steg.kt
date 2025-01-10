@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.flyt.steg.Ventebehov
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.BESTILL_BREV
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.EFFEKTUER_11_7
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.FORHÅNDSVARSEL_AKTIVITETSPLIKT
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.SKRIV_BREV
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -93,7 +94,7 @@ class Effektuer11_7Steg(
             if (LocalDate.now() <= frist /* TODO: og ikke fått svar (SpesifikkVentebehovEvaluerer) */) {
                 return FantVentebehov(
                     Ventebehov(
-                        definisjon = EFFEKTUER_11_7,
+                        definisjon = FORHÅNDSVARSEL_AKTIVITETSPLIKT,
                         grunn = ÅrsakTilSettPåVent.VENTER_PÅ_SVAR_FRA_BRUKER,
                         frist = frist,
                     )
@@ -103,7 +104,7 @@ class Effektuer11_7Steg(
             /* Brevet er bestilt, men ikke ikke sendt enda. Vi vet derfor ikke fristen, så sjekker igjen i morgen. */
             return FantVentebehov(
                 Ventebehov(
-                    definisjon = EFFEKTUER_11_7,
+                    definisjon = FORHÅNDSVARSEL_AKTIVITETSPLIKT,
                     grunn = ÅrsakTilSettPåVent.VENTER_PÅ_MASKINELL_AVKLARING, /* Under antagelsen om at varselet er automatisk, så venter vi på at bestillingen blir utført maskinelt. */
                     frist = LocalDate.now().plusDays(1),
                 )

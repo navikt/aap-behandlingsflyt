@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.entries
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import tilgang.Rolle
 import java.time.LocalDate
@@ -149,6 +148,12 @@ public enum class Definisjon(
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.SAMORDNING_GRADERING,
         løsesAv = listOf(Rolle.SAKSBEHANDLER)
+    ),
+    FORHÅNDSVARSEL_AKTIVITETSPLIKT(
+        kode = AvklaringsbehovKode.`5016`,
+        type = BehovType.BREV_VENTEPUNKT,
+        løsesISteg = StegType.EFFEKTUER_11_7,
+        løsesAv = listOf(Rolle.VEILEDER),
     ),
     EFFEKTUER_11_7(
         kode = AvklaringsbehovKode.`5015`,
