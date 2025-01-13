@@ -21,6 +21,8 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.Faktagrunnlag
+import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.FaktagrunnlagDto
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.LøsBrevbestillingDto
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.ElementNotFoundException
@@ -39,6 +41,7 @@ import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.authorizedPost
 import org.slf4j.MDC
 import tilgang.Operasjon
+import java.time.LocalDate
 import java.util.*
 import javax.sql.DataSource
 
@@ -212,6 +215,18 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                         }
                     }
                     respond("{}", HttpStatusCode.Accepted)
+                }
+            }
+            route("/faktagrunnlag") {
+                authorizedPost<Unit, FaktagrunnlagDto, LøsBrevbestillingDto>(
+                    AuthorizationBodyPathConfig(
+                        operasjon = Operasjon.SAKSBEHANDLE,
+                        applicationRole = "brev",
+                        applicationsOnly = true
+                    )
+                ) { _, request ->
+                    // TODO : Finne ut hva som faktisk skal returneres, midlertidig løsning
+                    respond(FaktagrunnlagDto(listOf(Faktagrunnlag.Testverdi("Test string"))))
                 }
             }
         }
