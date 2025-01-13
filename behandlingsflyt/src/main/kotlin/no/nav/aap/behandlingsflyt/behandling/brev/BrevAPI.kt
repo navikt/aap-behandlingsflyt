@@ -218,7 +218,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                 }
             }
             route("/faktagrunnlag") {
-                authorizedPost<HentFaktaGrunnlagRequest, FaktagrunnlagDto, LøsBrevbestillingDto>(
+                authorizedPost<Unit, FaktagrunnlagDto, HentFaktaGrunnlagRequest>(
                     AuthorizationBodyPathConfig(
                         operasjon = Operasjon.SAKSBEHANDLE,
                         applicationRole = "brev",
