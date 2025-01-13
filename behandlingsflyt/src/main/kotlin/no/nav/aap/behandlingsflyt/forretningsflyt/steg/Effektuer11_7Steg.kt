@@ -29,13 +29,15 @@ import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
+import java.time.Clock
 import java.time.LocalDate
 
 class Effektuer11_7Steg(
     private val underveisRepository: UnderveisRepository,
     private val brevbestillingService: BrevbestillingService,
     private val behandlingRepository: BehandlingRepository,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    internal var clock: Clock = Clock.systemDefaultZone(),
 ) : BehandlingSteg {
     private val logger = LoggerFactory.getLogger(Effektuer11_7Steg::class.java)
     private val typeBrev = TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT
@@ -91,7 +93,7 @@ class Effektuer11_7Steg(
             // `ekspedert` fra dokument-distribusjon, men det har vi ikke tilgjengelig i dag.
             val frist = brev.oppdatert.plusWeeks(3).toLocalDate()
 
-            if (LocalDate.now() <= frist /* TODO: og ikke fått svar (SpesifikkVentebehovEvaluerer) */) {
+            if (LocalDate.now(clock) <= frist /* TODO: og ikke fått svar (SpesifikkVentebehovEvaluerer) */) {
                 return FantVentebehov(
                     Ventebehov(
                         definisjon = FORHÅNDSVARSEL_AKTIVITETSPLIKT,
@@ -106,7 +108,7 @@ class Effektuer11_7Steg(
                 Ventebehov(
                     definisjon = FORHÅNDSVARSEL_AKTIVITETSPLIKT,
                     grunn = ÅrsakTilSettPåVent.VENTER_PÅ_MASKINELL_AVKLARING, /* Under antagelsen om at varselet er automatisk, så venter vi på at bestillingen blir utført maskinelt. */
-                    frist = LocalDate.now().plusDays(1),
+                    frist = LocalDate.now(clock).plusDays(1),
                 )
             )
         }

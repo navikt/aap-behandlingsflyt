@@ -7,11 +7,15 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
+import no.nav.aap.brev.kontrakt.Brevtype
+import no.nav.aap.brev.kontrakt.Språk
+import no.nav.aap.brev.kontrakt.Status
 import no.nav.aap.brev.kontrakt.Vedlegg
+import java.time.LocalDateTime
 import java.util.*
 
 class FakeBrevbestillingGateway : BrevbestillingGateway {
-    var brevbestillingReferanse: BrevbestillingReferanse? = null
+    var brevbestillingResponse: BrevbestillingResponse? = null
     override fun bestillBrev(
         saksnummer: Saksnummer,
         behandlingReferanse: BehandlingReferanse,
@@ -21,16 +25,26 @@ class FakeBrevbestillingGateway : BrevbestillingGateway {
     ): BrevbestillingReferanse {
         return BrevbestillingReferanse(UUID.randomUUID())
             .also {
-                brevbestillingReferanse = it
+                brevbestillingResponse = BrevbestillingResponse(
+                    referanse = it.brevbestillingReferanse,
+                    brev = null,
+                    opprettet = LocalDateTime.now(),
+                    oppdatert = LocalDateTime.now(),
+                    behandlingReferanse = behandlingReferanse.referanse,
+                    brevtype = Brevtype.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT,
+                    språk = Språk.NB,
+                    status = Status.REGISTRERT
+                )
             }
     }
 
     override fun ferdigstill(referanse: BrevbestillingReferanse): Boolean {
-        TODO("Not yet implemented")
+        brevbestillingResponse = brevbestillingResponse!!.copy(status = Status.FERDIGSTILT)
+        return true
     }
 
     override fun hent(bestillingReferanse: BrevbestillingReferanse): BrevbestillingResponse {
-        TODO("Not yet implemented")
+        return brevbestillingResponse!!
     }
 
     override fun oppdater(bestillingReferanse: BrevbestillingReferanse, brev: Brev) {

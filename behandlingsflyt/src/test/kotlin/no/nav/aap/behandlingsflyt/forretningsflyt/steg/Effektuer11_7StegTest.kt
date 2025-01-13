@@ -1,16 +1,16 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import io.ktor.client.utils.*
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent.VENTER_PÅ_MASKINELL_AVKLARING
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FULLFØRT
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.tomUnderveisInput
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktId
+import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FantVentebehov
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.Ventebehov
@@ -21,6 +21,8 @@ import no.nav.aap.behandlingsflyt.flyt.testutil.InMemoryBrevbestillingRepository
 import no.nav.aap.behandlingsflyt.flyt.testutil.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.flyt.testutil.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.EFFEKTUER_11_7
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.FORHÅNDSVARSEL_AKTIVITETSPLIKT
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -30,7 +32,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.januar
-import no.nav.aap.brev.kontrakt.Status
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -40,6 +41,11 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertInstanceOf
 import org.junit.jupiter.api.assertThrows
 import java.math.BigDecimal
+import java.time.Clock
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 import java.util.*
 
 class Effektuer11_7StegTest {
@@ -86,11 +92,13 @@ class Effektuer11_7StegTest {
             sakId = sak.id,
             behandlingId = behandling.id,
             behandlingType = TypeBehandling.Førstegangsbehandling,
-            perioderTilVurdering = setOf(Vurdering(
-                type = VurderingType.FØRSTEGANGSBEHANDLING,
-                årsaker = listOf(),
-                periode = sak.rettighetsperiode,
-            )),
+            perioderTilVurdering = setOf(
+                Vurdering(
+                    type = VurderingType.FØRSTEGANGSBEHANDLING,
+                    årsaker = listOf(),
+                    periode = sak.rettighetsperiode,
+                )
+            ),
         )
         val resultat = steg.utfør(kontekst)
 
@@ -98,7 +106,7 @@ class Effektuer11_7StegTest {
     }
 
     @Test
-    fun `ny sak med ikke-relevante brudd er alltid fullført`()  {
+    fun `ny sak med ikke-relevante brudd er alltid fullført`() {
         val steg = Effektuer11_7Steg(
             underveisRepository = InMemoryUnderveisRepository,
             brevbestillingService = BrevbestillingService(
@@ -142,11 +150,13 @@ class Effektuer11_7StegTest {
             sakId = sak.id,
             behandlingId = behandling.id,
             behandlingType = TypeBehandling.Førstegangsbehandling,
-            perioderTilVurdering = setOf(Vurdering(
-                type = VurderingType.FØRSTEGANGSBEHANDLING,
-                årsaker = listOf(),
-                periode = sak.rettighetsperiode,
-            )),
+            perioderTilVurdering = setOf(
+                Vurdering(
+                    type = VurderingType.FØRSTEGANGSBEHANDLING,
+                    årsaker = listOf(),
+                    periode = sak.rettighetsperiode,
+                )
+            ),
         )
         val resultat = steg.utfør(kontekst)
 
@@ -154,7 +164,7 @@ class Effektuer11_7StegTest {
     }
 
     @Test
-    fun `ny sak med relevante brudd ventebehov på bestilling av brev`()  {
+    fun `ny sak med relevante brudd ventebehov på bestilling av brev`() {
         val brevbestillingGateway = FakeBrevbestillingGateway()
         val steg = Effektuer11_7Steg(
             underveisRepository = InMemoryUnderveisRepository,
@@ -200,26 +210,50 @@ class Effektuer11_7StegTest {
             sakId = sak.id,
             behandlingId = behandling.id,
             behandlingType = TypeBehandling.Førstegangsbehandling,
-            perioderTilVurdering = setOf(Vurdering(
-                type = VurderingType.FØRSTEGANGSBEHANDLING,
-                årsaker = listOf(),
-                periode = sak.rettighetsperiode,
-            )),
+            perioderTilVurdering = setOf(
+                Vurdering(
+                    type = VurderingType.FØRSTEGANGSBEHANDLING,
+                    årsaker = listOf(),
+                    periode = sak.rettighetsperiode,
+                )
+            ),
         )
-        val resultat = steg.utfør(kontekst)
 
-        val ventebehov = assertInstanceOf<FantVentebehov>(resultat)
-        assertEquals(FantVentebehov(listOf(
-            Ventebehov(definisjon = Definisjon.BESTILL_BREV, grunn = VENTER_PÅ_MASKINELL_AVKLARING)
-        )), ventebehov)
+        steg.utfør(kontekst).also {
+            assertEquals(
+                FantVentebehov(
+                    Ventebehov(definisjon = Definisjon.BESTILL_BREV, grunn = VENTER_PÅ_MASKINELL_AVKLARING)
+                ), it
+            )
+
+        }
+
+        brevbestillingGateway.ferdigstill(
+            BrevbestillingReferanse(brevbestillingGateway.brevbestillingResponse!!.referanse)
+        )
 
 
-        /* Simuler at brev er sendt. */
-        InMemoryBrevbestillingRepository.oppdaterStatus(behandling.id, brevbestillingGateway.brevbestillingReferanse!!, FULLFØRT)
+        steg.utfør(kontekst).also {
+            assertEquals(
+                FantVentebehov(
+                    Ventebehov(
+                        definisjon = FORHÅNDSVARSEL_AKTIVITETSPLIKT,
+                        grunn = ÅrsakTilSettPåVent.VENTER_PÅ_SVAR_FRA_BRUKER,
+                        frist = LocalDate.now().plusWeeks(3),
+                    )
+                ), it
+            )
+        }
+
+        steg.clock = Clock.fixed(Instant.now().plus(22, ChronoUnit.DAYS), ZoneId.systemDefault())
+        steg.utfør(kontekst).also {
+            assertEquals(FantAvklaringsbehov(EFFEKTUER_11_7), it)
+        }
+
     }
 
     @Test
-    fun `brev er bestillt trenger manuell skriving av veileder`()  {
+    fun `brev er bestillt trenger manuell skriving av veileder`() {
         val steg = Effektuer11_7Steg(
             underveisRepository = InMemoryUnderveisRepository,
             brevbestillingService = BrevbestillingService(
@@ -264,11 +298,13 @@ class Effektuer11_7StegTest {
             sakId = sak.id,
             behandlingId = behandling.id,
             behandlingType = TypeBehandling.Førstegangsbehandling,
-            perioderTilVurdering = setOf(Vurdering(
-                type = VurderingType.FØRSTEGANGSBEHANDLING,
-                årsaker = listOf(),
-                periode = sak.rettighetsperiode,
-            )),
+            perioderTilVurdering = setOf(
+                Vurdering(
+                    type = VurderingType.FØRSTEGANGSBEHANDLING,
+                    årsaker = listOf(),
+                    periode = sak.rettighetsperiode,
+                )
+            ),
         )
 
         // bestiller brev
