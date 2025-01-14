@@ -11,7 +11,7 @@ class BrevUtlederService(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
 ) {
 
-    fun utledBrevbehov(behandlingId: BehandlingId): BrevBehov {
+    fun utledBehovForMeldingOmVedtak(behandlingId: BehandlingId): BrevBehov {
         // TODO: Sjekk på behandlingen og utled hva som har skjedd for å avgjøre om det skal sendes et brev
         val behandling = behandlingRepository.hent(behandlingId)
 

@@ -60,7 +60,7 @@ class Effektuer11_7Steg(
             return Fullført
         }
 
-        val eksisterendeBrevBestilling = brevbestillingService.hentBestillingForSteg(kontekst.behandlingId, typeBrev)
+        val eksisterendeBrevBestilling = brevbestillingService.hentBestillinger(kontekst.behandlingId, typeBrev).maxByOrNull { it.id }
 
         if (eksisterendeBrevBestilling == null || false /* TODO: eksisterende varsel er ikke dekkende */) {
             // XXX: skulle gjerne "avbrutt" tidligere bestilling av brev, men det er ikke mulig i dag.
@@ -82,13 +82,10 @@ class Effektuer11_7Steg(
             throw BrevIkkeUtfyltException()
         }
 
-        val brev = brevbestillingService.hentSisteBrevbestilling(behandling.id) ?: run {
-            // TODO: Dette burde ikke kunne skje: prøv å strukturer koden slik at vi ikke ender opp her
-            logger.error("Finner ikke brev selv om brev er bestillt")
-            return Fullført
-        }
+        val brev = brevbestillingService.hentBrevbestilling(eksisterendeBrevBestilling.referanse)
 
         if (brev.status == no.nav.aap.brev.kontrakt.Status.FERDIGSTILT) {
+
             // `oppdatert` er det beste vi har tilgjengelig nå. Ideelt sett skulle vi nok brukt
             // `ekspedert` fra dokument-distribusjon, men det har vi ikke tilgjengelig i dag.
             val frist = brev.oppdatert.plusWeeks(3).toLocalDate()

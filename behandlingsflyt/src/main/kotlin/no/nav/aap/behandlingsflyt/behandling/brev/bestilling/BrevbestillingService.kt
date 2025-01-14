@@ -15,10 +15,13 @@ class BrevbestillingService(
     private val sakRepository: SakRepository,
 ) {
 
-    fun hentBestillingForSteg(behandlingId: BehandlingId, typeBrev: TypeBrev): Brevbestilling? {
+    fun harBestillingOmVedtak(behandlingId: BehandlingId): Boolean {
+        return brevbestillingRepository.hent(behandlingId).any { it.typeBrev.erVedtak() }
+    }
+
+    fun hentBestillinger(behandlingId: BehandlingId, typeBrev: TypeBrev): List<Brevbestilling> {
         val bestillinger = brevbestillingRepository.hent(behandlingId).filter { it.typeBrev == typeBrev }
-        check(bestillinger.isEmpty() || bestillinger.size == 1)
-        return bestillinger.firstOrNull()
+        return bestillinger
     }
 
     fun bestill(behandlingId: BehandlingId, typeBrev: TypeBrev, unikReferanse: String, vedlegg: Vedlegg? = null): UUID {
@@ -41,21 +44,19 @@ class BrevbestillingService(
         return bestillingReferanse.brevbestillingReferanse
     }
 
+    fun hentBrevbestilling(referanse: BrevbestillingReferanse): BrevbestillingResponse {
+        return brevbestillingGateway.hent(referanse)
+    }
+
+    fun hentBrevbestillinger(behandlingReferanse: BehandlingReferanse): List<BrevbestillingResponse> {
+        val behandling = behandlingRepository.hent(behandlingReferanse)
+        return brevbestillingRepository.hent(behandling.id).map {
+            hentBrevbestilling(it.referanse)
+        }
+    }
+
     fun oppdaterStatus(behandlingId: BehandlingId, referanse: BrevbestillingReferanse, status: Status) {
         brevbestillingRepository.oppdaterStatus(behandlingId, referanse, status)
-    }
-
-    fun hentSisteBrevbestilling(behandlingReferanse: BehandlingReferanse): BrevbestillingResponse? {
-        val behandling = behandlingRepository.hent(behandlingReferanse)
-        return hentSisteBrevbestilling(behandling.id)
-    }
-
-    fun hentSisteBrevbestilling(behandlingId: BehandlingId): BrevbestillingResponse? {
-        val brevbestilling =
-            // TODO Bør ha en mer robust logikk for å finne relevant brev for editering, gitt en behandlingreferanse
-            brevbestillingRepository.hent(behandlingId).maxByOrNull { it.id }!!
-
-        return brevbestillingGateway.hent(brevbestilling.referanse)
     }
 
     fun ferdigstill(referanse: BrevbestillingReferanse): Boolean {

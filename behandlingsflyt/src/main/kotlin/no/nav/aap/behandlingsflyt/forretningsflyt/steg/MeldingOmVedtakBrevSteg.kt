@@ -1,3 +1,5 @@
+@file:JvmName("MeldingOmVedtakBrevStegKt")
+
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
@@ -23,21 +25,20 @@ import org.slf4j.LoggerFactory
 
 private val logger = LoggerFactory.getLogger("BrevSteg")
 
-class BrevSteg private constructor(
+class MeldingOmVedtakBrevSteg private constructor(
     private val brevUtlederService: BrevUtlederService,
     private val brevbestillingService: BrevbestillingService,
     private val behandlingRepository: BehandlingRepository
 ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val brevBehov = brevUtlederService.utledBrevbehov(kontekst.behandlingId)
+        val brevBehov = brevUtlederService.utledBehovForMeldingOmVedtak(kontekst.behandlingId)
         if (brevBehov.harBehovForBrev()) {
             val typeBrev = brevBehov.typeBrev!!
-            val bestilling =
-                brevbestillingService.hentBestillingForSteg(kontekst.behandlingId, typeBrev)
-            if (bestilling == null) {
+            val bestillingFinnes =
+                brevbestillingService.harBestillingOmVedtak(kontekst.behandlingId)
+            if (!bestillingFinnes) {
                 val behandling = behandlingRepository.hent(kontekst.behandlingId)
-                // Bestill hvis ikke bestilt allerede
                 logger.info("Bestiller brev for sak ${kontekst.sakId}.")
                 brevbestillingService.bestill(kontekst.behandlingId, typeBrev, "${behandling.referanse}-$typeBrev")
                 return FantVentebehov(Ventebehov(BESTILL_BREV, ÅrsakTilSettPåVent.VENTER_PÅ_MASKINELL_AVKLARING))
@@ -54,7 +55,7 @@ class BrevSteg private constructor(
             val vilkårsresultatRepository = repositoryProvider.provide(VilkårsresultatRepository::class)
             val brevbestillingRepository = repositoryProvider.provide(BrevbestillingRepository::class)
 
-            return BrevSteg(
+            return MeldingOmVedtakBrevSteg(
                 BrevUtlederService(
                     behandlingRepository = behandlingRepository,
                     vilkårsresultatRepository = vilkårsresultatRepository

@@ -19,7 +19,7 @@ import no.nav.aap.behandlingsflyt.flyt.BehandlingType
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BarnetilleggSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BeregnTilkjentYtelseSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BeregningAvklarFaktaSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BrevSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.MeldingOmVedtakBrevSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.effektuer11_7.Effektuer11_7Steg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.EtAnnetStedSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettArbeidsevneSteg
@@ -120,7 +120,7 @@ object Revurdering : BehandlingType {
             .medSteg(steg = ForeslåVedtakSteg, årsakRelevanteForSteg = ÅrsakTilBehandling.entries) // en-trinn
             .sluttÅOppdatereFaktagrunnlag()
             .medSteg(steg = FatteVedtakSteg) // to-trinn
-            .medSteg(steg = BrevSteg)
+            .medSteg(steg = MeldingOmVedtakBrevSteg)
             .medSteg(steg = IverksettVedtakSteg)
             .build()
     }

@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehovHendelse
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.BREV_SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.BrevbestillingLøsning
+import no.nav.aap.behandlingsflyt.behandling.brev.BrevGrunnlag.Brev.Mottaker
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevGateway
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
@@ -26,13 +27,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.FaktagrunnlagDto
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.HentFaktaGrunnlagRequest
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.LøsBrevbestillingDto
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.ElementNotFoundException
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.brev.kontrakt.Brev
-import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.lookup.gateway.GatewayProvider
@@ -47,8 +46,6 @@ import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
 
-    val brevAzp = requiredConfigForKey("integrasjon.brev.azp")
-    val dokumentinnhentingAzp = requiredConfigForKey("integrasjon.dokumentinnhenting.azp")
     route("/api") {
         route("/behandling") {
             route("/{referanse}/grunnlag/brev") {
@@ -61,41 +58,43 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                         val brevbestillingRepository =
                             repositoryProvider.provide(BrevbestillingRepository::class)
 
-                        val brevbestilling =
+                        val brevbestillinger =
                             BrevbestillingService(
                                 brevbestillingGateway = BrevGateway(),
                                 brevbestillingRepository = brevbestillingRepository,
                                 behandlingRepository = behandlingRepository,
                                 sakRepository = sakRepository
-                            ).hentSisteBrevbestilling(behandlingReferanse)
-                                ?: throw ElementNotFoundException()
-                        val behandling = behandlingRepository.hent(behandlingReferanse)
+                            ).hentBrevbestillinger(behandlingReferanse)
 
+                        val behandling = behandlingRepository.hent(behandlingReferanse)
                         val sak = SakService(sakRepository).hent(behandling.sakId)
                         val personIdent = sak.person.aktivIdent()
                         val personinfo =
                             GatewayProvider.provide(PersoninfoGateway::class)
                                 .hentPersoninfoForIdent(personIdent, token())
-                        BrevGrunnlag(
-                            brevbestillingReferanse = brevbestilling.referanse,
-                            brev = brevbestilling.brev,
-                            opprettet = brevbestilling.opprettet,
-                            oppdatert = brevbestilling.oppdatert,
-                            brevtype = brevbestilling.brevtype,
-                            språk = brevbestilling.språk,
-                            status = when (brevbestilling.status) {
-                                no.nav.aap.brev.kontrakt.Status.REGISTRERT -> Status.SENDT
-                                no.nav.aap.brev.kontrakt.Status.UNDER_ARBEID -> Status.FORHÅNDSVISNING_KLAR
-                                no.nav.aap.brev.kontrakt.Status.FERDIGSTILT -> Status.FULLFØRT
-                            },
-                            mottaker = Mottaker(
-                                navn = personinfo.fulltNavn(),
-                                ident = personinfo.ident.identifikator
+
+                        brevbestillinger.map {
+                            BrevGrunnlag.Brev(
+                                brevbestillingReferanse = it.referanse,
+                                brev = it.brev,
+                                opprettet = it.opprettet,
+                                oppdatert = it.oppdatert,
+                                brevtype = it.brevtype,
+                                språk = it.språk,
+                                status = when (it.status) {
+                                    no.nav.aap.brev.kontrakt.Status.REGISTRERT -> Status.SENDT
+                                    no.nav.aap.brev.kontrakt.Status.UNDER_ARBEID -> Status.FORHÅNDSVISNING_KLAR
+                                    no.nav.aap.brev.kontrakt.Status.FERDIGSTILT -> Status.FULLFØRT
+                                },
+                                mottaker = Mottaker(
+                                    navn = personinfo.fulltNavn(),
+                                    ident = personinfo.ident.identifikator
+                                )
                             )
-                        )
+                        }
                     }
 
-                    respond(grunnlag)
+                    respond(BrevGrunnlag(grunnlag))
                 }
             }
         }
