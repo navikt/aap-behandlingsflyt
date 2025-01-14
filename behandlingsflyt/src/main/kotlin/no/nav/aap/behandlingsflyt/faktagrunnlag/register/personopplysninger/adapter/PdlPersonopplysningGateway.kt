@@ -69,10 +69,10 @@ val PERSON_QUERY = """
             doedsdato
         },
         foedselsdato {
-    	  foedselsdato
+            foedselsdato
         },
         statsborgerskap {
-            land!,
+            land,
             gyldigFraOgMed, 
             gyldigTilOgMed
         },
