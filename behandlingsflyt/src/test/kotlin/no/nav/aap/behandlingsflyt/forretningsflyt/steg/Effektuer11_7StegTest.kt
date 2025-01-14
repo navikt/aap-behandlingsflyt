@@ -28,6 +28,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.FORHÅNDSV
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurdering
@@ -100,7 +101,7 @@ class Effektuer11_7StegTest {
     }
 
     @Test
-    fun `ny sak med relevante brudd ventebehov på bestilling av brev`() {
+    fun `vanlig flyt - Bestill brev, Vente på brev skal ferdigstilles, venter på svar fra bruker, frist utløper`() {
         val brevbestillingGateway = FakeBrevbestillingGateway()
         val clock = mockk<Clock>()
         val fixedClock = Clock.fixed(Instant.now(), ZoneId.systemDefault())
@@ -169,7 +170,47 @@ class Effektuer11_7StegTest {
         steg.utfør(kontekst).also {
             assertEquals(FantAvklaringsbehov(EFFEKTUER_11_7), it)
         }
+    }
 
+    @Test
+    fun `Åpent Avklaringsbehov finnes fra før`() {
+        val brevbestillingGateway = FakeBrevbestillingGateway()
+        val sak = nySak()
+        val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+        val fixedClock = Clock.fixed(Instant.now().plus(Duration.ofDays(22)), ZoneId.systemDefault())
+        val kontekst = kontekst(sak, behandling.id, TypeBehandling.Førstegangsbehandling)
+
+        val steg = Effektuer11_7Steg(
+            underveisRepository = InMemoryUnderveisRepository,
+            brevbestillingService = BrevbestillingService(
+                brevbestillingGateway = brevbestillingGateway,
+                brevbestillingRepository = InMemoryBrevbestillingRepository,
+                behandlingRepository = InMemoryBehandlingRepository,
+                sakRepository = InMemorySakRepository,
+            ),
+            behandlingRepository = InMemoryBehandlingRepository,
+            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+            clock = fixedClock
+        )
+
+        steg.bestillBrev(
+            behandling = behandling,
+            sak = sak,
+            kontekst = kontekst,
+            brevbestillingGateway = brevbestillingGateway
+        )
+
+        InMemoryAvklaringsbehovRepository.opprett(
+            behandlingId = behandling.id,
+            definisjon = EFFEKTUER_11_7,
+            funnetISteg = StegType.EFFEKTUER_11_7,
+            begrunnelse = "",
+            endretAv = "",
+        )
+
+        steg.utfør(kontekst).also {
+            assertEquals(FantAvklaringsbehov(EFFEKTUER_11_7), it)
+        }
     }
 
     @Test
@@ -276,4 +317,28 @@ class Effektuer11_7StegTest {
         )
     }
 
+    private fun Effektuer11_7Steg.bestillBrev(
+        behandling: Behandling,
+        sak: Sak,
+        kontekst: FlytKontekstMedPerioder,
+        brevbestillingGateway: FakeBrevbestillingGateway
+    ) {
+        InMemoryUnderveisRepository.lagre(
+            behandling.id,
+            underveisperioder = listOf(
+                underveisperiode(sak).copy(
+                    utfall = Utfall.IKKE_OPPFYLT,
+                    avslagsårsak = UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT,
+                    bruddAktivitetspliktId = BruddAktivitetspliktId(0),
+                )
+            ),
+            input = tomUnderveisInput,
+        )
+
+        this.utfør(kontekst)
+
+        brevbestillingGateway.ferdigstill(
+            BrevbestillingReferanse(brevbestillingGateway.brevbestillingResponse!!.referanse)
+        )
+    }
 }

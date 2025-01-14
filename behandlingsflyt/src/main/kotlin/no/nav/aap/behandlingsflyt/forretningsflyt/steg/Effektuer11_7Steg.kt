@@ -47,12 +47,12 @@ class Effektuer11_7Steg(
         val underveisGrunnlag = underveisRepository.hent(kontekst.behandlingId)
         val relevanteBrudd =
             underveisGrunnlag.perioder.filter { it.avslagsårsak == UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT }
-                .let { Tidslinje(it.map { Segment(it.periode, it) }) }
+                .let { underveisperioder -> Tidslinje(underveisperioder.map { Segment(it.periode, it) }) }
 
         val forrigeUnderveisGrunnlag = behandling.forrigeBehandlingId?.let { underveisRepository.hent(it) }
         val forrigeBrudd = forrigeUnderveisGrunnlag?.perioder.orEmpty()
             .filter { it.avslagsårsak == UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT }
-            .let { Tidslinje(it.map { Segment(it.periode, it) }) }
+            .let { underveisperioder -> Tidslinje(underveisperioder.map { Segment(it.periode, it) }) }
 
         val nyeBrudd = relevanteBrudd.kombiner(forrigeBrudd, StandardSammenslåere.minus())
 
@@ -113,7 +113,8 @@ class Effektuer11_7Steg(
             )
         }
 
-        val effektuer117avklaringsbehov = avklaringsbehov.alle().singleOrNull { it.definisjon == EFFEKTUER_11_7 }
+        val effektuer117avklaringsbehov = avklaringsbehov.hentBehovForDefinisjon(EFFEKTUER_11_7)
+
 
         if (effektuer117avklaringsbehov == null || effektuer117avklaringsbehov.erÅpent()) {
             return FantAvklaringsbehov(EFFEKTUER_11_7)
