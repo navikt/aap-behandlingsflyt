@@ -28,6 +28,8 @@
         <appender-ref ref="secureLog"/>
     </logger>
 
+    <logger name="no.nav.aap.komponenter.httpklient.httpclient.tokenprovider" level="WARN"/>
+
     <root level="INFO">
         <appender-ref ref="json"/>
     </root>
