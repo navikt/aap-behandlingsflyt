@@ -92,7 +92,11 @@ class PersonopplysningRepositoryImpl(
                 Personopplysning(
                     id = id,
                     fødselsdato = Fødselsdato(row.getLocalDate("FODSELSDATO")),
-                    dødsdato = row.getLocalDateOrNull("dodsdato")?.let { Dødsdato(it) }
+                    dødsdato = row.getLocalDateOrNull("dodsdato")?.let { Dødsdato(it) },
+                    land = row.getString("LAND"),
+                    gyldigFraOgMed = row.getLocalDateOrNull("GYLDIGFRAOGMED"),
+                    gyldigTilOgMed = row.getLocalDateOrNull("GYLDIGTILOGMED"),
+                    status = row.getEnum("STATUS")
                 )
             }
         }
@@ -108,10 +112,14 @@ class PersonopplysningRepositoryImpl(
         }
 
         val personopplysningId =
-            connection.executeReturnKey("INSERT INTO BRUKER_PERSONOPPLYSNING (FODSELSDATO, dodsdato) VALUES (?, ?)") {
+            connection.executeReturnKey("INSERT INTO BRUKER_PERSONOPPLYSNING (FODSELSDATO, dodsdato, LAND, GYLDIGFRAOGMED, GYLDIGTILOGMED, STATUS) VALUES (?, ?, ?, ?, ?, ?)") {
                 setParams {
                     setLocalDate(1, personopplysning.fødselsdato.toLocalDate())
                     setLocalDate(2, personopplysning.dødsdato?.toLocalDate())
+                    setString(3, personopplysning.land)
+                    setLocalDate(4, personopplysning.gyldigFraOgMed)
+                    setLocalDate(5, personopplysning.gyldigTilOgMed)
+                    setEnumName(6, personopplysning.status)
                 }
             }
 

@@ -9,10 +9,11 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
+import no.nav.aap.komponenter.type.Periode
 import java.net.URI
 
 class MedlemskapGateway : MedlemskapGateway {
-    private val url = URI.create(requiredConfigForKey("integrasjon.medl.url"))
+    private val url = requiredConfigForKey("integrasjon.medl.url")
     private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.medl.scope"))
 
     private val client = RestClient.withDefaultResponseHandler(
@@ -21,6 +22,8 @@ class MedlemskapGateway : MedlemskapGateway {
     )
 
     private fun query(request: MedlemskapRequest): List<MedlemskapResponse> {
+        val urlWithParam = URI.create(url+"?fraOgMed=${request.periode.fom}&tilOgMed=${request.periode.tom}")
+
         val httpRequest = GetRequest(
             additionalHeaders = listOf(
                 Header("Nav-Consumer-Id", "aap-behandlingsflyt"),
@@ -31,18 +34,19 @@ class MedlemskapGateway : MedlemskapGateway {
 
         return requireNotNull(
             client.get(
-                uri = url,
+                uri = urlWithParam,
                 request = httpRequest,
                 mapper = { body, _ ->
                     DefaultJsonMapper.fromJson(body)
-                }
+                },
             )
         )
     }
 
-    override fun innhent(person: Person): List<MedlemskapResponse> {
+    override fun innhent(person: Person, periode: Periode): List<MedlemskapResponse> {
         val request = MedlemskapRequest(
-            ident = person.aktivIdent().identifikator
+            ident = person.aktivIdent().identifikator,
+            periode = periode
         )
         val medlemskapResultat = query(request)
 

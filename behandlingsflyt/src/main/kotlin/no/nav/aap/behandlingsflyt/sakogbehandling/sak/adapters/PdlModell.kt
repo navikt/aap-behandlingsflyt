@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters
 
+import java.time.LocalDate
+
 data class PdlRequest(
     val query: String,
     val variables: IdentVariables
@@ -67,12 +69,25 @@ data class HentPersonBolkResult(
 data class PdlPersoninfo(
     val forelderBarnRelasjon: List<PdlRelasjon>? = null,
     val foedselsdato: List<PdlFoedsel>? = null,
-    val doedsfall: Set<PDLDødsfall>? = null
+    val doedsfall: Set<PDLDødsfall>? = null,
+    val statsborgerskap: PdlStatsborgerskap,
+    val folkeregisterpersonstatus: PdlFolkeregisterPersonStatus
+)
+
+data class PdlFolkeregisterPersonStatus(
+    val status: PersonStatus
+)
+
+data class PdlStatsborgerskap(
+    val land: String,
+    val gyldigFraOgMed: LocalDate? = null,
+    val gyldigTilOgMed: LocalDate? = null,
 )
 
 data class PDLDødsfall(
     val doedsdato: String
 )
+
 
 data class PdlFoedsel(
     val foedselsdato: String?,
@@ -105,4 +120,16 @@ enum class PdlGruppe {
     FOLKEREGISTERIDENT,
     AKTORID,
     NPID,
+}
+
+enum class PersonStatus {
+    bosatt,
+    utflyttet,
+    forsvunnet,
+    doed,
+    opphort,
+    foedselsregistrert,
+    ikkebosatt,
+    midlertidig,
+    inaktiv
 }

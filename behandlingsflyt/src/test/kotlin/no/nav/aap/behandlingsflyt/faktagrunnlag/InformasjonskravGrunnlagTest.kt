@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonStatus
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.ident
@@ -145,7 +146,7 @@ class InformasjonskravGrunnlagTest {
             connection,
             PersonRepositoryImpl(connection)
         )
-        personopplysningRepository.lagre(behandling.id, Personopplysning(Fødselsdato(LocalDate.now().minusYears(20))))
+        personopplysningRepository.lagre(behandling.id, Personopplysning(Fødselsdato(LocalDate.now().minusYears(20)), land = "NOR", status = PersonStatus.bosatt))
 
         val flytKontekst = behandling.flytKontekst()
         return ident to FlytKontekstMedPerioder(

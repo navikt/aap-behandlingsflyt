@@ -9,4 +9,5 @@ data class Unntak(
     val grunnlag: String,
     val lovvalg: String,
     val helsedel: Boolean,
+    val lovvalgsland: String?,
 )

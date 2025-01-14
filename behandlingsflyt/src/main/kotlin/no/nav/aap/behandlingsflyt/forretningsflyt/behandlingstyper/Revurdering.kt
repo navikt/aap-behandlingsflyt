@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.SøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.ForutgåendeMedlemskapService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeService
@@ -49,11 +49,8 @@ object Revurdering : BehandlingType {
     override fun flyt(): BehandlingFlyt {
         return BehandlingFlytBuilder()
             .medSteg(steg = StartBehandlingSteg, informasjonskrav = listOf(SøknadService))
-            .medSteg(steg = VurderLovvalgSteg, informasjonskrav = listOf(LovvalgService))
-            .medSteg(
-                steg = VurderAlderSteg,
-                informasjonskrav = listOf(PersonopplysningService)
-            )
+            .medSteg(steg = VurderLovvalgSteg, informasjonskrav = listOf(LovvalgService, PersonopplysningService))
+            .medSteg(steg = VurderAlderSteg)
             .medSteg(steg = VurderStudentSteg)
             // UføreService svarer med mocket respons inntil pesys-integrasjon er fullført:
             // Relevant issue: https://github.com/navikt/pensjon-pen/pull/13138
@@ -103,7 +100,7 @@ object Revurdering : BehandlingType {
                     ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING
                 )
             )
-            .medSteg(steg = VurderForutgåendeMedlemskapSteg, informasjonskrav = listOf(MedlemskapService))
+            .medSteg(steg = VurderForutgåendeMedlemskapSteg, informasjonskrav = listOf(ForutgåendeMedlemskapService))
             .medSteg(
                 steg = BeregningAvklarFaktaSteg, årsakRelevanteForSteg = listOf(
                     ÅrsakTilBehandling.MOTTATT_SØKNAD,

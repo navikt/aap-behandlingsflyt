@@ -41,6 +41,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.HentPerson
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.HentPersonBolkResult
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PDLDødsfall
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlFoedsel
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlFolkeregisterPersonStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlGruppe
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdent
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlIdenter
@@ -56,6 +57,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlRelasjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlRelasjonData
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlRelasjonDataResponse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlRequest
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlStatsborgerskap
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonStatus
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.brev.kontrakt.BestillBrevRequest
 import no.nav.aap.brev.kontrakt.BestillBrevResponse
@@ -203,7 +206,9 @@ object FakeServers : AutoCloseable {
 
     private fun Application.pdlFake() {
         install(ContentNegotiation) {
-            jackson()
+            jackson {
+                registerModule(JavaTimeModule())
+            }
         }
         install(StatusPages) {
             exception<Throwable> { call, cause ->
@@ -742,7 +747,8 @@ object FakeServers : AutoCloseable {
     "statusaarsak": null,
     "medlem": true,
     "grunnlag": "grunnlag",
-    "lovvalg": "lovvalg"
+    "lovvalg": "lovvalg",
+    "lovvalgsland": "NOR"
   },
   {
     "unntakId": 100087729,
@@ -753,7 +759,8 @@ object FakeServers : AutoCloseable {
     "statusaarsak": null,
     "medlem": false,
     "grunnlag": "grunnlag",
-    "lovvalg": "lovvalg"
+    "lovvalg": "lovvalg",
+    "lovvalgsland": "NOR"
   }
 ]"""
 
@@ -844,7 +851,9 @@ object FakeServers : AutoCloseable {
                         "" + person.fødselsdato.toLocalDate().year
                     )
                 ),
-                doedsfall = mapDødsfall(person)
+                doedsfall = mapDødsfall(person),
+                statsborgerskap = PdlStatsborgerskap("NOR", LocalDate.now().minusYears(5), LocalDate.now()),
+                folkeregisterpersonstatus = PdlFolkeregisterPersonStatus(PersonStatus.bosatt)
             )
         )
     }
@@ -865,7 +874,9 @@ object FakeServers : AutoCloseable {
                 hentPerson = PdlPersoninfo(
                     forelderBarnRelasjon = testPerson.barn
                         .map { PdlRelasjon(it.identer.first().identifikator) }
-                        .toList()
+                        .toList(),
+                    statsborgerskap = PdlStatsborgerskap("NOR", LocalDate.now().minusYears(5), LocalDate.now()),
+                    folkeregisterpersonstatus = PdlFolkeregisterPersonStatus(PersonStatus.bosatt)
                 )
             )
         )
@@ -975,7 +986,9 @@ object FakeServers : AutoCloseable {
                     person.fødselsdato.toFormatedString(),
                     "" + person.fødselsdato.toLocalDate().year
                 )
-            )
+            ),
+            statsborgerskap = PdlStatsborgerskap("NOR", LocalDate.now(), LocalDate.now()),
+            folkeregisterpersonstatus = PdlFolkeregisterPersonStatus(PersonStatus.bosatt)
         )
     }
 

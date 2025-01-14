@@ -56,7 +56,7 @@ class MedlemskapRepositoryTest {
                         grunnlag = "FLK-TRGD",
                         lovvalg = "FLK_TRGD",
                         helsedel = true,
-                        lovvalgsland = "NORGE"
+                        lovvalgsland = "NOR"
                     )
                 )
             )
@@ -81,7 +81,8 @@ class MedlemskapRepositoryTest {
                     medlem = true,
                     lovvalg = "FLK_TRGD",
                     helsedel = true,
-                    grunnlag = "FLK-TRGD"
+                    grunnlag = "FLK-TRGD",
+                    lovvalgsland = "NOR"
                 )
             )
         )

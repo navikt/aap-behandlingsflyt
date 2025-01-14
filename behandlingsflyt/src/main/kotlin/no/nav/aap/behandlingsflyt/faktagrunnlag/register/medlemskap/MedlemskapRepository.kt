@@ -38,7 +38,7 @@ class MedlemskapRepository(private val connection: DBConnection) {
         unntak.forEach { it ->
             connection.execute(
                 """
-                INSERT INTO MEDLEMSKAP_UNNTAK (STATUS, STATUS_ARSAK, MEDLEM, PERIODE, GRUNNLAG, LOVVALG, HELSEDEL, MEDLEMSKAP_UNNTAK_PERSON_ID) VALUES (?, ?, ?, ?::daterange ,?, ?, ?, ?)
+                INSERT INTO MEDLEMSKAP_UNNTAK (STATUS, STATUS_ARSAK, MEDLEM, PERIODE, GRUNNLAG, LOVVALG, HELSEDEL, MEDLEMSKAP_UNNTAK_PERSON_ID, LOVVALGSLAND) VALUES (?, ?, ?, ?::daterange ,?, ?, ?, ?, ?)
             """.trimIndent()
             ) {
                 setParams {
@@ -50,6 +50,7 @@ class MedlemskapRepository(private val connection: DBConnection) {
                     setString(6, it.lovvalg)
                     setBoolean(7, it.helsedel)
                     setLong(8, medlemskapUnntakPersonId)
+                    setString(9, it.lovvalgsland)
                 }
             }
         }
@@ -69,7 +70,8 @@ class MedlemskapRepository(private val connection: DBConnection) {
                     medlem = it.getBoolean("MEDLEM"),
                     grunnlag = it.getString("GRUNNLAG"),
                     lovvalg = it.getString("LOVVALG"),
-                    helsedel = it.getBoolean("HELSEDEL")
+                    helsedel = it.getBoolean("HELSEDEL"),
+                    lovvalgsland = it.getStringOrNull("LOVVALGSLAND"),
                 )
                 Segment(
                     it.getPeriode("PERIODE"),

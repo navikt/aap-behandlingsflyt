@@ -10,6 +10,9 @@ import no.nav.aap.behandlingsflyt.test.PersonNavn
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlFolkeregisterPersonStatus
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlStatsborgerskap
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonStatus
 import java.time.LocalDate
 import java.time.Year
 
@@ -29,7 +32,9 @@ class TestPerson(
     val yrkesskade: List<TestYrkesskade> = emptyList(),
     val institusjonsopphold: List<InstitusjonsoppholdJSON> = emptyList(),
     val uføre: Prosent? = Prosent(0),
-    inntekter: List<InntektPerÅr> = defaultInntekt()
+    inntekter: List<InntektPerÅr> = defaultInntekt(),
+    val personStatus: PdlFolkeregisterPersonStatus = PdlFolkeregisterPersonStatus(PersonStatus.bosatt),
+    val statsborgerskap: PdlStatsborgerskap = PdlStatsborgerskap("NOR", LocalDate.now().minusYears(5), null)
 ) {
     private val inntekter: MutableList<InntektPerÅr> = inntekter.toMutableList()
 
@@ -44,7 +49,7 @@ class TestPerson(
     }
 
     override fun toString(): String {
-        return "TestPerson(fødselsdato=$fødselsdato, identer=$identer, dødsdato=$dødsdato, barn=$barn, navn=$navn, yrkesskade=$yrkesskade, institusjonsopphold=$institusjonsopphold, inntekter=$inntekter)"
+        return "TestPerson(fødselsdato=$fødselsdato, identer=$identer, dødsdato=$dødsdato, barn=$barn, navn=$navn, yrkesskade=$yrkesskade, institusjonsopphold=$institusjonsopphold, inntekter=$inntekter, personStatus=$personStatus, statsborgerskap=$statsborgerskap)"
     }
 
     fun aktivIdent(): Ident {
