@@ -317,7 +317,7 @@ class Effektuer11_7StegTest {
             begrunnelse = "",
             endretAv = "",
         )
-        assertThrows<Exception> {
+        assertThrows<IllegalStateException> {
             steg.utfør(kontekst)
         }
     }
