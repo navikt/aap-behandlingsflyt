@@ -90,9 +90,9 @@ val PERSON_QUERY_HISTORIKK = """
     	  foedselsdato
         },
         statsborgerskap {
-            land!,
-            gyldigFraOgMed, if null -> fødselsdato
-            gyldigTilOgMed // if null -> null
+            land,
+            gyldigFraOgMed,
+            gyldigTilOgMed
         },
         folkeregisterpersonstatus {
             status

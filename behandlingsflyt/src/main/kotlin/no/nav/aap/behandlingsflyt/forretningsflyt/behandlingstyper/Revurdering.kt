@@ -49,7 +49,7 @@ object Revurdering : BehandlingType {
     override fun flyt(): BehandlingFlyt {
         return BehandlingFlytBuilder()
             .medSteg(steg = StartBehandlingSteg, informasjonskrav = listOf(SøknadService))
-            .medSteg(steg = VurderLovvalgSteg, informasjonskrav = listOf(LovvalgService, PersonopplysningService))
+            .medSteg(steg = VurderLovvalgSteg, informasjonskrav = listOf(PersonopplysningService, LovvalgService ))
             .medSteg(steg = VurderAlderSteg)
             .medSteg(steg = VurderStudentSteg)
             // UføreService svarer med mocket respons inntil pesys-integrasjon er fullført:
