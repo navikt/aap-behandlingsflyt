@@ -28,12 +28,12 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.FORHÅNDSV
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -54,33 +54,11 @@ class Effektuer11_7StegTest {
 
     @Test
     fun `ny sak uten brudd er alltid fullført`() {
-        val steg = Effektuer11_7Steg(
-            underveisRepository = InMemoryUnderveisRepository,
-            brevbestillingService = BrevbestillingService(
-                brevbestillingGateway = FakeBrevbestillingGateway(),
-                brevbestillingRepository = InMemoryBrevbestillingRepository,
-                behandlingRepository = InMemoryBehandlingRepository,
-                sakRepository = InMemorySakRepository,
-            ),
-            behandlingRepository = InMemoryBehandlingRepository,
-            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-        )
+        val steg = effektuer11_7steg()
 
-        val sak = InMemorySakRepository.finnEllerOpprett(
-            person = Person(
-                id = 0,
-                identifikator = UUID.randomUUID(),
-                identer = listOf(Ident("0".repeat(11)))
-            ),
-            periode = Periode(1 januar 2025, 1 januar 2026)
-        )
+        val sak = nySak()
 
-        val behandling = InMemoryBehandlingRepository.opprettBehandling(
-            sak.id,
-            årsaker = listOf(),
-            typeBehandling = TypeBehandling.Førstegangsbehandling,
-            forrigeBehandlingId = null,
-        )
+        val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         InMemoryUnderveisRepository.lagre(
             behandling.id,
@@ -90,18 +68,7 @@ class Effektuer11_7StegTest {
             input = tomUnderveisInput,
         )
 
-        val kontekst = FlytKontekstMedPerioder(
-            sakId = sak.id,
-            behandlingId = behandling.id,
-            behandlingType = TypeBehandling.Førstegangsbehandling,
-            perioderTilVurdering = setOf(
-                Vurdering(
-                    type = VurderingType.FØRSTEGANGSBEHANDLING,
-                    årsaker = listOf(),
-                    periode = sak.rettighetsperiode,
-                )
-            ),
-        )
+        val kontekst = kontekst(sak, behandling.id, TypeBehandling.Førstegangsbehandling)
         val resultat = steg.utfør(kontekst)
 
         assertInstanceOf<Fullført>(resultat)
@@ -109,33 +76,11 @@ class Effektuer11_7StegTest {
 
     @Test
     fun `ny sak med ikke-relevante brudd er alltid fullført`() {
-        val steg = Effektuer11_7Steg(
-            underveisRepository = InMemoryUnderveisRepository,
-            brevbestillingService = BrevbestillingService(
-                brevbestillingGateway = FakeBrevbestillingGateway(),
-                brevbestillingRepository = InMemoryBrevbestillingRepository,
-                behandlingRepository = InMemoryBehandlingRepository,
-                sakRepository = InMemorySakRepository,
-            ),
-            behandlingRepository = InMemoryBehandlingRepository,
-            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-        )
+        val steg = effektuer11_7steg()
 
-        val sak = InMemorySakRepository.finnEllerOpprett(
-            person = Person(
-                id = 0,
-                identifikator = UUID.randomUUID(),
-                identer = listOf(Ident("0".repeat(11)))
-            ),
-            periode = Periode(1 januar 2025, 1 januar 2026)
-        )
+        val sak = nySak()
 
-        val behandling = InMemoryBehandlingRepository.opprettBehandling(
-            sak.id,
-            årsaker = listOf(),
-            typeBehandling = TypeBehandling.Førstegangsbehandling,
-            forrigeBehandlingId = null,
-        )
+        val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         InMemoryUnderveisRepository.lagre(
             behandling.id,
@@ -148,18 +93,7 @@ class Effektuer11_7StegTest {
             input = tomUnderveisInput,
         )
 
-        val kontekst = FlytKontekstMedPerioder(
-            sakId = sak.id,
-            behandlingId = behandling.id,
-            behandlingType = TypeBehandling.Førstegangsbehandling,
-            perioderTilVurdering = setOf(
-                Vurdering(
-                    type = VurderingType.FØRSTEGANGSBEHANDLING,
-                    årsaker = listOf(),
-                    periode = sak.rettighetsperiode,
-                )
-            ),
-        )
+        val kontekst = kontekst(sak, behandling.id, TypeBehandling.Førstegangsbehandling)
         val resultat = steg.utfør(kontekst)
 
         assertInstanceOf<Fullført>(resultat)
@@ -186,21 +120,9 @@ class Effektuer11_7StegTest {
             clock = clock
         )
 
-        val sak = InMemorySakRepository.finnEllerOpprett(
-            person = Person(
-                id = 0,
-                identifikator = UUID.randomUUID(),
-                identer = listOf(Ident("0".repeat(11)))
-            ),
-            periode = Periode(1 januar 2025, 1 januar 2026)
-        )
+        val sak = nySak()
 
-        val behandling = InMemoryBehandlingRepository.opprettBehandling(
-            sak.id,
-            årsaker = listOf(),
-            typeBehandling = TypeBehandling.Førstegangsbehandling,
-            forrigeBehandlingId = null,
-        )
+        val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         InMemoryUnderveisRepository.lagre(
             behandling.id,
@@ -214,18 +136,7 @@ class Effektuer11_7StegTest {
             input = tomUnderveisInput,
         )
 
-        val kontekst = FlytKontekstMedPerioder(
-            sakId = sak.id,
-            behandlingId = behandling.id,
-            behandlingType = TypeBehandling.Førstegangsbehandling,
-            perioderTilVurdering = setOf(
-                Vurdering(
-                    type = VurderingType.FØRSTEGANGSBEHANDLING,
-                    årsaker = listOf(),
-                    periode = sak.rettighetsperiode,
-                )
-            ),
-        )
+        val kontekst = kontekst(sak, behandling.id, TypeBehandling.Førstegangsbehandling)
 
         steg.utfør(kontekst).also {
             assertEquals(
@@ -263,33 +174,11 @@ class Effektuer11_7StegTest {
 
     @Test
     fun `brev er bestillt trenger manuell skriving av veileder`() {
-        val steg = Effektuer11_7Steg(
-            underveisRepository = InMemoryUnderveisRepository,
-            brevbestillingService = BrevbestillingService(
-                brevbestillingGateway = FakeBrevbestillingGateway(),
-                brevbestillingRepository = InMemoryBrevbestillingRepository,
-                behandlingRepository = InMemoryBehandlingRepository,
-                sakRepository = InMemorySakRepository,
-            ),
-            behandlingRepository = InMemoryBehandlingRepository,
-            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-        )
+        val steg = effektuer11_7steg()
 
-        val sak = InMemorySakRepository.finnEllerOpprett(
-            person = Person(
-                id = 0,
-                identifikator = UUID.randomUUID(),
-                identer = listOf(Ident("0".repeat(11)))
-            ),
-            periode = Periode(1 januar 2025, 1 januar 2026)
-        )
+        val sak = nySak()
 
-        val behandling = InMemoryBehandlingRepository.opprettBehandling(
-            sak.id,
-            årsaker = listOf(),
-            typeBehandling = TypeBehandling.Førstegangsbehandling,
-            forrigeBehandlingId = null,
-        )
+        val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         InMemoryUnderveisRepository.lagre(
             behandling.id,
@@ -303,18 +192,7 @@ class Effektuer11_7StegTest {
             input = tomUnderveisInput,
         )
 
-        val kontekst = FlytKontekstMedPerioder(
-            sakId = sak.id,
-            behandlingId = behandling.id,
-            behandlingType = TypeBehandling.Førstegangsbehandling,
-            perioderTilVurdering = setOf(
-                Vurdering(
-                    type = VurderingType.FØRSTEGANGSBEHANDLING,
-                    årsaker = listOf(),
-                    periode = sak.rettighetsperiode,
-                )
-            ),
-        )
+        val kontekst = kontekst(sak, behandling.id, TypeBehandling.Førstegangsbehandling)
 
         // bestiller brev
         steg.utfør(kontekst)
@@ -330,6 +208,35 @@ class Effektuer11_7StegTest {
             steg.utfør(kontekst)
         }
     }
+
+    private fun opprettBehandling(sak: Sak, typeBehandling: TypeBehandling) =
+        InMemoryBehandlingRepository.opprettBehandling(
+            sak.id,
+            årsaker = listOf(),
+            typeBehandling = typeBehandling,
+            forrigeBehandlingId = null,
+        )
+
+    private fun nySak() = InMemorySakRepository.finnEllerOpprett(
+        person = Person(
+            id = 0,
+            identifikator = UUID.randomUUID(),
+            identer = listOf(Ident("0".repeat(11)))
+        ),
+        periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
+    )
+
+    private fun effektuer11_7steg() = Effektuer11_7Steg(
+        underveisRepository = InMemoryUnderveisRepository,
+        brevbestillingService = BrevbestillingService(
+            brevbestillingGateway = FakeBrevbestillingGateway(),
+            brevbestillingRepository = InMemoryBrevbestillingRepository,
+            behandlingRepository = InMemoryBehandlingRepository,
+            sakRepository = InMemorySakRepository,
+        ),
+        behandlingRepository = InMemoryBehandlingRepository,
+        avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+    )
 
     private fun underveisperiode(sak: Sak) = Underveisperiode(
         periode = sak.rettighetsperiode,
@@ -347,5 +254,26 @@ class Effektuer11_7StegTest {
         brukerAvKvoter = setOf(),
         bruddAktivitetspliktId = null,
     )
+
+    private fun kontekst(sak: Sak, behandlingId: BehandlingId, typeBehandling: TypeBehandling): FlytKontekstMedPerioder {
+        val vurderingType = when(typeBehandling) {
+            TypeBehandling.Førstegangsbehandling -> VurderingType.FØRSTEGANGSBEHANDLING
+            TypeBehandling.Revurdering -> VurderingType.REVURDERING
+            TypeBehandling.Tilbakekreving -> VurderingType.REVURDERING //Skal nok være noe annet
+            TypeBehandling.Klage -> VurderingType.REVURDERING
+        }
+        return FlytKontekstMedPerioder(
+            sakId = sak.id,
+            behandlingId = behandlingId,
+            behandlingType = TypeBehandling.Førstegangsbehandling,
+            perioderTilVurdering = setOf(
+                Vurdering(
+                    type = vurderingType,
+                    årsaker = listOf(),
+                    periode = sak.rettighetsperiode,
+                )
+            ),
+        )
+    }
 
 }
