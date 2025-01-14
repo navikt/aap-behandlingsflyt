@@ -1,7 +1,5 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg.effektuer11_7
 
-import io.mockk.every
-import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent.VENTER_PÅ_MASKINELL_AVKLARING
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
@@ -35,6 +33,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.AdjustableClock
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -44,11 +43,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertInstanceOf
 import org.junit.jupiter.api.assertThrows
 import java.math.BigDecimal
-import java.time.Clock
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
 import java.util.*
 
 class Effektuer11_7StegTest {
@@ -102,7 +99,7 @@ class Effektuer11_7StegTest {
     @Test
     fun `vanlig flyt - Bestill brev, Vente på brev skal ferdigstilles, venter på svar fra bruker, frist utløper`() {
         val brevbestillingGateway = FakeBrevbestillingGateway()
-        val clock = FakeBruddAktivitetspliktClock(Clock.fixed(Instant.now(), ZoneId.systemDefault()))
+        val clock = AdjustableClock(Instant.now())
 
         val steg = Effektuer11_7Steg(
             underveisRepository = InMemoryUnderveisRepository,
@@ -173,9 +170,7 @@ class Effektuer11_7StegTest {
         val brevbestillingGateway = FakeBrevbestillingGateway()
         val sak = nySak()
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
-        val clock = FakeBruddAktivitetspliktClock(
-            Clock.fixed(Instant.now().plus(Duration.ofDays(22)), ZoneId.systemDefault())
-        )
+        val clock = AdjustableClock(Instant.now().plus(Duration.ofDays(22)))
         val kontekst = kontekst(sak, behandling.id, TypeBehandling.Førstegangsbehandling)
 
         val steg = Effektuer11_7Steg(
