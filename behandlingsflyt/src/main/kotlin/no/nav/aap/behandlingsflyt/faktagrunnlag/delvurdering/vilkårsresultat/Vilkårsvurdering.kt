@@ -1,23 +1,15 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat
 
 class Vilkårsvurdering(vilkårsperiode: Vilkårsperiode) {
-    val utfall: Utfall
-    val manuellVurdering: Boolean
-    val begrunnelse: String?
-    val innvilgelsesårsak: Innvilgelsesårsak?
-    val avslagsårsak: Avslagsårsak?
-    internal val faktagrunnlag: Faktagrunnlag?
-    internal val versjon: String
+    val utfall: Utfall = vilkårsperiode.utfall
+    val manuellVurdering: Boolean = vilkårsperiode.manuellVurdering
+    val begrunnelse: String? = vilkårsperiode.begrunnelse
+    val innvilgelsesårsak: Innvilgelsesårsak? = vilkårsperiode.innvilgelsesårsak
+    val avslagsårsak: Avslagsårsak? = vilkårsperiode.avslagsårsak
+    internal val faktagrunnlag: Faktagrunnlag? = vilkårsperiode.faktagrunnlag
+    internal val versjon: String = vilkårsperiode.versjon
 
     init {
-        utfall = vilkårsperiode.utfall
-        manuellVurdering = vilkårsperiode.manuellVurdering
-        begrunnelse = vilkårsperiode.begrunnelse
-        innvilgelsesårsak = vilkårsperiode.innvilgelsesårsak
-        avslagsårsak = vilkårsperiode.avslagsårsak
-        faktagrunnlag = vilkårsperiode.faktagrunnlag
-        versjon = vilkårsperiode.versjon
-
         if (utfall == Utfall.IKKE_OPPFYLT && avslagsårsak == null) {
             throw IllegalStateException("Avslagsårsak må være satt ved IKKE_OPPFYLT som utfall")
         }
