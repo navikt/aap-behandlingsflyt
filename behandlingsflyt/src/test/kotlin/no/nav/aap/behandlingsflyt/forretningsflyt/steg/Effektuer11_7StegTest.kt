@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import io.mockk.every
+import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent.VENTER_PÅ_MASKINELL_AVKLARING
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
@@ -42,10 +44,10 @@ import org.junit.jupiter.api.assertInstanceOf
 import org.junit.jupiter.api.assertThrows
 import java.math.BigDecimal
 import java.time.Clock
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-import java.time.temporal.ChronoUnit
 import java.util.*
 
 class Effektuer11_7StegTest {
@@ -166,6 +168,11 @@ class Effektuer11_7StegTest {
     @Test
     fun `ny sak med relevante brudd ventebehov på bestilling av brev`() {
         val brevbestillingGateway = FakeBrevbestillingGateway()
+        val clock = mockk<Clock>()
+        val fixedClock = Clock.fixed(Instant.now(), ZoneId.systemDefault())
+        every { clock.instant() } returns fixedClock.instant()
+        every { clock.zone } returns fixedClock.zone
+
         val steg = Effektuer11_7Steg(
             underveisRepository = InMemoryUnderveisRepository,
             brevbestillingService = BrevbestillingService(
@@ -176,6 +183,7 @@ class Effektuer11_7StegTest {
             ),
             behandlingRepository = InMemoryBehandlingRepository,
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+            clock = clock
         )
 
         val sak = InMemorySakRepository.finnEllerOpprett(
@@ -245,7 +253,8 @@ class Effektuer11_7StegTest {
             )
         }
 
-        steg.clock = Clock.fixed(Instant.now().plus(22, ChronoUnit.DAYS), ZoneId.systemDefault())
+        //3 uker + en dag
+        every { clock.instant() } returns fixedClock.instant().plus(Duration.ofDays(22))
         steg.utfør(kontekst).also {
             assertEquals(FantAvklaringsbehov(EFFEKTUER_11_7), it)
         }

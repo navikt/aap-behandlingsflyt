@@ -37,7 +37,7 @@ class Effektuer11_7Steg(
     private val brevbestillingService: BrevbestillingService,
     private val behandlingRepository: BehandlingRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
-    internal var clock: Clock = Clock.systemDefaultZone(),
+    private val clock: Clock = Clock.systemDefaultZone(),
 ) : BehandlingSteg {
     private val logger = LoggerFactory.getLogger(Effektuer11_7Steg::class.java)
     private val typeBrev = TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT
