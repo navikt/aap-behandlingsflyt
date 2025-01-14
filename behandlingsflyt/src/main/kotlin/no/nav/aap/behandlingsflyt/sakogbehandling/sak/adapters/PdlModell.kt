@@ -70,8 +70,8 @@ data class PdlPersoninfo(
     val forelderBarnRelasjon: List<PdlRelasjon>? = null,
     val foedselsdato: List<PdlFoedsel>? = null,
     val doedsfall: Set<PDLDødsfall>? = null,
-    val statsborgerskap: PdlStatsborgerskap,
-    val folkeregisterpersonstatus: PdlFolkeregisterPersonStatus
+    val statsborgerskap: Set<PdlStatsborgerskap> ? = null,
+    val folkeregisterpersonstatus: Set<PdlFolkeregisterPersonStatus> ? = null,
 )
 
 data class PdlFolkeregisterPersonStatus(
