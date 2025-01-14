@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.forretningsflyt.steg
+package no.nav.aap.behandlingsflyt.forretningsflyt.steg.effektuer11_7
 
 import io.mockk.every
 import io.mockk.mockk
@@ -52,7 +52,6 @@ import java.time.ZoneId
 import java.util.*
 
 class Effektuer11_7StegTest {
-
     @Test
     fun `ny sak uten brudd er alltid fullført`() {
         val steg = effektuer11_7steg()
@@ -103,10 +102,7 @@ class Effektuer11_7StegTest {
     @Test
     fun `vanlig flyt - Bestill brev, Vente på brev skal ferdigstilles, venter på svar fra bruker, frist utløper`() {
         val brevbestillingGateway = FakeBrevbestillingGateway()
-        val clock = mockk<Clock>()
-        val fixedClock = Clock.fixed(Instant.now(), ZoneId.systemDefault())
-        every { clock.instant() } returns fixedClock.instant()
-        every { clock.zone } returns fixedClock.zone
+        val clock = FakeBruddAktivitetspliktClock(Clock.fixed(Instant.now(), ZoneId.systemDefault()))
 
         val steg = Effektuer11_7Steg(
             underveisRepository = InMemoryUnderveisRepository,
@@ -166,7 +162,7 @@ class Effektuer11_7StegTest {
         }
 
         //3 uker + en dag
-        every { clock.instant() } returns fixedClock.instant().plus(Duration.ofDays(22))
+        clock.gåFremITid(Duration.ofDays(22))
         steg.utfør(kontekst).also {
             assertEquals(FantAvklaringsbehov(EFFEKTUER_11_7), it)
         }
@@ -177,7 +173,9 @@ class Effektuer11_7StegTest {
         val brevbestillingGateway = FakeBrevbestillingGateway()
         val sak = nySak()
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
-        val fixedClock = Clock.fixed(Instant.now().plus(Duration.ofDays(22)), ZoneId.systemDefault())
+        val clock = FakeBruddAktivitetspliktClock(
+            Clock.fixed(Instant.now().plus(Duration.ofDays(22)), ZoneId.systemDefault())
+        )
         val kontekst = kontekst(sak, behandling.id, TypeBehandling.Førstegangsbehandling)
 
         val steg = Effektuer11_7Steg(
@@ -190,7 +188,7 @@ class Effektuer11_7StegTest {
             ),
             behandlingRepository = InMemoryBehandlingRepository,
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-            clock = fixedClock
+            clock = clock
         )
 
         steg.bestillBrev(
@@ -245,7 +243,7 @@ class Effektuer11_7StegTest {
             begrunnelse = "",
             endretAv = "",
         )
-        assertThrows<IllegalStateException> {
+        assertThrows<BrevIkkeUtfyltException> {
             steg.utfør(kontekst)
         }
     }

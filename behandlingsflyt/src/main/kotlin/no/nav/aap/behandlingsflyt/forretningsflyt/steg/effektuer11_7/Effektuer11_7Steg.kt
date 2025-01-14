@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.forretningsflyt.steg
+package no.nav.aap.behandlingsflyt.forretningsflyt.steg.effektuer11_7
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
@@ -29,15 +29,13 @@ import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
-import java.time.Clock
-import java.time.LocalDate
 
 class Effektuer11_7Steg(
     private val underveisRepository: UnderveisRepository,
     private val brevbestillingService: BrevbestillingService,
     private val behandlingRepository: BehandlingRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
-    private val clock: Clock = Clock.systemDefaultZone(),
+    private val clock: BruddAktivitetspliktClock = BruddAktivitetspliktClockImpl,
 ) : BehandlingSteg {
     private val logger = LoggerFactory.getLogger(Effektuer11_7Steg::class.java)
     private val typeBrev = TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT
@@ -79,7 +77,7 @@ class Effektuer11_7Steg(
         // TODO: blir "forlatte" SKRIV_BREV-avklarings-behov automatisk lukket?
         val skrivBrevAvklaringsbehov = avklaringsbehov.åpne().any { it.definisjon == SKRIV_BREV }
         if (skrivBrevAvklaringsbehov) {
-            throw IllegalStateException("Brudd aktivitetsplikt-brev skal være helautomatisk (foreløpig)")
+            throw BrevIkkeUtfyltException()
         }
 
         val brev = brevbestillingService.hentSisteBrevbestilling(behandling.id) ?: run {
@@ -93,7 +91,7 @@ class Effektuer11_7Steg(
             // `ekspedert` fra dokument-distribusjon, men det har vi ikke tilgjengelig i dag.
             val frist = brev.oppdatert.plusWeeks(3).toLocalDate()
 
-            if (LocalDate.now(clock) <= frist /* TODO: og ikke fått svar (SpesifikkVentebehovEvaluerer) */) {
+            if (clock.now() <= frist /* TODO: og ikke fått svar (SpesifikkVentebehovEvaluerer) */) {
                 return FantVentebehov(
                     Ventebehov(
                         definisjon = FORHÅNDSVARSEL_AKTIVITETSPLIKT,
@@ -108,7 +106,7 @@ class Effektuer11_7Steg(
                 Ventebehov(
                     definisjon = FORHÅNDSVARSEL_AKTIVITETSPLIKT,
                     grunn = ÅrsakTilSettPåVent.VENTER_PÅ_MASKINELL_AVKLARING, /* Under antagelsen om at varselet er automatisk, så venter vi på at bestillingen blir utført maskinelt. */
-                    frist = LocalDate.now(clock).plusDays(1),
+                    frist = clock.now().plusDays(1),
                 )
             )
         }
