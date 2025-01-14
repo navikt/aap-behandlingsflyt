@@ -60,6 +60,16 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
         return UnderveisGrunnlag(row.getLong("id"), underveisperioder)
     }
 
+    fun hentPerioder(ider: List<Long>): List<Underveisperiode> {
+        return connection.queryList("""select * from underveis_periode where id = any(?::bigint[])""") {
+            setParams {
+                setLongArray(1, ider)
+            }
+            setRowMapper { row -> mapPeriode(row) }
+        }
+    }
+
+
     private fun mapPeriode(it: Row): Underveisperiode {
 
         val antallTimer = it.getBigDecimal("timer_arbeid")
