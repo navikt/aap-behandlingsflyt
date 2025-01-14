@@ -29,7 +29,7 @@ dependencies {
     compileOnly("io.ktor:ktor-http-jvm:$ktorVersion")
     implementation("com.zaxxer:HikariCP:6.2.1")
     implementation("org.flywaydb:flyway-database-postgresql:11.1.1")
-    runtimeOnly("org.postgresql:postgresql:42.7.4")
+    runtimeOnly("org.postgresql:postgresql:42.7.5")
 
 
     testImplementation(project(":lib-test"))
