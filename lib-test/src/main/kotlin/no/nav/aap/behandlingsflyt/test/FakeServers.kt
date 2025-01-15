@@ -1054,7 +1054,7 @@ object FakeServers : AutoCloseable {
                         val responseRequest = LøsBrevbestillingDto(
                             behandlingReferanse = request.behandlingReferanse,
                             bestillingReferanse = brevbestillingReferanse,
-                            status = BrevbestillingLøsningStatus.KLAR_FOR_EDITERING,
+                            status = BrevbestillingLøsningStatus.AUTOMATISK_FERDIGSTILT,
                         )
                         val uri = URI.create("http://localhost:8080/api/brev/los-bestilling")
                         val httpRequest = PostRequest(
