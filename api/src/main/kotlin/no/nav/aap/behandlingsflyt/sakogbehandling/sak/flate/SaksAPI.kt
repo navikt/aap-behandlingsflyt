@@ -30,6 +30,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.SakPathParam
+import no.nav.aap.tilgang.auditlog.AuditLogPathParamConfig
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -145,7 +146,8 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 AuthorizationParamPathConfig(
                     sakPathParam = SakPathParam("saksnummer")
                 ),
-                TagModule(listOf(Tags.Sak))
+                null,
+                TagModule(listOf(Tags.Sak)),
             ) { req ->
                 val saksnummer = req.saksnummer
 
@@ -181,7 +183,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 authorizedGet<HentSakDTO, List<SafListDokument>>(
                     AuthorizationParamPathConfig(
                         sakPathParam = SakPathParam("saksnummer")
-                    ), TagModule(listOf(Tags.Sak))
+                    ), null, TagModule(listOf(Tags.Sak))
                 ) { req ->
                     val token = token()
                     val safRespons = SafListDokumentGateway.hentDokumenterForSak(Saksnummer(req.saksnummer), token)
