@@ -30,6 +30,26 @@ class Vilkår(
         )
     }
 
+    fun forleng(periode: Periode) {
+        val eksisterendeVurdering = vilkårTidslinje.kryss(periode)
+        if (eksisterendeVurdering.isEmpty() || eksisterendeVurdering.maxDato().isAfter(periode.tom)) {
+            return
+        }
+
+        val segmentSomSkalForlenges = eksisterendeVurdering.max()
+
+        vilkårTidslinje = vilkårTidslinje.kombiner(
+            Tidslinje(
+                listOf(
+                    Segment(
+                        Periode(segmentSomSkalForlenges.periode.fom, periode.tom),
+                        segmentSomSkalForlenges.verdi
+                    )
+                )
+            ), StandardSammenslåere.prioriterHøyreSideCrossJoin()
+        )
+    }
+
     fun leggTilIkkeVurdertPeriode(rettighetsperiode: Periode) {
         this.leggTilVurdering(
             Vilkårsperiode(
@@ -46,6 +66,20 @@ class Vilkår(
         return vilkårTidslinje.kryss(Tidslinje(periodeTilVurdering.map { Segment(it, Unit) }))
             .segmenter()
             .any { periode -> periode.verdi.erIkkeVurdert() }
+    }
+
+    fun harPerioderSomIkkeErVurdert(periodeTilVurdering: Periode): Boolean {
+        return vilkårTidslinje.kryss(Tidslinje(periodeTilVurdering, Unit))
+            .segmenter()
+            .any { periode -> periode.verdi.erIkkeVurdert() }
+    }
+
+    fun førsteDatoTilVurdering(): LocalDate {
+        return vilkårTidslinje.minDato()
+    }
+
+    fun harPerioderSomErOppfylt(): Boolean {
+        return vilkårTidslinje.segmenter().any { it.verdi.erOppfylt() }
     }
 
     override fun toString(): String {
@@ -68,13 +102,5 @@ class Vilkår(
         var result = type.hashCode()
         result = 31 * result + vilkårTidslinje.hashCode()
         return result
-    }
-
-    fun førsteDatoTilVurdering(): LocalDate {
-        return vilkårTidslinje.minDato()
-    }
-
-    fun harPerioderSomErOppfylt(): Boolean {
-        return vilkårTidslinje.segmenter().any { it.verdi.erOppfylt() }
     }
 }
