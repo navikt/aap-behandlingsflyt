@@ -12,7 +12,7 @@ private val logger = LoggerFactory.getLogger(MedlemskapRepository::class.java)
 
 class MedlemskapRepository(private val connection: DBConnection) {
 
-    fun lagreUnntakMedlemskap(behandlingId: BehandlingId, unntak: List<MedlemskapResponse>) {
+    fun lagreUnntakMedlemskap(behandlingId: BehandlingId, unntak: List<MedlemskapResponse>): Long {
         if (hentHvisEksisterer(behandlingId) != null) {
             logger.info("Medlemsskapsgrunnlag for behandling $behandlingId eksisterer allerede. Deaktiverer forrige lagrede.")
             deaktiverEksisterendeGrunnlag(behandlingId)
@@ -54,6 +54,7 @@ class MedlemskapRepository(private val connection: DBConnection) {
                 }
             }
         }
+        return medlemskapUnntakPersonId
     }
 
     private fun hentMedlemskapUnntak(behandlingsMedlemskapUnntak: Long): List<Segment<Unntak>> {
