@@ -1072,6 +1072,7 @@ object FakeServers : AutoCloseable {
                             BrevbestillingResponse(
                                 referanse = UUID.fromString(call.pathParameters.get("referanse"))!!,
                                 brev = Brev(
+                                    journalpostTittel = "En tittel",
                                     overskrift = "Overskrift", tekstbolker = listOf(
                                         Tekstbolk(
                                             id = UUID.randomUUID(), overskrift = "En fin overskrift", innhold = listOf(
