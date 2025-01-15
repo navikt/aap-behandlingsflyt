@@ -81,7 +81,7 @@ dependencies {
     implementation(project(":repository"))
     implementation("com.zaxxer:HikariCP:6.2.1")
     implementation("org.flywaydb:flyway-database-postgresql:11.1.1")
-    runtimeOnly("org.postgresql:postgresql:42.7.4")
+    runtimeOnly("org.postgresql:postgresql:42.7.5")
     implementation("ch.qos.logback:logback-classic:1.5.16")
 
     testImplementation(project(":lib-test"))
