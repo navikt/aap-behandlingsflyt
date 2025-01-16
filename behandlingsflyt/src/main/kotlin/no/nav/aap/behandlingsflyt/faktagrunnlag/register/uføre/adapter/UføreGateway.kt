@@ -35,7 +35,7 @@ object UføreGateway : UføreRegisterGateway {
     private fun query(uføreRequest: UføreRequest): UføreRespons? {
         val httpRequest = GetRequest(
             additionalHeaders = listOf(
-                Header("fnr", uføreRequest.fnr.first().toString()),
+                Header("fnr", uføreRequest.fnr),
                 Header("Nav-Consumer-Id", "aap-behandlingsflyt"),
                 Header("Accept", "application/json")
             )
@@ -50,7 +50,7 @@ object UføreGateway : UføreRegisterGateway {
             )
         } catch (e: IkkeFunnetException) {
             // Om personen ikke ble funnet i PESYS.
-            logger.info("Fant ikke person i PESYS. Returnerer null. URL brukt: $uri")
+            logger.info("Fant ikke person i PESYS. Returnerer null. URL brukt: $uri. Message: ${e.message}")
             return null
         }
     }

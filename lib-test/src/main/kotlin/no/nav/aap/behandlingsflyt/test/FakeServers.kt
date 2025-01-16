@@ -157,9 +157,14 @@ object FakeServers : AutoCloseable {
             }
         }
         routing() {
-            get("/api/uforetrygd/uforegrad") {
+            get("/pen/api/uforetrygd/uforegrad") {
                 val ident = requireNotNull(call.request.header("fnr"))
-                val uføregrad = FakePersoner.hentPerson(ident)?.uføre?.prosentverdi()
+                val hentPerson = FakePersoner.hentPerson(ident)
+                if (hentPerson == null) {
+                    call.respond(HttpStatusCode.Companion.NotFound, "Fant ikke person med fnr $ident")
+                    return@get
+                }
+                val uføregrad = hentPerson.uføre?.prosentverdi()
                 if (uføregrad == null) {
                     call.respond(HttpStatusCode.OK, UføreRespons(uforegrad = 0))
                 } else {
