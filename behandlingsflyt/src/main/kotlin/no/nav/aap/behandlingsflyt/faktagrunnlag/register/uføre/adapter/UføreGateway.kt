@@ -42,8 +42,9 @@ object UføreGateway : UføreRegisterGateway {
         )
 
         try {
+            logger.info("Henter uføregrad for dato: ${uføreRequest.dato}")
             return client.get(
-                uri = url.resolve("api/uforetrygd/uforegrad?dato=${uføreRequest.fom}"),
+                uri = url.resolve("api/uforetrygd/uforegrad?dato=${uføreRequest.dato}"),
                 request = httpRequest
             )
         } catch (e: IkkeFunnetException) {
@@ -53,9 +54,10 @@ object UføreGateway : UføreRegisterGateway {
         }
     }
 
-    override fun innhent(person: Person, fom: LocalDate): Uføre {
-        val fomString = fom.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-        val request = UføreRequest(person.identer().filter { it.aktivIdent }.map { it.identifikator }, fomString)
+    override fun innhent(person: Person, forDato: LocalDate): Uføre {
+        val datoString = forDato.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        val request =
+            UføreRequest(person.identer().filter { it.aktivIdent }.map { it.identifikator }.first(), datoString)
         val uføreRes = query(request) ?: error("Respons skal aldri være null fra PESYS.")
 
         return Uføre(

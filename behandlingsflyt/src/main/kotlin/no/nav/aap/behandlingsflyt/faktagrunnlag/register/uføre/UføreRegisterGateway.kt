@@ -6,6 +6,6 @@ import java.time.LocalDate
 interface UføreRegisterGateway {
     fun innhent(
         person: Person,
-        fom: LocalDate
+        forDato: LocalDate
     ): Uføre
 }
