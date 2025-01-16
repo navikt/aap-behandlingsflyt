@@ -41,15 +41,16 @@ object UføreGateway : UføreRegisterGateway {
             )
         )
 
+        val uri = url.resolve("api/uforetrygd/uforegrad?dato=${uføreRequest.dato}")
         try {
             logger.info("Henter uføregrad for dato: ${uføreRequest.dato}")
             return client.get(
-                uri = url.resolve("api/uforetrygd/uforegrad?dato=${uføreRequest.dato}"),
+                uri = uri,
                 request = httpRequest
             )
         } catch (e: IkkeFunnetException) {
-            // Om personen ikke ble funnet.
-            logger.info("Fant ikke person i PESYS. Returnerer null.")
+            // Om personen ikke ble funnet i PESYS.
+            logger.info("Fant ikke person i PESYS. Returnerer null. URL brukt: $uri")
             return null
         }
     }
@@ -58,7 +59,14 @@ object UføreGateway : UføreRegisterGateway {
         val datoString = forDato.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
         val request =
             UføreRequest(person.identer().filter { it.aktivIdent }.map { it.identifikator }.first(), datoString)
-        val uføreRes = query(request) ?: error("Respons skal aldri være null fra PESYS.")
+        val uføreRes = query(request)
+
+        if (uføreRes == null) {
+            logger.warn("Fant ikke person i Pesys. Returnerer uføregrad null.")
+            return Uføre(
+                uføregrad = Prosent.`0_PROSENT`
+            )
+        }
 
         return Uføre(
             uføregrad = uføreRes.uforegrad?.let { Prosent(it) } ?: Prosent.`0_PROSENT`
