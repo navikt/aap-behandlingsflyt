@@ -58,7 +58,7 @@ class LovvalgService private constructor(
             val medlemskapPerioder = medlemskapGateway.innhent(sak.person, Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.fom))
             LOGGER.info("medlemskapPerioder response: ${medlemskapPerioder}")
         } catch (e: Exception) {
-            LOGGER.warn("innhentMedlemskapGrunnlagOgLagre: ${e.message}")
+            LOGGER.warn("innhentMedlemskapGrunnlagOgLagre: ${e.message}, stacktrace: $e")
         }
         return 1
         //return medlemskapRepository.lagreUnntakMedlemskap(behandlingId, medlemskapPerioder)
@@ -75,9 +75,9 @@ class LovvalgService private constructor(
             )
 
             val response = aaRegisterGateway.hentAARegisterData(request)
-            LOGGER.info("innhentAARegisterGrunnlagOgLagre response:", response)
+            LOGGER.info("innhentAARegisterGrunnlagOgLagre response: ${response}", )
         } catch (e: Exception) {
-            LOGGER.warn("innhentAARegisterGrunnlagOgLagre: ${e.message}")
+            LOGGER.warn("innhentAARegisterGrunnlagOgLagre: ${e.message}, stacktrace: $e")
         }
         return 1
     }

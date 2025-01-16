@@ -129,7 +129,7 @@ enum class PersonStatus {
     doed,
     opphort,
     foedselsregistrert,
-    ikkebosatt,
+    ikkeBosatt,
     midlertidig,
     inaktiv
 }
