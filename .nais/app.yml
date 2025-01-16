@@ -181,4 +181,4 @@ spec:
     - name: INTEGRASJON_AAREG_URL
       value: https://aareg-services-q1.dev-fss-pub.nais.io
     - name: INTEGRASJON_AAREG_SCOPE
-      value: api://dev-fss.arbeidsforhold.aareg-services-nais-q1/.default
+      value: api://dev-fss.arbeidsforhold.aareg-services-nais/.default
