@@ -41,7 +41,7 @@ object UføreGateway : UføreRegisterGateway {
             )
         )
 
-        val uri = url.resolve("api/uforetrygd/uforegrad?dato=${uføreRequest.dato}")
+        val uri = url.resolve("pen/api/uforetrygd/uforegrad?dato=${uføreRequest.dato}")
         try {
             logger.info("Henter uføregrad for dato: ${uføreRequest.dato}")
             return client.get(
