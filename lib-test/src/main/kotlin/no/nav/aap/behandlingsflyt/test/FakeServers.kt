@@ -26,6 +26,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.Inntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.SumPi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PERSON_QUERY
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.adapter.UføreRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeModell
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.Yrkesskader
@@ -156,15 +157,14 @@ object FakeServers : AutoCloseable {
             }
         }
         routing() {
-            get("/vedtak/gradalderellerufore") {
+            get("/api/uforetrygd/uforegrad") {
                 val ident = requireNotNull(call.request.header("Nav-Personident"))
                 val uføregrad = FakePersoner.hentPerson(ident)?.uføre?.prosentverdi()
                 if (uføregrad == null) {
-                    call.respond(HttpStatusCode.NoContent)
+                    call.respond(HttpStatusCode.OK, UføreRespons(uforegrad = 0))
                 } else {
-                    call.respond(HttpStatusCode.Companion.OK, uføregrad)
+                    call.respond(HttpStatusCode.Companion.OK, UføreRespons(uforegrad = uføregrad))
                 }
-
             }
         }
     }

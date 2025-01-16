@@ -7,15 +7,22 @@ import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
+import no.nav.aap.komponenter.httpklient.httpclient.error.IkkeFunnetException
 import no.nav.aap.komponenter.httpklient.httpclient.get
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
-import no.nav.aap.komponenter.miljo.Miljø
-import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.komponenter.verdityper.Prosent
+import org.slf4j.LoggerFactory
 import java.net.URI
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+
+/**
+ * @param uforegrad Uføregrad i prosent. `null` om personen er registrert i systemet, men ikke har uføregrad.
+ */
+data class UføreRespons(val uforegrad: Int?)
+
+private val logger = LoggerFactory.getLogger(UføreGateway::class.java)
 
 object UføreGateway : UføreRegisterGateway {
     private val url = URI.create(requiredConfigForKey("integrasjon.pesys.url"))
@@ -25,7 +32,7 @@ object UføreGateway : UføreRegisterGateway {
         tokenProvider = ClientCredentialsTokenProvider,
     )
 
-    private fun query(uføreRequest: UføreRequest): Int? {
+    private fun query(uføreRequest: UføreRequest): UføreRespons? {
         val httpRequest = GetRequest(
             additionalHeaders = listOf(
                 Header("Nav-Personident", uføreRequest.fnr.first().toString()),
@@ -34,28 +41,25 @@ object UføreGateway : UføreRegisterGateway {
             )
         )
 
-        return client.get(
-            uri = url.resolve("vedtak/gradalderellerufore?fom=${uføreRequest.fom}&sakstype=${uføreRequest.sakstype}"),
-            request = httpRequest
-        )
-    } //TODO: få inn request parameter på en bedre måte
-
-    // /springapi/vedtak/gradalderellerufore
-    // https://github.com/navikt/pensjon-pen/blob/16fd07f36c6bfaaeeb1e5e139834f07f9c59b0e2/pen-app/src/main/java/no/nav/pensjon/pen_app/provider/api/vedtak/VedtakController.kt#L288
-    override fun innhent(person: Person, fomDate: LocalDate): Uføre {
-        //FIXME: Fjerne mock respons
-        if (Miljø.er() == MiljøKode.DEV) {
-            return Uføre(Prosent.`0_PROSENT`)
+        try {
+            return client.get(
+                uri = url.resolve("api/uforetrygd/uforegrad?dato=${uføreRequest.fom}"),
+                request = httpRequest
+            )
+        } catch (e: IkkeFunnetException) {
+            // Om personen ikke ble funnet.
+            logger.info("Fant ikke person i PESYS. Returnerer null.")
+            return null
         }
+    }
 
-        val fom = fomDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-        val request = UføreRequest(person.identer().filter { it.aktivIdent }.map { it.identifikator }, fom)
-        val uføreRes = query(request)
-
-        if (uføreRes == null) return Uføre(uføregrad = Prosent.`0_PROSENT`)
+    override fun innhent(person: Person, fom: LocalDate): Uføre {
+        val fomString = fom.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        val request = UføreRequest(person.identer().filter { it.aktivIdent }.map { it.identifikator }, fomString)
+        val uføreRes = query(request) ?: error("Respons skal aldri være null fra PESYS.")
 
         return Uføre(
-            uføregrad = Prosent(uføreRes),
+            uføregrad = uføreRes.uforegrad?.let { Prosent(it) } ?: Prosent.`0_PROSENT`
         )
     }
 }

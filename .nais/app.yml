@@ -141,7 +141,7 @@ spec:
     - name: INTEGRASJON_STATISTIKK_SCOPE
       value: api://dev-gcp.aap.statistikk/.default
     - name: INTEGRASJON_PESYS_URL
-      value: http://pensjon-pen-q2.pensjon-q2/pen/springapi/
+      value: https://pensjon-pen-q2.dev.adeo.no
     - name: INTEGRASJON_PESYS_SCOPE
       value: api://dev-fss.pensjon-q2.pensjon-pen-q2/.default
     - name: INTEGRASJON_TILGANG_URL
