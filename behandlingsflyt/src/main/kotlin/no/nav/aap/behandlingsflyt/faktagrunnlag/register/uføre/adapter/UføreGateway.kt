@@ -11,8 +11,6 @@ import no.nav.aap.komponenter.httpklient.httpclient.error.IkkeFunnetException
 import no.nav.aap.komponenter.httpklient.httpclient.get
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
-import no.nav.aap.komponenter.miljo.Miljø
-import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.slf4j.LoggerFactory
 import java.net.URI
@@ -37,7 +35,7 @@ object UføreGateway : UføreRegisterGateway {
     private fun query(uføreRequest: UføreRequest): UføreRespons? {
         val httpRequest = GetRequest(
             additionalHeaders = listOf(
-                Header("Nav-Personident", uføreRequest.fnr.first().toString()),
+                Header("fnr", uføreRequest.fnr.first().toString()),
                 Header("Nav-Consumer-Id", "aap-behandlingsflyt"),
                 Header("Accept", "application/json")
             )
