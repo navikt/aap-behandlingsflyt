@@ -186,3 +186,7 @@ spec:
       value: https://aareg-services-q1.dev-fss-pub.nais.io
     - name: INTEGRASJON_AAREG_SCOPE
       value: api://dev-fss.arbeidsforhold.aareg-services-nais/.default
+    - name: INTEGRASJON_INNTEKTSKOMPONENTEN_URL
+      value: https://app-q2.adeo.no/inntektskomponenten-ws/rs/api/v1/
+    - name: INTEGRASJON_INNTEKTSKOMPONENTEN_SCOPE
+      value: api://dev-fss.team-inntekt.inntektskomponenten/.default

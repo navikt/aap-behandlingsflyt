@@ -1,5 +1,6 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret
+package no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning
 
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
@@ -8,17 +9,18 @@ import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import java.net.URI
+import java.time.YearMonth
 
-class AARegisterGateway {
-    private val url = URI.create(requiredConfigForKey("integrasjon.aareg.url")+"/api/v2/arbeidstaker/arbeidsforholdoversikt")
-    private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.aareg.scope"))
+class InntektkomponentenGateway  {
+    private val url = URI.create(requiredConfigForKey("integrasjon.inntektskomponenten.url") +"/hentinntektliste")
+    private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.inntektskomponenten.scope"))
 
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
         tokenProvider = ClientCredentialsTokenProvider,
     )
 
-    private fun query(request: ArbeidsforholdRequest): ArbeidsforholdoversiktResponse {
+    private fun query(request: InntektskomponentRequest): InntektskomponentResponse {
         val httpRequest = PostRequest(
             body = request,
             additionalHeaders = listOf(
@@ -28,11 +30,19 @@ class AARegisterGateway {
         return requireNotNull(client.post(uri = url, request = httpRequest))
     }
 
-    fun hentAARegisterData(request: ArbeidsforholdRequest): ArbeidsforholdoversiktResponse {
+    fun hentAInntekt(fnr: String, fom: YearMonth, tom: YearMonth): InntektskomponentResponse {
+        val request = InntektskomponentRequest(
+            maanedFom = fom,
+            maanedTom = tom,
+            ident = Ident(
+                fnr
+            )
+        )
+
         try {
             return query(request)
         } catch (e : Exception) {
-            throw RuntimeException("Feil ved henting av data i AAREG: ${e.message}, $e")
+            throw RuntimeException("Feil ved henting av data i Inntektskomponenten: ${e.message}, $e")
         }
     }
 }
