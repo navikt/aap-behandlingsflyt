@@ -11,6 +11,8 @@ import no.nav.aap.komponenter.httpklient.httpclient.error.IkkeFunnetException
 import no.nav.aap.komponenter.httpklient.httpclient.get
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.miljo.Miljø
+import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.slf4j.LoggerFactory
 import java.net.URI
@@ -55,6 +57,10 @@ object UføreGateway : UføreRegisterGateway {
     }
 
     override fun innhent(person: Person, forDato: LocalDate): Uføre {
+        //FIXME: Fjerne mock respons
+        if (Miljø.er() == MiljøKode.DEV) {
+            return Uføre(Prosent.`0_PROSENT`)
+        }
         val datoString = forDato.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
         val request =
             UføreRequest(person.identer().filter { it.aktivIdent }.map { it.identifikator }.first(), datoString)
