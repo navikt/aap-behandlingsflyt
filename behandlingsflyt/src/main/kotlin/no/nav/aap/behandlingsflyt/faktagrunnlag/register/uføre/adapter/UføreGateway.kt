@@ -57,10 +57,6 @@ object UføreGateway : UføreRegisterGateway {
     }
 
     override fun innhent(person: Person, forDato: LocalDate): Uføre {
-        //FIXME: Fjerne mock respons
-        if (Miljø.er() == MiljøKode.DEV) {
-            return Uføre(Prosent.`0_PROSENT`)
-        }
         val datoString = forDato.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
         val request =
             UføreRequest(person.identer().filter { it.aktivIdent }.map { it.identifikator }.first(), datoString)
