@@ -98,6 +98,7 @@ spec:
         - host: pensjon-popp-q2.dev-fss-pub.nais.io
         - host: fpabakus.dev-fss-pub.nais.io
         - host: aareg-services-q1.dev-fss-pub.nais.io
+        - host: pensjon-pen-q2.dev.adeo.no # PESYS
       rules:
         - application: brev
         - application: tilgang
