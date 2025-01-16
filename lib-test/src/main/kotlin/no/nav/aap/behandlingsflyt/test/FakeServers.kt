@@ -158,7 +158,7 @@ object FakeServers : AutoCloseable {
         }
         routing() {
             get("/api/uforetrygd/uforegrad") {
-                val ident = requireNotNull(call.request.header("Nav-Personident"))
+                val ident = requireNotNull(call.request.header("fnr"))
                 val uføregrad = FakePersoner.hentPerson(ident)?.uføre?.prosentverdi()
                 if (uføregrad == null) {
                     call.respond(HttpStatusCode.OK, UføreRespons(uforegrad = 0))
