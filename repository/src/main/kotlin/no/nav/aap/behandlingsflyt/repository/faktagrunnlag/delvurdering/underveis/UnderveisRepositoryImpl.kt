@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisperiodeId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktId
@@ -60,10 +61,10 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
         return UnderveisGrunnlag(row.getLong("id"), underveisperioder)
     }
 
-    fun hentPerioder(ider: List<Long>): List<Underveisperiode> {
+    fun hentPerioder(ider: List<UnderveisperiodeId>): List<Underveisperiode> {
         return connection.queryList("""select * from underveis_periode where id = any(?::bigint[])""") {
             setParams {
-                setLongArray(1, ider)
+                setLongArray(1, ider.map { it.asLong })
             }
             setRowMapper { row -> mapPeriode(row) }
         }
@@ -85,15 +86,16 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
 
 
         return Underveisperiode(
-            it.getPeriode("periode"),
-            it.getPeriode("meldeperiode"),
-            it.getEnum("utfall"),
-            it.getEnumOrNull("avslagsarsak"),
-            Prosent(it.getInt("grenseverdi")),
-            gradering,
-            Dagsatser(it.getInt("trekk_dagsatser")),
-            it.getArray("bruker_av_kvoter", String::class).map { Kvote.valueOf(it) }.toSet(),
-            it.getLongOrNull("brudd_aktivitetsplikt_id")?.let { BruddAktivitetspliktId(it) }
+            periode = it.getPeriode("periode"),
+            meldePeriode = it.getPeriode("meldeperiode"),
+            utfall = it.getEnum("utfall"),
+            avslagsårsak = it.getEnumOrNull("avslagsarsak"),
+            grenseverdi = Prosent(it.getInt("grenseverdi")),
+            gradering = gradering,
+            trekk = Dagsatser(it.getInt("trekk_dagsatser")),
+            brukerAvKvoter = it.getArray("bruker_av_kvoter", String::class).map { Kvote.valueOf(it) }.toSet(),
+            bruddAktivitetspliktId = it.getLongOrNull("brudd_aktivitetsplikt_id")?.let { BruddAktivitetspliktId(it) },
+            id = UnderveisperiodeId(it.getLong("id")),
         )
     }
 

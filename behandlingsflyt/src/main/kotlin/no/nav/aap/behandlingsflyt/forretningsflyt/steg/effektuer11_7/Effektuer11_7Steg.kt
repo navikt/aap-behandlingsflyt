@@ -6,6 +6,8 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevGateway
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7Forhåndsvarsel
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -23,6 +25,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.brev.kontrakt.Status
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
@@ -37,6 +40,7 @@ class Effektuer11_7Steg(
     private val brevbestillingService: BrevbestillingService,
     private val behandlingRepository: BehandlingRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val effektuer117repository: Effektuer11_7Repository,
     private val clock: Clock = Clock.systemDefaultZone(),
 ) : BehandlingSteg {
     private val logger = LoggerFactory.getLogger(Effektuer11_7Steg::class.java)
@@ -65,6 +69,15 @@ class Effektuer11_7Steg(
         if (eksisterendeBrevBestilling == null || false /* TODO: eksisterende varsel er ikke dekkende */) {
             // XXX: skulle gjerne "avbrutt" tidligere bestilling av brev, men det er ikke mulig i dag.
             brevbestillingService.bestill(kontekst.behandlingId, typeBrev, "${behandling.referanse}-$typeBrev")
+
+            effektuer117repository.lagreVarsel(
+                behandling.id,
+                varsel = Effektuer11_7Forhåndsvarsel(
+                    datoVarslet = LocalDate.now(),
+                    underveisperioder = relevanteBrudd.toList().map { it.verdi },
+                ),
+            )
+
             return FantVentebehov(
                 Ventebehov(
                     definisjon = BESTILL_BREV,
@@ -84,7 +97,7 @@ class Effektuer11_7Steg(
 
         val brev = brevbestillingService.hentBrevbestilling(eksisterendeBrevBestilling.referanse)
 
-        if (brev.status == no.nav.aap.brev.kontrakt.Status.FERDIGSTILT) {
+        if (brev.status == Status.FERDIGSTILT) {
 
             // `oppdatert` er det beste vi har tilgjengelig nå. Ideelt sett skulle vi nok brukt
             // `ekspedert` fra dokument-distribusjon, men det har vi ikke tilgjengelig i dag.
@@ -126,6 +139,7 @@ class Effektuer11_7Steg(
             val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
             val sakRepository = repositoryProvider.provide(SakRepository::class)
             val brevbestillingRepository = repositoryProvider.provide(BrevbestillingRepository::class)
+            val effektuer117repository = repositoryProvider.provide(Effektuer11_7Repository::class)
 
             val brevbestillingService =
                 BrevbestillingService(
@@ -141,7 +155,8 @@ class Effektuer11_7Steg(
                 underveisRepository,
                 brevbestillingService,
                 behandlingRepository = behandlingRepository,
-                avklaringsbehovRepository = avklaringsbehovRepository
+                avklaringsbehovRepository = avklaringsbehovRepository,
+                effektuer117repository = effektuer117repository
             )
         }
 

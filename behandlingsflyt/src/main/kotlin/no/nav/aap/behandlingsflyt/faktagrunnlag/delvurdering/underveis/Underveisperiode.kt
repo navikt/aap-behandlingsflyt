@@ -7,6 +7,8 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
 
+data class UnderveisperiodeId(val asLong: Long)
+
 data class Underveisperiode(
     val periode: Periode,
     val meldePeriode: Periode,
@@ -16,7 +18,8 @@ data class Underveisperiode(
     val gradering: Gradering,
     val trekk: Dagsatser,
     val brukerAvKvoter: Set<Kvote>,
-    val bruddAktivitetspliktId: BruddAktivitetspliktId?
+    val bruddAktivitetspliktId: BruddAktivitetspliktId?,
+    val id: UnderveisperiodeId? = null,
 ) : Comparable<Underveisperiode> {
 
     fun utbetalingsgrad(): Prosent {
@@ -32,7 +35,7 @@ data class Underveisperiode(
 
 
     override fun toString(): String {
-        return "Underveisperiode(periode=$periode, utfall=$utfall, utbetalingsgrad=${utbetalingsgrad()}, avslagsårsak=$avslagsårsak, grenseverdi=$grenseverdi, gradering=$gradering, trekk=$trekk)"
+        return "Underveisperiode(periode=$periode, utfall=$utfall, utbetalingsgrad=${utbetalingsgrad()}, avslagsårsak=$avslagsårsak, grenseverdi=$grenseverdi, gradering=$gradering, trekk=$trekk, id=$id)"
     }
 
 }

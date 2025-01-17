@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.flyt.testutil.FakeBrevbestillingGateway
 import no.nav.aap.behandlingsflyt.flyt.testutil.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.flyt.testutil.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.flyt.testutil.InMemoryBrevbestillingRepository
+import no.nav.aap.behandlingsflyt.flyt.testutil.InMemoryEffektuer117Repository
 import no.nav.aap.behandlingsflyt.flyt.testutil.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.flyt.testutil.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -111,7 +112,8 @@ class Effektuer11_7StegTest {
             ),
             behandlingRepository = InMemoryBehandlingRepository,
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-            clock = clock
+            effektuer117repository = InMemoryEffektuer117Repository,
+            clock = clock,
         )
 
         val sak = nySak()
@@ -183,7 +185,8 @@ class Effektuer11_7StegTest {
             ),
             behandlingRepository = InMemoryBehandlingRepository,
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-            clock = clock
+            effektuer117repository = InMemoryEffektuer117Repository,
+            clock = clock,
         )
 
         steg.bestillBrev(
@@ -270,6 +273,7 @@ class Effektuer11_7StegTest {
         ),
         behandlingRepository = InMemoryBehandlingRepository,
         avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+        effektuer117repository = InMemoryEffektuer117Repository,
     )
 
     private fun underveisperiode(sak: Sak) = Underveisperiode(
@@ -289,8 +293,12 @@ class Effektuer11_7StegTest {
         bruddAktivitetspliktId = null,
     )
 
-    private fun kontekst(sak: Sak, behandlingId: BehandlingId, typeBehandling: TypeBehandling): FlytKontekstMedPerioder {
-        val vurderingType = when(typeBehandling) {
+    private fun kontekst(
+        sak: Sak,
+        behandlingId: BehandlingId,
+        typeBehandling: TypeBehandling
+    ): FlytKontekstMedPerioder {
+        val vurderingType = when (typeBehandling) {
             TypeBehandling.Førstegangsbehandling -> VurderingType.FØRSTEGANGSBEHANDLING
             TypeBehandling.Revurdering -> VurderingType.REVURDERING
             TypeBehandling.Tilbakekreving -> VurderingType.REVURDERING //Skal nok være noe annet

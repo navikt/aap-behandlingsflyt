@@ -55,24 +55,24 @@ class Effektuer11_7RepositoryImplTest {
     @Test
     fun `Lagrer og henter varsel`() {
         InitTestDatabase.dataSource.transaction { connection ->
+            val effektuer11_7Repository = Effektuer11_7RepositoryImpl(connection)
+            val underveisRepository = UnderveisRepositoryImpl(connection)
+
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
+
             val underveisperiode = underveisperiode(sak).copy(
                 utfall = Utfall.IKKE_OPPFYLT,
                 avslagsårsak = UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT,
             )
+            underveisRepository.lagre(behandling.id, listOf(underveisperiode), tomUnderveisInput)
+
             val varsel = Effektuer11_7Forhåndsvarsel(
                 LocalDate.now(),
-                listOf(underveisperiode)
+                underveisRepository.hent(behandling.id).perioder,
             )
 
-            val effektuer11_7Repository = Effektuer11_7RepositoryImpl(connection)
-            val underveisRepository = UnderveisRepositoryImpl(connection)
-
-            underveisRepository.lagre(behandling.id, listOf(underveisperiode), tomUnderveisInput)
-            val underveisGrunnlag = underveisRepository.hent(behandling.id)
-
-            effektuer11_7Repository.lagreVarsel(behandling.id, varsel, underveisGrunnlag)
+            effektuer11_7Repository.lagreVarsel(behandling.id, varsel)
 
             assertEquals(
                 varsel,

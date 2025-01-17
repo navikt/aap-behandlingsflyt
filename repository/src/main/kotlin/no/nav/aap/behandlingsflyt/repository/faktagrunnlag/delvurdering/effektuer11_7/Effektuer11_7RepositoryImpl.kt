@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.effektuer11_7.Effek
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7Vurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisperiodeId
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -45,7 +45,7 @@ class Effektuer11_7RepositoryImpl(private val connection: DBConnection) : Effekt
         }
     }
 
-    override fun lagreVarsel(behandlingId: BehandlingId, varsel: Effektuer11_7Forhåndsvarsel, underveisGrunnlag: UnderveisGrunnlag) {
+    override fun lagreVarsel(behandlingId: BehandlingId, varsel: Effektuer11_7Forhåndsvarsel) {
         val varslingerId = connection.executeReturnKey("insert into effektuer_11_7_varslinger default values")
 
         val varselId = connection.executeReturnKey("insert into effektuer_11_7_varsel(varslinger_id, dato_varslet) values(?, ?)") {
@@ -55,10 +55,10 @@ class Effektuer11_7RepositoryImpl(private val connection: DBConnection) : Effekt
             }
         }
 
-        connection.executeReturnKey("insert into effektuer_11_7_brudd(varsel_id, underveis_periode_id) values(?, ?)") {
+        connection.executeBatch("insert into effektuer_11_7_brudd(varsel_id, underveis_periode_id) values(?, ?)", varsel.underveisperioder) {
             setParams {
                 setLong(1, varselId)
-                setLong(2, underveisGrunnlag.id)
+                setLong(2, it.id!!.asLong)
             }
         }
 
@@ -123,10 +123,11 @@ class Effektuer11_7RepositoryImpl(private val connection: DBConnection) : Effekt
                 Effektuer11_7Forhåndsvarsel(
                     datoVarslet = row.getLocalDate("dato_varslet"),
                     underveisperioder = row.getArray("underveisperioder", Long::class)
-                        .let { UnderveisRepositoryImpl(connection).hentPerioder(it) }
+                        .let { UnderveisRepositoryImpl(connection).hentPerioder(it.map { UnderveisperiodeId(it) }).sorted() }
                 )
             }
         }
+            .sortedBy { it.datoVarslet }
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
