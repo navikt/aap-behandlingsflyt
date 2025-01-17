@@ -32,7 +32,7 @@ class LovvalgService private constructor(
 
         val medlemskapUnntakPersonId = innhentMedlemskapGrunnlagOgLagre(sak, kontekst.behandlingId)
         val aaRegId = innhentAARegisterGrunnlagOgLagre(sak, kontekst.behandlingId)
-        val aInntektId = innhentAInntektGrunnlagOgLagre(sak, kontekst.behandlingId)
+        //val aInntektId = innhentAInntektGrunnlagOgLagre(sak, kontekst.behandlingId)
 
         val sykepenger = "" // TODO: Hva skulle vi gjøre her?
 
@@ -83,9 +83,9 @@ class LovvalgService private constructor(
             )
 
             //TODO: Repo for dette
-            LOGGER.info("innhentAARegisterGrunnlagOgLagre response: $response")
+            LOGGER.info("innhentAInntektGrunnlagOgLagre response: $response")
         } catch (e: Exception) {
-            LOGGER.warn("innhentAARegisterGrunnlagOgLagre: ${e.message}, stacktrace: $e")
+            LOGGER.warn("innhentAInntektGrunnlagOgLagre: ${e.message}, stacktrace: $e")
         }
 
         return 1
