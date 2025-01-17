@@ -81,6 +81,7 @@ import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import tilgang.Rolle
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -392,16 +393,17 @@ class StatistikkJobbUtførerTest {
         }
         val behandlingRepository = InMemoryBehandlingRepository
 
-        val sak = InMemorySakRepository.finnEllerOpprett(Person(
-            id = 1,
-            identifikator = UUID.randomUUID(),
-            identer = listOf(
-                Ident(
-                    identifikator = "1234",
-                    aktivIdent = true
+        val sak = InMemorySakRepository.finnEllerOpprett(
+            Person(
+                id = 1,
+                identifikator = UUID.randomUUID(),
+                identer = listOf(
+                    Ident(
+                        identifikator = "1234",
+                        aktivIdent = true
+                    )
                 )
-            )
-        ), Periode(LocalDate.now(), LocalDate.now().plusDays(1))
+            ), Periode(LocalDate.now(), LocalDate.now().plusDays(1))
         )
         InMemorySakRepository.oppdaterSakStatus(sak.id, UTREDES)
         val sakId = sak.id
@@ -521,7 +523,11 @@ class StatistikkJobbUtførerTest {
             AvklaringsbehovHendelseDto(
                 definisjon = DefinisjonDTO(
                     type = AvklaringsbehovKode.`5050`,
-                    behovType = Definisjon.BehovType.MANUELT_PÅKREVD, løsesISteg = StegType.FATTE_VEDTAK
+                    behovType = Definisjon.BehovType.MANUELT_PÅKREVD,
+                    løsesISteg = StegType.FATTE_VEDTAK,
+                    løsesAv = listOf(
+                        Rolle.SAKSBEHANDLER, Rolle.VEILEDER
+                    )
                 ),
                 status = no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER,
                 endringer = listOf(

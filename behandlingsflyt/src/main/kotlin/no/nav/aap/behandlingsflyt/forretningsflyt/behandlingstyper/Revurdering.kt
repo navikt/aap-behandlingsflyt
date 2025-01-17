@@ -52,8 +52,6 @@ object Revurdering : BehandlingType {
             .medSteg(steg = VurderLovvalgSteg, informasjonskrav = listOf(PersonopplysningService, LovvalgService ))
             .medSteg(steg = VurderAlderSteg)
             .medSteg(steg = VurderStudentSteg)
-            // UføreService svarer med mocket respons inntil pesys-integrasjon er fullført:
-            // Relevant issue: https://github.com/navikt/pensjon-pen/pull/13138
             .medSteg(
                 steg = VurderSykdomSteg,
                 informasjonskrav = listOf(YrkesskadeService, UføreService, LegeerklæringService),

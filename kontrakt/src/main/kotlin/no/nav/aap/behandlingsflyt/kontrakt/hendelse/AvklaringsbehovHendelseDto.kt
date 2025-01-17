@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import tilgang.Rolle
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -21,7 +22,8 @@ public data class AvklaringsbehovHendelseDto(
 public data class DefinisjonDTO(
     val type: AvklaringsbehovKode,
     val behovType: Definisjon.BehovType,
-    val løsesISteg: StegType
+    val løsesISteg: StegType,
+    val løsesAv: List<Rolle>
 )
 
 public data class EndringDTO(
