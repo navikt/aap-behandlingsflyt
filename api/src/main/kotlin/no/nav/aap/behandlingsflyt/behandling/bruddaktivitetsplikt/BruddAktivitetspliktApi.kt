@@ -8,6 +8,7 @@ import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.Tags
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.DokumentInput
@@ -37,15 +38,16 @@ import javax.sql.DataSource
 fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
     route("/api").tag(Tags.Aktivitetsplikt) {
         route("/behandling/{referanse}/aktivitetsplikt/effektuer").get<BehandlingReferanse, Effektuer11_7Dto> { behandlingReferanse ->
-            val bruddAktivitetspliktHendelseDto = dataSource.transaction { conn ->
+            val respons = dataSource.transaction { conn ->
                 val repositoryProvider = RepositoryProvider(conn)
                 val underveisRepository = repositoryProvider.provide(UnderveisRepository::class)
                 val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
                 val aktivitetspliktRepository = repositoryProvider.provide(AktivitetspliktRepository::class)
+                val effektuer117Repository = repositoryProvider.provide(Effektuer11_7Repository::class)
 
                 val behandlingId = BehandlingReferanseService(behandlingRepository).behandling(behandlingReferanse).id
 
-                underveisRepository.hent(behandlingId)
+                val brudd = underveisRepository.hent(behandlingId)
                     .perioder
                     .mapNotNull {
                         val id = it.bruddAktivitetspliktId ?: return@mapNotNull null
@@ -57,16 +59,19 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
                         val dokument = aktivitetspliktRepository.hentBrudd(segment.verdi)
                         bruddAktivitetspliktHendelseDto(dokument, segment.periode)
                     }
+
+                val effektuer11_7Grunnlag = effektuer117Repository.hentHvisEksisterer(behandlingId)
+                val sisteVarsel = effektuer11_7Grunnlag?.varslinger?.maxByOrNull { it.datoVarslet }
+
+                Effektuer11_7Dto(
+                    begrunnelse = effektuer11_7Grunnlag?.vurdering?.begrunnelse,
+                    forhåndsvarselDato = sisteVarsel?.datoVarslet,
+                    forhåndsvarselSvar = null,
+                    gjeldendeBrudd = brudd,
+                )
             }
 
-            respond(
-                Effektuer11_7Dto(
-                    begrunnelse = "dette er en vurdering",
-                    forhåndsvarselDato = null,
-                    forhåndsvarselSvar = null,
-                    gjeldendeBrudd = bruddAktivitetspliktHendelseDto
-                )
-            )
+            respond(respons)
         }
 
         route("/sak/{saksnummer}/aktivitetsplikt") {
