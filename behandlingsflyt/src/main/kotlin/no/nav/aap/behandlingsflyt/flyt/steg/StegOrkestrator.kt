@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 
 private val log = LoggerFactory.getLogger(StegOrkestrator::class.java)
 
@@ -47,39 +48,43 @@ class StegOrkestrator(
         behandling: Behandling,
         faktagrunnlagForGjeldendeSteg: List<Informasjonskravkonstruktør>
     ): Transisjon {
-        var gjeldendeStegStatus = StegStatus.START
-        log.info("Behandler steg '{}'", aktivtSteg.type())
+        MDC.putCloseable("stegType", aktivtSteg.type().name).use {
+            var gjeldendeStegStatus = StegStatus.START
+            log.info("Behandler steg '{}'", aktivtSteg.type())
 
-        val kontekstMedPerioder = FlytKontekstMedPerioder(
-            sakId = kontekst.sakId,
-            behandlingId = kontekst.behandlingId,
-            behandlingType = kontekst.behandlingType,
-            perioderTilVurdering = perioderTilVurderingService.utled(
-                kontekst = kontekst,
-                stegType = aktivtSteg.type()
+            val kontekstMedPerioder = FlytKontekstMedPerioder(
+                sakId = kontekst.sakId,
+                behandlingId = kontekst.behandlingId,
+                behandlingType = kontekst.behandlingType,
+                perioderTilVurdering = perioderTilVurderingService.utled(
+                    kontekst = kontekst,
+                    stegType = aktivtSteg.type()
+                )
             )
-        )
 
-        while (true) {
-            val resultat = utførTilstandsEndring(
-                kontekstMedPerioder,
-                gjeldendeStegStatus,
-                behandling,
-                faktagrunnlagForGjeldendeSteg
-            )
-            if (gjeldendeStegStatus in setOf(StegStatus.START, StegStatus.OPPDATER_FAKTAGRUNNLAG)) {
-                // Legger denne her slik at vi får savepoint på at vi har byttet steg, slik at vi starter opp igjen på rett sted når prosessen dras i gang igjen
-                stegKonstruktør.markerSavepoint()
-            }
+            while (true) {
+                MDC.putCloseable("stegStatus", gjeldendeStegStatus.name).use {
+                    val resultat = utførTilstandsEndring(
+                        kontekstMedPerioder,
+                        gjeldendeStegStatus,
+                        behandling,
+                        faktagrunnlagForGjeldendeSteg
+                    )
+                    if (gjeldendeStegStatus in setOf(StegStatus.START, StegStatus.OPPDATER_FAKTAGRUNNLAG)) {
+                        // Legger denne her slik at vi får savepoint på at vi har byttet steg, slik at vi starter opp igjen på rett sted når prosessen dras i gang igjen
+                        stegKonstruktør.markerSavepoint()
+                    }
 
-            if (gjeldendeStegStatus == StegStatus.AVSLUTTER) {
-                return resultat
-            }
+                    if (gjeldendeStegStatus == StegStatus.AVSLUTTER) {
+                        return resultat
+                    }
 
-            if (!resultat.kanFortsette() || resultat.erTilbakeføring()) {
-                return resultat
+                    if (!resultat.kanFortsette() || resultat.erTilbakeføring()) {
+                        return resultat
+                    }
+                    gjeldendeStegStatus = gjeldendeStegStatus.neste()
+                }
             }
-            gjeldendeStegStatus = gjeldendeStegStatus.neste()
         }
     }
 
@@ -87,21 +92,25 @@ class StegOrkestrator(
         kontekst: FlytKontekst,
         behandling: Behandling
     ): Transisjon {
-        val kontekstMedPerioder = FlytKontekstMedPerioder(
-            sakId = kontekst.sakId,
-            behandlingId = kontekst.behandlingId,
-            behandlingType = kontekst.behandlingType,
-            perioderTilVurdering = perioderTilVurderingService.utled(
-                kontekst = kontekst,
-                stegType = aktivtSteg.type()
-            )
-        )
-        return utførTilstandsEndring(
-            kontekstMedPerioder,
-            StegStatus.TILBAKEFØRT,
-            behandling,
-            listOf()
-        )
+        MDC.putCloseable("stegType", aktivtSteg.type().name).use {
+            MDC.putCloseable("stegStatus", StegStatus.TILBAKEFØRT.name).use {
+                val kontekstMedPerioder = FlytKontekstMedPerioder(
+                    sakId = kontekst.sakId,
+                    behandlingId = kontekst.behandlingId,
+                    behandlingType = kontekst.behandlingType,
+                    perioderTilVurdering = perioderTilVurderingService.utled(
+                        kontekst = kontekst,
+                        stegType = aktivtSteg.type()
+                    )
+                )
+                return utførTilstandsEndring(
+                    kontekstMedPerioder,
+                    StegStatus.TILBAKEFØRT,
+                    behandling,
+                    listOf()
+                )
+            }
+        }
     }
 
     private fun utførTilstandsEndring(
