@@ -155,6 +155,13 @@ public enum class Definisjon(
         løsesISteg = StegType.EFFEKTUER_11_7,
         løsesAv = listOf(Rolle.VEILEDER),
     ),
+    VENTE_PÅ_FIRST_EFFEKTUER_11_7(
+        kode = AvklaringsbehovKode.`5018`,
+        type = BehovType.VENTEPUNKT,
+        løsesISteg = StegType.EFFEKTUER_11_7,
+        løsesAv = listOf(Rolle.VEILEDER),
+        defaultFrist = Period.ofWeeks(3),
+    ),
     AVKLAR_LOVVALG_MEDLEMSKAP(
         kode = AvklaringsbehovKode.`5017`,
         type = BehovType.MANUELT_PÅKREVD,

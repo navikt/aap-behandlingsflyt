@@ -1046,16 +1046,55 @@ object FakeServers : AutoCloseable {
                 )
             }
         }
+
+        val brevStore = mutableListOf<BrevbestillingResponse>()
+        val mutex = Any()
+
         routing {
             route("/api") {
                 post("/bestill") {
                     val request = call.receive<BestillBrevRequest>()
                     val brevbestillingReferanse = UUID.randomUUID()
 
+                    synchronized(mutex) {
+                        brevStore += BrevbestillingResponse(
+                            referanse = brevbestillingReferanse,
+                            brev = Brev(
+                                journalpostTittel = "En tittel",
+                                overskrift = "Overskrift", tekstbolker = listOf(
+                                    Tekstbolk(
+                                        id = UUID.randomUUID(),
+                                        overskrift = "En fin overskrift",
+                                        innhold = listOf(
+                                            Innhold(
+                                                id = UUID.randomUUID(),
+                                                overskrift = "Enda en overskrift",
+                                                blokker = emptyList(),
+                                                kanRedigeres = true,
+                                                erFullstendig = false
+                                            )
+                                        )
+                                    )
+                                )
+                            ),
+                            opprettet = LocalDateTime.now(),
+                            oppdatert = LocalDateTime.now(),
+                            behandlingReferanse = UUID.randomUUID(),
+                            brevtype = Brevtype.INNVILGELSE,
+                            språk = Språk.NB,
+                            status = Status.REGISTRERT,
+                        )
+                    }
+
                     call.respond(status = HttpStatusCode.Created, BestillBrevResponse(brevbestillingReferanse))
 
                     launch {
                         delay(100)
+                        synchronized(mutex) {
+                            val i = brevStore.indexOfFirst { it.referanse == brevbestillingReferanse }
+                            brevStore[i] = brevStore[i].copy(status = Status.FERDIGSTILT)
+                        }
+
                         val responseRequest = LøsBrevbestillingDto(
                             behandlingReferanse = request.behandlingReferanse,
                             bestillingReferanse = brevbestillingReferanse,
@@ -1073,32 +1112,12 @@ object FakeServers : AutoCloseable {
                 }
                 route("/bestilling/{referanse}") { ->
                     get {
+                        val ref = UUID.fromString(call.pathParameters.get("referanse"))!!
+
                         call.respond(
-                            BrevbestillingResponse(
-                                referanse = UUID.fromString(call.pathParameters.get("referanse"))!!,
-                                brev = Brev(
-                                    journalpostTittel = "En tittel",
-                                    overskrift = "Overskrift", tekstbolker = listOf(
-                                        Tekstbolk(
-                                            id = UUID.randomUUID(), overskrift = "En fin overskrift", innhold = listOf(
-                                                Innhold(
-                                                    id = UUID.randomUUID(),
-                                                    overskrift = "Enda en overskrift",
-                                                    blokker = emptyList(),
-                                                    kanRedigeres = true,
-                                                    erFullstendig = false
-                                                )
-                                            )
-                                        )
-                                    )
-                                ),
-                                opprettet = LocalDateTime.now(),
-                                oppdatert = LocalDateTime.now(),
-                                behandlingReferanse = UUID.randomUUID(),
-                                brevtype = Brevtype.INNVILGELSE,
-                                språk = Språk.NB,
-                                status = Status.REGISTRERT,
-                            )
+                            synchronized(mutex) {
+                                brevStore.find { it.referanse == ref }!!
+                            }
                         )
                     }
                     put("/oppdater") {
@@ -1162,7 +1181,7 @@ object FakeServers : AutoCloseable {
 
     private fun setProperties() {
 
-        // Tilgang
+        // Brev
         System.setProperty("integrasjon.brev.url", "http://localhost:${brev.port()}")
         System.setProperty("integrasjon.brev.scope", "brev")
         System.setProperty("integrasjon.brev.azp", "azp")

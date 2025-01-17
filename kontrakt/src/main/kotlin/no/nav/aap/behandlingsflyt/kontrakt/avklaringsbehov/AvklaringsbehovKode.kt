@@ -26,6 +26,7 @@ public const val FORESLÅ_VEDTAK_KODE: String = "5098"
 public const val FATTE_VEDTAK_KODE: String = "5099"
 public const val SKRIV_BREV_KODE: String = "5050"
 public const val AVKLAR_LOVVALG_MEDLEMSKAP_KODE: String = "5017"
+public const val VENTE_PÅ_FIRST_EFFEKTUER_11_7_KODE: String = "5018"
 
 public enum class AvklaringsbehovKode {
     `9001`,
@@ -47,6 +48,7 @@ public enum class AvklaringsbehovKode {
     `5015`,
     `5016`,
     `5017`,
+    `5018`,
     `5097`,
     `5098`,
     `5099`,

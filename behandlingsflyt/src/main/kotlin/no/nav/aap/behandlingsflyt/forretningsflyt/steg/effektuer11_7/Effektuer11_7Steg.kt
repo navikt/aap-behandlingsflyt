@@ -21,6 +21,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.BESTILL_BR
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.EFFEKTUER_11_7
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.FORHÅNDSVARSEL_AKTIVITETSPLIKT
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.SKRIV_BREV
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.VENTE_PÅ_FIRST_EFFEKTUER_11_7
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -97,28 +98,27 @@ class Effektuer11_7Steg(
 
         val brev = brevbestillingService.hentBrevbestilling(eksisterendeBrevBestilling.referanse)
 
-        if (brev.status == Status.FERDIGSTILT) {
-
-            // `oppdatert` er det beste vi har tilgjengelig nå. Ideelt sett skulle vi nok brukt
-            // `ekspedert` fra dokument-distribusjon, men det har vi ikke tilgjengelig i dag.
-            val frist = brev.oppdatert.plusWeeks(3).toLocalDate()
-
-            if (LocalDate.now(clock) <= frist /* TODO: og ikke fått svar (SpesifikkVentebehovEvaluerer) */) {
-                return FantVentebehov(
-                    Ventebehov(
-                        definisjon = FORHÅNDSVARSEL_AKTIVITETSPLIKT,
-                        grunn = ÅrsakTilSettPåVent.VENTER_PÅ_SVAR_FRA_BRUKER,
-                        frist = frist,
-                    )
-                )
-            }
-        } else {
+        if (brev.status != Status.FERDIGSTILT) {
             /* Brevet er bestilt, men ikke ikke sendt enda. Vi vet derfor ikke fristen, så sjekker igjen i morgen. */
             return FantVentebehov(
                 Ventebehov(
                     definisjon = FORHÅNDSVARSEL_AKTIVITETSPLIKT,
                     grunn = ÅrsakTilSettPåVent.VENTER_PÅ_MASKINELL_AVKLARING, /* Under antagelsen om at varselet er automatisk, så venter vi på at bestillingen blir utført maskinelt. */
                     frist = LocalDate.now(clock).plusDays(1),
+                )
+            )
+        }
+
+        // `oppdatert` er det beste vi har tilgjengelig nå. Ideelt sett skulle vi nok brukt
+        // `ekspedert` fra dokument-distribusjon, men det har vi ikke tilgjengelig i dag.
+        val frist = brev.oppdatert.plusWeeks(3).toLocalDate()
+
+        if (LocalDate.now(clock) <= frist /* TODO: og ikke fått svar (SpesifikkVentebehovEvaluerer) */) {
+            return FantVentebehov(
+                Ventebehov(
+                    definisjon = VENTE_PÅ_FIRST_EFFEKTUER_11_7,
+                    grunn = ÅrsakTilSettPåVent.VENTER_PÅ_SVAR_FRA_BRUKER,
+                    frist = frist,
                 )
             )
         }

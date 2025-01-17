@@ -152,7 +152,7 @@ class Effektuer11_7StegTest {
             assertEquals(
                 FantVentebehov(
                     Ventebehov(
-                        definisjon = FORHÅNDSVARSEL_AKTIVITETSPLIKT,
+                        definisjon = Definisjon.VENTE_PÅ_FIRST_EFFEKTUER_11_7,
                         grunn = ÅrsakTilSettPåVent.VENTER_PÅ_SVAR_FRA_BRUKER,
                         frist = LocalDate.now().plusWeeks(3),
                     )
