@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.DefinisjonDTO
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.EndringDTO
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.prosessering.StatistikkJobbUtfører
@@ -35,12 +34,6 @@ class BehandlingHendelseServiceImpl(
             status = behandling.status(),
             avklaringsbehov = avklaringsbehovene.alle().map { avklaringsbehov ->
                 AvklaringsbehovHendelseDto(
-                    definisjon = DefinisjonDTO(
-                        type = avklaringsbehov.definisjon.kode,
-                        behovType = avklaringsbehov.definisjon.type,
-                        løsesISteg = avklaringsbehov.løsesISteg(),
-                        løsesAv = avklaringsbehov.definisjon.løsesAv
-                    ),
                     avklaringsbehovDefinisjon = avklaringsbehov.definisjon,
                     status = avklaringsbehov.status(),
                     endringer = avklaringsbehov.historikk.map { endring ->
