@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning
 import java.time.YearMonth
 
 data class InntektskomponentResponse(
-    val arbeidsInntektMaaned: List<Måned>
+    val arbeidsInntektMaaned: List<Måned> = listOf()
 )
 
 data class Måned(
