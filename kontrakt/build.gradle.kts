@@ -17,7 +17,7 @@ dependencies {
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
-    testImplementation("org.assertj:assertj-core:3.27.2")
+    testImplementation("org.assertj:assertj-core:3.27.3")
     testImplementation("no.nav.aap.kelvin:json:$komponenterVersjon")
 }
 
