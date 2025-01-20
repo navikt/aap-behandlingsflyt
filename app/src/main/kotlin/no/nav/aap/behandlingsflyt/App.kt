@@ -203,9 +203,6 @@ internal fun Application.server(dbConfig: DbConfig) {
                 underveisVurderingerAPI(dataSource)
             }
         }
-        apiRouting {
-            testAPI(dataSource)
-        }
         actuator(prometheus, motor)
     }
 
