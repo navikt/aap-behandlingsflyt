@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSet
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent.VENTER_PÅ_MASKINELL_AVKLARING
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.tomUnderveisInput
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
@@ -139,12 +140,12 @@ class Effektuer11_7StegTest {
                     Ventebehov(definisjon = Definisjon.BESTILL_BREV, grunn = VENTER_PÅ_MASKINELL_AVKLARING)
                 ), it
             )
-
         }
 
-        brevbestillingGateway.ferdigstill(
-            BrevbestillingReferanse(brevbestillingGateway.brevbestillingResponse!!.referanse)
-        )
+        BrevbestillingReferanse(brevbestillingGateway.brevbestillingResponse!!.referanse).let { ref ->
+            brevbestillingGateway.ferdigstill(ref)
+            InMemoryBrevbestillingRepository.oppdaterStatus(behandling.id, ref, Status.FULLFØRT)
+        }
 
 
         steg.utfør(kontekst).also {
@@ -194,6 +195,7 @@ class Effektuer11_7StegTest {
             kontekst = kontekst,
             brevbestillingGateway = brevbestillingGateway
         )
+        InMemoryAvklaringsbehovRepository
 
         InMemoryAvklaringsbehovRepository.opprett(
             behandlingId = behandling.id,
@@ -337,8 +339,8 @@ class Effektuer11_7StegTest {
 
         this.utfør(kontekst)
 
-        brevbestillingGateway.ferdigstill(
-            BrevbestillingReferanse(brevbestillingGateway.brevbestillingResponse!!.referanse)
-        )
+        val referanse = BrevbestillingReferanse(brevbestillingGateway.brevbestillingResponse!!.referanse)
+        brevbestillingGateway.ferdigstill(referanse)
+        InMemoryBrevbestillingRepository.oppdaterStatus(behandling.id, referanse, Status.FULLFØRT)
     }
 }
