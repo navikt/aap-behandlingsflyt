@@ -15,11 +15,11 @@ import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.testAPI(dataSource: DataSource) {
     route("/api/test/inntekt") {
-        post<Unit, InntektskomponentResponse, String> { _, req ->
+        post<Unit, InntektskomponentResponse, TestInntektRequest> { _, req ->
             val inntektRespons = dataSource.transaction(readOnly = true) { connection ->
                 val sakRepository = RepositoryProvider(connection).provide(SakRepository::class)
 
-                val sak = sakRepository.hent((Saksnummer(req)))
+                val sak = sakRepository.hent((Saksnummer(req.saksnummer)))
 
                 val inntektskomponentGateway = InntektkomponentenGateway()
 
@@ -33,4 +33,9 @@ fun NormalOpenAPIRoute.testAPI(dataSource: DataSource) {
             respond(inntektRespons)
         }
     }
+
 }
+
+data class TestInntektRequest(
+    val saksnummer: String
+)
