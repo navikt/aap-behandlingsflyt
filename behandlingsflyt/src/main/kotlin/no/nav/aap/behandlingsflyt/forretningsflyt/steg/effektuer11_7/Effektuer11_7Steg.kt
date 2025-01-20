@@ -21,7 +21,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.BESTILL_BR
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.EFFEKTUER_11_7
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.FORHÅNDSVARSEL_AKTIVITETSPLIKT
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.SKRIV_BREV
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.VENTE_PÅ_FIRST_EFFEKTUER_11_7
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.VENTE_PÅ_FRIST_EFFEKTUER_11_7
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -112,11 +112,13 @@ class Effektuer11_7Steg(
         // `oppdatert` er det beste vi har tilgjengelig nå. Ideelt sett skulle vi nok brukt
         // `ekspedert` fra dokument-distribusjon, men det har vi ikke tilgjengelig i dag.
         val frist = brev.oppdatert.plusWeeks(3).toLocalDate()
+        val venteBehov = avklaringsbehov.hentBehovForDefinisjon(VENTE_PÅ_FRIST_EFFEKTUER_11_7)
 
-        if (LocalDate.now(clock) <= frist /* TODO: og ikke fått svar (SpesifikkVentebehovEvaluerer) */) {
+
+        if ((venteBehov == null || !venteBehov.erAvsluttet()) && LocalDate.now(clock) <= frist) {
             return FantVentebehov(
                 Ventebehov(
-                    definisjon = VENTE_PÅ_FIRST_EFFEKTUER_11_7,
+                    definisjon = VENTE_PÅ_FRIST_EFFEKTUER_11_7,
                     grunn = ÅrsakTilSettPåVent.VENTER_PÅ_SVAR_FRA_BRUKER,
                     frist = frist,
                 )
@@ -124,7 +126,6 @@ class Effektuer11_7Steg(
         }
 
         val effektuer117avklaringsbehov = avklaringsbehov.hentBehovForDefinisjon(EFFEKTUER_11_7)
-
 
         if (effektuer117avklaringsbehov == null || effektuer117avklaringsbehov.erÅpent()) {
             return FantAvklaringsbehov(EFFEKTUER_11_7)

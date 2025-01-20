@@ -156,7 +156,7 @@ public enum class Definisjon(
         løsesISteg = StegType.EFFEKTUER_11_7,
         løsesAv = listOf(Rolle.VEILEDER),
     ),
-    VENTE_PÅ_FIRST_EFFEKTUER_11_7(
+    VENTE_PÅ_FRIST_EFFEKTUER_11_7(
         kode = AvklaringsbehovKode.`5018`,
         type = BehovType.VENTEPUNKT,
         løsesISteg = StegType.EFFEKTUER_11_7,

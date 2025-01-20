@@ -23,7 +23,6 @@ import no.nav.aap.behandlingsflyt.flyt.testutil.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.flyt.testutil.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.EFFEKTUER_11_7
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.FORHÅNDSVARSEL_AKTIVITETSPLIKT
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -152,7 +151,7 @@ class Effektuer11_7StegTest {
             assertEquals(
                 FantVentebehov(
                     Ventebehov(
-                        definisjon = Definisjon.VENTE_PÅ_FIRST_EFFEKTUER_11_7,
+                        definisjon = Definisjon.VENTE_PÅ_FRIST_EFFEKTUER_11_7,
                         grunn = ÅrsakTilSettPåVent.VENTER_PÅ_SVAR_FRA_BRUKER,
                         frist = LocalDate.now().plusWeeks(3),
                     )
