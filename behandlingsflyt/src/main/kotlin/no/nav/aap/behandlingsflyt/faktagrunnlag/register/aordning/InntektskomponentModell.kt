@@ -17,7 +17,8 @@ data class ArbeidsInntektInformasjon(
 
 data class Inntekt(
     val beloep: Double,
-    val opptjeningsland: String,
+    val opptjeningsland: String?,
+    val skattemessigBosattLand: String?
 )
 
 data class InntektskomponentRequest(
