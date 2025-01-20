@@ -81,6 +81,47 @@ class Effektuer11_7RepositoryImplTest {
         }
     }
 
+    @Test
+    fun `Ny vurdering når grunnlag allerede finnes`(){
+        InitTestDatabase.dataSource.transaction { connection ->
+            val effektuer11_7Repository = Effektuer11_7RepositoryImpl(connection)
+            val underveisRepository = UnderveisRepositoryImpl(connection)
+
+            val sak = sak(connection)
+            val behandling = behandling(connection, sak)
+
+            val underveisperiode = underveisperiode(sak).copy(
+                utfall = Utfall.IKKE_OPPFYLT,
+                avslagsårsak = UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT,
+            )
+            underveisRepository.lagre(behandling.id, listOf(underveisperiode), tomUnderveisInput)
+
+            val varsel = Effektuer11_7Forhåndsvarsel(
+                LocalDate.now(),
+                underveisRepository.hent(behandling.id).perioder,
+            )
+
+            effektuer11_7Repository.lagreVarsel(behandling.id, varsel)
+
+            assertEquals(
+                varsel,
+                effektuer11_7Repository.hentHvisEksisterer(behandling.id)?.varslinger?.single()
+            )
+
+            val varsel2 = Effektuer11_7Forhåndsvarsel(
+                LocalDate.now().plusDays(1),
+                underveisRepository.hent(behandling.id).perioder,
+            )
+
+            effektuer11_7Repository.lagreVarsel(behandling.id, varsel2)
+            assertEquals(
+                varsel2,
+                effektuer11_7Repository.hentHvisEksisterer(behandling.id)?.varslinger?.single()
+            )
+        }
+
+    }
+
     private fun sak(connection: DBConnection): Sak {
         return PersonOgSakService(
             FakePdlGateway,

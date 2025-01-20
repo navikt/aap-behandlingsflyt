@@ -155,6 +155,9 @@ class Effektuer11_7RepositoryImpl(private val connection: DBConnection) : Effekt
             """.trimIndent()
         ) {
             setParams { setLong(1, behandlingId.id) }
+            setRowMapper {
+                it.getLongOrNull("id")
+            }
         }
     }
 }
