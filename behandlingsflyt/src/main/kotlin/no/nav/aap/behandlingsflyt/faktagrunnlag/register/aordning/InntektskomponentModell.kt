@@ -23,8 +23,8 @@ data class InntektskomponentRequest(
     val maanedFom: YearMonth,
     val maanedTom: YearMonth,
     val ident: Ident,
-    val formaal: String = "ArbeidsavklaringspengerA-inntekt",
-    val ainntektsfilter: String = "arbeidsavklaringspenger",
+    val formaal: String = "Arbeidsavklaringspenger",
+    val ainntektsfilter: String = "ArbeidsavklaringspengerA-inntekt"
 )
 
 data class Ident(

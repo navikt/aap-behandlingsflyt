@@ -7,7 +7,6 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
-import org.slf4j.LoggerFactory
 import java.net.URI
 import java.time.YearMonth
 
@@ -15,7 +14,6 @@ class InntektkomponentenGateway  {
     private val url = URI.create(requiredConfigForKey("integrasjon.inntektskomponenten.url") +"/hentinntektliste")
     private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.inntektskomponenten.scope"))
 
-    val logger = LoggerFactory.getLogger(InntektkomponentenGateway::class.java)
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
         tokenProvider = ClientCredentialsTokenProvider,
@@ -28,7 +26,6 @@ class InntektkomponentenGateway  {
                 Header("Accept", "application/json")
             )
         )
-        logger.info("inntekt request: $httpRequest")
         return requireNotNull(client.post(uri = url, request = httpRequest))
     }
 
