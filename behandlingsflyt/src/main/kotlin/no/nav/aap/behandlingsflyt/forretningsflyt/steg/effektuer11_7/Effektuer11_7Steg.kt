@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg.effektuer11_7
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevGateway
@@ -7,8 +8,10 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepos
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7Forhåndsvarsel
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
@@ -22,7 +25,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.EFFEKTUER_
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.FORHÅNDSVARSEL_AKTIVITETSPLIKT
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.SKRIV_BREV
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.VENTE_PÅ_FRIST_EFFEKTUER_11_7
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.AVSLUTTET
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -35,6 +40,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.time.Clock
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class Effektuer11_7Steg(
     private val underveisRepository: UnderveisRepository,
@@ -49,33 +55,33 @@ class Effektuer11_7Steg(
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
-        val underveisGrunnlag = underveisRepository.hent(kontekst.behandlingId)
-        val relevanteBrudd =
-            underveisGrunnlag.perioder.filter { it.avslagsårsak == UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT }
-                .let { underveisperioder -> Tidslinje(underveisperioder.map { Segment(it.periode, it) }) }
+        val bruddSomSkalSanksjoneres = bruddSomSkalSanksjoneres(kontekst, behandling)
 
-        val forrigeUnderveisGrunnlag = behandling.forrigeBehandlingId?.let { underveisRepository.hent(it) }
-        val forrigeBrudd = forrigeUnderveisGrunnlag?.perioder.orEmpty()
-            .filter { it.avslagsårsak == UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT }
-            .let { underveisperioder -> Tidslinje(underveisperioder.map { Segment(it.periode, it) }) }
-
-        val nyeBrudd = relevanteBrudd.kombiner(forrigeBrudd, StandardSammenslåere.minus())
-
-        if (nyeBrudd.isEmpty()) {
+        if (bruddSomSkalSanksjoneres.isEmpty()) {
             return Fullført
         }
 
-        val eksisterendeBrevBestilling = brevbestillingService.hentBestillinger(kontekst.behandlingId, typeBrev).maxByOrNull { it.id }
+        val eksisterendeBrevBestilling = brevbestillingService.hentBestillinger(kontekst.behandlingId, typeBrev)
+            .maxByOrNull { it.opprettet }
 
-        if (eksisterendeBrevBestilling == null || false /* TODO: eksisterende varsel er ikke dekkende */) {
+        val effektuer117grunnlag = effektuer117repository.hentHvisEksisterer(behandling.id)
+        if (eksisterendeBrevBestilling == null || eksisterendeVarselErIkkeDekkende(
+                bruddSomSkalSanksjoneres,
+                effektuer117grunnlag
+            )
+        ) {
             // XXX: skulle gjerne "avbrutt" tidligere bestilling av brev, men det er ikke mulig i dag.
-            brevbestillingService.bestill(kontekst.behandlingId, typeBrev, "${behandling.referanse}-$typeBrev")
+            brevbestillingService.bestill(
+                kontekst.behandlingId,
+                typeBrev,
+                "${behandling.referanse}-$typeBrev-${effektuer117grunnlag?.varslinger?.size ?: 0}"
+            )
 
             effektuer117repository.lagreVarsel(
                 behandling.id,
                 varsel = Effektuer11_7Forhåndsvarsel(
                     datoVarslet = LocalDate.now(),
-                    underveisperioder = relevanteBrudd.toList().map { it.verdi },
+                    underveisperioder = bruddSomSkalSanksjoneres.toList().map { it.verdi },
                 ),
             )
 
@@ -109,13 +115,10 @@ class Effektuer11_7Steg(
             )
         }
 
-        // `oppdatert` er det beste vi har tilgjengelig nå. Ideelt sett skulle vi nok brukt
-        // `ekspedert` fra dokument-distribusjon, men det har vi ikke tilgjengelig i dag.
         val frist = brev.oppdatert.plusWeeks(3).toLocalDate()
         val venteBehov = avklaringsbehov.hentBehovForDefinisjon(VENTE_PÅ_FRIST_EFFEKTUER_11_7)
 
-
-        if ((venteBehov == null || !venteBehov.erAvsluttet()) && LocalDate.now(clock) <= frist) {
+        if (skalVentePåSvar(venteBehov, brev.opprettet) && LocalDate.now(clock) <= frist) {
             return FantVentebehov(
                 Ventebehov(
                     definisjon = VENTE_PÅ_FRIST_EFFEKTUER_11_7,
@@ -132,6 +135,48 @@ class Effektuer11_7Steg(
         }
 
         return Fullført
+    }
+
+    private fun skalVentePåSvar(venteBehov: Avklaringsbehov?, sisteVarsel: LocalDateTime): Boolean {
+        if (venteBehov == null) {
+            return true
+        }
+
+        val sisteVarselTattAvVent = venteBehov.historikk.any { it.status == AVSLUTTET && it.tidsstempel > sisteVarsel }
+        return !sisteVarselTattAvVent
+    }
+
+    private fun eksisterendeVarselErIkkeDekkende(
+        perioderSomSkalSanksjoneres: Tidslinje<Underveisperiode>,
+        effektuer117grunnlag: Effektuer11_7Grunnlag?
+    ): Boolean {
+        val perioderAlleredeVarslet = effektuer117grunnlag
+            ?.varslinger
+            ?.lastOrNull()
+            ?.underveisperioder
+            .orEmpty()
+            .map { Segment(it.periode, it) }
+            .let { Tidslinje(it) }
+
+        val dagerIkkeVarslet = perioderSomSkalSanksjoneres.kombiner(perioderAlleredeVarslet, StandardSammenslåere.minus())
+        return dagerIkkeVarslet.isNotEmpty()
+    }
+
+    private fun bruddSomSkalSanksjoneres(
+        kontekst: FlytKontekstMedPerioder,
+        behandling: Behandling
+    ): Tidslinje<Underveisperiode> {
+        val underveisGrunnlag = underveisRepository.hent(kontekst.behandlingId)
+        val relevanteBrudd =
+            underveisGrunnlag.perioder.filter { it.avslagsårsak == UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT }
+                .let { underveisperioder -> Tidslinje(underveisperioder.map { Segment(it.periode, it) }) }
+
+        val forrigeUnderveisGrunnlag = behandling.forrigeBehandlingId?.let { underveisRepository.hent(it) }
+        val effektuerteBrudd = forrigeUnderveisGrunnlag?.perioder.orEmpty()
+            .filter { it.avslagsårsak == UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT }
+            .let { underveisperioder -> Tidslinje(underveisperioder.map { Segment(it.periode, it) }) }
+
+        return relevanteBrudd.kombiner(effektuerteBrudd, StandardSammenslåere.minus())
     }
 
     companion object : FlytSteg {

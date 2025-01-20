@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepos
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicLong
 
 object InMemoryBrevbestillingRepository: BrevbestillingRepository {
@@ -28,6 +29,7 @@ object InMemoryBrevbestillingRepository: BrevbestillingRepository {
             typeBrev = typeBrev,
             referanse = bestillingReferanse,
             status = status,
+            opprettet = LocalDateTime.now(),
         )
     }
 

@@ -36,16 +36,12 @@ class BrevbestillingRepositoryImplTest {
 
             val brevbestilling = brevbestillingRepository.hent(behandlingId)
             assertThat(brevbestilling).hasSize(1)
-            assertThat(brevbestilling.first())
-                .isEqualTo(
-                    Brevbestilling(
-                        brevbestilling.first().id,
-                        behandlingId,
-                        typeBrev,
-                        referanse,
-                        Status.SENDT
-                    )
-                )
+            brevbestilling.first().let {
+                assertThat(it.behandlingId).isEqualTo(behandlingId)
+                assertThat(it.typeBrev).isEqualTo(typeBrev)
+                assertThat(it.referanse).isEqualTo(referanse)
+                assertThat(it.status).isEqualTo(Status.SENDT)
+            }
 
             brevbestillingRepository.oppdaterStatus(behandlingId, referanse, Status.FORHÅNDSVISNING_KLAR)
 

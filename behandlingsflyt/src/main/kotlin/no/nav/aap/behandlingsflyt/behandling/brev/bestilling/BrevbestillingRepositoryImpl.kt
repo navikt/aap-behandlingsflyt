@@ -36,6 +36,7 @@ class BrevbestillingRepositoryImpl(private val connection: DBConnection) : Brevb
             typeBrev = row.getEnum("type_brev"),
             referanse = BrevbestillingReferanse(row.getUUID("referanse")),
             status = row.getEnum("status"),
+            opprettet = row.getLocalDateTime("opprettet"),
         )
     }
 
