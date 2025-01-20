@@ -10,11 +10,14 @@ import java.time.LocalDateTime
 
 /**
  * @param definisjon Hva slags avklaringsbehov denne hendelsen gjelder.
+ * @param avklaringsbehovDefinisjon Hva slags avklaringsbehov denne hendelsen gjelder.
  * @param status Status for avklaringsbehovet.
  * @param endringer Alle endringer som har skjedd på en gitt behandling.
  */
 public data class AvklaringsbehovHendelseDto(
+    @Deprecated("Vil fjerne denne. Bruk heller avklaringsbehovDefinisjon.")
     val definisjon: DefinisjonDTO,
+    val avklaringsbehovDefinisjon: Definisjon? = null,
     val status: Status,
     val endringer: List<EndringDTO>
 )

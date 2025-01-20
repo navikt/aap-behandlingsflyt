@@ -529,6 +529,7 @@ class StatistikkJobbUtførerTest {
                         Rolle.SAKSBEHANDLER, Rolle.VEILEDER
                     )
                 ),
+                avklaringsbehovDefinisjon = Definisjon.FATTE_VEDTAK,
                 status = no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER,
                 endringer = listOf(
                     EndringDTO(

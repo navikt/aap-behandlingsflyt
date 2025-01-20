@@ -40,7 +40,9 @@ class BehandlingHendelseServiceImpl(
                         behovType = avklaringsbehov.definisjon.type,
                         løsesISteg = avklaringsbehov.løsesISteg(),
                         løsesAv = avklaringsbehov.definisjon.løsesAv
-                    ), status = avklaringsbehov.status(),
+                    ),
+                    avklaringsbehovDefinisjon = avklaringsbehov.definisjon,
+                    status = avklaringsbehov.status(),
                     endringer = avklaringsbehov.historikk.map { endring ->
                         EndringDTO(
                             status = endring.status,

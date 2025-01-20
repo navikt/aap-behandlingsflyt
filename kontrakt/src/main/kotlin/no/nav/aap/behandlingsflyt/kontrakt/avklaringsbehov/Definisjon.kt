@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov
 
+import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -210,6 +211,10 @@ public enum class Definisjon(
                 value.type.valideringsFunksjon(value)
             }
         }
+
+        @JsonCreator
+        @JvmStatic
+        public fun fraKode(@JsonProperty("kode") kode: AvklaringsbehovKode): Definisjon = forKode(kode)
     }
 
     public enum class BehovType(public val valideringsFunksjon: Definisjon.() -> Unit) {

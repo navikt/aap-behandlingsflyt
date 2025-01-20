@@ -78,7 +78,7 @@ class StatistikkJobbUtfører(
         val kanal = hentSøknadsKanal(behandling, søknaderForSak)
 
         val forrigeBehandling =
-            if (behandling.forrigeBehandlingId != null) behandlingRepository.hent(behandling.forrigeBehandlingId!!) else null
+            if (behandling.forrigeBehandlingId != null) behandlingRepository.hent(behandling.forrigeBehandlingId) else null
 
         val sak = sakService.hent(hendelse.saksnummer)
 
