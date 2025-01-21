@@ -3,6 +3,8 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.adapter
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.ErStudentStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.SkalGjenopptaStudieStatus
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.utenlandsopphold.UtenlandsOppholdData
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.utenlandsopphold.UtenlandsPeriode
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -16,7 +18,8 @@ data class UbehandletSøknad(
     val periode: Periode,
     val studentData: StudentData?,
     val harYrkesskade: Boolean,
-    val oppgitteBarn: OppgitteBarn?
+    val oppgitteBarn: OppgitteBarn?,
+    val utenlandsOppholdData: UtenlandsOppholdData?
 ) {
     companion object {
         fun fraKontrakt(søknad: Søknad, mottattDato: LocalDate, journalPostId: JournalpostId): UbehandletSøknad {
@@ -43,6 +46,26 @@ data class UbehandletSøknad(
                                 identer = id
                             )
                         }
+                    },
+                    utenlandsOppholdData = if (søknad.medlemskap == null) null else søknad.medlemskap?.let {
+                        val utenlandsOpphold = it.utenlandsOpphold?.map { opphold ->
+                            UtenlandsPeriode(
+                                id = opphold.id,
+                                land = opphold.land,
+                                tilDato = opphold.tilDato,
+                                fraDato = opphold.fraDato,
+                                iArbeid = opphold.iArbeid?.uppercase() == "JA",
+                                utenlandsId = opphold.utenlandsId,
+                            )
+                        }
+
+                        UtenlandsOppholdData(
+                            harBoddINorgeSiste5År = it.harBoddINorgeSiste5År?.uppercase() == "JA",
+                            harArbeidetINorgeSiste5År = it.harArbeidetINorgeSiste5År?.uppercase() == "JA",
+                            arbeidetUtenforNorgeFørSykdom = it.arbeidetUtenforNorgeFørSykdom?.uppercase() == "JA",
+                            iTilleggArbeidUtenforNorge = it.iTilleggArbeidUtenforNorge?.uppercase() == "JA",
+                            utenlandsOpphold = utenlandsOpphold ?: listOf()
+                        )
                     }
                 )
             }

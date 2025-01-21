@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Ident
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
@@ -168,7 +169,14 @@ fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>): S�
     } else {
         null
     }
-    return SøknadV0(student = SøknadStudentDto(erStudent), harYrkesskade, oppgitteBarn)
+    val harMedlemskap = if (dto.medlemskap) {
+        "JA"
+    } else {
+        "NEI"
+    }
+    return SøknadV0(student = SøknadStudentDto(erStudent), harYrkesskade, oppgitteBarn,
+        medlemskap = SøknadMedlemskapDto(harMedlemskap, null, null, null, listOf())
+    )
 }
 
 internal fun postgreSQLContainer(): PostgreSQLContainer<Nothing> {

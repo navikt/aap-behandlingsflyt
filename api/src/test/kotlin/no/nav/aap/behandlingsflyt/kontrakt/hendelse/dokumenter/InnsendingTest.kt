@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter
 
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.assertj.core.api.Assertions.assertThat
-import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
@@ -35,7 +34,34 @@ class InnsendingTest {
       "aktivIdent" : true
     } ]
   }
-}"""]
+}""", """
+    {
+  "student" : {
+    "erStudent" : "ja",
+    "kommeTilbake" : "ja"
+  },
+  "yrkesskade" : "ja",
+  "oppgitteBarn" : {
+    "identer" : [ {
+      "identifikator" : "21283126223"
+    } ]
+  },
+  "medlemskap" : {
+    "harBoddINorgeSiste5År" : "ja",
+    "harArbeidetINorgeSiste5År" : "ja",
+    "arbeidetUtenforNorgeFørSykdom" : "ja",
+    "utenlandsOpphold" : [ {
+      "id" : "id",
+      "land" : "NOR",
+      "tilDato" : "2025-01-21",
+      "fraDato" : "2025-01-24",
+      "utenlandsId" : "utenlandsId",
+      "iArbeid" : "nei"
+    }],
+    "iTtilleggArbeidUtenforNorge" : "ja"
+  }
+}
+"""]
     )
     fun `kan deserialisere ting som allerede er i databasen`(input: String) {
         val fromJson = DefaultJsonMapper.fromJson<Melding>(input)
@@ -57,6 +83,13 @@ class InnsendingTest {
                     )
                 )
             ),
+            medlemskap = SøknadMedlemskapDto(
+                harArbeidetINorgeSiste5År = "ja",
+                harBoddINorgeSiste5År = "ja",
+                arbeidetUtenforNorgeFørSykdom = "ja",
+                iTilleggArbeidUtenforNorge = "ja",
+                utenlandsOpphold = listOf(UtenlandsPeriodeDto("id", "NOR", LocalDate.now(), LocalDate.now().plusDays(3), "nei", "utenlandsId"))
+            )
         )
 
         val somJSON = DefaultJsonMapper.toJson(søknad)
@@ -112,6 +145,7 @@ class InnsendingTest {
     },
     "yrkesskade" : "ja",
     "oppgitteBarn" : null,
+    "medlemskap": null,
     "nyttFelt" : 2
   }
         """.trimIndent()

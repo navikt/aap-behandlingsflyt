@@ -328,7 +328,8 @@ class ApiTest {
                     melding = SøknadV0(
                         student = null,
                         yrkesskade = "NEI",
-                        oppgitteBarn = null
+                        oppgitteBarn = null,
+                        medlemskap = null
                     )
                 ),
                 currentToken = getToken()

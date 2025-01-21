@@ -20,6 +20,7 @@ data class OpprettTestcaseDTO(
     @JsonProperty(value = "uføre") val uføre: Int?,
     @NotNull @JsonProperty(value = "student", defaultValue = "false") val student: Boolean,
     @NotNull @JsonProperty(value = "barn") val barn: List<TestBarn> = emptyList(),
+    @NotNull @JsonProperty(value = "medlemskap", defaultValue = "true") val medlemskap: Boolean,
     @JsonProperty(value = "inntekterPerAr") val inntekterPerAr: List<InntektPerÅrDto>? = null,
     val institusjoner: Institusjoner = Institusjoner()
 )

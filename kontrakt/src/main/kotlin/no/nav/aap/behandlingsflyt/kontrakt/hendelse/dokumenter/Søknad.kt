@@ -1,5 +1,8 @@
 package no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter
 
+import com.fasterxml.jackson.annotation.JsonAlias
+import java.time.LocalDate
+
 public sealed interface Søknad : Melding
 
 /**
@@ -8,11 +11,13 @@ public sealed interface Søknad : Melding
  * @param student Hvis ikke oppgitt, skal dette objektet være null.
  * @param yrkesskade Lovlig verdi er "ja/jA/Ja/JA". Alt annet blir tolket som false.
  * @param oppgitteBarn Om barn er oppgitt, mengden av identer.
+ * @param medlemskap Søkers opphold i utland
  */
 public data class SøknadV0(
     public val student: SøknadStudentDto?,
     public val yrkesskade: String,
-    public val oppgitteBarn: OppgitteBarn?
+    public val oppgitteBarn: OppgitteBarn?,
+    public val medlemskap: SøknadMedlemskapDto? = null
 ) : Søknad
 
 /**
@@ -22,6 +27,32 @@ public data class SøknadV0(
 public data class SøknadStudentDto(
     public val erStudent: String,
     public val kommeTilbake: String? = null
+)
+
+/**
+ * @param harBoddINorgeSiste5År Lovlig verdi er "ja/jA/Ja/JA". Alt annet blir tolket som false.
+ * @param harArbeidetINorgeSiste5År Lovlig verdi er "ja/jA/Ja/JA". Alt annet blir tolket som false.
+ * @param arbeidetUtenforNorgeFørSykdom Lovlig verdi er "ja/jA/Ja/JA". Alt annet blir tolket som false.
+ * @param iTilleggArbeidUtenforNorge Lovlig verdi er "ja/jA/Ja/JA". Alt annet blir tolket som false
+ */
+public data class SøknadMedlemskapDto(
+    val harBoddINorgeSiste5År: String?,
+    val harArbeidetINorgeSiste5År: String?,
+    val arbeidetUtenforNorgeFørSykdom: String?,
+    @JsonAlias("itilleggArbeidUtenforNorge") val iTilleggArbeidUtenforNorge: String?,
+    val utenlandsOpphold: List<UtenlandsPeriodeDto>?
+)
+
+/**
+* @param iArbeid Lovlig verdi er "ja/jA/Ja/JA". Alt annet blir tolket som false.
+ */
+public data class UtenlandsPeriodeDto(
+    val id: String?,
+    val land: String?,
+    val tilDato: LocalDate?,
+    val fraDato: LocalDate?,
+    @JsonAlias("iarbeid") val iArbeid: String?,
+    val utenlandsId: String?
 )
 
 public data class OppgitteBarn(public val identer: Set<Ident>)
