@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedInput
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.barnetillegg.BarnetilleggRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall

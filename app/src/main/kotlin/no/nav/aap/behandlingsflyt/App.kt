@@ -33,7 +33,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilkjentYtelseAPI
 import no.nav.aap.behandlingsflyt.behandling.vilkår.alder.flate.aldersGrunnlagApi
 import no.nav.aap.behandlingsflyt.exception.ErrorRespons
 import no.nav.aap.behandlingsflyt.exception.FlytOperasjonException
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.barnetillegg.BarnetilleggRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.flate.underveisVurderingerAPI
