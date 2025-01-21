@@ -34,9 +34,10 @@ class BrevGateway : BrevbestillingGateway {
         scope = requiredConfigForKey("integrasjon.brev.scope"),
     )
 
-    private val client = RestClient.withDefaultResponseHandler(
+    private val client = RestClient(
         config = config,
         tokenProvider = ClientCredentialsTokenProvider,
+        responseHandler = HåndterConflictResponseHandler()
     )
 
     override fun bestillBrev(
