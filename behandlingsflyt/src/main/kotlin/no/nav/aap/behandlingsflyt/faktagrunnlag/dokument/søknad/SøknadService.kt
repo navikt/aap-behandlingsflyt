@@ -13,12 +13,14 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 
 class SøknadService private constructor(
     private val mottaDokumentService: MottaDokumentService,
     private val studentRepository: StudentRepository,
     private val barnRepository: BarnRepository
 ) : Informasjonskrav {
+    val logger =  LoggerFactory.getLogger(SøknadService::class.java)
 
     companion object : Informasjonskravkonstruktør {
         override fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
@@ -36,6 +38,7 @@ class SøknadService private constructor(
         }
     }
 
+    //TODO: Oppdater her med utenlandsopphold
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val ubehandletSøknader = mottaDokumentService.søknaderSomIkkeHarBlittBehandlet(kontekst.sakId)
         if (ubehandletSøknader.isEmpty()) {
@@ -56,6 +59,10 @@ class SøknadService private constructor(
 
             if (ubehandletSøknad.oppgitteBarn != null) {
                 barnRepository.lagreOppgitteBarn(kontekst.behandlingId, ubehandletSøknad.oppgitteBarn)
+            }
+
+            if (ubehandletSøknad.utenlandsOppholdData != null) {
+                logger.info("fant utenlandsoppholdData: ${ubehandletSøknad.utenlandsOppholdData}")
             }
 
             mottaDokumentService.knyttTilBehandling(
