@@ -58,6 +58,8 @@ class BarnetilleggSteg(
             val sakRepository = repositoryProvider.provide(SakRepository::class)
             val personopplysningRepository = repositoryProvider.provide(PersonopplysningRepository::class)
             val vilkårsresultatRepository = repositoryProvider.provide(VilkårsresultatRepository::class)
+            val barnetilleggRepository = repositoryProvider.provide(BarnetilleggRepository::class)
+
             return BarnetilleggSteg(
                 BarnetilleggService(
                     SakOgBehandlingService(
@@ -69,7 +71,7 @@ class BarnetilleggSteg(
                     personopplysningRepository,
                     vilkårsresultatRepository
                 ),
-                BarnetilleggRepository(connection)
+                barnetilleggRepository
             )
         }
 

@@ -72,9 +72,11 @@ class EtAnnetStedSteg(
             val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
             val sakRepository = repositoryProvider.provide(SakRepository::class)
             val avklaringsbehovRepository = repositoryProvider.provide(AvklaringsbehovRepository::class)
+            val barnetilleggRepository = repositoryProvider.provide(BarnetilleggRepository::class)
+
             return EtAnnetStedSteg(
                 avklaringsbehovRepository, EtAnnetStedUtlederService(
-                    BarnetilleggRepository(connection),
+                    barnetilleggRepository,
                     institusjonsoppholdRepository,
                     sakRepository,
                     behandlingRepository

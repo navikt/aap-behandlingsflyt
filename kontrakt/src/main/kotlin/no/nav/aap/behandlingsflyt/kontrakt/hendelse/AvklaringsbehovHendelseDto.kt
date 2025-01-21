@@ -1,10 +1,7 @@
 package no.nav.aap.behandlingsflyt.kontrakt.hendelse
 
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
-import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import tilgang.Rolle
 import java.time.LocalDate
 import java.time.LocalDateTime
 

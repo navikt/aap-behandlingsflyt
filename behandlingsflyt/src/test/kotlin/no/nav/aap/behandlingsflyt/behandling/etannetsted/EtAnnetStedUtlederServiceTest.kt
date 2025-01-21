@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.etannetsted
 
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggPeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
@@ -22,7 +22,7 @@ import java.time.LocalDate
 class EtAnnetStedUtlederServiceTest {
     val connection = MockConnection().toDBConnection()
     val utlederService = EtAnnetStedUtlederService(
-        BarnetilleggRepository(connection),
+        BarnetilleggRepositoryImpl(connection),
         InstitusjonsoppholdRepository(connection),
         SakRepositoryImpl(connection),
         BehandlingRepositoryImpl(connection)

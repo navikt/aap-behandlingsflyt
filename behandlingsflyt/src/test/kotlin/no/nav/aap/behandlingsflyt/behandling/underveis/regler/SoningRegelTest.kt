@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedInput
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
@@ -31,7 +31,7 @@ class SoningRegelTest {
 
     private val mockConnection = MockConnection().toDBConnection()
     val utlederService = EtAnnetStedUtlederService(
-        BarnetilleggRepository(mockConnection),
+        BarnetilleggRepositoryImpl(mockConnection),
         InstitusjonsoppholdRepository(mockConnection),
         SakRepositoryImpl(mockConnection),
         BehandlingRepositoryImpl(mockConnection)

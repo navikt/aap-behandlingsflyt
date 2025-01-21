@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederServi
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.tomUnderveisInput
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
@@ -45,7 +45,7 @@ class UnderveisServiceTest {
                     UnderveisRepositoryImpl(connection),
                     AktivitetspliktRepositoryImpl(connection),
                     EtAnnetStedUtlederService(
-                        BarnetilleggRepository(connection),
+                        BarnetilleggRepositoryImpl(connection),
                         InstitusjonsoppholdRepository(connection),
                         SakRepositoryImpl(connection),
                         BehandlingRepositoryImpl(connection)

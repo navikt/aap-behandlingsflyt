@@ -32,11 +32,12 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource) {
                     val repositoryProvider = RepositoryProvider(connection)
                     val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
                     val sakRepository = repositoryProvider.provide(SakRepository::class)
+                    val barnetilleggRepository = repositoryProvider.provide(BarnetilleggRepository::class)
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                     val institusjonsoppholdRepository = InstitusjonsoppholdRepository(connection)
                     val utlederService =
                         EtAnnetStedUtlederService(
-                            BarnetilleggRepository(connection), institusjonsoppholdRepository,
+                            barnetilleggRepository, institusjonsoppholdRepository,
                             sakRepository,
                             behandlingRepository
                         )
@@ -78,9 +79,11 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource) {
                     val sakRepository = repositoryProvider.provide(SakRepository::class)
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                     val institusjonsoppholdRepository = InstitusjonsoppholdRepository(connection)
+                    val barnetilleggRepository = repositoryProvider.provide(BarnetilleggRepository::class)
+
                     val utlederService =
                         EtAnnetStedUtlederService(
-                            BarnetilleggRepository(connection), institusjonsoppholdRepository,
+                            barnetilleggRepository, institusjonsoppholdRepository,
                             sakRepository,
                             behandlingRepository
                         )

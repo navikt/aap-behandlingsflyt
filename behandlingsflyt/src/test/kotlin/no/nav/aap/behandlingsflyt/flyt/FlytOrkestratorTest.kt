@@ -24,6 +24,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
@@ -155,6 +156,7 @@ class FlytOrkestratorTest {
             .register<UnderveisRepositoryImpl>()
             .register<ArbeidsevneRepositoryImpl>()
             .register<Effektuer11_7RepositoryImpl>()
+            .register<BarnetilleggRepositoryImpl>()
             .status()
         GatewayRegistry.register<PdlBarnGateway>()
             .register<PdlIdentGateway>()

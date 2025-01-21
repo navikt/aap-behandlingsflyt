@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggPeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
@@ -19,11 +19,25 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.lookup.repository.RepositoryRegistry
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class BarnetilleggRepositoryTest {
+class BarnetilleggRepositoryImplTest {
+
+    companion object {
+        @BeforeAll
+        @JvmStatic
+        fun beforeAll() {
+            RepositoryRegistry
+                .register<BarnetilleggRepositoryImpl>()
+                .status()
+        }
+
+        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+    }
 
     @Test
     fun `Finner ikke barnetilleggGrunnlag hvis ikke lagret`() {
@@ -32,7 +46,7 @@ class BarnetilleggRepositoryTest {
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val barnetilleggRepository = BarnetilleggRepository(connection)
+            val barnetilleggRepository = BarnetilleggRepositoryImpl(connection)
             val barnetilleggGrunnlag = barnetilleggRepository.hentHvisEksisterer(behandling.id)
             assertThat(barnetilleggGrunnlag).isNull()
         }
@@ -44,7 +58,7 @@ class BarnetilleggRepositoryTest {
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val barnetilleggRepository = BarnetilleggRepository(connection)
+            val barnetilleggRepository = BarnetilleggRepositoryImpl(connection)
             val barnetilleggPeriode = listOf(
                 BarnetilleggPeriode(
                     Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1)),
@@ -74,7 +88,7 @@ class BarnetilleggRepositoryTest {
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val barnetilleggRepository = BarnetilleggRepository(connection)
+            val barnetilleggRepository = BarnetilleggRepositoryImpl(connection)
             val barnetilleggPeriode1 = BarnetilleggPeriode(
                 Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1)),
                 setOf(Ident("12345678910"), Ident("12345678911"))
@@ -105,7 +119,7 @@ class BarnetilleggRepositoryTest {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
-            val barnetilleggRepository = BarnetilleggRepository(connection)
+            val barnetilleggRepository = BarnetilleggRepositoryImpl(connection)
             barnetilleggRepository.lagre(
                 behandling1.id,
                 listOf(
@@ -131,10 +145,6 @@ class BarnetilleggRepositoryTest {
                     ),
                 )
         }
-    }
-
-    private companion object {
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 
     private fun sak(connection: DBConnection): Sak {

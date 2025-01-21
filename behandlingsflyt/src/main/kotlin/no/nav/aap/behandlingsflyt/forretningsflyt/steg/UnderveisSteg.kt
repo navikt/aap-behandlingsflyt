@@ -50,6 +50,8 @@ class UnderveisSteg(private val underveisService: UnderveisService) : Behandling
             val aktivitetspliktRepository = repositoryProvider.provide(AktivitetspliktRepository::class)
             val plikortkortRepository = repositoryProvider.provide(PliktkortRepository::class)
             val underveisRepository = repositoryProvider.provide(UnderveisRepository::class)
+            val barnetilleggRepository = repositoryProvider.provide(BarnetilleggRepository::class)
+
             return UnderveisSteg(
                 UnderveisService(
                     behandlingService = behandlingService,
@@ -58,7 +60,7 @@ class UnderveisSteg(private val underveisService: UnderveisService) : Behandling
                     underveisRepository = underveisRepository,
                     aktivitetspliktRepository = aktivitetspliktRepository,
                     etAnnetStedUtlederService = EtAnnetStedUtlederService(
-                        BarnetilleggRepository(connection),
+                        barnetilleggRepository,
                         InstitusjonsoppholdRepository(connection),
                         sakRepository,
                         behandlingRepository
