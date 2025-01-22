@@ -106,15 +106,16 @@ class InntektService private constructor(
 
         override fun konstruer(connection: DBConnection): InntektService {
             val repositoryProvider = RepositoryProvider(connection)
-            val sakRepository = repositoryProvider.provide(SakRepository::class)
-            val vilkårsresultatRepository = repositoryProvider.provide(VilkårsresultatRepository::class)
+            val sakRepository = repositoryProvider.provide<SakRepository>()
+            val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
+            val beregningVurderingRepository = repositoryProvider.provide<BeregningVurderingRepository>()
             return InntektService(
                 SakService(sakRepository),
                 InntektGrunnlagRepository(connection),
                 vilkårsresultatRepository,
                 SykdomRepository(connection),
                 StudentRepository(connection),
-                BeregningVurderingRepository(connection),
+                beregningVurderingRepository,
                 YrkesskadeRepository(connection),
                 InntektGateway
             )

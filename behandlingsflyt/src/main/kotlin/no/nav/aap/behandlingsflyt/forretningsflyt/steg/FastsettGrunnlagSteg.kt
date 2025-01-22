@@ -80,7 +80,8 @@ class FastsettGrunnlagSteg(
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
             val repositoryProvider = RepositoryProvider(connection)
-            val vilkårsresultatRepository = repositoryProvider.provide(VilkårsresultatRepository::class)
+            val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
+            val beregningVurderingRepository = repositoryProvider.provide<BeregningVurderingRepository>()
             return FastsettGrunnlagSteg(
                 BeregningService(
                     InntektGrunnlagRepository(connection),
@@ -88,7 +89,7 @@ class FastsettGrunnlagSteg(
                     StudentRepository(connection),
                     UføreRepository(connection),
                     BeregningsgrunnlagRepositoryImpl(connection),
-                    BeregningVurderingRepository(connection),
+                    beregningVurderingRepository,
                     YrkesskadeRepository(connection)
                 ),
                 vilkårsresultatRepository,

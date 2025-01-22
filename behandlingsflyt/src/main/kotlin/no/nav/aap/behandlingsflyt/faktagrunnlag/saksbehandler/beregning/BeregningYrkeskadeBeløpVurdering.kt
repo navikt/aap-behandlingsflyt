@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import no.nav.aap.komponenter.verdityper.Beløp
 
 data class BeregningYrkeskaderBeløpVurdering(
-    @JsonIgnore internal val id: Long? = null,
+    @JsonIgnore val id: Long? = null,
     val vurderinger: List<YrkesskadeBeløpVurdering>
 )
 

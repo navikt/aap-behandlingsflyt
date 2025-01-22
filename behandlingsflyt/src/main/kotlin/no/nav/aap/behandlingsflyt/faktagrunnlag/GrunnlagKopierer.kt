@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
@@ -30,7 +29,6 @@ class GrunnlagKopierer(connection: DBConnection) {
     private val sykepengerErstatningRepository = SykepengerErstatningRepository(connection)
     private val uføreRepository = UføreRepository(connection)
     private val barnRepository = BarnRepository(connection)
-    private val beregningVurderingRepository = BeregningVurderingRepository(connection)
     private val institusjonsoppholdRepository = InstitusjonsoppholdRepository(connection)
     private val inntektGrunnlagRepository = InntektGrunnlagRepository(connection)
     private val samordningYtelseVurderingRepository = SamordningYtelseVurderingRepository(connection)
@@ -47,7 +45,6 @@ class GrunnlagKopierer(connection: DBConnection) {
         sykepengerErstatningRepository.kopier(fraBehandlingId, tilBehandlingId)
         uføreRepository.kopier(fraBehandlingId, tilBehandlingId)
         barnRepository.kopier(fraBehandlingId, tilBehandlingId)
-        beregningVurderingRepository.kopier(fraBehandlingId, tilBehandlingId)
         institusjonsoppholdRepository.kopier(fraBehandlingId, tilBehandlingId)
         inntektGrunnlagRepository.kopier(fraBehandlingId, tilBehandlingId)
         samordningYtelseVurderingRepository.kopier(fraBehandlingId, tilBehandlingId)
