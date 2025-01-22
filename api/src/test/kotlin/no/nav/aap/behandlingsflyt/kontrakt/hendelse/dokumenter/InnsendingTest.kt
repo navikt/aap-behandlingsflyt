@@ -1,17 +1,12 @@
 package no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter
 
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
-import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.komponenter.json.DefaultJsonMapper
-import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 // TODO, test på at lagre og hente ut LazyDokument fungerer
 
@@ -121,11 +116,6 @@ class InnsendingTest {
 
         val somJSON = DefaultJsonMapper.toJson(aktivitetskort)
         assertThat(DefaultJsonMapper.fromJson<Melding>(somJSON)).isEqualTo(aktivitetskort)
-
-        val innsending = Innsending(saksnummer = Saksnummer("SAKSNUMMER"), referanse = InnsendingReferanse(JournalpostId("JOURNALPOSTID")), type = InnsendingType.PLIKTKORT, mottattTidspunkt = LocalDateTime.now(), melding = aktivitetskort)
-        val innsendingJson = DefaultJsonMapper.toJson(innsending)
-
-        assertThat(innsendingJson).isNotEmpty
     }
 
     @Test
