@@ -11,7 +11,26 @@ public data class AvsluttetBehandlingDTO(
     val tilkjentYtelse: TilkjentYtelseDTO,
     val vilkårsResultat: VilkårsResultatDTO,
     val beregningsGrunnlag: BeregningsgrunnlagDTO?,
+    val utfall: List<UtfallDTO>
 )
+
+public data class UtfallDTO(
+    val fra: LocalDate,
+    val til: LocalDate,
+    val utfall: Utfall,
+    val avslagsårsak: UnderveisÅrsak?
+)
+
+public enum class UnderveisÅrsak {
+    IKKE_GRUNNLEGGENDE_RETT,
+    MELDEPLIKT_FRIST_IKKE_PASSERT,
+    IKKE_OVERHOLDT_MELDEPLIKT_SANKSJON,
+    ARBEIDER_MER_ENN_GRENSEVERDI,
+    SONER_STRAFF,
+    BRUDD_PÅ_AKTIVITETSPLIKT,
+    FRAVÆR_FASTSATT_AKTIVITET,
+    VARIGHETSKVOTE_BRUKT_OPP,
+}
 
 
 /**

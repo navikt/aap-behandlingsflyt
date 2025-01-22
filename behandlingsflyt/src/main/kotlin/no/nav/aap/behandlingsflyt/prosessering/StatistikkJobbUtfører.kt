@@ -6,6 +6,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
@@ -23,7 +25,16 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.TilkjentYtelseDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.TilkjentYtelsePeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.UføreType
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.UnderveisÅrsak.ARBEIDER_MER_ENN_GRENSEVERDI
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.UnderveisÅrsak.FRAVÆR_FASTSATT_AKTIVITET
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.UnderveisÅrsak.IKKE_OVERHOLDT_MELDEPLIKT_SANKSJON
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.UnderveisÅrsak.MELDEPLIKT_FRIST_IKKE_PASSERT
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.UnderveisÅrsak.SONER_STRAFF
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.UnderveisÅrsak.VARIGHETSKVOTE_BRUKT_OPP
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Utfall
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.UtfallDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsPeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsResultatDTO
@@ -42,6 +53,7 @@ import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall as DomeneUtfall
 
 private val log = LoggerFactory.getLogger(StatistikkJobbUtfører::class.java)
 
@@ -55,6 +67,7 @@ class StatistikkJobbUtfører(
     private val beregningsgrunnlagRepository: BeregningsgrunnlagRepository,
     private val pipRepository: PipRepository,
     private val dokumentRepository: MottattDokumentRepository,
+    private val underveisRepository: UnderveisRepository
 ) : JobbUtfører {
     override fun utfør(input: JobbInput) {
         log.info("Utfører jobbinput statistikk: $input")
@@ -188,7 +201,32 @@ class StatistikkJobbUtfører(
         val beregningsGrunnlagDTO: BeregningsgrunnlagDTO? =
             if (grunnlag == null) null else beregningsgrunnlagDTO(grunnlag)
 
-        log.info("Kaller aap-statistikk for sak ${sak.saksnummer}.")
+        val underveis = underveisRepository.hent(behandling.id)
+
+        val utfall = underveis.perioder.map {
+            UtfallDTO(
+                fra = it.periode.fom,
+                til = it.periode.tom,
+                utfall =
+                    when (it.utfall) {
+                        DomeneUtfall.IKKE_VURDERT -> Utfall.IKKE_VURDERT
+                        DomeneUtfall.IKKE_RELEVANT -> Utfall.IKKE_RELEVANT
+                        DomeneUtfall.OPPFYLT -> Utfall.OPPFYLT
+                        DomeneUtfall.IKKE_OPPFYLT -> Utfall.IKKE_OPPFYLT
+                    },
+                avslagsårsak = when (it.avslagsårsak) {
+                    UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT -> IKKE_GRUNNLEGGENDE_RETT
+                    UnderveisÅrsak.MELDEPLIKT_FRIST_IKKE_PASSERT -> MELDEPLIKT_FRIST_IKKE_PASSERT
+                    UnderveisÅrsak.IKKE_OVERHOLDT_MELDEPLIKT_SANKSJON -> IKKE_OVERHOLDT_MELDEPLIKT_SANKSJON
+                    UnderveisÅrsak.ARBEIDER_MER_ENN_GRENSEVERDI -> ARBEIDER_MER_ENN_GRENSEVERDI
+                    UnderveisÅrsak.SONER_STRAFF -> SONER_STRAFF
+                    UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT -> BRUDD_PÅ_AKTIVITETSPLIKT
+                    UnderveisÅrsak.FRAVÆR_FASTSATT_AKTIVITET -> FRAVÆR_FASTSATT_AKTIVITET
+                    UnderveisÅrsak.VARIGHETSKVOTE_BRUKT_OPP -> VARIGHETSKVOTE_BRUKT_OPP
+                    null -> null
+                }
+            )
+        }
 
         val avsluttetBehandlingDTO = AvsluttetBehandlingDTO(
             vilkårsResultat = VilkårsResultatDTO(
@@ -211,6 +249,7 @@ class StatistikkJobbUtfører(
             ),
             tilkjentYtelse = tilkjentYtelseDTO,
             beregningsGrunnlag = beregningsGrunnlagDTO,
+            utfall = utfall
         )
         return avsluttetBehandlingDTO
     }
@@ -271,13 +310,13 @@ class StatistikkJobbUtfører(
     companion object : Jobb {
         override fun konstruer(connection: DBConnection): JobbUtfører {
             val repositoryProvider = RepositoryProvider(connection)
-            val vilkårsresultatRepository = repositoryProvider.provide(VilkårsresultatRepository::class)
-            val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-            val sakRepository = repositoryProvider.provide(SakRepository::class)
-            val pipRepository = repositoryProvider.provide(PipRepository::class)
-            val tilkjentYtelseRepository = repositoryProvider.provide(TilkjentYtelseRepository::class)
-            val beregningsgrunnlagRepository = repositoryProvider.provide(BeregningsgrunnlagRepository::class)
-            val mottattDokumentRepository = repositoryProvider.provide(MottattDokumentRepository::class)
+            val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
+            val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+            val sakRepository = repositoryProvider.provide<SakRepository>()
+            val pipRepository = repositoryProvider.provide<PipRepository>()
+            val tilkjentYtelseRepository = repositoryProvider.provide<TilkjentYtelseRepository>()
+            val beregningsgrunnlagRepository = repositoryProvider.provide<BeregningsgrunnlagRepository>()
+            val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
             val sakService = SakService(sakRepository)
 
             return StatistikkJobbUtfører(
@@ -288,7 +327,8 @@ class StatistikkJobbUtfører(
                 tilkjentYtelseRepository,
                 beregningsgrunnlagRepository,
                 pipRepository = pipRepository,
-                dokumentRepository = mottattDokumentRepository
+                dokumentRepository = mottattDokumentRepository,
+                underveisRepository = repositoryProvider.provide()
             )
         }
 

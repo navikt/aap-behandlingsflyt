@@ -5,6 +5,8 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepos
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UnderveisInput
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.tomUnderveisInput
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
@@ -19,8 +21,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReposito
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.DokumentRekkefølge
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.flyt.testutil.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.flyt.testutil.InMemorySakRepository
+import no.nav.aap.behandlingsflyt.flyt.testutil.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
 import no.nav.aap.behandlingsflyt.integrasjon.barn.PdlBarnGateway
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
@@ -50,6 +55,7 @@ import no.nav.aap.behandlingsflyt.pip.IdentPåSak
 import no.nav.aap.behandlingsflyt.pip.PipRepository
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.lås.TaSkriveLåsRepositoryImpl
@@ -72,14 +78,17 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.lookup.gateway.GatewayRegistry
+import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.motor.JobbInput
+import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.Month.APRIL
 import java.time.temporal.ChronoUnit
 import java.util.*
 
@@ -99,6 +108,7 @@ class StatistikkJobbUtførerTest {
             .register(TilkjentYtelseRepositoryImpl::class)
             .register(AktivitetspliktRepositoryImpl::class)
             .register(BrevbestillingRepositoryImpl::class)
+            .register(UnderveisRepositoryImpl::class)
             .status()
         GatewayRegistry.register<PdlBarnGateway>()
             .register<PdlIdentGateway>()
@@ -183,6 +193,7 @@ class StatistikkJobbUtførerTest {
             val vilkårsResultatRepository = VilkårsresultatRepositoryImpl(connection = connection)
             val behandlingRepository = BehandlingRepositoryImpl(connection)
             val beregningsgrunnlagRepository = BeregningsgrunnlagRepositoryImpl(connection)
+            val repositoryProvider = RepositoryProvider(connection)
 
             StatistikkJobbUtfører(
                 StatistikkGateway(),
@@ -192,7 +203,8 @@ class StatistikkJobbUtførerTest {
                 TilkjentYtelseRepositoryImpl(connection),
                 beregningsgrunnlagRepository,
                 dokumentRepository = MottattDokumentRepositoryImpl(connection),
-                pipRepository = PipRepositoryImpl(connection)
+                pipRepository = PipRepositoryImpl(connection),
+                underveisRepository = repositoryProvider.provide()
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
             )
@@ -227,12 +239,13 @@ class StatistikkJobbUtførerTest {
                 }
             }
 
+            val periode = Periode(LocalDate.now().minusDays(10), LocalDate.now().plusDays(1))
             val sak = PersonOgSakService(
                 identGateway,
                 PersonRepositoryImpl(connection),
                 SakRepositoryImpl(connection)
             ).finnEllerOpprett(
-                ident, periode = Periode(LocalDate.now().minusDays(10), LocalDate.now().plusDays(1))
+                ident, periode = periode
             )
 
             val opprettetBehandling = behandlingRepository.opprettBehandling(
@@ -288,6 +301,25 @@ class StatistikkJobbUtførerTest {
                 )
             )
 
+            UnderveisRepositoryImpl(connection).lagre(
+                behandlingId = opprettetBehandling.id,
+                underveisperioder = listOf(),
+                input = tomUnderveisInput.copy(
+                    rettighetsperiode = periode,
+                    meldepliktGrunnlag = MeldepliktGrunnlag(listOf(
+                        Fritaksvurdering(
+                            harFritak = true,
+                            fraDato = periode.fom,
+                            begrunnelse = "kan ikke",
+                            opprettetTid = periode.fom.atStartOfDay(),
+                        )
+                    )),
+                    innsendingsTidspunkt = mapOf(
+                        LocalDate.of(2020, APRIL, 28) to JournalpostId("1"),
+                    ),
+                )
+            )
+
             behandlingRepository.oppdaterBehandlingStatus(opprettetBehandling.id, Status.AVSLUTTET)
 
             val oppdatertBehandling = behandlingRepository.hent(opprettetBehandling.id)
@@ -317,6 +349,7 @@ class StatistikkJobbUtførerTest {
             val vilkårsResultatRepository = VilkårsresultatRepositoryImpl(connection = connection)
             val behandlingRepository = BehandlingRepositoryImpl(connection)
             val beregningsgrunnlagRepository = BeregningsgrunnlagRepositoryImpl(connection)
+            val repositoryProvider = RepositoryProvider(connection)
 
             StatistikkJobbUtfører(
                 StatistikkGateway(),
@@ -326,7 +359,8 @@ class StatistikkJobbUtførerTest {
                 TilkjentYtelseRepositoryImpl(connection),
                 beregningsgrunnlagRepository,
                 PipRepositoryImpl(connection),
-                MottattDokumentRepositoryImpl(connection)
+                MottattDokumentRepositoryImpl(connection),
+                repositoryProvider.provide()
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
             )
@@ -366,7 +400,7 @@ class StatistikkJobbUtførerTest {
                                 )
                             )
                         )
-                    ),
+                    ), utfall = listOf()
             ).toString()
         )
     }
@@ -512,7 +546,8 @@ class StatistikkJobbUtførerTest {
                 tilkjentYtelseRepository,
                 beregningsgrunnlagRepository,
                 pipRepository,
-                dokumentRepository
+                dokumentRepository,
+                InMemoryUnderveisRepository
             )
 
         val avklaringsbehov = listOf(
