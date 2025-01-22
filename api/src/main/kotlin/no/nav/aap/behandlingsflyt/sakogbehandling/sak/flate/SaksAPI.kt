@@ -30,7 +30,6 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.SakPathParam
-import no.nav.aap.tilgang.auditlog.AuditLogPathParamConfig
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -79,7 +78,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 } else {
                     val sak = repositoryProvider.provide(SakRepository::class).finnSakerFor(person).filter { sak ->
                         sak.rettighetsperiode.inneholder(dto.mottattTidspunkt) && sak.status() != Status.AVSLUTTET
-                    }.sortedBy { it.opprettetTidspunkt }.first()
+                    }.minByOrNull { it.opprettetTidspunkt }!!
 
                     val behandling =
                         repositoryProvider.provide(BehandlingRepository::class).finnSisteBehandlingFor(sak.id)

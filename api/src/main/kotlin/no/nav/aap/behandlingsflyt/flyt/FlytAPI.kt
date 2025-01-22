@@ -27,6 +27,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegGruppe
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.mdc.LogKontekst
+import no.nav.aap.behandlingsflyt.mdc.LoggingKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -41,7 +43,6 @@ import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbStatus
 import no.nav.aap.motor.api.JobbInfoDto
-import org.slf4j.MDC
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
@@ -163,37 +164,39 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
             post<BehandlingReferanse, BehandlingResultatDto, SettPåVentRequest> { request, body ->
                 dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
-                    val taSkriveLåsRepository = repositoryProvider.provide(TaSkriveLåsRepository::class)
-                    val lås = taSkriveLåsRepository.lås(request.referanse)
-                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-                    val sakRepository = repositoryProvider.provide(SakRepository::class)
-                    BehandlingTilstandValidator(
-                        BehandlingReferanseService(behandlingRepository),
-                        FlytJobbRepository(connection)
-                    ).validerTilstand(
-                        request,
-                        body.behandlingVersjon
-                    )
+                    LoggingKontekst(
+                        repositoryProvider,
+                        LogKontekst(referanse = BehandlingReferanse(request.referanse))
+                    ).use {
+                        val taSkriveLåsRepository = repositoryProvider.provide(TaSkriveLåsRepository::class)
+                        val lås = taSkriveLåsRepository.lås(request.referanse)
 
-                    MDC.putCloseable("sakId", lås.sakSkrivelås.id.toString()).use {
-                        MDC.putCloseable("behandlingId", lås.behandlingSkrivelås.id.toString()).use {
-                            AvklaringsbehovOrkestrator(
-                                connection,
-                                BehandlingHendelseServiceImpl(
-                                    FlytJobbRepository(connection),
-                                    SakService(sakRepository)
-                                )
-                            ).settBehandlingPåVent(
-                                lås.behandlingSkrivelås.id, BehandlingSattPåVent(
-                                    frist = body.frist,
-                                    begrunnelse = body.begrunnelse,
-                                    behandlingVersjon = body.behandlingVersjon,
-                                    grunn = body.grunn,
-                                    bruker = bruker()
-                                )
+                        val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+                        val sakRepository = repositoryProvider.provide(SakRepository::class)
+                        BehandlingTilstandValidator(
+                            BehandlingReferanseService(behandlingRepository),
+                            FlytJobbRepository(connection)
+                        ).validerTilstand(
+                            request,
+                            body.behandlingVersjon
+                        )
+
+                        AvklaringsbehovOrkestrator(
+                            connection,
+                            BehandlingHendelseServiceImpl(
+                                FlytJobbRepository(connection),
+                                SakService(sakRepository)
                             )
-                            taSkriveLåsRepository.verifiserSkrivelås(lås)
-                        }
+                        ).settBehandlingPåVent(
+                            lås.behandlingSkrivelås.id, BehandlingSattPåVent(
+                                frist = body.frist,
+                                begrunnelse = body.begrunnelse,
+                                behandlingVersjon = body.behandlingVersjon,
+                                grunn = body.grunn,
+                                bruker = bruker()
+                            )
+                        )
+                        taSkriveLåsRepository.verifiserSkrivelås(lås)
                     }
                 }
                 respondWithStatus(HttpStatusCode.NoContent)

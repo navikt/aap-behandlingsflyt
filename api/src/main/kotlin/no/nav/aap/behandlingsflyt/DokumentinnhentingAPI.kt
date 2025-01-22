@@ -20,12 +20,13 @@ import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.mdc.LogKontekst
+import no.nav.aap.behandlingsflyt.mdc.LoggingKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.komponenter.httpklient.auth.token
@@ -37,7 +38,6 @@ import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
-import org.slf4j.MDC
 import tilgang.Operasjon
 import java.time.LocalDate
 import java.time.Period
@@ -57,58 +57,60 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
                 val bestillingUuid = dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
 
-                    val låsRepository = repositoryProvider.provide(TaSkriveLåsRepository::class)
-                    val lås = låsRepository.lås(req.behandlingsReferanse)
-                    var bestillingUUID: String?
+                    LoggingKontekst(
+                        repositoryProvider,
+                        LogKontekst(referanse = BehandlingReferanse(req.behandlingsReferanse))
+                    ).use {
+                        val låsRepository = repositoryProvider.provide(TaSkriveLåsRepository::class)
+                        val lås = låsRepository.lås(req.behandlingsReferanse)
+                        var bestillingUUID: String?
 
-                    MDC.putCloseable("sakId", lås.sakSkrivelås.id.toString()).use {
-                        MDC.putCloseable("behandlingId", lås.behandlingSkrivelås.id.toString()).use {
-                            val sak =
-                                repositoryProvider.provide(SakRepository::class).hent((Saksnummer(req.saksnummer)))
-                            val behandling = repositoryProvider.provide(BehandlingRepository::class)
-                                .hent(BehandlingReferanse(req.behandlingsReferanse))
-                            val avklaringsbehovene = repositoryProvider.provide(AvklaringsbehovRepository::class)
-                                .hentAvklaringsbehovene(behandling.id)
+                        val sak =
+                            repositoryProvider.provide(SakRepository::class).hent((Saksnummer(req.saksnummer)))
+                        val behandling = repositoryProvider.provide(BehandlingRepository::class)
+                            .hent(BehandlingReferanse(req.behandlingsReferanse))
+                        val avklaringsbehovene = repositoryProvider.provide(AvklaringsbehovRepository::class)
+                            .hentAvklaringsbehovene(behandling.id)
 
-                            val personIdent = sak.person.aktivIdent()
-                            val personinfo =
-                                GatewayProvider.provide(PersoninfoGateway::class)
-                                    .hentPersoninfoForIdent(personIdent, token())
+                        val personIdent = sak.person.aktivIdent()
+                        val personinfo =
+                            GatewayProvider.provide(PersoninfoGateway::class)
+                                .hentPersoninfoForIdent(personIdent, token())
 
-                            avklaringsbehovene.validateTilstand(behandling = behandling)
-                            avklaringsbehovene.leggTil(
-                                definisjoner = listOf(Definisjon.BESTILL_LEGEERKLÆRING),
-                                funnetISteg = behandling.aktivtSteg(),
-                                grunn = ÅrsakTilSettPåVent.VENTER_PÅ_MEDISINSKE_OPPLYSNINGER,
-                                bruker = bruker(),
-                                frist = LocalDate.now() + Period.ofWeeks(4),
+                        avklaringsbehovene.validateTilstand(behandling = behandling)
+                        avklaringsbehovene.leggTil(
+                            definisjoner = listOf(Definisjon.BESTILL_LEGEERKLÆRING),
+                            funnetISteg = behandling.aktivtSteg(),
+                            grunn = ÅrsakTilSettPåVent.VENTER_PÅ_MEDISINSKE_OPPLYSNINGER,
+                            bruker = bruker(),
+                            frist = LocalDate.now() + Period.ofWeeks(4),
+                        )
+                        avklaringsbehovene.validerPlassering(behandling = behandling)
+
+                        val sakService = SakService(repositoryProvider.provide(SakRepository::class))
+                        val behandlingHendelseService =
+                            BehandlingHendelseServiceImpl(FlytJobbRepository((connection)), sakService)
+
+                        behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
+
+                        bestillingUUID = DokumeninnhentingGateway().bestillLegeerklæring(
+                            LegeerklæringBestillingRequest(
+                                req.behandlerRef,
+                                req.behandlerNavn,
+                                req.behandlerHprNr,
+                                personIdent.identifikator,
+                                personinfo.fulltNavn(),
+                                req.fritekst,
+                                req.saksnummer,
+                                req.dokumentasjonType,
+                                req.behandlingsReferanse
                             )
-                            avklaringsbehovene.validerPlassering(behandling = behandling)
+                        )
 
-                            val sakService = SakService(repositoryProvider.provide(SakRepository::class))
-                            val behandlingHendelseService =
-                                BehandlingHendelseServiceImpl(FlytJobbRepository((connection)), sakService)
+                        låsRepository.verifiserSkrivelås(lås)
 
-                            behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
-
-                            bestillingUUID = DokumeninnhentingGateway().bestillLegeerklæring(
-                                LegeerklæringBestillingRequest(
-                                    req.behandlerRef,
-                                    req.behandlerNavn,
-                                    req.behandlerHprNr,
-                                    personIdent.identifikator,
-                                    personinfo.fulltNavn(),
-                                    req.fritekst,
-                                    req.saksnummer,
-                                    req.dokumentasjonType,
-                                    req.behandlingsReferanse
-                                )
-                            )
-
-                            låsRepository.verifiserSkrivelås(lås)
-                        }
+                        bestillingUUID
                     }
-                    bestillingUUID
                 }
 
                 respond(requireNotNull(bestillingUuid))

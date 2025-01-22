@@ -18,8 +18,8 @@ import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.avklaringsbehovApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.fatteVedtakGrunnlagApi
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.avklaringsbehovApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.utledSubtypesTilAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.flate.barnetilleggApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.beregningsGrunnlagApi
@@ -33,9 +33,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilkjentYtelseAPI
 import no.nav.aap.behandlingsflyt.behandling.vilkår.alder.flate.aldersGrunnlagApi
 import no.nav.aap.behandlingsflyt.exception.ErrorRespons
 import no.nav.aap.behandlingsflyt.exception.FlytOperasjonException
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.barnetillegg.BarnetilleggRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.flate.underveisVurderingerAPI
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
@@ -63,8 +61,10 @@ import no.nav.aap.behandlingsflyt.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.barnetillegg.BarnetilleggRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7RepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.dokument.arbeid.PliktkortRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningRepositoryImpl
