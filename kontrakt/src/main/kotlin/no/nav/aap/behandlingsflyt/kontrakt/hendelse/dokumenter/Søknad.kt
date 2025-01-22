@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter
 
 import com.fasterxml.jackson.annotation.JsonAlias
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import java.time.LocalDate
 
 public sealed interface Søknad : Melding
@@ -13,6 +14,7 @@ public sealed interface Søknad : Melding
  * @param oppgitteBarn Om barn er oppgitt, mengden av identer.
  * @param medlemskap Søkers opphold i utland
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public data class SøknadV0(
     public val student: SøknadStudentDto?,
     public val yrkesskade: String,
