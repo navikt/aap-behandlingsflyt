@@ -12,7 +12,7 @@ class AvklarBistandLøser(val connection: DBConnection) : AvklaringsbehovsLøser
 
     private val repositoryProvider = RepositoryProvider(connection)
     private val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-    private val bistandRepository = BistandRepository(connection)
+    private val bistandRepository = repositoryProvider.provide(BistandRepository::class)
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarBistandsbehovLøsning): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
