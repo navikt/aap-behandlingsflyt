@@ -173,7 +173,8 @@ public enum class Definisjon(
         kode = AvklaringsbehovKode.`5015`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.EFFEKTUER_11_7,
-        løsesAv = listOf(Rolle.VEILEDER)
+        løsesAv = listOf(Rolle.VEILEDER),
+        kreverToTrinn = true,
     ),
     FORESLÅ_VEDTAK(
         kode = AvklaringsbehovKode.`5098`,
