@@ -709,7 +709,7 @@ class FlytOrkestratorTest {
             ).håndtere(
                 behandling.id,
                 LøsAvklaringsbehovHendelse(
-                    løsning = SkrivBrevLøsning(brevbestillingReferanse = brevbestilling.referanse),
+                    løsning = SkrivBrevLøsning(brevbestillingReferanse = brevbestilling.referanse.brevbestillingReferanse),
                     behandlingVersjon = behandling.versjon,
                     bruker = Bruker("SAKSBEHANDLER")
                 )
@@ -1103,7 +1103,7 @@ class FlytOrkestratorTest {
             ).håndtere(
                 behandling.id,
                 LøsAvklaringsbehovHendelse(
-                    løsning = SkrivBrevLøsning(brevbestillingReferanse = brevbestilling.referanse),
+                    løsning = SkrivBrevLøsning(brevbestillingReferanse = brevbestilling.referanse.brevbestillingReferanse),
                     behandlingVersjon = behandling.versjon,
                     bruker = Bruker("SAKSBEHANDLER")
                 )
@@ -1763,7 +1763,7 @@ class FlytOrkestratorTest {
             ).håndtere(
                 behandling.id,
                 LøsAvklaringsbehovHendelse(
-                    løsning = SkrivBrevLøsning(brevbestillingReferanse = brevbestilling.referanse),
+                    løsning = SkrivBrevLøsning(brevbestillingReferanse = brevbestilling.referanse.brevbestillingReferanse),
                     behandlingVersjon = behandling.versjon,
                     bruker = Bruker("SAKSBEHANDLER")
                 )
