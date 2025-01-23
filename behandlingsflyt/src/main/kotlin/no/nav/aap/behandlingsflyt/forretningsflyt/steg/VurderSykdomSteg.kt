@@ -96,7 +96,7 @@ class VurderSykdomSteg private constructor(
         yrkesskadeGrunnlag: YrkesskadeGrunnlag?,
         avklaringsbehovene: Avklaringsbehovene
     ): Boolean {
-        if (!erIkkeAvslagPåVilkårTidligere(vilkårResultat) && studentVurdering?.erOppfylt() == true) {
+        if (!erIkkeAvslagPåVilkårTidligere(vilkårResultat) || studentVurdering?.erOppfylt() == true) {
             return false
         }
         return sykdomsGrunnlag?.erKonsistentForSykdom(harYrkesskade(yrkesskadeGrunnlag)) != true || harVærtVurdertMinstEnGangIBehandlingen(
