@@ -63,7 +63,6 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
                     ).use {
                         val låsRepository = repositoryProvider.provide(TaSkriveLåsRepository::class)
                         val lås = låsRepository.lås(req.behandlingsReferanse)
-                        var bestillingUUID: String?
 
                         val sak =
                             repositoryProvider.provide(SakRepository::class).hent((Saksnummer(req.saksnummer)))
@@ -93,7 +92,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
 
                         behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
 
-                        bestillingUUID = DokumeninnhentingGateway().bestillLegeerklæring(
+                        val bestillingUUID: String = DokumeninnhentingGateway().bestillLegeerklæring(
                             LegeerklæringBestillingRequest(
                                 req.behandlerRef,
                                 req.behandlerNavn,
@@ -113,7 +112,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
                     }
                 }
 
-                respond(requireNotNull(bestillingUuid))
+                respond(bestillingUuid)
             }
         }
         route("/status/{saksnummer}") {

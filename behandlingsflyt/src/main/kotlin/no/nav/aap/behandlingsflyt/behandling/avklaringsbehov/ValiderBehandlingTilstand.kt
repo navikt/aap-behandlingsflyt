@@ -4,14 +4,17 @@ import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import org.slf4j.LoggerFactory
 
 internal object ValiderBehandlingTilstand {
 
+    private val logger = LoggerFactory.getLogger(ValiderBehandlingTilstand::class.java)
     fun validerTilstandBehandling(
         behandling: Behandling,
         avklaringsbehov: Definisjon?,
         eksisterendeAvklaringsbehov: List<Avklaringsbehov>
     ) {
+        logger.info("Validerer status for behandling ${behandling.id} og avklaringsbehov $avklaringsbehov.")
         validerStatus(behandling.status())
         if (avklaringsbehov != null) {
             if (!eksisterendeAvklaringsbehov.map { a -> a.definisjon }
