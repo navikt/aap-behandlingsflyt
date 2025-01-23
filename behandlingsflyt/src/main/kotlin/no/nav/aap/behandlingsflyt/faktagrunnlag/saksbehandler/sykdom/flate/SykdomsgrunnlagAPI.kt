@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.lookup.repository.RepositoryProvider
 import javax.sql.DataSource
@@ -18,19 +19,11 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: DataSource) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/sykdom/sykdom") {
             get<BehandlingReferanse, SykdomGrunnlagDto> { req ->
-                val (yrkesskadeGrunnlag, sykdomGrunnlag) = dataSource.transaction { connection ->
-                    val repositoryProvider = RepositoryProvider(connection)
-                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-
-                    val behandling: Behandling =
-                        BehandlingReferanseService(behandlingRepository).behandling(req)
-
-                    val yrkesskadeGrunnlag =
-                        YrkesskadeRepository(connection).hentHvisEksisterer(behandlingId = behandling.id)
-                    val sykdomGrunnlag = SykdomRepository(connection).hentHvisEksisterer(behandlingId = behandling.id)
-
-                    yrkesskadeGrunnlag to sykdomGrunnlag
-                }
+                val (yrkesskadeGrunnlag, sykdomGrunnlag) = dataSource.transaction(
+                    block = hentUtYrkesskadOgSykdomsgrunnlag(
+                        req
+                    )
+                )
 
                 val innhentedeYrkesskader = yrkesskadeGrunnlag?.yrkesskader?.yrkesskader?.map { yrkesskade ->
                     RegistrertYrkesskade(
@@ -53,18 +46,9 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: DataSource) {
         }
         route("/{referanse}/grunnlag/sykdom/yrkesskade") {
             get<BehandlingReferanse, YrkesskadeVurderingGrunnlagDto> { req ->
-                val (yrkesskadeGrunnlag, sykdomGrunnlag) = dataSource.transaction { connection ->
-                    val repositoryProvider = RepositoryProvider(connection)
-                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-                    val behandling: Behandling =
-                        BehandlingReferanseService(behandlingRepository).behandling(req)
-
-                    val yrkesskadeGrunnlag =
-                        YrkesskadeRepository(connection).hentHvisEksisterer(behandlingId = behandling.id)
-                    val sykdomGrunnlag = SykdomRepository(connection).hentHvisEksisterer(behandlingId = behandling.id)
-
-                    yrkesskadeGrunnlag to sykdomGrunnlag
-                }
+                val (yrkesskadeGrunnlag, sykdomGrunnlag) = dataSource.transaction(
+                    block = hentUtYrkesskadOgSykdomsgrunnlag(req)
+                )
 
                 val innhentedeYrkesskader = yrkesskadeGrunnlag?.yrkesskader?.yrkesskader?.map { yrkesskade ->
                     RegistrertYrkesskade(
@@ -85,4 +69,19 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: DataSource) {
             }
         }
     }
+}
+
+private fun hentUtYrkesskadOgSykdomsgrunnlag(req: BehandlingReferanse) = { connection: DBConnection ->
+    val repositoryProvider = RepositoryProvider(connection)
+    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+    val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
+
+    val behandling: Behandling =
+        BehandlingReferanseService(behandlingRepository).behandling(req)
+
+    val yrkesskadeGrunnlag =
+        YrkesskadeRepository(connection).hentHvisEksisterer(behandlingId = behandling.id)
+    val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId = behandling.id)
+
+    yrkesskadeGrunnlag to sykdomGrunnlag
 }

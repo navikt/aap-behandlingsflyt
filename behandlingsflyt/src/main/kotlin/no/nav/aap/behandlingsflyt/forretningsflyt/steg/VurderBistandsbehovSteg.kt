@@ -182,7 +182,7 @@ class VurderBistandsbehovSteg private constructor(
             return VurderBistandsbehovSteg(
                 bistandRepository,
                 StudentRepository(connection),
-                SykdomRepository(connection),
+                repositoryProvider.provide(),
                 vilkårsresultatRepository,
                 avklaringsbehovRepository
             )

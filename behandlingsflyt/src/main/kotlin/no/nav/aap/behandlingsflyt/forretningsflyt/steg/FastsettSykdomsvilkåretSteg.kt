@@ -48,7 +48,7 @@ class FastsettSykdomsvilkåretSteg private constructor(
             val vilkårsresultatRepository = repositoryProvider.provide(VilkårsresultatRepository::class)
             return FastsettSykdomsvilkåretSteg(
                 vilkårsresultatRepository,
-                SykdomRepository(connection),
+                repositoryProvider.provide(),
                 StudentRepository(connection)
             )
         }

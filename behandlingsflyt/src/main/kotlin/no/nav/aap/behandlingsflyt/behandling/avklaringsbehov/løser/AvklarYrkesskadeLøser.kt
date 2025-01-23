@@ -11,8 +11,8 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class AvklarYrkesskadeLøser(connection: DBConnection) : AvklaringsbehovsLøser<AvklarYrkesskadeLøsning> {
 
     private val repositoryProvider = RepositoryProvider(connection)
-    private val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-    private val sykdomRepository = SykdomRepository(connection)
+    private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+    private val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarYrkesskadeLøsning): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)

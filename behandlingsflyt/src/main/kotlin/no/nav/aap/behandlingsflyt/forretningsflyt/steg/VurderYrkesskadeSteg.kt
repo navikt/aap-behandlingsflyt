@@ -69,7 +69,7 @@ class VurderYrkesskadeSteg private constructor(
             val vilkårsresultatRepository = repositoryProvider.provide(VilkårsresultatRepository::class)
             return VurderYrkesskadeSteg(
                 vilkårsresultatRepository,
-                SykdomRepository(connection),
+                repositoryProvider.provide(),
                 YrkesskadeRepository(connection),
                 avklaringsbehovRepository
             )

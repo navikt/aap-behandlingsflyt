@@ -88,7 +88,7 @@ class BeregningAvklarFaktaSteg private constructor(
             val beregningVurderingRepository = repositoryProvider.provide<BeregningVurderingRepository>()
             return BeregningAvklarFaktaSteg(
                 beregningVurderingRepository,
-                SykdomRepository(connection),
+                repositoryProvider.provide(),
                 vilkårsresultatRepository,
                 AvklarFaktaBeregningService(vilkårsresultatRepository),
                 avklaringsbehovRepository,

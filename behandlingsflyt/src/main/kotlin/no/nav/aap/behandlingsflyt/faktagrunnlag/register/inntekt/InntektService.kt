@@ -113,7 +113,7 @@ class InntektService private constructor(
                 SakService(sakRepository),
                 InntektGrunnlagRepository(connection),
                 vilkårsresultatRepository,
-                SykdomRepository(connection),
+                repositoryProvider.provide(),
                 StudentRepository(connection),
                 beregningVurderingRepository,
                 YrkesskadeRepository(connection),

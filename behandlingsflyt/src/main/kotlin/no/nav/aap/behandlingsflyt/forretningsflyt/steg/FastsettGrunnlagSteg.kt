@@ -85,7 +85,7 @@ class FastsettGrunnlagSteg(
             return FastsettGrunnlagSteg(
                 BeregningService(
                     InntektGrunnlagRepository(connection),
-                    SykdomRepository(connection),
+                    repositoryProvider.provide<SykdomRepository>(),
                     StudentRepository(connection),
                     UføreRepository(connection),
                     BeregningsgrunnlagRepositoryImpl(connection),
