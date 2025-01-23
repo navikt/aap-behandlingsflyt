@@ -28,10 +28,12 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource) {
             get<BehandlingReferanse, BarnetilleggDto> { req ->
                 val dto = dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
-                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-                    val vilkårsresultatRepository = repositoryProvider.provide(VilkårsresultatRepository::class)
-                    val sakRepository = repositoryProvider.provide(SakRepository::class)
-                    val personopplysningRepository = repositoryProvider.provide(PersonopplysningRepository::class)
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val vilkårsresultatRepository =
+                        repositoryProvider.provide<VilkårsresultatRepository>()
+                    val sakRepository = repositoryProvider.provide<SakRepository>()
+                    val personopplysningRepository =
+                        repositoryProvider.provide<PersonopplysningRepository>()
 
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
@@ -56,19 +58,33 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource) {
                     }
 
                     val barnGrunnlag = barnRepository.hentHvisEksisterer(behandling.id)
-                    val personopplysningGrunnlag = personopplysningRepository.hentHvisEksisterer(behandling.id)
+                    val personopplysningGrunnlag =
+                        personopplysningRepository.hentHvisEksisterer(behandling.id)
 
                     BarnetilleggDto(
                         søknadstidspunkt = sakOgBehandlingService.hentSakFor(behandling.id).rettighetsperiode.fom,
-                        folkeregisterbarn = folkeregister.map { hentBarn(it, personopplysningGrunnlag!!) },
+                        folkeregisterbarn = folkeregister.map {
+                            hentBarn(
+                                it,
+                                personopplysningGrunnlag!!
+                            )
+                        },
                         vurderteBarn = barnGrunnlag?.vurderteBarn?.barn?.map {
                             ExtendedVurdertBarnDto(
                                 ident = it.ident.identifikator,
                                 vurderinger = it.vurderinger,
-                                fødselsdato = hentBarn(it.ident, personopplysningGrunnlag!!).fødselsdato
+                                fødselsdato = hentBarn(
+                                    it.ident,
+                                    personopplysningGrunnlag!!
+                                ).fødselsdato
                             )
                         } ?: emptyList(),
-                        barnSomTrengerVurdering = uavklarteBarn.map { hentBarn(it, personopplysningGrunnlag!!) }
+                        barnSomTrengerVurdering = uavklarteBarn.map {
+                            hentBarn(
+                                it,
+                                personopplysningGrunnlag!!
+                            )
+                        }
                             .toList()
                     )
                 }

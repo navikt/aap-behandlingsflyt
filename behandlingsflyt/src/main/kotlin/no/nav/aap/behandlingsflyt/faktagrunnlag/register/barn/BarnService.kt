@@ -110,10 +110,12 @@ class BarnService private constructor(
 
         override fun konstruer(connection: DBConnection): BarnService {
             val repositoryProvider = RepositoryProvider(connection)
-            val sakRepository = repositoryProvider.provide(SakRepository::class)
-            val personRepository = repositoryProvider.provide(PersonRepository::class)
-            val personopplysningRepository = repositoryProvider.provide(PersonopplysningRepository::class)
-            val vilkårsresultatRepository = repositoryProvider.provide(VilkårsresultatRepository::class)
+            val sakRepository = repositoryProvider.provide<SakRepository>()
+            val personRepository = repositoryProvider.provide<PersonRepository>()
+            val personopplysningRepository =
+                repositoryProvider.provide<PersonopplysningRepository>()
+            val vilkårsresultatRepository =
+                repositoryProvider.provide<VilkårsresultatRepository>()
             val barnGateway = GatewayProvider.provide(BarnGateway::class)
             val identGateway = GatewayProvider.provide(IdentGateway::class)
             return BarnService(

@@ -176,9 +176,9 @@ class VurderBistandsbehovSteg private constructor(
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
             val repositoryProvider = RepositoryProvider(connection)
-            val vilkårsresultatRepository = repositoryProvider.provide(VilkårsresultatRepository::class)
-            val avklaringsbehovRepository = repositoryProvider.provide(AvklaringsbehovRepository::class)
-            val bistandRepository = repositoryProvider.provide(BistandRepository::class)
+            val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
+            val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
+            val bistandRepository = repositoryProvider.provide<BistandRepository>()
             return VurderBistandsbehovSteg(
                 bistandRepository,
                 StudentRepository(connection),

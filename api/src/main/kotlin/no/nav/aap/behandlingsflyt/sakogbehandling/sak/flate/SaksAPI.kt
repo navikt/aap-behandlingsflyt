@@ -44,19 +44,20 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
             val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = RepositoryProvider(connection)
                 val ident = Ident(dto.ident)
-                val person = repositoryProvider.provide(PersonRepository::class).finn(ident)
+                val person = repositoryProvider.provide<PersonRepository>().finn(ident)
 
                 if (person == null) {
                     throw ElementNotFoundException()
                 } else {
-                    repositoryProvider.provide(SakRepository::class).finnSakerFor(person).map { sak ->
-                        SaksinfoDTO(
-                            saksnummer = sak.saksnummer.toString(),
-                            opprettetTidspunkt = sak.opprettetTidspunkt,
-                            periode = sak.rettighetsperiode,
-                            ident = sak.person.aktivIdent().identifikator
-                        )
-                    }
+                    repositoryProvider.provide<SakRepository>().finnSakerFor(person)
+                        .map { sak ->
+                            SaksinfoDTO(
+                                saksnummer = sak.saksnummer.toString(),
+                                opprettetTidspunkt = sak.opprettetTidspunkt,
+                                periode = sak.rettighetsperiode,
+                                ident = sak.person.aktivIdent().identifikator
+                            )
+                        }
 
                 }
             }
@@ -71,17 +72,19 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
             val behandlinger: SakOgBehandlingDTO? = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = RepositoryProvider(connection)
                 val ident = Ident(dto.ident)
-                val person = repositoryProvider.provide(PersonRepository::class).finn(ident)
+                val person = repositoryProvider.provide<PersonRepository>().finn(ident)
 
                 if (person == null) {
                     null
                 } else {
-                    val sak = repositoryProvider.provide(SakRepository::class).finnSakerFor(person).filter { sak ->
-                        sak.rettighetsperiode.inneholder(dto.mottattTidspunkt) && sak.status() != Status.AVSLUTTET
-                    }.minByOrNull { it.opprettetTidspunkt }!!
+                    val sak = repositoryProvider.provide<SakRepository>().finnSakerFor(person)
+                        .filter { sak ->
+                            sak.rettighetsperiode.inneholder(dto.mottattTidspunkt) && sak.status() != Status.AVSLUTTET
+                        }.minByOrNull { it.opprettetTidspunkt }!!
 
                     val behandling =
-                        repositoryProvider.provide(BehandlingRepository::class).finnSisteBehandlingFor(sak.id)
+                        repositoryProvider.provide<BehandlingRepository>()
+                            .finnSisteBehandlingFor(sak.id)
 
                     SakOgBehandlingDTO(
                         personIdent = sak.person.aktivIdent().toString(),
@@ -111,8 +114,8 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                     ) // Setter til et år frem i tid som er tilsvarende "vedtakslengde" i forskriften
                     val sak = PersonOgSakService(
                         pdlGateway = GatewayProvider.provide(IdentGateway::class),
-                        personRepository = repositoryProvider.provide(PersonRepository::class),
-                        sakRepository = repositoryProvider.provide(SakRepository::class)
+                        personRepository = repositoryProvider.provide<PersonRepository>(),
+                        sakRepository = repositoryProvider.provide<SakRepository>()
                     ).finnEllerOpprett(ident = ident, periode = periode)
 
                     SaksinfoDTO(
@@ -129,7 +132,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
             route("/alle").get<Unit, List<SaksinfoDTO>>(TagModule(listOf(Tags.Sak))) {
                 val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
-                    repositoryProvider.provide(SakRepository::class).finnAlle().map { sak ->
+                    repositoryProvider.provide<SakRepository>().finnAlle().map { sak ->
                         SaksinfoDTO(
                             saksnummer = sak.saksnummer.toString(),
                             opprettetTidspunkt = sak.opprettetTidspunkt,
@@ -152,17 +155,19 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
 
                 val (sak, behandlinger) = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
-                    val sak = repositoryProvider.provide(SakRepository::class).hent(saksnummer = Saksnummer(saksnummer))
+                    val sak = repositoryProvider.provide<SakRepository>()
+                        .hent(saksnummer = Saksnummer(saksnummer))
 
                     val behandlinger =
-                        repositoryProvider.provide(BehandlingRepository::class).hentAlleFor(sak.id).map { behandling ->
-                            BehandlinginfoDTO(
-                                referanse = behandling.referanse.referanse,
-                                type = behandling.typeBehandling().identifikator(),
-                                status = behandling.status(),
-                                opprettet = behandling.opprettetTidspunkt
-                            )
-                        }
+                        repositoryProvider.provide<BehandlingRepository>().hentAlleFor(sak.id)
+                            .map { behandling ->
+                                BehandlinginfoDTO(
+                                    referanse = behandling.referanse.referanse,
+                                    type = behandling.typeBehandling().identifikator(),
+                                    status = behandling.status(),
+                                    opprettet = behandling.opprettetTidspunkt
+                                )
+                            }
 
                     sak to behandlinger
                 }
@@ -222,7 +227,8 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                     val ident = dataSource.transaction(readOnly = true) { connection ->
                         val repositoryProvider = RepositoryProvider(connection)
                         val sak =
-                            repositoryProvider.provide(SakRepository::class).hent(saksnummer = Saksnummer(saksnummer))
+                            repositoryProvider.provide<SakRepository>()
+                                .hent(saksnummer = Saksnummer(saksnummer))
                         sak.person.aktivIdent()
                     }
 

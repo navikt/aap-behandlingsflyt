@@ -12,7 +12,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class StudentVisningUtleder(connection: DBConnection) : StegGruppeVisningUtleder {
 
     private val repositoryProvider = RepositoryProvider(connection)
-    private val avklaringsbehovRepository = repositoryProvider.provide(AvklaringsbehovRepository::class)
+    private val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
     private val studentRepository = StudentRepository(connection)
 
     override fun skalVises(behandlingId: BehandlingId): Boolean {

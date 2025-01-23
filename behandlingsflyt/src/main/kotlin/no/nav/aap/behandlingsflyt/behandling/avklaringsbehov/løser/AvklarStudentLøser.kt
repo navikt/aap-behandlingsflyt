@@ -9,13 +9,17 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
 
-class AvklarStudentLøser(val connection: DBConnection) : AvklaringsbehovsLøser<AvklarStudentLøsning> {
+class AvklarStudentLøser(val connection: DBConnection) :
+    AvklaringsbehovsLøser<AvklarStudentLøsning> {
 
     private val repositoryProvider = RepositoryProvider(connection)
-    private val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+    private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
     private val studentRepository = StudentRepository(connection)
 
-    override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarStudentLøsning): LøsningsResultat {
+    override fun løs(
+        kontekst: AvklaringsbehovKontekst,
+        løsning: AvklarStudentLøsning
+    ): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
 
         studentRepository.lagre(

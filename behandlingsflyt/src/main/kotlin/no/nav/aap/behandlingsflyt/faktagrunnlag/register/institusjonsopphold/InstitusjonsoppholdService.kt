@@ -53,7 +53,7 @@ class InstitusjonsoppholdService private constructor(
 
         override fun konstruer(connection: DBConnection): InstitusjonsoppholdService {
             val repositoryProvider = RepositoryProvider(connection)
-            val sakRepository = repositoryProvider.provide(SakRepository::class)
+            val sakRepository = repositoryProvider.provide<SakRepository>()
             return InstitusjonsoppholdService(
                 SakService(sakRepository),
                 InstitusjonsoppholdRepository(connection),

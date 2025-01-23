@@ -41,8 +41,9 @@ class StartBehandlingSteg private constructor(
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
             val repositoryProvider = RepositoryProvider(connection)
-            val sakRepository = repositoryProvider.provide(SakRepository::class)
-            val vilkårsresultatRepository = repositoryProvider.provide(VilkårsresultatRepository::class)
+            val sakRepository = repositoryProvider.provide<SakRepository>()
+            val vilkårsresultatRepository =
+                repositoryProvider.provide<VilkårsresultatRepository>()
             return StartBehandlingSteg(
                 vilkårsresultatRepository,
                 SakService(sakRepository)

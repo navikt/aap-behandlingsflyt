@@ -38,19 +38,21 @@ class UnderveisSteg(private val underveisService: UnderveisService) : Behandling
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
             val repositoryProvider = RepositoryProvider(connection)
-            val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-            val sakRepository = repositoryProvider.provide(SakRepository::class)
-            val vilkårsresultatRepository = repositoryProvider.provide(VilkårsresultatRepository::class)
+            val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+            val sakRepository = repositoryProvider.provide<SakRepository>()
+            val vilkårsresultatRepository =
+                repositoryProvider.provide<VilkårsresultatRepository>()
             val behandlingService =
                 SakOgBehandlingService(
                     GrunnlagKopierer(connection),
                     sakRepository,
                     behandlingRepository
                 )
-            val aktivitetspliktRepository = repositoryProvider.provide(AktivitetspliktRepository::class)
-            val plikortkortRepository = repositoryProvider.provide(PliktkortRepository::class)
-            val underveisRepository = repositoryProvider.provide(UnderveisRepository::class)
-            val barnetilleggRepository = repositoryProvider.provide(BarnetilleggRepository::class)
+            val aktivitetspliktRepository =
+                repositoryProvider.provide<AktivitetspliktRepository>()
+            val plikortkortRepository = repositoryProvider.provide<PliktkortRepository>()
+            val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
+            val barnetilleggRepository = repositoryProvider.provide<BarnetilleggRepository>()
 
             return UnderveisSteg(
                 UnderveisService(
@@ -65,7 +67,7 @@ class UnderveisSteg(private val underveisService: UnderveisService) : Behandling
                         sakRepository,
                         behandlingRepository
                     ),
-                    arbeidsevneRepository = repositoryProvider.provide(ArbeidsevneRepository::class),
+                    arbeidsevneRepository = repositoryProvider.provide<ArbeidsevneRepository>(),
                     meldepliktRepository = MeldepliktRepository(connection),
                 )
             )

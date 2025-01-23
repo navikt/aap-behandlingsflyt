@@ -11,21 +11,27 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
 
-class FritakFraMeldepliktLøser(val connection: DBConnection) : AvklaringsbehovsLøser<FritakMeldepliktLøsning> {
+class FritakFraMeldepliktLøser(val connection: DBConnection) :
+    AvklaringsbehovsLøser<FritakMeldepliktLøsning> {
 
     private val repositoryProvider = RepositoryProvider(connection)
-    private val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+    private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
     private val meldepliktRepository = MeldepliktRepository(connection)
 
-    override fun løs(kontekst: AvklaringsbehovKontekst, løsning: FritakMeldepliktLøsning): LøsningsResultat {
+    override fun løs(
+        kontekst: AvklaringsbehovKontekst,
+        løsning: FritakMeldepliktLøsning
+    ): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
-        val fritaksvurderinger = løsning.fritaksvurderinger.map(FritaksvurderingDto::toFritaksvurdering)
+        val fritaksvurderinger =
+            løsning.fritaksvurderinger.map(FritaksvurderingDto::toFritaksvurdering)
         val eksisterendeFritaksperioder = MeldepliktFritaksperioder(
             behandling.forrigeBehandlingId?.let { meldepliktRepository.hentHvisEksisterer(it) }?.vurderinger
                 ?: emptyList()
         )
 
-        val nyeFritaksperioder = eksisterendeFritaksperioder.leggTil(MeldepliktFritaksperioder(fritaksvurderinger))
+        val nyeFritaksperioder =
+            eksisterendeFritaksperioder.leggTil(MeldepliktFritaksperioder(fritaksvurderinger))
 
         meldepliktRepository.lagre(
             behandlingId = behandling.id,

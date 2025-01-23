@@ -27,10 +27,13 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource) {
             post<Unit, LøsAvklaringsbehovPåBehandling, LøsAvklaringsbehovPåBehandling> { _, request ->
                 dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
-                    val sakRepository = repositoryProvider.provide(SakRepository::class)
-                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-                    val taSkriveLåsRepository = repositoryProvider.provide(TaSkriveLåsRepository::class)
-                    val avklaringsbehovRepository = repositoryProvider.provide(AvklaringsbehovRepository::class)
+                    val sakRepository = repositoryProvider.provide<SakRepository>()
+                    val behandlingRepository =
+                        repositoryProvider.provide<BehandlingRepository>()
+                    val taSkriveLåsRepository =
+                        repositoryProvider.provide<TaSkriveLåsRepository>()
+                    val avklaringsbehovRepository =
+                        repositoryProvider.provide<AvklaringsbehovRepository>()
 
                     LoggingKontekst(
                         repositoryProvider,

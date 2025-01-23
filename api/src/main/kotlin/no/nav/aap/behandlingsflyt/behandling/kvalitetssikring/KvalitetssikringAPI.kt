@@ -31,8 +31,9 @@ fun NormalOpenAPIRoute.kvalitetssikringApi(dataSource: DataSource) {
 
                 val dto = dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
-                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-                    val avklaringsbehovRepository = repositoryProvider.provide(AvklaringsbehovRepository::class)
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val avklaringsbehovRepository =
+                        repositoryProvider.provide<AvklaringsbehovRepository>()
 
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)

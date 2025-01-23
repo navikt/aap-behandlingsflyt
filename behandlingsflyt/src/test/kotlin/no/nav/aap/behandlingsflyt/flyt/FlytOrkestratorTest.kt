@@ -216,7 +216,12 @@ class FlytOrkestratorTest {
                 journalpost = JournalpostId("20"),
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),
                 strukturertDokument = StrukturertDokument(
-                    SøknadV0(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null, medlemskap = null),
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"),
+                        yrkesskade = "NEI",
+                        oppgitteBarn = null,
+                        medlemskap = null
+                    ),
                 ),
                 periode = periode
             )
@@ -771,7 +776,12 @@ class FlytOrkestratorTest {
                 journalpost = JournalpostId("10"),
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
-                    SøknadV0(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null, medlemskap = null),
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"),
+                        yrkesskade = "NEI",
+                        oppgitteBarn = null,
+                        medlemskap = null
+                    ),
                 ),
                 periode = periode
             )
@@ -1099,7 +1109,7 @@ class FlytOrkestratorTest {
             // Brevet er fullført
             assertThat(
                 BrevbestillingRepositoryImpl(connection).hent(behandling.id)
-                    .first { it.typeBrev == TypeBrev.VEDTAK_INNVILGELSE }?.status
+                    .first { it.typeBrev == TypeBrev.VEDTAK_INNVILGELSE }.status
             ).isEqualTo(
                 no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FULLFØRT
             )
@@ -1168,7 +1178,12 @@ class FlytOrkestratorTest {
                 journalpost = JournalpostId("20"),
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),
                 strukturertDokument = StrukturertDokument(
-                    SøknadV0(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null, medlemskap = null),
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"),
+                        yrkesskade = "NEI",
+                        oppgitteBarn = null,
+                        medlemskap = null
+                    ),
                 ),
                 periode = periode
             )
@@ -1656,7 +1671,12 @@ class FlytOrkestratorTest {
                 journalpost = JournalpostId("1"),
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
-                    SøknadV0(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null, medlemskap = null),
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"),
+                        yrkesskade = "NEI",
+                        oppgitteBarn = null,
+                        medlemskap = null
+                    ),
 
                     ),
                 periode = periode
@@ -1778,7 +1798,8 @@ class FlytOrkestratorTest {
                 journalpost = JournalpostId("2"),
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
-                    SøknadV0(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
                         medlemskap = SøknadMedlemskapDto("JA", "JA", "JA", "NEI", null)
                     ),
                 ),
@@ -1833,7 +1854,8 @@ class FlytOrkestratorTest {
                 journalpost = JournalpostId("3"),
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
-                    SøknadV0(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
                         medlemskap = SøknadMedlemskapDto("JA", "JA", "JA", "NEI", null)
                     ),
                 ),
@@ -1865,7 +1887,8 @@ class FlytOrkestratorTest {
                 journalpost = JournalpostId("2"),
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
-                    SøknadV0(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
                         medlemskap = SøknadMedlemskapDto("JA", "JA", "JA", "NEI", null)
                     ),
                 ),
@@ -1944,7 +1967,8 @@ class FlytOrkestratorTest {
                 journalpost = JournalpostId("2"),
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
-                    SøknadV0(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
                         medlemskap = SøknadMedlemskapDto("JA", "JA", "JA", "NEI", listOf())
                     ),
                 ),
@@ -2024,7 +2048,8 @@ class FlytOrkestratorTest {
                 journalpost = JournalpostId("2"),
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
-                    SøknadV0(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
                         medlemskap = SøknadMedlemskapDto("JA", "JA", "JA", "NEI", null)
                     ),
                 ),

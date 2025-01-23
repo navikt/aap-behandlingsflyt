@@ -15,8 +15,8 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class SkrivBrevLøser(val connection: DBConnection) : AvklaringsbehovsLøser<SkrivBrevLøsning> {
 
     private val repositoryProvider = RepositoryProvider(connection)
-    private val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-    private val sakRepository = repositoryProvider.provide(SakRepository::class)
+    private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+    private val sakRepository = repositoryProvider.provide<SakRepository>()
 
     override fun løs(
         kontekst: AvklaringsbehovKontekst,

@@ -11,9 +11,13 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class Effektuer11_7Løser(
     connection: DBConnection,
 ) : AvklaringsbehovsLøser<Effektuer11_7Løsning> {
-    private val effektuer117repository = RepositoryProvider(connection).provide(Effektuer11_7Repository::class)
+    private val effektuer117repository =
+        RepositoryProvider(connection).provide<Effektuer11_7Repository>()
 
-    override fun løs(kontekst: AvklaringsbehovKontekst, løsning: Effektuer11_7Løsning): LøsningsResultat {
+    override fun løs(
+        kontekst: AvklaringsbehovKontekst,
+        løsning: Effektuer11_7Løsning
+    ): LøsningsResultat {
         val vurdering = Effektuer11_7Vurdering(løsning.begrunnelse)
         effektuer117repository.lagreVurdering(
             kontekst.behandlingId(),

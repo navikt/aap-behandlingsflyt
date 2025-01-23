@@ -14,24 +14,37 @@ class LegeerklæringVentebehovEvaluerer(private val connection: DBConnection): S
         return Definisjon.BESTILL_LEGEERKLÆRING
     }
 
-    override fun ansesSomLøst(behandlingId: BehandlingId, avklaringsbehov: Avklaringsbehov, sakId: SakId): Boolean {
-        val mottattDokumentRepository = RepositoryProvider(connection).provide(MottattDokumentRepository::class)
+    override fun ansesSomLøst(
+        behandlingId: BehandlingId,
+        avklaringsbehov: Avklaringsbehov,
+        sakId: SakId
+    ): Boolean {
+        val mottattDokumentRepository =
+            RepositoryProvider(connection).provide<MottattDokumentRepository>()
         val sisteLegeerklæringBestilling = avklaringsbehov.historikk.maxBy { it.tidsstempel }
 
         val avvistDokumenter =
-            mottattDokumentRepository.hentDokumenterAvType(sakId, InnsendingType.LEGEERKLÆRING_AVVIST)
-        val avslåtteDokumenterEtterBestilling = avvistDokumenter.filter { it.mottattTidspunkt.isAfter(sisteLegeerklæringBestilling.tidsstempel)}
+            mottattDokumentRepository.hentDokumenterAvType(
+                sakId,
+                InnsendingType.LEGEERKLÆRING_AVVIST
+            )
+        val avslåtteDokumenterEtterBestilling =
+            avvistDokumenter.filter { it.mottattTidspunkt.isAfter(sisteLegeerklæringBestilling.tidsstempel) }
 
         val mottatteLegeerklæringer =
             mottattDokumentRepository.hentDokumenterAvType(sakId, InnsendingType.LEGEERKLÆRING)
-        val mottatteLegeerklæringerEtterSisteBestilling = mottatteLegeerklæringer.filter { it.mottattTidspunkt.isAfter(sisteLegeerklæringBestilling.tidsstempel) }
+        val mottatteLegeerklæringerEtterSisteBestilling = mottatteLegeerklæringer.filter {
+            it.mottattTidspunkt.isAfter(sisteLegeerklæringBestilling.tidsstempel)
+        }
 
         val mottattedialogmeldinger =
             mottattDokumentRepository.hentDokumenterAvType(sakId, InnsendingType.DIALOGMELDING)
-        val mottatteDialogmeldingerEtterSisteBestilling = mottattedialogmeldinger.filter { it.mottattTidspunkt.isAfter(sisteLegeerklæringBestilling.tidsstempel) }
+        val mottatteDialogmeldingerEtterSisteBestilling = mottattedialogmeldinger.filter {
+            it.mottattTidspunkt.isAfter(sisteLegeerklæringBestilling.tidsstempel)
+        }
 
         return (avslåtteDokumenterEtterBestilling.any() && avklaringsbehov.erÅpent()) ||
-            mottatteLegeerklæringerEtterSisteBestilling.any() ||
-            mottatteDialogmeldingerEtterSisteBestilling.any()
+                mottatteLegeerklæringerEtterSisteBestilling.any() ||
+                mottatteDialogmeldingerEtterSisteBestilling.any()
     }
 }

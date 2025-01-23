@@ -123,7 +123,7 @@ class SamordningYtelseVurderingService(
 
         override fun konstruer(connection: DBConnection): SamordningYtelseVurderingService {
             val repositoryProvider = RepositoryProvider(connection)
-            val sakRepository = repositoryProvider.provide(SakRepository::class)
+            val sakRepository = repositoryProvider.provide<SakRepository>()
             return SamordningYtelseVurderingService(
                 SamordningYtelseVurderingRepository(connection),
                 SakService(sakRepository)

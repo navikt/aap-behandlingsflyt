@@ -69,10 +69,11 @@ class EtAnnetStedSteg(
         override fun konstruer(connection: DBConnection): BehandlingSteg {
             val institusjonsoppholdRepository = InstitusjonsoppholdRepository(connection)
             val repositoryProvider = RepositoryProvider(connection)
-            val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-            val sakRepository = repositoryProvider.provide(SakRepository::class)
-            val avklaringsbehovRepository = repositoryProvider.provide(AvklaringsbehovRepository::class)
-            val barnetilleggRepository = repositoryProvider.provide(BarnetilleggRepository::class)
+            val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+            val sakRepository = repositoryProvider.provide<SakRepository>()
+            val avklaringsbehovRepository =
+                repositoryProvider.provide<AvklaringsbehovRepository>()
+            val barnetilleggRepository = repositoryProvider.provide<BarnetilleggRepository>()
 
             return EtAnnetStedSteg(
                 avklaringsbehovRepository, EtAnnetStedUtlederService(

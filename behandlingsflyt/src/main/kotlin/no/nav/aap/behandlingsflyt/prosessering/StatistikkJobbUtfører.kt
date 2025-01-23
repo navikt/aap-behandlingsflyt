@@ -295,13 +295,13 @@ class StatistikkJobbUtfører(
     companion object : Jobb {
         override fun konstruer(connection: DBConnection): JobbUtfører {
             val repositoryProvider = RepositoryProvider(connection)
-            val vilkårsresultatRepository = repositoryProvider.provide(VilkårsresultatRepository::class)
-            val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-            val sakRepository = repositoryProvider.provide(SakRepository::class)
-            val pipRepository = repositoryProvider.provide(PipRepository::class)
-            val tilkjentYtelseRepository = repositoryProvider.provide(TilkjentYtelseRepository::class)
-            val beregningsgrunnlagRepository = repositoryProvider.provide(BeregningsgrunnlagRepository::class)
-            val mottattDokumentRepository = repositoryProvider.provide(MottattDokumentRepository::class)
+            val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
+            val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+            val sakRepository = repositoryProvider.provide<SakRepository>()
+            val pipRepository = repositoryProvider.provide<PipRepository>()
+            val tilkjentYtelseRepository = repositoryProvider.provide<TilkjentYtelseRepository>()
+            val beregningsgrunnlagRepository = repositoryProvider.provide<BeregningsgrunnlagRepository>()
+            val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
             val sakService = SakService(sakRepository)
 
             return StatistikkJobbUtfører(

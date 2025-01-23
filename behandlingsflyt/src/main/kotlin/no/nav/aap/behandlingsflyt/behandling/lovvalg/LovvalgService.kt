@@ -101,7 +101,7 @@ class LovvalgService private constructor(
 
         override fun konstruer(connection: DBConnection): LovvalgService {
             val repositoryProvider = RepositoryProvider(connection)
-            val sakRepository = repositoryProvider.provide(SakRepository::class)
+            val sakRepository = repositoryProvider.provide<SakRepository>()
             return LovvalgService(
                 MedlemskapGateway(),
                 SakService(sakRepository),

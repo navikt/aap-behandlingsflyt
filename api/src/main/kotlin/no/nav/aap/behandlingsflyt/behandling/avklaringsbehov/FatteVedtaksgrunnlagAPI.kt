@@ -32,8 +32,9 @@ fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(dataSource: DataSource) {
                 val dto = dataSource.transaction { connection ->
 
                     val repositoryProvider = RepositoryProvider(connection)
-                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-                    val avklaringsbehovRepository = repositoryProvider.provide(AvklaringsbehovRepository::class)
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val avklaringsbehovRepository =
+                        repositoryProvider.provide<AvklaringsbehovRepository>()
 
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
@@ -42,7 +43,10 @@ fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(dataSource: DataSource) {
                     val flyt = utledType(behandling.typeBehandling()).flyt()
 
                     val vurderinger = beslutterVurdering(avklaringsbehovene, flyt)
-                    FatteVedtakGrunnlagDto(vurderinger = vurderinger, historikk = utledHistorikk(avklaringsbehovene))
+                    FatteVedtakGrunnlagDto(
+                        vurderinger = vurderinger,
+                        historikk = utledHistorikk(avklaringsbehovene)
+                    )
                 }
                 respond(dto)
             }

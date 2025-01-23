@@ -26,7 +26,7 @@ fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource) {
             MDC.putCloseable("saksnummer", dto.saksnummer.toString()).use {
                 dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
-                    val sak = repositoryProvider.provide(SakRepository::class).hent(dto.saksnummer)
+                    val sak = repositoryProvider.provide<SakRepository>().hent(dto.saksnummer)
 
                     logger.info("Mottok dokumenthendelse. Brevkategori: ${dto.type}.")
 

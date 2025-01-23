@@ -15,11 +15,12 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 val BREV_SYSTEMBRUKER = Bruker("Brevløsning")
 
-class BrevbestillingLøser(val connection: DBConnection) : AvklaringsbehovsLøser<BrevbestillingLøsning> {
+class BrevbestillingLøser(val connection: DBConnection) :
+    AvklaringsbehovsLøser<BrevbestillingLøsning> {
 
     private val repositoryProvider = RepositoryProvider(connection)
-    private val avklaringsbehovRepository = repositoryProvider.provide(AvklaringsbehovRepository::class)
-    private val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+    private val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
+    private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
 
     override fun løs(
         kontekst: AvklaringsbehovKontekst,

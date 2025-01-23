@@ -39,8 +39,10 @@ class VurderAlderSteg private constructor(
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
             val repositoryProvider = RepositoryProvider(connection)
-            val personopplysningRepository = repositoryProvider.provide(PersonopplysningRepository::class)
-            val vilkårsresultatRepository = repositoryProvider.provide(VilkårsresultatRepository::class)
+            val personopplysningRepository =
+                repositoryProvider.provide<PersonopplysningRepository>()
+            val vilkårsresultatRepository =
+                repositoryProvider.provide<VilkårsresultatRepository>()
             return VurderAlderSteg(
                 vilkårsresultatRepository,
                 personopplysningRepository

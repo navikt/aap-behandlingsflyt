@@ -47,7 +47,7 @@ class ForutgåendeMedlemskapService private constructor(
 
         override fun konstruer(connection: DBConnection): ForutgåendeMedlemskapService {
             val repositoryProvider = RepositoryProvider(connection)
-            val sakRepository = repositoryProvider.provide(SakRepository::class)
+            val sakRepository = repositoryProvider.provide<SakRepository>()
             return ForutgåendeMedlemskapService(
                 MedlemskapGateway(),
                 SakService(sakRepository),

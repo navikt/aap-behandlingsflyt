@@ -10,18 +10,24 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
 
-class KvalitetssikrerLøser(val connection: DBConnection) : AvklaringsbehovsLøser<KvalitetssikringLøsning> {
+class KvalitetssikrerLøser(val connection: DBConnection) :
+    AvklaringsbehovsLøser<KvalitetssikringLøsning> {
 
     private val repositoryProvider = RepositoryProvider(connection)
-    private val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-    private val avklaringsbehovRepository = repositoryProvider.provide(AvklaringsbehovRepository::class)
+    private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+    private val avklaringsbehovRepository =
+        repositoryProvider.provide<AvklaringsbehovRepository>()
 
-    override fun løs(kontekst: AvklaringsbehovKontekst, løsning: KvalitetssikringLøsning): LøsningsResultat {
+    override fun løs(
+        kontekst: AvklaringsbehovKontekst,
+        løsning: KvalitetssikringLøsning
+    ): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
         val avklaringsbehovene =
             avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId = kontekst.kontekst.behandlingId)
 
-        val relevanteVurderinger = løsning.vurderinger.filter { Definisjon.forKode(it.definisjon).kvalitetssikres }
+        val relevanteVurderinger =
+            løsning.vurderinger.filter { Definisjon.forKode(it.definisjon).kvalitetssikres }
         relevanteVurderinger.all { it.valider() }
 
         if (skalSendesTilbake(relevanteVurderinger)) {
@@ -36,7 +42,12 @@ class KvalitetssikrerLøser(val connection: DBConnection) : AvklaringsbehovsLøs
 
             val vurderingerFørRetur = relevanteVurderinger
                 .filter { it.godkjent == true }
-                .filter { flyt.erStegFør(Definisjon.forKode(it.definisjon).løsesISteg, tidligsteStegMedRetur) }
+                .filter {
+                    flyt.erStegFør(
+                        Definisjon.forKode(it.definisjon).løsesISteg,
+                        tidligsteStegMedRetur
+                    )
+                }
 
             val vurderingerSomMåReåpnes = relevanteVurderinger
                 .filter { vurdering ->

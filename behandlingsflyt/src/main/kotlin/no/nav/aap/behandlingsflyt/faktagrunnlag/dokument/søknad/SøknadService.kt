@@ -29,7 +29,8 @@ class SøknadService private constructor(
         }
 
         override fun konstruer(connection: DBConnection): SøknadService {
-            val mottattDokumentRepository = RepositoryProvider(connection).provide(MottattDokumentRepository::class)
+            val mottattDokumentRepository =
+                RepositoryProvider(connection).provide<MottattDokumentRepository>()
             return SøknadService(
                 MottaDokumentService(mottattDokumentRepository),
                 StudentRepository(connection),

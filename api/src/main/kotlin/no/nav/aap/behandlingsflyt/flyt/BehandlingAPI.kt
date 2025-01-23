@@ -41,9 +41,11 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
             get<BehandlingReferanse, DetaljertBehandlingDTO>(TagModule(listOf(Tags.Behandling))) { req ->
                 val dto = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
-                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-                    val avklaringsbehovRepository = repositoryProvider.provide(AvklaringsbehovRepository::class)
-                    val vilkårsresultatRepository = repositoryProvider.provide(VilkårsresultatRepository::class)
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val avklaringsbehovRepository =
+                        repositoryProvider.provide<AvklaringsbehovRepository>()
+                    val vilkårsresultatRepository =
+                        repositoryProvider.provide<VilkårsresultatRepository>()
 
                     val behandling = behandling(behandlingRepository, req)
                     val flyt = utledType(behandling.typeBehandling()).flyt()
@@ -74,21 +76,22 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
                                 }
                             )
                         },
-                        vilkår = vilkårResultat(vilkårsresultatRepository, behandling.id).alle().map { vilkår ->
-                            VilkårDTO(
-                                vilkårtype = vilkår.type,
-                                perioder = vilkår.vilkårsperioder()
-                                    .map { vp ->
-                                        VilkårsperiodeDTO(
-                                            periode = vp.periode,
-                                            utfall = vp.utfall,
-                                            manuellVurdering = vp.manuellVurdering,
-                                            begrunnelse = vp.begrunnelse,
-                                            avslagsårsak = vp.avslagsårsak,
-                                            innvilgelsesårsak = vp.innvilgelsesårsak
-                                        )
-                                    })
-                        },
+                        vilkår = vilkårResultat(vilkårsresultatRepository, behandling.id).alle()
+                            .map { vilkår ->
+                                VilkårDTO(
+                                    vilkårtype = vilkår.type,
+                                    perioder = vilkår.vilkårsperioder()
+                                        .map { vp ->
+                                            VilkårsperiodeDTO(
+                                                periode = vp.periode,
+                                                utfall = vp.utfall,
+                                                manuellVurdering = vp.manuellVurdering,
+                                                begrunnelse = vp.begrunnelse,
+                                                avslagsårsak = vp.avslagsårsak,
+                                                innvilgelsesårsak = vp.innvilgelsesårsak
+                                            )
+                                        })
+                            },
                         aktivtSteg = behandling.stegHistorikk().last().steg(),
                         versjon = behandling.versjon
                     )
@@ -100,8 +103,9 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
             get<BehandlingReferanse, DetaljertBehandlingDTO>(TagModule(listOf(Tags.Behandling))) { req ->
                 dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
-                    val taSkriveLåsRepository = repositoryProvider.provide(TaSkriveLåsRepository::class)
-                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+                    val taSkriveLåsRepository = repositoryProvider.provide<TaSkriveLåsRepository>()
+                    val behandlingRepository =
+                        repositoryProvider.provide<BehandlingRepository>()
                     val lås = taSkriveLåsRepository.lås(req.referanse)
                     val behandling = behandling(behandlingRepository, req)
                     val flytJobbRepository = FlytJobbRepository(connection)
@@ -134,7 +138,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
 
                 val identer = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
-                    val pipRepository = repositoryProvider.provide(PipRepository::class)
+                    val pipRepository = repositoryProvider.provide<PipRepository>()
                     pipRepository.finnIdenterPåBehandling(BehandlingReferanse(referanse))
                 }
 

@@ -19,8 +19,8 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(dataSource: DataSource) {
             get<BehandlingReferanse, BistandGrunnlagDto> { req ->
                 val bistandsGrunnlag = dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
-                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-                    val bistandRepository = repositoryProvider.provide(BistandRepository::class)
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val bistandRepository = repositoryProvider.provide<BistandRepository>()
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
                     bistandRepository.hentHvisEksisterer(behandling.id)

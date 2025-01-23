@@ -66,9 +66,9 @@ class SamordningSteg(
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
             val repositoryProvider = RepositoryProvider(connection)
-            val avklaringsbehovRepository = repositoryProvider.provide(AvklaringsbehovRepository::class)
-            val samordningRepository = repositoryProvider.provide(SamordningRepository::class)
-            val underveisRepository = repositoryProvider.provide(UnderveisRepository::class)
+            val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
+            val samordningRepository = repositoryProvider.provide<SamordningRepository>()
+            val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
             return SamordningSteg(
                 SamordningService(
                     SamordningYtelseVurderingRepository(connection),

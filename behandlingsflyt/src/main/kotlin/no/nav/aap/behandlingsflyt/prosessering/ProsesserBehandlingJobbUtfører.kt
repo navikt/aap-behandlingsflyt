@@ -43,12 +43,14 @@ class ProsesserBehandlingJobbUtfører(
     companion object : Jobb {
         override fun konstruer(connection: DBConnection): JobbUtfører {
             val repositoryProvider = RepositoryProvider(connection)
-            val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-            val behandlingFlytRepository = repositoryProvider.provide(BehandlingFlytRepository::class)
-            val sakRepository = repositoryProvider.provide(SakRepository::class)
-            val sakFlytRepository = repositoryProvider.provide(SakFlytRepository::class)
-            val låsRepository = repositoryProvider.provide(TaSkriveLåsRepository::class)
-            val avklaringsbehovRepository = repositoryProvider.provide(AvklaringsbehovRepository::class)
+            val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+            val behandlingFlytRepository =
+                repositoryProvider.provide<BehandlingFlytRepository>()
+            val sakRepository = repositoryProvider.provide<SakRepository>()
+            val sakFlytRepository = repositoryProvider.provide<SakFlytRepository>()
+            val låsRepository = repositoryProvider.provide<TaSkriveLåsRepository>()
+            val avklaringsbehovRepository =
+                repositoryProvider.provide<AvklaringsbehovRepository>()
             return ProsesserBehandlingJobbUtfører(
                 låsRepository,
                 FlytOrkestrator(

@@ -8,17 +8,6 @@ import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.starProjectedType
 
 class RepositoryProvider(private val connection: DBConnection) {
-
-    @Deprecated(
-        message = "Erstattes for å fjerne avhengigheten til KClass og reflection ut i programkoden",
-        replaceWith = ReplaceWith("provide<T>()")
-    )
-    inline fun <reified T : Repository> provide(type: KClass<T>): T {
-        val repositoryKlass = RepositoryRegistry.fetch(type.starProjectedType)
-
-        return internalCreate(repositoryKlass)
-    }
-
     inline fun <reified T : Repository> provide(): T {
         val repositoryKlass = RepositoryRegistry.fetch(T::class.starProjectedType)
 

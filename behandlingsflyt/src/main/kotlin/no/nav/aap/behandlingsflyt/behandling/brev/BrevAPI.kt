@@ -53,10 +53,10 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                     val grunnlag = dataSource.transaction(readOnly = true) { connection ->
                         val repositoryProvider = RepositoryProvider(connection)
                         val behandlingRepository =
-                            repositoryProvider.provide(BehandlingRepository::class)
-                        val sakRepository = repositoryProvider.provide(SakRepository::class)
+                            repositoryProvider.provide<BehandlingRepository>()
+                        val sakRepository = repositoryProvider.provide<SakRepository>()
                         val brevbestillingRepository =
-                            repositoryProvider.provide(BrevbestillingRepository::class)
+                            repositoryProvider.provide<BrevbestillingRepository>()
 
                         val brevbestillinger =
                             BrevbestillingService(
@@ -111,19 +111,22 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                         val repositoryProvider = RepositoryProvider(connection)
 
                         val taSkriveLåsRepository =
-                            repositoryProvider.provide(TaSkriveLåsRepository::class)
+                            repositoryProvider.provide<TaSkriveLåsRepository>()
 
                         val lås = taSkriveLåsRepository.lås(req.behandlingsReferanse.referanse)
 
                         MDC.putCloseable("sakId", lås.sakSkrivelås.id.toString()).use {
                             MDC.putCloseable("behandlingId", lås.behandlingSkrivelås.id.toString())
                                 .use {
-                                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-                                    val sakRepository = repositoryProvider.provide(SakRepository::class)
+                                    val behandlingRepository =
+                                        repositoryProvider.provide<BehandlingRepository>()
+                                    val sakRepository =
+                                        repositoryProvider.provide<SakRepository>()
                                     val brevbestillingRepository =
-                                        repositoryProvider.provide(BrevbestillingRepository::class)
+                                        repositoryProvider.provide<BrevbestillingRepository>()
 
-                                    val behandling = behandlingRepository.hent(req.behandlingsReferanse)
+                                    val behandling =
+                                        behandlingRepository.hent(req.behandlingsReferanse)
 
                                     val service = BrevbestillingService(
                                         BrevGateway(),
@@ -132,8 +135,9 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                                         sakRepository
                                     )
 
-                                    val avklaringsbehovene = repositoryProvider.provide(AvklaringsbehovRepository::class)
-                                        .hentAvklaringsbehovene(behandling.id)
+                                    val avklaringsbehovene =
+                                        repositoryProvider.provide<AvklaringsbehovRepository>()
+                                            .hentAvklaringsbehovene(behandling.id)
 
                                     avklaringsbehovene.validateTilstand(behandling = behandling)
                                     avklaringsbehovene.leggTil(
@@ -172,17 +176,16 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                 ) { _, request ->
                     dataSource.transaction { connection ->
                         val repositoryProvider = RepositoryProvider(connection)
-                        val avklaringsbehovRepository = repositoryProvider.provide(
-                            AvklaringsbehovRepository::class
-                        )
+                        val avklaringsbehovRepository =
+                            repositoryProvider.provide<AvklaringsbehovRepository>()
                         val taSkriveLåsRepository =
-                            repositoryProvider.provide(TaSkriveLåsRepository::class)
+                            repositoryProvider.provide<TaSkriveLåsRepository>()
 
                         val lås = taSkriveLåsRepository.lås(request.behandlingReferanse)
 
                         val behandlingRepository =
-                            repositoryProvider.provide(BehandlingRepository::class)
-                        val sakRepository = repositoryProvider.provide(SakRepository::class)
+                            repositoryProvider.provide<BehandlingRepository>()
+                        val sakRepository = repositoryProvider.provide<SakRepository>()
 
                         MDC.putCloseable("sakId", lås.sakSkrivelås.id.toString()).use {
                             MDC.putCloseable("behandlingId", lås.behandlingSkrivelås.id.toString())

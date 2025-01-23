@@ -20,12 +20,16 @@ fun NormalOpenAPIRoute.aldersGrunnlagApi(dataSource: DataSource) {
             get<BehandlingReferanse, AlderDTO> { req ->
                 val alderDTO = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
-                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-                    val personopplysningRepository = repositoryProvider.provide(PersonopplysningRepository::class)
-                    val vilkårsresultatRepository = repositoryProvider.provide(VilkårsresultatRepository::class)
-                    val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val personopplysningRepository =
+                        repositoryProvider.provide<PersonopplysningRepository>()
+                    val vilkårsresultatRepository =
+                        repositoryProvider.provide<VilkårsresultatRepository>()
+                    val behandling =
+                        BehandlingReferanseService(behandlingRepository).behandling(req)
                     val aldersvilkårperioder =
-                        vilkårsresultatRepository.hent(behandling.id).finnVilkår(Vilkårtype.ALDERSVILKÅRET)
+                        vilkårsresultatRepository.hent(behandling.id)
+                            .finnVilkår(Vilkårtype.ALDERSVILKÅRET)
                             .vilkårsperioder()
                     val fødselsdato =
                         requireNotNull(

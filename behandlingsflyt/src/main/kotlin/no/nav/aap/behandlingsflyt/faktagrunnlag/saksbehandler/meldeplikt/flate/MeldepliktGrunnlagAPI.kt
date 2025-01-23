@@ -24,7 +24,7 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(dataSource: DataSource) {
         get<BehandlingReferanse, FritakMeldepliktGrunnlagDto> { req ->
             val meldepliktGrunnlag = dataSource.transaction { connection ->
                 val repositoryProvider = RepositoryProvider(connection)
-                val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+                val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                 val behandling: Behandling =
                     BehandlingReferanseService(behandlingRepository).behandling(req)
                 val meldepliktRepository = MeldepliktRepository(connection)
@@ -36,13 +36,16 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(dataSource: DataSource) {
                 val vedtatteVerdier =
                     behandling.forrigeBehandlingId?.let { meldepliktRepository.hentHvisEksisterer(it) }?.vurderinger
                         ?: emptyList()
-                val historikk = meldepliktRepository.hentAlleVurderinger(behandling.sakId, behandling.id)
+                val historikk =
+                    meldepliktRepository.hentAlleVurderinger(behandling.sakId, behandling.id)
 
                 FritakMeldepliktGrunnlagDto(
-                    historikk = historikk.map { tilDto(it) }.sortedBy { it.vurderingsTidspunkt }.toSet(),
+                    historikk = historikk.map { tilDto(it) }.sortedBy { it.vurderingsTidspunkt }
+                        .toSet(),
                     gjeldendeVedtatteVurderinger = vedtatteVerdier.map { tilDto(it) }
                         .sortedBy { it.fraDato },
-                    vurderinger = nåTilstand.filterNot { vedtatteVerdier.contains(it) }.map { tilDto(it) }
+                    vurderinger = nåTilstand.filterNot { vedtatteVerdier.contains(it) }
+                        .map { tilDto(it) }
                         .sortedBy { it.fraDato }
                 )
             }
@@ -58,7 +61,7 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(dataSource: DataSource) {
         post<BehandlingReferanse, SimulertFritakMeldepliktDto, SimulerFritakMeldepliktDto> { req, dto ->
             val meldepliktGrunnlag = dataSource.transaction { connection ->
                 val repositoryProvider = RepositoryProvider(connection)
-                val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+                val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                 val behandling: Behandling =
                     BehandlingReferanseService(behandlingRepository).behandling(req)
                 val meldepliktRepository = MeldepliktRepository(connection)
@@ -71,7 +74,8 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(dataSource: DataSource) {
                 val simulertFritak =
                     eksisterendeFritak.leggTil(MeldepliktFritaksperioder(dto.fritaksvurderinger.map { it.toFritaksvurdering() }))
 
-                SimulertFritakMeldepliktDto(simulertFritak.gjeldendeFritaksvurderinger().map { tilDto(it) })
+                SimulertFritakMeldepliktDto(
+                    simulertFritak.gjeldendeFritaksvurderinger().map { tilDto(it) })
             }
 
             respond(meldepliktGrunnlag)
