@@ -22,6 +22,9 @@ class BrevUtlederService(
         val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
 
         return if (vilkårsresultat.alle().all { it.harPerioderSomErOppfylt() }) {
+            // FIX LOGIKK
+            // felles logikk her for når en behandling er innvilget
+            // ved avslag: trenger prioritering på vilkår
             BrevBehov(TypeBrev.VEDTAK_INNVILGELSE)
         } else {
             BrevBehov(TypeBrev.VEDTAK_AVSLAG)

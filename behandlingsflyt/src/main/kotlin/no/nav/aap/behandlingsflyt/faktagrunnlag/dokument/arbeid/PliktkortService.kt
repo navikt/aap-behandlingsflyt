@@ -25,8 +25,8 @@ class PliktkortService private constructor(
         override fun konstruer(connection: DBConnection): PliktkortService {
             val repositoryProvider = RepositoryProvider(connection)
             return PliktkortService(
-                MottaDokumentService(repositoryProvider.provide(MottattDokumentRepository::class)),
-                repositoryProvider.provide(PliktkortRepository::class)
+                MottaDokumentService(repositoryProvider.provide<MottattDokumentRepository>()),
+                repositoryProvider.provide<PliktkortRepository>()
             )
         }
     }

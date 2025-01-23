@@ -23,11 +23,12 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource) {
             get<BehandlingReferanse, BeregningTidspunktAvklaringDto> { req ->
                 val responsDto = dataSource.transaction(readOnly = true) {
                     val repositoryProvider = RepositoryProvider(it)
-                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                     val skalVurdereUføre = UføreRepository(it).hentHvisEksisterer(behandling.id)?.vurdering != null
                     val beregningGrunnlag =
-                        BeregningVurderingRepository(it).hentHvisEksisterer(behandlingId = behandling.id)
+                        repositoryProvider.provide<BeregningVurderingRepository>()
+                            .hentHvisEksisterer(behandlingId = behandling.id)
 
                     BeregningTidspunktAvklaringDto(
                         vurdering = beregningGrunnlag?.tidspunktVurdering,
@@ -44,15 +45,19 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource) {
             get<BehandlingReferanse, BeregningYrkesskadeAvklaringDto> { req ->
                 val responsDto = dataSource.transaction(readOnly = true) {
                     val repositoryProvider = RepositoryProvider(it)
-                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
+                    val yrkesskadeRepository = repositoryProvider.provide<YrkesskadeRepository>()
+
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                     val yrkesskadevurdering =
-                        SykdomRepository(it).hentHvisEksisterer(behandling.id)?.yrkesskadevurdering
+                        sykdomRepository.hentHvisEksisterer(behandling.id)?.yrkesskadevurdering
                     val registerYrkeskade =
-                        YrkesskadeRepository(it).hentHvisEksisterer(behandling.id)?.yrkesskader?.yrkesskader
+                        yrkesskadeRepository.hentHvisEksisterer(behandling.id)?.yrkesskader?.yrkesskader
                             ?: emptyList()
                     val beregningGrunnlag =
-                        BeregningVurderingRepository(it).hentHvisEksisterer(behandlingId = behandling.id)
+                        repositoryProvider.provide<BeregningVurderingRepository>()
+                            .hentHvisEksisterer(behandlingId = behandling.id)
 
                     val relevanteSaker = yrkesskadevurdering?.relevanteSaker ?: emptyList()
                     val sakerMedDato =

@@ -39,8 +39,9 @@ class PersonopplysningService private constructor(
 
         override fun konstruer(connection: DBConnection): PersonopplysningService {
             val repositoryProvider = RepositoryProvider(connection)
-            val sakRepository = repositoryProvider.provide(SakRepository::class)
-            val personopplysningRepository = repositoryProvider.provide(PersonopplysningRepository::class)
+            val sakRepository = repositoryProvider.provide<SakRepository>()
+            val personopplysningRepository =
+                repositoryProvider.provide<PersonopplysningRepository>()
             return PersonopplysningService(
                 SakService(sakRepository),
                 personopplysningRepository,

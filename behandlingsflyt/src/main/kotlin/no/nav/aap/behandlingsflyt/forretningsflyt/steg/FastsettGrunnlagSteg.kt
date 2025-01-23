@@ -9,7 +9,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
@@ -80,16 +79,17 @@ class FastsettGrunnlagSteg(
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
             val repositoryProvider = RepositoryProvider(connection)
-            val vilkårsresultatRepository = repositoryProvider.provide(VilkårsresultatRepository::class)
+            val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
+            val beregningVurderingRepository = repositoryProvider.provide<BeregningVurderingRepository>()
             return FastsettGrunnlagSteg(
                 BeregningService(
                     InntektGrunnlagRepository(connection),
-                    SykdomRepository(connection),
+                    repositoryProvider.provide<SykdomRepository>(),
                     StudentRepository(connection),
                     UføreRepository(connection),
                     BeregningsgrunnlagRepositoryImpl(connection),
-                    BeregningVurderingRepository(connection),
-                    YrkesskadeRepository(connection)
+                    beregningVurderingRepository,
+                    repositoryProvider.provide()
                 ),
                 vilkårsresultatRepository,
                 AvklarFaktaBeregningService(vilkårsresultatRepository)

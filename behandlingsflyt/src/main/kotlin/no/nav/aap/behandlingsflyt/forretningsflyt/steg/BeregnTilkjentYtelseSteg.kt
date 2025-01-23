@@ -47,11 +47,13 @@ class BeregnTilkjentYtelseSteg private constructor(
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
             val repositoryProvider = RepositoryProvider(connection)
-            val personopplysningRepository = repositoryProvider.provide(PersonopplysningRepository::class)
-            val tilkjentYtelseRepository = repositoryProvider.provide(TilkjentYtelseRepository::class)
-            val samordningRepository = repositoryProvider.provide(SamordningRepository::class)
-            val underveisRepository = repositoryProvider.provide(UnderveisRepository::class)
-            val barnetilleggRepository = repositoryProvider.provide(BarnetilleggRepository::class)
+            val personopplysningRepository =
+                repositoryProvider.provide<PersonopplysningRepository>()
+            val tilkjentYtelseRepository =
+                repositoryProvider.provide<TilkjentYtelseRepository>()
+            val samordningRepository = repositoryProvider.provide<SamordningRepository>()
+            val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
+            val barnetilleggRepository = repositoryProvider.provide<BarnetilleggRepository>()
 
             return BeregnTilkjentYtelseSteg(
                 underveisRepository,

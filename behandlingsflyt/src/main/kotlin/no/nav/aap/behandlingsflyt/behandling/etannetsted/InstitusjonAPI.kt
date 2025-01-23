@@ -30,9 +30,9 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource) {
             get<BehandlingReferanse, SoningsGrunnlag> { req ->
                 val soningsgrunnlag = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
-                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-                    val sakRepository = repositoryProvider.provide(SakRepository::class)
-                    val barnetilleggRepository = repositoryProvider.provide(BarnetilleggRepository::class)
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val sakRepository = repositoryProvider.provide<SakRepository>()
+                    val barnetilleggRepository = repositoryProvider.provide<BarnetilleggRepository>()
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                     val institusjonsoppholdRepository = InstitusjonsoppholdRepository(connection)
                     val utlederService =
@@ -75,11 +75,11 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource) {
             get<BehandlingReferanse, HelseinstitusjonGrunnlag> { req ->
                 val grunnlagDto = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
-                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-                    val sakRepository = repositoryProvider.provide(SakRepository::class)
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val sakRepository = repositoryProvider.provide<SakRepository>()
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                     val institusjonsoppholdRepository = InstitusjonsoppholdRepository(connection)
-                    val barnetilleggRepository = repositoryProvider.provide(BarnetilleggRepository::class)
+                    val barnetilleggRepository = repositoryProvider.provide<BarnetilleggRepository>()
 
                     val utlederService =
                         EtAnnetStedUtlederService(

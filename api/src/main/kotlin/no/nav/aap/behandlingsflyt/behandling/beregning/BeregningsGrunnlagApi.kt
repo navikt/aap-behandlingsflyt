@@ -33,8 +33,9 @@ fun NormalOpenAPIRoute.beregningsGrunnlagApi(dataSource: DataSource) {
             get<BehandlingReferanse, BeregningDTO>(TagModule(listOf(Tags.Grunnlag))) { req ->
                 val begregningsgrunnlag = dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
-                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-                    val beregningsgrunnlagRepository = repositoryProvider.provide(BeregningsgrunnlagRepository::class)
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val beregningsgrunnlagRepository =
+                        repositoryProvider.provide<BeregningsgrunnlagRepository>()
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
                     val beregning = beregningsgrunnlagRepository.hentHvisEksisterer(behandling.id)

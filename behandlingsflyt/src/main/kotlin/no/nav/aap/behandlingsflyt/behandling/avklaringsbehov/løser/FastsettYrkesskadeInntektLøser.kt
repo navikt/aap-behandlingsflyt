@@ -12,8 +12,8 @@ class FastsettYrkesskadeInntektLøser(connection: DBConnection) :
     AvklaringsbehovsLøser<FastsettYrkesskadeInntektLøsning> {
 
     private val repositoryProvider = RepositoryProvider(connection)
-    private val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-    private val beregningVurderingRepository = BeregningVurderingRepository(connection)
+    private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+    private val beregningVurderingRepository = repositoryProvider.provide<BeregningVurderingRepository>()
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: FastsettYrkesskadeInntektLøsning): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)

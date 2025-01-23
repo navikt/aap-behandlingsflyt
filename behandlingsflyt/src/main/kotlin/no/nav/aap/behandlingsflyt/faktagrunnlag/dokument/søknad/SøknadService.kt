@@ -20,7 +20,7 @@ class SøknadService private constructor(
     private val studentRepository: StudentRepository,
     private val barnRepository: BarnRepository
 ) : Informasjonskrav {
-    val logger =  LoggerFactory.getLogger(SøknadService::class.java)
+    private val logger = LoggerFactory.getLogger(SøknadService::class.java)
 
     companion object : Informasjonskravkonstruktør {
         override fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
@@ -29,7 +29,8 @@ class SøknadService private constructor(
         }
 
         override fun konstruer(connection: DBConnection): SøknadService {
-            val mottattDokumentRepository = RepositoryProvider(connection).provide(MottattDokumentRepository::class)
+            val mottattDokumentRepository =
+                RepositoryProvider(connection).provide<MottattDokumentRepository>()
             return SøknadService(
                 MottaDokumentService(mottattDokumentRepository),
                 StudentRepository(connection),

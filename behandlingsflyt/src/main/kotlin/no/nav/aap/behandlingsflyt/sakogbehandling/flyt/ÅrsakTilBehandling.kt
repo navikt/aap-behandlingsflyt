@@ -7,6 +7,7 @@ enum class ÅrsakTilBehandling {
     MOTTATT_LEGEERKLÆRING,
     MOTTATT_AVVIST_LEGEERKLÆRING,
     MOTTATT_DIALOGMELDING,
+    ENDRING_MEDLEMSKAP,
     G_REGULERING;
 
     companion object {

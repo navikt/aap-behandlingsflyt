@@ -17,10 +17,14 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource) {
 
                 val tilkjentYtelser = dataSource.transaction { connection ->
                     val repositoryFactory = RepositoryProvider(connection)
-                    val behandlingRepository = repositoryFactory.provide(BehandlingRepository::class)
-                    val tilkjentYtelseRepository = repositoryFactory.provide(TilkjentYtelseRepository::class)
+                    val behandlingRepository = repositoryFactory.provide<BehandlingRepository>()
+                    val tilkjentYtelseRepository =
+                        repositoryFactory.provide<TilkjentYtelseRepository>()
 
-                    TilkjentYtelseService(behandlingRepository, tilkjentYtelseRepository).hentTilkjentYtelse(req)
+                    TilkjentYtelseService(
+                        behandlingRepository,
+                        tilkjentYtelseRepository
+                    ).hentTilkjentYtelse(req)
                         .map { TilkjentYtelsePeriode(it.periode, it.tilkjent) }
                 }
                 respond(TilkjentYtelseDto(perioder = tilkjentYtelser))

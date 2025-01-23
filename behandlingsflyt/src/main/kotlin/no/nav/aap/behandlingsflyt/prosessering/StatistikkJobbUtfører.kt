@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagY
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
@@ -16,6 +17,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvsluttetBehandlingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BeregningsgrunnlagDTO
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Diagnoser
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Grunnlag11_19DTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.GrunnlagUføreDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.GrunnlagYrkesskadeDTO
@@ -55,6 +57,7 @@ class StatistikkJobbUtfører(
     private val beregningsgrunnlagRepository: BeregningsgrunnlagRepository,
     private val pipRepository: PipRepository,
     private val dokumentRepository: MottattDokumentRepository,
+    private val sykdomRepository: SykdomRepository,
 ) : JobbUtfører {
     override fun utfør(input: JobbInput) {
         log.info("Utfører jobbinput statistikk: $input")
@@ -107,6 +110,7 @@ class StatistikkJobbUtfører(
                     ÅrsakTilBehandling.MOTTATT_AVVIST_LEGEERKLÆRING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.AVVIST_LEGEERKLÆRING
                     ÅrsakTilBehandling.MOTTATT_DIALOGMELDING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.DIALOGMELDING
                     ÅrsakTilBehandling.G_REGULERING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.G_REGULERING
+                    ÅrsakTilBehandling.ENDRING_MEDLEMSKAP -> TODO()
                 }
             }.distinct()
         )
@@ -211,8 +215,29 @@ class StatistikkJobbUtfører(
             ),
             tilkjentYtelse = tilkjentYtelseDTO,
             beregningsGrunnlag = beregningsGrunnlagDTO,
+            diagnoser = hentDiagnose(behandling),
         )
         return avsluttetBehandlingDTO
+    }
+
+    private fun hentDiagnose(behandling: Behandling): Diagnoser? {
+        val sykdomsvurdering = sykdomRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurdering
+
+        if (sykdomsvurdering == null) {
+            log.info("Fant ikke sykdomsvurdering for behandling ${behandling.referanse} (id: ${behandling.id})")
+            return null
+        }
+
+        if (sykdomsvurdering.hoveddiagnose == null || sykdomsvurdering.kodeverk == null) {
+            log.info("Fant sykdomsvurdering, men ingen diagnose eller kodeverk for behandling ${behandling.referanse} (id: ${behandling.id})")
+            return null
+        }
+
+        return Diagnoser(
+            kodeverk = sykdomsvurdering.kodeverk,
+            diagnosekode = sykdomsvurdering.hoveddiagnose,
+            bidiagnoser = sykdomsvurdering.bidiagnoser.orEmpty(),
+        )
     }
 
     private fun beregningsgrunnlagDTO(
@@ -271,13 +296,13 @@ class StatistikkJobbUtfører(
     companion object : Jobb {
         override fun konstruer(connection: DBConnection): JobbUtfører {
             val repositoryProvider = RepositoryProvider(connection)
-            val vilkårsresultatRepository = repositoryProvider.provide(VilkårsresultatRepository::class)
-            val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-            val sakRepository = repositoryProvider.provide(SakRepository::class)
-            val pipRepository = repositoryProvider.provide(PipRepository::class)
-            val tilkjentYtelseRepository = repositoryProvider.provide(TilkjentYtelseRepository::class)
-            val beregningsgrunnlagRepository = repositoryProvider.provide(BeregningsgrunnlagRepository::class)
-            val mottattDokumentRepository = repositoryProvider.provide(MottattDokumentRepository::class)
+            val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
+            val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+            val sakRepository = repositoryProvider.provide<SakRepository>()
+            val pipRepository = repositoryProvider.provide<PipRepository>()
+            val tilkjentYtelseRepository = repositoryProvider.provide<TilkjentYtelseRepository>()
+            val beregningsgrunnlagRepository = repositoryProvider.provide<BeregningsgrunnlagRepository>()
+            val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
             val sakService = SakService(sakRepository)
 
             return StatistikkJobbUtfører(
@@ -288,7 +313,8 @@ class StatistikkJobbUtfører(
                 tilkjentYtelseRepository,
                 beregningsgrunnlagRepository,
                 pipRepository = pipRepository,
-                dokumentRepository = mottattDokumentRepository
+                dokumentRepository = mottattDokumentRepository,
+                sykdomRepository = repositoryProvider.provide()
             )
         }
 

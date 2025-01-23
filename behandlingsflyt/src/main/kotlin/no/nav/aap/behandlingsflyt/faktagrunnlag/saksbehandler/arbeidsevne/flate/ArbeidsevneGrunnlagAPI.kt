@@ -40,12 +40,13 @@ private fun arbeidsevneGrunnlag(
 ): ArbeidsevneGrunnlagDto? {
     return dataSource.transaction { connection ->
         val repositoryProvider = RepositoryProvider(connection)
-        val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+        val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
         val behandling: Behandling =
             BehandlingReferanseService(behandlingRepository).behandling(behandlingReferanse)
-        val arbeidsevneRepository = repositoryProvider.provide(ArbeidsevneRepository::class)
+        val arbeidsevneRepository = repositoryProvider.provide<ArbeidsevneRepository>()
 
-        val nåTilstand = arbeidsevneRepository.hentHvisEksisterer(behandling.id)?.vurderinger ?: return@transaction null
+        val nåTilstand = arbeidsevneRepository.hentHvisEksisterer(behandling.id)?.vurderinger
+            ?: return@transaction null
         val vedtatteVerdier =
             behandling.forrigeBehandlingId?.let { arbeidsevneRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
         val historikk = arbeidsevneRepository.hentAlleVurderinger(behandling.sakId, behandling.id)
@@ -54,7 +55,8 @@ private fun arbeidsevneGrunnlag(
             historikk = historikk.map { it.toDto() }.sortedBy { it.vurderingsTidspunkt }.toSet(),
             vurderinger = nåTilstand.filterNot { vedtatteVerdier.contains(it) }.map { it.toDto() }
                 .sortedBy { it.fraDato },
-            gjeldendeVedtatteVurderinger = vedtatteVerdier.map { it.toDto() }.sortedBy { it.fraDato }
+            gjeldendeVedtatteVurderinger = vedtatteVerdier.map { it.toDto() }
+                .sortedBy { it.fraDato }
         )
     }
 }
@@ -66,9 +68,10 @@ private fun simuleringsresulat(
 ): SimulertArbeidsevneResultatDto {
     return dataSource.transaction { con ->
         val repositoryProvider = RepositoryProvider(con)
-        val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-        val arbeidsevneRepository = repositoryProvider.provide(ArbeidsevneRepository::class)
-        val behandling = BehandlingReferanseService(behandlingRepository).behandling(behandlingReferanse)
+        val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+        val arbeidsevneRepository = repositoryProvider.provide<ArbeidsevneRepository>()
+        val behandling =
+            BehandlingReferanseService(behandlingRepository).behandling(behandlingReferanse)
 
         val vedtatteArbeidsevner =
             behandling.forrigeBehandlingId?.let { arbeidsevneRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
@@ -77,6 +80,7 @@ private fun simuleringsresulat(
             ArbeidsevnePerioder(dto.vurderinger.map { it.toArbeidsevnevurdering() })
         )
 
-        SimulertArbeidsevneResultatDto(simuleringsresultat.gjeldendeArbeidsevner().map { it.toDto() })
+        SimulertArbeidsevneResultatDto(
+            simuleringsresultat.gjeldendeArbeidsevner().map { it.toDto() })
     }
 }

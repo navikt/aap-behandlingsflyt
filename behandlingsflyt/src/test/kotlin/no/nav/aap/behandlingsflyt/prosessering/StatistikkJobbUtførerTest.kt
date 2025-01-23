@@ -19,6 +19,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReposito
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.DokumentRekkefølge
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.flyt.testutil.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.flyt.testutil.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
@@ -39,6 +43,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status.UTREDES
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvsluttetBehandlingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BeregningsgrunnlagDTO
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Diagnoser
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Grunnlag11_19DTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.TilkjentYtelseDTO
@@ -52,6 +57,7 @@ import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.pip.PipRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
@@ -192,7 +198,8 @@ class StatistikkJobbUtførerTest {
                 TilkjentYtelseRepositoryImpl(connection),
                 beregningsgrunnlagRepository,
                 dokumentRepository = MottattDokumentRepositoryImpl(connection),
-                pipRepository = PipRepositoryImpl(connection)
+                pipRepository = PipRepositoryImpl(connection),
+                sykdomRepository = SykdomRepositoryImpl(connection)
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
             )
@@ -288,6 +295,23 @@ class StatistikkJobbUtførerTest {
                 )
             )
 
+            SykdomRepositoryImpl(connection).lagre(
+                behandlingId = opprettetBehandling.id, Sykdomsvurdering(
+                    begrunnelse = "123",
+                    dokumenterBruktIVurdering = listOf(),
+                    harSkadeSykdomEllerLyte = true,
+                    erSkadeSykdomEllerLyteVesentligdel = true,
+                    erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                    erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                    erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
+                    yrkesskadeBegrunnelse = "begr",
+                    erArbeidsevnenNedsatt = true,
+                    kodeverk = "KODEVERK",
+                    hoveddiagnose = "PEST",
+                    bidiagnoser = listOf("KOLERA")
+                )
+            )
+
             behandlingRepository.oppdaterBehandlingStatus(opprettetBehandling.id, Status.AVSLUTTET)
 
             val oppdatertBehandling = behandlingRepository.hent(opprettetBehandling.id)
@@ -326,7 +350,8 @@ class StatistikkJobbUtførerTest {
                 TilkjentYtelseRepositoryImpl(connection),
                 beregningsgrunnlagRepository,
                 PipRepositoryImpl(connection),
-                MottattDokumentRepositoryImpl(connection)
+                MottattDokumentRepositoryImpl(connection),
+                sykdomRepository = SykdomRepositoryImpl(connection)
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
             )
@@ -366,7 +391,7 @@ class StatistikkJobbUtførerTest {
                                 )
                             )
                         )
-                    ),
+                    ), diagnoser = Diagnoser(kodeverk = "KODEVERK", diagnosekode = "PEST", bidiagnoser = listOf("KOLERA"))
             ).toString()
         )
     }
@@ -500,7 +525,28 @@ class StatistikkJobbUtførerTest {
             override fun finnIdenterPåBehandling(behandlingReferanse: BehandlingReferanse): List<IdentPåSak> {
                 TODO("Not yet implemented")
             }
+        }
 
+        val sykdomRepository = object : SykdomRepository {
+            override fun lagre(behandlingId: BehandlingId, sykdomsvurdering: Sykdomsvurdering?) {
+                TODO("Not yet implemented")
+            }
+
+            override fun lagre(behandlingId: BehandlingId, yrkesskadevurdering: Yrkesskadevurdering?) {
+                TODO("Not yet implemented")
+            }
+
+            override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+                TODO("Not yet implemented")
+            }
+
+            override fun hentHvisEksisterer(behandlingId: BehandlingId): SykdomGrunnlag? {
+                TODO("Not yet implemented")
+            }
+
+            override fun hent(behandlingId: BehandlingId): SykdomGrunnlag {
+                TODO("Not yet implemented")
+            }
         }
 
         val utfører =
@@ -512,7 +558,8 @@ class StatistikkJobbUtførerTest {
                 tilkjentYtelseRepository,
                 beregningsgrunnlagRepository,
                 pipRepository,
-                dokumentRepository
+                dokumentRepository,
+                sykdomRepository = sykdomRepository
             )
 
         val avklaringsbehov = listOf(

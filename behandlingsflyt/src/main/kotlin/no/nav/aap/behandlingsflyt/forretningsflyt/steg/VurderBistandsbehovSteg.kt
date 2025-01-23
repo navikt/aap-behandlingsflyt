@@ -55,7 +55,8 @@ class VurderBistandsbehovSteg private constructor(
                             studentGrunnlag,
                             sykdomsvurdering,
                             bistandsGrunnlag,
-                            vilkårsresultat
+                            vilkårsresultat,
+                            avklaringsbehovene
                         )
                     ) {
                         return FantAvklaringsbehov(Definisjon.AVKLAR_BISTANDSBEHOV)
@@ -72,8 +73,9 @@ class VurderBistandsbehovSteg private constructor(
                             studentGrunnlag,
                             sykdomsvurdering,
                             bistandsGrunnlag,
-                            vilkårsresultat
-                        ) || harIkkeVærtAvklartIBehandlingenEnda(avklaringsbehovene)
+                            vilkårsresultat,
+                            avklaringsbehovene
+                        )
                     ) {
                         return FantAvklaringsbehov(Definisjon.AVKLAR_BISTANDSBEHOV)
                     }
@@ -98,9 +100,11 @@ class VurderBistandsbehovSteg private constructor(
         return Fullført
     }
 
-    private fun harIkkeVærtAvklartIBehandlingenEnda(avklaringsbehovene: Avklaringsbehovene): Boolean {
+    private fun harVærtVurdertMinstEnGangIBehandlingen(
+        avklaringsbehovene: Avklaringsbehovene
+    ): Boolean {
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_BISTANDSBEHOV)
-        return avklaringsbehov == null
+        return (avklaringsbehov == null || avklaringsbehov.erÅpent())
     }
 
     private fun postcondition(vilkår: Vilkår) {
@@ -114,15 +118,20 @@ class VurderBistandsbehovSteg private constructor(
         studentGrunnlag: StudentGrunnlag?,
         sykdomsvurdering: Sykdomsvurdering?,
         bistandsGrunnlag: BistandGrunnlag?,
-        vilkårsresultat: Vilkårsresultat
+        vilkårsresultat: Vilkårsresultat,
+        avklaringsbehovene: Avklaringsbehovene
     ): Boolean {
         val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
-        return erIkkeAvslagPåVilkårTidligere(vilkårsresultat, sykdomsvurdering) && harBehovForAvklaring(
+        val erIkkeAvslagPåVilkårTidligere = erIkkeAvslagPåVilkårTidligere(vilkårsresultat, sykdomsvurdering)
+        if (!erIkkeAvslagPåVilkårTidligere || studentGrunnlag?.studentvurdering?.erOppfylt() == true) {
+            return false
+        }
+        return harBehovForAvklaring(
             bistandsGrunnlag,
             periode,
             vilkår,
             studentGrunnlag?.studentvurdering?.erOppfylt() == true
-        )
+        ) || harVærtVurdertMinstEnGangIBehandlingen(avklaringsbehovene)
     }
 
 
@@ -176,12 +185,13 @@ class VurderBistandsbehovSteg private constructor(
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
             val repositoryProvider = RepositoryProvider(connection)
-            val vilkårsresultatRepository = repositoryProvider.provide(VilkårsresultatRepository::class)
-            val avklaringsbehovRepository = repositoryProvider.provide(AvklaringsbehovRepository::class)
+            val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
+            val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
+            val bistandRepository = repositoryProvider.provide<BistandRepository>()
             return VurderBistandsbehovSteg(
-                BistandRepository(connection),
+                bistandRepository,
                 StudentRepository(connection),
-                SykdomRepository(connection),
+                repositoryProvider.provide(),
                 vilkårsresultatRepository,
                 avklaringsbehovRepository
             )

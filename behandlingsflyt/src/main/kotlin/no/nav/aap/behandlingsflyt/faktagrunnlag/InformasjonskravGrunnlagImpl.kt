@@ -9,7 +9,6 @@ class InformasjonskravGrunnlagImpl(private val connection: DBConnection) : Infor
         kravliste: List<Informasjonskravkonstruktør>,
         kontekst: FlytKontekstMedPerioder
     ): List<Informasjonskravkonstruktør> {
-        // Hva gir dette leddet?
         return kravliste
             .filter { kravtype -> kravtype.erRelevant(kontekst) }
             .filter { kravtype -> kravtype.konstruer(connection).oppdater(kontekst) == Informasjonskrav.Endret.ENDRET }

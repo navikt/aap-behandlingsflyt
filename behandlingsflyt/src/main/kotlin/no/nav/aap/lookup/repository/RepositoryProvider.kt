@@ -8,9 +8,8 @@ import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.starProjectedType
 
 class RepositoryProvider(private val connection: DBConnection) {
-
-    inline fun <reified T : Repository> provide(type: KClass<T>): T {
-        val repositoryKlass = RepositoryRegistry.fetch(type.starProjectedType)
+    inline fun <reified T : Repository> provide(): T {
+        val repositoryKlass = RepositoryRegistry.fetch(T::class.starProjectedType)
 
         return internalCreate(repositoryKlass)
     }

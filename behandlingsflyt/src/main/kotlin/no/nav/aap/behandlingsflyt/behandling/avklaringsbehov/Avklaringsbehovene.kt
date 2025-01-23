@@ -66,13 +66,13 @@ class Avklaringsbehovene(
         grunn: ÅrsakTilSettPåVent? = null,
         bruker: Bruker = SYSTEMBRUKER
     ) {
-        log.info("Legger til avklaringsbehov :: {}", definisjoner)
+        log.info("Legger til avklaringsbehov :: {} - {}", definisjoner, funnetISteg)
         definisjoner.forEach { definisjon ->
             val avklaringsbehov = hentBehovForDefinisjon(definisjon)
             if (avklaringsbehov != null) {
                 if (avklaringsbehov.erAvsluttet()) {
                     avklaringsbehov.reåpne(utledFrist(definisjon, frist), begrunnelse, grunn)
-                    if (avklaringsbehov.erVentepunkt()) {
+                    if (avklaringsbehov.erVentepunkt() || avklaringsbehov.erBrevVentebehov() || avklaringsbehov.erAutomatisk()) {
                         // TODO: Vurdere om funnet steg bør ligge på endringen...
                         repository.endreVentepunkt(avklaringsbehov.id, avklaringsbehov.historikk.last(), funnetISteg)
                     } else {

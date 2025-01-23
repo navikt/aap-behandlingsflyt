@@ -12,8 +12,8 @@ class FastsettBeregningstidspunktLøser(connection: DBConnection) :
     AvklaringsbehovsLøser<FastsettBeregningstidspunktLøsning> {
 
     private val repositoryProvider = RepositoryProvider(connection)
-    private val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-    private val beregningVurderingRepository = BeregningVurderingRepository(connection)
+    private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+    private val beregningVurderingRepository = repositoryProvider.provide<BeregningVurderingRepository>()
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: FastsettBeregningstidspunktLøsning): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)

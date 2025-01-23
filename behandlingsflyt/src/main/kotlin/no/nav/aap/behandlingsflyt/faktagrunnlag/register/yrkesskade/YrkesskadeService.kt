@@ -98,12 +98,14 @@ class YrkesskadeService private constructor(
 
         override fun konstruer(connection: DBConnection): YrkesskadeService {
             val repositoryProvider = RepositoryProvider(connection)
-            val sakRepository = repositoryProvider.provide(SakRepository::class)
-            val personopplysningRepository = repositoryProvider.provide(PersonopplysningRepository::class)
-            val mottattDokumentRepository = repositoryProvider.provide(MottattDokumentRepository::class)
+            val sakRepository = repositoryProvider.provide<SakRepository>()
+            val personopplysningRepository =
+                repositoryProvider.provide<PersonopplysningRepository>()
+            val mottattDokumentRepository =
+                repositoryProvider.provide<MottattDokumentRepository>()
             return YrkesskadeService(
                 SakService(sakRepository),
-                YrkesskadeRepository(connection),
+                repositoryProvider.provide(),
                 personopplysningRepository,
                 YrkesskadeRegisterGateway,
                 mottattDokumentRepository,

@@ -40,12 +40,15 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
         route("/behandling/{referanse}/aktivitetsplikt/effektuer").get<BehandlingReferanse, Effektuer11_7Dto> { behandlingReferanse ->
             val respons = dataSource.transaction { conn ->
                 val repositoryProvider = RepositoryProvider(conn)
-                val underveisRepository = repositoryProvider.provide(UnderveisRepository::class)
-                val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-                val aktivitetspliktRepository = repositoryProvider.provide(AktivitetspliktRepository::class)
-                val effektuer117Repository = repositoryProvider.provide(Effektuer11_7Repository::class)
+                val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
+                val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                val aktivitetspliktRepository =
+                    repositoryProvider.provide<AktivitetspliktRepository>()
+                val effektuer117Repository =
+                    repositoryProvider.provide<Effektuer11_7Repository>()
 
-                val behandlingId = BehandlingReferanseService(behandlingRepository).behandling(behandlingReferanse).id
+                val behandlingId =
+                    BehandlingReferanseService(behandlingRepository).behandling(behandlingReferanse).id
 
                 val brudd = underveisRepository.hent(behandlingId)
                     .perioder
@@ -94,8 +97,9 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
             get<SaksnummerParameter, BruddAktivitetspliktResponse> { params ->
                 val response = dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
-                    val sakRepository = repositoryProvider.provide(SakRepository::class)
-                    val aktivitetspliktRepository = repositoryProvider.provide(AktivitetspliktRepository::class)
+                    val sakRepository = repositoryProvider.provide<SakRepository>()
+                    val aktivitetspliktRepository =
+                        repositoryProvider.provide<AktivitetspliktRepository>()
 
                     val sak = SakService(sakRepository).hent(Saksnummer(params.saksnummer))
                     val alleBrudd = aktivitetspliktRepository.hentBrudd(sak.id).utledBruddTilstand()
@@ -115,8 +119,8 @@ private fun opprettDokument(
     req: AktivitetspliktDTO
 ) {
     val repositoryProvider = RepositoryProvider(connection)
-    val sakRepository = repositoryProvider.provide(SakRepository::class)
-    val repository = repositoryProvider.provide(AktivitetspliktRepository::class)
+    val sakRepository = repositoryProvider.provide<SakRepository>()
+    val repository = repositoryProvider.provide<AktivitetspliktRepository>()
 
     val sak = SakService(sakRepository).hent(saksnummer)
 

@@ -5,12 +5,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -24,15 +20,11 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class GrunnlagKopierer(connection: DBConnection) {
 
     private val repositoryProvider = RepositoryProvider(connection)
-    private val yrkesskadeRepository = YrkesskadeRepository(connection)
-    private val sykdomRepository = SykdomRepository(connection)
     private val studentRepository = StudentRepository(connection)
-    private val bistandRepository = BistandRepository(connection)
     private val meldepliktRepository = MeldepliktRepository(connection)
     private val sykepengerErstatningRepository = SykepengerErstatningRepository(connection)
     private val uføreRepository = UføreRepository(connection)
     private val barnRepository = BarnRepository(connection)
-    private val beregningVurderingRepository = BeregningVurderingRepository(connection)
     private val institusjonsoppholdRepository = InstitusjonsoppholdRepository(connection)
     private val inntektGrunnlagRepository = InntektGrunnlagRepository(connection)
     private val samordningYtelseVurderingRepository = SamordningYtelseVurderingRepository(connection)
@@ -42,15 +34,11 @@ class GrunnlagKopierer(connection: DBConnection) {
 
         repositoryProvider.provideAlle().forEach { repository -> repository.kopier(fraBehandlingId, tilBehandlingId) }
 
-        yrkesskadeRepository.kopier(fraBehandlingId, tilBehandlingId)
-        sykdomRepository.kopier(fraBehandlingId, tilBehandlingId)
         studentRepository.kopier(fraBehandlingId, tilBehandlingId)
-        bistandRepository.kopier(fraBehandlingId, tilBehandlingId)
         meldepliktRepository.kopier(fraBehandlingId, tilBehandlingId)
         sykepengerErstatningRepository.kopier(fraBehandlingId, tilBehandlingId)
         uføreRepository.kopier(fraBehandlingId, tilBehandlingId)
         barnRepository.kopier(fraBehandlingId, tilBehandlingId)
-        beregningVurderingRepository.kopier(fraBehandlingId, tilBehandlingId)
         institusjonsoppholdRepository.kopier(fraBehandlingId, tilBehandlingId)
         inntektGrunnlagRepository.kopier(fraBehandlingId, tilBehandlingId)
         samordningYtelseVurderingRepository.kopier(fraBehandlingId, tilBehandlingId)

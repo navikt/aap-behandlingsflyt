@@ -22,7 +22,8 @@ class LegeerklæringService private constructor(
         }
 
         override fun konstruer(connection: DBConnection): LegeerklæringService {
-            val mottattDokumentRepository = RepositoryProvider(connection).provide(MottattDokumentRepository::class)
+            val mottattDokumentRepository =
+                RepositoryProvider(connection).provide<MottattDokumentRepository>()
             return LegeerklæringService(
                 MottaDokumentService(mottattDokumentRepository)
             )

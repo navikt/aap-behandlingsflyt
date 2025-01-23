@@ -13,10 +13,13 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class FatteVedtakLøser(dbConnection: DBConnection) : AvklaringsbehovsLøser<FatteVedtakLøsning> {
 
     private val repositoryProvider = RepositoryProvider(dbConnection)
-    private val avklaringsbehovRepository = repositoryProvider.provide(AvklaringsbehovRepository::class)
-    private val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+    private val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
+    private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
 
-    override fun løs(kontekst: AvklaringsbehovKontekst, løsning: FatteVedtakLøsning): LøsningsResultat {
+    override fun løs(
+        kontekst: AvklaringsbehovKontekst,
+        løsning: FatteVedtakLøsning
+    ): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
         val avklaringsbehovene =
             avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId = kontekst.kontekst.behandlingId)
@@ -35,7 +38,12 @@ class FatteVedtakLøser(dbConnection: DBConnection) : AvklaringsbehovsLøser<Fat
 
             val vurderingerFørRetur = løsning.vurderinger
                 .filter { it.godkjent == true }
-                .filter { flyt.erStegFør(Definisjon.forKode(it.definisjon).løsesISteg, tidligsteStegMedRetur) }
+                .filter {
+                    flyt.erStegFør(
+                        Definisjon.forKode(it.definisjon).løsesISteg,
+                        tidligsteStegMedRetur
+                    )
+                }
 
             val vurderingerSomMåReåpnes = avklaringsbehovene.alle()
                 .filterNot { behov ->

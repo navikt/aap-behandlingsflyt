@@ -3,7 +3,7 @@ import java.io.ByteArrayOutputStream
 
 
 val ktorVersion = "3.0.3"
-val komponenterVersjon = "1.0.114"
+val komponenterVersjon = "1.0.118"
 val junitVersjon = "5.11.4"
 
 plugins {
@@ -40,12 +40,11 @@ tasks.register<JavaExec>("runTestApp") {
 }
 
 fun runCommand(command: String): String {
-    val byteOut = ByteArrayOutputStream()
-    project.exec {
-        commandLine = command.split("\\s".toRegex())
-        standardOutput = byteOut
-    }
-    return String(byteOut.toByteArray()).trim()
+    val execResult = providers.exec {
+        commandLine(command.split("\\s".toRegex()))
+    }.standardOutput.asText
+
+    return execResult.get()
 }
 
 fun getCheckedOutGitCommitHash(): String {

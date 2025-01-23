@@ -50,10 +50,12 @@ class MeldingOmVedtakBrevSteg private constructor(
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
             val repositoryProvider = RepositoryProvider(connection)
-            val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-            val sakRepository = repositoryProvider.provide(SakRepository::class)
-            val vilkårsresultatRepository = repositoryProvider.provide(VilkårsresultatRepository::class)
-            val brevbestillingRepository = repositoryProvider.provide(BrevbestillingRepository::class)
+            val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+            val sakRepository = repositoryProvider.provide<SakRepository>()
+            val vilkårsresultatRepository =
+                repositoryProvider.provide<VilkårsresultatRepository>()
+            val brevbestillingRepository =
+                repositoryProvider.provide<BrevbestillingRepository>()
 
             return MeldingOmVedtakBrevSteg(
                 BrevUtlederService(
@@ -66,7 +68,7 @@ class MeldingOmVedtakBrevSteg private constructor(
                     behandlingRepository = behandlingRepository,
                     sakRepository = sakRepository
                 ),
-                repositoryProvider.provide(BehandlingRepository::class)
+                repositoryProvider.provide<BehandlingRepository>()
             )
         }
 

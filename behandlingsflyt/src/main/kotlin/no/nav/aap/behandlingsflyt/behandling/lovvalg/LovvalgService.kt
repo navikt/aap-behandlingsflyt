@@ -1,12 +1,10 @@
 package no.nav.aap.behandlingsflyt.behandling.lovvalg
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapGateway
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.MedlemskapLovvalgRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.AARegisterGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ARBEIDSFORHOLDSTATUSER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdOversikt
@@ -15,7 +13,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektkomponentenGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -66,14 +67,19 @@ class LovvalgService private constructor(
 
     companion object : Informasjonskravkonstruktør {
         override fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
-            // Skal alltid innhentes
-            return true
+            if (kontekst.skalBehandlesSomFørstegangsbehandling()) {
+                return true
+            }
+            val relevanteÅrsaker = setOf(ÅrsakTilBehandling.ENDRING_MEDLEMSKAP)
+            return kontekst.perioderTilVurdering.flatMap { vurdering -> vurdering.årsaker }
+                .any { årsak -> relevanteÅrsaker.contains(årsak) }
         }
 
         override fun konstruer(connection: DBConnection): LovvalgService {
             val repositoryProvider = RepositoryProvider(connection)
             val sakRepository = repositoryProvider.provide(SakRepository::class)
             val medlemskapLovvalgRepository = repositoryProvider.provide(MedlemskapLovvalgRepository::class)
+            val sakRepository = repositoryProvider.provide<SakRepository>()
             return LovvalgService(
                 MedlemskapGateway(),
                 SakService(sakRepository),

@@ -51,9 +51,11 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
             get<BehandlingReferanse, BehandlingFlytOgTilstandDto> { req ->
                 val dto = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
-                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-                    val vilkårsresultatRepository = repositoryProvider.provide(VilkårsresultatRepository::class)
-                    val avklaringsbehovRepository = repositoryProvider.provide(AvklaringsbehovRepository::class)
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val vilkårsresultatRepository =
+                        repositoryProvider.provide<VilkårsresultatRepository>()
+                    val avklaringsbehovRepository =
+                        repositoryProvider.provide<AvklaringsbehovRepository>()
 
                     var behandling = behandling(behandlingRepository, req)
                     val avklaringsbehovene = avklaringsbehov(
@@ -97,7 +99,8 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
                         avklaringsbehovene,
                         flyt, aktivtSteg
                     )
-                    val vurdertStegPair = utledVurdertGruppe(prosessering, aktivtSteg, flyt, avklaringsbehovene)
+                    val vurdertStegPair =
+                        utledVurdertGruppe(prosessering, aktivtSteg, flyt, avklaringsbehovene)
                     val vilkårsresultat = vilkårResultat(vilkårsresultatRepository, behandling.id)
                     val alleAvklaringsbehov = alleAvklaringsbehovInkludertFrivillige.alle()
                     BehandlingFlytOgTilstandDto(
@@ -111,7 +114,11 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
                                     FlytSteg(
                                         stegType = stegType,
                                         avklaringsbehov = alleAvklaringsbehov
-                                            .filter { avklaringsbehov -> avklaringsbehov.skalLøsesISteg(stegType) }
+                                            .filter { avklaringsbehov ->
+                                                avklaringsbehov.skalLøsesISteg(
+                                                    stegType
+                                                )
+                                            }
                                             .map { behov ->
                                                 AvklaringsbehovDTO(
                                                     behov.definisjon,
@@ -148,8 +155,9 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
             get<BehandlingReferanse, BehandlingResultatDto> { req ->
                 val dto = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
-                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-                    val vilkårsresultatRepository = repositoryProvider.provide(VilkårsresultatRepository::class)
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val vilkårsresultatRepository =
+                        repositoryProvider.provide<VilkårsresultatRepository>()
 
                     val behandling = behandling(behandlingRepository, req)
 
@@ -168,11 +176,13 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
                         repositoryProvider,
                         LogKontekst(referanse = BehandlingReferanse(request.referanse))
                     ).use {
-                        val taSkriveLåsRepository = repositoryProvider.provide(TaSkriveLåsRepository::class)
+                        val taSkriveLåsRepository =
+                            repositoryProvider.provide<TaSkriveLåsRepository>()
                         val lås = taSkriveLåsRepository.lås(request.referanse)
 
-                        val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-                        val sakRepository = repositoryProvider.provide(SakRepository::class)
+                        val behandlingRepository =
+                            repositoryProvider.provide<BehandlingRepository>()
+                        val sakRepository = repositoryProvider.provide<SakRepository>()
                         BehandlingTilstandValidator(
                             BehandlingReferanseService(behandlingRepository),
                             FlytJobbRepository(connection)
@@ -206,11 +216,13 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
             get<BehandlingReferanse, Venteinformasjon> { request ->
                 val dto = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
-                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-                    val avklaringsbehovRepository = repositoryProvider.provide(AvklaringsbehovRepository::class)
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val avklaringsbehovRepository =
+                        repositoryProvider.provide<AvklaringsbehovRepository>()
 
                     val behandling = behandling(behandlingRepository, request)
-                    val avklaringsbehovene = avklaringsbehov(avklaringsbehovRepository, behandling.id)
+                    val avklaringsbehovene =
+                        avklaringsbehov(avklaringsbehovRepository, behandling.id)
 
                     val ventepunkter = avklaringsbehovene.hentÅpneVentebehov()
                     if (avklaringsbehovene.erSattPåVent()) {

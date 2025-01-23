@@ -39,7 +39,7 @@ object SafListDokumentGateway {
         val dokumentoversiktFagsak = response.data?.dokumentoversiktFagsak ?: return emptyList()
 
         return dokumentoversiktFagsak.journalposter.flatMap { journalpost ->
-            log.info("Original Journalpost:  $journalpost")
+            log.debug("Original Journalpost:  {}", journalpost)
             journalpost.dokumenter.flatMap { dok ->
                 dok.dokumentvarianter
                     .filter { it.variantformat === Variantformat.ARKIV }

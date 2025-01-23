@@ -6,7 +6,7 @@ import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
 
 class Sykdomsvurdering(
-    internal val id: Long? = null,
+    val id: Long? = null,
     val begrunnelse: String,
     val dokumenterBruktIVurdering: List<JournalpostId>,
     val harSkadeSykdomEllerLyte: Boolean,
@@ -51,7 +51,7 @@ class Sykdomsvurdering(
 }
 
 class Yrkesskadevurdering(
-    internal val id: Long? = null,
+    val id: Long? = null,
     val begrunnelse: String,
     val relevanteSaker: List<String>,
     val erÅrsakssammenheng: Boolean,

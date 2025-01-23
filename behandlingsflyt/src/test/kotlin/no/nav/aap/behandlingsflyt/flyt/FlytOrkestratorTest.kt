@@ -24,16 +24,13 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.barnetillegg.BarnetilleggRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.dokument.arbeid.PliktkortRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurdering
@@ -68,11 +65,18 @@ import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtf
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.barnetillegg.BarnetilleggRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7RepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.dokument.arbeid.PliktkortRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.yrkesskade.YrkesskadeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistand.BistandRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.pip.PipRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
@@ -139,7 +143,8 @@ class FlytOrkestratorTest {
 
     @BeforeEach
     fun setUp() {
-        RepositoryRegistry.register<BehandlingRepositoryImpl>()
+        RepositoryRegistry
+            .register<BehandlingRepositoryImpl>()
             .register<PersonRepositoryImpl>()
             .register<SakRepositoryImpl>()
             .register<AvklaringsbehovRepositoryImpl>()
@@ -158,6 +163,10 @@ class FlytOrkestratorTest {
             .register<ArbeidsevneRepositoryImpl>()
             .register<Effektuer11_7RepositoryImpl>()
             .register<BarnetilleggRepositoryImpl>()
+            .register<BistandRepositoryImpl>()
+            .register<BeregningVurderingRepositoryImpl>()
+            .register<SykdomRepositoryImpl>()
+            .register<YrkesskadeRepositoryImpl>()
             .status()
         GatewayRegistry.register<PdlBarnGateway>()
             .register<PdlIdentGateway>()
@@ -210,7 +219,12 @@ class FlytOrkestratorTest {
                 journalpost = JournalpostId("20"),
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),
                 strukturertDokument = StrukturertDokument(
-                    SøknadV0(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null, medlemskap = null),
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"),
+                        yrkesskade = "NEI",
+                        oppgitteBarn = null,
+                        medlemskap = null
+                    ),
                 ),
                 periode = periode
             )
@@ -695,7 +709,7 @@ class FlytOrkestratorTest {
             ).håndtere(
                 behandling.id,
                 LøsAvklaringsbehovHendelse(
-                    løsning = SkrivBrevLøsning(brevbestillingReferanse = brevbestilling.referanse),
+                    løsning = SkrivBrevLøsning(brevbestillingReferanse = brevbestilling.referanse.brevbestillingReferanse),
                     behandlingVersjon = behandling.versjon,
                     bruker = Bruker("SAKSBEHANDLER")
                 )
@@ -742,6 +756,63 @@ class FlytOrkestratorTest {
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
             assertThat(avklaringsbehov.åpne()).isEmpty()
         }
+
+        sendInnDokument(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("29"),
+                mottattTidspunkt = LocalDateTime.now().minusMonths(3),
+                strukturertDokument = StrukturertDokument(
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"),
+                        yrkesskade = "NEI",
+                        oppgitteBarn = null,
+                        medlemskap = null
+                    ),
+                ),
+                periode = periode
+            )
+        )
+        util.ventPåSvar(sakId = sak.id.toLong())
+
+        behandling = hentBehandling(sak.id)
+        assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+        assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+
+        dataSource.transaction {
+            AvklaringsbehovHendelseHåndterer(
+                AvklaringsbehovOrkestrator(
+                    it,
+                    BehandlingHendelseServiceImpl(FlytJobbRepository(it), SakService(SakRepositoryImpl(it)))
+                ), AvklaringsbehovRepositoryImpl(it), BehandlingRepositoryImpl(it)
+            ).håndtere(
+                behandling.id,
+                LøsAvklaringsbehovHendelse(
+                    løsning = AvklarSykdomLøsning(
+                        sykdomsvurdering = SykdomsvurderingDto(
+                            begrunnelse = "Er syk nok",
+                            dokumenterBruktIVurdering = listOf(JournalpostId("1349532")),
+                            harSkadeSykdomEllerLyte = true,
+                            erSkadeSykdomEllerLyteVesentligdel = true,
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                            erArbeidsevnenNedsatt = true,
+                            yrkesskadeBegrunnelse = null
+                        )
+                    ),
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
+                )
+            )
+        }
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
+        behandling = hentBehandling(sak.id)
+
+        dataSource.transaction { connection ->
+            val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
+            assertThat(avklaringsbehov.alle()).anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.AVKLAR_BISTANDSBEHOV) }
+            assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+        }
     }
 
     @Test
@@ -765,7 +836,12 @@ class FlytOrkestratorTest {
                 journalpost = JournalpostId("10"),
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
-                    SøknadV0(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null, medlemskap = null),
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"),
+                        yrkesskade = "NEI",
+                        oppgitteBarn = null,
+                        medlemskap = null
+                    ),
                 ),
                 periode = periode
             )
@@ -1084,7 +1160,7 @@ class FlytOrkestratorTest {
             ).håndtere(
                 behandling.id,
                 LøsAvklaringsbehovHendelse(
-                    løsning = SkrivBrevLøsning(brevbestillingReferanse = brevbestilling.referanse),
+                    løsning = SkrivBrevLøsning(brevbestillingReferanse = brevbestilling.referanse.brevbestillingReferanse),
                     behandlingVersjon = behandling.versjon,
                     bruker = Bruker("SAKSBEHANDLER")
                 )
@@ -1093,7 +1169,7 @@ class FlytOrkestratorTest {
             // Brevet er fullført
             assertThat(
                 BrevbestillingRepositoryImpl(connection).hent(behandling.id)
-                    .first { it.typeBrev == TypeBrev.VEDTAK_INNVILGELSE }?.status
+                    .first { it.typeBrev == TypeBrev.VEDTAK_INNVILGELSE }.status
             ).isEqualTo(
                 no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FULLFØRT
             )
@@ -1162,7 +1238,12 @@ class FlytOrkestratorTest {
                 journalpost = JournalpostId("20"),
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),
                 strukturertDokument = StrukturertDokument(
-                    SøknadV0(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null, medlemskap = null),
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"),
+                        yrkesskade = "NEI",
+                        oppgitteBarn = null,
+                        medlemskap = null
+                    ),
                 ),
                 periode = periode
             )
@@ -1650,7 +1731,12 @@ class FlytOrkestratorTest {
                 journalpost = JournalpostId("1"),
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
-                    SøknadV0(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null, medlemskap = null),
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"),
+                        yrkesskade = "NEI",
+                        oppgitteBarn = null,
+                        medlemskap = null
+                    ),
 
                     ),
                 periode = periode
@@ -1734,7 +1820,7 @@ class FlytOrkestratorTest {
             ).håndtere(
                 behandling.id,
                 LøsAvklaringsbehovHendelse(
-                    løsning = SkrivBrevLøsning(brevbestillingReferanse = brevbestilling.referanse),
+                    løsning = SkrivBrevLøsning(brevbestillingReferanse = brevbestilling.referanse.brevbestillingReferanse),
                     behandlingVersjon = behandling.versjon,
                     bruker = Bruker("SAKSBEHANDLER")
                 )
@@ -1772,7 +1858,8 @@ class FlytOrkestratorTest {
                 journalpost = JournalpostId("2"),
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
-                    SøknadV0(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
                         medlemskap = SøknadMedlemskapDto("JA", "JA", "JA", "NEI", null)
                     ),
                 ),
@@ -1827,7 +1914,8 @@ class FlytOrkestratorTest {
                 journalpost = JournalpostId("3"),
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
-                    SøknadV0(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
                         medlemskap = SøknadMedlemskapDto("JA", "JA", "JA", "NEI", null)
                     ),
                 ),
@@ -1859,7 +1947,8 @@ class FlytOrkestratorTest {
                 journalpost = JournalpostId("2"),
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
-                    SøknadV0(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
                         medlemskap = SøknadMedlemskapDto("JA", "JA", "JA", "NEI", null)
                     ),
                 ),
@@ -1938,7 +2027,8 @@ class FlytOrkestratorTest {
                 journalpost = JournalpostId("2"),
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
-                    SøknadV0(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
                         medlemskap = SøknadMedlemskapDto("JA", "JA", "JA", "NEI", listOf())
                     ),
                 ),
@@ -2018,7 +2108,8 @@ class FlytOrkestratorTest {
                 journalpost = JournalpostId("2"),
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
-                    SøknadV0(student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
                         medlemskap = SøknadMedlemskapDto("JA", "JA", "JA", "NEI", null)
                     ),
                 ),

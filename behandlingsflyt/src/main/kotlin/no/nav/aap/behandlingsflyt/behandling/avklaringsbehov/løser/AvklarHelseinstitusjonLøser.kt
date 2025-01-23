@@ -14,23 +14,34 @@ import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.lookup.repository.RepositoryProvider
 
-class AvklarHelseinstitusjonLøser(connection: DBConnection) : AvklaringsbehovsLøser<AvklarHelseinstitusjonLøsning> {
+class AvklarHelseinstitusjonLøser(connection: DBConnection) :
+    AvklaringsbehovsLøser<AvklarHelseinstitusjonLøsning> {
 
     private val repositoryProvider = RepositoryProvider(connection)
-    private val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+    private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
     private val helseinstitusjonRepository = InstitusjonsoppholdRepository(connection)
 
-    override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarHelseinstitusjonLøsning): LøsningsResultat {
+    override fun løs(
+        kontekst: AvklaringsbehovKontekst,
+        løsning: AvklarHelseinstitusjonLøsning
+    ): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.behandlingId())
 
         val vedtatteVurderinger =
             behandling.forrigeBehandlingId?.let { helseinstitusjonRepository.hentHvisEksisterer(it) }
 
         val oppdaterteVurderinger =
-            slåSammenMedNyeVurderinger(vedtatteVurderinger, løsning.helseinstitusjonVurdering.vurderinger)
-        helseinstitusjonRepository.lagreHelseVurdering(kontekst.kontekst.behandlingId, oppdaterteVurderinger)
+            slåSammenMedNyeVurderinger(
+                vedtatteVurderinger,
+                løsning.helseinstitusjonVurdering.vurderinger
+            )
+        helseinstitusjonRepository.lagreHelseVurdering(
+            kontekst.kontekst.behandlingId,
+            oppdaterteVurderinger
+        )
 
-        return LøsningsResultat(løsning.helseinstitusjonVurdering.vurderinger.map { it.begrunnelse }.joinToString(" "))
+        return LøsningsResultat(løsning.helseinstitusjonVurdering.vurderinger.map { it.begrunnelse }
+            .joinToString(" "))
     }
 
     private fun slåSammenMedNyeVurderinger(

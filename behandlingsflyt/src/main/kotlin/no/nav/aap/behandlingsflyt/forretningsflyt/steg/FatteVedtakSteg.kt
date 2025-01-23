@@ -33,7 +33,7 @@ class FatteVedtakSteg private constructor(
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
             val repositoryProvider = RepositoryProvider(connection)
-            val avklaringsbehovRepository = repositoryProvider.provide(AvklaringsbehovRepository::class)
+            val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
             return FatteVedtakSteg(avklaringsbehovRepository)
         }
 

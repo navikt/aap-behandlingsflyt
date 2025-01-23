@@ -54,11 +54,13 @@ class BarnetilleggSteg(
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
             val repositoryProvider = RepositoryProvider(connection)
-            val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-            val sakRepository = repositoryProvider.provide(SakRepository::class)
-            val personopplysningRepository = repositoryProvider.provide(PersonopplysningRepository::class)
-            val vilkårsresultatRepository = repositoryProvider.provide(VilkårsresultatRepository::class)
-            val barnetilleggRepository = repositoryProvider.provide(BarnetilleggRepository::class)
+            val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+            val sakRepository = repositoryProvider.provide<SakRepository>()
+            val personopplysningRepository =
+                repositoryProvider.provide<PersonopplysningRepository>()
+            val vilkårsresultatRepository =
+                repositoryProvider.provide<VilkårsresultatRepository>()
+            val barnetilleggRepository = repositoryProvider.provide<BarnetilleggRepository>()
 
             return BarnetilleggSteg(
                 BarnetilleggService(

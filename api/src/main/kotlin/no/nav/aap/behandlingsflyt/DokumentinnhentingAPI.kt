@@ -61,15 +61,14 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
                         repositoryProvider,
                         LogKontekst(referanse = BehandlingReferanse(req.behandlingsReferanse))
                     ).use {
-                        val låsRepository = repositoryProvider.provide(TaSkriveLåsRepository::class)
+                        val låsRepository = repositoryProvider.provide<TaSkriveLåsRepository>()
                         val lås = låsRepository.lås(req.behandlingsReferanse)
-                        var bestillingUUID: String?
 
                         val sak =
-                            repositoryProvider.provide(SakRepository::class).hent((Saksnummer(req.saksnummer)))
-                        val behandling = repositoryProvider.provide(BehandlingRepository::class)
+                            repositoryProvider.provide<SakRepository>().hent((Saksnummer(req.saksnummer)))
+                        val behandling = repositoryProvider.provide<BehandlingRepository>()
                             .hent(BehandlingReferanse(req.behandlingsReferanse))
-                        val avklaringsbehovene = repositoryProvider.provide(AvklaringsbehovRepository::class)
+                        val avklaringsbehovene = repositoryProvider.provide<AvklaringsbehovRepository>()
                             .hentAvklaringsbehovene(behandling.id)
 
                         val personIdent = sak.person.aktivIdent()
@@ -87,13 +86,13 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
                         )
                         avklaringsbehovene.validerPlassering(behandling = behandling)
 
-                        val sakService = SakService(repositoryProvider.provide(SakRepository::class))
+                        val sakService = SakService(repositoryProvider.provide<SakRepository>())
                         val behandlingHendelseService =
                             BehandlingHendelseServiceImpl(FlytJobbRepository((connection)), sakService)
 
                         behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
 
-                        bestillingUUID = DokumeninnhentingGateway().bestillLegeerklæring(
+                        val bestillingUUID: String = DokumeninnhentingGateway().bestillLegeerklæring(
                             LegeerklæringBestillingRequest(
                                 req.behandlerRef,
                                 req.behandlerNavn,
@@ -113,7 +112,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
                     }
                 }
 
-                respond(requireNotNull(bestillingUuid))
+                respond(bestillingUuid)
             }
         }
         route("/status/{saksnummer}") {
@@ -137,7 +136,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
                 )
             ) { _, req ->
                 val brevPreview = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = RepositoryProvider(connection).provide(SakRepository::class)
+                    val repositoryProvider = RepositoryProvider(connection).provide<SakRepository>()
                     val sak = repositoryProvider.hent((Saksnummer(req.saksnummer)))
 
                     val personIdent = sak.person.aktivIdent()

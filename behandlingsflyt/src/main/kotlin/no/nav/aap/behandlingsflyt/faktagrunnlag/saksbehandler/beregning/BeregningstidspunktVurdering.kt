@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import java.time.LocalDate
 
 data class BeregningstidspunktVurdering(
-    @JsonIgnore internal val id: Long? = null,
+    @JsonIgnore val id: Long? = null,
     val begrunnelse: String,
     val nedsattArbeidsevneDato: LocalDate,
     val ytterligereNedsattBegrunnelse: String?,

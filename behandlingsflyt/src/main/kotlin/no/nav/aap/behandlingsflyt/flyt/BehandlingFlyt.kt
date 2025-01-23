@@ -14,7 +14,7 @@ import java.util.*
  */
 class BehandlingFlyt private constructor(
     private val flyt: List<Behandlingsflytsteg>,
-    private val årsaker: Map<ÅrsakTilBehandling, StegType>,
+    private val årsaker: Map<ÅrsakTilBehandling, List<StegType>>,
     private val parent: BehandlingFlyt?
 ) {
     private var aktivtSteg: Behandlingsflytsteg? = flyt.firstOrNull()
@@ -25,7 +25,7 @@ class BehandlingFlyt private constructor(
         val oppdaterFaktagrunnlag: Boolean
     )
 
-    constructor(flyt: List<Behandlingsflytsteg>, årsaker: Map<ÅrsakTilBehandling, StegType>) : this(
+    constructor(flyt: List<Behandlingsflytsteg>, årsaker: Map<ÅrsakTilBehandling, List<StegType>>) : this(
         flyt = flyt,
         årsaker = årsaker,
         parent = null
@@ -201,7 +201,7 @@ class BehandlingFlyt private constructor(
 
     fun årsakerRelevantForSteg(stegType: StegType): Set<ÅrsakTilBehandling> {
         return if (steg(stegType).oppdaterFaktagrunnlag) {
-            årsaker.filter { entry -> entry.value == stegType }.keys
+            årsaker.filter { entry -> entry.value.contains(stegType) }.keys
         } else {
             ÅrsakTilBehandling.entries.toSet()
         }
@@ -220,7 +220,7 @@ class StegComparator(private var flyt: List<BehandlingFlyt.Behandlingsflytsteg>)
 
 class BehandlingFlytBuilder {
     private val flyt: MutableList<BehandlingFlyt.Behandlingsflytsteg> = mutableListOf()
-    private val endringTilSteg: MutableMap<ÅrsakTilBehandling, StegType> = mutableMapOf()
+    private val endringTilSteg: MutableMap<ÅrsakTilBehandling, MutableList<StegType>> = mutableMapOf()
     private var oppdaterFaktagrunnlag = true
     private var buildt = false
 
@@ -237,7 +237,9 @@ class BehandlingFlytBuilder {
         }
         this.flyt.add(BehandlingFlyt.Behandlingsflytsteg(steg, informasjonskrav, oppdaterFaktagrunnlag))
         årsakRelevanteForSteg.forEach { endring ->
-            this.endringTilSteg[endring] = steg.type()
+            val stegene = this.endringTilSteg[endring] ?: mutableListOf()
+            stegene.add(steg.type())
+            this.endringTilSteg[endring] = stegene
         }
         return this
     }

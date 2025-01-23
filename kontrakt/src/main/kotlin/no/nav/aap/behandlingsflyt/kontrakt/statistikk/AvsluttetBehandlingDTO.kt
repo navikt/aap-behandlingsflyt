@@ -11,6 +11,13 @@ public data class AvsluttetBehandlingDTO(
     val tilkjentYtelse: TilkjentYtelseDTO,
     val vilkårsResultat: VilkårsResultatDTO,
     val beregningsGrunnlag: BeregningsgrunnlagDTO?,
+    val diagnoser: Diagnoser? = null,
+)
+
+public data class Diagnoser(
+    val kodeverk: String,
+    val diagnosekode: String,
+    val bidiagnoser: List<String>
 )
 
 

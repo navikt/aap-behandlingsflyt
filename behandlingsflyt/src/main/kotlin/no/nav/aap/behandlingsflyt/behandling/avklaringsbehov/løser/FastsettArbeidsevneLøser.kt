@@ -11,16 +11,25 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class FastsettArbeidsevneLøser(
     connection: DBConnection,
 ) : AvklaringsbehovsLøser<FastsettArbeidsevneLøsning> {
-    private val arbeidsevneRepository = RepositoryProvider(connection).provide(ArbeidsevneRepository::class)
+    private val arbeidsevneRepository =
+        RepositoryProvider(connection).provide<ArbeidsevneRepository>()
 
-    override fun løs(kontekst: AvklaringsbehovKontekst, løsning: FastsettArbeidsevneLøsning): LøsningsResultat {
-        val arbeidsevneVurderinger = løsning.arbeidsevneVurderinger.map { it.toArbeidsevnevurdering() }
+    override fun løs(
+        kontekst: AvklaringsbehovKontekst,
+        løsning: FastsettArbeidsevneLøsning
+    ): LøsningsResultat {
+        val arbeidsevneVurderinger =
+            løsning.arbeidsevneVurderinger.map { it.toArbeidsevnevurdering() }
         val eksisterendeArbeidsevnePerioder = ArbeidsevnePerioder(
             arbeidsevneRepository.hentHvisEksisterer(kontekst.behandlingId())?.vurderinger.orEmpty()
         )
-        val nyeArbeidsevnePerioder = eksisterendeArbeidsevnePerioder.leggTil(ArbeidsevnePerioder(arbeidsevneVurderinger))
+        val nyeArbeidsevnePerioder =
+            eksisterendeArbeidsevnePerioder.leggTil(ArbeidsevnePerioder(arbeidsevneVurderinger))
 
-        arbeidsevneRepository.lagre(kontekst.behandlingId(), nyeArbeidsevnePerioder.gjeldendeArbeidsevner())
+        arbeidsevneRepository.lagre(
+            kontekst.behandlingId(),
+            nyeArbeidsevnePerioder.gjeldendeArbeidsevner()
+        )
 
         return LøsningsResultat(begrunnelse = "Vurdert fastsetting av arbeidsevne")
     }

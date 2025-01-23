@@ -19,8 +19,9 @@ fun NormalOpenAPIRoute.studentgrunnlagApi(dataSource: DataSource) {
             get<BehandlingReferanse, StudentGrunnlagDto> { req ->
                 val studentGrunnlag: StudentGrunnlag? = dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
-                    val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-                    val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val behandling =
+                        BehandlingReferanseService(behandlingRepository).behandling(req)
 
                     StudentRepository(connection).hentHvisEksisterer(behandlingId = behandling.id)
                 }

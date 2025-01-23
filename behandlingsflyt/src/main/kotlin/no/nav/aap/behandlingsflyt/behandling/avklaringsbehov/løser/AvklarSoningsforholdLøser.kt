@@ -15,17 +15,22 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 
-class AvklarSoningsforholdLøser(connection: DBConnection) : AvklaringsbehovsLøser<AvklarSoningsforholdLøsning> {
+class AvklarSoningsforholdLøser(connection: DBConnection) :
+    AvklaringsbehovsLøser<AvklarSoningsforholdLøsning> {
 
     private val repositoryProvider = RepositoryProvider(connection)
-    private val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+    private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
     private val soningRepository = InstitusjonsoppholdRepository(connection)
 
-    override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarSoningsforholdLøsning): LøsningsResultat {
+    override fun løs(
+        kontekst: AvklaringsbehovKontekst,
+        løsning: AvklarSoningsforholdLøsning
+    ): LøsningsResultat {
 
         val behandling = behandlingRepository.hent(kontekst.behandlingId())
 
-        val vedtatteVurderinger = behandling.forrigeBehandlingId?.let { soningRepository.hentHvisEksisterer(it) }
+        val vedtatteVurderinger =
+            behandling.forrigeBehandlingId?.let { soningRepository.hentHvisEksisterer(it) }
 
         val oppdaterteVurderinger =
             slåSammenMedNyeVurderinger(vedtatteVurderinger, løsning.soningsvurdering.vurderinger)
@@ -35,7 +40,8 @@ class AvklarSoningsforholdLøser(connection: DBConnection) : AvklaringsbehovsLø
             oppdaterteVurderinger
         )
 
-        return LøsningsResultat(løsning.soningsvurdering.vurderinger.map { it.begrunnelse }.joinToString(" "))
+        return LøsningsResultat(løsning.soningsvurdering.vurderinger.map { it.begrunnelse }
+            .joinToString(" "))
     }
 
     private fun slåSammenMedNyeVurderinger(
@@ -45,7 +51,12 @@ class AvklarSoningsforholdLøser(connection: DBConnection) : AvklaringsbehovsLø
         val eksisterendeTidslinje = byggTidslinjeForSoningsvurderinger(grunnlag)
 
         val nyeVurderingerTidslinje = nyeVurderinger.sortedBy { it.fraDato }
-            .map { Tidslinje(Periode(it.fraDato, Tid.MAKS), SoningsvurderingData(it.skalOpphore, it.begrunnelse)) }
+            .map {
+                Tidslinje(
+                    Periode(it.fraDato, Tid.MAKS),
+                    SoningsvurderingData(it.skalOpphore, it.begrunnelse)
+                )
+            }
             .fold(Tidslinje<SoningsvurderingData>()) { acc, tidslinje ->
                 acc.kombiner(tidslinje, StandardSammenslåere.prioriterHøyreSideCrossJoin())
             }.komprimer()
@@ -53,7 +64,8 @@ class AvklarSoningsforholdLøser(connection: DBConnection) : AvklaringsbehovsLø
         return eksisterendeTidslinje.kombiner(
             nyeVurderingerTidslinje,
             StandardSammenslåere.prioriterHøyreSideCrossJoin()
-        ).segmenter().map { Soningsvurdering(it.verdi.skalOpphøre, it.verdi.begrunnelse, it.periode.fom) }
+        ).segmenter()
+            .map { Soningsvurdering(it.verdi.skalOpphøre, it.verdi.begrunnelse, it.periode.fom) }
     }
 
     private fun byggTidslinjeForSoningsvurderinger(grunnlag: InstitusjonsoppholdGrunnlag?): Tidslinje<SoningsvurderingData> {

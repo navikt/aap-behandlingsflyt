@@ -177,10 +177,11 @@ class Effektuer11_7Steg(
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
             val repositoryProvider = RepositoryProvider(connection)
-            val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-            val sakRepository = repositoryProvider.provide(SakRepository::class)
-            val brevbestillingRepository = repositoryProvider.provide(BrevbestillingRepository::class)
-            val effektuer117repository = repositoryProvider.provide(Effektuer11_7Repository::class)
+            val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+            val sakRepository = repositoryProvider.provide<SakRepository>()
+            val brevbestillingRepository =
+                repositoryProvider.provide<BrevbestillingRepository>()
+            val effektuer117repository = repositoryProvider.provide<Effektuer11_7Repository>()
 
             val brevbestillingService =
                 BrevbestillingService(
@@ -190,8 +191,9 @@ class Effektuer11_7Steg(
                     sakRepository = sakRepository
                 )
 
-            val underveisRepository = repositoryProvider.provide(UnderveisRepository::class)
-            val avklaringsbehovRepository = repositoryProvider.provide(AvklaringsbehovRepository::class)
+            val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
+            val avklaringsbehovRepository =
+                repositoryProvider.provide<AvklaringsbehovRepository>()
             return Effektuer11_7Steg(
                 underveisRepository,
                 brevbestillingService,

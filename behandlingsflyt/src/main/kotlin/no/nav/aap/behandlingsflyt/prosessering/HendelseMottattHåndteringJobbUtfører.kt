@@ -118,10 +118,11 @@ class HendelseMottattHåndteringJobbUtfører(
 
         override fun konstruer(connection: DBConnection): JobbUtfører {
             val repositoryProvider = RepositoryProvider(connection)
-            val låsRepository = repositoryProvider.provide(TaSkriveLåsRepository::class)
-            val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-            val sakRepository = repositoryProvider.provide(SakRepository::class)
-            val mottattDokumentRepository = repositoryProvider.provide(MottattDokumentRepository::class)
+            val låsRepository = repositoryProvider.provide<TaSkriveLåsRepository>()
+            val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+            val sakRepository = repositoryProvider.provide<SakRepository>()
+            val mottattDokumentRepository =
+                repositoryProvider.provide<MottattDokumentRepository>()
             return HendelseMottattHåndteringJobbUtfører(
                 låsRepository,
                 HåndterMottattDokumentService(

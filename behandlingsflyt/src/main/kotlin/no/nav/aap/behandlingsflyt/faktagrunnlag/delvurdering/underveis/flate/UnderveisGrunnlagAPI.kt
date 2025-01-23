@@ -28,9 +28,10 @@ fun NormalOpenAPIRoute.underveisVurderingerAPI(datasource: DataSource) {
     ) { behandlingReferanse ->
         val underveisGrunnlag = datasource.transaction(readOnly = true) { conn ->
             val repositoryProvider = RepositoryProvider(conn)
-            val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
-            val behandling = BehandlingReferanseService(behandlingRepository).behandling(behandlingReferanse)
-            val underveisRepository = repositoryProvider.provide(UnderveisRepository::class)
+            val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+            val behandling =
+                BehandlingReferanseService(behandlingRepository).behandling(behandlingReferanse)
+            val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
             underveisRepository.hentHvisEksisterer(behandling.id)
         }
 

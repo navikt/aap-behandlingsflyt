@@ -52,7 +52,7 @@ class UføreService(
 
         override fun konstruer(connection: DBConnection): UføreService {
             val repositoryProvider = RepositoryProvider(connection)
-            val sakRepository = repositoryProvider.provide(SakRepository::class)
+            val sakRepository = repositoryProvider.provide<SakRepository>()
             return UføreService(
                 SakService(sakRepository),
                 UføreRepository(connection),

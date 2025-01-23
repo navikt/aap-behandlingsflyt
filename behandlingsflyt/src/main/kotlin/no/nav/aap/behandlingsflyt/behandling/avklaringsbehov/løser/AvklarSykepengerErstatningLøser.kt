@@ -12,10 +12,13 @@ class AvklarSykepengerErstatningLøser(val connection: DBConnection) :
     AvklaringsbehovsLøser<AvklarSykepengerErstatningLøsning> {
 
     private val repositoryProvider = RepositoryProvider(connection)
-    private val behandlingRepository = repositoryProvider.provide(BehandlingRepository::class)
+    private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
     private val sykepengerErstatningRepository = SykepengerErstatningRepository(connection)
 
-    override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarSykepengerErstatningLøsning): LøsningsResultat {
+    override fun løs(
+        kontekst: AvklaringsbehovKontekst,
+        løsning: AvklarSykepengerErstatningLøsning
+    ): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
 
         sykepengerErstatningRepository.lagre(

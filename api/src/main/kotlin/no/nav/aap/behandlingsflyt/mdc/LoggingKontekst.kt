@@ -11,7 +11,7 @@ class LoggingKontekst(repositoryProvider: RepositoryProvider, logKontekst: LogKo
     private val keys = HashSet<String>()
 
     init {
-        val contextRepository = repositoryProvider.provide(ContextRepository::class)
+        val contextRepository = repositoryProvider.provide<ContextRepository>()
         if (logKontekst.referanse != null) {
             contextRepository.hentDataFor(logKontekst.referanse)?.forEach { key, value ->
                 keys.add(key)
