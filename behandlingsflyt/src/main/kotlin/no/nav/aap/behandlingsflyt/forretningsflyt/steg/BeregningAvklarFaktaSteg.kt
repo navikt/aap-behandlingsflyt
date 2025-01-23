@@ -92,7 +92,7 @@ class BeregningAvklarFaktaSteg private constructor(
                 vilkårsresultatRepository,
                 AvklarFaktaBeregningService(vilkårsresultatRepository),
                 avklaringsbehovRepository,
-                YrkesskadeRepository(connection)
+                repositoryProvider.provide()
             )
         }
 

@@ -114,7 +114,7 @@ class VurderSykdomSteg private constructor(
             return VurderSykdomSteg(
                 repositoryProvider.provide(),
                 StudentRepository(connection),
-                YrkesskadeRepository(connection),
+                repositoryProvider.provide(),
                 vilkårsresultatRepository,
                 avklaringsbehovRepository,
             )

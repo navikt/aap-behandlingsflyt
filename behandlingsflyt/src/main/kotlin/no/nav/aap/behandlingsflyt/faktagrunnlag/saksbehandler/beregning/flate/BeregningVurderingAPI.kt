@@ -47,12 +47,13 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource) {
                     val repositoryProvider = RepositoryProvider(it)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
+                    val yrkesskadeRepository = repositoryProvider.provide<YrkesskadeRepository>()
 
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                     val yrkesskadevurdering =
                         sykdomRepository.hentHvisEksisterer(behandling.id)?.yrkesskadevurdering
                     val registerYrkeskade =
-                        YrkesskadeRepository(it).hentHvisEksisterer(behandling.id)?.yrkesskader?.yrkesskader
+                        yrkesskadeRepository.hentHvisEksisterer(behandling.id)?.yrkesskader?.yrkesskader
                             ?: emptyList()
                     val beregningGrunnlag =
                         repositoryProvider.provide<BeregningVurderingRepository>()

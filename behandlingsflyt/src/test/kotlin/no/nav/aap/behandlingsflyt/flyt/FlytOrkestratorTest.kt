@@ -33,6 +33,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
@@ -142,7 +143,8 @@ class FlytOrkestratorTest {
 
     @BeforeEach
     fun setUp() {
-        RepositoryRegistry.register<BehandlingRepositoryImpl>()
+        RepositoryRegistry
+            .register<BehandlingRepositoryImpl>()
             .register<PersonRepositoryImpl>()
             .register<SakRepositoryImpl>()
             .register<AvklaringsbehovRepositoryImpl>()
@@ -164,6 +166,7 @@ class FlytOrkestratorTest {
             .register<BistandRepositoryImpl>()
             .register<BeregningVurderingRepositoryImpl>()
             .register<SykdomRepositoryImpl>()
+            .register<YrkesskadeRepositoryImpl>()
             .status()
         GatewayRegistry.register<PdlBarnGateway>()
             .register<PdlIdentGateway>()

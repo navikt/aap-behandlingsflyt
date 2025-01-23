@@ -70,7 +70,7 @@ class VurderYrkesskadeSteg private constructor(
             return VurderYrkesskadeSteg(
                 vilkårsresultatRepository,
                 repositoryProvider.provide(),
-                YrkesskadeRepository(connection),
+                repositoryProvider.provide(),
                 avklaringsbehovRepository
             )
         }

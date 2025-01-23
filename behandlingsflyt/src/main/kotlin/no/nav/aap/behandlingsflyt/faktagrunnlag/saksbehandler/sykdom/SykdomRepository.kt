@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.lookup.repository.Repository
 
-interface SykdomRepository : Repository{
+interface SykdomRepository : Repository {
     fun lagre(
         behandlingId: BehandlingId,
         sykdomsvurdering: Sykdomsvurdering?,

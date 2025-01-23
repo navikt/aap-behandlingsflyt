@@ -75,12 +75,13 @@ private fun hentUtYrkesskadOgSykdomsgrunnlag(req: BehandlingReferanse) = { conne
     val repositoryProvider = RepositoryProvider(connection)
     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
     val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
+    val yrkesskadeRepository = repositoryProvider.provide<YrkesskadeRepository>()
 
     val behandling: Behandling =
         BehandlingReferanseService(behandlingRepository).behandling(req)
 
     val yrkesskadeGrunnlag =
-        YrkesskadeRepository(connection).hentHvisEksisterer(behandlingId = behandling.id)
+        yrkesskadeRepository.hentHvisEksisterer(behandlingId = behandling.id)
     val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId = behandling.id)
 
     yrkesskadeGrunnlag to sykdomGrunnlag

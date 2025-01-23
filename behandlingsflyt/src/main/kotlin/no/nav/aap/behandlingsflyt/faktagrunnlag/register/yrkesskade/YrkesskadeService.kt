@@ -105,7 +105,7 @@ class YrkesskadeService private constructor(
                 repositoryProvider.provide<MottattDokumentRepository>()
             return YrkesskadeService(
                 SakService(sakRepository),
-                YrkesskadeRepository(connection),
+                repositoryProvider.provide(),
                 personopplysningRepository,
                 YrkesskadeRegisterGateway,
                 mottattDokumentRepository,

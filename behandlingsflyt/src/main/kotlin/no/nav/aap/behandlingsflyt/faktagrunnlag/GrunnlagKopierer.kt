@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
@@ -21,7 +20,6 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class GrunnlagKopierer(connection: DBConnection) {
 
     private val repositoryProvider = RepositoryProvider(connection)
-    private val yrkesskadeRepository = YrkesskadeRepository(connection)
     private val studentRepository = StudentRepository(connection)
     private val meldepliktRepository = MeldepliktRepository(connection)
     private val sykepengerErstatningRepository = SykepengerErstatningRepository(connection)
@@ -36,7 +34,6 @@ class GrunnlagKopierer(connection: DBConnection) {
 
         repositoryProvider.provideAlle().forEach { repository -> repository.kopier(fraBehandlingId, tilBehandlingId) }
 
-        yrkesskadeRepository.kopier(fraBehandlingId, tilBehandlingId)
         studentRepository.kopier(fraBehandlingId, tilBehandlingId)
         meldepliktRepository.kopier(fraBehandlingId, tilBehandlingId)
         sykepengerErstatningRepository.kopier(fraBehandlingId, tilBehandlingId)
