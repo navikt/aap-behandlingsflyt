@@ -19,4 +19,8 @@ data class FlytKontekstMedPerioder(
     fun perioder(): NavigableSet<Periode> {
         return perioderTilVurdering.map { it.periode }.toCollection(TreeSet())
     }
+
+    fun skalBehandlesSomFørstegangsbehandling(): Boolean {
+        return perioderTilVurdering.any { vurdering -> vurdering.type == VurderingType.FØRSTEGANGSBEHANDLING }
+    }
 }

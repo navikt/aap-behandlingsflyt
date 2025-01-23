@@ -49,7 +49,8 @@ class VurderSykdomSteg private constructor(
                             vilkårResultat,
                             studentVurdering,
                             sykdomsGrunnlag,
-                            yrkesskadeGrunnlag
+                            yrkesskadeGrunnlag,
+                            avklaringsbehovene
                         )
                     ) {
                         return FantAvklaringsbehov(Definisjon.AVKLAR_SYKDOM)
@@ -62,7 +63,7 @@ class VurderSykdomSteg private constructor(
                 }
 
                 VurderingType.REVURDERING -> {
-                    if (skalStoppeIRevurdering(avklaringsbehovene)) {
+                    if (harVærtVurdertMinstEnGangIBehandlingen(avklaringsbehovene)) {
                         return FantAvklaringsbehov(Definisjon.AVKLAR_SYKDOM)
                     } else {
                         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)
@@ -81,7 +82,7 @@ class VurderSykdomSteg private constructor(
         return Fullført
     }
 
-    private fun skalStoppeIRevurdering(
+    private fun harVærtVurdertMinstEnGangIBehandlingen(
         avklaringsbehovene: Avklaringsbehovene
     ): Boolean {
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)
@@ -92,15 +93,20 @@ class VurderSykdomSteg private constructor(
         vilkårResultat: Vilkårsresultat,
         studentVurdering: StudentVurdering?,
         sykdomsGrunnlag: SykdomGrunnlag?,
-        yrkesskadeGrunnlag: YrkesskadeGrunnlag?
+        yrkesskadeGrunnlag: YrkesskadeGrunnlag?,
+        avklaringsbehovene: Avklaringsbehovene
     ): Boolean {
-        return erIkkeAvslagPåVilkårTidligere(vilkårResultat) &&
-                (studentVurdering?.erOppfylt() != true
-                        && sykdomsGrunnlag?.erKonsistentForSykdom(harYrkesskade(yrkesskadeGrunnlag)) != true)
+        if (!erIkkeAvslagPåVilkårTidligere(vilkårResultat) && studentVurdering?.erOppfylt() == true) {
+            return false
+        }
+        return sykdomsGrunnlag?.erKonsistentForSykdom(harYrkesskade(yrkesskadeGrunnlag)) != true || harVærtVurdertMinstEnGangIBehandlingen(
+            avklaringsbehovene
+        )
     }
 
-    private fun harYrkesskade(yrkesskadeGrunnlag: YrkesskadeGrunnlag?): Boolean =
-        yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true
+    private fun harYrkesskade(yrkesskadeGrunnlag: YrkesskadeGrunnlag?): Boolean {
+        return yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true
+    }
 
     private fun erIkkeAvslagPåVilkårTidligere(vilkårsresultat: Vilkårsresultat): Boolean {
         return vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET).harPerioderSomErOppfylt()

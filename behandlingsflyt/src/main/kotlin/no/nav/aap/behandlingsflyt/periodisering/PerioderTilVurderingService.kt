@@ -102,7 +102,7 @@ class PerioderTilVurderingService(
                 VurderingType.FORLENGELSE,
                 listOf(årsak.type),
                 requireNotNull(årsak.periode)
-            ) // TODO: Vurdere om denne skal utlede mer komplekst (dvs har mottatt for denne perioden før)
+            )
 
             ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING -> Vurdering(
                 VurderingType.REVURDERING,
@@ -126,6 +126,12 @@ class PerioderTilVurderingService(
                 VurderingType.REVURDERING,
                 listOf(årsak.type),
                 requireNotNull(årsak.periode)
+            )
+
+            ÅrsakTilBehandling.ENDRING_MEDLEMSKAP -> Vurdering(
+                VurderingType.REVURDERING,
+                listOf(årsak.type),
+                rettighetsperiode
             )
         }
     }

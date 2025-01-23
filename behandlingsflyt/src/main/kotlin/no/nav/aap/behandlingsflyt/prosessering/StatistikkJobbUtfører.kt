@@ -110,6 +110,7 @@ class StatistikkJobbUtfører(
                     ÅrsakTilBehandling.MOTTATT_AVVIST_LEGEERKLÆRING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.AVVIST_LEGEERKLÆRING
                     ÅrsakTilBehandling.MOTTATT_DIALOGMELDING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.DIALOGMELDING
                     ÅrsakTilBehandling.G_REGULERING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.G_REGULERING
+                    ÅrsakTilBehandling.ENDRING_MEDLEMSKAP -> TODO()
                 }
             }.distinct()
         )
