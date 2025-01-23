@@ -14,12 +14,16 @@ class VurderLovvalgSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        /*if (fantAtViIkkeKanStoppe) {
+
+        /*
+
+        Medlemskapvilkåret(vilkårsresultat = "").vurder(grunnnlag)
+        if (fantAtViIkkeKanStoppe) {
             return FantAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
         }
-        Medlemskapvilkåret(vilkårsresultat = "").vurder(grunnnlag)
         vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
         */
+
         return Fullført
     }
 

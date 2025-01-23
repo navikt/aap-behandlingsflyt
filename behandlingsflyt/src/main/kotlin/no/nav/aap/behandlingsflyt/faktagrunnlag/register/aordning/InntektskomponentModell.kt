@@ -1,12 +1,13 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning
 
+import java.time.LocalDate
 import java.time.YearMonth
 
 data class InntektskomponentResponse(
-    val arbeidsInntektMaaned: List<Måned> = listOf()
+    val arbeidsInntektMaaned: List<ArbeidsInntektMaaned> = listOf()
 )
 
-data class Måned(
+data class ArbeidsInntektMaaned(
     val aarMaaned: YearMonth,
     val arbeidsInntektInformasjon: ArbeidsInntektInformasjon
 )
@@ -18,7 +19,15 @@ data class ArbeidsInntektInformasjon(
 data class Inntekt(
     val beloep: Double,
     val opptjeningsland: String?,
-    val skattemessigBosattLand: String?
+    val skattemessigBosattLand: String?,
+    val opptjeningsperiodeFom: LocalDate?,
+    val opptjeningsperiodeTom: LocalDate?,
+    val virksomhet: Virksomhet,
+    val beskrivelse: String?
+)
+
+data class Virksomhet(
+    val identifikator: String,
 )
 
 data class InntektskomponentRequest(
