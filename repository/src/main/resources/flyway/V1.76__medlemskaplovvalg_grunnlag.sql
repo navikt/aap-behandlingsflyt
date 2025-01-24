@@ -1,3 +1,10 @@
+-- Aggregering
+CREATE TABLE ARBEIDER
+(
+    ID              BIGSERIAL                              NOT NULL   PRIMARY KEY,
+    OPPRETTET_TID   TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
 CREATE TABLE ARBEID
 (
     ID                      BIGSERIAL                              NOT NULL   PRIMARY KEY,
@@ -7,15 +14,15 @@ CREATE TABLE ARBEID
     STARTDATO               DATE                                   NOT NULL,
     SLUTTDATO               DATE                                   NULL,
     OPPRETTET_TID           TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
-)
+);
 CREATE INDEX IDX_ARBEID_ARBEIDER_ID ON ARBEID (ARBEIDER_ID);
 
 -- Aggregering
-CREATE TABLE ARBEIDER
+CREATE TABLE INNTEKTER_I_NORGE
 (
     ID              BIGSERIAL                              NOT NULL   PRIMARY KEY,
     OPPRETTET_TID   TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
-)
+);
 
 CREATE TABLE INNTEKT_I_NORGE
 (
@@ -23,20 +30,13 @@ CREATE TABLE INNTEKT_I_NORGE
     IDENTIFIKATOR               VARCHAR(30)                            NOT NULL,
     BELOEP                      NUMERIC                                NOT NULL,
     SKATTEMESSIG_BOSATT_LAND    VARCHAR(3)                             NULL,
-    OPPTJENINGS_LAND            VARCHAR(3)                             NULL
+    OPPTJENINGS_LAND            VARCHAR(3)                             NULL,
     INNTEKT_TYPE                VARCHAR(50)                            NULL,
     PERIODE                     DATERANGE                              NOT NULL,
     INNTEKTER_I_NORGE_ID        BIGINT                                 NOT NULL REFERENCES INNTEKTER_I_NORGE (ID),
     OPPRETTET_TID               TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
-)
+);
 CREATE INDEX IDX_INNTEKT_I_NORGE_INNTEKTER_I_NORGE_ID ON INNTEKT_I_NORGE (INNTEKTER_I_NORGE_ID);
-
--- Aggregering
-CREATE TABLE INNTEKTER_I_NORGE
-(
-    ID              BIGSERIAL                              NOT NULL   PRIMARY KEY,
-    OPPRETTET_TID   TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
-)
 
 CREATE TABLE MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG
 (

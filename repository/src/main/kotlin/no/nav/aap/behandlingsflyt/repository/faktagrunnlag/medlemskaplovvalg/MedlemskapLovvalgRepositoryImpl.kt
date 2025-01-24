@@ -35,8 +35,7 @@ class MedlemskapLovvalgRepositoryImpl(private val connection: DBConnection): Med
                 MedlemskapLovvalgGrunnlag(
                     medlemskapGrunnlag = hentMedlemskapGrunnlag(it.getLongOrNull("medlemskap_unntak_person_id")),
                     inntekterINorgeGrunnlag = hentInntekterINorgeGrunnlag(it.getLongOrNull("inntekter_i_norge_id")),
-                    arbeiderINorgeGrunnlag = hentArbeiderINorgeGrunnlag(it.getLongOrNull("arbeider_id")),
-                    id = it.getLong("id")
+                    arbeiderINorgeGrunnlag = hentArbeiderINorgeGrunnlag(it.getLongOrNull("arbeider_id"))
                 )
             }
         }
@@ -82,10 +81,15 @@ class MedlemskapLovvalgRepositoryImpl(private val connection: DBConnection): Med
         for (entry in inntektGrunnlag) {
             for (inntekt in entry.arbeidsInntektInformasjon.inntektListe) {
                 val inntektQuery = """
-                    INSERT INTO INNTEKT_I_NORGE (identifikator, beloep, skattemessig_bosatt_land, opptjenings_land, inntekt_type, inntekter_i_norge_id, periode) VALUES (?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO INNTEKT_I_NORGE (identifikator, beloep, skattemessig_bosatt_land, opptjenings_land, inntekt_type, inntekter_i_norge_id, periode) VALUES (?, ?, ?, ?, ?, ?, ?::daterange)
                 """.trimIndent()
 
-                val årMånedFallback = LocalDate.from(entry.aarMaaned)
+                val årMånedFallback = if (entry.aarMaaned.atDay(1).isAfter(inntekt.opptjeningsperiodeFom) && inntekt.opptjeningsperiodeFom != null) {
+                    entry.aarMaaned.atDay(1)
+                } else {
+                    inntekt.opptjeningsperiodeFom!!
+                }
+
                 connection.execute(inntektQuery)  {
                     setParams {
                         setString(1, inntekt.virksomhet.identifikator)

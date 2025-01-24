@@ -60,6 +60,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlRelasjonDataRe
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlRequest
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlStatsborgerskap
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonStatus
+import no.nav.aap.behandlingsflyt.test.FakeServers.aaregFake
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.brev.kontrakt.BestillBrevRequest
 import no.nav.aap.brev.kontrakt.BestillBrevResponse
@@ -111,6 +112,8 @@ object FakeServers : AutoCloseable {
     private val sykepenger = embeddedServer(Netty, port = 0, module = { spFake() })
     private val statistikk = embeddedServer(Netty, port = 0, module = { statistikkFake() })
     private val dokumentinnhenting = embeddedServer(Netty, port = 0, module = { dokumentinnhentingFake() })
+    private val ainntekt = embeddedServer(Netty, port = 0, module = { ainntektFake() })
+    private val aareg = embeddedServer(Netty, port = 0, module = { aaregFake() })
 
     internal val statistikkHendelser = mutableListOf<StoppetBehandling>()
     internal val legeerklæringStatuser = mutableListOf<LegeerklæringStatusResponse>()
@@ -547,6 +550,149 @@ object FakeServers : AutoCloseable {
             post("/utbetalte-perioder-aap") {
                 call.receive<String>()
                 call.respond(spResponse)
+            }
+        }
+    }
+
+    private fun Application.aaregFake() {
+        @Language("JSON")
+        val aaregResponse = """
+            {
+              "arbeidsforholdoversikter": [
+                {
+                  "type": {
+                    "kode": "ordinaertArbeidsforhold",
+                    "beskrivelse": "Ordinært arbeidsforhold"
+                  },
+                  "arbeidstaker": {
+                    "identer": [
+                      {
+                        "type": "AKTORID",
+                        "ident": "2336200023418",
+                        "gjeldende": true
+                      },
+                      {
+                        "type": "FOLKEREGISTERIDENT",
+                        "ident": "244991*****",
+                        "gjeldende": true
+                      }
+                    ]
+                  },
+                  "arbeidssted": {
+                    "type": "Underenhet",
+                    "identer": [
+                      {
+                        "type": "ORGANISASJONSNUMMER",
+                        "ident": "896929119",
+                        "gjeldende": null
+                      }
+                    ]
+                  },
+                  "opplysningspliktig": {
+                    "type": "Hovedenhet",
+                    "identer": [
+                      {
+                        "type": "ORGANISASJONSNUMMER",
+                        "ident": "963743254",
+                        "gjeldende": null
+                      }
+                    ]
+                  },
+                  "startdato": "2005-01-16",
+                  "sluttdato": null,
+                  "yrke": {
+                    "kode": "7125102",
+                    "beskrivelse": "BYGNINGSSNEKKER"
+                  },
+                  "avtaltStillingsprosent": 100,
+                  "permisjonsprosent": null,
+                  "permitteringsprosent": null
+                }
+              ]
+            }
+        """.trimIndent()
+
+        install(ContentNegotiation) {
+            jackson()
+        }
+        install(StatusPages) {
+            exception<Throwable> { call, cause ->
+                this@aaregFake.log.info(
+                    "SYKEPENGER :: Ukjent feil ved kall til '{}'",
+                    call.request.local.uri,
+                    cause
+                )
+                call.respond(
+                    status = HttpStatusCode.Companion.InternalServerError,
+                    message = ErrorRespons(cause.message)
+                )
+            }
+        }
+        routing {
+            post("/api/v2/arbeidstaker/arbeidsforholdoversikt") {
+                call.respond(aaregResponse)
+            }
+        }
+    }
+
+    private fun Application.ainntektFake() {
+        @Language("JSON")
+        val ainntektResponse = """
+            {
+                "arbeidsInntektMaaned": [
+                    {
+                        "aarMaaned": "2025-01",
+                        "arbeidsInntektInformasjon": {
+                            "inntektListe": [
+                                {
+                                    "beloep": 4006.0,
+                                    "opptjeningsland": null,
+                                    "skattemessigBosattLand": null,
+                                    "opptjeningsperiodeFom": "2025-01-22",
+                                    "opptjeningsperiodeTom": null,
+                                    "beskrivelse": "sykepenger",
+                                    "virksomhet": {
+                                      "identifikator": "896929119",
+                                      "aktoerType": "AKTOER_ID"
+                                    }
+                                },
+                                {
+                                    "beloep": 4444.0,
+                                    "opptjeningsland": null,
+                                    "skattemessigBosattLand": null,
+                                    "opptjeningsperiodeFom": "2025-01-01",
+                                    "opptjeningsperiodeTom": null,
+                                    "beskrivelse": "ikkeSykepenger",
+                                    "virksomhet": {
+                                      "identifikator": "896929119",
+                                      "aktoerType": "AKTOER_ID"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        """.trimIndent()
+        install(ContentNegotiation) {
+            jackson()
+        }
+        install(StatusPages) {
+            exception<Throwable> { call, cause ->
+                this@ainntektFake.log.info(
+                    "SYKEPENGER :: Ukjent feil ved kall til '{}'",
+                    call.request.local.uri,
+                    cause
+                )
+                call.respond(
+                    status = HttpStatusCode.Companion.InternalServerError,
+                    message = ErrorRespons(cause.message)
+                )
+            }
+        }
+        routing {
+            post("/hentinntektliste") {
+                call.respond(ainntektResponse)
             }
         }
     }
@@ -1163,6 +1309,8 @@ object FakeServers : AutoCloseable {
         sykepenger.start()
         statistikk.start()
         dokumentinnhenting.start()
+        ainntekt.start()
+        aareg.start()
 
         println("AZURE PORT ${azure.port()}")
 
@@ -1247,6 +1395,14 @@ object FakeServers : AutoCloseable {
 
         // Saksbehandling
         System.setProperty("integrasjon.saksbehandling.azp", "azp")
+
+        // AAregisteret
+        System.setProperty("integrasjon.aareg.url", "http://localhost:${aareg.port()}")
+        System.setProperty("integrasjon.aareg.scope", "scope")
+
+        // Inntektskomponenten
+        System.setProperty("integrasjon.inntektskomponenten.url", "http://localhost:${ainntekt.port()}")
+        System.setProperty("integrasjon.inntektskomponenten.scope", "scope")
     }
 
     override fun close() {
@@ -1267,6 +1423,8 @@ object FakeServers : AutoCloseable {
         foreldrepenger.stop(0L, 0L)
         sykepenger.stop(0L, 0L)
         dokumentinnhenting.stop(0L, 0L)
+        ainntekt.stop(0L, 0L)
+        aareg.stop(0L, 0L)
     }
 }
 

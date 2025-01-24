@@ -7,8 +7,7 @@ import java.time.LocalDate
 data class MedlemskapLovvalgGrunnlag(
     val medlemskapGrunnlag: MedlemskapUnntakGrunnlag?,
     val inntekterINorgeGrunnlag : List<InntektINorgeGrunnlag>,
-    val arbeiderINorgeGrunnlag : List<ArbeidINorgeGrunnlag>,
-    val id: Long
+    val arbeiderINorgeGrunnlag : List<ArbeidINorgeGrunnlag>
 )
 
 data class InntektINorgeGrunnlag(
