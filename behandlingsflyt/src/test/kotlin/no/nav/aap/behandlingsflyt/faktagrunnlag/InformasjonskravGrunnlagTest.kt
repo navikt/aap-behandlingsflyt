@@ -1,24 +1,36 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.yrkesskade.YrkesskadeRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeService
+import no.nav.aap.behandlingsflyt.flyt.testutil.InMemoryBehandlingRepository
+import no.nav.aap.behandlingsflyt.flyt.testutil.InMemorySakRepository
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.periodisering.PerioderTilVurderingService
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapLovvalgRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.pip.PipRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurdering
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonStatus
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.Fakes
@@ -55,6 +67,7 @@ class InformasjonskravGrunnlagTest {
             .register(PersonopplysningRepositoryImpl::class)
             .register<MottattDokumentRepositoryImpl>()
             .register<YrkesskadeRepositoryImpl>()
+            .register<MedlemskapLovvalgRepositoryImpl>()
     }
 
     @Test
@@ -129,6 +142,38 @@ class InformasjonskravGrunnlagTest {
         }
     }
 
+    @Test
+    fun LovvalgMedlemskapErOppdatert() {
+        InitTestDatabase.dataSource.transaction { connection ->
+            val (ident, kontekst) = klargjør(connection)
+            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(connection)
+
+            FakePersoner.leggTil(
+                TestPerson(
+                    identer = setOf(ident),
+                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
+                    yrkesskade = listOf()
+                )
+            )
+
+            val initiell = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
+                listOf(LovvalgService),
+                kontekst
+            )
+
+            assertThat(initiell)
+                .hasSize(1)
+                .allMatch { it === LovvalgService }
+
+            val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
+                listOf(LovvalgService),
+                kontekst
+            )
+
+            assertThat(erOppdatert).isEmpty()
+        }
+    }
+
     private fun klargjør(connection: DBConnection): Pair<Ident, FlytKontekstMedPerioder> {
         val ident = ident()
         val sak = PersonOgSakService(
@@ -154,7 +199,13 @@ class InformasjonskravGrunnlagTest {
             flytKontekst.sakId,
             flytKontekst.behandlingId,
             behandling.typeBehandling(),
-            emptySet()
+            setOf(
+                Vurdering(
+                    VurderingType.FØRSTEGANGSBEHANDLING,
+                    listOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
+                    Periode(LocalDate.now(), LocalDate.now())
+                )
+            )
         )
     }
 }
