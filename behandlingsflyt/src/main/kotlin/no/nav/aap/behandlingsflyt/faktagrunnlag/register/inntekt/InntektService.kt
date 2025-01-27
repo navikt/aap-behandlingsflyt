@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
@@ -32,6 +33,7 @@ class InntektService private constructor(
     private val inntektGrunnlagRepository: InntektGrunnlagRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val sykdomRepository: SykdomRepository,
+    private val uføreRepository: UføreRepository,
     private val studentRepository: StudentRepository,
     private val beregningVurderingRepository: BeregningVurderingRepository,
     private val yrkesskadeRepository: YrkesskadeRepository,
@@ -49,6 +51,7 @@ class InntektService private constructor(
             val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId)
             val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
             val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
+            val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandlingId)
 
             val sak = sakService.hent(kontekst.sakId)
             val nedsettelsesDato = utledNedsettelsesdato(beregningVurdering?.tidspunktVurdering, studentGrunnlag);
@@ -56,7 +59,7 @@ class InntektService private constructor(
                 Input(
                     nedsettelsesDato = nedsettelsesDato,
                     inntekter = setOf(),
-                    uføregrad = Prosent.`0_PROSENT`,
+                    uføregrad = uføreGrunnlag?.vurdering?.uføregrad ?: Prosent(0),
                     yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
                     registrerteYrkesskader = yrkesskadeGrunnlag?.yrkesskader,
                     beregningGrunnlag = beregningVurdering
@@ -112,15 +115,17 @@ class InntektService private constructor(
             val sakRepository = repositoryProvider.provide<SakRepository>()
             val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
             val beregningVurderingRepository = repositoryProvider.provide<BeregningVurderingRepository>()
+
             return InntektService(
-                SakService(sakRepository),
-                InntektGrunnlagRepository(connection),
-                vilkårsresultatRepository,
-                repositoryProvider.provide(),
-                StudentRepository(connection),
-                beregningVurderingRepository,
-                repositoryProvider.provide(),
-                InntektGateway
+                sakService = SakService(sakRepository),
+                inntektGrunnlagRepository = InntektGrunnlagRepository(connection),
+                vilkårsresultatRepository = vilkårsresultatRepository,
+                sykdomRepository = repositoryProvider.provide(),
+                uføreRepository = repositoryProvider.provide(),
+                studentRepository = StudentRepository(connection),
+                beregningVurderingRepository = beregningVurderingRepository,
+                yrkesskadeRepository = repositoryProvider.provide(),
+                inntektRegisterGateway = InntektGateway
             )
         }
     }
