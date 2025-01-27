@@ -24,8 +24,10 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource) {
                 val responsDto = dataSource.transaction(readOnly = true) {
                     val repositoryProvider = RepositoryProvider(it)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val uføreRepository = repositoryProvider.provide<UføreRepository>()
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
-                    val skalVurdereUføre = UføreRepository(it).hentHvisEksisterer(behandling.id)?.vurdering != null
+                    // Dette er logikk, burde i egen service
+                    val skalVurdereUføre = uføreRepository.hentHvisEksisterer(behandling.id)?.vurdering != null
                     val beregningGrunnlag =
                         repositoryProvider.provide<BeregningVurderingRepository>()
                             .hentHvisEksisterer(behandlingId = behandling.id)

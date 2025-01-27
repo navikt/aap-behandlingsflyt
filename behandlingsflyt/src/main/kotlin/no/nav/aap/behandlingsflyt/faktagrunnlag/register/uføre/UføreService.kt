@@ -55,7 +55,7 @@ class UføreService(
             val sakRepository = repositoryProvider.provide<SakRepository>()
             return UføreService(
                 SakService(sakRepository),
-                UføreRepository(connection),
+                repositoryProvider.provide(),
                 UføreGateway
             )
         }
