@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.behandling.vilkår.alder.flate
+package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.alder
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import java.time.LocalDate
