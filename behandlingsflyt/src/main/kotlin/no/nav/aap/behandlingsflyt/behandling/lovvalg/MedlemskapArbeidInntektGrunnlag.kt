@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUn
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 
-data class MedlemskapLovvalgGrunnlag(
+data class MedlemskapArbeidInntektGrunnlag(
     val medlemskapGrunnlag: MedlemskapUnntakGrunnlag?,
     val inntekterINorgeGrunnlag : List<InntektINorgeGrunnlag>,
     val arbeiderINorgeGrunnlag : List<ArbeidINorgeGrunnlag>

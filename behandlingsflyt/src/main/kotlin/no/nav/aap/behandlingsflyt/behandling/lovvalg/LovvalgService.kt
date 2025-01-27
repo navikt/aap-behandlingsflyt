@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.lovvalg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.MedlemskapLovvalgRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.AARegisterGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ARBEIDSFORHOLDSTATUSER
@@ -28,7 +28,7 @@ import java.time.YearMonth
 class LovvalgService private constructor(
     private val medlemskapGateway: MedlemskapGateway,
     private val sakService: SakService,
-    private val medlemskapLovvalgRepository: MedlemskapLovvalgRepository,
+    private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
     private val medlemskapRepository: MedlemskapRepository
 ): Informasjonskrav {
 
@@ -39,9 +39,9 @@ class LovvalgService private constructor(
         val arbeidGrunnlag = innhentAARegisterGrunnlag(sak)
         val inntektGrunnlag = innhentAInntektGrunnlag(sak)
 
-        val eksisterendeData = medlemskapLovvalgRepository.hentHvisEksisterer(kontekst.behandlingId)
+        val eksisterendeData = medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)
         lagre(kontekst.behandlingId, medlemskapPerioder, arbeidGrunnlag, inntektGrunnlag)
-        val nyeData = medlemskapLovvalgRepository.hentHvisEksisterer(kontekst.behandlingId)
+        val nyeData = medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)
 
         return if (nyeData == eksisterendeData) IKKE_ENDRET else ENDRET
     }
@@ -62,7 +62,7 @@ class LovvalgService private constructor(
 
     private fun lagre(behandlingId: BehandlingId, medlemskapGrunnlag: List<MedlemskapResponse>, arbeidGrunnlag: List<ArbeidsforholdOversikt>, inntektGrunnlag: List<ArbeidsInntektMaaned>) {
         val medlId = if (medlemskapGrunnlag.isNotEmpty()) medlemskapRepository.lagreUnntakMedlemskap(behandlingId, medlemskapGrunnlag) else null
-        medlemskapLovvalgRepository.lagreArbeidsforholdOgInntektINorge(behandlingId, arbeidGrunnlag, inntektGrunnlag, medlId)
+        medlemskapArbeidInntektRepository.lagreArbeidsforholdOgInntektINorge(behandlingId, arbeidGrunnlag, inntektGrunnlag, medlId)
     }
 
     companion object : Informasjonskravkonstruktør {
@@ -77,12 +77,12 @@ class LovvalgService private constructor(
 
         override fun konstruer(connection: DBConnection): LovvalgService {
             val repositoryProvider = RepositoryProvider(connection)
-            val medlemskapLovvalgRepository = repositoryProvider.provide<MedlemskapLovvalgRepository>()
+            val medlemskapArbeidInntektRepository = repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
             val sakRepository = repositoryProvider.provide<SakRepository>()
             return LovvalgService(
                 MedlemskapGateway(),
                 SakService(sakRepository),
-                medlemskapLovvalgRepository,
+                medlemskapArbeidInntektRepository,
                 MedlemskapRepository(connection)
             )
         }

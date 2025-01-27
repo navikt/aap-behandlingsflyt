@@ -2,8 +2,8 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.MedlemskapLovvalgRepository
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapArbeidInntektGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdOversikt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
@@ -13,16 +13,15 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
-import java.time.LocalDate
 
-class MedlemskapLovvalgRepositoryImpl(private val connection: DBConnection): MedlemskapLovvalgRepository {
-    companion object : Factory<MedlemskapLovvalgRepositoryImpl> {
-        override fun konstruer(connection: DBConnection): MedlemskapLovvalgRepositoryImpl {
-            return MedlemskapLovvalgRepositoryImpl(connection)
+class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection): MedlemskapArbeidInntektRepository {
+    companion object : Factory<MedlemskapArbeidInntektRepositoryImpl> {
+        override fun konstruer(connection: DBConnection): MedlemskapArbeidInntektRepositoryImpl {
+            return MedlemskapArbeidInntektRepositoryImpl(connection)
         }
     }
 
-    override fun hentHvisEksisterer(behandlingId: BehandlingId): MedlemskapLovvalgGrunnlag? {
+    override fun hentHvisEksisterer(behandlingId: BehandlingId): MedlemskapArbeidInntektGrunnlag? {
         val query = """
             SELECT * FROM MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG WHERE behandling_id = ? and aktiv = true
         """.trimIndent()
@@ -32,7 +31,7 @@ class MedlemskapLovvalgRepositoryImpl(private val connection: DBConnection): Med
                 setLong(1, behandlingId.toLong())
             }
             setRowMapper {
-                MedlemskapLovvalgGrunnlag(
+                MedlemskapArbeidInntektGrunnlag(
                     medlemskapGrunnlag = hentMedlemskapGrunnlag(it.getLongOrNull("medlemskap_unntak_person_id")),
                     inntekterINorgeGrunnlag = hentInntekterINorgeGrunnlag(it.getLongOrNull("inntekter_i_norge_id")),
                     arbeiderINorgeGrunnlag = hentArbeiderINorgeGrunnlag(it.getLongOrNull("arbeider_id"))
