@@ -2,6 +2,9 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat
 
 import no.nav.aap.komponenter.type.Periode
 
+/**
+ * @param manuellVurdering Hvorvidt vilkåret ble utledet av systemet basert på fakta, eller om det ble manuelt satt av en saksbehandler.
+ */
 class Vilkårsperiode(
     val periode: Periode,
     val utfall: Utfall,
