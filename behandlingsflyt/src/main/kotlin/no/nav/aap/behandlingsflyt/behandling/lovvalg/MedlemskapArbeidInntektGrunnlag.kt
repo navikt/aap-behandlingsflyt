@@ -1,8 +1,17 @@
 package no.nav.aap.behandlingsflyt.behandling.lovvalg
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
+
+data class MedlemskapLovvalgGrunnlag(
+    val medlemskapArbeidInntektGrunnlag: MedlemskapArbeidInntektGrunnlag?,
+    val personopplysningGrunnlag: PersonopplysningGrunnlag,
+    var nyeSoknadGrunnlag: UtenlandsOppholdData?
+) : Faktagrunnlag
 
 data class MedlemskapArbeidInntektGrunnlag(
     val medlemskapGrunnlag: MedlemskapUnntakGrunnlag?,

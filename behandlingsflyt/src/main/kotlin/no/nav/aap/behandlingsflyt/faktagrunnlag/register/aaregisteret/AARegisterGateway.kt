@@ -32,7 +32,8 @@ class AARegisterGateway {
         try {
             return query(request)
         } catch (e : Exception) {
-            throw RuntimeException("Feil ved henting av data i AAREG: ${e.message}, $e")
+            // Fant ikke bruker i AAreg
+            return ArbeidsforholdoversiktResponse()
         }
     }
 }

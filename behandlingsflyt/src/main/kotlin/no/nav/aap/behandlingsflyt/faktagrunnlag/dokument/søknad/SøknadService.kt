@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_END
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.OppgittStudent
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
@@ -13,14 +14,13 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
-import org.slf4j.LoggerFactory
 
 class SøknadService private constructor(
     private val mottaDokumentService: MottaDokumentService,
     private val studentRepository: StudentRepository,
-    private val barnRepository: BarnRepository
+    private val barnRepository: BarnRepository,
+    private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository
 ) : Informasjonskrav {
-    private val logger = LoggerFactory.getLogger(SøknadService::class.java)
 
     companion object : Informasjonskravkonstruktør {
         override fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
@@ -29,17 +29,18 @@ class SøknadService private constructor(
         }
 
         override fun konstruer(connection: DBConnection): SøknadService {
-            val mottattDokumentRepository =
-                RepositoryProvider(connection).provide<MottattDokumentRepository>()
+            val repositoryProvider = RepositoryProvider(connection)
+            val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
+            val medlemskapArbeidInntektRepository = repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
             return SøknadService(
                 MottaDokumentService(mottattDokumentRepository),
                 StudentRepository(connection),
-                BarnRepository(connection)
+                BarnRepository(connection),
+                medlemskapArbeidInntektRepository
             )
         }
     }
 
-    //TODO: Oppdater her med utenlandsopphold
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val ubehandletSøknader = mottaDokumentService.søknaderSomIkkeHarBlittBehandlet(kontekst.sakId)
         if (ubehandletSøknader.isEmpty()) {
@@ -63,7 +64,7 @@ class SøknadService private constructor(
             }
 
             if (ubehandletSøknad.utenlandsOppholdData != null) {
-                logger.info("fant utenlandsoppholdData: ${ubehandletSøknad.utenlandsOppholdData}")
+                medlemskapArbeidInntektRepository.lagreOppgittUtenlandsOppplysninger(kontekst.behandlingId, ubehandletSøknad.journalpostId, ubehandletSøknad.utenlandsOppholdData)
             }
 
             mottaDokumentService.knyttTilBehandling(

@@ -49,7 +49,6 @@ public data class SøknadMedlemskapDto(
 * @param iArbeid Lovlig verdi er "ja/jA/Ja/JA". Alt annet blir tolket som false.
  */
 public data class UtenlandsPeriodeDto(
-    val id: String?,
     val land: String?,
     val tilDato: LocalDate?,
     val fraDato: LocalDate?,

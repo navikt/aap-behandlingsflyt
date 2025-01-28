@@ -88,7 +88,15 @@ class InnsendingTest {
                 harBoddINorgeSiste5År = "ja",
                 arbeidetUtenforNorgeFørSykdom = "ja",
                 iTilleggArbeidUtenforNorge = "ja",
-                utenlandsOpphold = listOf(UtenlandsPeriodeDto("id", "NOR", LocalDate.now(), LocalDate.now().plusDays(3), "nei", "utenlandsId"))
+                utenlandsOpphold = listOf(
+                    UtenlandsPeriodeDto(
+                        "AD:Andorra",
+                        LocalDate.parse("2024-12-31"),
+                        LocalDate.parse("2024-12-31").plusDays(3),
+                        "nei",
+                        "utenlandsId"
+                    )
+                )
             )
         )
 

@@ -50,7 +50,6 @@ data class UbehandletSøknad(
                     utenlandsOppholdData = if (søknad.medlemskap == null) null else søknad.medlemskap?.let {
                         val utenlandsOpphold = it.utenlandsOpphold?.map { opphold ->
                             UtenlandsPeriode(
-                                id = opphold.id,
                                 land = opphold.land,
                                 tilDato = opphold.tilDato,
                                 fraDato = opphold.fraDato,
@@ -64,7 +63,7 @@ data class UbehandletSøknad(
                             harArbeidetINorgeSiste5År = it.harArbeidetINorgeSiste5År?.uppercase() == "JA",
                             arbeidetUtenforNorgeFørSykdom = it.arbeidetUtenforNorgeFørSykdom?.uppercase() == "JA",
                             iTilleggArbeidUtenforNorge = it.iTilleggArbeidUtenforNorge?.uppercase() == "JA",
-                            utenlandsOpphold = utenlandsOpphold ?: listOf()
+                            utenlandsOpphold = utenlandsOpphold
                         )
                     }
                 )
