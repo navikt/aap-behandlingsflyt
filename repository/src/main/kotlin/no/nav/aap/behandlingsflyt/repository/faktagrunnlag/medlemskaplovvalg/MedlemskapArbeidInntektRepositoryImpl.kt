@@ -16,7 +16,7 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
 import no.nav.aap.verdityper.dokument.JournalpostId
-import java.util.*
+import org.slf4j.LoggerFactory
 
 class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection): MedlemskapArbeidInntektRepository {
     companion object : Factory<MedlemskapArbeidInntektRepositoryImpl> {
@@ -113,11 +113,13 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
     }
 
     private fun lagreArbeidsInntektGrunnlag (arbeidsInntektGrunnlag: List<ArbeidsInntektMaaned>): Long? {
+        val logger = LoggerFactory.getLogger(MedlemskapArbeidInntektRepositoryImpl::class.java)
         if (arbeidsInntektGrunnlag.isEmpty()) return null
         val inntekterINorgeQuery = """
             INSERT INTO INNTEKTER_I_NORGE DEFAULT VALUES
         """.trimIndent()
         val inntekterINorgeId = connection.executeReturnKey(inntekterINorgeQuery)
+        logger.info("arbeidsInntektGrunnlag: $arbeidsInntektGrunnlag")
 
         for (entry in arbeidsInntektGrunnlag) {
             for (inntekt in entry.arbeidsInntektInformasjon.inntektListe) {
