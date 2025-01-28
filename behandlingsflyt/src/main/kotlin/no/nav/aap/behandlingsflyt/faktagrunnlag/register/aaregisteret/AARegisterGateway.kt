@@ -33,7 +33,8 @@ class AARegisterGateway {
             return query(request)
         } catch (e : Exception) {
             // Fant ikke bruker i AAreg
-            return ArbeidsforholdoversiktResponse()
+            throw RuntimeException("Feil ved henting av data i Inntektskomponenten: ${e.message}, $e")
+            //return ArbeidsforholdoversiktResponse()
         }
     }
 }

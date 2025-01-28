@@ -127,11 +127,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                     INSERT INTO INNTEKT_I_NORGE (identifikator, beloep, skattemessig_bosatt_land, opptjenings_land, inntekt_type, inntekter_i_norge_id, periode) VALUES (?, ?, ?, ?, ?, ?, ?::daterange)
                 """.trimIndent()
 
-                val årMånedFallback = if (entry.aarMaaned.atDay(1).isAfter(inntekt.opptjeningsperiodeFom) && inntekt.opptjeningsperiodeFom != null) {
-                    entry.aarMaaned.atDay(1)
-                } else {
-                    inntekt.opptjeningsperiodeFom!!
-                }
+                val tomFallback = inntekt.opptjeningsperiodeFom ?: entry.aarMaaned.atDay(1)
 
                 connection.execute(inntektQuery)  {
                     setParams {
@@ -141,7 +137,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                         setString(4, inntekt.opptjeningsland)
                         setString(5, inntekt.beskrivelse)
                         setLong(6, inntekterINorgeId)
-                        setPeriode(7, Periode(inntekt.opptjeningsperiodeFom?: årMånedFallback, inntekt.opptjeningsperiodeTom?: årMånedFallback))
+                        setPeriode(7, Periode(inntekt.opptjeningsperiodeFom?: entry.aarMaaned.atDay(1), inntekt.opptjeningsperiodeTom?: tomFallback))
                     }
                 }
             }
