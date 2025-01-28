@@ -4,6 +4,7 @@ import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
+import no.nav.aap.komponenter.httpklient.httpclient.error.IkkeFunnetException
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
@@ -29,12 +30,13 @@ class AARegisterGateway {
     }
 
     fun hentAARegisterData(request: ArbeidsforholdRequest): ArbeidsforholdoversiktResponse {
-        try {
-            return query(request)
-        } catch (e : Exception) {
-            // Fant ikke bruker i AAreg
-            throw RuntimeException("Feil ved henting av data i Inntektskomponenten: ${e.message}, $e")
-            //return ArbeidsforholdoversiktResponse()
+        return try {
+            query(request)
+        } catch (e: IkkeFunnetException) {
+            // Fant ikke ident i AAreg, de returnerer 404
+            ArbeidsforholdoversiktResponse()
+        } catch (e: Exception) {
+            throw RuntimeException("Feil ved henting av data i AAreg: ${e.message}", e)
         }
     }
 }
