@@ -17,10 +17,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurdering
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -103,11 +102,12 @@ class InntektService private constructor(
     companion object : Informasjonskravkonstruktør {
         override fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
             // Skal kun innhente på nytt når det skal beregnes, førstegengasbehandling
-            return kontekst.behandlingType == TypeBehandling.Førstegangsbehandling || skalReberegne(kontekst.perioderTilVurdering)
-        }
-
-        private fun skalReberegne(vurderinger: Set<Vurdering>): Boolean {
-            return false
+            if (kontekst.skalBehandlesSomFørstegangsbehandling()) {
+                return true
+            }
+            val relevanteÅrsaker = setOf(ÅrsakTilBehandling.REVURDER_BEREGNING)
+            return kontekst.perioderTilVurdering.flatMap { vurdering -> vurdering.årsaker }
+                .any { årsak -> relevanteÅrsaker.contains(årsak) }
         }
 
         override fun konstruer(connection: DBConnection): InntektService {

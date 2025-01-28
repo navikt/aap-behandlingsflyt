@@ -19,8 +19,6 @@ import no.nav.aap.behandlingsflyt.flyt.BehandlingType
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BarnetilleggSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BeregnTilkjentYtelseSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BeregningAvklarFaktaSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.MeldingOmVedtakBrevSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.effektuer11_7.Effektuer11_7Steg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.EtAnnetStedSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettArbeidsevneSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettGrunnlagSteg
@@ -30,6 +28,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.ForeslåVedtakSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FritakMeldepliktSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.IverksettVedtakSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.KvalitetssikringsSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.MeldingOmVedtakBrevSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SimulerUtbetalingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.StartBehandlingSteg
@@ -43,6 +42,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderStudentSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykdomSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykepengeErstatningSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderYrkesskadeSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.effektuer11_7.Effektuer11_7Steg
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 
 object Revurdering : BehandlingType {
@@ -54,7 +54,7 @@ object Revurdering : BehandlingType {
                 informasjonskrav = listOf(PersonopplysningService, LovvalgService),
                 årsakRelevanteForSteg = listOf(
                     ÅrsakTilBehandling.MOTTATT_SØKNAD,
-                    ÅrsakTilBehandling.ENDRING_MEDLEMSKAP
+                    ÅrsakTilBehandling.REVURDER_MEDLEMSKAP
                 )
             )
             .medSteg(steg = VurderAlderSteg)
@@ -94,7 +94,8 @@ object Revurdering : BehandlingType {
                 steg = VurderYrkesskadeSteg, årsakRelevanteForSteg = listOf(
                     ÅrsakTilBehandling.MOTTATT_SØKNAD,
                     ÅrsakTilBehandling.MOTTATT_DIALOGMELDING,
-                    ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING
+                    ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING,
+                    ÅrsakTilBehandling.REVURDER_YRKESSKADE
                 )
             )
             .medSteg(steg = FastsettSykdomsvilkåretSteg)
@@ -105,28 +106,53 @@ object Revurdering : BehandlingType {
                     ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING
                 )
             )
-            .medSteg(steg = VurderForutgåendeMedlemskapSteg, informasjonskrav = listOf(ForutgåendeMedlemskapService))
+            .medSteg(
+                steg = VurderForutgåendeMedlemskapSteg,
+                informasjonskrav = listOf(ForutgåendeMedlemskapService),
+                årsakRelevanteForSteg = listOf(
+                    ÅrsakTilBehandling.MOTTATT_SØKNAD,
+                    ÅrsakTilBehandling.REVURDER_MEDLEMSKAP
+                )
+            )
             .medSteg(
                 steg = BeregningAvklarFaktaSteg, årsakRelevanteForSteg = listOf(
                     ÅrsakTilBehandling.MOTTATT_SØKNAD,
-                    ÅrsakTilBehandling.MOTTATT_DIALOGMELDING,
-                    ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING
+                    ÅrsakTilBehandling.REVURDER_BEREGNING,
+                    ÅrsakTilBehandling.REVURDER_YRKESSKADE
                 )
             )
             .medSteg(steg = VisGrunnlagSteg)
-            .medSteg(steg = FastsettGrunnlagSteg, informasjonskrav = listOf(InntektService))
+            .medSteg(
+                steg = FastsettGrunnlagSteg, informasjonskrav = listOf(InntektService), årsakRelevanteForSteg = listOf(
+                    ÅrsakTilBehandling.MOTTATT_SØKNAD,
+                    ÅrsakTilBehandling.REVURDER_BEREGNING,
+                    ÅrsakTilBehandling.REVURDER_YRKESSKADE
+                )
+            )
             .medSteg(steg = BarnetilleggSteg, informasjonskrav = listOf(BarnService))
             .medSteg(steg = EtAnnetStedSteg, informasjonskrav = listOf(InstitusjonsoppholdService))
             .medSteg(steg = UnderveisSteg, informasjonskrav = listOf(PliktkortService, AktivitetspliktInformasjonskrav))
             .medSteg(steg = SamordningSteg, informasjonskrav = listOf(SamordningYtelseVurderingService))
             .medSteg(steg = Effektuer11_7Steg)
-            .medSteg(steg = BeregnTilkjentYtelseSteg, årsakRelevanteForSteg = ÅrsakTilBehandling.entries)
-            .medSteg(steg = SimulerUtbetalingSteg, årsakRelevanteForSteg = ÅrsakTilBehandling.entries)
-            .medSteg(steg = ForeslåVedtakSteg, årsakRelevanteForSteg = ÅrsakTilBehandling.entries) // en-trinn
+            .medSteg(
+                steg = BeregnTilkjentYtelseSteg,
+                årsakRelevanteForSteg = ÅrsakTilBehandling.alleInklusivGRegulering()
+            )
+            .medSteg(steg = SimulerUtbetalingSteg, årsakRelevanteForSteg = ÅrsakTilBehandling.alleInklusivGRegulering())
+            .medSteg(
+                steg = ForeslåVedtakSteg,
+                årsakRelevanteForSteg = ÅrsakTilBehandling.alleInklusivGRegulering()
+            ) // en-trinn
             .sluttÅOppdatereFaktagrunnlag()
-            .medSteg(steg = FatteVedtakSteg) // to-trinn
-            .medSteg(steg = MeldingOmVedtakBrevSteg)
-            .medSteg(steg = IverksettVedtakSteg)
+            .medSteg(
+                steg = FatteVedtakSteg,
+                årsakRelevanteForSteg = ÅrsakTilBehandling.alleInklusivGRegulering()
+            ) // to-trinn
+            .medSteg(
+                steg = MeldingOmVedtakBrevSteg,
+                årsakRelevanteForSteg = ÅrsakTilBehandling.alleInklusivGRegulering()
+            )
+            .medSteg(steg = IverksettVedtakSteg, årsakRelevanteForSteg = ÅrsakTilBehandling.alleInklusivGRegulering())
             .build()
     }
 

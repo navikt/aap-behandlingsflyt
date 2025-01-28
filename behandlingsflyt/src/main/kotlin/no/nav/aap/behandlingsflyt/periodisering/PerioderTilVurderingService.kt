@@ -128,7 +128,19 @@ class PerioderTilVurderingService(
                 requireNotNull(årsak.periode)
             )
 
-            ÅrsakTilBehandling.ENDRING_MEDLEMSKAP -> Vurdering(
+            ÅrsakTilBehandling.REVURDER_MEDLEMSKAP -> Vurdering(
+                VurderingType.REVURDERING,
+                listOf(årsak.type),
+                rettighetsperiode
+            )
+
+            ÅrsakTilBehandling.REVURDER_BEREGNING -> Vurdering(
+                VurderingType.REVURDERING,
+                listOf(årsak.type),
+                rettighetsperiode
+            )
+
+            ÅrsakTilBehandling.REVURDER_YRKESSKADE -> Vurdering(
                 VurderingType.REVURDERING,
                 listOf(årsak.type),
                 rettighetsperiode

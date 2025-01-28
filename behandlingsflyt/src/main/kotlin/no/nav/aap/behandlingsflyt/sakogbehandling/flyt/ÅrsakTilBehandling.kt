@@ -7,7 +7,9 @@ enum class ÅrsakTilBehandling {
     MOTTATT_LEGEERKLÆRING,
     MOTTATT_AVVIST_LEGEERKLÆRING,
     MOTTATT_DIALOGMELDING,
-    ENDRING_MEDLEMSKAP,
+    REVURDER_MEDLEMSKAP,
+    REVURDER_BEREGNING,
+    REVURDER_YRKESSKADE,
     G_REGULERING;
 
     companion object {
@@ -20,6 +22,13 @@ enum class ÅrsakTilBehandling {
             alle.remove(G_REGULERING)
 
             return alle.toList()
+        }
+
+        /**
+         * Alle med funksjonell verdi
+         */
+        fun alleInklusivGRegulering(): List<ÅrsakTilBehandling> {
+            return ÅrsakTilBehandling.entries.toList()
         }
     }
 }
