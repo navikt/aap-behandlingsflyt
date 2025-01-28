@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.flate
+package no.nav.aap.behandlingsflyt.behandling.underveis
 
 import com.papsign.ktor.openapigen.annotations.properties.description.Description
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote

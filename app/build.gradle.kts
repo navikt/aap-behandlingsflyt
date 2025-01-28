@@ -39,6 +39,13 @@ tasks.register<JavaExec>("runTestApp") {
     mainClass.set("no.nav.aap.behandlingsflyt.TestAppKt")
 }
 
+
+tasks.register<JavaExec>("beregnCSV") {
+    classpath = sourceSets.test.get().runtimeClasspath
+    standardInput = System.`in`
+    mainClass.set("no.nav.aap.behandlingsflyt.BeregnMedCSVKt")
+}
+
 fun runCommand(command: String): String {
     val execResult = providers.exec {
         commandLine(command.split("\\s".toRegex()))

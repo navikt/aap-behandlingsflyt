@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.behandling.vilkår.alder.flate
+package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.alder
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get

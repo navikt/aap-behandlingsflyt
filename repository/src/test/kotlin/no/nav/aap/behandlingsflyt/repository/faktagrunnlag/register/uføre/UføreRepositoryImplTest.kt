@@ -1,10 +1,9 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.uføre
+package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.uføre
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
+import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
@@ -20,12 +19,23 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.lookup.repository.RepositoryRegistry
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 
-class UføreRepositoryTest {
+class UføreRepositoryImplTest {
+    companion object {
+        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        @BeforeAll
+        @JvmStatic
+        fun beforeAll() {
+            RepositoryRegistry.register<UføreRepositoryImpl>()
+        }
+    }
 
     @Test
     fun `Finner ikke uføre hvis ikke lagret`() {
@@ -33,7 +43,7 @@ class UføreRepositoryTest {
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val uføreRepository = UføreRepository(connection)
+            val uføreRepository = UføreRepositoryImpl(connection)
             val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandling.id)
             assertThat(uføreGrunnlag).isNull()
         }
@@ -45,7 +55,7 @@ class UføreRepositoryTest {
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val uføreRepository = UføreRepository(connection)
+            val uføreRepository = UføreRepositoryImpl(connection)
             uføreRepository.lagre(behandling.id, Uføre(Prosent(100)))
             val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandling.id)
             assertThat(uføreGrunnlag?.vurdering).isEqualTo(Uføre(Prosent(100)))
@@ -58,7 +68,7 @@ class UføreRepositoryTest {
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val uføreRepository = UføreRepository(connection)
+            val uføreRepository = UføreRepositoryImpl(connection)
             uføreRepository.lagre(behandling.id, Uføre(Prosent(100)))
             uføreRepository.lagre(behandling.id, Uføre(Prosent(80)))
             uføreRepository.lagre(behandling.id, Uføre(Prosent(80)))
@@ -88,7 +98,7 @@ class UføreRepositoryTest {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
-            val uføreRepository = UføreRepository(connection)
+            val uføreRepository = UføreRepositoryImpl(connection)
             uføreRepository.lagre(behandling1.id, Uføre(Prosent(100)))
             connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
                 setParams {
@@ -106,7 +116,7 @@ class UføreRepositoryTest {
     @Test
     fun `Kopiering av uføre fra en behandling uten opplysningene skal ikke føre til feil`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val uføreRepository = UføreRepository(connection)
+            val uføreRepository = UføreRepositoryImpl(connection)
             assertDoesNotThrow {
                 uføreRepository.kopier(BehandlingId(Long.MAX_VALUE - 1), BehandlingId(Long.MAX_VALUE))
             }
@@ -118,7 +128,7 @@ class UføreRepositoryTest {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
-            val uføreRepository = UføreRepository(connection)
+            val uføreRepository = UføreRepositoryImpl(connection)
             uføreRepository.lagre(behandling1.id, Uføre(Prosent(100)))
             uføreRepository.lagre(behandling1.id, Uføre(Prosent(80)))
             connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
@@ -139,7 +149,7 @@ class UføreRepositoryTest {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
-            val uføreRepository = UføreRepository(connection)
+            val uføreRepository = UføreRepositoryImpl(connection)
 
             uføreRepository.lagre(behandling.id, Uføre(Prosent(100)))
             val orginaltGrunnlag = uføreRepository.hentHvisEksisterer(behandling.id)
@@ -188,7 +198,7 @@ class UføreRepositoryTest {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
-            val uføreRepository = UføreRepository(connection)
+            val uføreRepository = UføreRepositoryImpl(connection)
             uføreRepository.lagre(behandling1.id, Uføre(Prosent(100)))
             uføreRepository.lagre(behandling1.id, Uføre(Prosent(80)))
             connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
@@ -252,10 +262,6 @@ class UføreRepositoryTest {
                     )
                 )
         }
-    }
-
-    private companion object {
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 
     private fun sak(connection: DBConnection): Sak {
