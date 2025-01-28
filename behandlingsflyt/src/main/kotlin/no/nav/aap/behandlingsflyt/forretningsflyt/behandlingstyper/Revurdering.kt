@@ -49,7 +49,14 @@ object Revurdering : BehandlingType {
     override fun flyt(): BehandlingFlyt {
         return BehandlingFlytBuilder()
             .medSteg(steg = StartBehandlingSteg, informasjonskrav = listOf(SøknadService))
-            .medSteg(steg = VurderLovvalgSteg, informasjonskrav = listOf(PersonopplysningService, LovvalgService ))
+            .medSteg(
+                steg = VurderLovvalgSteg,
+                informasjonskrav = listOf(PersonopplysningService, LovvalgService),
+                årsakRelevanteForSteg = listOf(
+                    ÅrsakTilBehandling.MOTTATT_SØKNAD,
+                    ÅrsakTilBehandling.ENDRING_MEDLEMSKAP
+                )
+            )
             .medSteg(steg = VurderAlderSteg)
             .medSteg(steg = VurderStudentSteg)
             .medSteg(

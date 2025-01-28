@@ -2,12 +2,17 @@ package no.nav.aap.behandlingsflyt.behandling.lovvalg
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.AARegisterGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ARBEIDSFORHOLDSTATUSER
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdOversikt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdRequest
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektkomponentenGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -18,81 +23,46 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
-import org.slf4j.LoggerFactory
 import java.time.YearMonth
 
 class LovvalgService private constructor(
     private val medlemskapGateway: MedlemskapGateway,
     private val sakService: SakService,
+    private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
     private val medlemskapRepository: MedlemskapRepository
-) : Informasjonskrav {
-    val LOGGER = LoggerFactory.getLogger(LovvalgService::class.java)
+): Informasjonskrav {
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
 
-        val medlemskapUnntakPersonId = innhentMedlemskapGrunnlagOgLagre(sak, kontekst.behandlingId)
-        val aaRegId = innhentAARegisterGrunnlagOgLagre(sak, kontekst.behandlingId)
-        val aInntektId = innhentAInntektGrunnlagOgLagre(sak, kontekst.behandlingId)
+        val medlemskapPerioder = medlemskapGateway.innhent(sak.person, Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.fom))
+        val arbeidGrunnlag = innhentAARegisterGrunnlag(sak)
+        val inntektGrunnlag = innhentAInntektGrunnlag(sak)
 
-        val sykepenger = "" // TODO: Hva skulle vi gjøre her?
+        val eksisterendeData = medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)
+        lagre(kontekst.behandlingId, medlemskapPerioder, arbeidGrunnlag, inntektGrunnlag)
+        val nyeData = medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)
 
-        /*
-        val relatertePersonopplysninger = personRepository.hentHvisEksisterer(kontekst.behandlingId)?.relatertePersonopplysninger?.personopplysninger
-        val soknad = TODO() // Her mangler mye knask
-        */
-
-        // Kombinér til aggregat-tabell
-        //genererMedlemskapLovvalgGrunnlagOgLagre(medlemskapUnntakPersonId, aaRegId, aInntektId)
-
-        return IKKE_ENDRET
+        return if (nyeData == eksisterendeData) IKKE_ENDRET else ENDRET
     }
 
-    fun innhentMedlemskapGrunnlagOgLagre(sak: Sak, behandlingId: BehandlingId): Long {
-        try {
-            val medlemskapPerioder =
-                medlemskapGateway.innhent(sak.person, Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.fom))
-            //return medlemskapRepository.lagreUnntakMedlemskap(behandlingId, medlemskapPerioder)
-        } catch (e: Exception) {
-            LOGGER.warn("innhentMedlemskapGrunnlagOgLagre: ${e.message}, stacktrace: $e")
-        }
-        return 1
+    private fun innhentAARegisterGrunnlag(sak: Sak): List<ArbeidsforholdOversikt> {
+        val request = ArbeidsforholdRequest(sak.person.aktivIdent().identifikator, listOf(ARBEIDSFORHOLDSTATUSER.AKTIV.toString()))
+        return AARegisterGateway().hentAARegisterData(request).arbeidsforholdoversikter.filter { it.arbeidssted.type.uppercase() == "UNDERENHET" }
     }
 
-    fun innhentAARegisterGrunnlagOgLagre(sak: Sak, behandlingId: BehandlingId): Long {
-        //TODO: Repo for dette
-        try {
-            val aaRegisterGateway = AARegisterGateway()
-            val request = ArbeidsforholdRequest(
-                arbeidstakerId = sak.person.aktivIdent().identifikator,
-                arbeidsforholdstatuser = listOf(ARBEIDSFORHOLDSTATUSER.AKTIV.toString())
-            )
-
-            val response = aaRegisterGateway.hentAARegisterData(request)
-        } catch (e: Exception) {
-            LOGGER.warn("innhentAARegisterGrunnlagOgLagre: ${e.message}, stacktrace: $e")
-        }
-        return 1
+    private fun innhentAInntektGrunnlag(sak: Sak): List<ArbeidsInntektMaaned> {
+        val inntektskomponentGateway = InntektkomponentenGateway()
+        return inntektskomponentGateway.hentAInntekt(
+            sak.person.aktivIdent().identifikator,
+            YearMonth.from(sak.rettighetsperiode.fom),
+            YearMonth.from(sak.rettighetsperiode.fom)
+        ).arbeidsInntektMaaned
     }
 
-    fun innhentAInntektGrunnlagOgLagre(sak: Sak, behandlingId: BehandlingId): Long {
-        try {
-            val inntektskomponentGateway = InntektkomponentenGateway()
-            val response = inntektskomponentGateway.hentAInntekt(
-                sak.person.aktivIdent().identifikator,
-                YearMonth.from(sak.rettighetsperiode.fom),
-                YearMonth.from(sak.rettighetsperiode.fom)
-            )
-        } catch (e: Exception) {
-            LOGGER.warn("innhentAInntektGrunnlagOgLagre: ${e.message}, stacktrace: $e")
-        }
-
-        return 1
-    }
-
-    fun genererMedlemskapLovvalgGrunnlagOgLagre(medlemskapUnntakPersonId: Long, aaRegId: Long, aInntektId: Long) {
-        // Putt alt inn i aggregeringstabellen/MEDLEMSKAP_GRUNNLAG ELNS som du ikke har laget
-        //TODO: Repo for dette
+    private fun lagre(behandlingId: BehandlingId, medlemskapGrunnlag: List<MedlemskapResponse>, arbeidGrunnlag: List<ArbeidsforholdOversikt>, inntektGrunnlag: List<ArbeidsInntektMaaned>) {
+        val medlId = if (medlemskapGrunnlag.isNotEmpty()) medlemskapRepository.lagreUnntakMedlemskap(behandlingId, medlemskapGrunnlag) else null
+        medlemskapArbeidInntektRepository.lagreArbeidsforholdOgInntektINorge(behandlingId, arbeidGrunnlag, inntektGrunnlag, medlId)
     }
 
     companion object : Informasjonskravkonstruktør {
@@ -107,10 +77,12 @@ class LovvalgService private constructor(
 
         override fun konstruer(connection: DBConnection): LovvalgService {
             val repositoryProvider = RepositoryProvider(connection)
+            val medlemskapArbeidInntektRepository = repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
             val sakRepository = repositoryProvider.provide<SakRepository>()
             return LovvalgService(
                 MedlemskapGateway(),
                 SakService(sakRepository),
+                medlemskapArbeidInntektRepository,
                 MedlemskapRepository(connection)
             )
         }

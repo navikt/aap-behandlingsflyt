@@ -8,11 +8,10 @@ data class UtenlandsOppholdData(
     val harArbeidetINorgeSiste5År: Boolean,
     val arbeidetUtenforNorgeFørSykdom: Boolean,
     val iTilleggArbeidUtenforNorge: Boolean,
-    val utenlandsOpphold: List<UtenlandsPeriode>
+    val utenlandsOpphold: List<UtenlandsPeriode>?
 )
 
 data class UtenlandsPeriode(
-    val id: String?,
     val land: String?,
     val tilDato: LocalDate?,
     val fraDato: LocalDate?,
