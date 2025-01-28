@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.beregning.AvklarFaktaBeregningService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
@@ -34,22 +35,55 @@ class BeregningAvklarFaktaSteg private constructor(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val behandlingId = kontekst.behandlingId
 
-        if (avklarFaktaBeregningService.skalFastsetteGrunnlag(behandlingId)) {
-            val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
+        if (!avklarFaktaBeregningService.skalFastsetteGrunnlag(behandlingId)) {
+            return Fullført
+        }
 
-            val vilkårsresultat = vilkårsresultatRepository1.hent(behandlingId)
-            val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
-            if (beregningVurdering == null && erIkkeStudent(vilkårsresultat)) {
-                return FantAvklaringsbehov(Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT)
-            }
-            val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FASTSETT_YRKESSKADEINNTEKT)
-            if (erBehovForÅAvklareYrkesskade(behandlingId, beregningVurdering)) {
-                return FantAvklaringsbehov(Definisjon.FASTSETT_YRKESSKADEINNTEKT)
-            } else if (avklaringsbehov != null) {
-                avklaringsbehovene.avbryt(Definisjon.FASTSETT_YRKESSKADEINNTEKT)
+        if (kontekst.harNoeTilBehandling()) {
+            if (kontekst.skalBehandlesSomFørstegangsbehandling()) {
+                val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
+
+                val vilkårsresultat = vilkårsresultatRepository1.hent(behandlingId)
+                val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
+                if (beregningVurdering == null && erIkkeStudent(vilkårsresultat)) {
+                    return FantAvklaringsbehov(Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT)
+                }
+                val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FASTSETT_YRKESSKADEINNTEKT)
+                if (erBehovForÅAvklareYrkesskade(behandlingId, beregningVurdering)) {
+                    return FantAvklaringsbehov(Definisjon.FASTSETT_YRKESSKADEINNTEKT)
+                } else if (avklaringsbehov != null) {
+                    avklaringsbehovene.avbryt(Definisjon.FASTSETT_YRKESSKADEINNTEKT)
+                }
+            } else {
+                // Revurdering
+                val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
+
+                val vilkårsresultat = vilkårsresultatRepository1.hent(behandlingId)
+                val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
+                if ((beregningVurdering == null || harVærtVurdertMinstEnGangIBehandlingen(
+                        avklaringsbehovene,
+                        Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT
+                    )) && erIkkeStudent(vilkårsresultat)
+                ) {
+                    return FantAvklaringsbehov(Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT)
+                }
+                val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FASTSETT_YRKESSKADEINNTEKT)
+                if (erBehovForÅAvklareYrkesskadeRevurdering(behandlingId, beregningVurdering, avklaringsbehovene)) {
+                    return FantAvklaringsbehov(Definisjon.FASTSETT_YRKESSKADEINNTEKT)
+                } else if (avklaringsbehov != null) {
+                    avklaringsbehovene.avbryt(Definisjon.FASTSETT_YRKESSKADEINNTEKT)
+                }
             }
         }
         return Fullført
+    }
+
+    private fun harVærtVurdertMinstEnGangIBehandlingen(
+        avklaringsbehovene: Avklaringsbehovene,
+        definisjon: Definisjon
+    ): Boolean {
+        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
+        return (avklaringsbehov == null || avklaringsbehov.erÅpent())
     }
 
     private fun erIkkeStudent(vilkårsresultat: Vilkårsresultat): Boolean {
@@ -67,6 +101,19 @@ class BeregningAvklarFaktaSteg private constructor(
             yrkesskadeVurdering.relevanteSaker,
             beregningGrunnlag
         )
+    }
+
+    private fun erBehovForÅAvklareYrkesskadeRevurdering(
+        behandlingId: BehandlingId,
+        beregningGrunnlag: BeregningGrunnlag?,
+        avklaringsbehovene: Avklaringsbehovene
+    ): Boolean {
+        val yrkesskadeVurdering = sykdomRepository.hentHvisEksisterer(behandlingId)?.yrkesskadevurdering
+        val yrkesskader = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
+        return yrkesskader?.yrkesskader?.harYrkesskade() == true && yrkesskadeVurdering?.erÅrsakssammenheng == true && (harIkkeFastsattBeløpForAlle(
+            yrkesskadeVurdering.relevanteSaker,
+            beregningGrunnlag
+        ) || harVærtVurdertMinstEnGangIBehandlingen(avklaringsbehovene, Definisjon.FASTSETT_YRKESSKADEINNTEKT))
     }
 
     private fun harIkkeFastsattBeløpForAlle(

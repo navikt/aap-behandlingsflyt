@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -24,41 +25,40 @@ import org.slf4j.LoggerFactory
 class FastsettGrunnlagSteg(
     private val beregningService: BeregningService,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val avklarFaktaBeregningService: AvklarFaktaBeregningService
+    private val avklarFaktaBeregningService: AvklarFaktaBeregningService,
+    private val sakRepository: SakRepository
 ) : BehandlingSteg {
     private val log = LoggerFactory.getLogger(FastsettGrunnlagSteg::class.java)
 
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-
         val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.GRUNNLAGET)
+        val rettighetsperiode = sakRepository.hent(kontekst.sakId).rettighetsperiode
 
-        if (avklarFaktaBeregningService.skalFastsetteGrunnlag(kontekst.behandlingId)) {
-            val beregningsgrunnlag = beregningService.beregnGrunnlag(kontekst.behandlingId)
+        if (kontekst.skalBehandlesSomEntenFørstegangsbehandlingEllerRevurdering()) {
+            if (avklarFaktaBeregningService.skalFastsetteGrunnlag(kontekst.behandlingId)) {
+                val beregningsgrunnlag = beregningService.beregnGrunnlag(kontekst.behandlingId)
 
-            kontekst.perioder().forEach { periode ->
                 vilkår.leggTilVurdering(
                     Vilkårsperiode(
-                        periode = periode,
-                        utfall = Utfall.OPPFYLT,
+                        periode = rettighetsperiode,
+                        utfall = Utfall.OPPFYLT, // TODO: Ta med utfall av beregning hvis bruker er over 62 elns
                         manuellVurdering = false,
                         begrunnelse = null,
-                        innvilgelsesårsak = null,
+                        innvilgelsesårsak = null, // TODO: Sett hjemmel
                         avslagsårsak = null,
                         faktagrunnlag = beregningsgrunnlag.faktagrunnlag()
                     )
                 )
-            }
-            log.info("Beregnet grunnlag til ${beregningsgrunnlag.grunnlaget()}")
-        } else {
-            log.info("Deaktiverer grunnlag når det ikke er relevant å beregne")
-            beregningService.deaktiverGrunnlag(kontekst.behandlingId)
+                log.info("Beregnet grunnlag til ${beregningsgrunnlag.grunnlaget()}")
+            } else {
+                log.info("Deaktiverer grunnlag når det ikke er relevant å beregne")
+                beregningService.deaktiverGrunnlag(kontekst.behandlingId)
 
-            kontekst.perioder().forEach { periode ->
                 vilkår.leggTilVurdering(
                     Vilkårsperiode(
-                        periode = periode,
+                        periode = rettighetsperiode,
                         utfall = Utfall.IKKE_RELEVANT,
                         manuellVurdering = false,
                         begrunnelse = null,
@@ -68,9 +68,8 @@ class FastsettGrunnlagSteg(
                     )
                 )
             }
+            vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
         }
-
-        vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
 
         return Fullført
     }
@@ -80,6 +79,7 @@ class FastsettGrunnlagSteg(
             val repositoryProvider = RepositoryProvider(connection)
             val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
             val beregningVurderingRepository = repositoryProvider.provide<BeregningVurderingRepository>()
+            val sakRepository = repositoryProvider.provide<SakRepository>()
             return FastsettGrunnlagSteg(
                 BeregningService(
                     InntektGrunnlagRepository(connection),
@@ -91,7 +91,8 @@ class FastsettGrunnlagSteg(
                     repositoryProvider.provide()
                 ),
                 vilkårsresultatRepository,
-                AvklarFaktaBeregningService(vilkårsresultatRepository)
+                AvklarFaktaBeregningService(vilkårsresultatRepository),
+                sakRepository
             )
         }
 

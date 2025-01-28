@@ -23,4 +23,12 @@ data class FlytKontekstMedPerioder(
     fun skalBehandlesSomFørstegangsbehandling(): Boolean {
         return perioderTilVurdering.any { vurdering -> vurdering.type == VurderingType.FØRSTEGANGSBEHANDLING }
     }
+
+    fun harNoeTilBehandling(): Boolean {
+        return perioderTilVurdering.isNotEmpty()
+    }
+
+    fun skalBehandlesSomEntenFørstegangsbehandlingEllerRevurdering(): Boolean {
+        return perioderTilVurdering.any { vurdering -> vurdering.type == VurderingType.FØRSTEGANGSBEHANDLING || vurdering.type == VurderingType.REVURDERING }
+    }
 }
