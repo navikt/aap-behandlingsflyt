@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 
 class VurderLovvalgSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
@@ -20,6 +21,7 @@ class VurderLovvalgSteg private constructor(
     private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        val logger = LoggerFactory.getLogger(VurderLovvalgSteg::class.java)
 
         if (kontekst.perioderTilVurdering.isNotEmpty()) {
             val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
@@ -33,6 +35,7 @@ class VurderLovvalgSteg private constructor(
                     MedlemskapLovvalgGrunnlag(medlemskapArbeidInntektGrunnlag, personopplysningGrunnlag, oppgittUtenlandsOppholdGrunnlag)
                 )
             }
+            logger.info("Hentet ut og lagret. medlemskapArbeidInntektGrunnlag{$medlemskapArbeidInntektGrunnlag}, personopplysningGrunnlag: {$personopplysningGrunnlag}, oppgittUtenlandsOppholdGrunnlag: {$oppgittUtenlandsOppholdGrunnlag}")
             vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
         }
         /*
