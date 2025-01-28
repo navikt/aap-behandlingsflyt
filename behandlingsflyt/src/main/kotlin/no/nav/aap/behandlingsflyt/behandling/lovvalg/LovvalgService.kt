@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.Inntektkompone
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapGateway
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderLovvalgSteg
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
@@ -23,6 +24,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 import java.time.YearMonth
 
 class LovvalgService private constructor(
@@ -32,6 +34,7 @@ class LovvalgService private constructor(
     private val medlemskapRepository: MedlemskapRepository
 ): Informasjonskrav {
 
+    val logger = LoggerFactory.getLogger(LovvalgService::class.java)
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
 
@@ -48,7 +51,9 @@ class LovvalgService private constructor(
 
     private fun innhentAARegisterGrunnlag(sak: Sak): List<ArbeidsforholdOversikt> {
         val request = ArbeidsforholdRequest(sak.person.aktivIdent().identifikator, listOf(ARBEIDSFORHOLDSTATUSER.AKTIV.toString()))
-        return AARegisterGateway().hentAARegisterData(request).arbeidsforholdoversikter.filter { it.arbeidssted.type.uppercase() == "UNDERENHET" }
+        val response = AARegisterGateway().hentAARegisterData(request).arbeidsforholdoversikter
+        logger.info("innhentAARegisterGrunnlag: {$response}")
+        return response.filter { it.arbeidssted.type.uppercase() == "UNDERENHET" }
     }
 
     private fun innhentAInntektGrunnlag(sak: Sak): List<ArbeidsInntektMaaned> {
