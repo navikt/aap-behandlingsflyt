@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret
 
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgService
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
@@ -8,11 +9,13 @@ import no.nav.aap.komponenter.httpklient.httpclient.error.IkkeFunnetException
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import org.slf4j.LoggerFactory
 import java.net.URI
 
 class AARegisterGateway {
     private val url = URI.create(requiredConfigForKey("integrasjon.aareg.url")+"/api/v2/arbeidstaker/arbeidsforholdoversikt")
     private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.aareg.scope"))
+    val logger = LoggerFactory.getLogger(AARegisterGateway::class.java)
 
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
@@ -36,7 +39,9 @@ class AARegisterGateway {
             // Fant ikke ident i AAreg, de returnerer 404
             ArbeidsforholdoversiktResponse()
         } catch (e: Exception) {
-            throw RuntimeException("Feil ved henting av data i AAreg: ${e.message}", e)
+            logger.warn("Feil ved henting av data i AAreg: ${e.message}, stack: $e")
+            return ArbeidsforholdoversiktResponse()
+            //throw RuntimeException("Feil ved henting av data i AAreg: ${e.message}", e)
         }
     }
 }
