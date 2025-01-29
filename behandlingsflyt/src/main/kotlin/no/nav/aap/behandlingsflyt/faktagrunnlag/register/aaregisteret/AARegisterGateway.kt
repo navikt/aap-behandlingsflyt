@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret
 
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgService
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
@@ -39,9 +38,7 @@ class AARegisterGateway {
             // Fant ikke ident i AAreg, de returnerer 404
             ArbeidsforholdoversiktResponse()
         } catch (e: Exception) {
-            logger.warn("Feil ved henting av data i AAreg: ${e.message}, stack: $e")
-            return ArbeidsforholdoversiktResponse()
-            //throw RuntimeException("Feil ved henting av data i AAreg: ${e.message}", e)
+            throw RuntimeException("Feil ved henting av data i AAreg: ${e.message}", e)
         }
     }
 }
