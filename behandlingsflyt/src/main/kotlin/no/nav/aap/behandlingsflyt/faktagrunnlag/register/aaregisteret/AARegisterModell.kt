@@ -4,8 +4,8 @@ import java.time.LocalDate
 
 data class ArbeidsforholdRequest(
     val arbeidstakerId: String,
-    val arbeidsforholdtyper: List<String> = listOf("ordinaertArbeidsforhold"),
     val arbeidsforholdstatuser: List<String> = listOf(ARBEIDSFORHOLDSTATUSER.AKTIV.toString(), ARBEIDSFORHOLDSTATUSER.AVSLUTTET.toString()),
+    val arbeidsforholdtyper: List<String> = listOf("ordinaertArbeidsforhold")
 )
 
 data class ArbeidsforholdoversiktResponse(

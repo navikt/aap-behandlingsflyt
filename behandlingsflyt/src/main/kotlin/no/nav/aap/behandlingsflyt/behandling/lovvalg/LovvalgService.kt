@@ -50,7 +50,10 @@ class LovvalgService private constructor(
     }
 
     private fun innhentAARegisterGrunnlag(sak: Sak): List<ArbeidsforholdOversikt> {
-        val request = ArbeidsforholdRequest(sak.person.aktivIdent().identifikator, listOf(ARBEIDSFORHOLDSTATUSER.AKTIV.toString()))
+        val request = ArbeidsforholdRequest(
+            arbeidstakerId = sak.person.aktivIdent().identifikator,
+            arbeidsforholdstatuser = listOf(ARBEIDSFORHOLDSTATUSER.AKTIV.toString())
+        )
         val response = AARegisterGateway().hentAARegisterData(request).arbeidsforholdoversikter
         logger.info("innhentAARegisterGrunnlag: {$response}")
         return response.filter { it.arbeidssted.type.uppercase() == "UNDERENHET" }
