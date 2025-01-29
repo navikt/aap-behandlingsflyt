@@ -45,13 +45,13 @@ class BrevUtlederService(
         }.fold(Tidslinje<Boolean>()) { resultatTidslinje, vilkårsvurderingTidslinje ->
             resultatTidslinje.kombiner(
                 vilkårsvurderingTidslinje,
-                JoinStyle.OUTER_JOIN { periode, vedtakResultat, vilkårsvurdering ->
+                JoinStyle.OUTER_JOIN { periode, erOppfylt, vilkårsvurdering ->
                     if (vilkårsvurdering == null) {
-                        vedtakResultat
+                        erOppfylt
                     } else {
                         Segment(
                             periode,
-                            vilkårsvurdering.verdi.erOppfylt() && vedtakResultat?.verdi != false
+                            vilkårsvurdering.verdi.erOppfylt() && erOppfylt?.verdi != false
                         )
                     }
                 })
