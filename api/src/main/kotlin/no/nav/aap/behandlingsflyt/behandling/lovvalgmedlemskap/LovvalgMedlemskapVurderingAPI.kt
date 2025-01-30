@@ -26,7 +26,7 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapAPI(dataSource: DataSource) {
         route("/vurdering") {
             authorizedPost<Unit, KanBehandlesAutomatiskVurdering, LovvalgMedlemskapVurderingRequest>(
                 AuthorizationBodyPathConfig(
-                    operasjon = Operasjon.SE,
+                    operasjon = Operasjon.SAKSBEHANDLE,
                     applicationRole = "medlemskaplovvalg-api",
                     applicationsOnly = false
                 )
@@ -59,7 +59,7 @@ data class LovvalgMedlemskapVurderingRequest(
     val behandlingsReferanse: UUID
 ): Behandlingsreferanse {
     override fun hentAvklaringsbehovKode(): String? {
-        return Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP.toString()
+        return Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP.kode.toString()
     }
 
     override fun hentBehandlingsreferanse(): String {
