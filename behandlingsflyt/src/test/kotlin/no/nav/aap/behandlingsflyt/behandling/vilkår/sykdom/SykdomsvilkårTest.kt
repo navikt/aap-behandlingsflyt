@@ -30,7 +30,8 @@ class SykdomsvilkårTest {
                     erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                     erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
                     erArbeidsevnenNedsatt = true,
-                    yrkesskadeBegrunnelse = null
+                    yrkesskadeBegrunnelse = null,
+                    vurderingenGjelderFra = null,
                 ),
                 studentvurdering = null
             )
@@ -53,7 +54,8 @@ class SykdomsvilkårTest {
                     erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                     erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
                     erArbeidsevnenNedsatt = true,
-                    yrkesskadeBegrunnelse = null
+                    yrkesskadeBegrunnelse = null,
+                    vurderingenGjelderFra = null,
                 ),
                 studentvurdering = null
             )

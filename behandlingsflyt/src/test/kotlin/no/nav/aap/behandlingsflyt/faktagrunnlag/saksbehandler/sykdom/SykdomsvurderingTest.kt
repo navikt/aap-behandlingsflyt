@@ -15,7 +15,8 @@ class SykdomsvurderingTest {
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
             erArbeidsevnenNedsatt = true,
             yrkesskadeBegrunnelse = null,
-            erNedsettelseIArbeidsevneAvEnVissVarighet = false
+            erNedsettelseIArbeidsevneAvEnVissVarighet = false,
+            vurderingenGjelderFra = null,
         )
 
         assertThat(vurdering.erOppfylt()).isFalse

@@ -308,7 +308,8 @@ class StatistikkJobbUtførerTest {
                     erArbeidsevnenNedsatt = true,
                     kodeverk = "KODEVERK",
                     hoveddiagnose = "PEST",
-                    bidiagnoser = listOf("KOLERA")
+                    bidiagnoser = listOf("KOLERA"),
+                    vurderingenGjelderFra = null,
                 )
             )
 

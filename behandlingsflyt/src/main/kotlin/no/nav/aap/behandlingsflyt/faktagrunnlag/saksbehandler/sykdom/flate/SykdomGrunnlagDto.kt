@@ -26,6 +26,9 @@ data class RegistrertYrkesskade(val ref: String, val skadedato: LocalDate, val k
 
 data class SykdomsvurderingDto(
     val begrunnelse: String,
+
+    /** Hvis null, så gjelder den fra starten. */
+    val vurderingenGjelderFra: LocalDate?,
     val dokumenterBruktIVurdering: List<JournalpostId>,
     val erArbeidsevnenNedsatt: Boolean?,
     val harSkadeSykdomEllerLyte: Boolean,
@@ -42,6 +45,7 @@ data class SykdomsvurderingDto(
     fun toSykdomsvurdering(): Sykdomsvurdering {
         return Sykdomsvurdering(
             begrunnelse = begrunnelse,
+            vurderingenGjelderFra = vurderingenGjelderFra,
             dokumenterBruktIVurdering = dokumenterBruktIVurdering,
             erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
             harSkadeSykdomEllerLyte = harSkadeSykdomEllerLyte,

@@ -4,10 +4,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.Sykdo
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.YrkesskadevurderingDto
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
+import java.time.LocalDate
 
 class Sykdomsvurdering(
     val id: Long? = null,
     val begrunnelse: String,
+    val vurderingenGjelderFra: LocalDate?,
     val dokumenterBruktIVurdering: List<JournalpostId>,
     val harSkadeSykdomEllerLyte: Boolean,
     val erSkadeSykdomEllerLyteVesentligdel: Boolean?,
@@ -23,6 +25,7 @@ class Sykdomsvurdering(
     fun toDto(): SykdomsvurderingDto {
         return SykdomsvurderingDto(
             begrunnelse = begrunnelse,
+            vurderingenGjelderFra = vurderingenGjelderFra,
             dokumenterBruktIVurdering = dokumenterBruktIVurdering,
             erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
             harSkadeSykdomEllerLyte = harSkadeSykdomEllerLyte,
@@ -33,7 +36,7 @@ class Sykdomsvurdering(
             yrkesskadeBegrunnelse = yrkesskadeBegrunnelse,
             kodeverk = kodeverk,
             hoveddiagnose = hoveddiagnose,
-            bidiagnoser = bidiagnoser
+            bidiagnoser = bidiagnoser,
         )
     }
 

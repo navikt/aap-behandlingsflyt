@@ -1,0 +1,1 @@
+alter table sykdom_vurdering add column vurderingen_gjelder_fra date;

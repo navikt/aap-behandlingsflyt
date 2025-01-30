@@ -21,7 +21,8 @@ class SykdomsInformasjonskravTest {
                 erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                 erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                 erArbeidsevnenNedsatt = true,
-                yrkesskadeBegrunnelse = null
+                yrkesskadeBegrunnelse = null,
+                vurderingenGjelderFra = null,
             )
         )
 
@@ -42,7 +43,8 @@ class SykdomsInformasjonskravTest {
                 erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                 erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                 erArbeidsevnenNedsatt = true,
-                yrkesskadeBegrunnelse = null
+                yrkesskadeBegrunnelse = null,
+                vurderingenGjelderFra = null,
             )
         )
 
@@ -63,7 +65,8 @@ class SykdomsInformasjonskravTest {
                 erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                 erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                 erArbeidsevnenNedsatt = true,
-                yrkesskadeBegrunnelse = null
+                yrkesskadeBegrunnelse = null,
+                vurderingenGjelderFra = null,
             )
         )
 
@@ -84,7 +87,8 @@ class SykdomsInformasjonskravTest {
                 erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                 erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
                 erArbeidsevnenNedsatt = true,
-                yrkesskadeBegrunnelse = null
+                yrkesskadeBegrunnelse = null,
+                vurderingenGjelderFra = null,
             )
         )
 
@@ -105,7 +109,8 @@ class SykdomsInformasjonskravTest {
                 erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                 erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                 erArbeidsevnenNedsatt = true,
-                yrkesskadeBegrunnelse = null
+                yrkesskadeBegrunnelse = null,
+                vurderingenGjelderFra = null,
             )
         )
 
@@ -126,7 +131,8 @@ class SykdomsInformasjonskravTest {
                 erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                 erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                 erArbeidsevnenNedsatt = true,
-                yrkesskadeBegrunnelse = null
+                yrkesskadeBegrunnelse = null,
+                vurderingenGjelderFra = null,
             )
         )
 
@@ -147,7 +153,8 @@ class SykdomsInformasjonskravTest {
                 erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                 erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                 erArbeidsevnenNedsatt = true,
-                yrkesskadeBegrunnelse = null
+                yrkesskadeBegrunnelse = null,
+                vurderingenGjelderFra = null,
             )
         )
 
@@ -168,7 +175,8 @@ class SykdomsInformasjonskravTest {
                 erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                 erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                 erArbeidsevnenNedsatt = true,
-                yrkesskadeBegrunnelse = null
+                yrkesskadeBegrunnelse = null,
+                vurderingenGjelderFra = null,
             )
         )
 
@@ -189,7 +197,8 @@ class SykdomsInformasjonskravTest {
                 erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                 erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                 erArbeidsevnenNedsatt = true,
-                yrkesskadeBegrunnelse = null
+                yrkesskadeBegrunnelse = null,
+                vurderingenGjelderFra = null,
             )
         )
 
