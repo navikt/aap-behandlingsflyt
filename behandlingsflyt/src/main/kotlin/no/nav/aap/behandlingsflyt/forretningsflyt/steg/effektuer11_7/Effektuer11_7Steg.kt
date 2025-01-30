@@ -93,20 +93,11 @@ class Effektuer11_7Steg(
         }
 
         val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        // XXX: her ønsker vi egentlig en form for fall-back hvis brev ikke er automatisk?
+        // XXX: I denne tilstanden skal brev-editor dukke opp
         // TODO: blir "forlatte" SKRIV_BREV-avklarings-behov automatisk lukket?
         val skrivBrevAvklaringsbehov = avklaringsbehov.åpne().any { it.definisjon == SKRIV_BREV }
-        if (skrivBrevAvklaringsbehov) {
-            throw BrevIkkeUtfyltException()
-        }
-
-        if (eksisterendeBrevBestilling.status != FULLFØRT) {
-            return FantVentebehov(
-                Ventebehov(
-                    definisjon = BESTILL_BREV,
-                    grunn = ÅrsakTilSettPåVent.VENTER_PÅ_MASKINELL_AVKLARING, /* Under antagelsen om at varselet er automatisk, så venter vi på at bestillingen blir utført maskinelt. */
-                )
-            )
+        if (skrivBrevAvklaringsbehov || eksisterendeBrevBestilling.status != FULLFØRT) {
+            return Fullført
         }
 
         val brev = brevbestillingService.hentBrevbestilling(eksisterendeBrevBestilling.referanse)

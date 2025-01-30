@@ -242,8 +242,8 @@ class Effektuer11_7StegTest {
             begrunnelse = "",
             endretAv = "",
         )
-        assertThrows<BrevIkkeUtfyltException> {
-            steg.utfør(kontekst)
+        steg.utfør(kontekst).also {
+            assertEquals(Fullført, it)
         }
     }
 
