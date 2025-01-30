@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
+import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgGrunnlag
@@ -14,23 +15,21 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.lookup.repository.RepositoryProvider
-import no.nav.aap.tilgang.AuthorizationBodyPathConfig
-import no.nav.aap.tilgang.authorizedPost
 import no.nav.aap.tilgang.plugin.kontrakt.Behandlingsreferanse
-import tilgang.Operasjon
 import java.util.*
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.lovvalgMedlemskapAPI(dataSource: DataSource) {
     route("/api/lovvalgmedlemskap/") {
         route("/vurdering") {
-            authorizedPost<Unit, KanBehandlesAutomatiskVurdering, LovvalgMedlemskapVurderingRequest>(
+            /*authorizedPost<Unit, KanBehandlesAutomatiskVurdering, LovvalgMedlemskapVurderingRequest>(
                 AuthorizationBodyPathConfig(
                     operasjon = Operasjon.SAKSBEHANDLE,
                     applicationRole = "medlemskaplovvalg-api",
                     applicationsOnly = false
                 )
-            )
+            )*/
+            post<Unit, KanBehandlesAutomatiskVurdering, LovvalgMedlemskapVurderingRequest>
             { _, req ->
                 val vurdering = dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
