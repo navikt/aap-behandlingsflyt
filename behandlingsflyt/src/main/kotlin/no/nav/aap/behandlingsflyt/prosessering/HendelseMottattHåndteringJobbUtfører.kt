@@ -8,11 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.UnparsedStrukturertDoku
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterMottattDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Aktivitetskort
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AktivitetskortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Pliktkort
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PliktkortV0
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -20,7 +16,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.json.DefaultJsonMapper
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.Jobb
@@ -67,47 +62,15 @@ class HendelseMottattHåndteringJobbUtfører(
 
         hånderMottattDokumentService.håndterMottatteDokumenter(
             sakId,
+            mottattTidspunkt,
             innsendingType,
-            utledPeriode(innsendingType, mottattTidspunkt, parsedMelding),
+            parsedMelding,
             mottattTidspunkt.toLocalDate()
         )
 
         låsRepository.verifiserSkrivelås(sakSkrivelås)
     }
-
-    /**
-     * TODO Denne logikken burde kanskje flyttes til en testbar stateless klasse.
-     */
-    private fun utledPeriode(
-        innsendingType: InnsendingType,
-        mottattTidspunkt: LocalDateTime,
-        melding: Melding?,
-    ): Periode? {
-        return when (innsendingType) {
-            InnsendingType.SØKNAD -> Periode(
-                mottattTidspunkt.toLocalDate(),
-                mottattTidspunkt.plusYears(1).toLocalDate()
-            )
-
-            InnsendingType.AKTIVITETSKORT -> if (melding is Aktivitetskort) {
-                when (melding) {
-                    is AktivitetskortV0 -> Periode(fom = melding.fraOgMed, tom = melding.tilOgMed)
-                }
-
-            } else error("Må være aktivitetskort")
-            InnsendingType.PLIKTKORT -> if (melding is Pliktkort) {
-                when (melding) {
-                    is PliktkortV0 -> Periode(
-                        fom = melding.fom() ?: mottattTidspunkt.toLocalDate(),
-                        tom = melding.tom() ?: mottattTidspunkt.toLocalDate()
-                    )
-                }
-            } else error("Må være Pliktkort")
-
-            else -> null
-        }
-    }
-
+    
     companion object : Jobb {
         fun nyJobb(
             sakId: SakId,

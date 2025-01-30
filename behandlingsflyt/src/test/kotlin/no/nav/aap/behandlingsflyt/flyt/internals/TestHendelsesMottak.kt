@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Aktivitetskort
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AnnetRelevantDokumentV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PliktkortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.innsendingType
@@ -66,6 +67,7 @@ class TestHendelsesMottak(private val dataSource: DataSource) {
                             is Søknad -> hendelse.strukturertDokument.data
                             is Aktivitetskort -> TODO()
                             is PliktkortV0 -> TODO()
+                            is AnnetRelevantDokumentV0 -> TODO()
                         }
                     )
                 )

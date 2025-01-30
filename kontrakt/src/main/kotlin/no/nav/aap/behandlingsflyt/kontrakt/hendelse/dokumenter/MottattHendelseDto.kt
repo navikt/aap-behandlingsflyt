@@ -55,6 +55,12 @@ public class Innsending(
             InnsendingType.DIALOGMELDING -> {
                 require(melding == null) { "Dialogmelding har ikke payload. Kun journalpost-ID." }
             }
+            
+            InnsendingType.ANNET_RELEVANT_DOKUMENT -> {
+                require(referanse.type == InnsendingReferanse.Type.JOURNALPOST)
+                requireNotNull(melding)
+                require(melding is AnnetRelevantDokument)
+            }
         }
     }
 }
@@ -73,6 +79,7 @@ public fun Melding.innsendingType(): InnsendingType = when (this) {
     is Aktivitetskort -> InnsendingType.AKTIVITETSKORT
     is Pliktkort -> InnsendingType.PLIKTKORT
     is Søknad -> InnsendingType.SØKNAD
+    is AnnetRelevantDokument -> InnsendingType.ANNET_RELEVANT_DOKUMENT
 }
 
 /**
@@ -90,6 +97,11 @@ private fun example(innsending: Innsending) {
         }
 
         is Aktivitetskort -> TODO()
+        
+        is AnnetRelevantDokument -> when (innsending.melding) {
+            is AnnetRelevantDokumentV0 -> TODO()
+        }
+        
         null -> TODO()
     }
 }

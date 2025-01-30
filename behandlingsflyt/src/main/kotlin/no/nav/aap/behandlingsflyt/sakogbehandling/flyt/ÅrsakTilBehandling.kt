@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.flyt
 
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling as EksponertÅrsak
+
 enum class ÅrsakTilBehandling {
     MOTTATT_SØKNAD,
     MOTTATT_AKTIVITETSMELDING,
@@ -32,3 +34,17 @@ enum class ÅrsakTilBehandling {
         }
     }
 }
+
+fun EksponertÅrsak.tilÅrsakTilBehandling() =
+    when (this) {
+        EksponertÅrsak.SØKNAD -> ÅrsakTilBehandling.MOTTATT_SØKNAD
+        EksponertÅrsak.AKTIVITETSMELDING -> ÅrsakTilBehandling.MOTTATT_AKTIVITETSMELDING
+        EksponertÅrsak.MELDEKORT -> ÅrsakTilBehandling.MOTTATT_MELDEKORT
+        EksponertÅrsak.LEGEERKLÆRING -> ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING
+        EksponertÅrsak.AVVIST_LEGEERKLÆRING -> ÅrsakTilBehandling.MOTTATT_AVVIST_LEGEERKLÆRING
+        EksponertÅrsak.DIALOGMELDING -> ÅrsakTilBehandling.MOTTATT_DIALOGMELDING
+        EksponertÅrsak.G_REGULERING -> ÅrsakTilBehandling.G_REGULERING
+        EksponertÅrsak.REVURDER_MEDLEMSKAP -> ÅrsakTilBehandling.REVURDER_MEDLEMSKAP
+        EksponertÅrsak.REVURDER_YRKESSKADE -> ÅrsakTilBehandling.REVURDER_YRKESSKADE
+        EksponertÅrsak.REVURDER_BEREGNING -> ÅrsakTilBehandling.REVURDER_BEREGNING
+    }
