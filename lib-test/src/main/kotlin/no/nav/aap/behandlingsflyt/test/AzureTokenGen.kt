@@ -43,7 +43,8 @@ internal class AzureTokenGen(private val issuer: String, private val audience: S
                         "hent-personinfo",
                         "bestill-varselbrev",
                         "brev",
-                        "pip-api"
+                        "pip-api",
+                        "medlemskaplovvalg-api"
                     )
                 )
         } else {
