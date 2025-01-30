@@ -46,7 +46,7 @@ public data class StoppetBehandling(
 
 
 /**
- * Eksponert versjon av [no.nav.aap.verdityper.flyt.ÅrsakTilBehandling] til kontrakt.
+ * Eksponert versjon av [no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling] til kontrakt.
  */
 public enum class ÅrsakTilBehandling {
     SØKNAD,
