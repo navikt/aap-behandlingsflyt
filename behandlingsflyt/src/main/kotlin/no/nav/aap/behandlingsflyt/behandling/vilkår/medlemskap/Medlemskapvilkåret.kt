@@ -9,11 +9,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.komponenter.type.Periode
 
-class Medlemskapvilkåret(vilkårsresultat: Vilkårsresultat): Vilkårsvurderer<MedlemskapLovvalgGrunnlag> {
+class Medlemskapvilkåret(vilkårsresultat: Vilkårsresultat, private val rettighetsPeriode: Periode): Vilkårsvurderer<MedlemskapLovvalgGrunnlag> {
     private val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.MEDLEMSKAP)
 
     override fun vurder(grunnlag: MedlemskapLovvalgGrunnlag) {
-        //val tilhørighetVurderinger = MedlemskapLovvalgService().vurderTilhørighet(grunnlag)
+        //val tilhørighetVurderinger = MedlemskapLovvalgService().vurderTilhørighet(grunnlag, rettighetsPeriode)
 
         /*
         if (medlemskapLovvalgService e good )

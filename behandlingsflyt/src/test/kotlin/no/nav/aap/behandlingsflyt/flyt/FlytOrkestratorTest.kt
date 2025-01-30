@@ -227,7 +227,7 @@ class FlytOrkestratorTest {
                         student = SøknadStudentDto("NEI"),
                         yrkesskade = "NEI",
                         oppgitteBarn = null,
-                        medlemskap = null
+                        medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
                     ),
                 ),
                 periode = periode
@@ -770,7 +770,7 @@ class FlytOrkestratorTest {
                         student = SøknadStudentDto("NEI"),
                         yrkesskade = "NEI",
                         oppgitteBarn = null,
-                        medlemskap = null
+                        medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
                     ),
                 ),
                 periode = periode
@@ -1246,10 +1246,10 @@ class FlytOrkestratorTest {
                         student = SøknadStudentDto("NEI"),
                         yrkesskade = "NEI",
                         oppgitteBarn = null,
-                        medlemskap = null
+                        medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
                     ),
                 ),
-                periode = periode
+                periode = periode,
             )
         )
         util.ventPåSvar()
@@ -1297,7 +1297,7 @@ class FlytOrkestratorTest {
                         student = SøknadStudentDto("JA", "JA"),
                         yrkesskade = "JA",
                         oppgitteBarn = null,
-                        medlemskap = null
+                        medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
                     )
                 ),
                 periode = periode
@@ -1739,7 +1739,7 @@ class FlytOrkestratorTest {
                         student = SøknadStudentDto("NEI"),
                         yrkesskade = "NEI",
                         oppgitteBarn = null,
-                        medlemskap = null
+                        medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
                     ),
 
                     ),

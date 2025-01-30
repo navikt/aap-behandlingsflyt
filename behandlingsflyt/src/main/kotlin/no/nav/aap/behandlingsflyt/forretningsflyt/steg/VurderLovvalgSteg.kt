@@ -27,8 +27,10 @@ class VurderLovvalgSteg private constructor(
             val medlemskapArbeidInntektGrunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)
             val oppgittUtenlandsOppholdGrunnlag = medlemskapArbeidInntektRepository.hentOppgittUtenlandsOppholdHvisEksisterer(kontekst.behandlingId)
 
+            // TODO: om oppgittUtenlandsOppholdGrunnlag er null må vi til manuell vurdering? Dette må vi lande, dette vil tryne på gamle versjoner
+
             for (periode in kontekst.perioder()) {
-                Medlemskapvilkåret(vilkårsresultat).vurder(
+                Medlemskapvilkåret(vilkårsresultat, periode).vurder(
                     MedlemskapLovvalgGrunnlag(medlemskapArbeidInntektGrunnlag, personopplysningGrunnlag, oppgittUtenlandsOppholdGrunnlag)
                 )
             }
