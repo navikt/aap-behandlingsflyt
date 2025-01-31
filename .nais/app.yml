@@ -188,7 +188,7 @@ spec:
     - name: INTEGRASJON_SAKSBEHANDLING_AZP
       value: dev-gcp:aap:saksbehandling
     - name: INTEGRASJON_AAREG_URL
-      value: https://aareg-services-q1.dev-fss-pub.nais.io
+      value: https://aareg-services-q2.dev-fss-pub.nais.io
     - name: INTEGRASJON_AAREG_SCOPE
       value: api://dev-fss.arbeidsforhold.aareg-services-nais/.default
     - name: INTEGRASJON_INNTEKTSKOMPONENTEN_URL
