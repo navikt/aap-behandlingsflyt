@@ -243,7 +243,7 @@ class Effektuer11_7StegTest {
             endretAv = "",
         )
         steg.utfør(kontekst).also {
-            assertEquals(Fullført, it)
+            assertEquals(FantAvklaringsbehov(avklaringsbehov=listOf(Definisjon.SKRIV_BREV)), it)
         }
     }
 

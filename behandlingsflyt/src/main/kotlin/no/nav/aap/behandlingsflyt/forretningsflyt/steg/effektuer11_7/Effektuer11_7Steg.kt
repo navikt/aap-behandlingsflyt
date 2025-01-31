@@ -69,12 +69,6 @@ class Effektuer11_7Steg(
                 effektuer117grunnlag
             )
         ) {
-            // XXX: skulle gjerne "avbrutt" tidligere bestilling av brev, men det er ikke mulig i dag.
-            brevbestillingService.bestill(
-                kontekst.behandlingId,
-                typeBrev,
-                "${behandling.referanse}-$typeBrev-${effektuer117grunnlag?.varslinger?.size ?: 0}"
-            )
 
             effektuer117repository.lagreVarsel(
                 behandling.id,
@@ -82,6 +76,15 @@ class Effektuer11_7Steg(
                     datoVarslet = LocalDate.now(),
                     underveisperioder = bruddSomSkalSanksjoneres.toList().map { it.verdi },
                 ),
+            )
+
+            val unikReferanse = "${behandling.referanse}-$typeBrev-${effektuer117grunnlag?.varslinger?.size ?: 0}"
+
+            // XXX: skulle gjerne "avbrutt" tidligere bestilling av brev, men det er ikke mulig i dag.
+            brevbestillingService.bestill(
+                kontekst.behandlingId,
+                typeBrev,
+                unikReferanse
             )
 
             return FantVentebehov(
@@ -93,11 +96,11 @@ class Effektuer11_7Steg(
         }
 
         val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        // XXX: I denne tilstanden skal brev-editor dukke opp
-        // TODO: blir "forlatte" SKRIV_BREV-avklarings-behov automatisk lukket?
-        val skrivBrevAvklaringsbehov = avklaringsbehov.åpne().any { it.definisjon == SKRIV_BREV }
-        if (skrivBrevAvklaringsbehov || eksisterendeBrevBestilling.status != FULLFØRT) {
-            return Fullført
+        if (avklaringsbehov.åpne().any { it.definisjon == SKRIV_BREV && it.skalStoppeHer(type()) }) {
+            return FantAvklaringsbehov(SKRIV_BREV)
+        }
+        check(eksisterendeBrevBestilling.status == FULLFØRT) {
+            "Brevet er ikke fullført, men brev-service har ikke opprettet SKRIV_BREV-behov"
         }
 
         val brev = brevbestillingService.hentBrevbestilling(eksisterendeBrevBestilling.referanse)

@@ -1238,13 +1238,13 @@ object FakeServers : AutoCloseable {
                         delay(100)
                         synchronized(mutex) {
                             val i = brevStore.indexOfFirst { it.referanse == brevbestillingReferanse }
-                            brevStore[i] = brevStore[i].copy(status = Status.FERDIGSTILT)
+                            brevStore[i] = brevStore[i].copy(status = Status.UNDER_ARBEID)
                         }
 
                         val responseRequest = LøsBrevbestillingDto(
                             behandlingReferanse = request.behandlingReferanse,
                             bestillingReferanse = brevbestillingReferanse,
-                            status = BrevbestillingLøsningStatus.AUTOMATISK_FERDIGSTILT,
+                            status = BrevbestillingLøsningStatus.KLAR_FOR_EDITERING,
                         )
                         val uri = URI.create("http://localhost:8080/api/brev/los-bestilling")
                         val httpRequest = PostRequest(
