@@ -48,10 +48,11 @@ class Effektuer11_7RepositoryImpl(private val connection: DBConnection) : Effekt
     override fun lagreVarsel(behandlingId: BehandlingId, varsel: Effektuer11_7Forhåndsvarsel) {
         val varslingerId = connection.executeReturnKey("insert into effektuer_11_7_varslinger default values")
 
-        val varselId = connection.executeReturnKey("insert into effektuer_11_7_varsel(varslinger_id, dato_varslet) values(?, ?)") {
+        val varselId = connection.executeReturnKey("insert into effektuer_11_7_varsel(varslinger_id, dato_varslet, frist) values(?, ?, ?)") {
             setParams {
                 setLong(1, varslingerId)
                 setLocalDate(2, varsel.datoVarslet)
+                setLocalDate(3, varsel.frist)
             }
         }
 
@@ -108,7 +109,7 @@ class Effektuer11_7RepositoryImpl(private val connection: DBConnection) : Effekt
 
     private fun hentVarslinger(varslingerId: Long): List<Effektuer11_7Forhåndsvarsel> {
         val query = """
-            select varsel.dato_varslet, array_agg(brudd.underveis_periode_id) as underveisperioder
+            select varsel.dato_varslet, varsel.frist, array_agg(brudd.underveis_periode_id) as underveisperioder
             from effektuer_11_7_varslinger varslinger
             join effektuer_11_7_varsel varsel on varslinger.id = varsel.varslinger_id
             join effektuer_11_7_brudd brudd on varsel.id = brudd.varsel_id
@@ -122,6 +123,7 @@ class Effektuer11_7RepositoryImpl(private val connection: DBConnection) : Effekt
             setRowMapper { row ->
                 Effektuer11_7Forhåndsvarsel(
                     datoVarslet = row.getLocalDate("dato_varslet"),
+                    frist = row.getLocalDateOrNull("frist"),
                     underveisperioder = row.getArray("underveisperioder", Long::class)
                         .let { UnderveisRepositoryImpl(connection).hentPerioder(it.map { UnderveisperiodeId(it) }).sorted() }
                 )

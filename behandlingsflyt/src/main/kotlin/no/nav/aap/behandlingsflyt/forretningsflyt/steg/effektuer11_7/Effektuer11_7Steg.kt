@@ -74,6 +74,7 @@ class Effektuer11_7Steg(
                 behandling.id,
                 varsel = Effektuer11_7Forhåndsvarsel(
                     datoVarslet = LocalDate.now(),
+                    frist = LocalDate.now().plusWeeks(3),
                     underveisperioder = bruddSomSkalSanksjoneres.toList().map { it.verdi },
                 ),
             )
@@ -104,9 +105,8 @@ class Effektuer11_7Steg(
         }
 
         val brev = brevbestillingService.hentBrevbestilling(eksisterendeBrevBestilling.referanse)
-        val frist = brev.oppdatert.plusWeeks(3).toLocalDate()
         val venteBehov = avklaringsbehov.hentBehovForDefinisjon(VENTE_PÅ_FRIST_EFFEKTUER_11_7)
-
+        val frist = requireNotNull(effektuer117grunnlag?.varslinger?.lastOrNull()?.frist)
         if (skalVentePåSvar(venteBehov, brev.opprettet) && LocalDate.now(clock) <= frist) {
             return FantVentebehov(
                 Ventebehov(

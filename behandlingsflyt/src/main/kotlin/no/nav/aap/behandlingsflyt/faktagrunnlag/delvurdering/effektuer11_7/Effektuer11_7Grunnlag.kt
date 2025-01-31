@@ -14,5 +14,6 @@ data class Effektuer11_7Vurdering(
 
 data class Effektuer11_7Forhåndsvarsel(
     val datoVarslet: LocalDate,
+    val frist: LocalDate?,
     val underveisperioder: List<Underveisperiode>
 )
