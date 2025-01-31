@@ -22,7 +22,6 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
-import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.FaktagrunnlagDto
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.HentFaktaGrunnlagRequest
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.LøsBrevbestillingDto
@@ -227,8 +226,14 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                         applicationsOnly = true
                     )
                 ) { _, request ->
-                    // TODO : Finne ut hva som faktisk skal returneres, midlertidig løsning
-                    respond(FaktagrunnlagDto(listOf(Faktagrunnlag.Testverdi("Test string"))))
+                    val faktagrunnlag = dataSource.transaction { connection ->
+                        FaktagrunnlagService.konstruer(connection)
+                            .finnFaktagrunnlag(
+                                behandlingReferanse = request.behandlingReferanse,
+                                faktagrunnlag = request.faktagrunnlag
+                            )
+                    }
+                    respond(FaktagrunnlagDto(faktagrunnlag))
                 }
             }
         }
