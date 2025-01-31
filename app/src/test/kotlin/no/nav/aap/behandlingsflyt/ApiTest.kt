@@ -24,6 +24,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -329,7 +330,7 @@ class ApiTest {
                         student = null,
                         yrkesskade = "NEI",
                         oppgitteBarn = null,
-                        medlemskap = null
+                        medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
                     )
                 ),
                 currentToken = getToken()

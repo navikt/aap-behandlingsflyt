@@ -10,7 +10,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonStatus
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 
-class MedlemskapLovvalgService {
+class MedlemskapLovvalgVurderingService {
     fun vurderTilhørighet(grunnlag: MedlemskapLovvalgGrunnlag, rettighetsPeriode: Periode): KanBehandlesAutomatiskVurdering{
         val førsteDelVurderinger = vurderFørsteDelKriteier(grunnlag)
         val andreDelVurdering = vurderAndreDelKriterier(grunnlag, rettighetsPeriode)
@@ -98,10 +98,8 @@ class MedlemskapLovvalgService {
         return TilhørighetVurdering(listOf(Kilde.A_INNTEKT), Indikasjon.I_NORGE, "Mottar sykepenger", mottarSykepenger != null, inntekterINorgeGrunnlag)
     }
 
-    // TODO: SKAL DENNE SPLITTES I TO?
     private fun harArbeidInntektINorge(grunnlag: MedlemskapArbeidInntektGrunnlag?): TilhørighetVurdering {
-        val eksistererArbeidsforhold = grunnlag?.arbeiderINorgeGrunnlag?.any() ?: false // TODO: Skal vi sammenligne denne med org-nr i inntekt?
-
+        val eksistererArbeidsforhold = grunnlag?.arbeiderINorgeGrunnlag?.any() ?: false
         val opptjeningsLandErNorge = grunnlag?.inntekterINorgeGrunnlag?.any{it.opptjeningsLand == EØSLand.NOR.toString()} ?: false
         val skattemessigBosattLandErNorge = grunnlag?.inntekterINorgeGrunnlag?.any{it.skattemessigBosattLand == EØSLand.NOR.toString()} ?: false
 

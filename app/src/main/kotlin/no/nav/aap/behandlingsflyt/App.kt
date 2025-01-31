@@ -210,10 +210,8 @@ internal fun Application.server(dbConfig: DbConfig) {
                 dokumentinnhentingAPI(dataSource)
                 mottattHendelseApi(dataSource)
                 underveisVurderingerAPI(dataSource)
+                lovvalgMedlemskapAPI(dataSource)
             }
-        }
-        apiRouting {
-            lovvalgMedlemskapAPI(dataSource)
         }
         actuator(prometheus, motor)
     }

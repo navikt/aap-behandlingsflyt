@@ -847,7 +847,7 @@ class FlytOrkestratorTest {
                         student = SøknadStudentDto("NEI"),
                         yrkesskade = "NEI",
                         oppgitteBarn = null,
-                        medlemskap = null
+                        medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
                     ),
                 ),
                 periode = periode
