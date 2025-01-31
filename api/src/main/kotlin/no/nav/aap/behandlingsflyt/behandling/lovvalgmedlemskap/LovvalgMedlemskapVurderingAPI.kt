@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.post
+import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgGrunnlag
@@ -15,13 +15,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.lookup.repository.RepositoryProvider
-import no.nav.aap.tilgang.plugin.kontrakt.Behandlingsreferanse
-import java.util.*
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.lovvalgMedlemskapAPI(dataSource: DataSource) {
     route("/api/lovvalgmedlemskap/") {
-        route("/vurdering") {
+        route("/vurdering/{referanse}") {
             /*authorizedPost<Unit, KanBehandlesAutomatiskVurdering, LovvalgMedlemskapVurderingRequest>(
                 AuthorizationBodyPathConfig(
                     operasjon = Operasjon.SAKSBEHANDLE,
@@ -29,11 +27,10 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapAPI(dataSource: DataSource) {
                     applicationsOnly = false
                 )
             )*/
-            post<Unit, KanBehandlesAutomatiskVurdering, LovvalgMedlemskapVurderingRequest>
-            { _, req ->
+            get<BehandlingReferanse, KanBehandlesAutomatiskVurdering> { req ->
                 val vurdering = dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
-                    val behandling = repositoryProvider.provide<BehandlingRepository>().hent(BehandlingReferanse(req.behandlingsReferanse))
+                    val behandling = repositoryProvider.provide<BehandlingRepository>().hent(BehandlingReferanse(req.referanse))
                     val sak = repositoryProvider.provide<SakRepository>().hent(behandling.sakId)
 
                     val personopplysningGrunnlag = repositoryProvider.provide<PersonopplysningRepository>().hentHvisEksisterer(behandling.id)
@@ -47,21 +44,8 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapAPI(dataSource: DataSource) {
                         sak.rettighetsperiode
                     )
                 }
-
                 respond(vurdering)
             }
         }
-    }
-}
-
-data class LovvalgMedlemskapVurderingRequest(
-    val behandlingsReferanse: UUID
-): Behandlingsreferanse {
-    override fun hentAvklaringsbehovKode(): String? {
-        return Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP.kode.toString()
-    }
-
-    override fun hentBehandlingsreferanse(): String {
-        return behandlingsReferanse.toString()
     }
 }
