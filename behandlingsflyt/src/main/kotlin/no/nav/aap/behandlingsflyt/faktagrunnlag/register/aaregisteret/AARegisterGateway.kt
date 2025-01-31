@@ -38,7 +38,9 @@ class AARegisterGateway {
             // Fant ikke ident i AAreg, de returnerer 404
             ArbeidsforholdoversiktResponse()
         } catch (e: Exception) {
-            throw RuntimeException("Feil ved henting av data i AAreg: ${e.message}", e)
+            logger.error("Feil ved henting av data i AAreg: ${e.message}, stack{$e}")
+            ArbeidsforholdoversiktResponse()
+            //throw RuntimeException("Feil ved henting av data i AAreg: ${e.message}", e)
         }
     }
 }
