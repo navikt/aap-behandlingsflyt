@@ -9,7 +9,6 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.KanBehandlesAuto
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.MedlemskapLovvalgService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
