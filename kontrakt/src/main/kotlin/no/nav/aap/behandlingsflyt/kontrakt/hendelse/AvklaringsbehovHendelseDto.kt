@@ -6,7 +6,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 /**
- * @param definisjon Hva slags avklaringsbehov denne hendelsen gjelder.
  * @param avklaringsbehovDefinisjon Hva slags avklaringsbehov denne hendelsen gjelder.
  * @param status Status for avklaringsbehovet.
  * @param endringer Alle endringer som har skjedd på en gitt behandling.
@@ -22,8 +21,19 @@ public data class EndringDTO(
     val tidsstempel: LocalDateTime = LocalDateTime.now(),
     val frist: LocalDate? = null,
     val endretAv: String,
-    val årsakTilSattPåVent: ÅrsakTilSettPåVent? = null
+    val årsakTilSattPåVent: ÅrsakTilSettPåVent? = null,
+    val årsakTilRetur: List<ÅrsakTilRetur> = emptyList()
 )
+
+public data class ÅrsakTilRetur(val årsak: ÅrsakTilReturKode)
+
+public enum class ÅrsakTilReturKode {
+    MANGELFULL_BEGRUNNELSE,
+    MANGLENDE_UTREDNING,
+    FEIL_LOVANVENDELSE,
+    ANNET
+}
+
 
 public enum class ÅrsakTilSettPåVent {
     VENTER_PÅ_OPPLYSNINGER,

@@ -1,10 +1,12 @@
 package no.nav.aap.behandlingsflyt.hendelse.avløp
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.ÅrsakTilReturKode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.EndringDTO
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.prosessering.StatistikkJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.StoppetHendelseJobbUtfører
@@ -14,12 +16,13 @@ import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.ÅrsakTilRetur as DomeneÅrsakTilRetur
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.ÅrsakTilReturKode as ÅrsakTilReturKodeKontrakt
 
 private val log = LoggerFactory.getLogger(BehandlingHendelseServiceImpl::class.java)
 
 class BehandlingHendelseServiceImpl(
-    private val flytJobbRepository: FlytJobbRepository,
-    private val sakService: SakService
+    private val flytJobbRepository: FlytJobbRepository, private val sakService: SakService
 ) : BehandlingHendelseService {
 
     override fun stoppet(behandling: Behandling, avklaringsbehovene: Avklaringsbehovene) {
@@ -42,8 +45,12 @@ class BehandlingHendelseServiceImpl(
                             tidsstempel = endring.tidsstempel,
                             endretAv = endring.endretAv,
                             frist = endring.frist,
-                            årsakTilSattPåVent = endring.grunn?.oversettTilKontrakt()
-                        )
+                            årsakTilSattPåVent = endring.grunn?.oversettTilKontrakt(),
+                            årsakTilRetur = endring.årsakTilRetur.map {
+                                ÅrsakTilRetur(
+                                    it.oversettTilKontrakt()
+                                )
+                            })
                     })
             },
             opprettetTidspunkt = behandling.opprettetTidspunkt,
@@ -58,6 +65,15 @@ class BehandlingHendelseServiceImpl(
         flytJobbRepository.leggTil(
             JobbInput(jobb = StatistikkJobbUtfører).medPayload(hendelse)
         )
+    }
+
+    private fun DomeneÅrsakTilRetur.oversettTilKontrakt(): ÅrsakTilReturKodeKontrakt {
+        return when (this.årsak) {
+            ÅrsakTilReturKode.MANGELFULL_BEGRUNNELSE -> ÅrsakTilReturKodeKontrakt.MANGELFULL_BEGRUNNELSE
+            ÅrsakTilReturKode.MANGLENDE_UTREDNING -> ÅrsakTilReturKodeKontrakt.MANGLENDE_UTREDNING
+            ÅrsakTilReturKode.FEIL_LOVANVENDELSE -> ÅrsakTilReturKodeKontrakt.FEIL_LOVANVENDELSE
+            ÅrsakTilReturKode.ANNET -> ÅrsakTilReturKodeKontrakt.ANNET
+        }
     }
 
     private fun no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent.oversettTilKontrakt(): ÅrsakTilSettPåVent {
