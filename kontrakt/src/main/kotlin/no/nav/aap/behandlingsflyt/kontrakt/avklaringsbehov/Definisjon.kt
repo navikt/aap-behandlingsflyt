@@ -28,34 +28,50 @@ public enum class Definisjon(
         kode = AvklaringsbehovKode.`9001`,
         type = BehovType.VENTEPUNKT,
         defaultFrist = Period.ofWeeks(3),
-        løsesAv = listOf(Rolle.SAKSBEHANDLER, Rolle.VEILEDER)
+        løsesAv = listOf(
+            Rolle.SAKSBEHANDLER,
+            Rolle.VEILEDER,
+            Rolle.SAKSBEHANDLER_OPPFOLGING,
+            Rolle.SAKSBEHANDLER_NASJONAL
+        )
     ),
     BESTILL_BREV(
         kode = AvklaringsbehovKode.`9002`,
         løsesISteg = StegType.UDEFINERT,
         type = BehovType.BREV_VENTEPUNKT,
         defaultFrist = Period.ofDays(1),
-        løsesAv = listOf(Rolle.SAKSBEHANDLER, Rolle.VEILEDER)
+        løsesAv = listOf(
+            Rolle.SAKSBEHANDLER, Rolle.VEILEDER,
+            Rolle.SAKSBEHANDLER_OPPFOLGING,
+            Rolle.SAKSBEHANDLER_NASJONAL
+        )
     ),
     BESTILL_LEGEERKLÆRING(
         kode = AvklaringsbehovKode.`9003`,
         løsesISteg = StegType.UDEFINERT,
         type = BehovType.VENTEPUNKT,
         defaultFrist = Period.ofWeeks(4),
-        løsesAv = listOf(Rolle.SAKSBEHANDLER, Rolle.VEILEDER)
+        løsesAv = listOf(
+            Rolle.SAKSBEHANDLER, Rolle.VEILEDER,
+            Rolle.SAKSBEHANDLER_OPPFOLGING,
+            Rolle.SAKSBEHANDLER_NASJONAL
+        )
     ),
     SKRIV_BREV(
         kode = AvklaringsbehovKode.`5050`,
         løsesISteg = StegType.UDEFINERT,
         type = BehovType.BREV,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER, Rolle.VEILEDER)
+        løsesAv = listOf(
+            Rolle.SAKSBEHANDLER, Rolle.VEILEDER, Rolle.SAKSBEHANDLER_OPPFOLGING,
+            Rolle.SAKSBEHANDLER_NASJONAL
+        )
     ),
     AVKLAR_STUDENT(
         kode = AvklaringsbehovKode.`5001`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.AVKLAR_STUDENT,
         kreverToTrinn = true,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER)
+        løsesAv = listOf(Rolle.SAKSBEHANDLER, Rolle.SAKSBEHANDLER_NASJONAL)
     ),
     AVKLAR_SYKDOM(
         kode = AvklaringsbehovKode.`5003`,
@@ -63,13 +79,13 @@ public enum class Definisjon(
         løsesISteg = StegType.AVKLAR_SYKDOM,
         kreverToTrinn = true,
         kvalitetssikres = true,
-        løsesAv = listOf(Rolle.VEILEDER)
+        løsesAv = listOf(Rolle.VEILEDER, Rolle.SAKSBEHANDLER_OPPFOLGING)
     ),
     KVALITETSSIKRING(
         kode = AvklaringsbehovKode.`5097`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.KVALITETSSIKRING,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER)
+        løsesAv = listOf(Rolle.SAKSBEHANDLER, Rolle.SAKSBEHANDLER_NASJONAL)
     ),
     FASTSETT_ARBEIDSEVNE(
         kode = AvklaringsbehovKode.`5004`,
@@ -77,21 +93,21 @@ public enum class Definisjon(
         løsesISteg = StegType.FASTSETT_ARBEIDSEVNE,
         kreverToTrinn = true,
         kvalitetssikres = true,
-        løsesAv = listOf(Rolle.VEILEDER)
+        løsesAv = listOf(Rolle.VEILEDER, Rolle.SAKSBEHANDLER_OPPFOLGING)
     ),
     FASTSETT_BEREGNINGSTIDSPUNKT(
         kode = AvklaringsbehovKode.`5008`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.FASTSETT_BEREGNINGSTIDSPUNKT,
         kreverToTrinn = true,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER)
+        løsesAv = listOf(Rolle.SAKSBEHANDLER, Rolle.SAKSBEHANDLER_NASJONAL)
     ),
     FASTSETT_YRKESSKADEINNTEKT(
         kode = AvklaringsbehovKode.`5014`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.FASTSETT_BEREGNINGSTIDSPUNKT,
         kreverToTrinn = true,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER)
+        løsesAv = listOf(Rolle.SAKSBEHANDLER, Rolle.SAKSBEHANDLER_NASJONAL)
     ),
     FRITAK_MELDEPLIKT(
         kode = AvklaringsbehovKode.`5005`,
@@ -99,7 +115,7 @@ public enum class Definisjon(
         løsesISteg = StegType.FRITAK_MELDEPLIKT,
         kreverToTrinn = true,
         kvalitetssikres = true,
-        løsesAv = listOf(Rolle.VEILEDER)
+        løsesAv = listOf(Rolle.VEILEDER, Rolle.SAKSBEHANDLER_OPPFOLGING)
     ),
     AVKLAR_BISTANDSBEHOV(
         kode = AvklaringsbehovKode.`5006`,
@@ -107,80 +123,80 @@ public enum class Definisjon(
         løsesISteg = StegType.VURDER_BISTANDSBEHOV,
         kreverToTrinn = true,
         kvalitetssikres = true,
-        løsesAv = listOf(Rolle.VEILEDER)
+        løsesAv = listOf(Rolle.VEILEDER, Rolle.SAKSBEHANDLER_OPPFOLGING)
     ),
     AVKLAR_SYKEPENGEERSTATNING(
         kode = AvklaringsbehovKode.`5007`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.VURDER_SYKEPENGEERSTATNING,
         kreverToTrinn = true,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER)
+        løsesAv = listOf(Rolle.SAKSBEHANDLER, Rolle.SAKSBEHANDLER_NASJONAL)
     ),
     AVKLAR_YRKESSKADE(
         kode = AvklaringsbehovKode.`5013`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.VURDER_YRKESSKADE,
         kreverToTrinn = true,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER)
+        løsesAv = listOf(Rolle.SAKSBEHANDLER, Rolle.SAKSBEHANDLER_NASJONAL)
     ),
     AVKLAR_BARNETILLEGG(
         kode = AvklaringsbehovKode.`5009`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.BARNETILLEGG,
         kreverToTrinn = true,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER)
+        løsesAv = listOf(Rolle.SAKSBEHANDLER, Rolle.SAKSBEHANDLER_NASJONAL)
     ),
     AVKLAR_SONINGSFORRHOLD(
         kode = AvklaringsbehovKode.`5010`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.DU_ER_ET_ANNET_STED,
         kreverToTrinn = true,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER)
+        løsesAv = listOf(Rolle.SAKSBEHANDLER, Rolle.SAKSBEHANDLER_NASJONAL)
     ),
     AVKLAR_HELSEINSTITUSJON(
         kode = AvklaringsbehovKode.`5011`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.DU_ER_ET_ANNET_STED,
         kreverToTrinn = true,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER)
+        løsesAv = listOf(Rolle.SAKSBEHANDLER, Rolle.SAKSBEHANDLER_NASJONAL)
     ),
     AVKLAR_SAMORDNING_GRADERING(
         kode = AvklaringsbehovKode.`5012`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.SAMORDNING_GRADERING,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER)
+        løsesAv = listOf(Rolle.SAKSBEHANDLER, Rolle.SAKSBEHANDLER_NASJONAL)
     ),
     FORHÅNDSVARSEL_AKTIVITETSPLIKT(
         kode = AvklaringsbehovKode.`5016`,
         type = BehovType.BREV_VENTEPUNKT,
         løsesISteg = StegType.EFFEKTUER_11_7,
-        løsesAv = listOf(Rolle.VEILEDER),
+        løsesAv = listOf(Rolle.VEILEDER, Rolle.SAKSBEHANDLER_OPPFOLGING),
     ),
     VENTE_PÅ_FRIST_EFFEKTUER_11_7(
         kode = AvklaringsbehovKode.`5018`,
         type = BehovType.VENTEPUNKT,
         løsesISteg = StegType.EFFEKTUER_11_7,
-        løsesAv = listOf(Rolle.VEILEDER),
+        løsesAv = listOf(Rolle.VEILEDER, Rolle.SAKSBEHANDLER_OPPFOLGING),
         defaultFrist = Period.ofWeeks(3),
     ),
     AVKLAR_LOVVALG_MEDLEMSKAP(
         kode = AvklaringsbehovKode.`5017`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.VURDER_LOVVALG,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER)
+        løsesAv = listOf(Rolle.SAKSBEHANDLER, Rolle.SAKSBEHANDLER_NASJONAL),
     ),
     EFFEKTUER_11_7(
         kode = AvklaringsbehovKode.`5015`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.EFFEKTUER_11_7,
-        løsesAv = listOf(Rolle.VEILEDER),
+        løsesAv = listOf(Rolle.VEILEDER, Rolle.SAKSBEHANDLER_OPPFOLGING),
         kreverToTrinn = true,
     ),
     FORESLÅ_VEDTAK(
         kode = AvklaringsbehovKode.`5098`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.FORESLÅ_VEDTAK,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER)
+        løsesAv = listOf(Rolle.SAKSBEHANDLER, Rolle.SAKSBEHANDLER_NASJONAL)
     ),
     FATTE_VEDTAK(
         kode = AvklaringsbehovKode.`5099`,
