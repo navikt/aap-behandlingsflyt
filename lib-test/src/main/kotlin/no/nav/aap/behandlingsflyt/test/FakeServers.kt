@@ -60,7 +60,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlRelasjonDataRe
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlRequest
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlStatsborgerskap
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonStatus
-import no.nav.aap.behandlingsflyt.test.FakeServers.aaregFake
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.brev.kontrakt.BestillBrevRequest
 import no.nav.aap.brev.kontrakt.BestillBrevResponse
