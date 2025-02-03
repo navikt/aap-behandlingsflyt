@@ -103,7 +103,7 @@ class FatteVedtakLøser(dbConnection: DBConnection) : AvklaringsbehovsLøser<Fat
     }
 
     private fun validerAvklaringsbehovOppMotBruker(avklaringsbehovene: List<Avklaringsbehov>, bruker: Bruker) {
-        if (Miljø.er() == MiljøKode.LOKALT && avklaringsbehovene.any { it.brukere().contains(bruker.ident) }) {
+        if (Miljø.er() == MiljøKode.PROD && avklaringsbehovene.any { it.brukere().contains(bruker.ident) }) {
             throw KanIkkeVurdereEgneVurderingerException()
         }
     }
