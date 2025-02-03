@@ -2219,7 +2219,7 @@ class FlytOrkestratorTest {
     }
 
     @Test
-    fun `Går automatisk forbi medlemskap når kravene til manuell avklaring oppfylles`() {
+    fun `Går automatisk forbi medlemskap når kravene til manuell avklaring ikke oppfylles`() {
         val ident = ident()
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
