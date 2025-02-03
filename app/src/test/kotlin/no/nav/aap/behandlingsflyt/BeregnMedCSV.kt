@@ -14,21 +14,25 @@ import java.time.Year
 
 /**
  * Fungerer kun for tilfellet uten uføre/yrkesskade per nå.
+ *
  * Bruk:
+ *
  * cat AAP_SyntetiskData.csv | ./gradlew -q beregnCSV > output.csv
+ *
  * Her antas skjema å være på formen:
- * INTSISTE - Inntekt siste år
- * INTNESTS - Inntekt nest siste år
- * INTTRDS - Inntekt tredje siste år
- * AAPBER - Årstall, beregningsdato
- * INTARSISTE - årstall, siste inntektsår
- * INTARNESTS - årstall, nest siste inntektsår
- * INTARTREDS - årstall, tredje siste beregningsår
- * AYRKESSKADE - har yrkesskade, 1 = JA
- * YSKADEGRD - Prosent yrkesskadegrad
- * SAM - Samordning utført i arena, 1 = JA. Tolkes som "har uføre"
- * GRUNN - Kroner,  Grunnlag regnet ut i Arena.
- * PersonKode - koblingsnøkkel til vedtak id
+ *
+ *  - INTSISTE - Inntekt siste år
+ *  - INTNESTS - Inntekt nest siste år
+ *  - INTTRDS - Inntekt tredje siste år
+ *  - AAPBER - Årstall, beregningsdato
+ *  - INTARSISTE - årstall, siste inntektsår
+ *  - INTARNESTS - årstall, nest siste inntektsår
+ *  - INTARTREDS - årstall, tredje siste beregningsår
+ *  - AYRKESSKADE - har yrkesskade, 1 = JA
+ *  - YSKADEGRD - Prosent yrkesskadegrad
+ *  -SAM - Samordning utført i arena, 1 = JA. Tolkes som "har uføre"
+ *  - GRUNN - Kroner,  Grunnlag regnet ut i Arena.
+ *  - PersonKode - koblingsnøkkel til vedtak id
  */
 
 data class CSVLine(
@@ -91,7 +95,7 @@ fun beregnForInput(input: Input): Pair<Year, GUnit> {
 
 fun printRad(år: Year, arenaBeløp: Int, beregnetGUnit: GUnit, personKode: Int) {
     val arenaGUnit =
-        Grunnbeløp.finnGUnit(år.atDay(1), Beløp(arenaBeløp)).gUnit
+        Grunnbeløp.finnGUnit(år.atDay(355), Beløp(arenaBeløp)).gUnit
 
     val grunnBeløp = grunnBeløpDetteÅret(år)
     val iKroner = beregnetGUnit.multiplisert(grunnBeløp)
@@ -120,5 +124,6 @@ fun main() {
     }
 }
 
-private fun grunnBeløpDetteÅret(årstall: Year) =
-    Grunnbeløp.tilTidslinje().segment(årstall.atDay(1))!!.verdi
+private fun grunnBeløpDetteÅret(årstall: Year): Beløp {
+    return Grunnbeløp.tilTidslinjeGjennomsnitt().segment(årstall.atDay(1))!!.verdi
+}
