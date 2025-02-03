@@ -1,13 +1,18 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.KanIkkeVurdereEgneVurderingerException
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.httpklient.auth.Bruker
+import no.nav.aap.komponenter.miljo.Miljø
+import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class FatteVedtakLøser(dbConnection: DBConnection) : AvklaringsbehovsLøser<FatteVedtakLøsning> {
@@ -25,6 +30,7 @@ class FatteVedtakLøser(dbConnection: DBConnection) : AvklaringsbehovsLøser<Fat
             avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId = kontekst.kontekst.behandlingId)
 
         løsning.vurderinger.all { it.valider() }
+        validerAvklaringsbehovOppMotBruker(avklaringsbehovene.alle().filter { it.erTotrinn() }, kontekst.bruker)
 
         if (skalSendesTilbake(løsning.vurderinger)) {
             val flyt = utledType(behandling.typeBehandling()).flyt()
@@ -94,6 +100,12 @@ class FatteVedtakLøser(dbConnection: DBConnection) : AvklaringsbehovsLøser<Fat
         val sammenstiltBegrunnelse = sammenstillBegrunnelse(løsning)
 
         return LøsningsResultat(sammenstiltBegrunnelse)
+    }
+
+    private fun validerAvklaringsbehovOppMotBruker(avklaringsbehovene: List<Avklaringsbehov>, bruker: Bruker) {
+        if (Miljø.er() == MiljøKode.LOKALT && avklaringsbehovene.any { it.brukere().contains(bruker.ident) }) {
+            throw KanIkkeVurdereEgneVurderingerException()
+        }
     }
 
     private fun skalSendesTilbake(vurderinger: List<TotrinnsVurdering>): Boolean {

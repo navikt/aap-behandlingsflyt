@@ -29,6 +29,10 @@ class Avklaringsbehov(
         return kreverToTrinn == true
     }
 
+    fun brukere(): List<String> {
+        return historikk.filter { it.status == Status.AVSLUTTET }.map { it.endretAv }
+    }
+
     fun erTotrinnsVurdert(): Boolean {
         return Status.TOTRINNS_VURDERT == historikk.maxOf { it }.status
     }
