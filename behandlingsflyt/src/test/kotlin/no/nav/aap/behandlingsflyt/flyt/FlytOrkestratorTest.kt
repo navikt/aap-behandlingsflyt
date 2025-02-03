@@ -1870,7 +1870,7 @@ class FlytOrkestratorTest {
                 strukturertDokument = StrukturertDokument(
                     SøknadV0(
                         student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
-                        medlemskap = SøknadMedlemskapDto("JA", "JA", "JA", "NEI", null)
+                        medlemskap = SøknadMedlemskapDto("JA", "JA", "NEI", "NEI", null)
                     ),
                 ),
                 periode = periode
@@ -1926,7 +1926,7 @@ class FlytOrkestratorTest {
                 strukturertDokument = StrukturertDokument(
                     SøknadV0(
                         student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
-                        medlemskap = SøknadMedlemskapDto("JA", "JA", "JA", "NEI", null)
+                        medlemskap = SøknadMedlemskapDto("JA", "JA", "NEI", "NEI", null)
                     ),
                 ),
                 periode = periode
@@ -1959,7 +1959,7 @@ class FlytOrkestratorTest {
                 strukturertDokument = StrukturertDokument(
                     SøknadV0(
                         student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
-                        medlemskap = SøknadMedlemskapDto("JA", "JA", "JA", "NEI", null)
+                        medlemskap = SøknadMedlemskapDto("JA", "JA", "NE)", "NEI", null)
                     ),
                 ),
                 periode = periode
@@ -2039,7 +2039,7 @@ class FlytOrkestratorTest {
                 strukturertDokument = StrukturertDokument(
                     SøknadV0(
                         student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
-                        medlemskap = SøknadMedlemskapDto("JA", "JA", "JA", "NEI", listOf())
+                        medlemskap = SøknadMedlemskapDto("JA", "JA", "NEI", "NEI", listOf())
                     ),
                 ),
                 periode = periode
@@ -2120,7 +2120,7 @@ class FlytOrkestratorTest {
                 strukturertDokument = StrukturertDokument(
                     SøknadV0(
                         student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
-                        medlemskap = SøknadMedlemskapDto("JA", "JA", "JA", "NEI", null)
+                        medlemskap = SøknadMedlemskapDto("JA", "JA", "NEI", "NEI", null)
                     ),
                 ),
                 periode = periode
@@ -2184,6 +2184,68 @@ class FlytOrkestratorTest {
             val legeerklæringBestillingVenteBehov =
                 avklaringsbehov.åpne().filter { it.definisjon == Definisjon.BESTILL_LEGEERKLÆRING }
             assertThat(legeerklæringBestillingVenteBehov.isEmpty()).isTrue()
+        }
+    }
+
+   // @Test
+    fun `Lager avklaringsbehov i medlemskap når kravene til manuell avklaring oppfylles`() {
+        val ident = ident()
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        // Oppretter vanlig søknad
+        hendelsesMottak.håndtere(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("2"),
+                mottattTidspunkt = LocalDateTime.now(),
+                strukturertDokument = StrukturertDokument(
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                        medlemskap = SøknadMedlemskapDto("JA", "JA", "JA", "NEI", null)
+                    ),
+                ),
+                periode = periode
+            )
+        )
+
+        util.ventPåSvar()
+        val sak = hentSak(ident, periode)
+        var behandling = requireNotNull(hentBehandling(sak.id))
+
+        // Validér avklaring
+        dataSource.transaction { connection ->
+            val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
+            assertThat(avklaringsbehov.åpne().all { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
+        }
+    }
+
+    @Test
+    fun `Går automatisk forbi medlemskap når kravene til manuell avklaring oppfylles`() {
+        val ident = ident()
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        // Oppretter vanlig søknad
+        hendelsesMottak.håndtere(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("2"),
+                mottattTidspunkt = LocalDateTime.now(),
+                strukturertDokument = StrukturertDokument(
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                        medlemskap = SøknadMedlemskapDto("JA", "JA", "NEI", "NEI", null)
+                    ),
+                ),
+                periode = periode
+            )
+        )
+
+        util.ventPåSvar()
+        val sak = hentSak(ident, periode)
+        var behandling = requireNotNull(hentBehandling(sak.id))
+
+        // Validér avklaring
+        dataSource.transaction { connection ->
+            val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
+            assertThat(avklaringsbehov.åpne().none())
         }
     }
 }

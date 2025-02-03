@@ -44,7 +44,10 @@ class VurderLovvalgSteg private constructor(
         if (!alleVilkårOppfylt) {
             return FantAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
         }
-        */ // Må ha løser/løsning for dette
+
+        if (!x.harGjortVurdering(kontekst.behandlingId)) {
+            return FantAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
+        }*/
 
         return Fullført
     }
