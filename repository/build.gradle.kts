@@ -2,7 +2,7 @@ plugins {
     id("behandlingsflyt.conventions")
 }
 
-val komponenterVersjon = "1.0.129"
+val komponenterVersjon = "1.0.130"
 val junitVersjon = "5.11.4"
 
 dependencies {
