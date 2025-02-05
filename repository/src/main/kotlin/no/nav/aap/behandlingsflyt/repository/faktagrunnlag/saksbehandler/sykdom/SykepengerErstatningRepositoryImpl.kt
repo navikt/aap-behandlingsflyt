@@ -1,11 +1,15 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom
+package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
 import no.nav.aap.verdityper.dokument.JournalpostId
 
-class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) : SykepengerErstatningRepository {
+class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
+    SykepengerErstatningRepository {
     companion object : Factory<SykepengerErstatningRepositoryImpl> {
         override fun konstruer(connection: DBConnection): SykepengerErstatningRepositoryImpl {
             return SykepengerErstatningRepositoryImpl(connection)
