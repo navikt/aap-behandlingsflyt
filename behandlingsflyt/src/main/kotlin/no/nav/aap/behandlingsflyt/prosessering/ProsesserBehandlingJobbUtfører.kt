@@ -34,8 +34,7 @@ class ProsesserBehandlingJobbUtfører(
 
         val kontekst = kontroller.opprettKontekst(sakId, behandlingId)
 
-        kontroller.forberedBehandling(kontekst)
-        kontroller.prosesserBehandling(kontekst)
+        kontroller.forberedOgProsesserBehandling(kontekst)
 
         låsRepository.verifiserSkrivelås(skrivelås)
     }

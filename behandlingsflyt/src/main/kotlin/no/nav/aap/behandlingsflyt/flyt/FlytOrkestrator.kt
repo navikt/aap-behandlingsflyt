@@ -58,7 +58,12 @@ class FlytOrkestrator(
         return FlytKontekst(sakId = sakId, behandlingId = behandlingId, behandlingType = typeBehandling)
     }
 
-    fun forberedBehandling(kontekst: FlytKontekst) {
+    fun forberedOgProsesserBehandling(kontekst: FlytKontekst) {
+        this.forberedBehandling(kontekst)
+        this.prosesserBehandling(kontekst)
+    }
+
+    private fun forberedBehandling(kontekst: FlytKontekst) {
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
@@ -129,7 +134,7 @@ class FlytOrkestrator(
         return behandling.stegHistorikk().isEmpty()
     }
 
-    fun prosesserBehandling(kontekst: FlytKontekst) {
+    private fun prosesserBehandling(kontekst: FlytKontekst) {
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
