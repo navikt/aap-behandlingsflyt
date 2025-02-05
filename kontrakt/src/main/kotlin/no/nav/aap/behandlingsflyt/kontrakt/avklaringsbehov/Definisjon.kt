@@ -13,6 +13,8 @@ import java.util.stream.Collectors
 
 /**
  * Brukes for å definere et [no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov].
+ *
+ * @param løsesAv Hva slags roller som har lov til å løse dette avklaringsbehovet. Dette blir verifisert i tilgangsmodulen.
  */
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 public enum class Definisjon(
