@@ -80,10 +80,10 @@ import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.verdityper.Beløp
 import org.intellij.lang.annotations.Language
 import org.slf4j.LoggerFactory
-import tilgang.BehandlingTilgangRequest
-import tilgang.JournalpostTilgangRequest
-import tilgang.SakTilgangRequest
-import tilgang.TilgangResponse
+import no.nav.aap.tilgang.BehandlingTilgangRequest
+import no.nav.aap.tilgang.JournalpostTilgangRequest
+import no.nav.aap.tilgang.SakTilgangRequest
+import no.nav.aap.tilgang.TilgangResponse
 import java.io.ByteArrayInputStream
 import java.net.URI
 import java.time.LocalDate
