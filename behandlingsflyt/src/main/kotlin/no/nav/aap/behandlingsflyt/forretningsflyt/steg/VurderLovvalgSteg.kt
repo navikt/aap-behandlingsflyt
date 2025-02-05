@@ -44,9 +44,8 @@ class VurderLovvalgSteg private constructor(
         // TODO: Revurdering må inn her
 
         val alleVilkårOppfylt = vilkårsresultatRepository.hent(kontekst.behandlingId).finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder().all{it.erOppfylt()}
-        val fantUvurderteVilkår = vilkårsresultatRepository.hent(kontekst.behandlingId).finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder().any{it.erIkkeVurdert()}
 
-        if (!alleVilkårOppfylt && manuellVurdering == null && fantUvurderteVilkår) {
+        if (!alleVilkårOppfylt && manuellVurdering == null) {
             return FantAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
         }
 

@@ -22,8 +22,8 @@ class Medlemskapvilkåret(
         var vurdertManuelt = false
         val vurderingsResultat = if (manuellVurderingForLovvalgMedlemskap != null) {
             vurdertManuelt = true
-            val lovvalgsLand = manuellVurderingForLovvalgMedlemskap.lovvalgVedSøknadsTidspunkt.lovvalgsEØSLand!!
-            val manglerEØS = lovvalgsLand !in enumValues<EØSLand>().map { it }
+            val lovvalgsLand = manuellVurderingForLovvalgMedlemskap.lovvalgVedSøknadsTidspunkt.lovvalgsEØSLand
+            val manglerEØS = lovvalgsLand == null || lovvalgsLand !in enumValues<EØSLand>().map { it }
             val varMedlemIFolketrygd = manuellVurderingForLovvalgMedlemskap.medlemskapVedSøknadsTidspunkt.varMedlemIFolketrygd
 
             if (!varMedlemIFolketrygd) {
