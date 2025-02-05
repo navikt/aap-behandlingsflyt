@@ -81,7 +81,7 @@ class VurderSykepengeErstatningSteg private constructor(
 
             return VurderSykepengeErstatningSteg(
                 vilkårsresultatRepository,
-                SykepengerErstatningRepository(connection),
+                repositoryProvider.provide(),
                 SakService(sakRepository),
                 avklaringsbehovRepository
             )

@@ -13,7 +13,7 @@ class AvklarSykepengerErstatningLøser(val connection: DBConnection) :
 
     private val repositoryProvider = RepositoryProvider(connection)
     private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-    private val sykepengerErstatningRepository = SykepengerErstatningRepository(connection)
+    private val sykepengerErstatningRepository = repositoryProvider.provide<SykepengerErstatningRepository>()
 
     override fun løs(
         kontekst: AvklaringsbehovKontekst,

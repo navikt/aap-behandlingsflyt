@@ -21,9 +21,10 @@ fun NormalOpenAPIRoute.sykepengerGrunnlagApi(dataSource: DataSource) {
                 val sykepengerErstatningGrunnlag = dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val sykeRepository = repositoryProvider.provide<SykepengerErstatningRepository>()
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
-                    SykepengerErstatningRepository(connection).hentHvisEksisterer(behandling.id)
+                    sykeRepository.hentHvisEksisterer(behandling.id)
                 }
 
                 respond(SykepengerGrunnlagDto(sykepengerErstatningGrunnlag?.vurdering))
