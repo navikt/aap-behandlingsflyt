@@ -105,7 +105,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                         applicationsOnly = true
                     )
                 ) { _, req ->
-                    val bestillingVarselReferanse = dataSource.transaction { connection ->
+                    dataSource.transaction { connection ->
                         val repositoryProvider = RepositoryProvider(connection)
 
                         val taSkriveLåsRepository =
