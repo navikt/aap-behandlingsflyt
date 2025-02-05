@@ -10,6 +10,7 @@ import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.Factory
 import no.nav.aap.verdityper.dokument.JournalpostId
+import java.time.LocalDateTime
 
 class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomRepository {
 
@@ -69,18 +70,19 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
     }
 
     private fun lagre(behandlingId: BehandlingId, nyttGrunnlag: SykdomGrunnlag) {
-        val sykdomsvurderingId = lagreSykdom(nyttGrunnlag.sykdomsvurdering)
+        val (sykdomsVurderingId, sykdomVurderingerId) = lagreSykdom(nyttGrunnlag.sykdomsvurdering)
         val yrkesskadeId = lagreYrkesskade(nyttGrunnlag.yrkesskadevurdering)
 
         val query = """
-            INSERT INTO SYKDOM_GRUNNLAG (BEHANDLING_ID, YRKESSKADE_ID, SYKDOM_ID) VALUES (?, ?, ?)
+            INSERT INTO SYKDOM_GRUNNLAG (BEHANDLING_ID, YRKESSKADE_ID, SYKDOM_ID, SYKDOM_VURDERINGER_ID) VALUES (?, ?, ?, ?)
         """.trimIndent()
 
         connection.execute(query) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, yrkesskadeId)
-                setLong(3, sykdomsvurderingId)
+                setLong(3, sykdomsVurderingId)
+                setLong(4, sykdomVurderingerId)
             }
         }
     }
@@ -122,34 +124,42 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
         return id
     }
 
-    private fun lagreSykdom(vurdering: Sykdomsvurdering?): Long? {
+    private fun lagreSykdom(vurdering: Sykdomsvurdering?): Pair<Long?, Long> {
+        /* double write til migrering er ferdig. */
+        val sykdomVurderingerId = connection.executeReturnKey("""INSERT INTO SYKDOM_VURDERINGER DEFAULT VALUES""")
+
         if (vurdering == null) {
-            return null
-        }
-        if (vurdering.id != null) {
-            return vurdering.id
+            return Pair(null, sykdomVurderingerId)
         }
 
         val query = """
-            INSERT INTO SYKDOM_VURDERING 
-            (BEGRUNNELSE, VURDERINGEN_GJELDER_FRA, ER_ARBEIDSEVNE_NEDSATT, HAR_SYKDOM_SKADE_LYTE, ER_SYKDOM_SKADE_LYTE_VESETLING_DEL, ER_NEDSETTELSE_MER_ENN_HALVPARTEN, ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE, ER_NEDSETTELSE_AV_EN_VISS_VARIGHET, YRKESSKADE_BEGRUNNELSE, KODEVERK, DIAGNOSE)
+            INSERT INTO SYKDOM_VURDERING (
+                SYKDOM_VURDERINGER_ID,
+                BEGRUNNELSE, VURDERINGEN_GJELDER_FRA,
+                ER_ARBEIDSEVNE_NEDSATT, HAR_SYKDOM_SKADE_LYTE,
+                ER_SYKDOM_SKADE_LYTE_VESETLING_DEL, ER_NEDSETTELSE_MER_ENN_HALVPARTEN,
+                ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE, ER_NEDSETTELSE_AV_EN_VISS_VARIGHET,
+                YRKESSKADE_BEGRUNNELSE, KODEVERK,
+                DIAGNOSE, OPPRETTET_TID)
             VALUES
-            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """.trimIndent()
 
         val id = connection.executeReturnKey(query) {
             setParams {
-                setString(1, vurdering.begrunnelse)
-                setLocalDate(2, vurdering.vurderingenGjelderFra)
-                setBoolean(3, vurdering.erArbeidsevnenNedsatt)
-                setBoolean(4, vurdering.harSkadeSykdomEllerLyte)
-                setBoolean(5, vurdering.erSkadeSykdomEllerLyteVesentligdel)
-                setBoolean(6, vurdering.erNedsettelseIArbeidsevneMerEnnHalvparten)
-                setBoolean(7, vurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense)
-                setBoolean(8, vurdering.erNedsettelseIArbeidsevneAvEnVissVarighet)
-                setString(9, vurdering.yrkesskadeBegrunnelse)
-                setString(10, vurdering.kodeverk)
-                setString(11, vurdering.hoveddiagnose)
+                setLong(1, sykdomVurderingerId)
+                setString(2, vurdering.begrunnelse)
+                setLocalDate(3, vurdering.vurderingenGjelderFra)
+                setBoolean(4, vurdering.erArbeidsevnenNedsatt)
+                setBoolean(5, vurdering.harSkadeSykdomEllerLyte)
+                setBoolean(6, vurdering.erSkadeSykdomEllerLyteVesentligdel)
+                setBoolean(7, vurdering.erNedsettelseIArbeidsevneMerEnnHalvparten)
+                setBoolean(8, vurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense)
+                setBoolean(9, vurdering.erNedsettelseIArbeidsevneAvEnVissVarighet)
+                setString(10, vurdering.yrkesskadeBegrunnelse)
+                setString(11, vurdering.kodeverk)
+                setString(12, vurdering.hoveddiagnose)
+                setLocalDateTime(13, vurdering.opprettet ?: LocalDateTime.now())
             }
         }
 
@@ -161,7 +171,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             lagreBidiagnose(id, it)
         }
 
-        return id
+        return Pair(id, sykdomVurderingerId)
     }
 
     private fun lagreBidiagnose(sykdomsId: Long, kode: String) {
@@ -199,7 +209,9 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             return
         }
         val query = """
-            INSERT INTO SYKDOM_GRUNNLAG (BEHANDLING_ID, YRKESSKADE_ID, SYKDOM_ID) SELECT ?, YRKESSKADE_ID, SYKDOM_ID FROM SYKDOM_GRUNNLAG WHERE BEHANDLING_ID = ? AND AKTIV
+            INSERT INTO SYKDOM_GRUNNLAG (BEHANDLING_ID, YRKESSKADE_ID, SYKDOM_ID, SYKDOM_VURDERINGER_ID)
+            SELECT ?, YRKESSKADE_ID, SYKDOM_ID, SYKDOM_VURDERINGER_ID
+            FROM SYKDOM_GRUNNLAG WHERE BEHANDLING_ID = ? AND AKTIV
         """.trimIndent()
 
         connection.execute(query) {
@@ -236,7 +248,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
         }
         return connection.queryFirstOrNull(
             """
-            SELECT id, BEGRUNNELSE, VURDERINGEN_GJELDER_FRA, HAR_SYKDOM_SKADE_LYTE, ER_SYKDOM_SKADE_LYTE_VESETLING_DEL, ER_NEDSETTELSE_MER_ENN_HALVPARTEN, ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE, ER_NEDSETTELSE_AV_EN_VISS_VARIGHET, ER_ARBEIDSEVNE_NEDSATT, YRKESSKADE_BEGRUNNELSE, KODEVERK, DIAGNOSE
+            SELECT id, BEGRUNNELSE, VURDERINGEN_GJELDER_FRA, HAR_SYKDOM_SKADE_LYTE, ER_SYKDOM_SKADE_LYTE_VESETLING_DEL, ER_NEDSETTELSE_MER_ENN_HALVPARTEN, ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE, ER_NEDSETTELSE_AV_EN_VISS_VARIGHET, ER_ARBEIDSEVNE_NEDSATT, YRKESSKADE_BEGRUNNELSE, KODEVERK, DIAGNOSE, OPPRETTET_TID
             FROM SYKDOM_VURDERING WHERE id = ?
             """.trimIndent()
         ) {
@@ -259,6 +271,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                     kodeverk = row.getStringOrNull("KODEVERK"),
                     hoveddiagnose = row.getStringOrNull("DIAGNOSE"),
                     bidiagnoser = hentBidiagnoser(vurderingId = row.getLong("ID")),
+                    opprettet = row.getLocalDateTimeOrNull("OPPRETTET_TID"),
                 )
             }
         }
