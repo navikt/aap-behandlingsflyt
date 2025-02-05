@@ -6,7 +6,6 @@ import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.pip.IdentPåSak.Companion.filterDistinctIdent
-import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -16,7 +15,6 @@ import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.behandlingsflytPip(dataSource: DataSource) {
-    val tilgangAzp = requiredConfigForKey("integrasjon.tilgang.azp")
     route("/pip/api") {
         route("/sak/{saksnummer}/identer") {
             authorizedGet<SakDTO, IdenterDTO>(
