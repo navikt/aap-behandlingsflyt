@@ -39,8 +39,7 @@ import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.authorizedPost
 import org.slf4j.MDC
-import tilgang.Operasjon
-import java.util.*
+import no.nav.aap.tilgang.Operasjon
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
@@ -99,14 +98,14 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
         }
         route("/brev") {
             route("/bestillingvarsel") {
-                authorizedPost<Unit, UUID, VarselOmBrevbestillingDto>(
+                authorizedPost<Unit, String, VarselOmBrevbestillingDto>(
                     AuthorizationBodyPathConfig(
                         operasjon = Operasjon.SAKSBEHANDLE,
                         applicationRole = "bestill-varselbrev",
                         applicationsOnly = true
                     )
                 ) { _, req ->
-                    val bestillingVarselReferanse = dataSource.transaction { connection ->
+                    dataSource.transaction { connection ->
                         val repositoryProvider = RepositoryProvider(connection)
 
                         val taSkriveLåsRepository =
@@ -156,7 +155,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                                 }
                         }
                     }
-                    respond(bestillingVarselReferanse, HttpStatusCode.Accepted)
+                    respond("{}", HttpStatusCode.Accepted)
                 }
             }
             route("/{brevbestillingReferanse}/oppdater") {

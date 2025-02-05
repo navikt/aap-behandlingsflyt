@@ -38,7 +38,7 @@ import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
-import tilgang.Operasjon
+import no.nav.aap.tilgang.Operasjon
 import java.time.LocalDate
 import java.time.Period
 import javax.sql.DataSource

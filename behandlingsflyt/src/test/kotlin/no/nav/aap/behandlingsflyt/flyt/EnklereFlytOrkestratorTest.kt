@@ -58,8 +58,8 @@ class EnklereFlytOrkestratorTest {
             behandlingRepository.opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
 
         val flytKontekst = flytOrkestrator.opprettKontekst(behandling.sakId, behandling.id)
-        flytOrkestrator.forberedBehandling(flytKontekst)
-        flytOrkestrator.prosesserBehandling(flytKontekst)
+
+        flytOrkestrator.forberedOgProsesserBehandling(flytKontekst)
 
         assertThat(behandling.stegHistorikk()).isNotEmpty()
         assertThat(behandling.stegHistorikk().map { tilstand -> tilstand.steg() }.distinct()).containsExactlyElementsOf(
@@ -98,8 +98,8 @@ class EnklereFlytOrkestratorTest {
         )
 
         val flytKontekst = flytOrkestrator.opprettKontekst(behandling.sakId, behandling.id)
-        flytOrkestrator.forberedBehandling(flytKontekst)
-        flytOrkestrator.prosesserBehandling(flytKontekst)
+
+        flytOrkestrator.forberedOgProsesserBehandling(flytKontekst)
 
         assertThat(behandlingHendelseService.hendelser).hasSize(1)
         assertThat(behandlingHendelseService.hendelser.first().first.status()).isEqualTo(Status.AVSLUTTET)
@@ -119,8 +119,7 @@ class EnklereFlytOrkestratorTest {
         )
 
         val flytKontekst = flytOrkestrator.opprettKontekst(behandling.sakId, behandling.id)
-        flytOrkestrator.forberedBehandling(flytKontekst)
-        flytOrkestrator.prosesserBehandling(flytKontekst)
+flytOrkestrator.forberedOgProsesserBehandling(flytKontekst)
 
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         assertThat(behandling.aktivtSteg()).isEqualTo(StegType.AVKLAR_SYKDOM)
@@ -136,8 +135,8 @@ class EnklereFlytOrkestratorTest {
         )
 
         val flytKontekst2 = flytOrkestrator.opprettKontekst(behandling.sakId, behandling.id)
-        flytOrkestrator.forberedBehandling(flytKontekst2)
-        flytOrkestrator.prosesserBehandling(flytKontekst2)
+        flytOrkestrator.forberedOgProsesserBehandling(flytKontekst)
+
 
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         assertThat(behandling.aktivtSteg()).isEqualTo(StegType.AVKLAR_SYKDOM)
@@ -160,8 +159,7 @@ class EnklereFlytOrkestratorTest {
         )
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, "asdf", "TESTEN")
 
-        flytOrkestrator.forberedBehandling(flytKontekst3)
-        flytOrkestrator.prosesserBehandling(flytKontekst3)
+        flytOrkestrator.forberedOgProsesserBehandling(flytKontekst3)
 
         assertThat(behandling.stegHistorikk()).isNotEmpty()
         assertThat(behandling.stegHistorikk().map { tilstand -> tilstand.steg() }.distinct()).containsExactlyElementsOf(
@@ -190,8 +188,7 @@ class EnklereFlytOrkestratorTest {
         )
 
         val flytKontekst = flytOrkestrator.opprettKontekst(behandling.sakId, behandling.id)
-        flytOrkestrator.forberedBehandling(flytKontekst)
-        flytOrkestrator.prosesserBehandling(flytKontekst)
+flytOrkestrator.forberedOgProsesserBehandling(flytKontekst)
 
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         assertThat(behandling.aktivtSteg()).isEqualTo(StegType.AVKLAR_SYKDOM)
@@ -265,8 +262,7 @@ class EnklereFlytOrkestratorTest {
         )
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_STUDENT, "asdf", "TESTEN")
 
-        flytOrkestrator.forberedBehandling(flytKontekst3)
-        flytOrkestrator.prosesserBehandling(flytKontekst3)
+        flytOrkestrator.forberedOgProsesserBehandling(flytKontekst3)
 
         assertThat(behandling.stegHistorikk()).isNotEmpty()
         assertThat(behandling.stegHistorikk()).containsExactlyElementsOf(

@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegGruppe
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.mdc.LogKontekst
@@ -144,7 +145,8 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
                             aktivtSteg = aktivtSteg,
                             flyt = flyt,
                             alleAvklaringsbehovInkludertFrivillige = alleAvklaringsbehovInkludertFrivillige,
-                            status = prosessering.status
+                            status = prosessering.status,
+                            typeBehandling = behandling.typeBehandling()
                         )
                     )
                 }
@@ -306,7 +308,8 @@ private fun utledVisning(
     aktivtSteg: StegType,
     flyt: BehandlingFlyt,
     alleAvklaringsbehovInkludertFrivillige: FrivilligeAvklaringsbehov,
-    status: ProsesseringStatus
+    status: ProsesseringStatus,
+    typeBehandling: TypeBehandling
 ): Visning {
     val jobber = status in listOf(ProsesseringStatus.JOBBER, ProsesseringStatus.FEILET)
     val påVent = alleAvklaringsbehovInkludertFrivillige.erSattPåVent()
@@ -326,7 +329,8 @@ private fun utledVisning(
             kvalitetssikringReadOnly = true,
             visBeslutterKort = visBeslutterKort,
             visKvalitetssikringKort = visKvalitetssikringKort,
-            visVentekort = påVent
+            visVentekort = påVent,
+            typeBehandling = typeBehandling
         )
     } else {
         return Visning(
@@ -335,7 +339,8 @@ private fun utledVisning(
             kvalitetssikringReadOnly = påVent || kvalitetssikringReadOnly,
             visBeslutterKort = visBeslutterKort,
             visKvalitetssikringKort = visKvalitetssikringKort,
-            visVentekort = påVent
+            visVentekort = påVent,
+            typeBehandling = typeBehandling
         )
     }
 }

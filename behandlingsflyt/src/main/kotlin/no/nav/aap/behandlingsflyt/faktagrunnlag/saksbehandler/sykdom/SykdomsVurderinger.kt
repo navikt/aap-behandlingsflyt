@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.Yrkes
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class Sykdomsvurdering(
     val id: Long? = null,
@@ -20,7 +21,8 @@ class Sykdomsvurdering(
     val erArbeidsevnenNedsatt: Boolean?,
     val kodeverk: String? = null,
     val hoveddiagnose: String? = null,
-    val bidiagnoser: List<String>? = emptyList()
+    val bidiagnoser: List<String>? = emptyList(),
+    val opprettet: LocalDateTime? = null,
 ) {
     fun toDto(): SykdomsvurderingDto {
         return SykdomsvurderingDto(

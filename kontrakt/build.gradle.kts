@@ -6,9 +6,9 @@ plugins {
     `java-library`
 }
 
-val tilgangVersjon = "0.0.94"
+val tilgangVersjon = "1.0.0"
 val junitVersion = "5.11.3"
-val komponenterVersjon = "1.0.129"
+val komponenterVersjon = "1.0.130"
 
 dependencies {
     api("com.fasterxml.jackson.core:jackson-annotations:2.18.2")
@@ -16,6 +16,7 @@ dependencies {
     compileOnly("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
+    testRuntimeOnly("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
     testImplementation("org.assertj:assertj-core:3.27.3")
     testImplementation("no.nav.aap.kelvin:json:$komponenterVersjon")

@@ -19,7 +19,7 @@ class SafListDokumentGatewayTest {
             issuer = "xdf",
             audience = "xxx"
         ).generate(true)
-        // TODO: Generer fake token
+
         val token = OidcToken(tokenString)
 
         val documents = gateway.hentDokumenterForSak(Saksnummer("123"), token)

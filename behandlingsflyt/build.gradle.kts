@@ -2,9 +2,9 @@ plugins {
     id("behandlingsflyt.conventions")
 }
 
-val komponenterVersjon = "1.0.129"
+val komponenterVersjon = "1.0.130"
 val ktorVersion = "3.0.3"
-val tilgangVersjon = "0.0.94"
+val tilgangVersjon = "1.0.0"
 val junitVersjon = "5.11.4"
 
 dependencies {
@@ -28,7 +28,7 @@ dependencies {
     implementation(kotlin("reflect"))
     compileOnly("io.ktor:ktor-http-jvm:$ktorVersion")
     implementation("com.zaxxer:HikariCP:6.2.1")
-    implementation("org.flywaydb:flyway-database-postgresql:11.3.0")
+    implementation("org.flywaydb:flyway-database-postgresql:11.3.1")
     runtimeOnly("org.postgresql:postgresql:42.7.5")
 
 
