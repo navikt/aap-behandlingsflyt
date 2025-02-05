@@ -40,7 +40,6 @@ import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.authorizedPost
 import org.slf4j.MDC
 import tilgang.Operasjon
-import java.util.*
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
@@ -99,7 +98,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
         }
         route("/brev") {
             route("/bestillingvarsel") {
-                authorizedPost<Unit, UUID, VarselOmBrevbestillingDto>(
+                authorizedPost<Unit, String, VarselOmBrevbestillingDto>(
                     AuthorizationBodyPathConfig(
                         operasjon = Operasjon.SAKSBEHANDLE,
                         applicationRole = "bestill-varselbrev",
@@ -156,7 +155,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                                 }
                         }
                     }
-                    respond(bestillingVarselReferanse, HttpStatusCode.Accepted)
+                    respond("{}", HttpStatusCode.Accepted)
                 }
             }
             route("/{brevbestillingReferanse}/oppdater") {
