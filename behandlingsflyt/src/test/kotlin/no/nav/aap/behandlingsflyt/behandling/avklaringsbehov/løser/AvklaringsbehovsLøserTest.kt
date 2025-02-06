@@ -32,6 +32,7 @@ class AvklaringsbehovsLøserTest {
         RepositoryRegistry.register(BeregningVurderingRepositoryImpl::class)
         RepositoryRegistry.register(SykdomRepositoryImpl::class)
         RepositoryRegistry.register(SykepengerErstatningRepositoryImpl::class)
+        RepositoryRegistry.register<SykepengerErstatningRepositoryImpl>()
     }
 
     @Test
