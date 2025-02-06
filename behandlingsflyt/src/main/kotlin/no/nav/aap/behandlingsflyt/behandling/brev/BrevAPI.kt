@@ -38,10 +38,12 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.authorizedPost
+import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import no.nav.aap.tilgang.Operasjon
 import javax.sql.DataSource
 
+private val log = LoggerFactory.getLogger("BrevAPI")
 fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
 
     route("/api") {
@@ -232,7 +234,10 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                                 faktagrunnlag = request.faktagrunnlag
                             )
                     }
-                    respond(FaktagrunnlagDto(faktagrunnlag))
+                    log.info("Ber om faktagrunnlag for " + request.faktagrunnlag.joinToString(","))
+                    respond(FaktagrunnlagDto(faktagrunnlag)).also {
+                        log.info("Fant faktagrunnlag for " + faktagrunnlag.map { it.type }.joinToString(","))
+                    }
                 }
             }
         }
