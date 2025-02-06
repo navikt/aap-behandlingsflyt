@@ -2320,7 +2320,7 @@ class FlytOrkestratorTest {
     }
 
     @Test
-    fun `Gir avslag når bruker ikke er medlem i EØS` () {
+    fun `Gir oppfylt når bruker ikke har lovvalgsland men oppfyller trygdeloven` () {
         val ident = ident()
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
@@ -2372,17 +2372,78 @@ class FlytOrkestratorTest {
         }
         util.ventPåSvar()
 
+        // Validér riktig resultat
+        dataSource.transaction { connection ->
+            val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
+            val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder()
+            assertThat(avklaringsbehov.åpne().none())
+            assertTrue(vilkårsResultat.all { it.erOppfylt() })
+        }
+    }
+
+    @Test
+    fun `Gir avslag når bruker har annet lovvalgsland` () {
+        val ident = ident()
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        // Oppretter vanlig søknad
+        hendelsesMottak.håndtere(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("102"),
+                mottattTidspunkt = LocalDateTime.now(),
+                strukturertDokument = StrukturertDokument(
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                        medlemskap = SøknadMedlemskapDto("JA", "JA", "JA", "NEI", null)
+                    ),
+                ),
+                periode = periode
+            )
+        )
+
+        util.ventPåSvar()
+        val sak = hentSak(ident, periode)
+        var behandling = requireNotNull(hentBehandling(sak.id))
+
         // Validér avklaring
         dataSource.transaction { connection ->
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
-            assertThat(avklaringsbehov.åpne().none())
+            assertThat(avklaringsbehov.åpne().all { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
+        }
+
+        // Trigger manuell vurdering
+        dataSource.transaction {connection ->
+            AvklaringsbehovHendelseHåndterer(
+                AvklaringsbehovOrkestrator(connection, BehandlingHendelseServiceImpl(FlytJobbRepository(connection), SakService(SakRepositoryImpl(connection)))),
+                AvklaringsbehovRepositoryImpl(connection),
+                BehandlingRepositoryImpl(connection)
+            ).håndtere(
+                behandling.id,
+                LøsAvklaringsbehovHendelse(
+                    løsning = AvklarLovvalgMedlemskapLøsning(
+                        manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskap(
+                            LovvalgVedSøknadsTidspunkt("crazy lovvalgsland vurdering", EØSLand.DNK),
+                            MedlemskapVedSøknadsTidspunkt(null, null)
+                        ),
+                        behovstype = AvklaringsbehovKode.`5017`
+                    ),
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
+                )
+            )
+        }
+        util.ventPåSvar()
+
+        // Validér avklaring
+        dataSource.transaction { connection ->
         }
 
         // Validér riktig resultat
         dataSource.transaction { connection ->
+            val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
             val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder()
+            assertThat(avklaringsbehov.åpne().none())
             assertTrue(vilkårsResultat.none { it.erOppfylt() })
-            assertThat(Avslagsårsak.IKKE_OPPFYLT_OPPHOLDSKRAV_EØS == vilkårsResultat.first().avslagsårsak)
         }
     }
 

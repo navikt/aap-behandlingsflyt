@@ -13,6 +13,6 @@ data class LovvalgVedSøknadsTidspunkt(
 )
 
 data class MedlemskapVedSøknadsTidspunkt(
-    val begrunnelse: String,
-    val varMedlemIFolketrygd: Boolean
+    val begrunnelse: String?,
+    val varMedlemIFolketrygd: Boolean?
 )
