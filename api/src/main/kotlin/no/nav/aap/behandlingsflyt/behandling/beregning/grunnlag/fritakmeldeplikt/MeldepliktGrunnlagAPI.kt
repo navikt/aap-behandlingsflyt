@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate
+package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.fritakmeldeplikt
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
