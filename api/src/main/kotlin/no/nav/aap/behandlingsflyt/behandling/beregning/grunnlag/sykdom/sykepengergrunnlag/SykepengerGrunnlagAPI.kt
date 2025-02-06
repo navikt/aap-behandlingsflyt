@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.alder.sykdom.sykepengergrunnlag
+package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykepengergrunnlag
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get

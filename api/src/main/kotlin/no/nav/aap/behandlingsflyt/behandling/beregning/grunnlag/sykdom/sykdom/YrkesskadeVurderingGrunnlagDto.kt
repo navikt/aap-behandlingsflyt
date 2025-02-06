@@ -1,0 +1,9 @@
+package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom
+
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.InnhentetSykdomsOpplysninger
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.YrkesskadevurderingDto
+
+data class YrkesskadeVurderingGrunnlagDto(
+    val opplysninger: InnhentetSykdomsOpplysninger,
+    val yrkesskadeVurdering: YrkesskadevurderingDto?
+)
