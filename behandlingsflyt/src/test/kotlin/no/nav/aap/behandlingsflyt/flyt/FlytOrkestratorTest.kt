@@ -2267,7 +2267,7 @@ class FlytOrkestratorTest {
         // Oppretter vanlig søknad
         hendelsesMottak.håndtere(
             ident, DokumentMottattPersonHendelse(
-                journalpost = JournalpostId("2"),
+                journalpost = JournalpostId("101"),
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
                     SøknadV0(
@@ -2327,7 +2327,7 @@ class FlytOrkestratorTest {
         // Oppretter vanlig søknad
         hendelsesMottak.håndtere(
             ident, DokumentMottattPersonHendelse(
-                journalpost = JournalpostId("2"),
+                journalpost = JournalpostId("102"),
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
                     SøknadV0(
@@ -2394,7 +2394,7 @@ class FlytOrkestratorTest {
         // Oppretter vanlig søknad
         hendelsesMottak.håndtere(
             ident, DokumentMottattPersonHendelse(
-                journalpost = JournalpostId("2"),
+                journalpost = JournalpostId("103"),
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
                     SøknadV0(
