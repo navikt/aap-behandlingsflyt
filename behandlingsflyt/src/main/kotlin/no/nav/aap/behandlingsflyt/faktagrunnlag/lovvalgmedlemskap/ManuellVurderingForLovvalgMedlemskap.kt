@@ -4,15 +4,15 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLand
 
 data class ManuellVurderingForLovvalgMedlemskap (
     val lovvalgVedSøknadsTidspunkt: LovvalgVedSøknadsTidspunkt,
-    val medlemskapVedSøknadsTidspunkt: MedlemskapVedSøknadsTidspunkt
+    val medlemskapVedSøknadsTidspunkt: MedlemskapVedSøknadsTidspunkt?
 )
 
 data class LovvalgVedSøknadsTidspunkt(
-    val tekstVurderinger: String,
+    val begrunnelse: String,
     val lovvalgsEØSLand: EØSLand?,
 )
 
 data class MedlemskapVedSøknadsTidspunkt(
-    val tekstVurdering: String,
+    val begrunnelse: String,
     val varMedlemIFolketrygd: Boolean
 )
