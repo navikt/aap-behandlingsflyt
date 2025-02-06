@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.behandling.kvalitetssikring
 
 import com.papsign.ktor.openapigen.route.TagModule
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.Tags
@@ -21,15 +20,22 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.verdityper.Interval
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.tilgang.AuthorizationParamPathConfig
+import no.nav.aap.tilgang.BehandlingPathParam
+import no.nav.aap.tilgang.authorizedGet
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.kvalitetssikringApi(dataSource: DataSource) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/kvalitetssikring") {
-            get<BehandlingReferanse, KvalitetssikringGrunnlagDto>(TagModule(listOf(Tags.Grunnlag))) { req ->
+            authorizedGet<BehandlingReferanse, KvalitetssikringGrunnlagDto>(
+                AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse")),
+                auditLogConfig = null,
+                TagModule(listOf(Tags.Grunnlag))
+            ) { req ->
 
-                val dto = dataSource.transaction { connection ->
+                val dto = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val avklaringsbehovRepository =

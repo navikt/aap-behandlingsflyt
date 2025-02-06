@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning.tidspunkt
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
@@ -15,17 +14,25 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.tilgang.AuthorizationParamPathConfig
+import no.nav.aap.tilgang.BehandlingPathParam
+import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/beregning/tidspunkt") {
-            get<BehandlingReferanse, BeregningTidspunktAvklaringDto> { req ->
+            authorizedGet<BehandlingReferanse, BeregningTidspunktAvklaringDto>(
+                AuthorizationParamPathConfig(
+                    behandlingPathParam = BehandlingPathParam("referanse")
+                )
+            ) { req ->
                 val responsDto = dataSource.transaction(readOnly = true) {
                     val repositoryProvider = RepositoryProvider(it)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val uføreRepository = repositoryProvider.provide<UføreRepository>()
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
+
                     // Dette er logikk, burde i egen service
                     val skalVurdereUføre = uføreRepository.hentHvisEksisterer(behandling.id)?.vurdering != null
                     val beregningGrunnlag =
@@ -44,7 +51,11 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource) {
             }
         }
         route("/{referanse}/grunnlag/beregning/yrkesskade") {
-            get<BehandlingReferanse, BeregningYrkesskadeAvklaringDto> { req ->
+            authorizedGet<BehandlingReferanse, BeregningYrkesskadeAvklaringDto>(
+                AuthorizationParamPathConfig(
+                    behandlingPathParam = BehandlingPathParam("referanse")
+                )
+            ) { req ->
                 val responsDto = dataSource.transaction(readOnly = true) {
                     val repositoryProvider = RepositoryProvider(it)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()

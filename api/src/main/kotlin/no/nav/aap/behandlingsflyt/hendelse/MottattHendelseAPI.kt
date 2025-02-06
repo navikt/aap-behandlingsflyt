@@ -22,6 +22,7 @@ private val logger = LoggerFactory.getLogger("hendelse.MottattHendelseAPI")
 
 fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource) {
     route("/api/hendelse") {
+        // TODO legg på authorization. Her tillates både maskin-maskin og folk?
         route("/send").post<Unit, String, Innsending>(TagModule(listOf(Tags.MottaHendelse))) { _, dto ->
             MDC.putCloseable("saksnummer", dto.saksnummer.toString()).use {
                 dataSource.transaction { connection ->

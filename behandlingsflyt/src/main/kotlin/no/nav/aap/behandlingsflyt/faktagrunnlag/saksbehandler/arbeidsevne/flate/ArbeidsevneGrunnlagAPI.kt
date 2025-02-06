@@ -1,8 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.flate
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.get
-import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
@@ -15,18 +13,30 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.tilgang.AuthorizationParamPathConfig
+import no.nav.aap.tilgang.BehandlingPathParam
+import no.nav.aap.tilgang.authorizedGet
+import no.nav.aap.tilgang.authorizedPost
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.arbeidsevneGrunnlagApi(dataSource: DataSource) {
     route("/api/behandling/{referanse}/grunnlag/arbeidsevne") {
-        get<BehandlingReferanse, ArbeidsevneGrunnlagDto> { behandlingReferanse ->
+        authorizedGet<BehandlingReferanse, ArbeidsevneGrunnlagDto>(
+            AuthorizationParamPathConfig(
+                behandlingPathParam = BehandlingPathParam(
+                    "referanse"
+                )
+            )
+        ) { behandlingReferanse ->
             arbeidsevneGrunnlag(dataSource, behandlingReferanse)?.let { respond(it) } ?: respondWithStatus(
                 HttpStatusCode.NoContent
             )
         }
 
         route("/simulering") {
-            post<BehandlingReferanse, SimulertArbeidsevneResultatDto, SimulerArbeidsevneDto> { behandlingReferanse, dto ->
+            authorizedPost<BehandlingReferanse, SimulertArbeidsevneResultatDto, SimulerArbeidsevneDto>(
+                AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse"))
+            ) { behandlingReferanse, dto ->
                 respond(simuleringsresulat(dataSource, behandlingReferanse, dto))
             }
         }
@@ -66,7 +76,7 @@ private fun simuleringsresulat(
     behandlingReferanse: BehandlingReferanse,
     dto: SimulerArbeidsevneDto
 ): SimulertArbeidsevneResultatDto {
-    return dataSource.transaction { con ->
+    return dataSource.transaction(readOnly = true) { con ->
         val repositoryProvider = RepositoryProvider(con)
         val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
         val arbeidsevneRepository = repositoryProvider.provide<ArbeidsevneRepository>()

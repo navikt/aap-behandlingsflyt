@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.behandling.underveis
 
 import com.papsign.ktor.openapigen.route.info
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
@@ -13,10 +12,15 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.tilgang.AuthorizationParamPathConfig
+import no.nav.aap.tilgang.BehandlingPathParam
+import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.underveisVurderingerAPI(datasource: DataSource) {
-    route("/api/behandling/underveis/{referanse}").get<BehandlingReferanse, List<UnderveisperiodeDto>>(
+    route("/api/behandling/underveis/{referanse}").authorizedGet<BehandlingReferanse, List<UnderveisperiodeDto>>(
+        AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse")),
+        null,
         info(
             summary = "Hente alle underveis-vurderinger på en behandling",
             description = """

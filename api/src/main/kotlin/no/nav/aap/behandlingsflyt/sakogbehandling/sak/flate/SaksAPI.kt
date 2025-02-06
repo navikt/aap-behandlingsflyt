@@ -28,15 +28,16 @@ import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
+import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import no.nav.aap.verdityper.dokument.JournalpostId
-import no.nav.aap.tilgang.Operasjon
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
     route("/api/sak") {
+        // TODO! Tilgangskontrollere, men har verken saksnr eller beh.referanse
         route("/finn").post<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO>(TagModule(listOf(Tags.Sak))) { _, dto ->
             val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = RepositoryProvider(connection)
