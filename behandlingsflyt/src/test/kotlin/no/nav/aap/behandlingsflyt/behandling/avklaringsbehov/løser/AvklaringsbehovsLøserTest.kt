@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7RepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningYtelseVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistand.BistandRepositoryImpl
@@ -32,7 +33,7 @@ class AvklaringsbehovsLøserTest {
         RepositoryRegistry.register(BeregningVurderingRepositoryImpl::class)
         RepositoryRegistry.register(SykdomRepositoryImpl::class)
         RepositoryRegistry.register(SykepengerErstatningRepositoryImpl::class)
-        RepositoryRegistry.register<SykepengerErstatningRepositoryImpl>()
+        RepositoryRegistry.register<SamordningYtelseVurderingRepositoryImpl>()
     }
 
     @Test
