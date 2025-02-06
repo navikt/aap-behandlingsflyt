@@ -6,6 +6,7 @@ import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import com.papsign.ktor.openapigen.route.tag
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
@@ -28,6 +29,7 @@ import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
+import no.nav.aap.tilgang.JournalpostPathParam
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
@@ -36,9 +38,9 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
-    route("/api/sak") {
+    route("/api/sak").tag(Tags.Sak) {
         // TODO! Tilgangskontrollere, men har verken saksnr eller beh.referanse
-        route("/finn").post<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO>(TagModule(listOf(Tags.Sak))) { _, dto ->
+        route("/finn").post<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO> { _, dto ->
             val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = RepositoryProvider(connection)
                 val ident = Ident(dto.ident)
@@ -62,6 +64,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
             respond(saker)
         }
 
+        // TODO, hvordan tilgangskontrollere denne?
         route("/finnSisteBehandlinger").post<Unit, NullableSakOgBehandlingDTO, FinnBehandlingForIdentDTO>(
             TagModule(
                 listOf(Tags.Behandling)
@@ -195,7 +198,13 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 }
             }
             route("/dokument/{journalpostId}/{dokumentinfoId}") {
-                get<HentDokumentDTO, DokumentResponsDTO>(TagModule(listOf(Tags.Sak))) { req ->
+                authorizedGet<HentDokumentDTO, DokumentResponsDTO>(
+                    AuthorizationParamPathConfig(
+                        journalpostPathParam = JournalpostPathParam(
+                            "journalpostId"
+                        )
+                    )
+                ) { req ->
                     val journalpostId = req.journalpostId
                     val dokumentInfoId = req.dokumentinfoId
 
