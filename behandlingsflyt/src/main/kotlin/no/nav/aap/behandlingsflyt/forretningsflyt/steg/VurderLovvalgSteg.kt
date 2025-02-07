@@ -14,16 +14,21 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class VurderLovvalgSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val personopplysningRepository: PersonopplysningRepository,
-    private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository
+    private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
+    private val sakRepository: SakRepository
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        val manuellVurdering = medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)?.manuellVurdering
+
         if (kontekst.perioderTilVurdering.isNotEmpty()) {
+            val sak = sakRepository.hent(kontekst.sakId)
             val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
             val personopplysningGrunnlag = personopplysningRepository.hentHvisEksisterer(kontekst.behandlingId)
                 ?: throw IllegalStateException("Forventet å finne personopplysninger")
@@ -31,23 +36,18 @@ class VurderLovvalgSteg private constructor(
             val oppgittUtenlandsOppholdGrunnlag = medlemskapArbeidInntektRepository.hentOppgittUtenlandsOppholdHvisEksisterer(kontekst.behandlingId)
                 ?: throw IllegalStateException("Forventet å finne utenlandsopplysninger")
 
-            for (periode in kontekst.perioder()) {
-                Medlemskapvilkåret(vilkårsresultat, periode).vurder(
+                Medlemskapvilkåret(vilkårsresultat, sak.rettighetsperiode, manuellVurdering).vurder(
                     MedlemskapLovvalgGrunnlag(medlemskapArbeidInntektGrunnlag, personopplysningGrunnlag, oppgittUtenlandsOppholdGrunnlag)
                 )
-            }
             vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
         }
+        // TODO: Revurdering må inn her
 
-        /*
         val alleVilkårOppfylt = vilkårsresultatRepository.hent(kontekst.behandlingId).finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder().all{it.erOppfylt()}
-        if (!alleVilkårOppfylt) {
+
+        if (!alleVilkårOppfylt && manuellVurdering == null) {
             return FantAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
         }
-
-        if (!x.harGjortVurdering(kontekst.behandlingId)) {
-            return FantAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
-        }*/
 
         return Fullført
     }
@@ -58,7 +58,8 @@ class VurderLovvalgSteg private constructor(
             val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
             val personopplysningRepository = repositoryProvider.provide<PersonopplysningRepository>()
             val medlemskapArbeidInntektRepository = repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
-            return VurderLovvalgSteg(vilkårsresultatRepository, personopplysningRepository, medlemskapArbeidInntektRepository)
+            val sakRepository = repositoryProvider.provide<SakRepository>()
+            return VurderLovvalgSteg(vilkårsresultatRepository, personopplysningRepository, medlemskapArbeidInntektRepository, sakRepository)
         }
 
         override fun type(): StegType {

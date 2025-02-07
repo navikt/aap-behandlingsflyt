@@ -3,6 +3,9 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapArbeidInntektGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøknadsTidspunkt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunkt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdOversikt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
@@ -37,7 +40,8 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 MedlemskapArbeidInntektGrunnlag(
                     medlemskapGrunnlag = hentMedlemskapGrunnlag(it.getLongOrNull("medlemskap_unntak_person_id")),
                     inntekterINorgeGrunnlag = hentInntekterINorgeGrunnlag(it.getLongOrNull("inntekter_i_norge_id")),
-                    arbeiderINorgeGrunnlag = hentArbeiderINorgeGrunnlag(it.getLongOrNull("arbeider_id"))
+                    arbeiderINorgeGrunnlag = hentArbeiderINorgeGrunnlag(it.getLongOrNull("arbeider_id")),
+                    manuellVurdering = hentManuellVurdering(it.getLongOrNull("manuell_vurdering_id"))
                 )
             }
         }
@@ -58,6 +62,39 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         }
     }
 
+    override fun lagreManuellVurdering(behandlingId: BehandlingId, manuellVurdering: ManuellVurderingForLovvalgMedlemskap){
+        val grunnlagOppslag = hentGrunnlag(behandlingId)
+        deaktiverGrunnlag(behandlingId)
+
+        val manuellVurderingQuery = """
+            INSERT INTO LOVVALG_MEDLEMSKAP_MANUELL_VURDERING (tekstvurdering_lovvalg, lovvalgs_land, tekstvurdering_medlemskap, var_medlem_i_folketrygden) VALUES (?, ?, ?, ?)
+        """.trimIndent()
+
+        val manuellVurderingId = connection.executeReturnKey(manuellVurderingQuery) {
+            setParams {
+                setString(1, manuellVurdering.lovvalgVedSøknadsTidspunkt.begrunnelse)
+                setEnumName(2, manuellVurdering.lovvalgVedSøknadsTidspunkt.lovvalgsEØSLand)
+                setString(3, manuellVurdering.medlemskapVedSøknadsTidspunkt?.begrunnelse)
+                setBoolean(4, manuellVurdering.medlemskapVedSøknadsTidspunkt?.varMedlemIFolketrygd)
+            }
+        }
+
+        val grunnlagQuery = """
+            INSERT INTO MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG (behandling_id, arbeider_id, inntekter_i_norge_id, medlemskap_unntak_person_id, manuell_vurdering_id) VALUES (?, ?, ?, ?, ?)
+        """.trimIndent()
+
+        connection.execute(grunnlagQuery) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setLong(2, grunnlagOppslag?.arbeiderId)
+                setLong(3, grunnlagOppslag?.inntektINorgeId)
+                setLong(4, grunnlagOppslag?.medlId)
+                setLong(5, manuellVurderingId)
+            }
+            setResultValidator { require(it == 1) }
+        }
+    }
+
     override fun lagreArbeidsforholdOgInntektINorge(
         behandlingId: BehandlingId,
         arbeidGrunnlag: List<ArbeidsforholdOversikt>,
@@ -65,6 +102,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         medlId: Long?
     ) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
+        val grunnlagOppslag = hentGrunnlag(behandlingId)
         if (eksisterendeGrunnlag != null) {
             deaktiverGrunnlag(behandlingId)
         }
@@ -73,7 +111,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         val inntekterINorgeId = lagreArbeidsInntektGrunnlag(inntektGrunnlag)
 
         val grunnlagQuery = """
-            INSERT INTO MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG (behandling_id, arbeider_id, inntekter_i_norge_id, medlemskap_unntak_person_id) VALUES (?, ?, ?, ?)
+            INSERT INTO MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG (behandling_id, arbeider_id, inntekter_i_norge_id, medlemskap_unntak_person_id, manuell_vurdering_id) VALUES (?, ?, ?, ?, ?)
         """.trimIndent()
         connection.execute(grunnlagQuery) {
             setParams {
@@ -81,6 +119,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 setLong(2, arbeiderId)
                 setLong(3, inntekterINorgeId)
                 setLong(4, medlId)
+                setLong(5, grunnlagOppslag?.manuellVurderingId)
             }
         }
     }
@@ -113,6 +152,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
 
     private fun lagreArbeidsInntektGrunnlag (arbeidsInntektGrunnlag: List<ArbeidsInntektMaaned>): Long? {
         if (arbeidsInntektGrunnlag.isEmpty()) return null
+
         val inntekterINorgeQuery = """
             INSERT INTO INNTEKTER_I_NORGE DEFAULT VALUES
         """.trimIndent()
@@ -143,9 +183,9 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
     }
 
     override fun lagreOppgittUtenlandsOppplysninger(behandlingId: BehandlingId, journalpostId: JournalpostId, utenlandsOppholdData: UtenlandsOppholdData) {
-        val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
+        val eksisterendeGrunnlag = hentOppgittUtenlandsOppholdHvisEksisterer(behandlingId)
         if (eksisterendeGrunnlag != null) {
-            deaktiverGrunnlag(behandlingId)
+            deaktiverUtenlandsOppholdGrunnlag(behandlingId)
         }
 
         val oppgittUtenlandsOppholdQuery = """
@@ -189,6 +229,31 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 setLong(1, behandlingId.toLong())
                 setString(2, journalpostId.identifikator)
                 setLong(3, oppgittUtenlandsOppholdId)
+            }
+        }
+    }
+
+    private fun hentManuellVurdering(vurderingId: Long?): ManuellVurderingForLovvalgMedlemskap?{
+        if (vurderingId == null) return null
+        val query = """
+            SELECT * FROM LOVVALG_MEDLEMSKAP_MANUELL_VURDERING WHERE ID = ?
+        """.trimIndent()
+
+        return connection.queryFirst(query){
+            setParams {
+                setLong(1, vurderingId)
+            }
+            setRowMapper {
+                ManuellVurderingForLovvalgMedlemskap(
+                    lovvalgVedSøknadsTidspunkt =  LovvalgVedSøknadsTidspunkt(
+                        begrunnelse = it.getString("tekstvurdering_lovvalg"),
+                        lovvalgsEØSLand = it.getEnumOrNull("lovvalgs_land")
+                    ),
+                    medlemskapVedSøknadsTidspunkt = MedlemskapVedSøknadsTidspunkt(
+                        begrunnelse = it.getStringOrNull("tekstvurdering_medlemskap"),
+                        varMedlemIFolketrygd = it.getBooleanOrNull("var_medlem_i_folketrygden")
+                    )
+                )
             }
         }
     }
@@ -301,8 +366,37 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         }
     }
 
+    private fun hentGrunnlag(behandlingId: BehandlingId): GrunnlagOppslag? {
+        val query = """
+            SELECT * FROM MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG WHERE behandling_id = ? and aktiv = true
+        """.trimIndent()
+
+        return connection.queryFirstOrNull(query) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+            setRowMapper {
+                GrunnlagOppslag(
+                    it.getLongOrNull("medlemskap_unntak_person_id"),
+                    it.getLongOrNull("inntekter_i_norge_id"),
+                    it.getLongOrNull("arbeider_id"),
+                    it.getLongOrNull("manuell_vurdering_id")
+                )
+            }
+        }
+    }
+
     private fun deaktiverGrunnlag(behandlingId: BehandlingId) {
         connection.execute("UPDATE MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG set aktiv = false WHERE behandling_id = ? and aktiv = true") {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+            setResultValidator { require(it == 1) }
+        }
+    }
+
+    private fun deaktiverUtenlandsOppholdGrunnlag(behandlingId: BehandlingId) {
+        connection.execute("UPDATE  OPPGITT_UTENLANDSOPPHOLD_GRUNNLAG set aktiv = false WHERE behandling_id = ? and aktiv = true") {
             setParams {
                 setLong(1, behandlingId.toLong())
             }
@@ -328,4 +422,11 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
             }
         }
     }
+
+    internal data class GrunnlagOppslag(
+        val medlId: Long?,
+        val inntektINorgeId: Long?,
+        val arbeiderId: Long?,
+        val manuellVurderingId: Long?
+    )
 }

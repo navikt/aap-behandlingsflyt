@@ -4,12 +4,14 @@ import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovHendelseHåndterer
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.BehandlingTilstandValidator
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehovHendelse
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.BREV_SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.ÅrsakTilReturKode
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
@@ -24,13 +26,18 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLand
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøknadsTidspunkt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunkt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurdering
@@ -51,6 +58,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoBulkGateway
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.BrevbestillingLøsningStatus
@@ -89,6 +97,7 @@ import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -103,6 +112,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.httpklient.auth.Bruker
+import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.gateway.GatewayRegistry
@@ -2193,7 +2203,7 @@ class FlytOrkestratorTest {
         }
     }
 
-   // @Test
+    @Test
     fun `Lager avklaringsbehov i medlemskap når kravene til manuell avklaring oppfylles`() {
         val ident = ident()
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
@@ -2252,6 +2262,261 @@ class FlytOrkestratorTest {
         dataSource.transaction { connection ->
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
             assertThat(avklaringsbehov.åpne().none())
+        }
+    }
+
+    @Test
+    fun `Går videre i medlemskapsteget når manuell vurdering mottas` () {
+        val ident = ident()
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        // Oppretter vanlig søknad
+        hendelsesMottak.håndtere(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("101"),
+                mottattTidspunkt = LocalDateTime.now(),
+                strukturertDokument = StrukturertDokument(
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                        medlemskap = SøknadMedlemskapDto("JA", "JA", "JA", "NEI", null)
+                    ),
+                ),
+                periode = periode
+            )
+        )
+
+        util.ventPåSvar()
+        val sak = hentSak(ident, periode)
+        var behandling = requireNotNull(hentBehandling(sak.id))
+
+        // Validér avklaring
+        dataSource.transaction { connection ->
+            val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
+            assertThat(avklaringsbehov.åpne().all { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
+        }
+
+        // Trigger manuell vurdering
+        dataSource.transaction {connection ->
+            AvklaringsbehovHendelseHåndterer(
+                AvklaringsbehovOrkestrator(connection, BehandlingHendelseServiceImpl(FlytJobbRepository(connection), SakService(SakRepositoryImpl(connection)))),
+                AvklaringsbehovRepositoryImpl(connection),
+                BehandlingRepositoryImpl(connection)
+            ).håndtere(
+                behandling.id,
+                LøsAvklaringsbehovHendelse(
+                    løsning = AvklarLovvalgMedlemskapLøsning(
+                        manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskap(
+                            LovvalgVedSøknadsTidspunkt("crazy lovvalgsland vurdering", EØSLand.NOR),
+                            MedlemskapVedSøknadsTidspunkt("crazy medlemskap vurdering", true)
+                        ),
+                        behovstype = AvklaringsbehovKode.`5017`
+                    ),
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
+                )
+            )
+        }
+        util.ventPåSvar()
+
+        // Validér avklaring
+        dataSource.transaction { connection ->
+            val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
+            assertThat(avklaringsbehov.åpne().none())
+        }
+    }
+
+    @Test
+    fun `Gir oppfylt når bruker ikke har lovvalgsland men oppfyller trygdeloven` () {
+        val ident = ident()
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        // Oppretter vanlig søknad
+        hendelsesMottak.håndtere(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("102"),
+                mottattTidspunkt = LocalDateTime.now(),
+                strukturertDokument = StrukturertDokument(
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                        medlemskap = SøknadMedlemskapDto("JA", "JA", "JA", "NEI", null)
+                    ),
+                ),
+                periode = periode
+            )
+        )
+
+        util.ventPåSvar()
+        val sak = hentSak(ident, periode)
+        var behandling = requireNotNull(hentBehandling(sak.id))
+
+        // Validér avklaring
+        dataSource.transaction { connection ->
+            val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
+            assertThat(avklaringsbehov.åpne().all { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
+        }
+
+        // Trigger manuell vurdering
+        dataSource.transaction {connection ->
+            AvklaringsbehovHendelseHåndterer(
+                AvklaringsbehovOrkestrator(connection, BehandlingHendelseServiceImpl(FlytJobbRepository(connection), SakService(SakRepositoryImpl(connection)))),
+                AvklaringsbehovRepositoryImpl(connection),
+                BehandlingRepositoryImpl(connection)
+            ).håndtere(
+                behandling.id,
+                LøsAvklaringsbehovHendelse(
+                    løsning = AvklarLovvalgMedlemskapLøsning(
+                        manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskap(
+                            LovvalgVedSøknadsTidspunkt("crazy lovvalgsland vurdering", null),
+                            MedlemskapVedSøknadsTidspunkt("crazy medlemskap vurdering", true)
+                        ),
+                        behovstype = AvklaringsbehovKode.`5017`
+                    ),
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
+                )
+            )
+        }
+        util.ventPåSvar()
+
+        // Validér riktig resultat
+        dataSource.transaction { connection ->
+            val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
+            val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder()
+            assertThat(avklaringsbehov.åpne().none())
+            assertTrue(vilkårsResultat.all { it.erOppfylt() })
+        }
+    }
+
+    @Test
+    fun `Gir avslag når bruker har annet lovvalgsland` () {
+        val ident = ident()
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        // Oppretter vanlig søknad
+        hendelsesMottak.håndtere(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("102"),
+                mottattTidspunkt = LocalDateTime.now(),
+                strukturertDokument = StrukturertDokument(
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                        medlemskap = SøknadMedlemskapDto("JA", "JA", "JA", "NEI", null)
+                    ),
+                ),
+                periode = periode
+            )
+        )
+
+        util.ventPåSvar()
+        val sak = hentSak(ident, periode)
+        var behandling = requireNotNull(hentBehandling(sak.id))
+
+        // Validér avklaring
+        dataSource.transaction { connection ->
+            val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
+            assertThat(avklaringsbehov.åpne().all { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
+        }
+
+        // Trigger manuell vurdering
+        dataSource.transaction {connection ->
+            AvklaringsbehovHendelseHåndterer(
+                AvklaringsbehovOrkestrator(connection, BehandlingHendelseServiceImpl(FlytJobbRepository(connection), SakService(SakRepositoryImpl(connection)))),
+                AvklaringsbehovRepositoryImpl(connection),
+                BehandlingRepositoryImpl(connection)
+            ).håndtere(
+                behandling.id,
+                LøsAvklaringsbehovHendelse(
+                    løsning = AvklarLovvalgMedlemskapLøsning(
+                        manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskap(
+                            LovvalgVedSøknadsTidspunkt("crazy lovvalgsland vurdering", EØSLand.DNK),
+                            MedlemskapVedSøknadsTidspunkt(null, null)
+                        ),
+                        behovstype = AvklaringsbehovKode.`5017`
+                    ),
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
+                )
+            )
+        }
+        util.ventPåSvar()
+
+        // Validér avklaring
+        dataSource.transaction { connection ->
+        }
+
+        // Validér riktig resultat
+        dataSource.transaction { connection ->
+            val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
+            val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder()
+            assertThat(avklaringsbehov.åpne().none())
+            assertTrue(vilkårsResultat.none { it.erOppfylt() })
+        }
+    }
+
+    @Test
+    fun `Gir avslag når bruker ikke er medlem i trygden` () {
+        val ident = ident()
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        // Oppretter vanlig søknad
+        hendelsesMottak.håndtere(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("103"),
+                mottattTidspunkt = LocalDateTime.now(),
+                strukturertDokument = StrukturertDokument(
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                        medlemskap = SøknadMedlemskapDto("JA", "JA", "JA", "NEI", null)
+                    ),
+                ),
+                periode = periode
+            )
+        )
+
+        util.ventPåSvar()
+        val sak = hentSak(ident, periode)
+        var behandling = requireNotNull(hentBehandling(sak.id))
+
+        // Validér avklaring
+        dataSource.transaction { connection ->
+            val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
+            assertThat(avklaringsbehov.åpne().all { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
+        }
+
+        // Trigger manuell vurdering
+        dataSource.transaction {connection ->
+            AvklaringsbehovHendelseHåndterer(
+                AvklaringsbehovOrkestrator(connection, BehandlingHendelseServiceImpl(FlytJobbRepository(connection), SakService(SakRepositoryImpl(connection)))),
+                AvklaringsbehovRepositoryImpl(connection),
+                BehandlingRepositoryImpl(connection)
+            ).håndtere(
+                behandling.id,
+                LøsAvklaringsbehovHendelse(
+                    løsning = AvklarLovvalgMedlemskapLøsning(
+                        manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskap(
+                            LovvalgVedSøknadsTidspunkt("crazy lovvalgsland vurdering", EØSLand.NOR),
+                            MedlemskapVedSøknadsTidspunkt("crazy medlemskap vurdering", false)
+                        ),
+                        behovstype = AvklaringsbehovKode.`5017`
+                    ),
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
+                )
+            )
+        }
+        util.ventPåSvar()
+
+        // Validér avklaring
+        dataSource.transaction { connection ->
+            val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
+            assertThat(avklaringsbehov.åpne().none())
+        }
+
+        // Validér riktig resultat
+        dataSource.transaction { connection ->
+            val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder()
+            assertTrue(vilkårsResultat.none { it.erOppfylt() })
+            assertThat(Avslagsårsak.IKKE_MEDLEM == vilkårsResultat.first().avslagsårsak)
         }
     }
 }
