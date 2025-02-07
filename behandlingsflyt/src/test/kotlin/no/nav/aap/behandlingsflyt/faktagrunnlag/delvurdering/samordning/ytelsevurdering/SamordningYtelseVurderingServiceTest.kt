@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningYtelseVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -25,10 +26,10 @@ class SamordningYtelseVurderingServiceTest {
     @Test
     fun kreverAvklaringNårEndringerKommer() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val repo = SamordningYtelseVurderingRepository(connection)
+            val repo = SamordningYtelseVurderingRepositoryImpl(connection)
             val sakRepository = SakRepositoryImpl(connection)
             val service = SamordningYtelseVurderingService(
-                SamordningYtelseVurderingRepository(connection),
+                SamordningYtelseVurderingRepositoryImpl(connection),
                 SakService(sakRepository)
             )
             val kontekst = opprettSakdata(connection)
@@ -49,7 +50,7 @@ class SamordningYtelseVurderingServiceTest {
         }
     }
 
-    private fun opprettVurderingData(repo: SamordningYtelseVurderingRepository, behandlingId: BehandlingId) {
+    private fun opprettVurderingData(repo: SamordningYtelseVurderingRepositoryImpl, behandlingId: BehandlingId) {
         repo.lagreVurderinger(
             behandlingId,
             listOf(
@@ -61,7 +62,7 @@ class SamordningYtelseVurderingServiceTest {
         )
     }
 
-    private fun opprettYtelseData(repo: SamordningYtelseVurderingRepository, behandlingId: BehandlingId) {
+    private fun opprettYtelseData(repo: SamordningYtelseVurderingRepositoryImpl, behandlingId: BehandlingId) {
         repo.lagreYtelser(
             behandlingId,
             listOf(SamordningYtelse(

@@ -6,16 +6,6 @@ import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDate
 
-data class SykdomGrunnlagDto(
-    val skalVurdereYrkesskade: Boolean,
-    val opplysninger: InnhentetSykdomsOpplysninger,
-    val sykdomsvurdering: SykdomsvurderingDto?
-)
-
-data class YrkesskadeVurderingGrunnlagDto(
-    val opplysninger: InnhentetSykdomsOpplysninger,
-    val yrkesskadeVurdering: YrkesskadevurderingDto?
-)
 
 data class InnhentetSykdomsOpplysninger(
     val oppgittYrkesskadeISøknad: Boolean,

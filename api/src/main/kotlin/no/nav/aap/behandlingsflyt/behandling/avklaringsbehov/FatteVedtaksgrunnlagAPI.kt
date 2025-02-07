@@ -1,10 +1,9 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
-import com.papsign.ktor.openapigen.route.TagModule
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import com.papsign.ktor.openapigen.route.tag
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.Aksjon
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.DefinisjonEndring
@@ -21,15 +20,24 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.verdityper.Interval
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.tilgang.AuthorizationParamPathConfig
+import no.nav.aap.tilgang.BehandlingPathParam
+import no.nav.aap.tilgang.authorizedGet
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(dataSource: DataSource) {
-    route("/api/behandling") {
+    route("/api/behandling").tag(Tags.Behandling) {
         route("/{referanse}/grunnlag/fatte-vedtak") {
-            get<BehandlingReferanse, FatteVedtakGrunnlagDto>(TagModule(listOf(Tags.Behandling))) { req ->
+            authorizedGet<BehandlingReferanse, FatteVedtakGrunnlagDto>(
+                AuthorizationParamPathConfig(
+                    behandlingPathParam = BehandlingPathParam(
+                        ("referanse")
+                    )
+                )
+            ) { req ->
 
-                val dto = dataSource.transaction { connection ->
+                val dto = dataSource.transaction(readOnly = true) { connection ->
 
                     val repositoryProvider = RepositoryProvider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()

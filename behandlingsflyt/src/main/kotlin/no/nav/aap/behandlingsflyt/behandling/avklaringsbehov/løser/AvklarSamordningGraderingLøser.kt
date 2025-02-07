@@ -5,13 +5,16 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamo
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 class AvklarSamordningGraderingLøser(connection: DBConnection): AvklaringsbehovsLøser<AvklarSamordningGraderingLøsning> {
-    private val samordningYtelseVurderingRepository  = SamordningYtelseVurderingRepository(connection)
+    private val samordningYtelseVurderingRepository  = RepositoryProvider(connection).provide<SamordningYtelseVurderingRepository>()
     
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarSamordningGraderingLøsning): LøsningsResultat {
 
-        samordningYtelseVurderingRepository.lagreVurderinger(kontekst.kontekst.behandlingId, løsning.vurderingerForSamordning.vurderteSamordninger)
+        samordningYtelseVurderingRepository.lagreVurderinger(
+            kontekst.kontekst.behandlingId, løsning.vurderingerForSamordning.vurderteSamordninger
+        )
 
         return LøsningsResultat("Vurdert samordning")
     }

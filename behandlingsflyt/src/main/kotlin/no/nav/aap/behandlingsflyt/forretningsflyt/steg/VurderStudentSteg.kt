@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 class VurderStudentSteg private constructor(
     private val studentRepository: StudentRepository
@@ -26,7 +27,7 @@ class VurderStudentSteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            return VurderStudentSteg(StudentRepository(connection))
+            return VurderStudentSteg(RepositoryProvider(connection).provide())
         }
 
         override fun type(): StegType {

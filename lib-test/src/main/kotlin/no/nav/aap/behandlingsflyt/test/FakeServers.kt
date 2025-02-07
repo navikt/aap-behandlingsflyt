@@ -1331,7 +1331,6 @@ object FakeServers : AutoCloseable {
         // Brev
         System.setProperty("integrasjon.brev.url", "http://localhost:${brev.port()}")
         System.setProperty("integrasjon.brev.scope", "brev")
-        System.setProperty("integrasjon.brev.azp", "azp")
 
         // Pdl
         System.setProperty("integrasjon.pdl.url", "http://localhost:${pdl.port()}")
@@ -1374,10 +1373,7 @@ object FakeServers : AutoCloseable {
         // Tilgang
         System.setProperty("integrasjon.tilgang.url", "http://localhost:${tilgang.port()}")
         System.setProperty("integrasjon.tilgang.scope", "scope")
-        System.setProperty("integrasjon.tilgang.azp", "azp")
 
-        // Postmottak
-        System.setProperty("integrasjon.postmottak.azp", "azp")
 
         // Foreldrepenger
         System.setProperty("integrasjon.foreldrepenger.url", "http://localhost:${foreldrepenger.port()}")
@@ -1390,10 +1386,6 @@ object FakeServers : AutoCloseable {
         // Dokumentinnhenting
         System.setProperty("integrasjon.dokumentinnhenting.url", "http://localhost:${dokumentinnhenting.port()}")
         System.setProperty("integrasjon.dokumentinnhenting.scope", "scope")
-        System.setProperty("integrasjon.dokumentinnhenting.azp", "azp")
-
-        // Saksbehandling
-        System.setProperty("integrasjon.saksbehandling.azp", "azp")
 
         // AAregisteret
         System.setProperty("integrasjon.aareg.url", "http://localhost:${aareg.port()}")

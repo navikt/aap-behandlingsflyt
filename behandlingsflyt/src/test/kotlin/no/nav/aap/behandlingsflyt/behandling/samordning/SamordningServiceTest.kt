@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingRepository
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningYtelseVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
@@ -33,7 +33,7 @@ class SamordningServiceTest {
     @Test
     fun gjørVurderingerNårAllDataErTilstede() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val ytelseVurderingRepo = SamordningYtelseVurderingRepository(connection)
+            val ytelseVurderingRepo = SamordningYtelseVurderingRepositoryImpl(connection)
             val behandlingId = opprettSakdata(connection)
             opprettYtelseData(ytelseVurderingRepo, behandlingId)
             opprettVurderingData(ytelseVurderingRepo, behandlingId)
@@ -46,7 +46,7 @@ class SamordningServiceTest {
     @Test
     fun kanHenteOgGjøreVurderingUtenVurderinger() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val ytelseVurderingRepo = SamordningYtelseVurderingRepository(connection)
+            val ytelseVurderingRepo = SamordningYtelseVurderingRepositoryImpl(connection)
             val behandlingId = opprettSakdata(connection)
             opprettYtelseData(ytelseVurderingRepo, behandlingId)
 
@@ -58,7 +58,7 @@ class SamordningServiceTest {
     @Test
     fun kanGåVidereUtenNoeData() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val ytelseVurderingRepo = SamordningYtelseVurderingRepository(connection)
+            val ytelseVurderingRepo = SamordningYtelseVurderingRepositoryImpl(connection)
             val behandlingId = opprettSakdata(connection)
 
             val service = SamordningService(ytelseVurderingRepo, UnderveisRepositoryImpl(connection))
@@ -69,7 +69,7 @@ class SamordningServiceTest {
     @Test
     fun sjekkerKorrektOmDetErGjortVurderinger() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val ytelseVurderingRepo = SamordningYtelseVurderingRepository(connection)
+            val ytelseVurderingRepo = SamordningYtelseVurderingRepositoryImpl(connection)
             val behandlingId = opprettSakdata(connection)
             opprettYtelseData(ytelseVurderingRepo, behandlingId)
 
@@ -81,7 +81,7 @@ class SamordningServiceTest {
         }
     }
 
-    private fun opprettVurderingData(repo: SamordningYtelseVurderingRepository, behandlingId: BehandlingId) {
+    private fun opprettVurderingData(repo: SamordningYtelseVurderingRepositoryImpl, behandlingId: BehandlingId) {
         repo.lagreVurderinger(
             behandlingId,
             listOf(
@@ -93,7 +93,7 @@ class SamordningServiceTest {
         )
     }
 
-    private fun opprettYtelseData(repo: SamordningYtelseVurderingRepository, behandlingId: BehandlingId) {
+    private fun opprettYtelseData(repo: SamordningYtelseVurderingRepositoryImpl, behandlingId: BehandlingId) {
         repo.lagreYtelser(
             behandlingId,
             listOf(SamordningYtelse(

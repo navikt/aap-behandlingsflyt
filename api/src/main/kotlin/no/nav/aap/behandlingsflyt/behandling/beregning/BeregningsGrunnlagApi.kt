@@ -1,11 +1,10 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning
 
-import com.papsign.ktor.openapigen.route.TagModule
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
+import com.papsign.ktor.openapigen.route.tag
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
@@ -21,6 +20,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.tilgang.AuthorizationParamPathConfig
+import no.nav.aap.tilgang.BehandlingPathParam
+import no.nav.aap.tilgang.authorizedGet
 import java.math.BigDecimal
 import java.time.format.DateTimeFormatter
 import javax.sql.DataSource
@@ -29,8 +31,14 @@ private val årFormatter = DateTimeFormatter.ofPattern("yyyy")
 
 fun NormalOpenAPIRoute.beregningsGrunnlagApi(dataSource: DataSource) {
     route("/api/beregning") {
-        route("/grunnlag/{referanse}") {
-            get<BehandlingReferanse, BeregningDTO>(TagModule(listOf(Tags.Grunnlag))) { req ->
+        route("/grunnlag/{referanse}").tag(Tags.Grunnlag) {
+            authorizedGet<BehandlingReferanse, BeregningDTO>(
+                AuthorizationParamPathConfig(
+                    behandlingPathParam = BehandlingPathParam(
+                        "referanse"
+                    )
+                )
+            ) { req ->
                 val begregningsgrunnlag = dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()

@@ -1,0 +1,1 @@
+package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler;

@@ -6,6 +6,7 @@ import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
+import com.papsign.ktor.openapigen.route.tag
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
@@ -34,11 +35,18 @@ import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
+import kotlin.collections.set
 
 fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
-    route("/api/behandling") {
+    route("/api/behandling").tag(Tags.Behandling) {
         route("/{referanse}") {
-            get<BehandlingReferanse, DetaljertBehandlingDTO>(TagModule(listOf(Tags.Behandling))) { req ->
+            authorizedGet<BehandlingReferanse, DetaljertBehandlingDTO>(
+                AuthorizationParamPathConfig(
+                    behandlingPathParam = BehandlingPathParam(
+                        "referanse"
+                    )
+                )
+            ) { req ->
                 val dto = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
@@ -100,6 +108,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
             }
         }
         route("/{referanse}/forbered") {
+            // TODO: trenger tilgangskontroll. Men hva er Operasjon her?
             get<BehandlingReferanse, DetaljertBehandlingDTO>(TagModule(listOf(Tags.Behandling))) { req ->
                 dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)

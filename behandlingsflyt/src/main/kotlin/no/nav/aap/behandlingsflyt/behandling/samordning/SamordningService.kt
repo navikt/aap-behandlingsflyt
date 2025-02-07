@@ -30,7 +30,7 @@ class SamordningService(
     }
 
     private fun vurderRegler(samordning: SamordningYtelseVurderingGrunnlag?) : Tidslinje<SamordningGradering> {
-        //TODO: Kombiner til tidslinje her. Kaja skal utarbeide en oversikt over regler, avventer dette
+        // TODO: Kombiner til tidslinje her. Kaja skal utarbeide en oversikt over regler, avventer dette
         return Tidslinje(listOf())
     }
 }

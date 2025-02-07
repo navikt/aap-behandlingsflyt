@@ -10,14 +10,19 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.Vurderi
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_SAMORDNING_GRADERING_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = AVKLAR_SAMORDNING_GRADERING_KODE)
 class AvklarSamordningGraderingLøsning(
     @JsonProperty("vurderingerForSamordning", required = true) val vurderingerForSamordning: VurderingerForSamordning,
-    @JsonProperty("behovstype", required = true, defaultValue = AVKLAR_SAMORDNING_GRADERING_KODE) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5012`
+    @JsonProperty(
+        "behovstype",
+        required = true,
+        defaultValue = AVKLAR_SAMORDNING_GRADERING_KODE
+    ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5012`
 ) : AvklaringsbehovLøsning {
     override fun løs(connection: DBConnection, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
-        return AvklarSamordningGraderingLøser(connection).løs(kontekst, this)
+        return AvklarSamordningGraderingLøser(RepositoryProvider(connection).provide()).løs(kontekst, this)
     }
 }

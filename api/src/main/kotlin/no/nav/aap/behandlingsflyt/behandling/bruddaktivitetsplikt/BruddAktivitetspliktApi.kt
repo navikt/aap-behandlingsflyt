@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.bruddaktivitetsplikt
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
@@ -12,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.effektuer11_7.Effek
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.DokumentInput
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FORHÅNDSVARSEL_AKTIVITETSPLIKT_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingId
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
@@ -32,13 +32,21 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
+import no.nav.aap.tilgang.AuthorizationParamPathConfig
+import no.nav.aap.tilgang.BehandlingPathParam
+import no.nav.aap.tilgang.Operasjon
+import no.nav.aap.tilgang.SakPathParam
+import no.nav.aap.tilgang.authorizedGet
+import no.nav.aap.tilgang.authorizedPost
 import no.nav.aap.verdityper.dokument.Kanal
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
     route("/api").tag(Tags.Aktivitetsplikt) {
-        route("/behandling/{referanse}/aktivitetsplikt/effektuer").get<BehandlingReferanse, Effektuer11_7Dto> { behandlingReferanse ->
-            val respons = dataSource.transaction { conn ->
+        route("/behandling/{referanse}/aktivitetsplikt/effektuer").authorizedGet<BehandlingReferanse, Effektuer11_7Dto>(
+            AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse"))
+        ) { behandlingReferanse ->
+            val respons = dataSource.transaction(readOnly = true) { conn ->
                 val repositoryProvider = RepositoryProvider(conn)
                 val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
                 val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
@@ -78,7 +86,13 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
         }
 
         route("/sak/{saksnummer}/aktivitetsplikt") {
-            route("/opprett").post<SaksnummerParameter, String, OpprettAktivitetspliktDTO> { params, req ->
+            route("/opprett").authorizedPost<SaksnummerParameter, String, OpprettAktivitetspliktDTO>(
+                AuthorizationParamPathConfig(
+                    operasjon = Operasjon.SAKSBEHANDLE,
+                    sakPathParam = SakPathParam("saksnummer"),
+                    avklaringsbehovKode = FORHÅNDSVARSEL_AKTIVITETSPLIKT_KODE,
+                )
+            ) { params, req ->
                 val navIdent = bruker()
                 dataSource.transaction { connection ->
                     opprettDokument(connection, navIdent, Saksnummer(params.saksnummer), req)
@@ -86,6 +100,7 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
                 respond("{}", HttpStatusCode.Accepted)
             }
 
+            // TODO !! Denne må tilgangskontrollers. Men hva er nødvendig kontekst?
             route("/oppdater").post<SaksnummerParameter, String, OppdaterAktivitetspliktDTOV2> { params, req ->
                 val navIdent = bruker()
                 dataSource.transaction { connection ->
@@ -94,8 +109,14 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
                 respond("{}", HttpStatusCode.Accepted)
             }
 
-            get<SaksnummerParameter, BruddAktivitetspliktResponse> { params ->
-                val response = dataSource.transaction { connection ->
+            authorizedGet<SaksnummerParameter, BruddAktivitetspliktResponse>(
+                AuthorizationParamPathConfig(
+                    sakPathParam = SakPathParam(
+                        "saksnummer"
+                    )
+                )
+            ) { params ->
+                val response = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
                     val sakRepository = repositoryProvider.provide<SakRepository>()
                     val aktivitetspliktRepository =

@@ -1,5 +1,6 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate
+package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.fritakmeldeplikt
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.FritaksvurderingDto
 import java.time.LocalDate
 import java.time.LocalDateTime
 
