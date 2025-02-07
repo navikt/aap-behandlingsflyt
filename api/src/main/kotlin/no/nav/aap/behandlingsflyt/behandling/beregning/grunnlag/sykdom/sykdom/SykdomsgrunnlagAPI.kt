@@ -43,14 +43,19 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: DataSource) {
                         kilde = "Yrkesskaderegisteret"
                     )
                 } ?: emptyList()
+
+                val sykdomsvurdering = sykdomGrunnlag?.sykdomsvurdering?.toDto()
                 respond(
                     SykdomGrunnlagDto(
                         opplysninger = InnhentetSykdomsOpplysninger(
                             oppgittYrkesskadeISøknad = false,
                             innhentedeYrkesskader = innhentedeYrkesskader,
                         ),
-                        sykdomsvurdering = sykdomGrunnlag?.sykdomsvurdering?.toDto(),
-                        skalVurdereYrkesskade = innhentedeYrkesskader.isNotEmpty()
+                        sykdomsvurdering = sykdomsvurdering,
+                        skalVurdereYrkesskade = innhentedeYrkesskader.isNotEmpty(),
+                        sykdomsvurderinger = listOfNotNull(sykdomsvurdering),
+                        historikkSykdomsvurderinger = listOf(),
+                        gjeldendeVedtatteSykdomsvurderinger = listOf(),
                     )
                 )
             }

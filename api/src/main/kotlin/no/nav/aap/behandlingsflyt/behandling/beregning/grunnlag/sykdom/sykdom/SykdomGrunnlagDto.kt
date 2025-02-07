@@ -6,5 +6,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.Sykdo
 data class SykdomGrunnlagDto(
     val skalVurdereYrkesskade: Boolean,
     val opplysninger: InnhentetSykdomsOpplysninger,
-    val sykdomsvurdering: SykdomsvurderingDto?
+
+    @Deprecated("kan være mer enn 1, bruk sykdomsvurderinger")
+    val sykdomsvurdering: SykdomsvurderingDto?,
+
+    val sykdomsvurderinger: List<SykdomsvurderingDto>,
+    val historikkSykdomsvurderinger: List<SykdomsvurderingDto>,
+    val gjeldendeVedtatteSykdomsvurderinger: List<SykdomsvurderingDto>,
 )
