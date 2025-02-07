@@ -116,6 +116,11 @@ class SamordningYtelseVurderingRepositoryImpl(private val connection: DBConnecti
             deaktiverGrunnlag(behandlingId)
         }
 
+        val ytelserId = eksisterendeGrunnlag?.ytelserId
+        requireNotNull(ytelserId) {
+            "Må sette inn ytelse først"
+        }
+
         val samordningVurderingerQuery = """
             INSERT INTO SAMORDNING_VURDERINGER DEFAULT VALUES
             """.trimIndent()
@@ -152,7 +157,7 @@ class SamordningYtelseVurderingRepositoryImpl(private val connection: DBConnecti
         connection.execute(grunnlagQuery) {
             setParams {
                 setLong(1, behandlingId.toLong())
-                setLong(2, eksisterendeGrunnlag?.ytelserId)
+                setLong(2, ytelserId)
                 setLong(3, vurderingerId)
             }
         }

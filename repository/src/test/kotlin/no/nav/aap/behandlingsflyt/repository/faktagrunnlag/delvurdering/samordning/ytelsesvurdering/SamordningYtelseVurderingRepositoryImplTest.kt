@@ -24,6 +24,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
 
 
@@ -31,7 +32,7 @@ class SamordningYtelseVurderingRepositoryImplTest {
     private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
     @Test
-    fun `fsdf sd`() {
+    fun `lagre og hente ut igjen`() {
         val dataSource = InitTestDatabase.dataSource
         val behandling = dataSource.transaction {
             behandling(it, sak(it))
@@ -115,6 +116,36 @@ class SamordningYtelseVurderingRepositoryImplTest {
                 )
             )
         )
+    }
+
+    @Test
+    fun `å lagre en vurdering før ytelse eksisterer gir feil`() {
+        val dataSource = InitTestDatabase.dataSource
+        val behandling = dataSource.transaction {
+            behandling(it, sak(it))
+        }
+
+        // Lagre vurdering
+        val vurdering = SamordningVurdering(
+            ytelseType = "SYKERPENGER",
+            vurderingPerioder = listOf(
+                SamordningVurderingPeriode(
+                    periode = Periode(LocalDate.now().minusYears(3), LocalDate.now().minusDays(1)),
+                    gradering = Prosent(40),
+                    kronesum = null,
+                )
+            )
+        )
+        assertThrows<IllegalArgumentException> {
+            dataSource.transaction {
+                SamordningYtelseVurderingRepositoryImpl(it).lagreVurderinger(
+                    behandlingId = behandling.id,
+                    samordningVurderinger = listOf(
+                        vurdering
+                    )
+                )
+            }
+        }
     }
 
     private fun sak(connection: DBConnection): Sak {
