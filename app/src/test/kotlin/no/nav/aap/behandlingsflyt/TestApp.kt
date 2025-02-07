@@ -125,6 +125,8 @@ fun main() {
 
                         respond(dto)
                     }
+                }
+                route("/brev") {
                     post<Unit, String, TestBestillBrev> { _, dto ->
                         datasource.transaction { connection ->
                             val behandlingRepository = BehandlingRepositoryImpl(connection)
