@@ -24,7 +24,7 @@ class Vilkårsperiode(
         vilkårsvurdering.innvilgelsesårsak,
         vilkårsvurdering.avslagsårsak,
         vilkårsvurdering.faktagrunnlag,
-        ApplikasjonsVersjon.versjon
+        vilkårsvurdering.versjon
     )
 
     init {
