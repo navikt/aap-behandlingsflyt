@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepos
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -365,5 +366,24 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
 
     override fun hent(behandlingId: BehandlingId): SykdomGrunnlag {
         return requireNotNull(hentHvisEksisterer(behandlingId))
+    }
+
+    override fun hentHistoriskeSykdomsvurderinger(sakId: SakId, behandlingId: BehandlingId): List<Sykdomsvurdering> {
+        val query = """
+            SELECT vurdering.*
+            FROM SYKDOM_GRUNNLAG grunnlag
+            INNER JOIN SYKDOM_VURDERINGER vurderinger ON grunnlag.SYKDOM_VURDERINGER_ID = vurderinger.ID
+            INNER JOIN SYKDOM_VURDERING vurdering ON vurdering.SYKDOM_VURDERINGER_ID = vurderinger.ID
+            JOIN BEHANDLING behandling ON grunnlag.BEHANDLING_ID = behandling.ID
+            WHERE grunnlag.AKTIV AND behandling.SAK_ID = ?
+              AND behandling.opprettet_tid < (SELECT a.opprettet_tid from behandling a where id = ?)
+            """.trimIndent()
+        return connection.queryList(query) {
+            setParams {
+                setLong(1, sakId.id)
+                setLong(2, behandlingId.id)
+            }
+            setRowMapper(::sykdomsvurderingRowmapper)
+        }
     }
 }

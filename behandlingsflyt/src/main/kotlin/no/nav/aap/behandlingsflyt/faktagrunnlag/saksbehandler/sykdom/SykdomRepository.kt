@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.lookup.repository.Repository
 
 interface SykdomRepository : Repository {
@@ -24,4 +25,6 @@ interface SykdomRepository : Repository {
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
     fun hentHvisEksisterer(behandlingId: BehandlingId): SykdomGrunnlag?
     fun hent(behandlingId: BehandlingId): SykdomGrunnlag
+
+    fun hentHistoriskeSykdomsvurderinger(sakId: SakId, behandlingId: BehandlingId): List<Sykdomsvurdering>
 }

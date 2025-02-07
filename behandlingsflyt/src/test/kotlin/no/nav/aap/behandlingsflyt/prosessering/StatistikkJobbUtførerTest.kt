@@ -548,6 +548,13 @@ class StatistikkJobbUtførerTest {
             override fun hent(behandlingId: BehandlingId): SykdomGrunnlag {
                 TODO("Not yet implemented")
             }
+
+            override fun hentHistoriskeSykdomsvurderinger(
+                sakId: SakId,
+                behandlingId: BehandlingId
+            ): List<Sykdomsvurdering> {
+                TODO("Not yet implemented")
+            }
         }
 
         val utfører =

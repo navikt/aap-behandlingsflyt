@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
@@ -103,6 +104,28 @@ class SykdomRepositoryImplTest {
         }
     }
 
+    @Test
+    fun `historikk viser kun vurderinger fra tidligere behandlinger`() {
+        val førstegangsbehandling = InitTestDatabase.dataSource.transaction { connection ->
+            val repo = SykdomRepositoryImpl(connection)
+            val sak = sak(connection)
+            val førstegangsbehandling = behandling(connection, sak)
+
+            repo.lagre(førstegangsbehandling.id, listOf(sykdomsvurdering1))
+            førstegangsbehandling
+        }
+
+        InitTestDatabase.dataSource.transaction { connection ->
+            val repo = SykdomRepositoryImpl(connection)
+            val revurdering = revurdering(connection, førstegangsbehandling)
+
+            repo.lagre(revurdering.id, listOf(sykdomsvurdering2))
+
+            val historikk = repo.hentHistoriskeSykdomsvurderinger(revurdering.sakId, revurdering.id)
+            assertEquals(listOf(sykdomsvurdering1), historikk)
+        }
+    }
+
     private companion object {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         private val sykdomsvurdering1 = Sykdomsvurdering(
@@ -180,5 +203,14 @@ class SykdomRepositoryImplTest {
             sak.saksnummer,
             listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
         ).behandling
+    }
+
+    private fun revurdering(connection: DBConnection, behandling: Behandling): Behandling {
+        return BehandlingRepositoryImpl(connection).opprettBehandling(
+            behandling.sakId,
+            årsaker = listOf(),
+            typeBehandling = TypeBehandling.Revurdering,
+            forrigeBehandlingId = behandling.id,
+        )
     }
 }
