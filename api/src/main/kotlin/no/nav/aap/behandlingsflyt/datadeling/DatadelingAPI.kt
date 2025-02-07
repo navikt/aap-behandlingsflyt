@@ -20,7 +20,33 @@ import java.time.LocalDate
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.DatadelingAPI(datasource: DataSource) {
-    route("/api/datadeling/utenUtbetaling") {
+    route("/api/datadeling") {
+        route("/sakByFnr"){
+            post<Unit, List<SakStatus>, SakerRequest>{ request, body ->
+                val person = datasource.transaction(readOnly = true) { conn ->
+                    val repositoryProvider = RepositoryProvider(conn)
+                    val personRepository = repositoryProvider.provide<PersonRepository>()
+                    personRepository.finn(Ident(body.personidentifikatorer.first()))
+                }
+                if (person==null){
+                    respond(emptyList())
+                }
+                val saker = datasource.transaction(readOnly = true) { conn ->
+                    val repositoryProvider = RepositoryProvider(conn)
+                    val sakRepository = repositoryProvider.provide<SakRepository>()
+                    sakRepository.finnSakerFor(person!!)
+                }
+                respond(saker.map { sak ->
+                    SakStatus(
+                        sak.id.toString(),
+                        SakStatus.VedtakStatus.valueOf(sak.status().toString()),
+                        Maksimum.Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.tom),
+                    )
+                })
+
+            }
+        }
+        route("/vedtak"){
         post<Unit, Maksimum, DatadelingRequest> {request, body ->
             val person = datasource.transaction(readOnly = true) { conn ->
                 val repositoryProvider = RepositoryProvider(conn)
@@ -84,5 +110,5 @@ fun NormalOpenAPIRoute.DatadelingAPI(datasource: DataSource) {
         }
 
     }
-}
+}}
 

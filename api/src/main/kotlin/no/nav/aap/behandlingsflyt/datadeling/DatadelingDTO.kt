@@ -2,6 +2,27 @@ package no.nav.aap.behandlingsflyt.datadeling
 
 import java.time.LocalDate
 
+data class SakStatus(
+    val sakId: String,
+    val vedtakStatusKode: VedtakStatus,
+    val periode: Maksimum.Periode,
+    val kilde:String = "Kelvin"
+){
+    enum class VedtakStatus{
+        AVSLU,
+        FORDE,
+        GODKJ,
+        INNST,
+        IVERK,
+        KONT,
+        MOTAT,
+        OPPRE,
+        REGIS,
+        UKJENT
+    }
+}
+
+
 data class Maksimum(
     val vedtak: List<Vedtak>
 ) {
