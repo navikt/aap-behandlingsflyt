@@ -2,10 +2,6 @@ package no.nav.aap.behandlingsflyt
 
 import com.papsign.ktor.openapigen.model.info.InfoModel
 import com.papsign.ktor.openapigen.route.apiRouting
-import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.get
-import com.papsign.ktor.openapigen.route.response.respond
-import com.papsign.ktor.openapigen.route.route
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.ktor.http.*
@@ -17,7 +13,8 @@ import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import no.nav.aap.behandlingsflyt.api.actuator.actuator
+import no.nav.aap.behandlingsflyt.api.config.definisjoner.configApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.avklaringsbehovApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.fatteVedtakGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.utledSubtypesTilAvklaringsbehovLøsning
@@ -46,7 +43,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktR
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.flate.arbeidsevneGrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.bistandsgrunnlagApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.medlemskap.flate.medlemskapsgrunnlagApi
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.student.StudentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.flate.studentgrunnlagApi
 import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
@@ -55,8 +51,6 @@ import no.nav.aap.behandlingsflyt.integrasjon.barn.PdlBarnGateway
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoBulkGateway
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoGateway
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
 import no.nav.aap.behandlingsflyt.pip.behandlingsflytPip
 import no.nav.aap.behandlingsflyt.prosessering.BehandlingsflytLogInfoProvider
@@ -77,6 +71,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.yrkesskade.Y
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistand.BistandRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.student.StudentRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.log.ContextRepositoryImpl
@@ -288,40 +283,6 @@ fun Application.startMotor(dataSource: DataSource): Motor {
     }
 
     return motor
-}
-
-fun NormalOpenAPIRoute.configApi() {
-    route("/config/definisjoner") {
-        get<Unit, Map<AvklaringsbehovKode, Definisjon>> {
-            val response = HashMap<AvklaringsbehovKode, Definisjon>()
-            Definisjon.entries.forEach {
-                response[it.kode] = it
-            }
-            respond(response)
-        }
-    }
-}
-
-private fun Routing.actuator(prometheus: PrometheusMeterRegistry, motor: Motor) {
-    route("/actuator") {
-        get("/metrics") {
-            call.respond(prometheus.scrape())
-        }
-
-        get("/live") {
-            val status = HttpStatusCode.OK
-            call.respond(status, "Oppe!")
-        }
-
-        get("/ready") {
-            if (motor.kjører()) {
-                val status = HttpStatusCode.OK
-                call.respond(status, "Oppe!")
-            } else {
-                call.respond(HttpStatusCode.ServiceUnavailable, "Kjører ikke")
-            }
-        }
-    }
 }
 
 class DbConfig(
