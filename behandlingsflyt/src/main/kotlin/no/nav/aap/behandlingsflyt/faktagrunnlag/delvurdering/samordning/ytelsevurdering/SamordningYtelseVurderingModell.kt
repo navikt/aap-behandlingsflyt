@@ -3,14 +3,14 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsev
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 
-data class SamordningYtelse (
+data class SamordningYtelse(
     val ytelseType: String,
     val ytelsePerioder: List<SamordningYtelsePeriode>,
     val kilde: String,
     val saksRef: String?,
 )
 
-data class SamordningYtelsePeriode (
+data class SamordningYtelsePeriode(
     val periode: Periode,
     val gradering: Prosent?,
     val kronesum: Number?
@@ -27,9 +27,9 @@ data class SamordningVurderingPeriode(
     val kronesum: Number?
 )
 
-data class SamordningYtelseVurderingGrunnlag (
+data class SamordningYtelseVurderingGrunnlag(
     val vurderingerId: Long?,
     val ytelserId: Long,
-    val ytelser :List<SamordningYtelse>,
+    val ytelser: List<SamordningYtelse>,
     val vurderinger: List<SamordningVurdering>?,
 )

@@ -24,7 +24,7 @@ import java.time.LocalDate
 class SamordningYtelseVurderingServiceTest {
 
     @Test
-    fun kreverAvklaringNårEndringerKommer() {
+    fun `krever avklaring når endringer kommer`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val repo = SamordningYtelseVurderingRepositoryImpl(connection)
             val sakRepository = SakRepositoryImpl(connection)
@@ -56,7 +56,13 @@ class SamordningYtelseVurderingServiceTest {
             listOf(
                 SamordningVurdering(
                     "myYtelse",
-                    listOf(SamordningVurderingPeriode(Periode(LocalDate.now(), LocalDate.now().plusDays(5)), Prosent(50), 0))
+                    listOf(
+                        SamordningVurderingPeriode(
+                            Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
+                            Prosent(50),
+                            0
+                        )
+                    )
                 )
             )
         )
@@ -65,19 +71,35 @@ class SamordningYtelseVurderingServiceTest {
     private fun opprettYtelseData(repo: SamordningYtelseVurderingRepositoryImpl, behandlingId: BehandlingId) {
         repo.lagreYtelser(
             behandlingId,
-            listOf(SamordningYtelse(
-                "myYtelse",
-                listOf(SamordningYtelsePeriode(Periode(LocalDate.now(), LocalDate.now().plusDays(5)), Prosent(50), 0)),
-                "kilde",
-                "ref")
+            listOf(
+                SamordningYtelse(
+                    "myYtelse",
+                    listOf(
+                        SamordningYtelsePeriode(
+                            Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
+                            Prosent(50),
+                            0
+                        )
+                    ),
+                    "kilde",
+                    "ref"
+                )
             )
         )
     }
 
     private fun opprettSakdata(connection: DBConnection): FlytKontekstMedPerioder {
         val person = PersonRepositoryImpl(connection).finnEllerOpprett(listOf(Ident("ident", true)))
-        val sakId = SakRepositoryImpl(connection).finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusDays(5))).id
-        val behandlingId = BehandlingRepositoryImpl(connection).opprettBehandling(sakId, listOf(), TypeBehandling.Førstegangsbehandling, null).id
+        val sakId = SakRepositoryImpl(connection).finnEllerOpprett(
+            person,
+            Periode(LocalDate.now(), LocalDate.now().plusDays(5))
+        ).id
+        val behandlingId = BehandlingRepositoryImpl(connection).opprettBehandling(
+            sakId,
+            listOf(),
+            TypeBehandling.Førstegangsbehandling,
+            null
+        ).id
         return FlytKontekstMedPerioder(sakId, behandlingId, TypeBehandling.Førstegangsbehandling, setOf())
     }
 }
