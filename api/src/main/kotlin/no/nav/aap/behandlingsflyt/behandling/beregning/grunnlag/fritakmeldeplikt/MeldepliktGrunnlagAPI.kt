@@ -29,9 +29,11 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(dataSource: DataSource) {
             val meldepliktGrunnlag = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = RepositoryProvider(connection)
                 val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                val meldepliktRepository = repositoryProvider.provide<MeldepliktRepository>()
+
                 val behandling: Behandling =
                     BehandlingReferanseService(behandlingRepository).behandling(req)
-                val meldepliktRepository = MeldepliktRepository(connection)
+
                 val nåTilstand = meldepliktRepository.hentHvisEksisterer(behandling.id)?.vurderinger
 
                 if (nåTilstand == null) {
@@ -68,9 +70,9 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(dataSource: DataSource) {
             val meldepliktGrunnlag = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = RepositoryProvider(connection)
                 val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                val meldepliktRepository = repositoryProvider.provide<MeldepliktRepository>()
                 val behandling: Behandling =
                     BehandlingReferanseService(behandlingRepository).behandling(req)
-                val meldepliktRepository = MeldepliktRepository(connection)
 
                 val vedtatteVerdier =
                     behandling.forrigeBehandlingId?.let { meldepliktRepository.hentHvisEksisterer(it) }?.vurderinger

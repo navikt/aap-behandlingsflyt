@@ -114,15 +114,16 @@ fun NormalOpenAPIRoute.institusjonAPI(dataSource: DataSource) {
                         .map {
                             Helseopphold(
                                 periode = it.periode,
-                                vurderinger = vurderinger.kryss(it.periode).segmenter().map {
-                                    HelseinstitusjonVurdering(
-                                        it.verdi.begrunnelse,
-                                        it.verdi.faarFriKostOgLosji,
-                                        it.verdi.forsoergerEktefelle,
-                                        it.verdi.harFasteUtgifter,
-                                        it.periode
-                                    )
-                                },
+                                vurderinger = vurderinger.kryss(it.periode).segmenter()
+                                    .map { helseinstitusjonsvurdering ->
+                                        HelseinstitusjonVurdering(
+                                            helseinstitusjonsvurdering.verdi.begrunnelse,
+                                            helseinstitusjonsvurdering.verdi.faarFriKostOgLosji,
+                                            helseinstitusjonsvurdering.verdi.forsoergerEktefelle,
+                                            helseinstitusjonsvurdering.verdi.harFasteUtgifter,
+                                            helseinstitusjonsvurdering.periode
+                                        )
+                                    },
                                 status = it.verdi!!.vurdering
                             )
                         }
