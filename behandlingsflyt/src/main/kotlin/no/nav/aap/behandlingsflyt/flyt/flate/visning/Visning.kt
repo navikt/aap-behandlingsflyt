@@ -7,6 +7,7 @@ data class Visning(
     val beslutterReadOnly: Boolean,
     val visBeslutterKort: Boolean,
     val visVentekort: Boolean,
+    val visBrevkort: Boolean,
     val kvalitetssikringReadOnly: Boolean,
     val visKvalitetssikringKort: Boolean,
     val typeBehandling: TypeBehandling
