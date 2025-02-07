@@ -1,10 +1,9 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.meldeplikt
+package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.meldeplikt
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
@@ -20,12 +19,24 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.lookup.repository.RepositoryRegistry
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 
 class MeldepliktRepositoryImplTest {
+    companion object {
+        @BeforeAll
+        @JvmStatic
+        fun beforeAll() {
+            RepositoryRegistry.register<MeldepliktRepositoryImpl>()
+        }
+
+        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+    }
+
     @Test
     fun `Finner ikke fritaksvurderinger hvis ikke lagret`() {
         InitTestDatabase.dataSource.transaction { connection ->
@@ -85,7 +96,7 @@ class MeldepliktRepositoryImplTest {
     fun `Kopiering av fritaksvurderinger fra en behandling uten opplysningene skal ikke føre til feil`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val bistandRepository = MeldepliktRepositoryImpl(connection)
-            assertDoesNotThrow {
+            org.junit.jupiter.api.assertDoesNotThrow {
                 bistandRepository.kopier(BehandlingId(Long.MAX_VALUE - 1), BehandlingId(Long.MAX_VALUE))
             }
         }
@@ -304,10 +315,6 @@ class MeldepliktRepositoryImplTest {
                     )
                 )
         }
-    }
-
-    private companion object {
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 
     private fun sak(connection: DBConnection): Sak {
