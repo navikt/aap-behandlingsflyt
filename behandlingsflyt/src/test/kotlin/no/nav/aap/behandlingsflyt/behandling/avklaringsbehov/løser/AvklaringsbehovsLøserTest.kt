@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7RepositoryImpl
@@ -8,7 +7,9 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordni
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistand.BistandRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.student.StudentRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -34,6 +35,7 @@ class AvklaringsbehovsLøserTest {
         RepositoryRegistry.register(SykdomRepositoryImpl::class)
         RepositoryRegistry.register(SykepengerErstatningRepositoryImpl::class)
         RepositoryRegistry.register<SamordningYtelseVurderingRepositoryImpl>()
+        RepositoryRegistry.register<StudentRepositoryImpl>()
     }
 
     @Test
