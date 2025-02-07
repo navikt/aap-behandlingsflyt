@@ -1,5 +1,9 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student
+package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.student
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.OppgittStudent
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
