@@ -61,50 +61,6 @@ class SykdomRepositoryImplTest {
     }
 
     @Test
-    fun `kan lese gammelt format, ingen vurdering`() {
-        InitTestDatabase.dataSource.transaction { connection ->
-            val repo = SykdomRepositoryImpl(connection)
-            val sak = sak(connection)
-            val behandling = behandling(connection, sak)
-
-            repo.lagre(behandling.id, listOf())
-
-            /* fjern nytt format */
-            connection.execute("""
-                update sykdom_grunnlag set sykdom_vurderinger_id = null where behandling_id = ? and aktiv = true
-            """.trimIndent()) {
-                setParams {
-                    setLong(1, behandling.id.id)
-                }
-            }
-
-            assertEquals(listOf(), repo.hent(behandling.id).sykdomsvurderinger)
-        }
-    }
-
-    @Test
-    fun `kan lese gammelt format, med vurdering`() {
-        InitTestDatabase.dataSource.transaction { connection ->
-            val repo = SykdomRepositoryImpl(connection)
-            val sak = sak(connection)
-            val behandling = behandling(connection, sak)
-
-            repo.lagre(behandling.id, listOf(sykdomsvurdering1))
-
-            /* fjern nytt format */
-            connection.execute("""
-                update sykdom_grunnlag set sykdom_vurderinger_id = null where behandling_id = ? and aktiv = true
-            """.trimIndent()) {
-                setParams {
-                    setLong(1, behandling.id.id)
-                }
-            }
-
-            assertEquals(listOf(sykdomsvurdering1), repo.hent(behandling.id).sykdomsvurderinger)
-        }
-    }
-
-    @Test
     fun `historikk viser kun vurderinger fra tidligere behandlinger`() {
         val førstegangsbehandling = InitTestDatabase.dataSource.transaction { connection ->
             val repo = SykdomRepositoryImpl(connection)

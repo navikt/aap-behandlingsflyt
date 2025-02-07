@@ -71,19 +71,18 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
     }
 
     private fun lagre(behandlingId: BehandlingId, nyttGrunnlag: SykdomGrunnlag) {
-        val (sykdomsvurderingId, sykdomsvurderingerId) = lagreSykdom(nyttGrunnlag.sykdomsvurderinger)
+        val sykdomsvurderingerId = lagreSykdom(nyttGrunnlag.sykdomsvurderinger)
         val yrkesskadeId = lagreYrkesskade(nyttGrunnlag.yrkesskadevurdering)
 
         val query = """
-            INSERT INTO SYKDOM_GRUNNLAG (BEHANDLING_ID, YRKESSKADE_ID, SYKDOM_ID, SYKDOM_VURDERINGER_ID) VALUES (?, ?, ?, ?)
+            INSERT INTO SYKDOM_GRUNNLAG (BEHANDLING_ID, YRKESSKADE_ID, SYKDOM_VURDERINGER_ID) VALUES (?, ?, ?)
         """.trimIndent()
 
         connection.execute(query) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, yrkesskadeId)
-                setLong(3, sykdomsvurderingId)
-                setLong(4, sykdomsvurderingerId)
+                setLong(3, sykdomsvurderingerId)
             }
         }
     }
@@ -125,8 +124,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
         return id
     }
 
-    /* litt funky returtype til migrering er ferdig */
-    private fun lagreSykdom(vurderinger: List<Sykdomsvurdering>): Pair<Long?, Long> {
+    private fun lagreSykdom(vurderinger: List<Sykdomsvurdering>): Long {
         val sykdomsvurderingerId = connection.executeReturnKey("""INSERT INTO SYKDOM_VURDERINGER DEFAULT VALUES""")
 
         val query = """
@@ -142,9 +140,8 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """.trimIndent()
 
-        var id: Long? = null
         for (vurdering in vurderinger) {
-            id = connection.executeReturnKey(query) {
+            val id = connection.executeReturnKey(query) {
                 setParams {
                     setLong(1, sykdomsvurderingerId)
                     setString(2, vurdering.begrunnelse)
@@ -171,7 +168,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             }
         }
 
-        return Pair(id, sykdomsvurderingerId)
+        return sykdomsvurderingerId
     }
 
     private fun lagreBidiagnose(sykdomsId: Long, kode: String) {
@@ -209,8 +206,8 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             return
         }
         val query = """
-            INSERT INTO SYKDOM_GRUNNLAG (BEHANDLING_ID, YRKESSKADE_ID, SYKDOM_ID, SYKDOM_VURDERINGER_ID)
-            SELECT ?, YRKESSKADE_ID, SYKDOM_ID, SYKDOM_VURDERINGER_ID
+            INSERT INTO SYKDOM_GRUNNLAG (BEHANDLING_ID, YRKESSKADE_ID, SYKDOM_VURDERINGER_ID)
+            SELECT ?, YRKESSKADE_ID, SYKDOM_VURDERINGER_ID
             FROM SYKDOM_GRUNNLAG WHERE BEHANDLING_ID = ? AND AKTIV
         """.trimIndent()
 
@@ -238,18 +235,11 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
         return SykdomGrunnlag(
             row.getLong("ID"),
             mapYrkesskade(row.getLongOrNull("YRKESSKADE_ID")),
-            mapSykdommer(
-                sykdomId = row.getLongOrNull("SYKDOM_ID"),
-                sykdomVurderingerId = row.getLongOrNull("SYKDOM_VURDERINGER_ID"),
-            ),
+            mapSykdommer(row.getLongOrNull("SYKDOM_VURDERINGER_ID")),
         )
     }
 
-    private fun mapSykdommer(sykdomId: Long?, sykdomVurderingerId: Long?): List<Sykdomsvurdering> {
-        if (sykdomVurderingerId == null) {
-            return listOfNotNull(mapSykdom(sykdomId))
-        }
-
+    private fun mapSykdommer(sykdomVurderingerId: Long?): List<Sykdomsvurdering> {
         return connection.queryList(
         """
             SELECT id, BEGRUNNELSE, VURDERINGEN_GJELDER_FRA, HAR_SYKDOM_SKADE_LYTE, ER_SYKDOM_SKADE_LYTE_VESETLING_DEL, ER_NEDSETTELSE_MER_ENN_HALVPARTEN, ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE, ER_NEDSETTELSE_AV_EN_VISS_VARIGHET, ER_ARBEIDSEVNE_NEDSATT, YRKESSKADE_BEGRUNNELSE, KODEVERK, DIAGNOSE, OPPRETTET_TID
@@ -263,23 +253,6 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
         }
     }
 
-
-    private fun mapSykdom(sykdomId: Long?): Sykdomsvurdering? {
-        if (sykdomId == null) {
-            return null
-        }
-        return connection.queryFirstOrNull(
-            """
-            SELECT id, BEGRUNNELSE, VURDERINGEN_GJELDER_FRA, HAR_SYKDOM_SKADE_LYTE, ER_SYKDOM_SKADE_LYTE_VESETLING_DEL, ER_NEDSETTELSE_MER_ENN_HALVPARTEN, ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE, ER_NEDSETTELSE_AV_EN_VISS_VARIGHET, ER_ARBEIDSEVNE_NEDSATT, YRKESSKADE_BEGRUNNELSE, KODEVERK, DIAGNOSE, OPPRETTET_TID
-            FROM SYKDOM_VURDERING WHERE id = ?
-            """.trimIndent()
-        ) {
-            setParams {
-                setLong(1, sykdomId)
-            }
-            setRowMapper(::sykdomsvurderingRowmapper)
-        }
-    }
 
     private fun sykdomsvurderingRowmapper(row: Row): Sykdomsvurdering {
         val sykdomsvurderingId = row.getLong("id")
