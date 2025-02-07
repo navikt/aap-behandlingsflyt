@@ -21,28 +21,14 @@ import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.DatadelingAPI(datasource: DataSource) {
     route("/api/datadeling/utenUtbetaling") {
-        post<Unit, VedtakUtenUtbetalingDTO, DatadelingRequest> {request, body ->
+        post<Unit, Maksimum, DatadelingRequest> {request, body ->
             val person = datasource.transaction(readOnly = true) { conn ->
                 val repositoryProvider = RepositoryProvider(conn)
                 val personRepository = repositoryProvider.provide<PersonRepository>()
                 personRepository.finn(Ident("12345678910"))
             }
             if (person==null){
-                respond(VedtakUtenUtbetalingDTO(
-                    dagsats = 0,
-                    status = "OK",
-                    saksnummer = "",
-                    vedtaksdato = "",
-                    vedtaksTypeKode = "",
-                    vedtaksTypeNavn = "",
-                    periode = VedtakUtenUtbetalingDTO.Periode(null, null),
-                    rettighetsType = "",
-                    beregningsgrunnlag = 0,
-                    barnMedStonad = 0,
-                    kildesystem = "Kelvin",
-                    samordningsId = null,
-                    opphorsAarsak = null
-                ))
+                respond(Maksimum(emptyList()))
             }
             val sak = datasource.transaction(readOnly = true) { conn ->
                 val repositoryProvider = RepositoryProvider(conn)
@@ -69,22 +55,32 @@ fun NormalOpenAPIRoute.DatadelingAPI(datasource: DataSource) {
 
 
 
-            respond(VedtakUtenUtbetalingDTO(
-                dagsats = beregning.grunnlaget().verdi().toInt(), // TODO: Her må vi gange med dagens grunnbeløp og dele på 260
-                status = "OK", // TODO: Denne må mappes ut til noe som gir mening
-                saksnummer = sak.last().id.toString(),
-                vedtaksdato = "", // TODO: hvor finner jeg denne?
-                vedtaksTypeKode = "", // TODO: Disse må vi mappe om til noe som gir mening
-                vedtaksTypeNavn = "", // TODO: -||-
-                periode = VedtakUtenUtbetalingDTO.Periode(null, null), // TODO: er dette rettighets periode?
-                rettighetsType = "", // TODO: Disse må vi mappe om til noe som gir mening
-                beregningsgrunnlag = beregning.grunnlaget().verdi().toInt(), //TODO: Dette må ganges med dagens grunnbeløp
-                barnMedStonad = 0, // TODO: Vi må lage en tidslinje/liste med vedtak for å kunne hente ut antall barn
-                kildesystem = "Kelvin",
-                samordningsId = null, //TODO: mangler en så lenge
-                opphorsAarsak = null // TODO: mengler en så lenge
+            respond(Maksimum(tilkjentYtelse.map { segment ->
+                Maksimum.Vedtak(
+                    dagsats = beregning.grunnlaget().verdi().toInt(), // TODO: Her må vi gange med dagens grunnbeløp og dele på 260
+                    status = "OK", // TODO: Denne må mappes ut til noe som gir mening
+                    saksnummer = sak.last().id.toString(),
+                    vedtaksdato = "", // TODO: hvor finner jeg denne?
+                    vedtaksTypeKode = "", // TODO: Disse må vi mappe om til noe som gir mening
+                    vedtaksTypeNavn = "", // TODO: -||-
+                    periode = Maksimum.Periode(segment.fom(), segment.tom()), // TODO: er dette rettighets periode?
+                    rettighetsType = "", // TODO: Disse må vi mappe om til noe som gir mening
+                    beregningsgrunnlag = beregning.grunnlaget().verdi().toInt(), //TODO: Dette må ganges med dagens grunnbeløp
+                    barnMedStonad = segment.verdi.antallBarn, // TODO: Vi må lage en tidslinje/liste med vedtak for å kunne hente ut antall barn
+                    kildesystem = "Kelvin",
+                    samordningsId = null, //TODO: mangler en så lenge
+                    opphorsAarsak = null, // TODO: mengler en så lenge,
+                    utbetaling = listOf(Maksimum.UtbetalingMedMer( //TODO: Denne må utvides når vi vet mer om hvordan utbetalinger ser ut
+                        null,
+                        segment.verdi.gradering.prosentverdi(), // TODO: dobbelsjekk at dette er riktig
+                        Maksimum.Periode(segment.fom(), segment.tom()),
+                        segment.verdi.dagsats.multiplisert(10).pluss(segment.verdi.barnetillegg.multiplisert(10)).verdi.toInt(),
+                        segment.verdi.dagsats.verdi.toInt(),
+                        segment.verdi.barnetillegg.verdi.toInt()
+                    ))// TODO: Vi må lage en tidslinje/liste med vedtak for å kunne hente ut utbetalinger
+                )
+            }))
 
-            ))
         }
 
     }
