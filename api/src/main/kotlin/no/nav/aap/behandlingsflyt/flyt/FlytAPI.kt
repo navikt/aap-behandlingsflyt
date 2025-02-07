@@ -345,6 +345,8 @@ private fun utledVisning(
         !beslutterReadOnly || (!saksbehandlerReadOnly && alleAvklaringsbehovInkludertFrivillige.harVærtSendtTilbakeFraBeslutterTidligere())
     val visKvalitetssikringKort = utledVisningAvKvalitetsikrerKort(alleAvklaringsbehovInkludertFrivillige)
     val kvalitetssikringReadOnly = visKvalitetssikringKort && flyt.erStegFør(aktivtSteg, StegType.KVALITETSSIKRING)
+    val visBrevkort =
+        alleAvklaringsbehovInkludertFrivillige.hentBehovForDefinisjon(Definisjon.SKRIV_BREV)?.erÅpent() == true
 
     if (jobber) {
         return Visning(
@@ -354,6 +356,7 @@ private fun utledVisning(
             visBeslutterKort = visBeslutterKort,
             visKvalitetssikringKort = visKvalitetssikringKort,
             visVentekort = påVent,
+            visBrevkort = false,
             typeBehandling = typeBehandling
         )
     } else {
@@ -364,6 +367,7 @@ private fun utledVisning(
             visBeslutterKort = visBeslutterKort,
             visKvalitetssikringKort = visKvalitetssikringKort,
             visVentekort = påVent,
+            visBrevkort = visBrevkort,
             typeBehandling = typeBehandling
         )
     }
