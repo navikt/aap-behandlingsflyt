@@ -119,7 +119,7 @@ class VurderSykdomSteg private constructor(
             val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
             return VurderSykdomSteg(
                 repositoryProvider.provide(),
-                StudentRepository(connection),
+                repositoryProvider.provide(),
                 repositoryProvider.provide(),
                 vilkårsresultatRepository,
                 avklaringsbehovRepository,

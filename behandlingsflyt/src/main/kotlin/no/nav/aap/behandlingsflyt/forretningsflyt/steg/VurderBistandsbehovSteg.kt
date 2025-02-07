@@ -190,7 +190,7 @@ class VurderBistandsbehovSteg private constructor(
             val bistandRepository = repositoryProvider.provide<BistandRepository>()
             return VurderBistandsbehovSteg(
                 bistandRepository,
-                StudentRepository(connection),
+                repositoryProvider.provide(),
                 repositoryProvider.provide(),
                 vilkårsresultatRepository,
                 avklaringsbehovRepository

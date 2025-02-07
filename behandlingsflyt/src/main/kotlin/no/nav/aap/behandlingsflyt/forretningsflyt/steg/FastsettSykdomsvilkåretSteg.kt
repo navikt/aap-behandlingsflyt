@@ -49,7 +49,7 @@ class FastsettSykdomsvilkåretSteg private constructor(
             return FastsettSykdomsvilkåretSteg(
                 vilkårsresultatRepository,
                 repositoryProvider.provide(),
-                StudentRepository(connection)
+                repositoryProvider.provide()
             )
         }
 

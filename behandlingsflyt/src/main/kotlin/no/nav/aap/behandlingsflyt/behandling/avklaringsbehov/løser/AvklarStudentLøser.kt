@@ -14,7 +14,7 @@ class AvklarStudentLøser(val connection: DBConnection) :
 
     private val repositoryProvider = RepositoryProvider(connection)
     private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-    private val studentRepository = StudentRepository(connection)
+    private val studentRepository = repositoryProvider.provide<StudentRepository>()
 
     override fun løs(
         kontekst: AvklaringsbehovKontekst,

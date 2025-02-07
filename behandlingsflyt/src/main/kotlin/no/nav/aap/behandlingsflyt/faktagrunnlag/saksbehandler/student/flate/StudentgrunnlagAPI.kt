@@ -28,10 +28,11 @@ fun NormalOpenAPIRoute.studentgrunnlagApi(dataSource: DataSource) {
                 val studentGrunnlag: StudentGrunnlag? = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val studentRepository = repositoryProvider.provide<StudentRepository>()
                     val behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
 
-                    StudentRepository(connection).hentHvisEksisterer(behandlingId = behandling.id)
+                    studentRepository.hentHvisEksisterer(behandlingId = behandling.id)
                 }
 
                 if (studentGrunnlag != null) {

@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -17,7 +16,6 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class GrunnlagKopierer(connection: DBConnection) {
 
     private val repositoryProvider = RepositoryProvider(connection)
-    private val studentRepository = StudentRepository(connection)
     private val meldepliktRepository = MeldepliktRepository(connection)
     private val barnRepository = BarnRepository(connection)
     private val institusjonsoppholdRepository = InstitusjonsoppholdRepository(connection)
@@ -28,7 +26,6 @@ class GrunnlagKopierer(connection: DBConnection) {
 
         repositoryProvider.provideAlle().forEach { repository -> repository.kopier(fraBehandlingId, tilBehandlingId) }
 
-        studentRepository.kopier(fraBehandlingId, tilBehandlingId)
         meldepliktRepository.kopier(fraBehandlingId, tilBehandlingId)
         barnRepository.kopier(fraBehandlingId, tilBehandlingId)
         institusjonsoppholdRepository.kopier(fraBehandlingId, tilBehandlingId)
