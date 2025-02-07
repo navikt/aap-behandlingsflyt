@@ -1,22 +1,67 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
+import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
+import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
+import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.ident
+import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
-import org.junit.jupiter.api.Assertions.*
+import no.nav.aap.komponenter.type.Periode
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 
+@Disabled
 class SamordningYtelseVurderingRepositoryImplTest {
+
+    private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     @Test
     fun `fsdf sd`() {
         InitTestDatabase.dataSource.transaction {
+            val behandling = behandling(it, sak(it))
             SamordningYtelseVurderingRepositoryImpl(it).lagreYtelser(
-                behandlingId = BehandlingId(0),
+                behandlingId = behandling.id,
                 samordningYtelser = listOf(
-
+                    SamordningYtelse(
+                        ytelseType = "xxx",
+                        ytelsePerioder = listOf(),
+                        kilde = "XXXX",
+                        saksRef = "XXXX"
+                    )
                 )
             )
         }
+    }
+
+    private fun sak(connection: DBConnection): Sak {
+        return PersonOgSakService(
+            FakePdlGateway,
+            PersonRepositoryImpl(connection),
+            SakRepositoryImpl(connection)
+        ).finnEllerOpprett(
+            ident(),
+            periode
+        )
+    }
+
+    private fun behandling(connection: DBConnection, sak: Sak): Behandling {
+        return SakOgBehandlingService(
+            GrunnlagKopierer(connection), SakRepositoryImpl(connection),
+            BehandlingRepositoryImpl(connection)
+        ).finnEllerOpprettBehandling(
+            sak.saksnummer,
+            listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
+        ).behandling
     }
 }
