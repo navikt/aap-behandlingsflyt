@@ -6,6 +6,8 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
@@ -20,13 +22,19 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagAPI(dataSource: DataSource) {
                 val grunnlag = dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                    val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
+                    val lovvalgMedlemskapRepository = repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
-                    val vilkårsPeriode = vilkårsresultatRepository.hent(behandling.id)
-                        .finnVilkår(Vilkårtype.MEDLEMSKAP)
-                        .vilkårsperioder()
 
-                    LovvalgMedlemskapGrunnlagDto(vilkårsPeriode)
+                    val data = lovvalgMedlemskapRepository.hentHvisEksisterer(behandling.id)?.manuellVurdering
+
+                    val response = if (data?.lovvalgVedSøknadsTidspunkt != null) {
+                        LovvalgMedlemskapGrunnlagDto(
+                            ManuellVurderingForLovvalgMedlemskap(data.lovvalgVedSøknadsTidspunkt, data.medlemskapVedSøknadsTidspunkt)
+                        )
+                    } else {
+                        LovvalgMedlemskapGrunnlagDto(null)
+                    }
+                    response
                 }
                 respond(grunnlag)
             }
