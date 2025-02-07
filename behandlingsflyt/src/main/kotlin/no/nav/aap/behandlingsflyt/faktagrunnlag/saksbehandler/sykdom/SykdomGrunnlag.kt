@@ -1,5 +1,10 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom
 
+import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.type.Periode
+import java.time.LocalDate
+
 class SykdomGrunnlag(
     private val id: Long?,
     val yrkesskadevurdering: Yrkesskadevurdering?,
@@ -14,6 +19,17 @@ class SykdomGrunnlag(
 
     fun erKonsistentForSykdom(harYrkesskadeRegistrert: Boolean): Boolean {
         return sykdomsvurdering?.erKonsistentForSykdom(harYrkesskadeRegistrert) ?: false
+    }
+
+    fun somSykdomsvurderingstidslinje(startDato: LocalDate): Tidslinje<Sykdomsvurdering> {
+        return sykdomsvurderinger
+            .sortedBy { it.vurderingenGjelderFra ?: startDato }
+            .fold(Tidslinje()) { tidslinje, vurdering ->
+                tidslinje.kombiner(
+                    Tidslinje(Periode(vurdering.vurderingenGjelderFra ?: startDato, LocalDate.MAX), vurdering),
+                    StandardSammenslåere.prioriterHøyreSideCrossJoin()
+                )
+            }
     }
 
     override fun equals(other: Any?): Boolean {
