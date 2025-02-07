@@ -14,7 +14,7 @@ class SamordningService(
         val samordningYtelseVurderingGrunnlag = samordningYtelseVurderingRepository.hentHvisEksisterer(behandlingId)
 
         //TODO: Kan benytte denne til å filtrere perioder hvor det ikke er rett på ytelse uansett
-        underveisRepository.hentHvisEksisterer(behandlingId)
+        val underveisPerioder = underveisRepository.hentHvisEksisterer(behandlingId)
 
         val vurderRegler = vurderRegler(samordningYtelseVurderingGrunnlag)
 
@@ -25,8 +25,7 @@ class SamordningService(
         val samordningYtelseVurderingGrunnlag = samordningYtelseVurderingRepository.hentHvisEksisterer(behandlingId)
 
         return samordningYtelseVurderingGrunnlag?.vurderingerId != null
-            && samordningYtelseVurderingGrunnlag.vurderinger != null
-            && samordningYtelseVurderingGrunnlag.vurderinger!!.isNotEmpty()
+            && !samordningYtelseVurderingGrunnlag.vurderinger.isNullOrEmpty()
     }
 
     private fun vurderRegler(samordning: SamordningYtelseVurderingGrunnlag?) : Tidslinje<SamordningGradering> {

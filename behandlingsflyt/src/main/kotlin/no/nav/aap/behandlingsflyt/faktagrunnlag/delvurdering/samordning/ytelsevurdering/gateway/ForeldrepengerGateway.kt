@@ -40,7 +40,7 @@ class ForeldrepengerGateway {
             val result = query(request)
             return result
         } catch (e : Exception) {
-            logger.error("Feil ved henting av ytelser i foreldrepenger: ${e.message}", e)
+            logger.error("Feil ved henting av ytelser i foreldrepenger.", e)
             throw RuntimeException("Feil ved henting av ytelser i foreldrepenger: ${e.message}")
         }
     }

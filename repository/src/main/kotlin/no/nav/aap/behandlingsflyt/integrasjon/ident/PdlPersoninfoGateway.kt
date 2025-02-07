@@ -48,7 +48,7 @@ object PdlPersoninfoGateway : PersoninfoGateway {
     """.trimIndent()
 
     private val url = URI.create(requiredConfigForKey("integrasjon.pdl.url"))
-    val config = ClientConfig(
+    private val config = ClientConfig(
         scope = requiredConfigForKey("integrasjon.pdl.scope"),
         additionalHeaders = listOf(Header("Behandlingsnummer", "B287"))
     )
