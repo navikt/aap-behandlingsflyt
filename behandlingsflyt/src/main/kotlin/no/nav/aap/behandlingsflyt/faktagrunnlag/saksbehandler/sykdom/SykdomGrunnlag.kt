@@ -3,30 +3,17 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom
 class SykdomGrunnlag(
     private val id: Long?,
     val yrkesskadevurdering: Yrkesskadevurdering?,
-    val sykdomsvurdering: Sykdomsvurdering?
+    val sykdomsvurderinger: List<Sykdomsvurdering>,
 ) {
+    @Deprecated("kan være flere enn en sykdomsvurdering, bruk `sykdomsvurderinger`")
+    val sykdomsvurdering: Sykdomsvurdering?
+        get() = sykdomsvurderinger.firstOrNull()
+
+    constructor(id: Long?, yrkesskadevurdering: Yrkesskadevurdering?, sykdomsvurdering: Sykdomsvurdering?):
+            this(id, yrkesskadevurdering, listOfNotNull(sykdomsvurdering))
 
     fun erKonsistentForSykdom(harYrkesskadeRegistrert: Boolean): Boolean {
-        if (sykdomsvurdering == null) {
-            return false
-        }
-        if (!sykdomsvurdering.harSkadeSykdomEllerLyte && sykdomsvurdering.erSkadeSykdomEllerLyteVesentligdel == true) {
-            return false
-        }
-        if (sykdomsvurdering.erArbeidsevnenNedsatt == false && sykdomsvurdering.erNedsettelseIArbeidsevneMerEnnHalvparten == true) {
-            return false
-        }
-        if (sykdomsvurdering.erNedsettelseIArbeidsevneMerEnnHalvparten != null &&
-            !sykdomsvurdering.erNedsettelseIArbeidsevneMerEnnHalvparten &&
-            harYrkesskadeRegistrert &&
-            sykdomsvurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == null
-        ) {
-            return false
-        }
-        if (sykdomsvurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != null && sykdomsvurdering.yrkesskadeBegrunnelse.isNullOrBlank()) {
-            return false
-        }
-        return true
+        return sykdomsvurdering?.erKonsistentForSykdom(harYrkesskadeRegistrert) ?: false
     }
 
     override fun equals(other: Any?): Boolean {
@@ -36,14 +23,14 @@ class SykdomGrunnlag(
         other as SykdomGrunnlag
 
         if (yrkesskadevurdering != other.yrkesskadevurdering) return false
-        if (sykdomsvurdering != other.sykdomsvurdering) return false
+        if (sykdomsvurderinger != other.sykdomsvurderinger) return false
 
         return true
     }
 
     override fun hashCode(): Int {
         var result = yrkesskadevurdering?.hashCode() ?: 0
-        result = 31 * result + (sykdomsvurdering?.hashCode() ?: 0)
+        result = 31 * result + sykdomsvurderinger.hashCode()
         return result
     }
 

@@ -53,6 +53,26 @@ class Sykdomsvurdering(
     fun erOppfyltSettBortIfraVissVarighet(): Boolean {
         return harSkadeSykdomEllerLyte && erArbeidsevnenNedsatt == true && erSkadeSykdomEllerLyteVesentligdel == true && erAndelNedsattNok()
     }
+
+    fun erKonsistentForSykdom(harYrkesskadeRegistrert: Boolean): Boolean {
+        if (!harSkadeSykdomEllerLyte && erSkadeSykdomEllerLyteVesentligdel == true) {
+            return false
+        }
+        if (erArbeidsevnenNedsatt == false && erNedsettelseIArbeidsevneMerEnnHalvparten == true) {
+            return false
+        }
+        if (erNedsettelseIArbeidsevneMerEnnHalvparten != null &&
+            !erNedsettelseIArbeidsevneMerEnnHalvparten &&
+            harYrkesskadeRegistrert &&
+            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == null
+        ) {
+            return false
+        }
+        if (erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != null && yrkesskadeBegrunnelse.isNullOrBlank()) {
+            return false
+        }
+        return true
+    }
 }
 
 class Yrkesskadevurdering(
