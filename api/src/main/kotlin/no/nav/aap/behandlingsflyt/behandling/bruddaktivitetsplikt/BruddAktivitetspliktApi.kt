@@ -11,7 +11,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.effektuer11_7.Effek
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.DokumentInput
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FORHÅNDSVARSEL_AKTIVITETSPLIKT_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingId
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
@@ -34,10 +33,8 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
-import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
-import no.nav.aap.tilgang.authorizedPost
 import no.nav.aap.verdityper.dokument.Kanal
 import javax.sql.DataSource
 
@@ -86,12 +83,7 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
         }
 
         route("/sak/{saksnummer}/aktivitetsplikt") {
-            route("/opprett").authorizedPost<SaksnummerParameter, String, OpprettAktivitetspliktDTO>(
-                AuthorizationParamPathConfig(
-                    operasjon = Operasjon.SAKSBEHANDLE,
-                    sakPathParam = SakPathParam("saksnummer"),
-                    avklaringsbehovKode = FORHÅNDSVARSEL_AKTIVITETSPLIKT_KODE,
-                )
+            route("/opprett").post<SaksnummerParameter, String, OpprettAktivitetspliktDTO>(
             ) { params, req ->
                 val navIdent = bruker()
                 dataSource.transaction { connection ->
