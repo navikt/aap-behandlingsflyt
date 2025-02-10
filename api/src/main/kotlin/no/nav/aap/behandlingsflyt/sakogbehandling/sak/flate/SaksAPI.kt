@@ -12,7 +12,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.ElementNotFoundException
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
@@ -47,7 +46,7 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                 val person = repositoryProvider.provide<PersonRepository>().finn(ident)
 
                 if (person == null) {
-                    throw ElementNotFoundException()
+                    emptyList()
                 } else {
                     repositoryProvider.provide<SakRepository>().finnSakerFor(person)
                         .map { sak ->
