@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeSe
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektForutgåendeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.lås.TaSkriveLåsRepositoryImpl
@@ -60,6 +61,7 @@ class InformasjonskravGrunnlagTest {
             .register<MottattDokumentRepositoryImpl>()
             .register<YrkesskadeRepositoryImpl>()
             .register<MedlemskapArbeidInntektRepositoryImpl>()
+            .register<MedlemskapArbeidInntektForutgåendeRepositoryImpl>()
     }
 
     @Test

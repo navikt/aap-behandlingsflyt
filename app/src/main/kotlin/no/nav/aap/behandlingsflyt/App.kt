@@ -68,6 +68,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordni
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.dokument.arbeid.PliktkortRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektForutgåendeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.uføre.UføreRepositoryImpl
@@ -253,6 +254,7 @@ private fun registerRepositories() {
         .register<YrkesskadeRepositoryImpl>()
         .register<UføreRepositoryImpl>()
         .register<MedlemskapArbeidInntektRepositoryImpl>()
+        .register<MedlemskapArbeidInntektForutgåendeRepositoryImpl>()
         .status()
 }
 
