@@ -32,5 +32,5 @@ data class SamordningYtelseVurderingGrunnlag(
     val vurderingerId: Long?,
     val ytelserId: Long,
     val ytelser: List<SamordningYtelse>,
-    val vurderinger: List<SamordningVurdering>?,
+    val vurderinger: List<SamordningVurdering>,
 )

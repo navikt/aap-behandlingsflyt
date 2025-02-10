@@ -34,6 +34,7 @@ class SamordningSteg(
                     it.ytelse.type == AvklaringsType.MANUELL
                 }
             }) {
+            log.info("Fant samordningytelser: ${samordningTidslinje.segmenter().map { it.verdi }}")
             if (!samordningService.harGjortVurdering(kontekst.behandlingId)) {
                 return FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_GRADERING)
             }

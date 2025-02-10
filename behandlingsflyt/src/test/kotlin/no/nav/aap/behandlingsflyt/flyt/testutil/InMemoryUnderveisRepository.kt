@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 
-object InMemoryUnderveisRepository : UnderveisRepository {
+class InMemoryUnderveisRepository() : UnderveisRepository {
     val grunnlag = ConcurrentHashMap<BehandlingId, UnderveisGrunnlag>()
     private val id = AtomicLong(0)
 
