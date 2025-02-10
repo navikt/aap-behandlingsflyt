@@ -1,0 +1,20 @@
+package no.nav.aap.behandlingsflyt.behandling.lovvalg
+
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Faktagrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskap
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
+
+data class ForutgåendeMedlemskapGrunnlag(
+    val medlemskapArbeidInntektGrunnlag: ForutgåendeMedlemskapArbeidInntektGrunnlag?,
+    val personopplysningGrunnlag: PersonopplysningGrunnlag,
+    var nyeSoknadGrunnlag: UtenlandsOppholdData?
+) : Faktagrunnlag
+
+data class ForutgåendeMedlemskapArbeidInntektGrunnlag(
+    val medlemskapGrunnlag: MedlemskapUnntakGrunnlag?,
+    val inntekterINorgeGrunnlag : List<InntektINorgeGrunnlag>,
+    val arbeiderINorgeGrunnlag : List<ArbeidINorgeGrunnlag>,
+    val manuellVurdering: ManuellVurderingForForutgåendeMedlemskap?
+)

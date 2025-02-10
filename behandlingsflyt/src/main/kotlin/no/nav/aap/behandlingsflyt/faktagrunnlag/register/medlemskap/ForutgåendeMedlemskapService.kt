@@ -4,9 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.AARegisterGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ARBEIDSFORHOLDSTATUSER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdOversikt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
@@ -27,8 +25,8 @@ import java.time.YearMonth
 class ForutgåendeMedlemskapService private constructor(
     private val medlemskapGateway: MedlemskapGateway,
     private val sakService: SakService,
-    private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
-    private val medlemskapRepository: MedlemskapRepository
+    private val medlemskapForutgåendeRepository: MedlemskapForutgåendeRepository,
+    private val grunnlagRepository: MedlemskapArbeidInntektForutgåendeRepository
 ) : Informasjonskrav {
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
@@ -37,9 +35,9 @@ class ForutgåendeMedlemskapService private constructor(
         val arbeidGrunnlag = innhentAARegisterGrunnlag5år(sak)
         val inntektGrunnlag = innhentAInntektGrunnlag5år(sak)
 
-        val eksisterendeData = forutgåendeRepo.hentHvisEksisterer(kontekst.behandlingId) // TODO: Mekk forutgående repo
+        val eksisterendeData = grunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
         lagre(kontekst.behandlingId, medlemskapPerioder, arbeidGrunnlag, inntektGrunnlag)
-        val nyeData = forutgåendeRepo.hentHvisEksisterer(kontekst.behandlingId)
+        val nyeData = grunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
 
         return if (nyeData == eksisterendeData) IKKE_ENDRET else ENDRET
     }
@@ -63,8 +61,8 @@ class ForutgåendeMedlemskapService private constructor(
     }
 
     private fun lagre(behandlingId: BehandlingId, medlemskapGrunnlag: List<MedlemskapResponse>, arbeidGrunnlag: List<ArbeidsforholdOversikt>, inntektGrunnlag: List<ArbeidsInntektMaaned>) {
-        val medlId = if (medlemskapGrunnlag.isNotEmpty()) medlemskapRepository.lagreUnntakMedlemskap(behandlingId, medlemskapGrunnlag) else null
-        forutgåendeRepo.lagreArbeidsforholdOgInntektINorge(behandlingId, arbeidGrunnlag, inntektGrunnlag, medlId) // TODO: Mekk forutgående repo
+        val medlId = if (medlemskapGrunnlag.isNotEmpty()) medlemskapForutgåendeRepository.lagreUnntakMedlemskap(behandlingId, medlemskapGrunnlag) else null
+        grunnlagRepository.lagreArbeidsforholdOgInntektINorge(behandlingId, arbeidGrunnlag, inntektGrunnlag, medlId)
     }
 
     companion object : Informasjonskravkonstruktør {
@@ -79,13 +77,13 @@ class ForutgåendeMedlemskapService private constructor(
 
         override fun konstruer(connection: DBConnection): ForutgåendeMedlemskapService {
             val repositoryProvider = RepositoryProvider(connection)
-            val medlemskapArbeidInntektRepository = repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
             val sakRepository = repositoryProvider.provide<SakRepository>()
+            val grunnlagRepository = repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>()
             return ForutgåendeMedlemskapService(
                 MedlemskapGateway(),
                 SakService(sakRepository),
-                medlemskapArbeidInntektRepository,
-                MedlemskapRepository(connection)
+                MedlemskapForutgåendeRepository(connection),
+                grunnlagRepository
             )
         }
     }
