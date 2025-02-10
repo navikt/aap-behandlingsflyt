@@ -35,7 +35,7 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.lovvalgMedlemskap
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilkjentYtelseAPI
 import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerAPI
-import no.nav.aap.behandlingsflyt.datadeling.DatadelingAPI
+import no.nav.aap.behandlingsflyt.datadeling.datadelingAPI
 import no.nav.aap.behandlingsflyt.exception.ErrorRespons
 import no.nav.aap.behandlingsflyt.exception.FlytOperasjonException
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
@@ -214,7 +214,7 @@ internal fun Application.server(dbConfig: DbConfig) {
                 underveisVurderingerAPI(dataSource)
                 lovvalgMedlemskapAPI(dataSource)
                 lovvalgMedlemskapGrunnlagAPI(dataSource)
-                DatadelingAPI(dataSource)
+                datadelingAPI(dataSource)
             }
         }
         actuator(prometheus, motor)

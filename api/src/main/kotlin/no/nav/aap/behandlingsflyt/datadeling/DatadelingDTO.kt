@@ -6,9 +6,9 @@ data class SakStatus(
     val sakId: String,
     val vedtakStatusKode: VedtakStatus,
     val periode: Maksimum.Periode,
-    val kilde:String = "Kelvin"
-){
-    enum class VedtakStatus{
+    val kilde: String = "Kelvin"
+) {
+    enum class VedtakStatus {
         AVSLU,
         FORDE,
         GODKJ,
