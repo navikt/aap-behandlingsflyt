@@ -98,6 +98,7 @@ spec:
           namespace: aura
           cluster: dev-gcp
         - application: api
+        - application: api-intern
     outbound:
       external:
         - host: pdl-api.dev-fss-pub.nais.io
