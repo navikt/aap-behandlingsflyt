@@ -119,7 +119,7 @@ class EnklereFlytOrkestratorTest {
         )
 
         val flytKontekst = flytOrkestrator.opprettKontekst(behandling.sakId, behandling.id)
-flytOrkestrator.forberedOgProsesserBehandling(flytKontekst)
+        flytOrkestrator.forberedOgProsesserBehandling(flytKontekst)
 
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         assertThat(behandling.aktivtSteg()).isEqualTo(StegType.AVKLAR_SYKDOM)
@@ -188,7 +188,7 @@ flytOrkestrator.forberedOgProsesserBehandling(flytKontekst)
         )
 
         val flytKontekst = flytOrkestrator.opprettKontekst(behandling.sakId, behandling.id)
-flytOrkestrator.forberedOgProsesserBehandling(flytKontekst)
+        flytOrkestrator.forberedOgProsesserBehandling(flytKontekst)
 
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         assertThat(behandling.aktivtSteg()).isEqualTo(StegType.AVKLAR_SYKDOM)
