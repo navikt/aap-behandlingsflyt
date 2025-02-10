@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningYtelseVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -23,12 +24,12 @@ import java.time.LocalDate
 class SamordningYtelseVurderingServiceTest {
 
     @Test
-    fun kreverAvklaringNårEndringerKommer() {
+    fun `krever avklaring når endringer kommer`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val repo = SamordningYtelseVurderingRepository(connection)
+            val repo = SamordningYtelseVurderingRepositoryImpl(connection)
             val sakRepository = SakRepositoryImpl(connection)
             val service = SamordningYtelseVurderingService(
-                SamordningYtelseVurderingRepository(connection),
+                SamordningYtelseVurderingRepositoryImpl(connection),
                 SakService(sakRepository)
             )
             val kontekst = opprettSakdata(connection)
@@ -49,34 +50,56 @@ class SamordningYtelseVurderingServiceTest {
         }
     }
 
-    private fun opprettVurderingData(repo: SamordningYtelseVurderingRepository, behandlingId: BehandlingId) {
+    private fun opprettVurderingData(repo: SamordningYtelseVurderingRepositoryImpl, behandlingId: BehandlingId) {
         repo.lagreVurderinger(
             behandlingId,
             listOf(
                 SamordningVurdering(
                     "myYtelse",
-                    listOf(SamordningVurderingPeriode(Periode(LocalDate.now(), LocalDate.now().plusDays(5)), Prosent(50), 0))
+                    listOf(
+                        SamordningVurderingPeriode(
+                            Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
+                            Prosent(50),
+                            0
+                        )
+                    )
                 )
             )
         )
     }
 
-    private fun opprettYtelseData(repo: SamordningYtelseVurderingRepository, behandlingId: BehandlingId) {
+    private fun opprettYtelseData(repo: SamordningYtelseVurderingRepositoryImpl, behandlingId: BehandlingId) {
         repo.lagreYtelser(
             behandlingId,
-            listOf(SamordningYtelse(
-                "myYtelse",
-                listOf(SamordningYtelsePeriode(Periode(LocalDate.now(), LocalDate.now().plusDays(5)), Prosent(50), 0)),
-                "kilde",
-                "ref")
+            listOf(
+                SamordningYtelse(
+                    "myYtelse",
+                    listOf(
+                        SamordningYtelsePeriode(
+                            Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
+                            Prosent(50),
+                            0
+                        )
+                    ),
+                    "kilde",
+                    "ref"
+                )
             )
         )
     }
 
     private fun opprettSakdata(connection: DBConnection): FlytKontekstMedPerioder {
         val person = PersonRepositoryImpl(connection).finnEllerOpprett(listOf(Ident("ident", true)))
-        val sakId = SakRepositoryImpl(connection).finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusDays(5))).id
-        val behandlingId = BehandlingRepositoryImpl(connection).opprettBehandling(sakId, listOf(), TypeBehandling.Førstegangsbehandling, null).id
+        val sakId = SakRepositoryImpl(connection).finnEllerOpprett(
+            person,
+            Periode(LocalDate.now(), LocalDate.now().plusDays(5))
+        ).id
+        val behandlingId = BehandlingRepositoryImpl(connection).opprettBehandling(
+            sakId,
+            listOf(),
+            TypeBehandling.Førstegangsbehandling,
+            null
+        ).id
         return FlytKontekstMedPerioder(sakId, behandlingId, TypeBehandling.Førstegangsbehandling, setOf())
     }
 }

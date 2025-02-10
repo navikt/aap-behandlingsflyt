@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.behandling.samordning.AvklaringsType
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
@@ -71,7 +70,7 @@ class SamordningSteg(
             val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
             return SamordningSteg(
                 SamordningService(
-                    SamordningYtelseVurderingRepository(connection),
+                    repositoryProvider.provide(),
                     underveisRepository
                 ),
                 samordningRepository,

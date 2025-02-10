@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.barnetillegg.flate
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.BarnetilleggService
@@ -20,13 +19,22 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.tilgang.AuthorizationParamPathConfig
+import no.nav.aap.tilgang.BehandlingPathParam
+import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource) {
     route("/api/barnetillegg") {
         route("/grunnlag/{referanse}") {
-            get<BehandlingReferanse, BarnetilleggDto> { req ->
-                val dto = dataSource.transaction { connection ->
+            authorizedGet<BehandlingReferanse, BarnetilleggDto>(
+                AuthorizationParamPathConfig(
+                    behandlingPathParam = BehandlingPathParam(
+                        "referanse"
+                    )
+                )
+            ) { req ->
+                val dto = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val vilkårsresultatRepository =
@@ -59,14 +67,14 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource) {
 
                     val barnGrunnlag = barnRepository.hentHvisEksisterer(behandling.id)
                     val personopplysningGrunnlag =
-                        personopplysningRepository.hentHvisEksisterer(behandling.id)
+                        requireNotNull(personopplysningRepository.hentHvisEksisterer(behandling.id))
 
                     BarnetilleggDto(
                         søknadstidspunkt = sakOgBehandlingService.hentSakFor(behandling.id).rettighetsperiode.fom,
                         folkeregisterbarn = folkeregister.map {
                             hentBarn(
                                 it,
-                                personopplysningGrunnlag!!
+                                personopplysningGrunnlag
                             )
                         },
                         vurderteBarn = barnGrunnlag?.vurderteBarn?.barn?.map {
@@ -75,14 +83,14 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource) {
                                 vurderinger = it.vurderinger,
                                 fødselsdato = hentBarn(
                                     it.ident,
-                                    personopplysningGrunnlag!!
+                                    personopplysningGrunnlag
                                 ).fødselsdato
                             )
                         } ?: emptyList(),
                         barnSomTrengerVurdering = uavklarteBarn.map {
                             hentBarn(
                                 it,
-                                personopplysningGrunnlag!!
+                                personopplysningGrunnlag
                             )
                         }
                             .toList()

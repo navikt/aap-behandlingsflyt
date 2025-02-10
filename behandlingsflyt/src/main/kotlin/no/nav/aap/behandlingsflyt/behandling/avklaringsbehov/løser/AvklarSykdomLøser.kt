@@ -17,13 +17,18 @@ class AvklarSykdomLøser(connection: DBConnection) : AvklaringsbehovsLøser<Avkl
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarSykdomLøsning): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
 
+        /* midlertidig, inntil frontend er over på sykdomsvurdering */
+        val sykdomsvurderinger = when {
+            løsning.sykdomsvurderinger != null -> løsning.sykdomsvurderinger
+            else -> listOf(løsning.sykdomsvurdering!!)
+        }
         sykdomRepository.lagre(
             behandlingId = behandling.id,
-            sykdomsvurdering = løsning.sykdomsvurdering.toSykdomsvurdering(),
+            sykdomsvurderinger = sykdomsvurderinger.map { it.toSykdomsvurdering() }
         )
 
         return LøsningsResultat(
-            begrunnelse = løsning.sykdomsvurdering.begrunnelse
+            begrunnelse = "Vurdering av § 11-5"
         )
     }
 

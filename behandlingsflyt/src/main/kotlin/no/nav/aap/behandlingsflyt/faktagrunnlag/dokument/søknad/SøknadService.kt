@@ -34,7 +34,7 @@ class SøknadService private constructor(
             val medlemskapArbeidInntektRepository = repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
             return SøknadService(
                 MottaDokumentService(mottattDokumentRepository),
-                StudentRepository(connection),
+                repositoryProvider.provide<StudentRepository>(),
                 BarnRepository(connection),
                 medlemskapArbeidInntektRepository
             )

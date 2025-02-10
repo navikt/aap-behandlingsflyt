@@ -14,7 +14,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = AVKLAR_LOVVALG_MEDLEMSKAP_KODE)
 class AvklarLovvalgMedlemskapLøsning(
-    @JsonProperty("vurderingerForLovvalgMedlemskap", required = true) val manuellVurderingForLovvalgMedlemskap: ManuellVurderingForLovvalgMedlemskap,
+    @JsonProperty("manuellVurderingForLovvalgMedlemskap", required = true) val manuellVurderingForLovvalgMedlemskap: ManuellVurderingForLovvalgMedlemskap,
     @JsonProperty("behovstype", required = true, defaultValue = AVKLAR_LOVVALG_MEDLEMSKAP_KODE) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5017`
 ) : AvklaringsbehovLøsning {
     override fun løs(connection: DBConnection, kontekst: AvklaringsbehovKontekst): LøsningsResultat {

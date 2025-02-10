@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.brev
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.put
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
@@ -37,17 +36,28 @@ import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
-import no.nav.aap.tilgang.authorizedPost
-import org.slf4j.MDC
+import no.nav.aap.tilgang.AuthorizationParamPathConfig
+import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.Operasjon
+import no.nav.aap.tilgang.authorizedGet
+import no.nav.aap.tilgang.authorizedPost
+import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import javax.sql.DataSource
 
+private val log = LoggerFactory.getLogger("BrevAPI")
 fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
 
     route("/api") {
         route("/behandling") {
             route("/{referanse}/grunnlag/brev") {
-                get<BehandlingReferanse, BrevGrunnlag> { behandlingReferanse ->
+                authorizedGet<BehandlingReferanse, BrevGrunnlag>(
+                    AuthorizationParamPathConfig(
+                        behandlingPathParam = BehandlingPathParam(
+                            "referanse"
+                        )
+                    )
+                ) { behandlingReferanse ->
                     val grunnlag = dataSource.transaction(readOnly = true) { connection ->
                         val repositoryProvider = RepositoryProvider(connection)
                         val behandlingRepository =
@@ -158,6 +168,8 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                     respond("{}", HttpStatusCode.Accepted)
                 }
             }
+
+            // TODO : trenger auth
             route("/{brevbestillingReferanse}/oppdater") {
                 put<BrevbestillingReferanse, String, Brev> { brevbestillingReferanse, brev ->
                     BrevGateway().oppdater(brevbestillingReferanse, brev)
@@ -232,7 +244,10 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                                 faktagrunnlag = request.faktagrunnlag
                             )
                     }
-                    respond(FaktagrunnlagDto(faktagrunnlag))
+                    log.info("Ber om faktagrunnlag for " + request.faktagrunnlag.joinToString(","))
+                    respond(FaktagrunnlagDto(faktagrunnlag)).also {
+                        log.info("Fant faktagrunnlag for " + faktagrunnlag.map { it.type }.joinToString(","))
+                    }
                 }
             }
         }

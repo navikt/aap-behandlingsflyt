@@ -14,7 +14,9 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = AVKLAR_SYKDOM_KODE)
 class AvklarSykdomLøsning(
-    @JsonProperty("sykdomsvurdering", required = true) val sykdomsvurdering: SykdomsvurderingDto,
+    @Deprecated("skal over på sykdomsvurderinger")
+    @JsonProperty("sykdomsvurdering", required = false) val sykdomsvurdering: SykdomsvurderingDto? = null,
+    @JsonProperty("sykdomsvurderinger", required = false) val sykdomsvurderinger: List<SykdomsvurderingDto>? = null,
     @JsonProperty(
         "behovstype",
         required = true,

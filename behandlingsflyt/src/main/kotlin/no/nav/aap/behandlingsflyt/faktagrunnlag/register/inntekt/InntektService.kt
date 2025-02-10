@@ -122,7 +122,7 @@ class InntektService private constructor(
                 vilkårsresultatRepository = vilkårsresultatRepository,
                 sykdomRepository = repositoryProvider.provide(),
                 uføreRepository = repositoryProvider.provide(),
-                studentRepository = StudentRepository(connection),
+                studentRepository = repositoryProvider.provide(),
                 beregningVurderingRepository = beregningVurderingRepository,
                 yrkesskadeRepository = repositoryProvider.provide(),
                 inntektRegisterGateway = InntektGateway

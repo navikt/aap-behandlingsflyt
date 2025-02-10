@@ -1,28 +1,25 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDate
 
-data class SykdomGrunnlagDto(
-    val skalVurdereYrkesskade: Boolean,
-    val opplysninger: InnhentetSykdomsOpplysninger,
-    val sykdomsvurdering: SykdomsvurderingDto?
-)
-
-data class YrkesskadeVurderingGrunnlagDto(
-    val opplysninger: InnhentetSykdomsOpplysninger,
-    val yrkesskadeVurdering: YrkesskadevurderingDto?
-)
 
 data class InnhentetSykdomsOpplysninger(
     val oppgittYrkesskadeISøknad: Boolean,
     val innhentedeYrkesskader: List<RegistrertYrkesskade>,
 )
 
-data class RegistrertYrkesskade(val ref: String, val skadedato: LocalDate, val kilde: String)
+data class RegistrertYrkesskade(
+    val ref: String,
+    val skadedato: LocalDate,
+    val kilde: String,
+) {
+    constructor(yrkesskade: Yrkesskade, kilde: String): this(yrkesskade.ref, yrkesskade.skadedato, kilde)
+}
 
 data class SykdomsvurderingDto(
     val begrunnelse: String,

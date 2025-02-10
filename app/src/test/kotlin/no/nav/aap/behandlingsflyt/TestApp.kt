@@ -6,11 +6,16 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevGateway
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepositoryImpl
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.adapter.InstitusjonsoppholdJSON
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Ident
@@ -19,6 +24,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskap
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
+import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
@@ -40,6 +47,7 @@ import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
 import java.time.Duration
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
+import java.util.*
 
 // Kjøres opp for å få logback i console uten json
 fun main() {
@@ -118,6 +126,35 @@ fun main() {
                         respond(dto)
                     }
                 }
+                route("/brev") {
+                    post<Unit, String, TestBestillBrev> { _, dto ->
+                        datasource.transaction { connection ->
+                            val behandlingRepository = BehandlingRepositoryImpl(connection)
+                            val sakRepository = SakRepositoryImpl(connection)
+                            val behandling = behandlingRepository.hent(dto.behandlingReferanse)
+                            if (behandling.status().erAvsluttet()) {
+                                throw IllegalStateException("Kan ikke legge på brevbehov på en avsluttet behandling")
+                            }
+                            val brevbestillingService = BrevbestillingService(
+                                BrevGateway(),
+                                BrevbestillingRepositoryImpl(connection),
+                                behandlingRepository,
+                                sakRepository
+                            )
+                            brevbestillingService.bestill(
+                                behandling.id,
+                                TypeBrev.VEDTAK_INNVILGELSE,
+                                UUID.randomUUID().toString()
+                            )
+                            val avklaringsbehovene =
+                                AvklaringsbehovRepositoryImpl(connection).hentAvklaringsbehovene(behandling.id)
+
+                            avklaringsbehovene.leggTil(listOf(Definisjon.SKRIV_BREV), behandling.aktivtSteg())
+                        }
+
+                        respond("OK")
+                    }
+                }
             }
         }
 
@@ -174,7 +211,8 @@ fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>): S�
     } else {
         "NEI"
     }
-    return SøknadV0(student = SøknadStudentDto(erStudent), harYrkesskade, oppgitteBarn,
+    return SøknadV0(
+        student = SøknadStudentDto(erStudent), harYrkesskade, oppgitteBarn,
         medlemskap = SøknadMedlemskapDto(harMedlemskap, null, null, null, listOf())
     )
 }

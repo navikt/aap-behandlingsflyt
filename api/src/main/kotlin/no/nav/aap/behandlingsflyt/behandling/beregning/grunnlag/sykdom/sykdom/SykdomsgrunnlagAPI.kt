@@ -1,0 +1,101 @@
+package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom
+
+import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
+import com.papsign.ktor.openapigen.route.response.respond
+import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.InnhentetSykdomsOpplysninger
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.RegistrertYrkesskade
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.tilgang.AuthorizationParamPathConfig
+import no.nav.aap.tilgang.BehandlingPathParam
+import no.nav.aap.tilgang.authorizedGet
+import javax.sql.DataSource
+
+fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: DataSource) {
+    route("/api/behandling") {
+        route("/{referanse}/grunnlag/sykdom/sykdom") {
+            authorizedGet<BehandlingReferanse, SykdomGrunnlagDto>(
+                AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse"))
+            ) { req ->
+                val response = dataSource.transaction(readOnly = true) { connection ->
+                    val repositoryProvider = RepositoryProvider(connection)
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
+                    val yrkesskadeRepository = repositoryProvider.provide<YrkesskadeRepository>()
+                    val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
+
+                    val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId = behandling.id)
+                    val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId = behandling.id)
+
+                    val innhentedeYrkesskader = yrkesskadeGrunnlag?.yrkesskader?.yrkesskader.orEmpty()
+                        .map { yrkesskade -> RegistrertYrkesskade( yrkesskade, "Yrkesskaderegisteret") }
+
+                    val sykdomsvurdering = sykdomGrunnlag?.sykdomsvurdering?.toDto()
+
+                    val historikkSykdomsvurderinger = sykdomRepository.hentHistoriskeSykdomsvurderinger(behandling.sakId, behandling.id)
+                        .sortedBy { it.opprettet }
+                        .map { it.toDto() }
+
+                    SykdomGrunnlagDto(
+                        opplysninger = InnhentetSykdomsOpplysninger(
+                            oppgittYrkesskadeISøknad = false,
+                            innhentedeYrkesskader = innhentedeYrkesskader,
+                        ),
+                        sykdomsvurdering = sykdomsvurdering,
+                        skalVurdereYrkesskade = innhentedeYrkesskader.isNotEmpty(),
+                        sykdomsvurderinger = listOfNotNull(sykdomsvurdering),
+                        historikkSykdomsvurderinger = historikkSykdomsvurderinger,
+                        gjeldendeVedtatteSykdomsvurderinger = listOf(),
+                    )
+                }
+
+
+                respond(response)
+            }
+        }
+        route("/{referanse}/grunnlag/sykdom/yrkesskade") {
+            authorizedGet<BehandlingReferanse, YrkesskadeVurderingGrunnlagDto>(
+                AuthorizationParamPathConfig(
+                    behandlingPathParam = BehandlingPathParam("referanse")
+                )
+            ) { req ->
+                val response = dataSource.transaction(readOnly = true) { connection ->
+                    val repositoryProvider = RepositoryProvider(connection)
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
+                    val yrkesskadeRepository = repositoryProvider.provide<YrkesskadeRepository>()
+
+                    val behandling: Behandling =
+                        BehandlingReferanseService(behandlingRepository).behandling(req)
+
+                    val yrkesskadeGrunnlag =
+                        yrkesskadeRepository.hentHvisEksisterer(behandlingId = behandling.id)
+                    val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId = behandling.id)
+
+                    yrkesskadeGrunnlag to sykdomGrunnlag
+
+                    val innhentedeYrkesskader = yrkesskadeGrunnlag?.yrkesskader?.yrkesskader.orEmpty()
+                        .map { yrkesskade -> RegistrertYrkesskade( yrkesskade, "Yrkesskaderegisteret") }
+
+                    YrkesskadeVurderingGrunnlagDto(
+                        opplysninger = InnhentetSykdomsOpplysninger(
+                            oppgittYrkesskadeISøknad = false,
+                            innhentedeYrkesskader = innhentedeYrkesskader,
+                        ),
+                        yrkesskadeVurdering = sykdomGrunnlag?.yrkesskadevurdering?.toDto(),
+                    )
+                }
+
+                respond(response)
+            }
+        }
+    }
+}
+

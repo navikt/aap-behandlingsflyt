@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepos
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -31,13 +32,13 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
 
     override fun lagre(
         behandlingId: BehandlingId,
-        sykdomsvurdering: Sykdomsvurdering?,
+        sykdomsvurderinger: List<Sykdomsvurdering>,
     ) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         val nyttGrunnlag = SykdomGrunnlag(
             null,
             yrkesskadevurdering = eksisterendeGrunnlag?.yrkesskadevurdering,
-            sykdomsvurdering = sykdomsvurdering
+            sykdomsvurderinger = sykdomsvurderinger
         )
 
         if (eksisterendeGrunnlag != nyttGrunnlag) {
@@ -57,7 +58,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
         val nyttGrunnlag = SykdomGrunnlag(
             null,
             yrkesskadevurdering = yrkesskadevurdering,
-            sykdomsvurdering = eksisterendeGrunnlag?.sykdomsvurdering
+            sykdomsvurderinger = eksisterendeGrunnlag?.sykdomsvurderinger ?: emptyList(),
         )
 
         if (eksisterendeGrunnlag != nyttGrunnlag) {
@@ -70,19 +71,18 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
     }
 
     private fun lagre(behandlingId: BehandlingId, nyttGrunnlag: SykdomGrunnlag) {
-        val (sykdomsVurderingId, sykdomVurderingerId) = lagreSykdom(nyttGrunnlag.sykdomsvurdering)
+        val sykdomsvurderingerId = lagreSykdom(nyttGrunnlag.sykdomsvurderinger)
         val yrkesskadeId = lagreYrkesskade(nyttGrunnlag.yrkesskadevurdering)
 
         val query = """
-            INSERT INTO SYKDOM_GRUNNLAG (BEHANDLING_ID, YRKESSKADE_ID, SYKDOM_ID, SYKDOM_VURDERINGER_ID) VALUES (?, ?, ?, ?)
+            INSERT INTO SYKDOM_GRUNNLAG (BEHANDLING_ID, YRKESSKADE_ID, SYKDOM_VURDERINGER_ID) VALUES (?, ?, ?)
         """.trimIndent()
 
         connection.execute(query) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, yrkesskadeId)
-                setLong(3, sykdomsVurderingId)
-                setLong(4, sykdomVurderingerId)
+                setLong(3, sykdomsvurderingerId)
             }
         }
     }
@@ -124,13 +124,8 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
         return id
     }
 
-    private fun lagreSykdom(vurdering: Sykdomsvurdering?): Pair<Long?, Long> {
-        /* double write til migrering er ferdig. */
-        val sykdomVurderingerId = connection.executeReturnKey("""INSERT INTO SYKDOM_VURDERINGER DEFAULT VALUES""")
-
-        if (vurdering == null) {
-            return Pair(null, sykdomVurderingerId)
-        }
+    private fun lagreSykdom(vurderinger: List<Sykdomsvurdering>): Long {
+        val sykdomsvurderingerId = connection.executeReturnKey("""INSERT INTO SYKDOM_VURDERINGER DEFAULT VALUES""")
 
         val query = """
             INSERT INTO SYKDOM_VURDERING (
@@ -145,33 +140,35 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """.trimIndent()
 
-        val id = connection.executeReturnKey(query) {
-            setParams {
-                setLong(1, sykdomVurderingerId)
-                setString(2, vurdering.begrunnelse)
-                setLocalDate(3, vurdering.vurderingenGjelderFra)
-                setBoolean(4, vurdering.erArbeidsevnenNedsatt)
-                setBoolean(5, vurdering.harSkadeSykdomEllerLyte)
-                setBoolean(6, vurdering.erSkadeSykdomEllerLyteVesentligdel)
-                setBoolean(7, vurdering.erNedsettelseIArbeidsevneMerEnnHalvparten)
-                setBoolean(8, vurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense)
-                setBoolean(9, vurdering.erNedsettelseIArbeidsevneAvEnVissVarighet)
-                setString(10, vurdering.yrkesskadeBegrunnelse)
-                setString(11, vurdering.kodeverk)
-                setString(12, vurdering.hoveddiagnose)
-                setLocalDateTime(13, vurdering.opprettet ?: LocalDateTime.now())
+        for (vurdering in vurderinger) {
+            val id = connection.executeReturnKey(query) {
+                setParams {
+                    setLong(1, sykdomsvurderingerId)
+                    setString(2, vurdering.begrunnelse)
+                    setLocalDate(3, vurdering.vurderingenGjelderFra)
+                    setBoolean(4, vurdering.erArbeidsevnenNedsatt)
+                    setBoolean(5, vurdering.harSkadeSykdomEllerLyte)
+                    setBoolean(6, vurdering.erSkadeSykdomEllerLyteVesentligdel)
+                    setBoolean(7, vurdering.erNedsettelseIArbeidsevneMerEnnHalvparten)
+                    setBoolean(8, vurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense)
+                    setBoolean(9, vurdering.erNedsettelseIArbeidsevneAvEnVissVarighet)
+                    setString(10, vurdering.yrkesskadeBegrunnelse)
+                    setString(11, vurdering.kodeverk)
+                    setString(12, vurdering.hoveddiagnose)
+                    setLocalDateTime(13, vurdering.opprettet ?: LocalDateTime.now())
+                }
+            }
+
+            vurdering.dokumenterBruktIVurdering.forEach {
+                lagreSykdomDokument(id, it)
+            }
+
+            vurdering.bidiagnoser?.forEach {
+                lagreBidiagnose(id, it)
             }
         }
 
-        vurdering.dokumenterBruktIVurdering.forEach {
-            lagreSykdomDokument(id, it)
-        }
-
-        vurdering.bidiagnoser?.forEach {
-            lagreBidiagnose(id, it)
-        }
-
-        return Pair(id, sykdomVurderingerId)
+        return sykdomsvurderingerId
     }
 
     private fun lagreBidiagnose(sykdomsId: Long, kode: String) {
@@ -209,8 +206,8 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             return
         }
         val query = """
-            INSERT INTO SYKDOM_GRUNNLAG (BEHANDLING_ID, YRKESSKADE_ID, SYKDOM_ID, SYKDOM_VURDERINGER_ID)
-            SELECT ?, YRKESSKADE_ID, SYKDOM_ID, SYKDOM_VURDERINGER_ID
+            INSERT INTO SYKDOM_GRUNNLAG (BEHANDLING_ID, YRKESSKADE_ID, SYKDOM_VURDERINGER_ID)
+            SELECT ?, YRKESSKADE_ID, SYKDOM_VURDERINGER_ID
             FROM SYKDOM_GRUNNLAG WHERE BEHANDLING_ID = ? AND AKTIV
         """.trimIndent()
 
@@ -238,43 +235,44 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
         return SykdomGrunnlag(
             row.getLong("ID"),
             mapYrkesskade(row.getLongOrNull("YRKESSKADE_ID")),
-            mapSykdom(row.getLongOrNull("SYKDOM_ID"))
+            mapSykdommer(row.getLongOrNull("SYKDOM_VURDERINGER_ID")),
         )
     }
 
-    private fun mapSykdom(sykdomId: Long?): Sykdomsvurdering? {
-        if (sykdomId == null) {
-            return null
-        }
-        return connection.queryFirstOrNull(
-            """
+    private fun mapSykdommer(sykdomVurderingerId: Long?): List<Sykdomsvurdering> {
+        return connection.queryList(
+        """
             SELECT id, BEGRUNNELSE, VURDERINGEN_GJELDER_FRA, HAR_SYKDOM_SKADE_LYTE, ER_SYKDOM_SKADE_LYTE_VESETLING_DEL, ER_NEDSETTELSE_MER_ENN_HALVPARTEN, ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE, ER_NEDSETTELSE_AV_EN_VISS_VARIGHET, ER_ARBEIDSEVNE_NEDSATT, YRKESSKADE_BEGRUNNELSE, KODEVERK, DIAGNOSE, OPPRETTET_TID
-            FROM SYKDOM_VURDERING WHERE id = ?
+            FROM SYKDOM_VURDERING WHERE SYKDOM_VURDERINGER_ID = ?
             """.trimIndent()
         ) {
             setParams {
-                setLong(1, sykdomId)
+                setLong(1, sykdomVurderingerId)
             }
-            setRowMapper { row ->
-                Sykdomsvurdering(
-                    id = row.getLong("id"),
-                    begrunnelse = row.getString("BEGRUNNELSE"),
-                    vurderingenGjelderFra = row.getLocalDateOrNull("VURDERINGEN_GJELDER_FRA"),
-                    dokumenterBruktIVurdering = hentSykdomsDokumenter(sykdomId),
-                    harSkadeSykdomEllerLyte = row.getBoolean("HAR_SYKDOM_SKADE_LYTE"),
-                    erSkadeSykdomEllerLyteVesentligdel = row.getBooleanOrNull("ER_SYKDOM_SKADE_LYTE_VESETLING_DEL"),
-                    erNedsettelseIArbeidsevneMerEnnHalvparten = row.getBooleanOrNull("ER_NEDSETTELSE_MER_ENN_HALVPARTEN"),
-                    erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = row.getBooleanOrNull("ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE"),
-                    erNedsettelseIArbeidsevneAvEnVissVarighet = row.getBooleanOrNull("ER_NEDSETTELSE_AV_EN_VISS_VARIGHET"),
-                    erArbeidsevnenNedsatt = row.getBooleanOrNull("ER_ARBEIDSEVNE_NEDSATT"),
-                    yrkesskadeBegrunnelse = row.getStringOrNull("YRKESSKADE_BEGRUNNELSE"),
-                    kodeverk = row.getStringOrNull("KODEVERK"),
-                    hoveddiagnose = row.getStringOrNull("DIAGNOSE"),
-                    bidiagnoser = hentBidiagnoser(vurderingId = row.getLong("ID")),
-                    opprettet = row.getLocalDateTimeOrNull("OPPRETTET_TID"),
-                )
-            }
+            setRowMapper(::sykdomsvurderingRowmapper)
         }
+    }
+
+
+    private fun sykdomsvurderingRowmapper(row: Row): Sykdomsvurdering {
+        val sykdomsvurderingId = row.getLong("id")
+        return Sykdomsvurdering(
+            id = sykdomsvurderingId,
+            begrunnelse = row.getString("BEGRUNNELSE"),
+            vurderingenGjelderFra = row.getLocalDateOrNull("VURDERINGEN_GJELDER_FRA"),
+            dokumenterBruktIVurdering = hentSykdomsDokumenter(sykdomsvurderingId),
+            harSkadeSykdomEllerLyte = row.getBoolean("HAR_SYKDOM_SKADE_LYTE"),
+            erSkadeSykdomEllerLyteVesentligdel = row.getBooleanOrNull("ER_SYKDOM_SKADE_LYTE_VESETLING_DEL"),
+            erNedsettelseIArbeidsevneMerEnnHalvparten = row.getBooleanOrNull("ER_NEDSETTELSE_MER_ENN_HALVPARTEN"),
+            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = row.getBooleanOrNull("ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE"),
+            erNedsettelseIArbeidsevneAvEnVissVarighet = row.getBooleanOrNull("ER_NEDSETTELSE_AV_EN_VISS_VARIGHET"),
+            erArbeidsevnenNedsatt = row.getBooleanOrNull("ER_ARBEIDSEVNE_NEDSATT"),
+            yrkesskadeBegrunnelse = row.getStringOrNull("YRKESSKADE_BEGRUNNELSE"),
+            kodeverk = row.getStringOrNull("KODEVERK"),
+            hoveddiagnose = row.getStringOrNull("DIAGNOSE"),
+            bidiagnoser = hentBidiagnoser(vurderingId = sykdomsvurderingId),
+            opprettet = row.getLocalDateTimeOrNull("OPPRETTET_TID"),
+        )
     }
 
     private fun hentBidiagnoser(vurderingId: Long): List<String> {
@@ -341,5 +339,24 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
 
     override fun hent(behandlingId: BehandlingId): SykdomGrunnlag {
         return requireNotNull(hentHvisEksisterer(behandlingId))
+    }
+
+    override fun hentHistoriskeSykdomsvurderinger(sakId: SakId, behandlingId: BehandlingId): List<Sykdomsvurdering> {
+        val query = """
+            SELECT vurdering.*
+            FROM SYKDOM_GRUNNLAG grunnlag
+            INNER JOIN SYKDOM_VURDERINGER vurderinger ON grunnlag.SYKDOM_VURDERINGER_ID = vurderinger.ID
+            INNER JOIN SYKDOM_VURDERING vurdering ON vurdering.SYKDOM_VURDERINGER_ID = vurderinger.ID
+            JOIN BEHANDLING behandling ON grunnlag.BEHANDLING_ID = behandling.ID
+            WHERE grunnlag.AKTIV AND behandling.SAK_ID = ?
+              AND behandling.opprettet_tid < (SELECT a.opprettet_tid from behandling a where id = ?)
+            """.trimIndent()
+        return connection.queryList(query) {
+            setParams {
+                setLong(1, sakId.id)
+                setLong(2, behandlingId.id)
+            }
+            setRowMapper(::sykdomsvurderingRowmapper)
+        }
     }
 }

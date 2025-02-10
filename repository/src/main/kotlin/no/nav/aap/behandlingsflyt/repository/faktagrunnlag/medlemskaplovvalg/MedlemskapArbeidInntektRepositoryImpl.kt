@@ -72,10 +72,10 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
 
         val manuellVurderingId = connection.executeReturnKey(manuellVurderingQuery) {
             setParams {
-                setString(1, manuellVurdering.lovvalgVedSøknadsTidspunkt.tekstVurderinger)
+                setString(1, manuellVurdering.lovvalgVedSøknadsTidspunkt.begrunnelse)
                 setEnumName(2, manuellVurdering.lovvalgVedSøknadsTidspunkt.lovvalgsEØSLand)
-                setString(3, manuellVurdering.medlemskapVedSøknadsTidspunkt.tekstVurdering)
-                setBoolean(4, manuellVurdering.medlemskapVedSøknadsTidspunkt.varMedlemIFolketrygd)
+                setString(3, manuellVurdering.medlemskapVedSøknadsTidspunkt?.begrunnelse)
+                setBoolean(4, manuellVurdering.medlemskapVedSøknadsTidspunkt?.varMedlemIFolketrygd)
             }
         }
 
@@ -246,12 +246,12 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
             setRowMapper {
                 ManuellVurderingForLovvalgMedlemskap(
                     lovvalgVedSøknadsTidspunkt =  LovvalgVedSøknadsTidspunkt(
-                        tekstVurderinger = it.getString("tekstvurdering_lovvalg"),
+                        begrunnelse = it.getString("tekstvurdering_lovvalg"),
                         lovvalgsEØSLand = it.getEnumOrNull("lovvalgs_land")
                     ),
                     medlemskapVedSøknadsTidspunkt = MedlemskapVedSøknadsTidspunkt(
-                        tekstVurdering = it.getString("tekstvurdering_medlemskap"),
-                        varMedlemIFolketrygd = it.getBoolean("var_medlem_i_folketrygden")
+                        begrunnelse = it.getStringOrNull("tekstvurdering_medlemskap"),
+                        varMedlemIFolketrygd = it.getBooleanOrNull("var_medlem_i_folketrygden")
                     )
                 )
             }

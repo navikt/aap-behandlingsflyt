@@ -1,8 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.get
-import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
@@ -24,6 +22,7 @@ import no.nav.aap.behandlingsflyt.flyt.flate.visning.Visning
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.MANUELT_SATT_PÅ_VENT_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegGruppe
@@ -44,12 +43,21 @@ import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbStatus
 import no.nav.aap.motor.api.JobbInfoDto
+import no.nav.aap.tilgang.AuthorizationParamPathConfig
+import no.nav.aap.tilgang.BehandlingPathParam
+import no.nav.aap.tilgang.Operasjon
+import no.nav.aap.tilgang.authorizedGet
+import no.nav.aap.tilgang.authorizedPost
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
     route("/api/behandling") {
         route("/{referanse}/flyt") {
-            get<BehandlingReferanse, BehandlingFlytOgTilstandDto> { req ->
+            authorizedGet<BehandlingReferanse, BehandlingFlytOgTilstandDto>(
+                AuthorizationParamPathConfig(
+                    behandlingPathParam = BehandlingPathParam("referanse")
+                )
+            ) { req ->
                 val dto = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
@@ -154,7 +162,11 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
             }
         }
         route("/{referanse}/resultat") {
-            get<BehandlingReferanse, BehandlingResultatDto> { req ->
+            authorizedGet<BehandlingReferanse, BehandlingResultatDto>(
+                AuthorizationParamPathConfig(
+                    behandlingPathParam = BehandlingPathParam("referanse")
+                ),
+            ) { req ->
                 val dto = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
@@ -171,7 +183,13 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
             }
         }
         route("/{referanse}/sett-på-vent") {
-            post<BehandlingReferanse, BehandlingResultatDto, SettPåVentRequest> { request, body ->
+            authorizedPost<BehandlingReferanse, BehandlingResultatDto, SettPåVentRequest>(
+                AuthorizationParamPathConfig(
+                    operasjon = Operasjon.SAKSBEHANDLE,
+                    behandlingPathParam = BehandlingPathParam("referanse"),
+                    avklaringsbehovKode = MANUELT_SATT_PÅ_VENT_KODE
+                )
+            ) { request, body ->
                 dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
                     LoggingKontekst(
@@ -215,7 +233,13 @@ fun NormalOpenAPIRoute.flytApi(dataSource: DataSource) {
             }
         }
         route("/{referanse}/vente-informasjon") {
-            get<BehandlingReferanse, Venteinformasjon> { request ->
+            authorizedGet<BehandlingReferanse, Venteinformasjon>(
+                AuthorizationParamPathConfig(
+                    behandlingPathParam = BehandlingPathParam(
+                        "referanse"
+                    )
+                )
+            ) { request ->
                 val dto = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
@@ -321,6 +345,8 @@ private fun utledVisning(
         !beslutterReadOnly || (!saksbehandlerReadOnly && alleAvklaringsbehovInkludertFrivillige.harVærtSendtTilbakeFraBeslutterTidligere())
     val visKvalitetssikringKort = utledVisningAvKvalitetsikrerKort(alleAvklaringsbehovInkludertFrivillige)
     val kvalitetssikringReadOnly = visKvalitetssikringKort && flyt.erStegFør(aktivtSteg, StegType.KVALITETSSIKRING)
+    val visBrevkort =
+        alleAvklaringsbehovInkludertFrivillige.hentBehovForDefinisjon(Definisjon.SKRIV_BREV)?.erÅpent() == true
 
     if (jobber) {
         return Visning(
@@ -330,6 +356,7 @@ private fun utledVisning(
             visBeslutterKort = visBeslutterKort,
             visKvalitetssikringKort = visKvalitetssikringKort,
             visVentekort = påVent,
+            visBrevkort = false,
             typeBehandling = typeBehandling
         )
     } else {
@@ -340,6 +367,7 @@ private fun utledVisning(
             visBeslutterKort = visBeslutterKort,
             visKvalitetssikringKort = visKvalitetssikringKort,
             visVentekort = påVent,
+            visBrevkort = visBrevkort,
             typeBehandling = typeBehandling
         )
     }

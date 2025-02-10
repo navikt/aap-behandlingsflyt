@@ -1,10 +1,9 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.meldeplikt
+package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.meldeplikt
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
@@ -20,19 +19,31 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.lookup.repository.RepositoryRegistry
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 
-class MeldepliktRepositoryTest {
+class MeldepliktRepositoryImplTest {
+    companion object {
+        @BeforeAll
+        @JvmStatic
+        fun beforeAll() {
+            RepositoryRegistry.register<MeldepliktRepositoryImpl>()
+        }
+
+        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+    }
+
     @Test
     fun `Finner ikke fritaksvurderinger hvis ikke lagret`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val meldepliktRepository = MeldepliktRepository(connection)
+            val meldepliktRepository = MeldepliktRepositoryImpl(connection)
             val meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling.id)
             assertThat(meldepliktGrunnlag).isNull()
         }
@@ -44,7 +55,7 @@ class MeldepliktRepositoryTest {
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val meldepliktRepository = MeldepliktRepository(connection)
+            val meldepliktRepository = MeldepliktRepositoryImpl(connection)
             val fritaksvurderinger = listOf(
                 Fritaksvurdering(true, 13 august 2023, "en begrunnelse", null),
                 Fritaksvurdering(false, 26 august 2023, "annen begrunnelse", null)
@@ -60,7 +71,7 @@ class MeldepliktRepositoryTest {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
-            val meldepliktRepository = MeldepliktRepository(connection)
+            val meldepliktRepository = MeldepliktRepositoryImpl(connection)
             val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, "en begrunnelse", null)
 
             meldepliktRepository.lagre(
@@ -84,8 +95,8 @@ class MeldepliktRepositoryTest {
     @Test
     fun `Kopiering av fritaksvurderinger fra en behandling uten opplysningene skal ikke føre til feil`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val bistandRepository = MeldepliktRepository(connection)
-            assertDoesNotThrow {
+            val bistandRepository = MeldepliktRepositoryImpl(connection)
+            org.junit.jupiter.api.assertDoesNotThrow {
                 bistandRepository.kopier(BehandlingId(Long.MAX_VALUE - 1), BehandlingId(Long.MAX_VALUE))
             }
         }
@@ -97,7 +108,7 @@ class MeldepliktRepositoryTest {
         val behandling1 = dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
-            val meldepliktRepository = MeldepliktRepository(connection)
+            val meldepliktRepository = MeldepliktRepositoryImpl(connection)
             val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, "en begrunnelse", null)
 
             meldepliktRepository.lagre(
@@ -116,7 +127,7 @@ class MeldepliktRepositoryTest {
             behandling1
         }
         dataSource.transaction { connection ->
-            val meldepliktRepository = MeldepliktRepository(connection)
+            val meldepliktRepository = MeldepliktRepositoryImpl(connection)
             val sak = SakOgBehandlingService(
                 GrunnlagKopierer(connection), SakRepositoryImpl(connection),
                 BehandlingRepositoryImpl(connection)
@@ -140,7 +151,7 @@ class MeldepliktRepositoryTest {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
-            val meldepliktRepository = MeldepliktRepository(connection)
+            val meldepliktRepository = MeldepliktRepositoryImpl(connection)
 
             val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, "en begrunnelse", null)
 
@@ -220,7 +231,7 @@ class MeldepliktRepositoryTest {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
-            val meldepliktRepository = MeldepliktRepository(connection)
+            val meldepliktRepository = MeldepliktRepositoryImpl(connection)
 
             val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, "en begrunnelse", null)
 
@@ -304,10 +315,6 @@ class MeldepliktRepositoryTest {
                     )
                 )
         }
-    }
-
-    private companion object {
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 
     private fun sak(connection: DBConnection): Sak {

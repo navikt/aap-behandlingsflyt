@@ -1,7 +1,6 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate
+package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykepengergrunnlag
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
@@ -11,19 +10,25 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.tilgang.AuthorizationParamPathConfig
+import no.nav.aap.tilgang.BehandlingPathParam
+import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
 
 
 fun NormalOpenAPIRoute.sykepengerGrunnlagApi(dataSource: DataSource) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/sykdom/sykepengergrunnlag") {
-            get<BehandlingReferanse, SykepengerGrunnlagDto> { req ->
-                val sykepengerErstatningGrunnlag = dataSource.transaction { connection ->
+            authorizedGet<BehandlingReferanse, SykepengerGrunnlagDto>(
+                pathConfig = AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse"))
+            ) { req ->
+                val sykepengerErstatningGrunnlag = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val sykeRepository = repositoryProvider.provide<SykepengerErstatningRepository>()
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
-                    SykepengerErstatningRepository(connection).hentHvisEksisterer(behandling.id)
+                    sykeRepository.hentHvisEksisterer(behandling.id)
                 }
 
                 respond(SykepengerGrunnlagDto(sykepengerErstatningGrunnlag?.vurdering))

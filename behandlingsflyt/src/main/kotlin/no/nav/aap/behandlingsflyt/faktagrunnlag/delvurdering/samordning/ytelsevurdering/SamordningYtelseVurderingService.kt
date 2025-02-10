@@ -125,7 +125,7 @@ class SamordningYtelseVurderingService(
             val repositoryProvider = RepositoryProvider(connection)
             val sakRepository = repositoryProvider.provide<SakRepository>()
             return SamordningYtelseVurderingService(
-                SamordningYtelseVurderingRepository(connection),
+                repositoryProvider.provide(),
                 SakService(sakRepository)
             )
         }

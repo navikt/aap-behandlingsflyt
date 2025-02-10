@@ -4,7 +4,7 @@ plugins {
 
 val komponenterVersjon = "1.0.130"
 val ktorVersion = "3.0.3"
-val tilgangVersjon = "1.0.0"
+val tilgangVersjon = "1.0.1"
 val junitVersjon = "5.11.4"
 
 dependencies {
@@ -15,7 +15,7 @@ dependencies {
 
     api("no.nav.aap.tilgang:plugin:$tilgangVersjon")
     api("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
-    implementation("no.nav.aap.brev:kontrakt:0.0.57")
+    api("no.nav.aap.brev:kontrakt:0.0.59")
     api("no.nav.aap.kelvin:motor:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:dbconnect:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:dbmigrering:$komponenterVersjon")
