@@ -37,8 +37,10 @@ object PdlPersonopplysningGateway : PersonopplysningGateway {
         }))
     }
 
-    override fun innhent(person: Person): Personopplysning? {
-        val request = PdlRequest(PERSON_QUERY, IdentVariables(person.aktivIdent().identifikator))
+    override fun innhent(person: Person, historikk: Boolean): Personopplysning? {
+        val query = if (historikk) PERSON_QUERY_HISTORIKK else PERSON_QUERY
+
+        val request = PdlRequest(query, IdentVariables(person.aktivIdent().identifikator))
         val response: PdlPersoninfoDataResponse = query(request)
 
         val foedselsdato = PdlParser.utledFødselsdato(response.data?.hentPerson?.foedselsdato)
