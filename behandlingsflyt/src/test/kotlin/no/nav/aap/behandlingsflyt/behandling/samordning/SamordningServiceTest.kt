@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 class SamordningServiceTest {
-    @Disabled("Denne produserer ingenting ennå")
+
     @Test
     fun `gjør vurderinger når all data er tilstede`() {
         InitTestDatabase.dataSource.transaction { connection ->
@@ -35,11 +35,10 @@ class SamordningServiceTest {
             opprettVurderingData(ytelseVurderingRepo, behandlingId)
 
             val service = SamordningService(ytelseVurderingRepo, UnderveisRepositoryImpl(connection))
-            assertThat(service.vurder(behandlingId)).isEmpty()
+            assertThat(service.vurder(behandlingId)).isNotEmpty
         }
     }
 
-    @Disabled("Inntil denne gjør noe nyttig")
     @Test
     fun `kan hente og gjøre vurdering uten vurderinger`() {
         InitTestDatabase.dataSource.transaction { connection ->
@@ -50,7 +49,7 @@ class SamordningServiceTest {
             val service = SamordningService(ytelseVurderingRepo, UnderveisRepositoryImpl(connection))
             val tidslinje = service.vurder(behandlingId)
 
-            assertThat(tidslinje).hasSize(112)
+            assertThat(tidslinje).hasSize(1)
         }
     }
 
@@ -87,7 +86,7 @@ class SamordningServiceTest {
             behandlingId,
             listOf(
                 SamordningVurdering(
-                    "myYtelse",
+                    Ytelse.SYKEPENGER,
                     listOf(
                         SamordningVurderingPeriode(
                             Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
@@ -105,7 +104,7 @@ class SamordningServiceTest {
             behandlingId,
             listOf(
                 SamordningYtelse(
-                    "myYtelse",
+                    Ytelse.SYKEPENGER,
                     listOf(
                         SamordningYtelsePeriode(
                             Periode(LocalDate.now(), LocalDate.now().plusDays(5)),

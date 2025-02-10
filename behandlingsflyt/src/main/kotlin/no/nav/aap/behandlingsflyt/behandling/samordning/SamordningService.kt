@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 
 class SamordningService(
@@ -16,6 +17,9 @@ class SamordningService(
         //TODO: Kan benytte denne til å filtrere perioder hvor det ikke er rett på ytelse uansett
         val underveisPerioder = underveisRepository.hentHvisEksisterer(behandlingId)
 
+        if (samordningYtelseVurderingGrunnlag == null) {
+            return Tidslinje(emptyList())
+        }
         val vurderRegler = vurderRegler(samordningYtelseVurderingGrunnlag)
 
         return vurderRegler
@@ -24,12 +28,25 @@ class SamordningService(
     fun harGjortVurdering(behandlingId: BehandlingId): Boolean {
         val samordningYtelseVurderingGrunnlag = samordningYtelseVurderingRepository.hentHvisEksisterer(behandlingId)
 
-        return samordningYtelseVurderingGrunnlag?.vurderingerId != null
-            && !samordningYtelseVurderingGrunnlag.vurderinger.isNullOrEmpty()
+        return samordningYtelseVurderingGrunnlag?.vurderingerId != null && !samordningYtelseVurderingGrunnlag.vurderinger.isNullOrEmpty()
     }
 
-    private fun vurderRegler(samordning: SamordningYtelseVurderingGrunnlag?) : Tidslinje<SamordningGradering> {
-        // TODO: Kombiner til tidslinje her. Kaja skal utarbeide en oversikt over regler, avventer dette
-        return Tidslinje(listOf())
+    private fun vurderRegler(samordning: SamordningYtelseVurderingGrunnlag): Tidslinje<SamordningGradering> {
+        // Desperat forsøk på å lage en tidslinje
+        // TODO: verifiser logikk osv
+        val p = samordning.ytelser.flatMap {
+            it.ytelsePerioder.map { ytelsePeriode -> Pair(it, ytelsePeriode) }
+        }.map { (ytelse, ytelsePeriode) ->
+            Segment(
+                ytelsePeriode.periode, SamordningGradering(
+                    gradering = ytelsePeriode.gradering!!, ytelsesGraderinger = ytelse.ytelsePerioder.map {
+                        YtelseGradering(
+                            ytelse = ytelse.ytelseType, gradering = it.gradering!!
+                        )
+                    })
+            )
+        }
+        return Tidslinje(p)
+
     }
 }

@@ -48,7 +48,7 @@ class SamordningYtelseVurderingRepositoryImpl(private val connection: DBConnecti
             }
             setRowMapper {
                 SamordningVurdering(
-                    ytelseType = it.getString("ytelse_type"),
+                    ytelseType = it.getEnum("ytelse_type"),
                     vurderingPerioder = hentSamordningVurderingPerioder(it.getLong("id")),
                 )
             }
@@ -83,7 +83,7 @@ class SamordningYtelseVurderingRepositoryImpl(private val connection: DBConnecti
             }
             setRowMapper {
                 SamordningYtelse(
-                    ytelseType = it.getString("ytelse_type"),
+                    ytelseType = it.getEnum("ytelse_type"),
                     ytelsePerioder = hentSamordningYtelsePerioder(it.getLong("id")),
                     kilde = it.getString("kilde"),
                     saksRef = it.getStringOrNull("saks_ref")
@@ -133,7 +133,7 @@ class SamordningYtelseVurderingRepositoryImpl(private val connection: DBConnecti
             val vurderingId = connection.executeReturnKey(vurderingQuery) {
                 setParams {
                     setLong(1, vurderingerId)
-                    setString(2, vurdering.ytelseType)
+                    setEnumName(2, vurdering.ytelseType)
                 }
             }
 
@@ -180,7 +180,7 @@ class SamordningYtelseVurderingRepositoryImpl(private val connection: DBConnecti
                 """.trimIndent()
             val ytelseId = connection.executeReturnKey(ytelseQuery) {
                 setParams {
-                    setString(1, ytelse.ytelseType)
+                    setEnumName(1, ytelse.ytelseType)
                     setLong(2, ytelserId)
                     setString(3, ytelse.kilde)
                     setString(4, ytelse.saksRef)

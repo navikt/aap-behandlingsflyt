@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering
 
+import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Aktør
@@ -9,6 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelser
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -87,7 +89,7 @@ class SamordningYtelseVurderingService(
             }
             samordningYtelser.add(
                 SamordningYtelse(
-                    ytelseType = ytelse.ytelse,
+                    ytelseType = konverterFraForeldrePengerDomene(ytelse),
                     ytelsePerioder = ytelsePerioder,
                     kilde = ytelse.kildesystem,
                     saksRef = ytelse.saksnummer.toString()
@@ -106,7 +108,7 @@ class SamordningYtelseVurderingService(
         // Sykepenger har ikke saksref, benytter samme som i vår for noe tracing
         samordningYtelser.add(
             SamordningYtelse(
-                ytelseType = sykepengerYtelse,
+                ytelseType = Ytelse.SYKEPENGER, // TODO, korrekt?
                 ytelsePerioder = ytelsePerioder,
                 kilde = sykepengerKilde,
                 saksRef = saksNummer
@@ -115,6 +117,18 @@ class SamordningYtelseVurderingService(
 
         return samordningYtelser
     }
+
+    private fun konverterFraForeldrePengerDomene(ytelse: no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelse) =
+        when (ytelse.ytelse) {
+            Ytelser.PLEIEPENGER_SYKT_BARN -> TODO()
+            Ytelser.PLEIEPENGER_NÆRSTÅENDE -> Ytelse.PLEIEPENGER_NÆR_FAMILIE
+            Ytelser.OMSORGSPENGER -> Ytelse.OMSORGSPENGER
+            Ytelser.OPPLÆRINGSPENGER -> Ytelse.OPPLÆRINGSPENGER
+            Ytelser.ENGANGSTØNAD -> TODO()
+            Ytelser.FORELDREPENGER -> Ytelse.FORELDREPENGER
+            Ytelser.SVANGERSKAPSPENGER -> Ytelse.SVANGERSKAPSPENGER
+            Ytelser.FRISINN -> TODO()
+        }
 
     companion object : Informasjonskravkonstruktør {
         override fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {

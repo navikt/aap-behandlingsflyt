@@ -7,13 +7,12 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
-import org.slf4j.LoggerFactory
 import java.net.URI
-
-private val logger = LoggerFactory.getLogger(ForeldrepengerGateway::class.java)
 
 /**
  * Henter alle ytelser i fpabakus
+ *
+ * TODO: har disse en offisiel Swagger noe steD?
  */
 class ForeldrepengerGateway {
     private val url = URI.create(requiredConfigForKey("integrasjon.foreldrepenger.url") + "/hent-ytelse-vedtak")
@@ -36,12 +35,8 @@ class ForeldrepengerGateway {
     }
 
     fun hentVedtakYtelseForPerson(request: ForeldrepengerRequest): ForeldrepengerResponse {
-        try {
-            val result = query(request)
-            return result
-        } catch (e : Exception) {
-            logger.error("Feil ved henting av ytelser i foreldrepenger.", e)
-            throw RuntimeException("Feil ved henting av ytelser i foreldrepenger: ${e.message}")
-        }
+        val result = query(request)
+        return result
+
     }
 }
