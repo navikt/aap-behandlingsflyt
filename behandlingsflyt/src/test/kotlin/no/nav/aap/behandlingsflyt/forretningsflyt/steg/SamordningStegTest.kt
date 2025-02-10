@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
@@ -14,6 +15,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurdering
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -32,18 +36,51 @@ class SamordningStegTest {
     fun `om det finnes tilfeller av samordning med Sykepenger, Svangerskapspenger, Pleiepenger, skal det opprettes et avklaringsbehov`(
         ytelse: Ytelse
     ) {
-        val steg = settOppRessurser(ytelse)
+        val inMemorySamordningYtelseVurderingRepository = InMemorySamordningYtelseVurderingRepository()
+        val steg = settOppRessurser(ytelse, inMemorySamordningYtelseVurderingRepository)
 
         val res = steg.utfør(
             kontekst = FlytKontekstMedPerioder(
                 sakId = SakId(0),
                 behandlingId = BehandlingId(0),
-                behandlingType = TypeBehandling.Førstegangsbehandling,
-                perioderTilVurdering = setOf()
+                behandlingType = TypeBehandling.Revurdering,
+                perioderTilVurdering = setOf(
+                    Vurdering(
+                        type = VurderingType.REVURDERING,
+                        årsaker = listOf(ÅrsakTilBehandling.MOTTATT_MELDEKORT),
+                        periode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
+                    )
+                )
             )
         )
 
         assertThat(res).isEqualTo(FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_GRADERING))
+
+        inMemorySamordningYtelseVurderingRepository.lagreVurderinger(
+            BehandlingId(0), listOf(
+                SamordningVurdering(
+                    ytelseType = ytelse,
+                    vurderingPerioder = listOf()
+                )
+            )
+        )
+
+        val res2 = steg.utfør(
+            kontekst = FlytKontekstMedPerioder(
+                sakId = SakId(0),
+                behandlingId = BehandlingId(0),
+                behandlingType = TypeBehandling.Revurdering,
+                perioderTilVurdering = setOf(
+                    Vurdering(
+                        type = VurderingType.REVURDERING,
+                        årsaker = listOf(ÅrsakTilBehandling.MOTTATT_MELDEKORT),
+                        periode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
+                    )
+                )
+            )
+        )
+
+        assertThat(res2).isEqualTo(Fullført)
     }
 
     @ParameterizedTest
@@ -53,7 +90,7 @@ class SamordningStegTest {
         mode = EnumSource.Mode.MATCH_ANY
     )
     fun `foreldrepenger, omsorgspenger, opplæringspenger avklares automatisk`(ytelse: Ytelse) {
-        val steg = settOppRessurser(ytelse)
+        val steg = settOppRessurser(ytelse, InMemorySamordningYtelseVurderingRepository())
 
         val res = steg.utfør(
             kontekst = FlytKontekstMedPerioder(
@@ -67,8 +104,10 @@ class SamordningStegTest {
         assertThat(res).isEqualTo(Fullført)
     }
 
-    private fun settOppRessurser(ytelse: Ytelse): SamordningSteg {
-        val samordningYtelseVurderingRepository = InMemorySamordningYtelseVurderingRepository()
+    private fun settOppRessurser(
+        ytelse: Ytelse, inMemorySamordningYtelseVurderingRepository: InMemorySamordningYtelseVurderingRepository
+    ): SamordningSteg {
+        val samordningYtelseVurderingRepository = inMemorySamordningYtelseVurderingRepository
         val steg = SamordningSteg(
             samordningService = SamordningService(
                 samordningYtelseVurderingRepository = samordningYtelseVurderingRepository,
