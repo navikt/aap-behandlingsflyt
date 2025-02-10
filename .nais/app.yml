@@ -97,6 +97,7 @@ spec:
         - application: azure-token-generator # Ikke i prod :)
           namespace: aura
           cluster: dev-gcp
+        - application: api
     outbound:
       external:
         - host: pdl-api.dev-fss-pub.nais.io
