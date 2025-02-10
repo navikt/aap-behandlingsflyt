@@ -36,7 +36,7 @@ class SamordningYtelseVurderingService(
         val eksisterendeData = samordningYtelseVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
         val samordningYtelser = mapTilSamordningYtelse(foreldrepenger, sykepenger, sak.saksnummer.toString())
 
-        if (harEndingerIYtelser(eksisterendeData, samordningYtelser)) {
+        if (harEndringerIYtelser(eksisterendeData, samordningYtelser)) {
             samordningYtelseVurderingRepository.lagreYtelser(kontekst.behandlingId, samordningYtelser)
             return Informasjonskrav.Endret.ENDRET
         }
@@ -63,7 +63,7 @@ class SamordningYtelseVurderingService(
         )
     }
 
-    private fun harEndingerIYtelser(
+    private fun harEndringerIYtelser(
         eksisterende: SamordningYtelseVurderingGrunnlag?,
         samordningYtelser: List<SamordningYtelse>
     ): Boolean {

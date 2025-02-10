@@ -36,35 +36,19 @@ class SamordningStegTest {
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
         )
 
-//        samordningYtelseVurderingRepository.lagreYtelser(
-//            BehandlingId(0), listOf(
-//                SamordningYtelse(
-//                    ytelseType = Ytelse.SYKEPENGER,
-//                    ytelsePerioder = listOf(
-//                        SamordningYtelsePeriode(
-//                            periode = Periode(LocalDate.now().minusYears(1), LocalDate.now()),
-//                            gradering = Prosent(50),
-//                            kronesum = 1234
-//                        )
-//                    ),
-//                    kilde = "xxxx",
-//                    saksRef = "xxx"
-//                )
-//            )
-//        )
-
-        samordningYtelseVurderingRepository.lagreVurderinger(
+        samordningYtelseVurderingRepository.lagreYtelser(
             BehandlingId(0), listOf(
-                SamordningVurdering(
+                SamordningYtelse(
                     ytelseType = Ytelse.SYKEPENGER,
-                    vurderingPerioder = listOf(
-                        SamordningVurderingPeriode(
-                            Periode(
-                                LocalDate.now().minusWeeks(1),
-                                LocalDate.now()
-                            ), Prosent(50), 0
+                    ytelsePerioder = listOf(
+                        SamordningYtelsePeriode(
+                            periode = Periode(LocalDate.now().minusYears(1), LocalDate.now()),
+                            gradering = Prosent(50),
+                            kronesum = 1234
                         )
-                    )
+                    ),
+                    kilde = "xxxx",
+                    saksRef = "xxx"
                 )
             )
         )

@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsev
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 
-data class ForeldrepengerRequest (
+data class ForeldrepengerRequest(
     val ident: Aktør,
     val periode: Periode,
 )
@@ -15,7 +15,7 @@ data class ForeldrepengerResponse(
 /**
  * [Kilde for denne](https://github.com/navikt/fp-abakus/blob/master/kontrakt-vedtak/src/main/java/no/nav/abakus/vedtak/ytelse/Ytelser.java#L3)
  *
- * @param Mulige verdier:
+ * @param ytelseStatus Mulige verdier: UNDER_BEHANDLING_LØPENDE,AVSLUTTET,UKJENT.
  */
 data class Ytelse(
     val ytelse: Ytelser,

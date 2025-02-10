@@ -7,6 +7,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import org.slf4j.LoggerFactory
 import java.net.URI
 
 /**
@@ -17,6 +18,7 @@ import java.net.URI
 class ForeldrepengerGateway {
     private val url = URI.create(requiredConfigForKey("integrasjon.foreldrepenger.url") + "/hent-ytelse-vedtak")
     val config = ClientConfig(scope = requiredConfigForKey("integrasjon.foreldrepenger.scope"))
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
@@ -31,12 +33,12 @@ class ForeldrepengerGateway {
             )
         )
         val response: List<Ytelse> = requireNotNull(client.post(uri = url, request = httpRequest))
+        logger.info("Fikk respons fra FP-abakus med lengde ${response.size}.")
         return ForeldrepengerResponse(response)
     }
 
     fun hentVedtakYtelseForPerson(request: ForeldrepengerRequest): ForeldrepengerResponse {
         val result = query(request)
         return result
-
     }
 }
