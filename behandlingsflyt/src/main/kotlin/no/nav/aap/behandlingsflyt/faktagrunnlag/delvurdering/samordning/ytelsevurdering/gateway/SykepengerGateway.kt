@@ -29,10 +29,6 @@ class SykepengerGateway {
     }
 
     fun hentYtelseSykepenger(request: SykepengerRequest): SykepengerResponse {
-        try {
-            return query(request)
-        } catch (e : Exception) {
-            throw RuntimeException("Feil ved henting av ytelser i sykepenger: ${e.message}")
-        }
+        return query(request)
     }
 }

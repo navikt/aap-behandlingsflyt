@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.BestillLegeerkl�
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.ForhåndsvisBrevRequest
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.HentStatusLegeerklæring
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.PurringLegeerklæring
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringStatusResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.MeldingStatusType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektRequest
@@ -305,7 +306,15 @@ object FakeServers : AutoCloseable {
                 val dialogmeldingId = UUID.randomUUID()
                 legeerklæringStatuser.add(
                     LegeerklæringStatusResponse(
-                        dialogmeldingId, MeldingStatusType.OK, "", dto.behandlerRef, dto.behandlerNavn, UUID.randomUUID().toString(), dto.saksnummer, LocalDateTime.now(), dto.fritekst
+                        dialogmeldingId,
+                        MeldingStatusType.OK,
+                        "",
+                        dto.behandlerRef,
+                        dto.behandlerNavn,
+                        UUID.randomUUID().toString(),
+                        dto.saksnummer,
+                        LocalDateTime.now(),
+                        dto.fritekst
                     )
                 )
                 call.respond(dialogmeldingId.toString())
@@ -315,7 +324,15 @@ object FakeServers : AutoCloseable {
                 val dialogmeldingId = UUID.randomUUID()
                 legeerklæringStatuser.add(
                     LegeerklæringStatusResponse(
-                        dialogmeldingId, MeldingStatusType.OK, "", "behandlerRef", "behandlerNavn", UUID.randomUUID().toString(), "saksnummer", LocalDateTime.now(), "fritekst"
+                        dialogmeldingId,
+                        MeldingStatusType.OK,
+                        "",
+                        "behandlerRef",
+                        "behandlerNavn",
+                        UUID.randomUUID().toString(),
+                        "saksnummer",
+                        LocalDateTime.now(),
+                        "fritekst"
                     )
                 )
                 call.respond(dialogmeldingId.toString())
@@ -334,7 +351,7 @@ object FakeServers : AutoCloseable {
                 val fnr = 12341234123
                 val navn = "Ronny Råkjører"
 
-                val brev =  """
+                val brev = """
                     Forespørsel om legeerklæring ved arbeidsuførhet\n
                     Gjelder pasient: $navn., $fnr.\n
                     Nav trenger opplysninger fra deg vedrørende din pasient. Du kan utelate opplysninger som etter din vurdering faller utenfor formålet.\n
@@ -530,7 +547,10 @@ object FakeServers : AutoCloseable {
         """.trimIndent()
 
         install(ContentNegotiation) {
-            jackson()
+            jackson {
+                registerModule(JavaTimeModule())
+                disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+            }
         }
         install(StatusPages) {
             exception<Throwable> { call, cause ->
@@ -547,8 +567,14 @@ object FakeServers : AutoCloseable {
         }
         routing {
             post("/utbetalte-perioder-aap") {
-                call.receive<String>()
-                call.respond(spResponse)
+                val x = call.receive<SykepengerRequest>()
+                if (x.personidentifikatorer.contains("11111111111")) {
+                    call.respond(spResponse)
+                } else {
+call.respond("""
+    {"utbetaltePerioder": []}
+""".trimIndent())
+                }
             }
         }
     }
@@ -612,7 +638,10 @@ object FakeServers : AutoCloseable {
         """.trimIndent()
 
         install(ContentNegotiation) {
-            jackson()
+            jackson {
+                registerModule(JavaTimeModule())
+                disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+            }
         }
         install(StatusPages) {
             exception<Throwable> { call, cause ->

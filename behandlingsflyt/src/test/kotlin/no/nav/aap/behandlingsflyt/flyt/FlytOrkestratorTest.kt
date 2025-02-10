@@ -1330,7 +1330,7 @@ class FlytOrkestratorTest {
         util.ventPåSvar()
 
         val sak = hentSak(ident, periode)
-        var behandling = hentBehandling(sak.id)
+        val behandling = hentBehandling(sak.id)
         assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
 
         val stegHistorikk = behandling.stegHistorikk()
