@@ -83,7 +83,7 @@ public enum class Definisjon(
         kode = AvklaringsbehovKode.`5097`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.KVALITETSSIKRING,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
+        løsesAv = listOf(Rolle.KVALITETSSIKRER)
     ),
     FASTSETT_ARBEIDSEVNE(
         kode = AvklaringsbehovKode.`5004`,
