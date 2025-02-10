@@ -94,6 +94,8 @@ spec:
               roles:
                   - "bestill-varselbrev"
         - application: paw-patrol
+        - application: produksjonsstyring
+        - application: postmottak
         - application: azure-token-generator # Ikke i prod :)
           namespace: aura
           cluster: dev-gcp
