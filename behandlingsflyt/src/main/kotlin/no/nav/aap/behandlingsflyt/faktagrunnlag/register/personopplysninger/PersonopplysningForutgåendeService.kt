@@ -19,7 +19,7 @@ class PersonopplysningForutgåendeService private constructor(
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
-        val personopplysninger = personopplysningGateway.innhent(sak.person, true) ?: error("fødselsdato skal alltid eksistere i PDL")
+        val personopplysninger = personopplysningGateway.innhentMedHistorikk(sak.person) ?: error("fødselsdato skal alltid eksistere i PDL")
         val eksisterendeData = personopplysningForutgåendeRepository.hentHvisEksisterer(kontekst.behandlingId)
 
         if (personopplysninger != eksisterendeData?.brukerPersonopplysning) {

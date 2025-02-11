@@ -2,18 +2,21 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningForutgåendeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikk
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikkGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.RelatertPersonopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.RelatertePersonopplysninger
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Statsborgerskap
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
 
+// Mangler full støtte for barn / relaterte personer
 class PersonopplysningForutgåendeRepositoryImpl(
     private val connection: DBConnection, private val personRepository: PersonRepository
 ) : PersonopplysningForutgåendeRepository {
@@ -24,7 +27,7 @@ class PersonopplysningForutgåendeRepositoryImpl(
         }
     }
 
-    override fun hentHvisEksisterer(behandlingId: BehandlingId): PersonopplysningGrunnlag? {
+    override fun hentHvisEksisterer(behandlingId: BehandlingId): PersonopplysningMedHistorikkGrunnlag? {
         return connection.queryFirstOrNull(
             """
             SELECT g.bruker_personopplysning_id, g.personopplysninger_id
@@ -41,12 +44,12 @@ class PersonopplysningForutgåendeRepositoryImpl(
         }
     }
 
-    private fun mapGrunnlag(row: Row): PersonopplysningGrunnlag? {
+    private fun mapGrunnlag(row: Row): PersonopplysningMedHistorikkGrunnlag? {
         val brukerPersonopplysningId = row.getLongOrNull("BRUKER_PERSONOPPLYSNING_ID")
         if (brukerPersonopplysningId == null) {
             return null
         }
-        return PersonopplysningGrunnlag(
+        return PersonopplysningMedHistorikkGrunnlag(
             brukerPersonopplysning = hentBrukerPersonopplysninger(brukerPersonopplysningId),
             relatertePersonopplysninger = hentRelatertePersonopplysninger(row.getLongOrNull("PERSONOPPLYSNINGER_ID"))
         )
@@ -76,7 +79,7 @@ class PersonopplysningForutgåendeRepositoryImpl(
             })
     }
 
-    private fun hentBrukerPersonopplysninger(id: Long): Personopplysning {
+    private fun hentBrukerPersonopplysninger(id: Long): PersonopplysningMedHistorikk {
         return connection.queryFirst(
             """
             SELECT *
@@ -88,20 +91,18 @@ class PersonopplysningForutgåendeRepositoryImpl(
                 setLong(1, id)
             }
             setRowMapper { row ->
-                Personopplysning(
+                PersonopplysningMedHistorikk(
                     id = id,
                     fødselsdato = Fødselsdato(row.getLocalDate("FODSELSDATO")),
                     dødsdato = row.getLocalDateOrNull("DODSDATO")?.let { Dødsdato(it) },
-                    land = row.getString("LAND"),
-                    gyldigFraOgMed = row.getLocalDateOrNull("GYLDIGFRAOGMED"),
-                    gyldigTilOgMed = row.getLocalDateOrNull("GYLDIGTILOGMED"),
-                    status = row.getEnum("STATUS")
+                    statsborgerskap = hentStatsborgerskap(row.getLong("LANDKODER_ID")),
+                    statuser = hentStatuser(row.getLong("STATUSER_ID"))
                 )
             }
         }
     }
 
-    override fun lagre(behandlingId: BehandlingId, personopplysning: Personopplysning) {
+    override fun lagre(behandlingId: BehandlingId, personopplysning: PersonopplysningMedHistorikk) {
         val personopplysningGrunnlag = hentHvisEksisterer(behandlingId)
 
         if (personopplysningGrunnlag?.brukerPersonopplysning == personopplysning) return
@@ -110,15 +111,31 @@ class PersonopplysningForutgåendeRepositoryImpl(
             deaktiverEksisterende(behandlingId)
         }
 
+        val landkoderId = connection.executeReturnKey("INSERT INTO BRUKER_LAND_FORUTGAAENDE_AGGREGAT DEFAULT VALUES"){}
+        connection.executeBatch("INSERT INTO BRUKER_LAND_FORUTGAAENDE (LAND, GYLDIGFRAOGMED, GYLDIGTILOGMED, LANDKODER_ID) VALUES (?, ?, ?, ?)", personopplysning.statsborgerskap){
+            setParams {
+                setString(1, it.land)
+                setLocalDate(2, it.gyldigFraOgMed)
+                setLocalDate(3, it.gyldigTilOgMed)
+                setLong(4, landkoderId)
+            }
+        }
+
+        val statuserId = connection.executeReturnKey("INSERT INTO BRUKER_STATUSER_FORUTGAAENDE_AGGREGAT DEFAULT VALUES"){}
+        connection.executeBatch("INSERT INTO BRUKER_STATUSER_FORUTGAAENDE (STATUS, STATUSER_ID) VALUES (?, ?)", personopplysning.statuser){
+            setParams {
+                setEnumName(1, it)
+                setLong(2, statuserId)
+            }
+        }
+
         val personopplysningId =
-            connection.executeReturnKey("INSERT INTO BRUKER_PERSONOPPLYSNING_FORUTGAAENDE (FODSELSDATO, DODSDATO, LAND, GYLDIGFRAOGMED, GYLDIGTILOGMED, STATUS) VALUES (?, ?, ?, ?, ?, ?)") {
+            connection.executeReturnKey("INSERT INTO BRUKER_PERSONOPPLYSNING_FORUTGAAENDE (FODSELSDATO, DODSDATO, LANDKODER_ID, STATUSER_ID) VALUES (?, ?, ?, ?, ?)") {
                 setParams {
                     setLocalDate(1, personopplysning.fødselsdato.toLocalDate())
                     setLocalDate(2, personopplysning.dødsdato?.toLocalDate())
-                    setString(3, personopplysning.land)
-                    setLocalDate(4, personopplysning.gyldigFraOgMed)
-                    setLocalDate(5, personopplysning.gyldigTilOgMed)
-                    setEnumName(6, personopplysning.status)
+                    setLong(3, landkoderId)
+                    setLong(4, statuserId)
                 }
             }
 
@@ -127,6 +144,42 @@ class PersonopplysningForutgåendeRepositoryImpl(
                 setLong(1, behandlingId.toLong())
                 setLong(2, personopplysningId)
                 setLong(3, personopplysningGrunnlag?.relatertePersonopplysninger?.id)
+            }
+        }
+    }
+
+    private fun hentStatsborgerskap(id: Long): List<Statsborgerskap> {
+        return connection.queryList(
+            """
+                SELECT * FROM BRUKER_LAND_FORUTGAAENDE
+                WHERE LANDKODER_ID = ?
+            """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, id)
+            }
+            setRowMapper { row ->
+                Statsborgerskap(
+                    land = row.getString("LAND"),
+                    gyldigFraOgMed = row.getLocalDateOrNull("GYLDIGFRAOGMED"),
+                    gyldigTilOgMed = row.getLocalDateOrNull("GYLDIGTILOGMED"),
+                )
+            }
+        }
+    }
+
+    private fun hentStatuser(id: Long): List<PersonStatus> {
+        return connection.queryList(
+            """
+                SELECT * FROM BRUKER_STATUSER_FORUTGAAENDE
+                WHERE STATUSER_ID = ?
+            """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, id)
+            }
+            setRowMapper { row ->
+                row.getEnum("STATUS")
             }
         }
     }

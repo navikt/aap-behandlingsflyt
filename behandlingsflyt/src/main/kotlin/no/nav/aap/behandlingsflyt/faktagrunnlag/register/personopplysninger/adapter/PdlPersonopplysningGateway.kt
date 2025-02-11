@@ -3,6 +3,8 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.ada
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikk
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Statsborgerskap
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.IdentVariables
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlPersoninfoDataResponse
@@ -37,10 +39,8 @@ object PdlPersonopplysningGateway : PersonopplysningGateway {
         }))
     }
 
-    override fun innhent(person: Person, historikk: Boolean): Personopplysning? {
-        val query = if (historikk) PERSON_QUERY_HISTORIKK else PERSON_QUERY
-
-        val request = PdlRequest(query, IdentVariables(person.aktivIdent().identifikator))
+    override fun innhent(person: Person): Personopplysning? {
+        val request = PdlRequest(PERSON_QUERY, IdentVariables(person.aktivIdent().identifikator))
         val response: PdlPersoninfoDataResponse = query(request)
 
         val foedselsdato = PdlParser.utledFødselsdato(response.data?.hentPerson?.foedselsdato)
@@ -58,6 +58,31 @@ object PdlPersonopplysningGateway : PersonopplysningGateway {
             gyldigFraOgMed = gyldigFom,
             gyldigTilOgMed = response.data?.hentPerson?.statsborgerskap?.firstOrNull()?.gyldigTilOgMed,
             status = status
+        )
+    }
+
+    override fun innhentMedHistorikk(person: Person): PersonopplysningMedHistorikk? {
+        val request = PdlRequest(PERSON_QUERY_HISTORIKK, IdentVariables(person.aktivIdent().identifikator))
+        val response: PdlPersoninfoDataResponse = query(request)
+
+        val foedselsdato = PdlParser.utledFødselsdato(response.data?.hentPerson?.foedselsdato)
+            ?: return null
+
+        val statuser = requireNotNull(response.data?.hentPerson?.folkeregisterpersonstatus?.map { it.status }) // TODO: Her mangler vi periode hvor disse er gyldige
+        val statsborgerskap = requireNotNull(response.data?.hentPerson?.statsborgerskap?.map {
+            Statsborgerskap(
+                land = it.land,
+                gyldigFraOgMed = it.gyldigFraOgMed,
+                gyldigTilOgMed = it.gyldigTilOgMed
+            )
+        })
+
+        return PersonopplysningMedHistorikk(
+            id = 0, // Setter no bs her for å få det gjennom
+            fødselsdato = foedselsdato,
+            dødsdato = response.data?.hentPerson?.doedsfall?.firstOrNull()?.doedsdato?.let { Dødsdato.parse(it) },
+            statsborgerskap = statsborgerskap,
+            statuser = statuser
         )
     }
 }
@@ -86,17 +111,17 @@ val PERSON_QUERY = """
 """.trimIndent()
 
 val PERSON_QUERY_HISTORIKK = """
-    query($ident: ID!, historikk=true){
+    query($ident: ID!){
       hentPerson(ident: $ident) 
         foedselsdato {
     	  foedselsdato
         },
-        statsborgerskap {
+        statsborgerskap(historikk: true){
             land,
             gyldigFraOgMed,
             gyldigTilOgMed
         },
-        folkeregisterpersonstatus {
+        folkeregisterpersonstatus(historikk: true){
             status
         }
       }

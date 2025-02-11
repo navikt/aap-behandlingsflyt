@@ -21,7 +21,7 @@ class MedlemskapForutgåendeRepository(private val connection: DBConnection) {
 
         connection.execute(
             """
-            INSERT INTO MEDLEMSKAP_FORUTGAAENDE_UNNTAK_GRUNNLAG (BEHANDLING_ID, MEDLEMSKAP_UNNTAK_PERSON_ID) VALUES (?, ?)
+            INSERT INTO MEDLEMSKAP_FORUTGAAENDE_UNNTAK_GRUNNLAG (BEHANDLING_ID, MEDLEMSKAP_FORUTGAAENDE_UNNTAK_PERSON_ID) VALUES (?, ?)
         """.trimIndent()
         ) {
             setParams {
@@ -33,7 +33,7 @@ class MedlemskapForutgåendeRepository(private val connection: DBConnection) {
         unntak.forEach {
             connection.execute(
                 """
-                INSERT INTO MEDLEMSKAP_FORUTGAAENDE_UNNTAK (STATUS, STATUS_ARSAK, MEDLEM, PERIODE, GRUNNLAG, LOVVALG, HELSEDEL, MEDLEMSKAP_UNNTAK_PERSON_ID, LOVVALGSLAND) VALUES (?, ?, ?, ?::daterange ,?, ?, ?, ?, ?)
+                INSERT INTO MEDLEMSKAP_FORUTGAAENDE_UNNTAK (STATUS, STATUS_ARSAK, MEDLEM, PERIODE, GRUNNLAG, LOVVALG, HELSEDEL, MEDLEMSKAP_FORUTGAAENDE_UNNTAK_PERSON_ID, LOVVALGSLAND) VALUES (?, ?, ?, ?::daterange ,?, ?, ?, ?, ?)
             """.trimIndent()
             ) {
                 setParams {
@@ -54,7 +54,7 @@ class MedlemskapForutgåendeRepository(private val connection: DBConnection) {
 
     private fun hentMedlemskapUnntak(behandlingsMedlemskapUnntak: Long): List<Segment<Unntak>> {
         return connection.queryList(
-            """SELECT * FROM MEDLEMSKAP_FORUTGAAENDE_UNNTAK WHERE MEDLEMSKAP_UNNTAK_PERSON_ID = ?""".trimIndent()
+            """SELECT * FROM MEDLEMSKAP_FORUTGAAENDE_UNNTAK WHERE MEDLEMSKAP_FORUTGAAENDE_UNNTAK_PERSON_ID = ?""".trimIndent()
         ) {
             setParams {
                 setLong(1, behandlingsMedlemskapUnntak)
@@ -79,12 +79,12 @@ class MedlemskapForutgåendeRepository(private val connection: DBConnection) {
 
     fun hentHvisEksisterer(behandlingId: BehandlingId): MedlemskapUnntakGrunnlag? {
         val behandlingsMedlemskapUnntak = connection.queryFirstOrNull(
-            "SELECT MEDLEMSKAP_UNNTAK_PERSON_ID FROM MEDLEMSKAP_FORUTGAAENDE_UNNTAK_GRUNNLAG WHERE BEHANDLING_ID=? AND AKTIV=TRUE"
+            "SELECT MEDLEMSKAP_FORUTGAAENDE_UNNTAK_PERSON_ID FROM MEDLEMSKAP_FORUTGAAENDE_UNNTAK_GRUNNLAG WHERE BEHANDLING_ID=? AND AKTIV=TRUE"
         ) {
             setParams {
                 setLong(1, behandlingId.toLong())
             }
-            setRowMapper { it.getLong("MEDLEMSKAP_UNNTAK_PERSON_ID") }
+            setRowMapper { it.getLong("MEDLEMSKAP_FORUTGAAENDE_UNNTAK_PERSON_ID") }
         }
         if (behandlingsMedlemskapUnntak == null) {
             return null
