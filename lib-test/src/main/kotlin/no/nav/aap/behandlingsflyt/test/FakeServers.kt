@@ -567,14 +567,17 @@ object FakeServers : AutoCloseable {
         }
         routing {
             post("/utbetalte-perioder-aap") {
-                val x = call.receive<SykepengerRequest>()
-                if (x.personidentifikatorer.contains("11111111111")) {
+                val request = call.receive<SykepengerRequest>()
+                if (request.personidentifikatorer.contains("11111111111")) {
                     call.respond(spResponse)
                 } else {
-call.respond("""
+                    call.respond(
+                        """
     {"utbetaltePerioder": []}
-""".trimIndent())
+""".trimIndent()
+                    )
                 }
+                call.respond(spResponse)
             }
         }
     }
