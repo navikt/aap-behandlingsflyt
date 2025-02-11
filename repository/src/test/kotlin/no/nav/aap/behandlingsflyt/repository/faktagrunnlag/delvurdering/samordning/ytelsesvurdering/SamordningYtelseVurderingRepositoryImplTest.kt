@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering
 
+import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
@@ -44,7 +45,7 @@ class SamordningYtelseVurderingRepositoryImplTest {
                 behandlingId = behandling.id,
                 samordningYtelser = listOf(
                     SamordningYtelse(
-                        ytelseType = "SYKEPENGER",
+                        ytelseType = Ytelse.SYKEPENGER,
                         ytelsePerioder = listOf(
                             SamordningYtelsePeriode(
                                 periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3)),
@@ -66,7 +67,7 @@ class SamordningYtelseVurderingRepositoryImplTest {
 
         // Lagre vurdering
         val vurdering = SamordningVurdering(
-            ytelseType = "SYKERPENGER",
+            ytelseType = Ytelse.SYKEPENGER,
             vurderingPerioder = listOf(
                 SamordningVurderingPeriode(
                     periode = Periode(LocalDate.now().minusYears(3), LocalDate.now().minusDays(1)),
@@ -94,7 +95,7 @@ class SamordningYtelseVurderingRepositoryImplTest {
                 ytelserId = 1,
                 ytelser = listOf(
                     SamordningYtelse(
-                        ytelseType = "SYKEPENGER",
+                        ytelseType = Ytelse.SYKEPENGER,
                         ytelsePerioder = listOf(
                             SamordningYtelsePeriode(
                                 periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3)),
@@ -127,7 +128,7 @@ class SamordningYtelseVurderingRepositoryImplTest {
 
         // Lagre vurdering
         val vurdering = SamordningVurdering(
-            ytelseType = "SYKERPENGER",
+            ytelseType = Ytelse.SYKEPENGER,
             vurderingPerioder = listOf(
                 SamordningVurderingPeriode(
                     periode = Periode(LocalDate.now().minusYears(3), LocalDate.now().minusDays(1)),

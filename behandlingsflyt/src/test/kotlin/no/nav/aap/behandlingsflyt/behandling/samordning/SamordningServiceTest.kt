@@ -87,7 +87,7 @@ class SamordningServiceTest {
             behandlingId,
             listOf(
                 SamordningVurdering(
-                    "myYtelse",
+                    Ytelse.SYKEPENGER,
                     listOf(
                         SamordningVurderingPeriode(
                             Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
@@ -105,7 +105,7 @@ class SamordningServiceTest {
             behandlingId,
             listOf(
                 SamordningYtelse(
-                    "myYtelse",
+                    Ytelse.SYKEPENGER,
                     listOf(
                         SamordningYtelsePeriode(
                             Periode(LocalDate.now(), LocalDate.now().plusDays(5)),

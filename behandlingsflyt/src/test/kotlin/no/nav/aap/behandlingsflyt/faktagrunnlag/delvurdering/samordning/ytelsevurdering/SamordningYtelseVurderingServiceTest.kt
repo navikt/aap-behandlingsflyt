@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering
 
+import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
@@ -55,7 +56,7 @@ class SamordningYtelseVurderingServiceTest {
             behandlingId,
             listOf(
                 SamordningVurdering(
-                    "myYtelse",
+                    Ytelse.SYKEPENGER,
                     listOf(
                         SamordningVurderingPeriode(
                             Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
@@ -73,7 +74,7 @@ class SamordningYtelseVurderingServiceTest {
             behandlingId,
             listOf(
                 SamordningYtelse(
-                    "myYtelse",
+                    Ytelse.SYKEPENGER,
                     listOf(
                         SamordningYtelsePeriode(
                             Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
