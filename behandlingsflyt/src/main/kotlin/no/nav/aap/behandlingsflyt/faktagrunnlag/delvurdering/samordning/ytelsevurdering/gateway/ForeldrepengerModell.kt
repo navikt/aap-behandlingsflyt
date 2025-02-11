@@ -40,7 +40,6 @@ data class Aktør(
     val verdi: String
 )
 
-
 // Kopiert herfra: https://github.com/navikt/fp-abakus/blob/master/kontrakt-vedtak/src/main/java/no/nav/abakus/vedtak/ytelse/Ytelser.java#L3
 enum class Ytelser {
     /**

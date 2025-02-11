@@ -76,7 +76,6 @@ class SamordningYtelseVurderingService(
         saksNummer: String
     ): List<SamordningYtelse> {
         val samordningYtelser = mutableListOf<SamordningYtelse>()
-        val sykepengerYtelse = "SYKEPENGER"
         val sykepengerKilde = "INFOTRYGDSPEIL"
 
         for (ytelse in foreldrepenger.ytelser) {
@@ -108,7 +107,7 @@ class SamordningYtelseVurderingService(
         // Sykepenger har ikke saksref, benytter samme som i vår for noe tracing
         samordningYtelser.add(
             SamordningYtelse(
-                ytelseType = Ytelse.SYKEPENGER, // TODO, korrekt?
+                ytelseType = Ytelse.SYKEPENGER,
                 ytelsePerioder = ytelsePerioder,
                 kilde = sykepengerKilde,
                 saksRef = saksNummer
