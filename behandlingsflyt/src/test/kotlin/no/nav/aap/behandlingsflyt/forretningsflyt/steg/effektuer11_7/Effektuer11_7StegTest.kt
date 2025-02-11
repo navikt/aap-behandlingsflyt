@@ -42,6 +42,7 @@ import no.nav.aap.komponenter.verdityper.TimerArbeid
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertInstanceOf
+import org.junit.jupiter.api.assertThrows
 import java.math.BigDecimal
 import java.time.Duration
 import java.time.Instant
@@ -51,14 +52,13 @@ import java.util.*
 class Effektuer11_7StegTest {
     @Test
     fun `ny sak uten brudd er alltid fullført`() {
-        val inMemoryUnderveisRepository = InMemoryUnderveisRepository()
-        val steg = effektuer11_7steg(inMemoryUnderveisRepository)
+        val steg = effektuer11_7steg()
 
         val sak = nySak()
 
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
-        inMemoryUnderveisRepository.lagre(
+        InMemoryUnderveisRepository.lagre(
             behandling.id,
             underveisperioder = listOf(
                 underveisperiode(sak)
@@ -74,14 +74,13 @@ class Effektuer11_7StegTest {
 
     @Test
     fun `ny sak med ikke-relevante brudd er alltid fullført`() {
-        val inMemoryUnderveisRepository = InMemoryUnderveisRepository()
-        val steg = effektuer11_7steg(inMemoryUnderveisRepository)
+        val steg = effektuer11_7steg()
 
         val sak = nySak()
 
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
-        inMemoryUnderveisRepository.lagre(
+        InMemoryUnderveisRepository.lagre(
             behandling.id,
             underveisperioder = listOf(
                 underveisperiode(sak).copy(
@@ -103,9 +102,8 @@ class Effektuer11_7StegTest {
         val brevbestillingGateway = FakeBrevbestillingGateway()
         val clock = AdjustableClock(Instant.now())
 
-        val inMemoryUnderveisRepository = InMemoryUnderveisRepository()
         val steg = Effektuer11_7Steg(
-            underveisRepository = inMemoryUnderveisRepository,
+            underveisRepository = InMemoryUnderveisRepository,
             brevbestillingService = BrevbestillingService(
                 brevbestillingGateway = brevbestillingGateway,
                 brevbestillingRepository = InMemoryBrevbestillingRepository,
@@ -122,7 +120,7 @@ class Effektuer11_7StegTest {
 
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
-        inMemoryUnderveisRepository.lagre(
+        InMemoryUnderveisRepository.lagre(
             behandling.id,
             underveisperioder = listOf(
                 underveisperiode(sak).copy(
@@ -177,9 +175,8 @@ class Effektuer11_7StegTest {
         val clock = AdjustableClock(Instant.now().plus(Duration.ofDays(22)))
         val kontekst = kontekst(sak, behandling.id, TypeBehandling.Førstegangsbehandling)
 
-        val inMemoryUnderveisRepository = InMemoryUnderveisRepository()
         val steg = Effektuer11_7Steg(
-            underveisRepository = inMemoryUnderveisRepository,
+            underveisRepository = InMemoryUnderveisRepository,
             brevbestillingService = BrevbestillingService(
                 brevbestillingGateway = brevbestillingGateway,
                 brevbestillingRepository = InMemoryBrevbestillingRepository,
@@ -196,9 +193,9 @@ class Effektuer11_7StegTest {
             behandling = behandling,
             sak = sak,
             kontekst = kontekst,
-            brevbestillingGateway = brevbestillingGateway,
-            inMemoryUnderveisRepository = inMemoryUnderveisRepository
+            brevbestillingGateway = brevbestillingGateway
         )
+        InMemoryAvklaringsbehovRepository
 
         InMemoryAvklaringsbehovRepository.opprett(
             behandlingId = behandling.id,
@@ -215,14 +212,13 @@ class Effektuer11_7StegTest {
 
     @Test
     fun `brev er bestillt trenger manuell skriving av veileder`() {
-        val inMemoryUnderveisRepository = InMemoryUnderveisRepository()
-        val steg = effektuer11_7steg(inMemoryUnderveisRepository)
+        val steg = effektuer11_7steg()
 
         val sak = nySak()
 
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
-        inMemoryUnderveisRepository.lagre(
+        InMemoryUnderveisRepository.lagre(
             behandling.id,
             underveisperioder = listOf(
                 underveisperiode(sak).copy(
@@ -268,8 +264,8 @@ class Effektuer11_7StegTest {
         periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
     )
 
-    private fun effektuer11_7steg(inMemoryUnderveisRepository: InMemoryUnderveisRepository) = Effektuer11_7Steg(
-        underveisRepository = inMemoryUnderveisRepository,
+    private fun effektuer11_7steg() = Effektuer11_7Steg(
+        underveisRepository = InMemoryUnderveisRepository,
         brevbestillingService = BrevbestillingService(
             brevbestillingGateway = FakeBrevbestillingGateway(),
             brevbestillingRepository = InMemoryBrevbestillingRepository,
@@ -327,10 +323,9 @@ class Effektuer11_7StegTest {
         behandling: Behandling,
         sak: Sak,
         kontekst: FlytKontekstMedPerioder,
-        brevbestillingGateway: FakeBrevbestillingGateway,
-        inMemoryUnderveisRepository: InMemoryUnderveisRepository
+        brevbestillingGateway: FakeBrevbestillingGateway
     ) {
-        inMemoryUnderveisRepository.lagre(
+        InMemoryUnderveisRepository.lagre(
             behandling.id,
             underveisperioder = listOf(
                 underveisperiode(sak).copy(

@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 
-class InMemorySamordningRepository : SamordningRepository {
+object InMemorySamordningRepository : SamordningRepository {
     val grunnlag = ConcurrentHashMap<BehandlingId, SamordningGrunnlag>()
     private val id = AtomicLong(0)
 
