@@ -19,7 +19,7 @@ enum class Vilkårtype(
     ),
     SYKDOMSVILKÅRET(
         kode = "AAP-5",
-        spesielleInnvilgelsesÅrsaker = listOf(Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG),
+        spesielleInnvilgelsesÅrsaker = listOf(Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG, Innvilgelsesårsak.STUDENT),
         avslagsårsaker = listOf(
             Avslagsårsak.MANGLENDE_DOKUMENTASJON
         ),
@@ -27,7 +27,7 @@ enum class Vilkårtype(
     ),
     BISTANDSVILKÅRET(
         kode = "AAP-6",
-        spesielleInnvilgelsesÅrsaker = listOf(),
+        spesielleInnvilgelsesÅrsaker = listOf(Innvilgelsesårsak.STUDENT),
         avslagsårsaker = listOf(
             Avslagsårsak.MANGLENDE_DOKUMENTASJON
         ),
