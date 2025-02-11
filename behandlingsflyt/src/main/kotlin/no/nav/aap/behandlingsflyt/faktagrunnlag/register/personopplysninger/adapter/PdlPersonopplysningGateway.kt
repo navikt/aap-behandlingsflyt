@@ -116,12 +116,12 @@ val PERSON_QUERY_HISTORIKK = """
         foedselsdato {
     	  foedselsdato
         },
-        statsborgerskap(historikk: true){
+        statsborgerskap(historikk: true) {
             land,
             gyldigFraOgMed,
             gyldigTilOgMed
         },
-        folkeregisterpersonstatus(historikk: true){
+        folkeregisterpersonstatus(historikk: true) {
             status
         }
       }

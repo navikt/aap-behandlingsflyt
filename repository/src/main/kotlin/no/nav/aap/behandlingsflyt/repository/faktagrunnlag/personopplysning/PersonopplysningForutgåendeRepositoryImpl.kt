@@ -130,7 +130,7 @@ class PersonopplysningForutgåendeRepositoryImpl(
         }
 
         val personopplysningId =
-            connection.executeReturnKey("INSERT INTO BRUKER_PERSONOPPLYSNING_FORUTGAAENDE (FODSELSDATO, DODSDATO, LANDKODER_ID, STATUSER_ID) VALUES (?, ?, ?, ?, ?)") {
+            connection.executeReturnKey("INSERT INTO BRUKER_PERSONOPPLYSNING_FORUTGAAENDE (FODSELSDATO, DODSDATO, LANDKODER_ID, STATUSER_ID) VALUES (?, ?, ?, ?)") {
                 setParams {
                     setLocalDate(1, personopplysning.fødselsdato.toLocalDate())
                     setLocalDate(2, personopplysning.dødsdato?.toLocalDate())
