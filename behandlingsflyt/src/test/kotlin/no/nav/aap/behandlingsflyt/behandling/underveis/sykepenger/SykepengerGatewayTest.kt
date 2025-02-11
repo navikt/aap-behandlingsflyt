@@ -13,7 +13,7 @@ class SykepengerGatewayTest {
     fun kanHenteInformasjonFraSykepenger() {
         val spGateway = SykepengerGateway()
         val request = SykepengerRequest(
-            setOf("12345678910"),
+            setOf("11111111111"),
             LocalDate.now(),
             LocalDate.now().plusDays(1),
         )
