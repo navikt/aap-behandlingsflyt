@@ -28,14 +28,46 @@ public const val SKRIV_BREV_KODE: String = "5050"
 public const val AVKLAR_LOVVALG_MEDLEMSKAP_KODE: String = "5017"
 public const val VENTE_PÅ_FIRST_EFFEKTUER_11_7_KODE: String = "5018"
 
+@Suppress("EnumEntryName")
 public enum class AvklaringsbehovKode {
+    /**
+     * [MANUELT_SATT_PÅ_VENT_KODE]
+     */
     `9001`,
+
+    /**
+     * [BESTILL_BREV_KODE]
+     */
     `9002`,
+
+    /**
+     * [BESTILL_LEGEERKLÆRING_KODE]
+     */
     `9003`,
+
+    /**
+     * [AVKLAR_STUDENT_KODE]
+     */
     `5001`,
+
+    /**
+     * [AVKLAR_SYKDOM_KODE]
+     */
     `5003`,
+
+    /**
+     * [FASTSETT_ARBEIDSEVNE_KODE]
+     */
     `5004`,
+
+    /**
+     * [FRITAK_MELDEPLIKT_KODE]
+     */
     `5005`,
+
+    /**
+     * [AVKLAR_BISTANDSBEHOV_KODE]
+     */
     `5006`,
     `5007`,
     `5008`,
@@ -52,5 +84,9 @@ public enum class AvklaringsbehovKode {
     `5097`,
     `5098`,
     `5099`,
+
+    /**
+     * [SKRIV_BREV_KODE]
+     */
     `5050`,
 }
