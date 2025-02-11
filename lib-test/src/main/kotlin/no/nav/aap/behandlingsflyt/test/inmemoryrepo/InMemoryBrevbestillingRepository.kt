@@ -1,10 +1,6 @@
-package no.nav.aap.behandlingsflyt.flyt.testutil
+package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Brevbestilling
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.*
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicLong

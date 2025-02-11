@@ -23,5 +23,8 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersjon")
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersjon")
     testImplementation("org.junit.jupiter:junit-jupiter-params:$junitVersjon")
+    testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
+    testImplementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+    testImplementation(project(":lib-test"))
     testImplementation("org.assertj:assertj-core:3.27.3")
 }

@@ -1,10 +1,6 @@
-package no.nav.aap.behandlingsflyt.flyt.testutil
+package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOperasjonerRepository
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Endring
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.*
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
@@ -13,7 +9,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import java.time.LocalDate
 import java.util.concurrent.atomic.AtomicLong
 
-object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository, AvklaringsbehovOperasjonerRepository {
+object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
+    AvklaringsbehovOperasjonerRepository {
 
     private val idSeq = AtomicLong(10000)
     private val memory = HashMap<BehandlingId, AvklaringsbehovHolder>()

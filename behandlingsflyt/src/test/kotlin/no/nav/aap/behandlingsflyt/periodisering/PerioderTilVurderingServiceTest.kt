@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.periodisering
 
-import no.nav.aap.behandlingsflyt.flyt.testutil.InMemoryBehandlingRepository
-import no.nav.aap.behandlingsflyt.flyt.testutil.InMemorySakRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId

@@ -45,9 +45,7 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource) {
                     )
                 }
 
-                respond(
-                    responsDto
-                )
+                respond(responsDto)
             }
         }
         route("/{referanse}/grunnlag/beregning/yrkesskade") {
@@ -89,9 +87,7 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(dataSource: DataSource) {
                     )
                 }
 
-                respond(
-                    responsDto
-                )
+                respond(responsDto)
             }
         }
     }

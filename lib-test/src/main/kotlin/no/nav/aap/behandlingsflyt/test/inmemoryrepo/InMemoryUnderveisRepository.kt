@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.flyt.testutil
+package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository

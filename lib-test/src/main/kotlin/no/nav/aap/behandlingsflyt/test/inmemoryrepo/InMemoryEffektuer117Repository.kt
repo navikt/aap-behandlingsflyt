@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.flyt.testutil
+package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7Forhåndsvarsel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7Grunnlag

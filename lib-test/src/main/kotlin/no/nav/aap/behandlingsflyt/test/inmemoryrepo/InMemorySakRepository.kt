@@ -1,12 +1,8 @@
-package no.nav.aap.behandlingsflyt.flyt.testutil
+package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakFlytRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.*
 import no.nav.aap.komponenter.type.Periode
 import java.util.concurrent.atomic.AtomicLong
 
@@ -28,7 +24,12 @@ object InMemorySakRepository : SakRepository, SakFlytRepository {
             } else {
                 val id = SakId(idSeq.andIncrement)
                 val sak =
-                    Sak(id = id, saksnummer = Saksnummer.valueOf(id.id), person = person, rettighetsperiode = periode)
+                    Sak(
+                        id = id,
+                        saksnummer = Saksnummer.valueOf(id.id),
+                        person = person,
+                        rettighetsperiode = periode
+                    )
                 memory.put(id, sak)
 
                 return sak
