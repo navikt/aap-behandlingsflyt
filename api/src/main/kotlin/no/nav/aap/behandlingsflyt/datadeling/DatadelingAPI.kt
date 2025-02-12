@@ -16,28 +16,29 @@ import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.datadelingAPI(datasource: DataSource) {
     route("/api/datadeling") {
-        route("/sakerByFnr"){
-            post<Unit, List<SakStatus>, SakerRequest>{ request, body ->
-                val person = datasource.transaction(readOnly = true) { conn ->
+        route("/sakerByFnr") {
+            post<Unit, List<SakStatus>, SakerRequest> { request, body ->
+                val person = datasource.transaction { conn ->
                     val repositoryProvider = RepositoryProvider(conn)
                     val personRepository = repositoryProvider.provide<PersonRepository>()
                     personRepository.finn(Ident(body.personidentifikatorer.first()))
                 }
-                if (person == null) {
+                if (person != null) {
+                    val saker = datasource.transaction { conn ->
+                        val repositoryProvider = RepositoryProvider(conn)
+                        val sakRepository = repositoryProvider.provide<SakRepository>()
+                        sakRepository.finnSakerFor(person)
+                    }
+                    respond(saker.map { sak ->
+                        SakStatus.fromKelvin(
+                            sak.id.toString(),
+                            sak.status(),
+                            Maksimum.Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.tom),
+                        )
+                    })
+                } else {
                     respond(emptyList())
                 }
-                val saker = datasource.transaction(readOnly = true) { conn ->
-                    val repositoryProvider = RepositoryProvider(conn)
-                    val sakRepository = repositoryProvider.provide<SakRepository>()
-                    sakRepository.finnSakerFor(person!!)
-                }
-                respond(saker.map { sak ->
-                    SakStatus(
-                        sak.id.toString(),
-                        SakStatus.VedtakStatus.valueOf(sak.status().toString()),
-                        Maksimum.Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.tom),
-                    )
-                })
 
             }
         }
@@ -112,4 +113,3 @@ fun NormalOpenAPIRoute.datadelingAPI(datasource: DataSource) {
         }
     }
 }
-

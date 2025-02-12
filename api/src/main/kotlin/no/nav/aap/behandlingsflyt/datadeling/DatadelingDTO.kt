@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.datadeling
 
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import java.time.LocalDate
 
 data class SakStatus(
@@ -8,6 +9,28 @@ data class SakStatus(
     val periode: Maksimum.Periode,
     val kilde: String = "Kelvin"
 ) {
+    companion object {
+        fun fromKelvin(saksnummer: String, status: Status, periode: Maksimum.Periode): SakStatus {
+            return SakStatus(
+                sakId = saksnummer,
+                vedtakStatusKode = SakStatus.fromStatus(status),
+                periode = periode,
+            )
+        }
+
+        private fun fromStatus(status: Status): SakStatus.VedtakStatus {
+            return when (status) {
+                Status.AVSLUTTET -> VedtakStatus.AVSLU
+                Status.UTREDES -> VedtakStatus.FORDE
+                Status.LØPENDE -> VedtakStatus.GODKJ
+                Status.OPPRETTET -> VedtakStatus.OPPRE
+                else -> {
+                    VedtakStatus.UKJENT
+                }
+            }
+        }
+    }
+
     enum class VedtakStatus {
         AVSLU,
         FORDE,
@@ -19,6 +42,28 @@ data class SakStatus(
         OPPRE,
         REGIS,
         UKJENT
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as SakStatus
+
+        if (sakId != other.sakId) return false
+        if (vedtakStatusKode != other.vedtakStatusKode) return false
+        if (periode != other.periode) return false
+        if (kilde != other.kilde) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = sakId.hashCode()
+        result = 31 * result + vedtakStatusKode.hashCode()
+        result = 31 * result + periode.hashCode()
+        result = 31 * result + kilde.hashCode()
+        return result
     }
 }
 
@@ -47,7 +92,26 @@ data class Maksimum(
     class Periode(
         val fraOgMedDato: LocalDate?,
         val tilOgMedDato: LocalDate?
-    )
+    ){
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as Periode
+
+            if (fraOgMedDato != other.fraOgMedDato) return false
+            if (tilOgMedDato != other.tilOgMedDato) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = fraOgMedDato?.hashCode() ?: 0
+            result = 31 * result + (tilOgMedDato?.hashCode() ?: 0)
+            return result
+        }
+
+    }
 
     data class UtbetalingMedMer(
         val reduksjon: Reduksjon? = null,
