@@ -2,7 +2,11 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.sykepenger
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerRequest
+import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.Fakes
+import no.nav.aap.behandlingsflyt.test.modell.TestPerson
+import no.nav.aap.komponenter.type.Periode
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -11,14 +15,25 @@ import java.time.LocalDate
 class SykepengerGatewayTest {
     @Test
     fun kanHenteInformasjonFraSykepenger() {
+        val person = TestPerson(
+            sykepenger = listOf(
+                TestPerson.Sykepenger(
+                    grad = 50,
+                    Periode(LocalDate.now(), LocalDate.now().plusDays(1))
+                )
+            )
+        )
+        FakePersoner.leggTil(person)
+
         val spGateway = SykepengerGateway()
         val request = SykepengerRequest(
-            setOf("11111111111"),
+            person.identer.map { it.identifikator }.toSet(),
             LocalDate.now(),
             LocalDate.now().plusDays(1),
         )
 
         val response = spGateway.hentYtelseSykepenger(request)
-        assertEquals(50, response.utbetaltePerioder[3].grad)
+        assertThat(response.utbetaltePerioder).hasSize(1)
+        assertEquals(50, response.utbetaltePerioder[0].grad)
     }
 }

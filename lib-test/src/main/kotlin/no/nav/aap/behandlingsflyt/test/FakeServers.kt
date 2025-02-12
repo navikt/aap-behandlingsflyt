@@ -20,6 +20,8 @@ import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.ForhåndsvisBrev
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.HentStatusLegeerklæring
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.PurringLegeerklæring
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerRequest
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.UtbetaltePerioder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringStatusResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.MeldingStatusType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektRequest
@@ -79,12 +81,12 @@ import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.verdityper.Beløp
-import org.intellij.lang.annotations.Language
-import org.slf4j.LoggerFactory
 import no.nav.aap.tilgang.BehandlingTilgangRequest
 import no.nav.aap.tilgang.JournalpostTilgangRequest
 import no.nav.aap.tilgang.SakTilgangRequest
 import no.nav.aap.tilgang.TilgangResponse
+import org.intellij.lang.annotations.Language
+import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
 import java.net.URI
 import java.time.LocalDate
@@ -534,18 +536,6 @@ object FakeServers : AutoCloseable {
     }
 
     private fun Application.spFake() {
-        @Language("JSON")
-        val spResponse = """
-        {
-            "utbetaltePerioder": [
-                { "personidentifikator": "11111111111", "grad": 100, "fom": "2018-01-01", "tom": "2018-01-10" },
-                { "personidentifikator": "11111111112", "grad": 70, "fom": "2018-01-11", "tom": "2018-01-20" },
-                { "personidentifikator": "11111111113", "grad": 60, "fom": "2018-01-21", "tom": "2018-01-31" },
-                { "personidentifikator": "11111111114", "grad": 50, "fom": "2018-02-01", "tom": "2018-02-10" }
-            ]
-        }
-        """.trimIndent()
-
         install(ContentNegotiation) {
             jackson {
                 registerModule(JavaTimeModule())
@@ -560,7 +550,7 @@ object FakeServers : AutoCloseable {
                     cause
                 )
                 call.respond(
-                    status = HttpStatusCode.Companion.InternalServerError,
+                    status = HttpStatusCode.InternalServerError,
                     message = ErrorRespons(cause.message)
                 )
             }
@@ -568,16 +558,21 @@ object FakeServers : AutoCloseable {
         routing {
             post("/utbetalte-perioder-aap") {
                 val request = call.receive<SykepengerRequest>()
-                if (request.personidentifikatorer.contains("11111111111")) {
-                    call.respond(spResponse)
-                } else {
+                val fakePerson = FakePersoner.hentPerson(request.personidentifikatorer.first())
+                if (fakePerson?.sykepenger != null) {
                     call.respond(
-                        """
-    {"utbetaltePerioder": []}
-""".trimIndent()
-                    )
+                        SykepengerResponse(
+                            utbetaltePerioder = fakePerson.sykepenger.map {
+                                UtbetaltePerioder(
+                                    fom = it.periode.fom,
+                                    tom = it.periode.tom,
+                                    grad = it.grad
+                                )
+                            }
+                        ))
+                } else {
+                    call.respond(SykepengerResponse(emptyList()))
                 }
-                call.respond(spResponse)
             }
         }
     }

@@ -4,21 +4,23 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.adapter.InstitusjonsoppholdJSON
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.test.FiktivtNavnGenerator
-import no.nav.aap.behandlingsflyt.test.FødselsnummerGenerator
-import no.nav.aap.behandlingsflyt.test.PersonNavn
-import no.nav.aap.komponenter.verdityper.Beløp
-import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlFolkeregisterPersonStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlStatsborgerskap
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonStatus
+import no.nav.aap.behandlingsflyt.test.FiktivtNavnGenerator
+import no.nav.aap.behandlingsflyt.test.FødselsnummerGenerator
+import no.nav.aap.behandlingsflyt.test.PersonNavn
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.Prosent
 import java.time.LocalDate
 import java.time.Year
 
 fun genererIdent(fødselsdato: LocalDate): Ident {
     return Ident(FødselsnummerGenerator.Builder().fodselsdato(fødselsdato).buildAndGenerate())
 }
+
 fun defaultInntekt(): List<InntektPerÅr> {
     return (1..10).map { InntektPerÅr(Year.now().minusYears(it.toLong()), Beløp("400000.0")) }
 }
@@ -34,8 +36,11 @@ class TestPerson(
     val uføre: Prosent? = Prosent(0),
     inntekter: List<InntektPerÅr> = defaultInntekt(),
     val personStatus: PdlFolkeregisterPersonStatus = PdlFolkeregisterPersonStatus(PersonStatus.bosatt),
-    val statsborgerskap: PdlStatsborgerskap = PdlStatsborgerskap("NOR", LocalDate.now().minusYears(5), null)
+    val statsborgerskap: PdlStatsborgerskap = PdlStatsborgerskap("NOR", LocalDate.now().minusYears(5), null),
+    val sykepenger: List<Sykepenger>? = null
 ) {
+    data class Sykepenger(val grad: Number, val periode: Periode)
+
     private val inntekter: MutableList<InntektPerÅr> = inntekter.toMutableList()
 
     fun inntekter(): List<InntektPerÅr> {
