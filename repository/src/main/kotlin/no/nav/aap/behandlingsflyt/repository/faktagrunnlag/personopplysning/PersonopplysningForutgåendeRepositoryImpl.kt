@@ -1,0 +1,211 @@
+package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning
+
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningForutgåendeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikk
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikkGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.RelatertPersonopplysning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.RelatertePersonopplysninger
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Statsborgerskap
+import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonStatus
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
+import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.dbconnect.Row
+import no.nav.aap.lookup.repository.Factory
+
+// Mangler full støtte for barn / relaterte personer
+class PersonopplysningForutgåendeRepositoryImpl(
+    private val connection: DBConnection, private val personRepository: PersonRepository
+) : PersonopplysningForutgåendeRepository {
+
+    companion object : Factory<PersonopplysningForutgåendeRepositoryImpl> {
+        override fun konstruer(connection: DBConnection): PersonopplysningForutgåendeRepositoryImpl {
+            return PersonopplysningForutgåendeRepositoryImpl(connection, PersonRepositoryImpl(connection))
+        }
+    }
+
+    override fun hentHvisEksisterer(behandlingId: BehandlingId): PersonopplysningMedHistorikkGrunnlag? {
+        return connection.queryFirstOrNull(
+            """
+            SELECT g.bruker_personopplysning_id, g.personopplysninger_id
+            FROM PERSONOPPLYSNING_FORUTGAAENDE_GRUNNLAG g
+            WHERE g.AKTIV AND g.BEHANDLING_ID = ?
+            """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+            setRowMapper { row ->
+                mapGrunnlag(row)
+            }
+        }
+    }
+
+    private fun mapGrunnlag(row: Row): PersonopplysningMedHistorikkGrunnlag? {
+        val brukerPersonopplysningId = row.getLongOrNull("BRUKER_PERSONOPPLYSNING_ID")
+        if (brukerPersonopplysningId == null) {
+            return null
+        }
+        return PersonopplysningMedHistorikkGrunnlag(
+            brukerPersonopplysning = hentBrukerPersonopplysninger(brukerPersonopplysningId),
+            relatertePersonopplysninger = hentRelatertePersonopplysninger(row.getLongOrNull("PERSONOPPLYSNINGER_ID"))
+        )
+    }
+
+    private fun hentRelatertePersonopplysninger(id: Long?): RelatertePersonopplysninger? {
+        if (id == null) {
+            return null
+        }
+
+        return RelatertePersonopplysninger(
+            id = id, personopplysninger = connection.queryList(
+                """
+            SELECT * FROM PERSONOPPLYSNING_FORUTGAAENDE 
+            WHERE PERSONOPPLYSNINGER_ID = ?
+        """.trimIndent()
+            ) {
+                setParams {
+                    setLong(1, id)
+                }
+                setRowMapper {
+                    RelatertPersonopplysning(
+                        person = personRepository.hent(it.getLong("PERSON_ID")),
+                        fødselsdato = Fødselsdato(it.getLocalDate("FODSELSDATO")),
+                        dødsdato = it.getLocalDateOrNull("DODSDATO")?.let { Dødsdato(it) })
+                }
+            })
+    }
+
+    private fun hentBrukerPersonopplysninger(id: Long): PersonopplysningMedHistorikk {
+        return connection.queryFirst(
+            """
+            SELECT *
+            FROM BRUKER_PERSONOPPLYSNING_FORUTGAAENDE
+            WHERE ID = ?
+            """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, id)
+            }
+            setRowMapper { row ->
+                PersonopplysningMedHistorikk(
+                    id = id,
+                    fødselsdato = Fødselsdato(row.getLocalDate("FODSELSDATO")),
+                    dødsdato = row.getLocalDateOrNull("DODSDATO")?.let { Dødsdato(it) },
+                    statsborgerskap = hentStatsborgerskap(row.getLong("LANDKODER_ID")),
+                    statuser = hentStatuser(row.getLong("STATUSER_ID"))
+                )
+            }
+        }
+    }
+
+    override fun lagre(behandlingId: BehandlingId, personopplysning: PersonopplysningMedHistorikk) {
+        val personopplysningGrunnlag = hentHvisEksisterer(behandlingId)
+
+        if (personopplysningGrunnlag?.brukerPersonopplysning == personopplysning) return
+
+        if (personopplysningGrunnlag != null) {
+            deaktiverEksisterende(behandlingId)
+        }
+
+        val landkoderId = connection.executeReturnKey("INSERT INTO BRUKER_LAND_FORUTGAAENDE_AGGREGAT DEFAULT VALUES"){}
+        connection.executeBatch("INSERT INTO BRUKER_LAND_FORUTGAAENDE (LAND, GYLDIGFRAOGMED, GYLDIGTILOGMED, LANDKODER_ID) VALUES (?, ?, ?, ?)", personopplysning.statsborgerskap){
+            setParams {
+                setString(1, it.land)
+                setLocalDate(2, it.gyldigFraOgMed)
+                setLocalDate(3, it.gyldigTilOgMed)
+                setLong(4, landkoderId)
+            }
+        }
+
+        val statuserId = connection.executeReturnKey("INSERT INTO BRUKER_STATUSER_FORUTGAAENDE_AGGREGAT DEFAULT VALUES"){}
+        connection.executeBatch("INSERT INTO BRUKER_STATUSER_FORUTGAAENDE (STATUS, STATUSER_ID) VALUES (?, ?)", personopplysning.statuser){
+            setParams {
+                setEnumName(1, it)
+                setLong(2, statuserId)
+            }
+        }
+
+        val personopplysningId =
+            connection.executeReturnKey("INSERT INTO BRUKER_PERSONOPPLYSNING_FORUTGAAENDE (FODSELSDATO, DODSDATO, LANDKODER_ID, STATUSER_ID) VALUES (?, ?, ?, ?)") {
+                setParams {
+                    setLocalDate(1, personopplysning.fødselsdato.toLocalDate())
+                    setLocalDate(2, personopplysning.dødsdato?.toLocalDate())
+                    setLong(3, landkoderId)
+                    setLong(4, statuserId)
+                }
+            }
+
+        connection.execute("INSERT INTO PERSONOPPLYSNING_FORUTGAAENDE_GRUNNLAG (BEHANDLING_ID, BRUKER_PERSONOPPLYSNING_ID, PERSONOPPLYSNINGER_ID) VALUES (?, ?, ?)") {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setLong(2, personopplysningId)
+                setLong(3, personopplysningGrunnlag?.relatertePersonopplysninger?.id)
+            }
+        }
+    }
+
+    private fun hentStatsborgerskap(id: Long): List<Statsborgerskap> {
+        return connection.queryList(
+            """
+                SELECT * FROM BRUKER_LAND_FORUTGAAENDE
+                WHERE LANDKODER_ID = ?
+            """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, id)
+            }
+            setRowMapper { row ->
+                Statsborgerskap(
+                    land = row.getString("LAND"),
+                    gyldigFraOgMed = row.getLocalDateOrNull("GYLDIGFRAOGMED"),
+                    gyldigTilOgMed = row.getLocalDateOrNull("GYLDIGTILOGMED"),
+                )
+            }
+        }
+    }
+
+    private fun hentStatuser(id: Long): List<PersonStatus> {
+        return connection.queryList(
+            """
+                SELECT * FROM BRUKER_STATUSER_FORUTGAAENDE
+                WHERE STATUSER_ID = ?
+            """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, id)
+            }
+            setRowMapper { row ->
+                row.getEnum("STATUS")
+            }
+        }
+    }
+
+    private fun deaktiverEksisterende(behandlingId: BehandlingId) {
+        connection.execute("UPDATE PERSONOPPLYSNING_FORUTGAAENDE_GRUNNLAG SET AKTIV = FALSE WHERE AKTIV AND BEHANDLING_ID = ?") {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+            setResultValidator { rowsUpdated ->
+                require(rowsUpdated == 1)
+            }
+        }
+    }
+
+    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+        require(fraBehandling != tilBehandling)
+        connection.execute("""
+            INSERT INTO PERSONOPPLYSNING_FORUTGAAENDE_GRUNNLAG (BEHANDLING_ID, BRUKER_PERSONOPPLYSNING_ID, PERSONOPPLYSNINGER_ID) 
+            SELECT ?, BRUKER_PERSONOPPLYSNING_ID, PERSONOPPLYSNINGER_ID FROM PERSONOPPLYSNING_FORUTGAAENDE_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?
+        """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, tilBehandling.toLong())
+                setLong(2, fraBehandling.toLong())
+            }
+        }
+    }
+}

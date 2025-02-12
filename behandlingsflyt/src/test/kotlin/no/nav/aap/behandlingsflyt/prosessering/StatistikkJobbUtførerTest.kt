@@ -56,6 +56,7 @@ import no.nav.aap.behandlingsflyt.pip.PipRepository
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningForutgåendeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.lås.TaSkriveLåsRepositoryImpl
@@ -105,6 +106,7 @@ class StatistikkJobbUtførerTest {
             .register(TilkjentYtelseRepositoryImpl::class)
             .register(AktivitetspliktRepositoryImpl::class)
             .register(BrevbestillingRepositoryImpl::class)
+            .register<PersonopplysningForutgåendeRepositoryImpl>()
             .status()
         GatewayRegistry.register<PdlBarnGateway>()
             .register<PdlIdentGateway>()
