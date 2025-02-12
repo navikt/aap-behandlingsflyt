@@ -5,9 +5,9 @@ import no.nav.aap.behandlingsflyt.flyt.testutil.DummyBehandlingHendelseService
 import no.nav.aap.behandlingsflyt.flyt.testutil.DummyInformasjonskravGrunnlag
 import no.nav.aap.behandlingsflyt.flyt.testutil.DummyStegKonstruktør
 import no.nav.aap.behandlingsflyt.flyt.testutil.DummyVentebehovEvaluererService
-import no.nav.aap.behandlingsflyt.flyt.testutil.InMemoryAvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.flyt.testutil.InMemoryBehandlingRepository
-import no.nav.aap.behandlingsflyt.flyt.testutil.InMemorySakRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Førstegangsbehandling
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon

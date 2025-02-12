@@ -2,8 +2,8 @@ plugins {
     id("behandlingsflyt.conventions")
 }
 
-val komponenterVersjon = "1.0.135"
-val ktorVersion = "3.1.0"
+val komponenterVersjon = "1.0.134"
+val ktorVersion = "3.0.3"
 val tilgangVersjon = "1.0.2"
 val junitVersjon = "5.11.4"
 
@@ -23,5 +23,8 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersjon")
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersjon")
     testImplementation("org.junit.jupiter:junit-jupiter-params:$junitVersjon")
+    testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
+    testImplementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+    testImplementation(project(":lib-test"))
     testImplementation("org.assertj:assertj-core:3.27.3")
 }
