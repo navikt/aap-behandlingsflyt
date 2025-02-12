@@ -52,7 +52,7 @@ object Revurdering : BehandlingType {
             .medSteg(steg = StartBehandlingSteg, informasjonskrav = listOf(SøknadService))
             .medSteg(
                 steg = VurderLovvalgSteg,
-                informasjonskrav = listOf(PersonopplysningService, LovvalgService, PersonopplysningForutgåendeService, ForutgåendeMedlemskapService),
+                informasjonskrav = listOf(PersonopplysningService, LovvalgService),
                 årsakRelevanteForSteg = listOf(
                     ÅrsakTilBehandling.MOTTATT_SØKNAD,
                     ÅrsakTilBehandling.REVURDER_MEDLEMSKAP
@@ -109,7 +109,7 @@ object Revurdering : BehandlingType {
             )
             .medSteg(
                 steg = VurderForutgåendeMedlemskapSteg,
-                informasjonskrav = listOf(),
+                informasjonskrav = listOf(PersonopplysningForutgåendeService, ForutgåendeMedlemskapService),
                 årsakRelevanteForSteg = listOf(
                     ÅrsakTilBehandling.MOTTATT_SØKNAD,
                     ÅrsakTilBehandling.REVURDER_MEDLEMSKAP
