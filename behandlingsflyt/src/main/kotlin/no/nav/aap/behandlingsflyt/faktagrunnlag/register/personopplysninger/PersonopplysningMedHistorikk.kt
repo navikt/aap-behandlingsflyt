@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonStatus
 import java.time.LocalDate
 
-class PersonopplysningMedHistorikk(
+data class PersonopplysningMedHistorikk(
     val fødselsdato: Fødselsdato,
     val id: Long? = null,
     val dødsdato: Dødsdato? = null,

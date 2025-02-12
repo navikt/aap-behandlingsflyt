@@ -20,7 +20,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
-import org.slf4j.LoggerFactory
 import java.time.YearMonth
 
 class ForutgåendeMedlemskapService private constructor(
@@ -29,8 +28,6 @@ class ForutgåendeMedlemskapService private constructor(
     private val medlemskapForutgåendeRepository: MedlemskapForutgåendeRepository,
     private val grunnlagRepository: MedlemskapArbeidInntektForutgåendeRepository
 ) : Informasjonskrav {
-    val logger = LoggerFactory.getLogger(ForutgåendeMedlemskapService::class.java)
-
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
 
@@ -42,7 +39,6 @@ class ForutgåendeMedlemskapService private constructor(
         lagre(kontekst.behandlingId, medlemskapPerioder, arbeidGrunnlag, inntektGrunnlag)
 
         val nyeData = grunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
-        logger.info("hentet ut nylig lagrede data: $nyeData")
 
         return if (nyeData == eksisterendeData) IKKE_ENDRET else ENDRET
     }
