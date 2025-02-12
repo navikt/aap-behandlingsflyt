@@ -22,16 +22,23 @@ class PersonopplysningForutgåendeService private constructor(
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
-        val personopplysninger = personopplysningGateway.innhentMedHistorikk(sak.person) ?: error("fødselsdato skal alltid eksistere i PDL")
-        logger.info("hentet personopplysninger: $personopplysninger")
-        val eksisterendeData = personopplysningForutgåendeRepository.hentHvisEksisterer(kontekst.behandlingId)
 
-        if (personopplysninger != eksisterendeData?.brukerPersonopplysning) {
-            personopplysningForutgåendeRepository.lagre(kontekst.behandlingId, personopplysninger)
-            val nyeData = personopplysningForutgåendeRepository.hentHvisEksisterer(kontekst.behandlingId)
-            logger.info("hentet nye data fra PDL: $nyeData")
-            return ENDRET
+        try {
+            val personopplysninger = personopplysningGateway.innhentMedHistorikk(sak.person) ?: error("fødselsdato skal alltid eksistere i PDL")
+            logger.info("hentet personopplysninger: $personopplysninger")
+            val eksisterendeData = personopplysningForutgåendeRepository.hentHvisEksisterer(kontekst.behandlingId)
+
+            if (personopplysninger != eksisterendeData?.brukerPersonopplysning) {
+                personopplysningForutgåendeRepository.lagre(kontekst.behandlingId, personopplysninger)
+                val nyeData = personopplysningForutgåendeRepository.hentHvisEksisterer(kontekst.behandlingId)
+                logger.info("hentet nye data fra PDL: $nyeData")
+                return IKKE_ENDRET//return ENDRET
+            }
+
+        } catch (e: Exception) {
+            logger.info("feilet ved innhenting PDL: ${e.message}, stack: $e ")
         }
+
         return IKKE_ENDRET
     }
 
