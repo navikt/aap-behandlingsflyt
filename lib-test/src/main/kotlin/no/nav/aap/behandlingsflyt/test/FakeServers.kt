@@ -636,10 +636,7 @@ object FakeServers : AutoCloseable {
         """.trimIndent()
 
         install(ContentNegotiation) {
-            jackson {
-                registerModule(JavaTimeModule())
-                disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-            }
+            jackson()
         }
         install(StatusPages) {
             exception<Throwable> { call, cause ->

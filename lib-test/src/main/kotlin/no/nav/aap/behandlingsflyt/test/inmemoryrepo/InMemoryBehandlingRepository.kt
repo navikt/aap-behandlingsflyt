@@ -17,7 +17,6 @@ import java.util.concurrent.atomic.AtomicLong
 object InMemoryBehandlingRepository : BehandlingRepository, BehandlingFlytRepository {
     private val logger = LoggerFactory.getLogger(javaClass)
 
-
     private val idSeq = AtomicLong(10000)
     private val memory = HashMap<BehandlingId, Behandling>()
     private val lock = Object()
