@@ -87,7 +87,7 @@ class MedlemskapLovvalgVurderingService {
     private fun manglerStatsborgerskapIEØS(grunnlag: PersonopplysningGrunnlag): TilhørighetVurdering {
         val manglerEØS = grunnlag.brukerPersonopplysning.land !in enumValues<EØSLand>().map { it.name }
         val jsonGrunnlag = grunnlag.let { DefaultJsonMapper.toJson(it) } // TODO: Her må vi faktisk lande hva vi vil ha ut
-        return TilhørighetVurdering(listOf(Kilde.PDL), Indikasjon.UTENFOR_NORGE, "Mangler statsborgerskal i EØS", manglerEØS, jsonGrunnlag)
+        return TilhørighetVurdering(listOf(Kilde.PDL), Indikasjon.UTENFOR_NORGE, "Mangler statsborgerskap i EØS", manglerEØS, jsonGrunnlag)
     }
 
     private fun mottarSykepenger(grunnlag: MedlemskapArbeidInntektGrunnlag?): TilhørighetVurdering{

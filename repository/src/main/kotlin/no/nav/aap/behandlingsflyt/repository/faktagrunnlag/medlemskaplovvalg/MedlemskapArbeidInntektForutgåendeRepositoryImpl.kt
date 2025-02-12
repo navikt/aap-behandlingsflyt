@@ -1,35 +1,33 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapArbeidInntektGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapArbeidInntektGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøknadsTidspunkt
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunkt
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdOversikt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.Unntak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektForutgåendeRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
-import no.nav.aap.verdityper.dokument.JournalpostId
 
-class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection): MedlemskapArbeidInntektRepository {
-    companion object : Factory<MedlemskapArbeidInntektRepositoryImpl> {
-        override fun konstruer(connection: DBConnection): MedlemskapArbeidInntektRepositoryImpl {
-            return MedlemskapArbeidInntektRepositoryImpl(connection)
+class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: DBConnection):
+    MedlemskapArbeidInntektForutgåendeRepository {
+    companion object : Factory<MedlemskapArbeidInntektForutgåendeRepositoryImpl> {
+        override fun konstruer(connection: DBConnection): MedlemskapArbeidInntektForutgåendeRepositoryImpl {
+            return MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
         }
     }
 
-    override fun hentHvisEksisterer(behandlingId: BehandlingId): MedlemskapArbeidInntektGrunnlag? {
+    override fun hentHvisEksisterer(behandlingId: BehandlingId): ForutgåendeMedlemskapArbeidInntektGrunnlag? {
         val query = """
-            SELECT * FROM MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG WHERE behandling_id = ? and aktiv = true
+            SELECT * FROM FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG WHERE behandling_id = ? and aktiv = true
         """.trimIndent()
 
         return connection.queryFirstOrNull(query) {
@@ -37,7 +35,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 setLong(1, behandlingId.toLong())
             }
             setRowMapper {
-                MedlemskapArbeidInntektGrunnlag(
+                ForutgåendeMedlemskapArbeidInntektGrunnlag(
                     medlemskapGrunnlag = hentMedlemskapGrunnlag(it.getLongOrNull("medlemskap_unntak_person_id")),
                     inntekterINorgeGrunnlag = hentInntekterINorgeGrunnlag(it.getLongOrNull("inntekter_i_norge_id")),
                     arbeiderINorgeGrunnlag = hentArbeiderINorgeGrunnlag(it.getLongOrNull("arbeider_id")),
@@ -62,25 +60,24 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         }
     }
 
-    override fun lagreManuellVurdering(behandlingId: BehandlingId, manuellVurdering: ManuellVurderingForLovvalgMedlemskap){
+    override fun lagreManuellVurdering(behandlingId: BehandlingId, manuellVurdering: ManuellVurderingForForutgåendeMedlemskap){
         val grunnlagOppslag = hentGrunnlag(behandlingId)
         deaktiverGrunnlag(behandlingId)
 
         val manuellVurderingQuery = """
-            INSERT INTO LOVVALG_MEDLEMSKAP_MANUELL_VURDERING (tekstvurdering_lovvalg, lovvalgs_land, tekstvurdering_medlemskap, var_medlem_i_folketrygden) VALUES (?, ?, ?, ?)
+            INSERT INTO FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERING (BEGRUNNELSE, HAR_FORUTGAAENDE_MEDLEMSKAP, OPPFYLLER_UNNTAKS_VILKÅR) VALUES (?, ?, ?)
         """.trimIndent()
 
         val manuellVurderingId = connection.executeReturnKey(manuellVurderingQuery) {
             setParams {
-                setString(1, manuellVurdering.lovvalgVedSøknadsTidspunkt.begrunnelse)
-                setEnumName(2, manuellVurdering.lovvalgVedSøknadsTidspunkt.lovvalgsEØSLand)
-                setString(3, manuellVurdering.medlemskapVedSøknadsTidspunkt?.begrunnelse)
-                setBoolean(4, manuellVurdering.medlemskapVedSøknadsTidspunkt?.varMedlemIFolketrygd)
+                setString(1, manuellVurdering.begrunnelse)
+                setBoolean(2, manuellVurdering.harForutgåendeMedlemskap)
+                setBoolean(3, manuellVurdering.oppfyllerUnntaksVilkår)
             }
         }
 
         val grunnlagQuery = """
-            INSERT INTO MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG (behandling_id, arbeider_id, inntekter_i_norge_id, medlemskap_unntak_person_id, manuell_vurdering_id) VALUES (?, ?, ?, ?, ?)
+            INSERT INTO FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG (behandling_id, arbeider_id, inntekter_i_norge_id, medlemskap_unntak_person_id, manuell_vurdering_id) VALUES (?, ?, ?, ?, ?)
         """.trimIndent()
 
         connection.execute(grunnlagQuery) {
@@ -111,7 +108,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         val inntekterINorgeId = lagreArbeidsInntektGrunnlag(inntektGrunnlag)
 
         val grunnlagQuery = """
-            INSERT INTO MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG (behandling_id, arbeider_id, inntekter_i_norge_id, medlemskap_unntak_person_id, manuell_vurdering_id) VALUES (?, ?, ?, ?, ?)
+            INSERT INTO FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG (behandling_id, arbeider_id, inntekter_i_norge_id, medlemskap_unntak_person_id, manuell_vurdering_id) VALUES (?, ?, ?, ?, ?)
         """.trimIndent()
         connection.execute(grunnlagQuery) {
             setParams {
@@ -128,13 +125,13 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         if (arbeidGrunnlag.isEmpty()) return null
 
         val arbeiderQuery = """
-            INSERT INTO ARBEIDER DEFAULT VALUES
+            INSERT INTO ARBEIDER_FORUTGAAENDE DEFAULT VALUES
         """.trimIndent()
         val arbeiderId = connection.executeReturnKey(arbeiderQuery)
 
         for (forhold in arbeidGrunnlag) {
             val arbeidQuery = """
-                INSERT INTO ARBEID (identifikator, arbeidsforhold_kode, arbeider_id, startdato, sluttdato) VALUES (?, ?, ?, ?, ?)
+                INSERT INTO ARBEID_FORUTGAAENDE (identifikator, arbeidsforhold_kode, arbeider_id, startdato, sluttdato) VALUES (?, ?, ?, ?, ?)
             """.trimIndent()
 
             connection.execute(arbeidQuery)  {
@@ -154,14 +151,14 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         if (arbeidsInntektGrunnlag.isEmpty()) return null
 
         val inntekterINorgeQuery = """
-            INSERT INTO INNTEKTER_I_NORGE DEFAULT VALUES
+            INSERT INTO INNTEKTER_I_NORGE_FORUTGAAENDE DEFAULT VALUES
         """.trimIndent()
         val inntekterINorgeId = connection.executeReturnKey(inntekterINorgeQuery)
 
         for (entry in arbeidsInntektGrunnlag) {
             for (inntekt in entry.arbeidsInntektInformasjon.inntektListe) {
                 val inntektQuery = """
-                    INSERT INTO INNTEKT_I_NORGE (identifikator, beloep, skattemessig_bosatt_land, opptjenings_land, inntekt_type, inntekter_i_norge_id, periode) VALUES (?, ?, ?, ?, ?, ?, ?::daterange)
+                    INSERT INTO INNTEKT_I_NORGE_FORUTGAAENDE (identifikator, beloep, skattemessig_bosatt_land, opptjenings_land, inntekt_type, inntekter_i_norge_id, periode) VALUES (?, ?, ?, ?, ?, ?, ?::daterange)
                 """.trimIndent()
 
                 val tomFallback = inntekt.opptjeningsperiodeFom ?: entry.aarMaaned.atDay(1)
@@ -182,61 +179,10 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         return inntekterINorgeId
     }
 
-    override fun lagreOppgittUtenlandsOppplysninger(behandlingId: BehandlingId, journalpostId: JournalpostId, utenlandsOppholdData: UtenlandsOppholdData) {
-        val eksisterendeGrunnlag = hentOppgittUtenlandsOppholdHvisEksisterer(behandlingId)
-        if (eksisterendeGrunnlag != null) {
-            deaktiverUtenlandsOppholdGrunnlag(behandlingId)
-        }
-
-        val oppgittUtenlandsOppholdQuery = """
-            INSERT INTO OPPGITT_UTENLANDSOPPHOLD (BODD_I_NORGE_SISTE_FEM_AAR, ARBEIDET_I_NORGE_SISTE_FEM_AAR, ARBEIDET_UTENFOR_NORGE_FOR_SYKDOM, I_TILLEGG_ARBEID_UTENFOR_NORGE) VALUES (?, ?, ?, ?)
-        """.trimIndent()
-
-        val oppgittUtenlandsOppholdId = connection.executeReturnKey(oppgittUtenlandsOppholdQuery)  {
-            setParams {
-                setBoolean(1, utenlandsOppholdData.harBoddINorgeSiste5År)
-                setBoolean(2, utenlandsOppholdData.harArbeidetINorgeSiste5År)
-                setBoolean(3, utenlandsOppholdData.arbeidetUtenforNorgeFørSykdom)
-                setBoolean(4, utenlandsOppholdData.iTilleggArbeidUtenforNorge)
-            }
-        }
-
-        val oppgittPeriodeQuery = """
-            INSERT INTO UTENLANDS_PERIODE (LAND, TIL_DATO, FRA_DATO, I_ARBEID, UTENLANDS_ID, OPPGITT_UTENLANDSOPPHOLD_ID) VALUES (?, ?, ?, ?, ?, ?)
-        """.trimIndent()
-
-        if (!utenlandsOppholdData.utenlandsOpphold.isNullOrEmpty()) {
-            for (opphold in utenlandsOppholdData.utenlandsOpphold!!) {
-                connection.execute(oppgittPeriodeQuery)  {
-                    setParams {
-                        setString(1, opphold.land)
-                        setLocalDate(2, opphold.tilDato)
-                        setLocalDate(3, opphold.fraDato)
-                        setBoolean(4, opphold.iArbeid)
-                        setString(5, opphold.utenlandsId)
-                        setLong(6, oppgittUtenlandsOppholdId)
-                    }
-                }
-            }
-        }
-
-        val oppgittUtenlandsOppholdGrunnlagQuery = """
-            INSERT INTO OPPGITT_UTENLANDSOPPHOLD_GRUNNLAG (BEHANDLING_ID, JOURNALPOST_ID, OPPGITT_UTENLANDSOPPHOLD_ID) VALUES (?, ?, ?)
-        """.trimIndent()
-
-        connection.execute(oppgittUtenlandsOppholdGrunnlagQuery) {
-            setParams {
-                setLong(1, behandlingId.toLong())
-                setString(2, journalpostId.identifikator)
-                setLong(3, oppgittUtenlandsOppholdId)
-            }
-        }
-    }
-
-    private fun hentManuellVurdering(vurderingId: Long?): ManuellVurderingForLovvalgMedlemskap?{
+    private fun hentManuellVurdering(vurderingId: Long?): ManuellVurderingForForutgåendeMedlemskap?{
         if (vurderingId == null) return null
         val query = """
-            SELECT * FROM LOVVALG_MEDLEMSKAP_MANUELL_VURDERING WHERE ID = ?
+            SELECT * FROM FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERING WHERE ID = ?
         """.trimIndent()
 
         return connection.queryFirst(query){
@@ -244,15 +190,10 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 setLong(1, vurderingId)
             }
             setRowMapper {
-                ManuellVurderingForLovvalgMedlemskap(
-                    lovvalgVedSøknadsTidspunkt =  LovvalgVedSøknadsTidspunkt(
-                        begrunnelse = it.getString("tekstvurdering_lovvalg"),
-                        lovvalgsEØSLand = it.getEnumOrNull("lovvalgs_land")
-                    ),
-                    medlemskapVedSøknadsTidspunkt = MedlemskapVedSøknadsTidspunkt(
-                        begrunnelse = it.getStringOrNull("tekstvurdering_medlemskap"),
-                        varMedlemIFolketrygd = it.getBooleanOrNull("var_medlem_i_folketrygden")
-                    )
+                ManuellVurderingForForutgåendeMedlemskap(
+                    begrunnelse = it.getString("begrunnelse"),
+                    harForutgåendeMedlemskap = it.getBoolean("har_forutgaaende_medlemskap"),
+                    oppfyllerUnntaksVilkår = it.getBooleanOrNull("oppfyller_unntaks_vilkår")
                 )
             }
         }
@@ -298,7 +239,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         if (medlemskapId == null) return null
 
         val data = connection.queryList(
-            """SELECT * FROM MEDLEMSKAP_UNNTAK WHERE MEDLEMSKAP_UNNTAK_PERSON_ID = ?""".trimIndent()
+            """SELECT * FROM MEDLEMSKAP_FORUTGAAENDE_UNNTAK WHERE MEDLEMSKAP_FORUTGAAENDE_UNNTAK_PERSON_ID = ?""".trimIndent()
         ) {
             setParams {
                 setLong(1, medlemskapId)
@@ -326,7 +267,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         if (arbeiderINorgeId == null) return listOf()
 
         val query = """
-            SELECT * FROM ARBEID WHERE arbeider_id = ?
+            SELECT * FROM ARBEID_FORUTGAAENDE WHERE arbeider_id = ?
         """.trimIndent()
         return connection.queryList(query) {
             setParams {
@@ -347,7 +288,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         if (inntekterINorgeId == null) return listOf()
 
         val query = """
-            SELECT * FROM INNTEKT_I_NORGE WHERE inntekter_i_norge_id = ?
+            SELECT * FROM INNTEKT_I_NORGE_FORUTGAAENDE WHERE inntekter_i_norge_id = ?
         """.trimIndent()
         return connection.queryList(query) {
             setParams {
@@ -368,7 +309,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
 
     private fun hentGrunnlag(behandlingId: BehandlingId): GrunnlagOppslag? {
         val query = """
-            SELECT * FROM MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG WHERE behandling_id = ? and aktiv = true
+            SELECT * FROM FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG WHERE behandling_id = ? and aktiv = true
         """.trimIndent()
 
         return connection.queryFirstOrNull(query) {
@@ -387,39 +328,11 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
     }
 
     private fun deaktiverGrunnlag(behandlingId: BehandlingId) {
-        connection.execute("UPDATE MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG set aktiv = false WHERE behandling_id = ? and aktiv = true") {
+        connection.execute("UPDATE FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG set aktiv = false WHERE behandling_id = ? and aktiv = true") {
             setParams {
                 setLong(1, behandlingId.toLong())
             }
             setResultValidator { require(it == 1) }
-        }
-    }
-
-    private fun deaktiverUtenlandsOppholdGrunnlag(behandlingId: BehandlingId) {
-        connection.execute("UPDATE  OPPGITT_UTENLANDSOPPHOLD_GRUNNLAG set aktiv = false WHERE behandling_id = ? and aktiv = true") {
-            setParams {
-                setLong(1, behandlingId.toLong())
-            }
-            setResultValidator { require(it == 1) }
-        }
-    }
-
-    override fun kopier(fraBehandlingId: BehandlingId, tilBehandlingId: BehandlingId) {
-        hentHvisEksisterer(fraBehandlingId) ?: return
-
-        val query = """
-            INSERT INTO MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG 
-                (behandling_id, medlemskap_unntak_person_id, inntekter_i_norge_id, arbeider_id) 
-            SELECT ?, medlemskap_unntak_person_id, inntekter_i_norge_id,  arbeider_id
-                from MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG 
-                where behandling_id = ? and aktiv
-        """.trimIndent()
-
-        connection.execute(query) {
-            setParams {
-                setLong(1, tilBehandlingId.toLong())
-                setLong(2, fraBehandlingId.toLong())
-            }
         }
     }
 

@@ -16,8 +16,8 @@ import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.datadelingAPI(datasource: DataSource) {
     route("/api/datadeling") {
-        route("/sakByFnr") {
-            post<Unit, List<SakStatus>, SakerRequest> { request, body ->
+        route("/sakerByFnr"){
+            post<Unit, List<SakStatus>, SakerRequest>{ request, body ->
                 val person = datasource.transaction(readOnly = true) { conn ->
                     val repositoryProvider = RepositoryProvider(conn)
                     val personRepository = repositoryProvider.provide<PersonRepository>()

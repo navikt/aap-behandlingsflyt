@@ -29,6 +29,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.Inntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.SumPi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PERSON_QUERY
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PERSON_QUERY_HISTORIKK
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.adapter.UføreRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeModell
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeRequest
@@ -236,6 +237,7 @@ object FakeServers : AutoCloseable {
                 when (req.query) {
                     IDENT_QUERY -> call.respond(identer(req))
                     PERSON_QUERY -> call.respond(personopplysninger(req))
+                    PERSON_QUERY_HISTORIKK -> call.respond(personopplysningerHistorikk(req))
                     PdlPersoninfoGateway.PERSONINFO_QUERY -> call.respond(navn(req))
                     PdlPersoninfoGateway.PERSONINFO_BOLK_QUERY -> call.respond(bolknavn(req))
                     BARN_RELASJON_QUERY -> call.respond(barnRelasjoner(req))
@@ -1108,6 +1110,17 @@ object FakeServers : AutoCloseable {
         )
     }
 
+    private fun personopplysningerHistorikk(req: PdlRequest): PdlPersoninfoDataResponse {
+        val testPerson = hentEllerGenererTestPerson(req.variables.ident ?: "")
+        return PdlPersoninfoDataResponse(
+            errors = null,
+            extensions = null,
+            data = PdlPersoninfoData(
+                hentPerson = mapPersonHistorikk(testPerson)
+            ),
+        )
+    }
+
     private fun navn(req: PdlRequest): PdlPersonNavnDataResponse {
         val testPerson = hentEllerGenererTestPerson(req.variables.ident ?: "")
         return PdlPersonNavnDataResponse(
@@ -1163,6 +1176,29 @@ object FakeServers : AutoCloseable {
             ),
             statsborgerskap = setOf(PdlStatsborgerskap("NOR", LocalDate.now(), LocalDate.now())),
             folkeregisterpersonstatus = setOf(PdlFolkeregisterPersonStatus(PersonStatus.bosatt))
+        )
+    }
+
+
+    private fun mapPersonHistorikk(person: TestPerson?): PdlPersoninfo? {
+        if (person == null) {
+            return null
+        }
+        return PdlPersoninfo(
+            foedselsdato = listOf(
+                PdlFoedsel(
+                    person.fødselsdato.toFormatedString(),
+                    "" + person.fødselsdato.toLocalDate().year
+                )
+            ),
+            statsborgerskap = setOf(
+                PdlStatsborgerskap("NOR", LocalDate.now(), LocalDate.now()),
+                PdlStatsborgerskap("MAC", LocalDate.now().minusYears(5), LocalDate.now()),
+            ),
+            folkeregisterpersonstatus = setOf(
+                PdlFolkeregisterPersonStatus(PersonStatus.bosatt),
+                PdlFolkeregisterPersonStatus(PersonStatus.ikkeBosatt)
+            )
         )
     }
 

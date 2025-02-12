@@ -16,6 +16,8 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
+import java.time.LocalDate
+import java.time.LocalDateTime
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: DataSource) {
@@ -35,27 +37,40 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: DataSource) {
                     val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId = behandling.id)
 
                     val innhentedeYrkesskader = yrkesskadeGrunnlag?.yrkesskader?.yrkesskader.orEmpty()
-                        .map { yrkesskade -> RegistrertYrkesskade( yrkesskade, "Yrkesskaderegisteret") }
+                        .map { yrkesskade -> RegistrertYrkesskade(yrkesskade, "Yrkesskaderegisteret") }
 
-                    val sykdomsvurdering = sykdomGrunnlag?.sykdomsvurdering?.toDto()
+                    val nåTilstand = sykdomGrunnlag?.sykdomsvurderinger.orEmpty()
 
-                    val historikkSykdomsvurderinger = sykdomRepository.hentHistoriskeSykdomsvurderinger(behandling.sakId, behandling.id)
-                        .sortedBy { it.opprettet }
-                        .map { it.toDto() }
+                    val historikkSykdomsvurderinger =
+                        sykdomRepository.hentHistoriskeSykdomsvurderinger(behandling.sakId, behandling.id)
+
+                    val vedtatteSykdomsvurderinger = behandling.forrigeBehandlingId
+                        ?.let { sykdomRepository.hentHvisEksisterer(it) }
+                        ?.sykdomsvurderinger.orEmpty()
+
+                    val vedtatteSykdomsvurderingerIder = vedtatteSykdomsvurderinger.map { it.id }
+                    val sykdomsvurderinger = nåTilstand.filterNot { it.id in vedtatteSykdomsvurderingerIder }
 
                     SykdomGrunnlagDto(
                         opplysninger = InnhentetSykdomsOpplysninger(
                             oppgittYrkesskadeISøknad = false,
                             innhentedeYrkesskader = innhentedeYrkesskader,
                         ),
-                        sykdomsvurdering = sykdomsvurdering,
                         skalVurdereYrkesskade = innhentedeYrkesskader.isNotEmpty(),
-                        sykdomsvurderinger = listOfNotNull(sykdomsvurdering),
-                        historikkSykdomsvurderinger = historikkSykdomsvurderinger,
-                        gjeldendeVedtatteSykdomsvurderinger = listOf(),
+                        sykdomsvurdering = sykdomsvurderinger
+                            .maxByOrNull { it.opprettet ?: LocalDateTime.MIN }
+                            ?.toDto(),
+                        sykdomsvurderinger = sykdomsvurderinger
+                            .sortedBy { it.vurderingenGjelderFra ?: LocalDate.MIN }
+                            .map { it.toDto() },
+                        historikkSykdomsvurderinger = historikkSykdomsvurderinger
+                            .sortedBy { it.opprettet }
+                            .map { it.toDto() },
+                        gjeldendeVedtatteSykdomsvurderinger = vedtatteSykdomsvurderinger
+                            .sortedBy { it.vurderingenGjelderFra ?: LocalDate.MIN }
+                            .map { it.toDto() },
                     )
                 }
-
 
                 respond(response)
             }
@@ -82,7 +97,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: DataSource) {
                     yrkesskadeGrunnlag to sykdomGrunnlag
 
                     val innhentedeYrkesskader = yrkesskadeGrunnlag?.yrkesskader?.yrkesskader.orEmpty()
-                        .map { yrkesskade -> RegistrertYrkesskade( yrkesskade, "Yrkesskaderegisteret") }
+                        .map { yrkesskade -> RegistrertYrkesskade(yrkesskade, "Yrkesskaderegisteret") }
 
                     YrkesskadeVurderingGrunnlagDto(
                         opplysninger = InnhentetSykdomsOpplysninger(
