@@ -201,6 +201,13 @@ public enum class Definisjon(
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.FATTE_VEDTAK,
         løsesAv = listOf(Rolle.BESLUTTER)
+    ),
+    VENTE_PÅ_UTENLANDSK_VIDEREFØRING_AVKLARING(
+        kode = AvklaringsbehovKode.`5019`,
+        type = BehovType.VENTEPUNKT,
+        løsesISteg = StegType.VURDER_LOVVALG,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
+        defaultFrist = Period.ofWeeks(3),
     );
 
     public companion object {
