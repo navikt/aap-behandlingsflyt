@@ -21,8 +21,8 @@ data class SakStatus(
         private fun fromStatus(status: Status): SakStatus.VedtakStatus {
             return when (status) {
                 Status.AVSLUTTET -> VedtakStatus.AVSLU
-                Status.UTREDES -> VedtakStatus.FORDE
-                Status.LØPENDE -> VedtakStatus.GODKJ
+                Status.UTREDES -> VedtakStatus.REGIS
+                Status.LØPENDE -> VedtakStatus.IVERK
                 Status.OPPRETTET -> VedtakStatus.OPPRE
                 else -> {
                     VedtakStatus.UKJENT
