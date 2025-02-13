@@ -207,7 +207,7 @@ public enum class Definisjon(
         type = BehovType.VENTEPUNKT,
         løsesISteg = StegType.VURDER_LOVVALG,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
-        defaultFrist = Period.ofWeeks(3),
+        defaultFrist = Period.ofYears(5),
     );
 
     public companion object {
