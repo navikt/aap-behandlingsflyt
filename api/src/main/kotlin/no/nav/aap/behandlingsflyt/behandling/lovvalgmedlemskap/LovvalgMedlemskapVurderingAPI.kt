@@ -36,7 +36,6 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapAPI(dataSource: DataSource) {
                         ?: throw IllegalStateException("Forventet å finne personopplysninger")
                     val medlemskapArbeidInntektGrunnlag = repositoryProvider.provide<MedlemskapArbeidInntektRepository>().hentHvisEksisterer(behandling.id)
                     val oppgittUtenlandsOppholdGrunnlag = repositoryProvider.provide<MedlemskapArbeidInntektRepository>().hentOppgittUtenlandsOppholdHvisEksisterer(behandling.id)
-                        ?: throw IllegalStateException("Forventet å finne utenlandsoppylsninger")
 
                     MedlemskapLovvalgVurderingService().vurderTilhørighet(
                         MedlemskapLovvalgGrunnlag(medlemskapArbeidInntektGrunnlag, personopplysningGrunnlag, oppgittUtenlandsOppholdGrunnlag),

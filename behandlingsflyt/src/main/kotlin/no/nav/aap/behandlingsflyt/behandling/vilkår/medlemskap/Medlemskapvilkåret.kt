@@ -25,11 +25,10 @@ class Medlemskapvilkåret(
             val lovvalgsLand = manuellVurderingForLovvalgMedlemskap.lovvalgVedSøknadsTidspunkt.lovvalgsEØSLand
             val varMedlemIFolketrygd = manuellVurderingForLovvalgMedlemskap.medlemskapVedSøknadsTidspunkt?.varMedlemIFolketrygd
 
-            val annetLandMedAvtaleIEØS = lovvalgsLand != null && lovvalgsLand in enumValues<EØSLand>().map { it }
+            val annetLandMedAvtaleIEØS = lovvalgsLand != null && lovvalgsLand != EØSLand.NOR && lovvalgsLand in enumValues<EØSLand>().map { it }
 
-            // TODO: Hvordan skal vi markere denne, slik at vi kan få den ut av systemet og overført til riktig stat?
             if (annetLandMedAvtaleIEØS) {
-                VurderingsResultat(Utfall.IKKE_OPPFYLT, Avslagsårsak.MANGLENDE_DOKUMENTASJON, null)
+                VurderingsResultat(Utfall.IKKE_OPPFYLT, Avslagsårsak.NORGE_IKKE_KOMPETENT_STAT, null)
             }
             else if (varMedlemIFolketrygd != true) {
                 VurderingsResultat(Utfall.IKKE_OPPFYLT, Avslagsårsak.IKKE_MEDLEM, null)

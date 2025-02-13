@@ -27,6 +27,7 @@ public const val FATTE_VEDTAK_KODE: String = "5099"
 public const val SKRIV_BREV_KODE: String = "5050"
 public const val AVKLAR_LOVVALG_MEDLEMSKAP_KODE: String = "5017"
 public const val VENTE_PÅ_FIRST_EFFEKTUER_11_7_KODE: String = "5018"
+public const val AVKLAR_UTENLANDSK_MEDLEMSKAP_KODE: String = "5019"
 
 @Suppress("EnumEntryName")
 public enum class AvklaringsbehovKode {
@@ -84,6 +85,11 @@ public enum class AvklaringsbehovKode {
     `5097`,
     `5098`,
     `5099`,
+
+    /**
+     * [AVKLAR_UTENLANDSK_MEDLEMSKAP_KODE]
+     */
+    `5019`,
 
     /**
      * [SKRIV_BREV_KODE]

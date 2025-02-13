@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.behandling.samordning
+package no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
@@ -6,6 +6,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
+import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingRepository
@@ -42,19 +43,19 @@ data class SamordningVurderingPeriodeDTO(
     val fom: LocalDate,
     val tom: LocalDate,
     val gradering: Int?,
-    val kronesum: Number?
+    val kronesum: Int?
 )
 
 data class SamordningYtelsePeriodeDTO(
     val fom: LocalDate,
     val tom: LocalDate,
     val gradering: Int?,
-    val kronesum: Number?
+    val kronesum: Int?
 )
 
-fun NormalOpenAPIRoute.samordning(dataSource: DataSource) {
+fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
     route("/api/behandling") {
-        route("/{referanse}/samordning/") {
+        route("/{referanse}/grunnlag/samordning/") {
             get<BehandlingReferanse, SamordningYtelseVurderingGrunnlagDTO> { req ->
                 val samordning = dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
@@ -99,7 +100,7 @@ private fun SamordningVurderingPeriode.tilDTO(): SamordningVurderingPeriodeDTO {
         fom = this.periode.fom,
         tom = this.periode.tom,
         gradering = this.gradering?.prosentverdi(),
-        kronesum = this.kronesum
+        kronesum = this.kronesum?.toInt()
     )
 }
 
@@ -108,6 +109,6 @@ private fun SamordningYtelsePeriode.tilDTO(): SamordningYtelsePeriodeDTO {
         fom = this.periode.fom,
         tom = this.periode.tom,
         gradering = this.gradering?.prosentverdi(),
-        kronesum = this.kronesum
+        kronesum = this.kronesum?.toInt()
     )
 }

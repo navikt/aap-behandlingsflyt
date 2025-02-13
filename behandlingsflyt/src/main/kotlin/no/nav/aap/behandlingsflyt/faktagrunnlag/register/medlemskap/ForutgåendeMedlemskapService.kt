@@ -20,7 +20,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
-import org.slf4j.LoggerFactory
 import java.time.YearMonth
 
 class ForutgåendeMedlemskapService private constructor(
@@ -29,46 +28,19 @@ class ForutgåendeMedlemskapService private constructor(
     private val medlemskapForutgåendeRepository: MedlemskapForutgåendeRepository,
     private val grunnlagRepository: MedlemskapArbeidInntektForutgåendeRepository
 ) : Informasjonskrav {
-    val logger = LoggerFactory.getLogger(ForutgåendeMedlemskapService::class.java)
-
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
 
-        try {
-            val medlemskapPerioder = medlemskapGateway.innhent(sak.person, Periode(sak.rettighetsperiode.fom.minusYears(5), sak.rettighetsperiode.fom))
-            logger.info("fikk medlemskapPerioder: $medlemskapPerioder")
-        } catch (e: Exception) {
-            logger.info("feilet innhenting på medlemskapPerioder: ${e.message}, stack: $e")
-        }
+        val medlemskapPerioder = medlemskapGateway.innhent(sak.person, Periode(sak.rettighetsperiode.fom.minusYears(5), sak.rettighetsperiode.fom))
+        val arbeidGrunnlag = innhentAARegisterGrunnlag5år(sak)
+        val inntektGrunnlag = innhentAInntektGrunnlag5år(sak)
 
-        try {
-            val arbeidGrunnlag = innhentAARegisterGrunnlag5år(sak)
-            logger.info("fikk arbeidGrunnlag: $arbeidGrunnlag")
-        } catch (e: Exception) {
-            logger.info("feilet innhenting på arbeidGrunnlag: ${e.message}, stack: $e")
-        }
-
-
-        try {
-            val inntektGrunnlag = innhentAInntektGrunnlag5år(sak)
-            logger.info("fikk inntektGrunnlag: $inntektGrunnlag")
-        } catch (e: Exception) {
-            logger.info("feilet innhenting på inntektGrunnlag: ${e.message}, stack: $e")
-        }
-
-        /*
-        try {
-            val eksisterendeData = grunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
-            lagre(kontekst.behandlingId, medlemskapPerioder, arbeidGrunnlag, inntektGrunnlag)
-        } catch (e: Exception) {
-            logger.info("feilet innhenting på eksisterendeData: ${e.message}, stack: $e")
-        }*/
+        val eksisterendeData = grunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
+        lagre(kontekst.behandlingId, medlemskapPerioder, arbeidGrunnlag, inntektGrunnlag)
 
         val nyeData = grunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
-        logger.info("hentet ut nylig lagrede data: $nyeData")
 
-        //return if (nyeData == eksisterendeData) IKKE_ENDRET else ENDRET
-        return IKKE_ENDRET
+        return if (nyeData == eksisterendeData) IKKE_ENDRET else ENDRET
     }
 
     private fun innhentAARegisterGrunnlag5år(sak: Sak): List<ArbeidsforholdOversikt> {

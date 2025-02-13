@@ -112,7 +112,7 @@ val PERSON_QUERY = """
 
 val PERSON_QUERY_HISTORIKK = """
     query($ident: ID!){
-      hentPerson(ident: $ident) 
+      hentPerson(ident: $ident) {
         foedselsdato {
     	  foedselsdato
         },
