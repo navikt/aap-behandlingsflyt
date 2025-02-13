@@ -35,8 +35,8 @@ class MedlemskapLovvalgVurderingService {
 
     // Ingen kan inntreffe
     private fun vurderAndreDelKriterier(grunnlag: MedlemskapLovvalgGrunnlag, rettighetsPeriode: Periode): List<TilhørighetVurdering> {
-        val harJobbetIUtland = oppgittJobbetIUtland(grunnlag.nyeSoknadGrunnlag!!, rettighetsPeriode )
-        val harHattUtenlandsOpphold = oppgittUtenlandsOpphold(grunnlag.nyeSoknadGrunnlag!!, rettighetsPeriode)
+        val harJobbetIUtland = oppgittJobbetIUtland(grunnlag.nyeSoknadGrunnlag, rettighetsPeriode )
+        val harHattUtenlandsOpphold = oppgittUtenlandsOpphold(grunnlag.nyeSoknadGrunnlag, rettighetsPeriode)
         val harUtenlandsAdresse = utenlandskAdresse(grunnlag.personopplysningGrunnlag)
         val annetLovvalgsland = lovvalgslandIkkeErNorge(grunnlag.medlemskapArbeidInntektGrunnlag?.medlemskapGrunnlag)
         val utenforEØS = manglerStatsborgerskapIEØS(grunnlag.personopplysningGrunnlag)
@@ -44,7 +44,11 @@ class MedlemskapLovvalgVurderingService {
         return listOf(harJobbetIUtland, harHattUtenlandsOpphold, harUtenlandsAdresse, annetLovvalgsland, utenforEØS)
     }
 
-    private fun oppgittJobbetIUtland(grunnlag: UtenlandsOppholdData, rettighetsPeriode: Periode): TilhørighetVurdering {
+    private fun oppgittJobbetIUtland(grunnlag: UtenlandsOppholdData?, rettighetsPeriode: Periode): TilhørighetVurdering {
+        if (grunnlag == null) {
+            return TilhørighetVurdering(listOf(Kilde.SØKNAD), Indikasjon.UTENFOR_NORGE, "Mangler utenlandsdata fra søknad", true, "Mangler utenlandsdata fra søknad")
+        }
+
         val arbeidUtlandIRelevantPeriode = grunnlag.utenlandsOpphold?.filter {
             it.iArbeid && (
                 (it.tilDato != null && rettighetsPeriode.inneholder(it.tilDato)) || (it.fraDato != null && rettighetsPeriode.inneholder(it.fraDato))
@@ -56,7 +60,11 @@ class MedlemskapLovvalgVurderingService {
         return TilhørighetVurdering(listOf(Kilde.SØKNAD), Indikasjon.UTENFOR_NORGE, "Arbeid i utland", arbeidetUtenforNorge, jsonGrunnlag)
     }
 
-    private fun oppgittUtenlandsOpphold(grunnlag: UtenlandsOppholdData, rettighetsPeriode: Periode): TilhørighetVurdering {
+    private fun oppgittUtenlandsOpphold(grunnlag: UtenlandsOppholdData?, rettighetsPeriode: Periode): TilhørighetVurdering {
+        if (grunnlag == null) {
+            return TilhørighetVurdering(listOf(Kilde.SØKNAD), Indikasjon.UTENFOR_NORGE, "Mangler utenlandsdata fra søknad", true, "Mangler utenlandsdata fra søknad")
+        }
+
         val arbeidUtlandIRelevantPeriode = grunnlag.utenlandsOpphold?.filter {
             it.iArbeid && (
                 (it.tilDato != null && rettighetsPeriode.inneholder(it.tilDato)) || (it.fraDato != null && rettighetsPeriode.inneholder(it.fraDato))
