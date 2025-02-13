@@ -25,7 +25,7 @@ class Medlemskapvilkåret(
             val lovvalgsLand = manuellVurderingForLovvalgMedlemskap.lovvalgVedSøknadsTidspunkt.lovvalgsEØSLand
             val varMedlemIFolketrygd = manuellVurderingForLovvalgMedlemskap.medlemskapVedSøknadsTidspunkt?.varMedlemIFolketrygd
 
-            val annetLandMedAvtaleIEØS = lovvalgsLand != null && lovvalgsLand in enumValues<EØSLand>().map { it }
+            val annetLandMedAvtaleIEØS = lovvalgsLand != null && lovvalgsLand != EØSLand.NOR && lovvalgsLand in enumValues<EØSLand>().map { it }
 
             if (annetLandMedAvtaleIEØS) {
                 VurderingsResultat(Utfall.IKKE_OPPFYLT, Avslagsårsak.NORGE_IKKE_KOMPETENT_STAT, null)
