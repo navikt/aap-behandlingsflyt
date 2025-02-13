@@ -12,7 +12,7 @@ class Vilkårsperiode(
     val begrunnelse: String?,
     val innvilgelsesårsak: Innvilgelsesårsak? = null,
     val avslagsårsak: Avslagsårsak? = null,
-    internal val faktagrunnlag: Faktagrunnlag?,
+    internal val faktagrunnlag: Faktagrunnlag? = null,
     val versjon: String = ApplikasjonsVersjon.versjon
 ) {
 

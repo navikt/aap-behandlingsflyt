@@ -7,10 +7,12 @@ class KvoteService {
     private val ANTALL_ARBEIDSDAGER_I_ÅRET = 260
 
     fun beregn(behandlingId: BehandlingId): Kvoter {
+        // TODO ta hensyn til når du har rett på hvilken kvote (Kvoter-objektet burde ha en tidslinje et sted)
+        // Dette burde skje ved å hente en tidslinje av rettighetstyper
         return Kvoter.create(
             ordinærkvote = ANTALL_ARBEIDSDAGER_I_ÅRET * 3,
-            studentkvote = ANTALL_ARBEIDSDAGER_I_ÅRET/2,
-            sykepengeerstatningkvote = ANTALL_ARBEIDSDAGER_I_ÅRET/2
+            studentkvote = ANTALL_ARBEIDSDAGER_I_ÅRET / 2,
+            sykepengeerstatningkvote = ANTALL_ARBEIDSDAGER_I_ÅRET / 2
         )
     }
 }

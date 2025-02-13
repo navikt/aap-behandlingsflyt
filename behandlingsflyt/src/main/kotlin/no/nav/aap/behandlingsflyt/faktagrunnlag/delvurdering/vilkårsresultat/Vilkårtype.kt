@@ -27,7 +27,11 @@ enum class Vilkårtype(
     ),
     BISTANDSVILKÅRET(
         kode = "AAP-6",
-        spesielleInnvilgelsesÅrsaker = listOf(Innvilgelsesårsak.STUDENT),
+        spesielleInnvilgelsesÅrsaker = listOf(
+            Innvilgelsesårsak.STUDENT,
+            Innvilgelsesårsak.ARBEIDSSØKER,
+            Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD
+        ),
         avslagsårsaker = listOf(
             Avslagsårsak.MANGLENDE_DOKUMENTASJON
         ),

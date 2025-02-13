@@ -31,39 +31,74 @@ class Vilkårsresultat(
 
     /**
      * Går gjennom oppfylte vilkår over alle perioder, og utleder hjemmel.
+     *
+     * @return En tidslinje med [RettighetsType].
      */
-    fun rettighetstypeTidslinje(): Tidslinje<String> {
-        var other = Tidslinje.empty<Set<Pair<Vilkårtype, Innvilgelsesårsak?>>>()
-        this.alle().filter {
-            it.type in setOf(
-                Vilkårtype.BISTANDSVILKÅRET,
-                Vilkårtype.SYKDOMSVILKÅRET,
-                Vilkårtype.SYKEPENGEERSTATNING
-            )
-        }
+    fun rettighetstypeTidslinje(): Tidslinje<RettighetsType> {
+        return listOf(
+            Vilkårtype.SYKEPENGEERSTATNING,
+            Vilkårtype.SYKDOMSVILKÅRET,
+            Vilkårtype.BISTANDSVILKÅRET
+        )
+            .mapNotNull { v -> this.optionalVilkår(v) }
             .map { vilkår -> Tidslinje(vilkår.vilkårsperioder().map { Segment(it.periode, Pair(vilkår, it)) }) }
-            .forEach {
-                other = other.kombiner(it, JoinStyle.RIGHT_JOIN { periode, venstre, høyre ->
-                    if (høyre.verdi.second.utfall != Utfall.OPPFYLT) {
+            .fold(Tidslinje.empty<Set<Pair<Vilkårtype, Innvilgelsesårsak?>>>()) { acc, curr ->
+                acc.kombiner(curr, JoinStyle.OUTER_JOIN { periode, venstre, høyre ->
+                    if (høyre == null && venstre == null) {
                         null
+                    } else if (venstre != null && høyre == null) {
+                        Segment(periode, venstre.verdi)
+                    } else if (venstre == null && høyre != null) {
+                        Segment(periode, setOf(Pair(høyre.verdi.first.type, høyre.verdi.second.innvilgelsesårsak)))
                     } else {
-                        val element = Pair(høyre.verdi.first.type, høyre.verdi.second.innvilgelsesårsak)
-                        if (venstre == null) {
-                            Segment(periode, setOf(element))
-                        } else {
-                            Segment(
-                                periode,
-                                venstre.verdi + element
-                            )
-                        }
+                        // Rart kompilatoren ikke skjønte dette...
+                        requireNotNull(høyre)
+                        requireNotNull(venstre)
+                        Segment(
+                            periode,
+                            venstre.verdi + Pair(høyre.verdi.first.type, høyre.verdi.second.innvilgelsesårsak)
+                        )
                     }
                 })
             }
+            .mapValue { prioriterVilkår(it) }
+            .komprimer()
+    }
 
+    /**
+     * Prioriterer oppfylte vilkår for å utlede [RettighetsType].
+     *
+     * Nåværende implementasjon prioriterer spesielle innvilgelsesårsaker på bistandvilkåret. Om ingen
+     * spesielle innvilgelsesårsaker er funnet, så sjekkes sykepengervilkåret. Om det er oppfylt, så
+     * returneres [RettighetsType.SYKEPENGEERSTATNING].
+     *
+     * Default-verdien er [RettighetsType.BISTANDSBEHOV] (normal § 11-6).
+     */
+    private fun prioriterVilkår(vilkårPar: Set<Pair<Vilkårtype, Innvilgelsesårsak?>>): RettighetsType {
+        val bistandVilkåret =
+            requireNotNull(vilkårPar.firstOrNull { it.first == Vilkårtype.BISTANDSVILKÅRET })
+            { "Bistandsvilkåret må være oppfylt for å regne ut rettighetstype." }
 
-        return other.mapValue {
-            it.prioriterVilkår()
+        if (bistandVilkåret.second != null) {
+            val innvilgelsesårsak = requireNotNull(bistandVilkåret.second)
+            val r = when (innvilgelsesårsak) {
+                Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG -> null
+                Innvilgelsesårsak.STUDENT -> RettighetsType.STUDENT
+                Innvilgelsesårsak.ARBEIDSSØKER -> RettighetsType.ARBEIDSSØKER
+                Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD -> RettighetsType.VURDERES_FOR_UFØRETYGD
+            }
+            if (r != null) {
+                return r
+            }
         }
+
+        val sykepengervilkåret = vilkårPar.find { it.first == Vilkårtype.SYKEPENGEERSTATNING }
+
+        if (sykepengervilkåret != null) {
+            return RettighetsType.SYKEPENGEERSTATNING
+        }
+
+        return RettighetsType.BISTANDSBEHOV
     }
 
     override fun equals(other: Any?): Boolean {
@@ -84,12 +119,3 @@ class Vilkårsresultat(
     }
 }
 
-fun Set<Pair<Vilkårtype, Innvilgelsesårsak?>>.prioriterVilkår(): String {
-    val spesielle = this.filter { it.second != null }
-
-    if (spesielle.isNotEmpty()) {
-        return spesielle.first().second!!.kode
-    }
-
-    return this.first { it.second == null }.first.kode
-}
