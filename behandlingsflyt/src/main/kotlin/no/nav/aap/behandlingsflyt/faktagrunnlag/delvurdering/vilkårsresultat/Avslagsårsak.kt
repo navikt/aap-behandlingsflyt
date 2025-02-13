@@ -10,5 +10,5 @@ enum class Avslagsårsak(val kode: String, val hjemmel: String) {
     IKKE_MEDLEM_FORUTGÅENDE(kode= "11-2", hjemmel = "§ 11-2"),
     IKKE_MEDLEM(kode= "2-1", hjemmel = "§ 2-1"),
     IKKE_OPPFYLT_OPPHOLDSKRAV_EØS(kode = "11-3-1", hjemmel = "§ 11-3 1.ledd"),
-    NORGE_IKKE_KOMPETENT_STAT(kode= "Lovvalg", hjemmel = "Folketrygdloven"), // TODO: Finn på noe korrekt her
+    NORGE_IKKE_KOMPETENT_STAT(kode= "EØS-forordning 883. Art 11-3-E", hjemmel = "EØS-forordning 883. Art 11-3-E")
 }

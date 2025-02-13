@@ -52,8 +52,7 @@ class VurderLovvalgSteg private constructor(
             return FantVentebehov(
                 Ventebehov(
                     definisjon = Definisjon.VENTE_PÅ_UTENLANDSK_VIDEREFØRING_AVKLARING,
-                    grunn = ÅrsakTilSettPåVent.VENTER_PÅ_UTENLANDSK_VIDEREFORING_AVKLARING,
-                    frist = null,
+                    grunn = ÅrsakTilSettPåVent.VENTER_PÅ_UTENLANDSK_VIDEREFORING_AVKLARING
                 )
             )
         }

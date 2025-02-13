@@ -67,6 +67,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UtenlandsPeriodeDto
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
@@ -1790,7 +1791,9 @@ class FlytOrkestratorTest {
                 strukturertDokument = StrukturertDokument(
                     SøknadV0(
                         student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
-                        medlemskap = SøknadMedlemskapDto("JA", "JA", "JA", "NEI", null)
+                        medlemskap = SøknadMedlemskapDto("JA", null, "JA", null,
+                            listOf(UtenlandsPeriodeDto("SWE", LocalDate.now().plusMonths(1), LocalDate.now().minusMonths(1), "JA", null))
+                        ),
                     ),
                 ),
                 periode = periode
@@ -1856,7 +1859,9 @@ class FlytOrkestratorTest {
                 strukturertDokument = StrukturertDokument(
                     SøknadV0(
                         student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
-                        medlemskap = SøknadMedlemskapDto("JA", "JA", "JA", "NEI", null)
+                        medlemskap = SøknadMedlemskapDto("JA", null, "JA", null,
+                            listOf(UtenlandsPeriodeDto("SWE", LocalDate.now().plusMonths(1), LocalDate.now().minusMonths(1), "JA", null))
+                        )
                     ),
                 ),
                 periode = periode
@@ -1924,7 +1929,9 @@ class FlytOrkestratorTest {
                 strukturertDokument = StrukturertDokument(
                     SøknadV0(
                         student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
-                        medlemskap = SøknadMedlemskapDto("JA", "JA", "JA", "NEI", null)
+                        medlemskap = SøknadMedlemskapDto("JA", null, "JA", null,
+                            listOf(UtenlandsPeriodeDto("SWE", LocalDate.now().plusMonths(1), LocalDate.now().minusMonths(1), "JA", null))
+                        ),
                     ),
                 ),
                 periode = periode
@@ -1981,7 +1988,9 @@ class FlytOrkestratorTest {
                 strukturertDokument = StrukturertDokument(
                     SøknadV0(
                         student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
-                        medlemskap = SøknadMedlemskapDto("JA", "JA", "JA", "NEI", null)
+                        medlemskap = SøknadMedlemskapDto("JA", null, "JA", null,
+                            listOf(UtenlandsPeriodeDto("SWE", LocalDate.now().plusMonths(1), LocalDate.now().minusMonths(1), "JA", null))
+                        ),
                     ),
                 ),
                 periode = periode
