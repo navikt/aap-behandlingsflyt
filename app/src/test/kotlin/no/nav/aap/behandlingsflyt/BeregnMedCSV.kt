@@ -69,7 +69,7 @@ fun readCSV(inputStream: InputStream): List<CSVLine> {
         }.toList()
 }
 
-fun tilInput(csvLine: CSVLine): Input {
+fun tilInput(csvLine: CSVLine): Input{
 
     return Input(
         nedsettelsesDato = LocalDate.of(csvLine.beregningsAar, 1, 1),

@@ -32,7 +32,7 @@ import no.nav.aap.behandlingsflyt.behandling.etannetsted.institusjonAPI
 import no.nav.aap.behandlingsflyt.behandling.kvalitetssikring.kvalitetssikringApi
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.lovvalgMedlemskapGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.lovvalgMedlemskapAPI
-import no.nav.aap.behandlingsflyt.behandling.samordning.samordning
+import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.samordningGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilkjentYtelseAPI
 import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerAPI
@@ -218,7 +218,7 @@ internal fun Application.server(dbConfig: DbConfig) {
                 lovvalgMedlemskapAPI(dataSource)
                 lovvalgMedlemskapGrunnlagAPI(dataSource)
                 datadelingAPI(dataSource)
-                samordning(dataSource)
+                samordningGrunnlag(dataSource)
             }
         }
         actuator(prometheus, motor)
