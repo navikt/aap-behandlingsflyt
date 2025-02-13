@@ -100,7 +100,7 @@ private fun SamordningVurderingPeriode.tilDTO(): SamordningVurderingPeriodeDTO {
         fom = this.periode.fom,
         tom = this.periode.tom,
         gradering = this.gradering?.prosentverdi(),
-        kronesum = this.kronesum
+        kronesum = this.kronesum?.toInt()
     )
 }
 
@@ -109,6 +109,6 @@ private fun SamordningYtelsePeriode.tilDTO(): SamordningYtelsePeriodeDTO {
         fom = this.periode.fom,
         tom = this.periode.tom,
         gradering = this.gradering?.prosentverdi(),
-        kronesum = this.kronesum
+        kronesum = this.kronesum?.toInt()
     )
 }
