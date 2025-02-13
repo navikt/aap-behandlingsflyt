@@ -36,8 +36,8 @@ data class Vurdering(
     }
 
     fun fårAapEtter(vilkårtype: Vilkårtype, innvilgelsesårsak: Innvilgelsesårsak?): Boolean {
-        // TODO: finn ut om et vilkår kan være oppfylt uten at det er det vilkårete som medlemmet
-        // får aap etter i betydningen fra § 11-12 fjerde ledd. Trenger i så fall prioritering, kanskje?
+        // TODO: finn ut om et vilkår kan være oppfylt uten at det er det vilkåret som medlemmet
+        // får AAP etter i betydningen fra § 11-12 fjerde ledd. Trenger i så fall prioritering, kanskje?
         return vurderinger.any { it.vilkår == vilkårtype && it.innvilgelsesårsak == innvilgelsesårsak && it.utfall == OPPFYLT }
     }
 
