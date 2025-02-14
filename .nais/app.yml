@@ -114,6 +114,7 @@ spec:
         - application: yrkesskade-saker
           namespace: yrkesskade
         - application: oppgave
+        - application: utbetal
         - application: statistikk
         - application: dokumentinnhenting
         - application: spokelse
