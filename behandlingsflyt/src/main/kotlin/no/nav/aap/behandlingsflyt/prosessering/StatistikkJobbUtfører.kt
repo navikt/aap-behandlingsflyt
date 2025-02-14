@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
@@ -21,6 +22,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Diagnoser
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Grunnlag11_19DTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.GrunnlagUføreDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.GrunnlagYrkesskadeDTO
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetstypePeriode
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.TilkjentYtelseDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.TilkjentYtelsePeriodeDTO
@@ -64,7 +66,7 @@ class StatistikkJobbUtfører(
         val payload = input.payload<BehandlingFlytStoppetHendelse>()
 
         håndterBehandlingStoppet(payload)
-    }
+    } // Todo skriv test på g_regulering
 
     private fun håndterBehandlingStoppet(hendelse: BehandlingFlytStoppetHendelse) {
 
@@ -196,6 +198,20 @@ class StatistikkJobbUtfører(
 
         log.info("Kaller aap-statistikk for sak ${sak.saksnummer}.")
 
+        val rettighetstypePerioder = vilkårsresultat.rettighetstypeTidslinje().map {
+            RettighetstypePeriode(
+                fraDato = it.periode.fom,
+                tilDato = it.periode.tom,
+                rettighetstype = when (it.verdi) {
+                    RettighetsType.BISTANDSBEHOV -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.BISTANDSBEHOV
+                    RettighetsType.SYKEPENGEERSTATNING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.SYKEPENGEERSTATNING
+                    RettighetsType.STUDENT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.STUDENT
+                    RettighetsType.ARBEIDSSØKER -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.ARBEIDSSØKER
+                    RettighetsType.VURDERES_FOR_UFØRETYGD -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.VURDERES_FOR_UFØRETYGD
+                }
+            )
+        }
+
         val avsluttetBehandlingDTO = AvsluttetBehandlingDTO(
             vilkårsResultat = VilkårsResultatDTO(
                 typeBehandling = behandling.typeBehandling(),
@@ -218,6 +234,7 @@ class StatistikkJobbUtfører(
             tilkjentYtelse = tilkjentYtelseDTO,
             beregningsGrunnlag = beregningsGrunnlagDTO,
             diagnoser = hentDiagnose(behandling),
+            rettighetstypePerioder = rettighetstypePerioder
         )
         return avsluttetBehandlingDTO
     }
