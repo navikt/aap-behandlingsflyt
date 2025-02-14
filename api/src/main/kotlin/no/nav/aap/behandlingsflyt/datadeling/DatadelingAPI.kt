@@ -79,6 +79,7 @@ fun NormalOpenAPIRoute.datadelingAPI(datasource: DataSource) {
 
                 respond(Maksimum(tilkjentYtelse.map { segment ->
                     Maksimum.Vedtak(
+                        vedtaksId = "", // TODO: hvor finner jeg denne?
                         dagsats = beregning.grunnlaget().verdi()
                             .toInt(), // TODO: Her må vi gange med dagens grunnbeløp og dele på 260
                         status = "OK", // TODO: Denne må mappes ut til noe som gir mening

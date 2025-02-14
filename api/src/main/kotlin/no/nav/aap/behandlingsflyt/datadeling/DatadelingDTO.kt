@@ -73,6 +73,7 @@ data class Maksimum(
 ) {
 
     data class Vedtak(
+        val vedtaksId: String,
         val dagsats: Int,
         val status: String, //Hypotese, vedtaksstatuskode
         val saksnummer: String,
