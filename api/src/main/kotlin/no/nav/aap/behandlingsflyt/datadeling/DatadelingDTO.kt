@@ -93,7 +93,7 @@ data class Maksimum(
     class Periode(
         val fraOgMedDato: LocalDate?,
         val tilOgMedDato: LocalDate?
-    ){
+    ) {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (javaClass != other?.javaClass) return false
@@ -110,6 +110,10 @@ data class Maksimum(
             var result = fraOgMedDato?.hashCode() ?: 0
             result = 31 * result + (tilOgMedDato?.hashCode() ?: 0)
             return result
+        }
+
+        override fun toString(): String {
+            return "Periode(fraOgMedDato=$fraOgMedDato, tilOgMedDato=$tilOgMedDato)"
         }
 
     }

@@ -6,9 +6,9 @@ plugins {
     `java-library`
 }
 
-val tilgangVersjon = "1.0.2"
+val tilgangVersjon = "1.0.4"
 val junitVersion = "5.11.3"
-val komponenterVersjon = "1.0.135"
+val komponenterVersjon = "1.0.140"
 
 dependencies {
     api("com.fasterxml.jackson.core:jackson-annotations:2.18.2")
