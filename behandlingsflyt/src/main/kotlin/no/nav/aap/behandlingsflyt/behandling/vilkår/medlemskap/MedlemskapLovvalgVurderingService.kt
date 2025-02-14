@@ -36,7 +36,7 @@ class MedlemskapLovvalgVurderingService {
     // Ingen kan inntreffe
     private fun vurderAndreDelKriterier(grunnlag: MedlemskapLovvalgGrunnlag, rettighetsPeriode: Periode): List<TilhørighetVurdering> {
         val harJobbetIUtland = oppgittJobbetIUtland(grunnlag.nyeSoknadGrunnlag, rettighetsPeriode )
-        val harHattUtenlandsOpphold = oppgittUtenlandsOpphold(grunnlag.nyeSoknadGrunnlag, rettighetsPeriode)
+        val harHattUtenlandsOpphold = oppgittUtenlandsOpphold(grunnlag.nyeSoknadGrunnlag)
         val harUtenlandsAdresse = utenlandskAdresse(grunnlag.personopplysningGrunnlag)
         val annetLovvalgsland = lovvalgslandIkkeErNorge(grunnlag.medlemskapArbeidInntektGrunnlag?.medlemskapGrunnlag)
         val utenforEØS = manglerStatsborgerskapIEØS(grunnlag.personopplysningGrunnlag)
@@ -48,26 +48,25 @@ class MedlemskapLovvalgVurderingService {
         if (grunnlag == null) {
             return TilhørighetVurdering(listOf(Kilde.SØKNAD), Indikasjon.UTENFOR_NORGE, "Mangler utenlandsdata fra søknad", true, "Mangler utenlandsdata fra søknad")
         }
-
-        var arbeidetUtenforNorge = false
         val relevantePerioder = grunnlag.utenlandsOpphold?.filter {
             (it.tilDato != null && rettighetsPeriode.inneholder(it.tilDato)) || (it.fraDato != null && rettighetsPeriode.inneholder(it.fraDato))
         }
 
-        if ((grunnlag.arbeidetUtenforNorgeFørSykdom  || grunnlag.iTilleggArbeidUtenforNorge) && relevantePerioder?.isNotEmpty() == true) {
-            arbeidetUtenforNorge = true
-        }
+        val jobbUtenforNorge = when {
+            !grunnlag.harBoddINorgeSiste5År ->
+                relevantePerioder?.any { it.iArbeid } == true
+                    || (grunnlag.harArbeidetINorgeSiste5År && grunnlag.iTilleggArbeidUtenforNorge && relevantePerioder?.isNotEmpty() == true)
 
-        if (!grunnlag.harArbeidetINorgeSiste5År && relevantePerioder?.any{ it.iArbeid } == true) {
-            arbeidetUtenforNorge = true
-        }
+            grunnlag.arbeidetUtenforNorgeFørSykdom ->
+                relevantePerioder?.isNotEmpty() == true
 
+            else -> false
+        }
         val jsonGrunnlag = DefaultJsonMapper.toJson(grunnlag) // TODO: Her må vi faktisk lande hva vi vil ha ut
-
-        return TilhørighetVurdering(listOf(Kilde.SØKNAD), Indikasjon.UTENFOR_NORGE, "Arbeid i utland", arbeidetUtenforNorge, jsonGrunnlag)
+        return TilhørighetVurdering(listOf(Kilde.SØKNAD), Indikasjon.UTENFOR_NORGE, "Arbeid i utland", jobbUtenforNorge, jsonGrunnlag)
     }
 
-    private fun oppgittUtenlandsOpphold(grunnlag: UtenlandsOppholdData?, rettighetsPeriode: Periode): TilhørighetVurdering {
+    private fun oppgittUtenlandsOpphold(grunnlag: UtenlandsOppholdData?): TilhørighetVurdering {
         if (grunnlag == null) {
             return TilhørighetVurdering(listOf(Kilde.SØKNAD), Indikasjon.UTENFOR_NORGE, "Mangler utenlandsdata fra søknad", true, "Mangler utenlandsdata fra søknad")
         }
