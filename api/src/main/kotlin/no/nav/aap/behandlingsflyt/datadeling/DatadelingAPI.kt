@@ -31,7 +31,7 @@ fun NormalOpenAPIRoute.datadelingAPI(datasource: DataSource) {
                     }
                     respond(saker.map { sak ->
                         SakStatus.fromKelvin(
-                            sak.id.toString(),
+                            sak.id.id.toString(),
                             sak.status(),
                             Maksimum.Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.tom),
                         )
