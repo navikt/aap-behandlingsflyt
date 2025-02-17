@@ -5,7 +5,7 @@ Behandlingsflyt for Arbeidsavklaringspenger (AAP). Definerer flyten for ulike be
 
 ### API-dokumentasjon
 
-APIene er dokumentert med Swagger: http://localhost:8080/swagger-ui/index.html
+APIene er dokumentert med Swagger: https://aap-behandlingsflyt.intern.dev.nav.no/swagger-ui/index.html
 
 ### Lokalt utviklingsmiljø:
 

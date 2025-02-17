@@ -4,10 +4,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegGruppe
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 class BarnetilleggVisningUtleder(connection: DBConnection) : StegGruppeVisningUtleder {
 
-    private val barnRepository = BarnRepository(connection)
+    private val barnRepository = RepositoryProvider(connection).provide<BarnRepository>()
 
     override fun skalVises(behandlingId: BehandlingId): Boolean {
         val harRegsiterBarn =

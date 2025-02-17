@@ -120,7 +120,7 @@ class BarnService private constructor(
             val identGateway = GatewayProvider.provide(IdentGateway::class)
             return BarnService(
                 SakService(sakRepository),
-                BarnRepository(connection),
+                repositoryProvider.provide(),
                 personopplysningRepository,
                 personRepository,
                 barnGateway,

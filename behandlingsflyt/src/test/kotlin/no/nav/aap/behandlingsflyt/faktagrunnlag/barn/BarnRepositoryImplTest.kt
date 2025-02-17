@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
@@ -25,7 +25,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class BarnRepositoryTest {
+class BarnRepositoryImplTest {
 
     @Test
     fun `Finner ikke barn hvis det ikke finnes barn`() {
@@ -33,7 +33,7 @@ class BarnRepositoryTest {
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val barnRepository = BarnRepository(connection)
+            val barnRepository = BarnRepositoryImpl(connection)
             val barn = barnRepository.hentHvisEksisterer(behandling.id)
             assertThat(barn?.registerbarn?.identer).isNullOrEmpty()
         }
@@ -45,7 +45,7 @@ class BarnRepositoryTest {
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val barnRepository = BarnRepository(connection)
+            val barnRepository = BarnRepositoryImpl(connection)
             val barnListe = setOf(Ident("12345678910"))
 
             barnRepository.lagreRegisterBarn(behandling.id, barnListe)
@@ -59,7 +59,7 @@ class BarnRepositoryTest {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
-            val barnRepository = BarnRepository(connection)
+            val barnRepository = BarnRepositoryImpl(connection)
             val registerBarn = setOf(Ident("1234567890"), Ident("1337"))
             val oppgitteBarn = OppgitteBarn(null, setOf(Ident("0987654321")))
             barnRepository.lagreRegisterBarn(behandling.id, registerBarn)
@@ -77,7 +77,7 @@ class BarnRepositoryTest {
     @Test
     fun `Kopiering av barn fra en behandling til en annen`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val barnRepository = BarnRepository(connection)
+            val barnRepository = BarnRepositoryImpl(connection)
             // Given
             val sak = sak(connection)
             val gammelBehandling = behandling(connection, sak)
