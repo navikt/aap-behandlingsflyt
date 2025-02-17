@@ -10,6 +10,9 @@ enum class RettighetsType(val hjemmel: String) {
     SYKEPENGEERSTATNING(hjemmel = "§ 11-13"),
     STUDENT(hjemmel = "§ 11-14"),
     ARBEIDSSØKER(hjemmel = "§ 11-17"),
+
+    @Deprecated("Skrivefeil i denne.", replaceWith = ReplaceWith("VURDERES_FOR_UFØRETRYGD"))
     VURDERES_FOR_UFØRETYGD(hjemmel = "§ 11-18"),
+    VURDERES_FOR_UFØRETRYGD(hjemmel = "§ 11-18"),
     // TODO: skal 11-22 (yrkesskade) inn her?
 }
