@@ -431,6 +431,9 @@ private fun hentUtRelevantVilkårForSteg(vilkårsresultat: Vilkårsresultat, ste
     if (stegType == StegType.VURDER_BISTANDSBEHOV) {
         vilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
     }
+    if (stegType == StegType.VURDER_LOVVALG) {
+        vilkår = vilkårsresultat.finnVilkår(Vilkårtype.MEDLEMSKAP)
+    }
     if (stegType == StegType.VURDER_MEDLEMSKAP) {
         vilkår = vilkårsresultat.finnVilkår(Vilkårtype.MEDLEMSKAP)
     }
