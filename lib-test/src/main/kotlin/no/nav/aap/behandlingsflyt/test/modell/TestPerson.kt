@@ -15,6 +15,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.Year
 
 fun genererIdent(fødselsdato: LocalDate): Ident {
@@ -35,7 +36,7 @@ class TestPerson(
     val institusjonsopphold: List<InstitusjonsoppholdJSON> = emptyList(),
     val uføre: Prosent? = Prosent(0),
     inntekter: List<InntektPerÅr> = defaultInntekt(),
-    val personStatus: PdlFolkeregisterPersonStatus = PdlFolkeregisterPersonStatus(PersonStatus.bosatt),
+    val personStatus: PdlFolkeregisterPersonStatus = PdlFolkeregisterPersonStatus(PersonStatus.bosatt, LocalDateTime.now(), null),
     val statsborgerskap: PdlStatsborgerskap = PdlStatsborgerskap("NOR", LocalDate.now().minusYears(5), null),
     val sykepenger: List<Sykepenger>? = null
 ) {

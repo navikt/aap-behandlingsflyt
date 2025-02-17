@@ -1029,7 +1029,7 @@ object FakeServers : AutoCloseable {
                 ),
                 doedsfall = mapDødsfall(person),
                 statsborgerskap = setOf(PdlStatsborgerskap("NOR", LocalDate.now().minusYears(5), LocalDate.now())),
-                folkeregisterpersonstatus = setOf(PdlFolkeregisterPersonStatus(PersonStatus.bosatt))
+                folkeregisterpersonstatus = setOf(PdlFolkeregisterPersonStatus(PersonStatus.bosatt, null, null))
             )
         )
     }
@@ -1052,7 +1052,7 @@ object FakeServers : AutoCloseable {
                         .map { PdlRelasjon(it.identer.first().identifikator) }
                         .toList(),
                     statsborgerskap = setOf(PdlStatsborgerskap("NOR", LocalDate.now().minusYears(5), LocalDate.now())),
-                    folkeregisterpersonstatus = setOf(PdlFolkeregisterPersonStatus(PersonStatus.bosatt))
+                    folkeregisterpersonstatus = setOf(PdlFolkeregisterPersonStatus(PersonStatus.bosatt, LocalDateTime.now(), null))
                 )
             )
         )
@@ -1175,7 +1175,7 @@ object FakeServers : AutoCloseable {
                 )
             ),
             statsborgerskap = setOf(PdlStatsborgerskap("NOR", LocalDate.now(), LocalDate.now())),
-            folkeregisterpersonstatus = setOf(PdlFolkeregisterPersonStatus(PersonStatus.bosatt))
+            folkeregisterpersonstatus = setOf(PdlFolkeregisterPersonStatus(PersonStatus.bosatt, null, null))
         )
     }
 
@@ -1196,8 +1196,8 @@ object FakeServers : AutoCloseable {
                 PdlStatsborgerskap("MAC", LocalDate.now().minusYears(5), LocalDate.now()),
             ),
             folkeregisterpersonstatus = setOf(
-                PdlFolkeregisterPersonStatus(PersonStatus.bosatt),
-                PdlFolkeregisterPersonStatus(PersonStatus.ikkeBosatt)
+                PdlFolkeregisterPersonStatus(PersonStatus.bosatt, null, null),
+                PdlFolkeregisterPersonStatus(PersonStatus.ikkeBosatt, null, null)
             )
         )
     }

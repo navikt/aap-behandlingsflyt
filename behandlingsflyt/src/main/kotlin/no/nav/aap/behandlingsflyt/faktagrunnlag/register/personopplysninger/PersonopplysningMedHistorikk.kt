@@ -3,13 +3,14 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonStatus
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 data class PersonopplysningMedHistorikk(
     val fødselsdato: Fødselsdato,
     val id: Long? = null,
     val dødsdato: Dødsdato? = null,
     val statsborgerskap: List<Statsborgerskap>,
-    val statuser: List<PersonStatus>
+    val folkeregisterStatuser: List<FolkeregisterStatus>
 ) {
 
     // Denne skal kun sammenlikne data og ikke tidspunkter
@@ -31,6 +32,12 @@ data class PersonopplysningMedHistorikk(
         return result
     }
 }
+
+data class FolkeregisterStatus(
+    val status: PersonStatus,
+    val gyldighetstidspunkt: LocalDate?,
+    val opphoerstidspunkt: LocalDate?
+)
 
 data class Statsborgerskap(
     val land: String,
