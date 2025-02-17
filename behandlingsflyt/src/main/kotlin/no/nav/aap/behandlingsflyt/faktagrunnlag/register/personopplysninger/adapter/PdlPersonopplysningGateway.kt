@@ -125,9 +125,7 @@ val PERSON_QUERY_HISTORIKK = """
             gyldigTilOgMed
         },
         folkeregisterpersonstatus(historikk: true) {
-            status,
-            gyldighetstidspunkt,
-            opphoerstidspunkt
+            status
         }
       }
     }
