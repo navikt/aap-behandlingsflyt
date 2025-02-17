@@ -24,9 +24,9 @@ import java.time.LocalDate
 class SamordningYtelseVurderingService(
     private val samordningYtelseVurderingRepository: SamordningYtelseVurderingRepository,
     private val sakService: SakService,
-    private val fpGateway: ForeldrepengerGateway
 ) : Informasjonskrav {
-    private val spGateway = SykepengerGateway()
+    private val fpGateway = GatewayProvider.provide<ForeldrepengerGateway>()
+    private val spGateway = GatewayProvider.provide<SykepengerGateway>()
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
@@ -141,7 +141,6 @@ class SamordningYtelseVurderingService(
             return SamordningYtelseVurderingService(
                 repositoryProvider.provide(),
                 SakService(sakRepository),
-                GatewayProvider.provide()
             )
         }
     }

@@ -2,7 +2,8 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsev
 
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.AbakusForeldrepengerGateway
+import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusSykepengerGateway
+import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningYtelseVurderingRepositoryImpl
@@ -32,7 +33,9 @@ class SamordningYtelseVurderingServiceTest {
         @BeforeAll
         @JvmStatic
         fun beforeAll() {
-            GatewayRegistry.register<AbakusForeldrepengerGateway>()
+            GatewayRegistry
+                .register<AbakusForeldrepengerGateway>()
+                .register<AbakusSykepengerGateway>()
         }
     }
 
@@ -44,7 +47,6 @@ class SamordningYtelseVurderingServiceTest {
             val service = SamordningYtelseVurderingService(
                 SamordningYtelseVurderingRepositoryImpl(connection),
                 SakService(sakRepository),
-                GatewayProvider.provide()
             )
             val kontekst = opprettSakdata(connection)
 
