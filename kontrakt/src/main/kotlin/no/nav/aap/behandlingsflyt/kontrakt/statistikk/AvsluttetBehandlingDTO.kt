@@ -12,7 +12,7 @@ public data class AvsluttetBehandlingDTO(
     val vilkårsResultat: VilkårsResultatDTO,
     val beregningsGrunnlag: BeregningsgrunnlagDTO?,
     val diagnoser: Diagnoser? = null,
-    val rettighetstypePerioder: List<RettighetstypePeriode>? = null
+    val rettighetstypePerioder: List<RettighetstypePeriode>
 )
 
 public data class Diagnoser(

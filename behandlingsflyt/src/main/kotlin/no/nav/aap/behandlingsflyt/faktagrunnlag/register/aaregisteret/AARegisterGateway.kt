@@ -12,9 +12,9 @@ import org.slf4j.LoggerFactory
 import java.net.URI
 
 class AARegisterGateway {
-    private val url = URI.create(requiredConfigForKey("integrasjon.aareg.url")+"/api/v2/arbeidstaker/arbeidsforholdoversikt")
+    private val url =
+        URI.create(requiredConfigForKey("integrasjon.aareg.url") + "/api/v2/arbeidstaker/arbeidsforholdoversikt")
     private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.aareg.scope"))
-    val logger = LoggerFactory.getLogger(AARegisterGateway::class.java)
 
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
