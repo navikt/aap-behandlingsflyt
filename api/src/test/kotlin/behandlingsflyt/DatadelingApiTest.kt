@@ -65,8 +65,8 @@ class DatadelingApiTest {
             assertThat(response.body<List<SakStatus>>()).isEqualTo(
                 listOf(
                     SakStatus(
-                        sakId = sak.id.id.toString(),
-                        vedtakStatusKode = SakStatus.VedtakStatus.OPPRE,
+                        sakId = "10000",
+                        statusKode = SakStatus.VedtakStatus.OPPRE,
                         periode = Maksimum.Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.tom)
                     )
                 )
