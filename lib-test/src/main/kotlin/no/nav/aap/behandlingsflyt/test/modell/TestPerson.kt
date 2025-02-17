@@ -36,7 +36,7 @@ class TestPerson(
     val institusjonsopphold: List<InstitusjonsoppholdJSON> = emptyList(),
     val uføre: Prosent? = Prosent(0),
     inntekter: List<InntektPerÅr> = defaultInntekt(),
-    val personStatus: PdlFolkeregisterPersonStatus = PdlFolkeregisterPersonStatus(PersonStatus.bosatt, LocalDateTime.now(), null),
+    val personStatus: PdlFolkeregisterPersonStatus = PdlFolkeregisterPersonStatus(PersonStatus.bosatt, null),
     val statsborgerskap: PdlStatsborgerskap = PdlStatsborgerskap("NOR", LocalDate.now().minusYears(5), null),
     val sykepenger: List<Sykepenger>? = null
 ) {

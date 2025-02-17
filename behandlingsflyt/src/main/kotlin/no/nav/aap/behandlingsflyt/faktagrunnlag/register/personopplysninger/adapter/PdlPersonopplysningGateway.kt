@@ -70,7 +70,7 @@ object PdlPersonopplysningGateway : PersonopplysningGateway {
             ?: return null
 
         val folkeregisterStatuser = requireNotNull(response.data?.hentPerson?.folkeregisterpersonstatus?.map {
-            FolkeregisterStatus(it.status, it.gyldighetstidspunkt?.toLocalDate(), it.opphoerstidspunkt?.toLocalDate())
+            FolkeregisterStatus(it.status, it.folkeregistermetadata?.gyldighetstidspunkt?.toLocalDate(), it.folkeregistermetadata?.opphoerstidspunkt?.toLocalDate())
         })
         val statsborgerskap = requireNotNull(response.data?.hentPerson?.statsborgerskap?.map {
             Statsborgerskap(
@@ -125,7 +125,11 @@ val PERSON_QUERY_HISTORIKK = """
             gyldigTilOgMed
         },
         folkeregisterpersonstatus(historikk: true) {
-            status
+            status,
+            folkeregistermetadata {
+                gyldighetstidspunkt,
+                opphoerstidspunkt
+            }
         }
       }
     }

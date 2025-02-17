@@ -1029,7 +1029,7 @@ object FakeServers : AutoCloseable {
                 ),
                 doedsfall = mapDødsfall(person),
                 statsborgerskap = setOf(PdlStatsborgerskap("NOR", LocalDate.now().minusYears(5), LocalDate.now())),
-                folkeregisterpersonstatus = setOf(PdlFolkeregisterPersonStatus(PersonStatus.bosatt, null, null))
+                folkeregisterpersonstatus = setOf(PdlFolkeregisterPersonStatus(PersonStatus.bosatt, null))
             )
         )
     }
@@ -1052,7 +1052,7 @@ object FakeServers : AutoCloseable {
                         .map { PdlRelasjon(it.identer.first().identifikator) }
                         .toList(),
                     statsborgerskap = setOf(PdlStatsborgerskap("NOR", LocalDate.now().minusYears(5), LocalDate.now())),
-                    folkeregisterpersonstatus = setOf(PdlFolkeregisterPersonStatus(PersonStatus.bosatt, LocalDateTime.now(), null))
+                    folkeregisterpersonstatus = setOf(PdlFolkeregisterPersonStatus(PersonStatus.bosatt, null))
                 )
             )
         )
@@ -1175,7 +1175,7 @@ object FakeServers : AutoCloseable {
                 )
             ),
             statsborgerskap = setOf(PdlStatsborgerskap("NOR", LocalDate.now(), LocalDate.now())),
-            folkeregisterpersonstatus = setOf(PdlFolkeregisterPersonStatus(PersonStatus.bosatt, null, null))
+            folkeregisterpersonstatus = setOf(PdlFolkeregisterPersonStatus(PersonStatus.bosatt, null))
         )
     }
 
@@ -1196,8 +1196,8 @@ object FakeServers : AutoCloseable {
                 PdlStatsborgerskap("MAC", LocalDate.now().minusYears(5), LocalDate.now()),
             ),
             folkeregisterpersonstatus = setOf(
-                PdlFolkeregisterPersonStatus(PersonStatus.bosatt, null, null),
-                PdlFolkeregisterPersonStatus(PersonStatus.ikkeBosatt, null, null)
+                PdlFolkeregisterPersonStatus(PersonStatus.bosatt, null),
+                PdlFolkeregisterPersonStatus(PersonStatus.ikkeBosatt, null)
             )
         )
     }

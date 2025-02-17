@@ -77,9 +77,14 @@ data class PdlPersoninfo(
 
 data class PdlFolkeregisterPersonStatus(
     val status: PersonStatus,
+    val folkeregistermetadata: PdlFolkeregistermetadata?,
+)
+
+data class PdlFolkeregistermetadata(
     val gyldighetstidspunkt: LocalDateTime?,
     val opphoerstidspunkt: LocalDateTime?
 )
+
 
 data class PdlStatsborgerskap(
     val land: String,
