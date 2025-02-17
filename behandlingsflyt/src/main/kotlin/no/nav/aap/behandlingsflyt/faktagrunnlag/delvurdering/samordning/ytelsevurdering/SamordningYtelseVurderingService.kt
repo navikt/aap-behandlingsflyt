@@ -17,14 +17,15 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
 
 class SamordningYtelseVurderingService(
     private val samordningYtelseVurderingRepository: SamordningYtelseVurderingRepository,
-    private val sakService: SakService
+    private val sakService: SakService,
+    private val fpGateway: ForeldrepengerGateway
 ) : Informasjonskrav {
-    private val fpGateway = ForeldrepengerGateway()
     private val spGateway = SykepengerGateway()
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
@@ -139,7 +140,8 @@ class SamordningYtelseVurderingService(
             val sakRepository = repositoryProvider.provide<SakRepository>()
             return SamordningYtelseVurderingService(
                 repositoryProvider.provide(),
-                SakService(sakRepository)
+                SakService(sakRepository),
+                GatewayProvider.provide()
             )
         }
     }

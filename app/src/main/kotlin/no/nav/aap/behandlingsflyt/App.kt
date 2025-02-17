@@ -40,6 +40,7 @@ import no.nav.aap.behandlingsflyt.datadeling.datadelingAPI
 import no.nav.aap.behandlingsflyt.exception.ErrorRespons
 import no.nav.aap.behandlingsflyt.exception.FlytOperasjonException
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.AbakusForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepositoryImpl
@@ -231,6 +232,7 @@ private fun registerGateways() {
         .register<PdlIdentGateway>()
         .register<PdlPersoninfoBulkGateway>()
         .register<PdlPersoninfoGateway>()
+        .register<AbakusForeldrepengerGateway>()
         .status()
 }
 
