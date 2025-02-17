@@ -207,8 +207,7 @@ class StatistikkJobbUtfører(
                     RettighetsType.SYKEPENGEERSTATNING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.SYKEPENGEERSTATNING
                     RettighetsType.STUDENT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.STUDENT
                     RettighetsType.ARBEIDSSØKER -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.ARBEIDSSØKER
-                    RettighetsType.VURDERES_FOR_UFØRETYGD -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.VURDERES_FOR_UFØRETYGD
-                    RettighetsType.VURDERES_FOR_UFØRETRYGD -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.VURDERES_FOR_UFØRETYGD
+                    RettighetsType.VURDERES_FOR_UFØRETRYGD -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.VURDERES_FOR_UFØRETRYGD
                 }
             )
         }

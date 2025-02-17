@@ -85,7 +85,7 @@ class Vilkårsresultat(
                 Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG -> null
                 Innvilgelsesårsak.STUDENT -> RettighetsType.STUDENT
                 Innvilgelsesårsak.ARBEIDSSØKER -> RettighetsType.ARBEIDSSØKER
-                Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD -> RettighetsType.VURDERES_FOR_UFØRETYGD
+                Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD -> RettighetsType.VURDERES_FOR_UFØRETRYGD
             }
             if (r != null) {
                 return r
