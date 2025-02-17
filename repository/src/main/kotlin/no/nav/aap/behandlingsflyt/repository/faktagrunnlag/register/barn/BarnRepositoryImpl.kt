@@ -1,5 +1,6 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn
+package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.*
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
