@@ -38,9 +38,9 @@ class VurderLovvalgSteg private constructor(
                 ?: throw IllegalStateException("Forventet å finne personopplysninger")
             val medlemskapArbeidInntektGrunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)
             val oppgittUtenlandsOppholdGrunnlag = medlemskapArbeidInntektRepository.hentOppgittUtenlandsOppholdHvisEksisterer(kontekst.behandlingId)
-                Medlemskapvilkåret(vilkårsresultat, sak.rettighetsperiode, manuellVurdering).vurder(
-                    MedlemskapLovvalgGrunnlag(medlemskapArbeidInntektGrunnlag, personopplysningGrunnlag, oppgittUtenlandsOppholdGrunnlag)
-                )
+            Medlemskapvilkåret(vilkårsresultat, sak.rettighetsperiode, manuellVurdering).vurder(
+                MedlemskapLovvalgGrunnlag(medlemskapArbeidInntektGrunnlag, personopplysningGrunnlag, oppgittUtenlandsOppholdGrunnlag)
+            )
             vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
         }
         // TODO: Revurdering må inn her
