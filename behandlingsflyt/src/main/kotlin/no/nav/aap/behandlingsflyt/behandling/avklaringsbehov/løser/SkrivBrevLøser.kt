@@ -46,6 +46,6 @@ class SkrivBrevLøser(val connection: DBConnection) : AvklaringsbehovsLøser<Skr
     }
 
     override fun forBehov(): Definisjon {
-        return Definisjon.SKRIV_BREV
+        return Definisjon.SKRIV_VEDTAK_AVSLAG_BREV // TODO en løser for hver "skriv brev"-definisjon?
     }
 }

@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.Brevbestil
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.BrevbestillingLøsningStatus
@@ -53,9 +54,17 @@ class BrevbestillingLøser(val connection: DBConnection) :
 
         if (status == Status.FORHÅNDSVISNING_KLAR) {
             val behandling = behandlingRepository.hent(kontekst.behandlingId())
+            val brevbestilling =
+                brevbestillingRepository.hent(BrevbestillingReferanse(løsning.oppdatertStatusForBestilling.bestillingReferanse))
+            val avklaringsbehov = when (brevbestilling.typeBrev) {
+                TypeBrev.VEDTAK_AVSLAG -> Definisjon.SKRIV_VEDTAK_AVSLAG_BREV
+                TypeBrev.VEDTAK_INNVILGELSE -> Definisjon.SKRIV_VEDTAK_INNVILGELSE_BREV
+                TypeBrev.VARSEL_OM_BESTILLING -> Definisjon.SKRIV_VARSEL_OM_BESTILLING_BREV
+                TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT -> Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV
+            }
             val avklaringsbehovene =
                 avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId = kontekst.behandlingId())
-            avklaringsbehovene.leggTil(listOf(Definisjon.SKRIV_BREV), behandling.aktivtSteg())
+            avklaringsbehovene.leggTil(listOf(avklaringsbehov), behandling.aktivtSteg())
             behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
         }
 

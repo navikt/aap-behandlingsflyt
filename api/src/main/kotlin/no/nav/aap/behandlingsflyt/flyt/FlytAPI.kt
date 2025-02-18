@@ -346,7 +346,14 @@ private fun utledVisning(
     val visKvalitetssikringKort = utledVisningAvKvalitetsikrerKort(alleAvklaringsbehovInkludertFrivillige)
     val kvalitetssikringReadOnly = visKvalitetssikringKort && flyt.erStegFør(aktivtSteg, StegType.KVALITETSSIKRING)
     val visBrevkort =
-        alleAvklaringsbehovInkludertFrivillige.hentBehovForDefinisjon(Definisjon.SKRIV_BREV)?.erÅpent() == true
+        alleAvklaringsbehovInkludertFrivillige.alle().filter {
+            listOf(
+                Definisjon.SKRIV_VEDTAK_AVSLAG_BREV,
+                Definisjon.SKRIV_VEDTAK_INNVILGELSE_BREV,
+                Definisjon.SKRIV_VARSEL_OM_BESTILLING_BREV,
+                Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV
+            ).contains(it.definisjon)
+        }.any { it.erÅpent() }
 
     if (jobber) {
         return Visning(

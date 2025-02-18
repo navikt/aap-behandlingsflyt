@@ -577,7 +577,7 @@ class FlytOrkestratorTest {
 
         alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling.id)
         // Venter på at brevet skal fullføres
-        assertThat(alleAvklaringsbehov).anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.SKRIV_BREV) }
+        assertThat(alleAvklaringsbehov).anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.SKRIV_VEDTAK_INNVILGELSE_BREV) }
 
         brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
 
@@ -906,7 +906,7 @@ class FlytOrkestratorTest {
 
         alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling.id)
         // Venter på at brevet skal fullføres
-        assertThat(alleAvklaringsbehov).anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.SKRIV_BREV) }
+        assertThat(alleAvklaringsbehov).anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.SKRIV_VEDTAK_INNVILGELSE_BREV) }
 
         brevBestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
         løsAvklaringsBehov(

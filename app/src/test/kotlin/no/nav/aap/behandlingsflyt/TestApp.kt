@@ -147,7 +147,7 @@ fun main() {
                             val avklaringsbehovene =
                                 AvklaringsbehovRepositoryImpl(connection).hentAvklaringsbehovene(behandling.id)
 
-                            avklaringsbehovene.leggTil(listOf(Definisjon.SKRIV_BREV), behandling.aktivtSteg())
+                            avklaringsbehovene.leggTil(listOf(Definisjon.SKRIV_VEDTAK_AVSLAG_BREV), behandling.aktivtSteg())
                         }
 
                         respond("OK")

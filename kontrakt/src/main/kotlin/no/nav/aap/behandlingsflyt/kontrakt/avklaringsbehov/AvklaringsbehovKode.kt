@@ -97,4 +97,7 @@ public enum class AvklaringsbehovKode {
      * [SKRIV_BREV_KODE]
      */
     `5050`,
+    `5051`,
+    `5052`,
+    `5053`,
 }

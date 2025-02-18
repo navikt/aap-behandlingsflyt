@@ -42,7 +42,6 @@ import no.nav.aap.komponenter.verdityper.TimerArbeid
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertInstanceOf
-import org.junit.jupiter.api.assertThrows
 import java.math.BigDecimal
 import java.time.Duration
 import java.time.Instant
@@ -237,13 +236,13 @@ class Effektuer11_7StegTest {
 
         InMemoryAvklaringsbehovRepository.opprett(
             behandlingId = behandling.id,
-            definisjon = Definisjon.SKRIV_BREV,
+            definisjon = Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV,
             funnetISteg = StegType.EFFEKTUER_11_7,
             begrunnelse = "",
             endretAv = "",
         )
         steg.utfør(kontekst).also {
-            assertEquals(FantAvklaringsbehov(avklaringsbehov=listOf(Definisjon.SKRIV_BREV)), it)
+            assertEquals(FantAvklaringsbehov(avklaringsbehov=listOf(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)), it)
         }
     }
 

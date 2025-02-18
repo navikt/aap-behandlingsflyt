@@ -55,8 +55,35 @@ public enum class Definisjon(
             Rolle.SAKSBEHANDLER_NASJONAL
         )
     ),
-    SKRIV_BREV(
+    SKRIV_VEDTAK_AVSLAG_BREV(
         kode = AvklaringsbehovKode.`5050`,
+        løsesISteg = StegType.UDEFINERT,
+        type = BehovType.BREV,
+        løsesAv = listOf(
+            Rolle.SAKSBEHANDLER_OPPFOLGING,
+            Rolle.SAKSBEHANDLER_NASJONAL
+        )
+    ),
+    SKRIV_VEDTAK_INNVILGELSE_BREV(
+        kode = AvklaringsbehovKode.`5051`,
+        løsesISteg = StegType.UDEFINERT,
+        type = BehovType.BREV,
+        løsesAv = listOf(
+            Rolle.SAKSBEHANDLER_OPPFOLGING,
+            Rolle.SAKSBEHANDLER_NASJONAL
+        )
+    ),
+    SKRIV_VARSEL_OM_BESTILLING_BREV(
+        kode = AvklaringsbehovKode.`5052`,
+        løsesISteg = StegType.UDEFINERT,
+        type = BehovType.BREV,
+        løsesAv = listOf(
+            Rolle.SAKSBEHANDLER_OPPFOLGING,
+            Rolle.SAKSBEHANDLER_NASJONAL
+        )
+    ),
+    SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV(
+        kode = AvklaringsbehovKode.`5053`,
         løsesISteg = StegType.UDEFINERT,
         type = BehovType.BREV,
         løsesAv = listOf(
@@ -285,9 +312,15 @@ public enum class Definisjon(
     }
 
     private fun validerBrevpunkt() {
-        if (this == SKRIV_BREV && !this.løsesISteg.tekniskSteg) {
+        if (
+            (this == SKRIV_VEDTAK_AVSLAG_BREV
+                    || this == SKRIV_VEDTAK_INNVILGELSE_BREV
+                    || this == SKRIV_VARSEL_OM_BESTILLING_BREV
+                    || this == SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
+            && !this.løsesISteg.tekniskSteg
+        ) {
             throw IllegalArgumentException(
-                "Brevbeho må være knyttet til et teknisk steg"
+                "Brevbehov må være knyttet til et teknisk steg"
             )
         }
     }

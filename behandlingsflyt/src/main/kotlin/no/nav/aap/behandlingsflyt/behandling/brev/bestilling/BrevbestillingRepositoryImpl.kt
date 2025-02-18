@@ -40,6 +40,22 @@ class BrevbestillingRepositoryImpl(private val connection: DBConnection) : Brevb
         )
     }
 
+    override fun hent(brevbestillingReferanse: BrevbestillingReferanse): Brevbestilling {
+        val query =
+            """
+                SELECT *
+                FROM BREVBESTILLING
+                WHERE REFERANSE = ?
+            """.trimIndent()
+
+        return connection.queryFirst (query) {
+            setParams {
+                setUUID(1, brevbestillingReferanse.brevbestillingReferanse)
+            }
+            setRowMapper { rowMapper(it) }
+        }
+    }
+
     override fun lagre(
         behandlingId: BehandlingId,
         typeBrev: TypeBrev,
