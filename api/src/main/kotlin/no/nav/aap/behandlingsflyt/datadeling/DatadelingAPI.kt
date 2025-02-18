@@ -6,13 +6,18 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import javax.sql.DataSource
+
+
 
 fun NormalOpenAPIRoute.datadelingAPI(datasource: DataSource) {
     route("/api/datadeling") {
@@ -61,6 +66,23 @@ fun NormalOpenAPIRoute.datadelingAPI(datasource: DataSource) {
                     }
                 }
             }
+            route("/meldekort"){ //take in InternVedtakRequest and select person, then sak, then last behandling using last sak, then select belonging underveisRepository
+                post<Unit, List<Periode>, Ident>{ request, body ->
+                    val behandling = selectLastBehandling(datasource, body.identifikator)
+
+                    val underveisGrunnlag = requireNotNull(datasource.transaction(readOnly = true) { conn ->
+                        val repositoryProvider = RepositoryProvider(conn)
+                        val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
+                        underveisRepository.hent(behandling!!.id)
+                    })
+
+                    val perioder = underveisGrunnlag.perioder.map { periode ->
+                        periode.meldePeriode
+                    }.toSet()
+
+                    respond(perioder.toList())
+                }
+            }
         }
         route("/sakerByFnr") {
             post<Unit, List<SakStatus>, SakerRequest> { request, body ->
@@ -90,24 +112,7 @@ fun NormalOpenAPIRoute.datadelingAPI(datasource: DataSource) {
         }
         route("/vedtak") {
             post<Unit, Maksimum, DatadelingRequest> { request, body ->
-                val person = datasource.transaction(readOnly = true) { conn ->
-                    val repositoryProvider = RepositoryProvider(conn)
-                    val personRepository = repositoryProvider.provide<PersonRepository>()
-                    personRepository.finn(Ident("12345678910"))
-                }
-                if (person == null) {
-                    respond(Maksimum(emptyList()))
-                }
-                val sak = datasource.transaction(readOnly = true) { conn ->
-                    val repositoryProvider = RepositoryProvider(conn)
-                    val sakRepository = repositoryProvider.provide<SakRepository>()
-                    sakRepository.finnSakerFor(person!!)
-                }
-                val behandling = datasource.transaction(readOnly = true) { conn ->
-                    val repositoryProvider = RepositoryProvider(conn)
-                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                    behandlingRepository.finnSisteBehandlingFor(sak.last().id)
-                }
+                val behandling = selectLastBehandling(datasource, body.personidentifikator)
 
                 val tilkjentYtelse = requireNotNull(datasource.transaction(readOnly = true) { conn ->
                     val repositoryProvider = RepositoryProvider(conn)
@@ -158,5 +163,26 @@ fun NormalOpenAPIRoute.datadelingAPI(datasource: DataSource) {
             }
 
         }
+    }
+}
+
+fun selectLastBehandling(datasource: DataSource, fnr: String):  Behandling? {
+    val person = datasource.transaction(readOnly = true) { conn ->
+        val repositoryProvider = RepositoryProvider(conn)
+        val personRepository = repositoryProvider.provide<PersonRepository>()
+        personRepository.finn(Ident(fnr))
+    }
+    if (person == null) {
+        return null
+    }
+    val sak = datasource.transaction(readOnly = true) { conn ->
+        val repositoryProvider = RepositoryProvider(conn)
+        val sakRepository = repositoryProvider.provide<SakRepository>()
+        sakRepository.finnSakerFor(person)
+    }
+    return datasource.transaction(readOnly = true) { conn ->
+        val repositoryProvider = RepositoryProvider(conn)
+        val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+        behandlingRepository.finnSisteBehandlingFor(sak.last().id)
     }
 }
