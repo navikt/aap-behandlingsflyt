@@ -29,6 +29,8 @@ data class Ytelse(
 )
 
 data class Anvist(
+    // Hva betyr denne? hva om det er en aktiv ytelse?
+    // Kan slutt-dato *ikke* være satt?
     val periode: Periode,
     val utbetalingsgrad: Utbetalingsgrad,
     val beløp: Number?

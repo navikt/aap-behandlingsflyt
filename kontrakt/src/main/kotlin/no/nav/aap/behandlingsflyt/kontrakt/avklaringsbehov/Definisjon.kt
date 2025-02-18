@@ -161,6 +161,15 @@ public enum class Definisjon(
         løsesISteg = StegType.SAMORDNING_GRADERING,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     ),
+    //? ????
+//    GJENOPPTA_FRA_FORELDREPENGER(
+//        kode = AvklaringsbehovKode.`5013`,
+//        type = BehovType.MANUELT_FRIVILLIG,
+//        løsesISteg = StegType.SAMORDNING_GRADERING,
+//        kreverToTrinn = true,
+//        kvalitetssikres = true,
+//        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
+//    ),
     FORHÅNDSVARSEL_AKTIVITETSPLIKT(
         kode = AvklaringsbehovKode.`5016`,
         type = BehovType.BREV_VENTEPUNKT,
