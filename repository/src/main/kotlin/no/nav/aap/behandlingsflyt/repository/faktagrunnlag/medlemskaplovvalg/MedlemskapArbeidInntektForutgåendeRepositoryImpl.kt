@@ -65,7 +65,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         deaktiverGrunnlag(behandlingId)
 
         val manuellVurderingQuery = """
-            INSERT INTO FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERING (BEGRUNNELSE, HAR_FORUTGAAENDE_MEDLEMSKAP, VAR_MEDLEM_MED_NEDSATT_ARBEIDSEVNE, MEDLEM_MED_UNNTAKT_AV_MAKS_FEM_AAR) VALUES (?, ?, ?, ?)
+            INSERT INTO FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERING (BEGRUNNELSE, HAR_FORUTGAAENDE_MEDLEMSKAP, VAR_MEDLEM_MED_NEDSATT_ARBEIDSEVNE, MEDLEM_MED_UNNTAK_AV_MAKS_FEM_AAR) VALUES (?, ?, ?, ?)
         """.trimIndent()
 
         val manuellVurderingId = connection.executeReturnKey(manuellVurderingQuery) {
