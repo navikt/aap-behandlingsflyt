@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningYtelseVurderingRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
@@ -32,7 +31,7 @@ class SamordningServiceTest {
             opprettYtelseData(ytelseVurderingRepo, behandlingId)
             opprettVurderingData(ytelseVurderingRepo, behandlingId)
 
-            val service = SamordningService(ytelseVurderingRepo, UnderveisRepositoryImpl(connection))
+            val service = SamordningService(ytelseVurderingRepo)
             assertThat(service.vurder(behandlingId)).isNotEmpty
         }
     }
@@ -44,7 +43,7 @@ class SamordningServiceTest {
             val behandlingId = opprettSakdata(connection)
             opprettYtelseData(ytelseVurderingRepo, behandlingId)
 
-            val service = SamordningService(ytelseVurderingRepo, UnderveisRepositoryImpl(connection))
+            val service = SamordningService(ytelseVurderingRepo)
             val tidslinje = service.vurder(behandlingId)
 
             assertThat(tidslinje).hasSize(1)
@@ -57,7 +56,7 @@ class SamordningServiceTest {
             val ytelseVurderingRepo = SamordningYtelseVurderingRepositoryImpl(connection)
             val behandlingId = opprettSakdata(connection)
 
-            val service = SamordningService(ytelseVurderingRepo, UnderveisRepositoryImpl(connection))
+            val service = SamordningService(ytelseVurderingRepo)
             val tidslinje = service.vurder(behandlingId)
 
             assertThat(tidslinje).isEmpty()
@@ -71,7 +70,7 @@ class SamordningServiceTest {
             val behandlingId = opprettSakdata(connection)
             opprettYtelseData(ytelseVurderingRepo, behandlingId)
 
-            val service = SamordningService(ytelseVurderingRepo, UnderveisRepositoryImpl(connection))
+            val service = SamordningService(ytelseVurderingRepo)
             assertEquals(false, service.harGjortVurdering(behandlingId))
 
             opprettVurderingData(ytelseVurderingRepo, behandlingId)

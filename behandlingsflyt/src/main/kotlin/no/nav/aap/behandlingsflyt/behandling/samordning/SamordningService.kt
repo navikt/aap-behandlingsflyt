@@ -2,24 +2,19 @@ package no.nav.aap.behandlingsflyt.behandling.samordning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Prosent
-import kotlin.math.max
 import kotlin.math.min
 
 class SamordningService(
     private val samordningYtelseVurderingRepository: SamordningYtelseVurderingRepository,
-    private val underveisRepository: UnderveisRepository,
 ) {
     fun vurder(behandlingId: BehandlingId): Tidslinje<SamordningGradering> {
         val samordningYtelseVurderingGrunnlag = samordningYtelseVurderingRepository.hentHvisEksisterer(behandlingId)
 
-        //TODO: Kan benytte denne til å filtrere perioder hvor det ikke er rett på ytelse uansett
-        val underveisPerioder = underveisRepository.hentHvisEksisterer(behandlingId)
 
         if (samordningYtelseVurderingGrunnlag == null) {
             return Tidslinje(emptyList())

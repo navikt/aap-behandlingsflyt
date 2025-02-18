@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.behandling.samordning.AvklaringsType
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -71,12 +70,9 @@ class SamordningSteg(
             val repositoryProvider = RepositoryProvider(connection)
             val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
             val samordningRepository = repositoryProvider.provide<SamordningRepository>()
-            val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
+
             return SamordningSteg(
-                SamordningService(
-                    repositoryProvider.provide(),
-                    underveisRepository
-                ),
+                SamordningService(repositoryProvider.provide()),
                 samordningRepository,
                 avklaringsbehovRepository
             )
