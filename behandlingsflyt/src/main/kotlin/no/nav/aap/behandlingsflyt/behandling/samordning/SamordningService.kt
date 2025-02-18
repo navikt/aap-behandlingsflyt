@@ -8,6 +8,7 @@ import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Prosent
+import kotlin.math.max
 
 class SamordningService(
     private val samordningYtelseVurderingRepository: SamordningYtelseVurderingRepository,
@@ -88,7 +89,12 @@ class SamordningService(
 
                     Segment(
                         periode, SamordningGradering(
-                            gradering = Prosent(høyre.verdi.gradering.prosentverdi() + venstre.verdi.gradering.prosentverdi()),
+                            gradering = Prosent(
+                                max(
+                                    100,
+                                    høyre.verdi.gradering.prosentverdi() + venstre.verdi.gradering.prosentverdi()
+                                )
+                            ),
                             ytelsesGraderinger = venstre.verdi.ytelsesGraderinger // TODO ...
                         )
                     )

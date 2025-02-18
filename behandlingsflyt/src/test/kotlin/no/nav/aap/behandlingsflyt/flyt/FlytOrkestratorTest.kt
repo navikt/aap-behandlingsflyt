@@ -196,6 +196,7 @@ class FlytOrkestratorTest {
             .register<MedlemskapArbeidInntektForutgåendeRepositoryImpl>()
             .register<PersonopplysningForutgåendeRepositoryImpl>()
             .register<BarnRepositoryImpl>()
+            .register<SykdomRepositoryImpl>()
             .status()
         GatewayRegistry.register<PdlBarnGateway>()
             .register<PdlIdentGateway>()

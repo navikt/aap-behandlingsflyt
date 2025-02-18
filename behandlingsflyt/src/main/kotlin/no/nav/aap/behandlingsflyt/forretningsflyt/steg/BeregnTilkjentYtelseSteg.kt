@@ -25,15 +25,12 @@ class BeregnTilkjentYtelseSteg private constructor(
     private val personopplysningRepository: PersonopplysningRepository,
     private val barnetilleggRepository: BarnetilleggRepository,
     private val tilkjentYtelseRepository: TilkjentYtelseRepository,
-    private val samordningRepository: SamordningRepository
 ) : BehandlingSteg {
     private val log = LoggerFactory.getLogger(BeregnTilkjentYtelseSteg::class.java)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val beregningsgrunnlag = beregningsgrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
         val underveisgrunnlag = underveisRepository.hent(kontekst.behandlingId)
-        // TODO: hvorfor brukes ikke denne?
-        val samordningGrunnlag = requireNotNull(samordningRepository.hentHvisEksisterer(kontekst.behandlingId))
         val fødselsdato = requireNotNull(personopplysningRepository.hentHvisEksisterer(kontekst.behandlingId)?.brukerPersonopplysning?.fødselsdato)
         val barnetilleggGrunnlag = requireNotNull(barnetilleggRepository.hentHvisEksisterer(kontekst.behandlingId))
 
@@ -61,7 +58,6 @@ class BeregnTilkjentYtelseSteg private constructor(
                 personopplysningRepository,
                 barnetilleggRepository,
                 tilkjentYtelseRepository,
-                samordningRepository,
             )
         }
 

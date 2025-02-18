@@ -40,16 +40,19 @@ class SamordningSteg(
             }
         }
 
-        samordningRepository.lagre(
-            kontekst.behandlingId,
-            samordningTidslinje.segmenter()
-                .map {
-                    SamordningPeriode(
-                        it.periode,
-                        it.verdi.gradering
-                    )
-                }
-        )
+        if (!samordningTidslinje.isEmpty()) {
+            samordningRepository.lagre(
+                kontekst.behandlingId,
+                samordningTidslinje.segmenter()
+                    .map {
+                        SamordningPeriode(
+                            it.periode,
+                            it.verdi.gradering
+                        )
+                    }
+            )
+        }
+
 
         log.info("Samordning tidslinje $samordningTidslinje")
         return Fullført
