@@ -40,10 +40,7 @@ public enum class Definisjon(
         løsesISteg = StegType.UDEFINERT,
         type = BehovType.BREV_VENTEPUNKT,
         defaultFrist = Period.ofDays(1),
-        løsesAv = listOf(
-            Rolle.SAKSBEHANDLER_OPPFOLGING,
-            Rolle.SAKSBEHANDLER_NASJONAL
-        )
+        løsesAv = listOf()
     ),
     BESTILL_LEGEERKLÆRING(
         kode = AvklaringsbehovKode.`9003`,
