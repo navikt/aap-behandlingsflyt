@@ -32,7 +32,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 class DatadelingApiTest {
-    companion object{
+    companion object {
         @BeforeAll
         @JvmStatic
         fun beforeAll() {
@@ -65,8 +65,8 @@ class DatadelingApiTest {
             assertThat(response.body<List<SakStatus>>()).isEqualTo(
                 listOf(
                     SakStatus(
-                        sakId = sak.id.toString(),
-                        vedtakStatusKode = SakStatus.VedtakStatus.OPPRE,
+                        sakId = sak.id.id.toString(),
+                        statusKode = SakStatus.VedtakStatus.OPPRE,
                         periode = Maksimum.Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.tom)
                     )
                 )

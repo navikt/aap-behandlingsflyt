@@ -11,12 +11,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 class AvklarBarnetilleggLøser(
     val connection: DBConnection
 ) : AvklaringsbehovsLøser<AvklarBarnetilleggLøsning> {
 
-    private val barnRepository = BarnRepository(connection)
+    private val barnRepository = RepositoryProvider(connection).provide<BarnRepository>()
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarBarnetilleggLøsning): LøsningsResultat {
 

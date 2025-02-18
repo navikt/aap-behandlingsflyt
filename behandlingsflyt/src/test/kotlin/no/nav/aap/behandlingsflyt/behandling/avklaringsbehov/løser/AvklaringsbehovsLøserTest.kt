@@ -1,9 +1,11 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn.BarnRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7RepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningYtelseVurderingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektForutgåendeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningForutgåendeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepositoryImpl
@@ -42,6 +44,8 @@ class AvklaringsbehovsLøserTest {
         RepositoryRegistry.register<MedlemskapArbeidInntektRepositoryImpl>()
         RepositoryRegistry.register<MeldepliktRepositoryImpl>()
         RepositoryRegistry.register<PersonopplysningForutgåendeRepositoryImpl>()
+        RepositoryRegistry.register<MedlemskapArbeidInntektForutgåendeRepositoryImpl>()
+        RepositoryRegistry.register<BarnRepositoryImpl>()
     }
 
     @Test

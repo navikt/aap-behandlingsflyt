@@ -29,6 +29,9 @@ class Bistandsvilkåret(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<B
             utfall = Utfall.IKKE_OPPFYLT
             avslagsårsak = Avslagsårsak.MANGLENDE_DOKUMENTASJON // TODO: Må ha mer
         }
+        // TODO!!!
+        // 11-18 - under behandling av krav om uføretrygd
+        // 11-17 - i perioden som arbeidssøker
 
         lagre(
             grunnlag, VurderingsResultat(

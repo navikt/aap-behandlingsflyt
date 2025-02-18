@@ -1,6 +1,5 @@
-package no.nav.aap.behandlingsflyt.behandling.underveis.sykepenger
+package no.nav.aap.behandlingsflyt.integrasjon.samordning
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerRequest
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.Fakes
@@ -12,7 +11,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 @Fakes
-class SykepengerGatewayTest {
+class AbakusSykepengerGatewayTest {
     @Test
     fun kanHenteInformasjonFraSykepenger() {
         val person = TestPerson(
@@ -25,7 +24,7 @@ class SykepengerGatewayTest {
         )
         FakePersoner.leggTil(person)
 
-        val spGateway = SykepengerGateway()
+        val spGateway = AbakusSykepengerGateway()
         val request = SykepengerRequest(
             person.identer.map { it.identifikator }.toSet(),
             LocalDate.now(),

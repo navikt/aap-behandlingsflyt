@@ -5,10 +5,14 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.Tags
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.ForutgåendeMedlemskapLovvalgVurderingService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.KanBehandlesAutomatiskVurdering
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.MedlemskapLovvalgVurderingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektForutgåendeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningForutgåendeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -25,7 +29,7 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapAPI(dataSource: DataSource) {
         route("/vurdering/{referanse}") {
             authorizedGet<BehandlingReferanse, KanBehandlesAutomatiskVurdering>(
                 AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse")),
-            null, TagModule(listOf(Tags.Behandling))
+                null, TagModule(listOf(Tags.Behandling))
             ) { req ->
                 val vurdering = dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
@@ -39,6 +43,29 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapAPI(dataSource: DataSource) {
 
                     MedlemskapLovvalgVurderingService().vurderTilhørighet(
                         MedlemskapLovvalgGrunnlag(medlemskapArbeidInntektGrunnlag, personopplysningGrunnlag, oppgittUtenlandsOppholdGrunnlag),
+                        sak.rettighetsperiode
+                    )
+                }
+                respond(vurdering)
+            }
+        }
+        route("/forutgaaendevurdering/{referanse}") {
+            authorizedGet<BehandlingReferanse, KanBehandlesAutomatiskVurdering>(
+                AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse")),
+                null, TagModule(listOf(Tags.Behandling))
+            ) { req ->
+                val vurdering = dataSource.transaction { connection ->
+                    val repositoryProvider = RepositoryProvider(connection)
+                    val behandling = repositoryProvider.provide<BehandlingRepository>().hent(BehandlingReferanse(req.referanse))
+                    val sak = repositoryProvider.provide<SakRepository>().hent(behandling.sakId)
+
+                    val personopplysningGrunnlag = repositoryProvider.provide<PersonopplysningForutgåendeRepository>().hentHvisEksisterer(behandling.id)
+                        ?: throw IllegalStateException("Forventet å finne forutgående personopplysninger")
+                    val medlemskapArbeidInntektGrunnlag = repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>().hentHvisEksisterer(behandling.id)
+                    val oppgittUtenlandsOppholdGrunnlag = repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>().hentOppgittUtenlandsOppholdHvisEksisterer(behandling.id)
+
+                    ForutgåendeMedlemskapLovvalgVurderingService().vurderTilhørighet(ForutgåendeMedlemskapGrunnlag(
+                        medlemskapArbeidInntektGrunnlag, personopplysningGrunnlag, oppgittUtenlandsOppholdGrunnlag),
                         sak.rettighetsperiode
                     )
                 }

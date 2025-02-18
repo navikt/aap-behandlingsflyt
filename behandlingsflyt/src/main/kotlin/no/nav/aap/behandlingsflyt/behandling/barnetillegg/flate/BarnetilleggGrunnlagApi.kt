@@ -45,7 +45,7 @@ fun NormalOpenAPIRoute.barnetilleggApi(dataSource: DataSource) {
 
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
-                    val barnRepository = BarnRepository(connection)
+                    val barnRepository = repositoryProvider.provide<BarnRepository>()
 
                     val sakOgBehandlingService = SakOgBehandlingService(
                         GrunnlagKopierer(connection), sakRepository, behandlingRepository

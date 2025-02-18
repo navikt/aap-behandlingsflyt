@@ -20,6 +20,7 @@ class SykepengerErstatningVilkår(vilkårsresultat: Vilkårsresultat) :
 
         val sykdomsvurdering = grunnlag.vurdering
 
+        // TODO: er dette nok vurdering?
         if (sykdomsvurdering.harRettPå == true) {
             utfall = Utfall.OPPFYLT
         } else {

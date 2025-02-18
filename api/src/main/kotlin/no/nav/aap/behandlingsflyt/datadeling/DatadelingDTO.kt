@@ -5,15 +5,15 @@ import java.time.LocalDate
 
 data class SakStatus(
     val sakId: String,
-    val vedtakStatusKode: VedtakStatus,
+    val statusKode: VedtakStatus,
     val periode: Maksimum.Periode,
-    val kilde: String = "Kelvin"
+    val kilde: Kilde = Kilde.KELVIN
 ) {
     companion object {
         fun fromKelvin(saksnummer: String, status: Status, periode: Maksimum.Periode): SakStatus {
             return SakStatus(
                 sakId = saksnummer,
-                vedtakStatusKode = SakStatus.fromStatus(status),
+                statusKode = SakStatus.fromStatus(status),
                 periode = periode,
             )
         }
@@ -29,6 +29,11 @@ data class SakStatus(
                 }
             }
         }
+    }
+
+    enum class Kilde{
+        ARENA,
+        KELVIN
     }
 
     enum class VedtakStatus {
@@ -51,7 +56,7 @@ data class SakStatus(
         other as SakStatus
 
         if (sakId != other.sakId) return false
-        if (vedtakStatusKode != other.vedtakStatusKode) return false
+        if (statusKode != other.statusKode) return false
         if (periode != other.periode) return false
         if (kilde != other.kilde) return false
 
@@ -60,12 +65,24 @@ data class SakStatus(
 
     override fun hashCode(): Int {
         var result = sakId.hashCode()
-        result = 31 * result + vedtakStatusKode.hashCode()
+        result = 31 * result + statusKode.hashCode()
         result = 31 * result + periode.hashCode()
         result = 31 * result + kilde.hashCode()
         return result
     }
 }
+
+data class InternVedtakRequest(
+    val personidentifikator: String,
+    val fraOgMedDato: LocalDate,
+    val tilOgMedDato: LocalDate
+)
+
+data class PeriodeMedAktFaseKode(
+    val periode: Maksimum.Periode,
+    val aktivitetsfaseKode: String,
+    val aktivitetsfaseNavn: String
+)
 
 
 data class Maksimum(
@@ -73,6 +90,7 @@ data class Maksimum(
 ) {
 
     data class Vedtak(
+        val vedtaksId: String,
         val dagsats: Int,
         val status: String, //Hypotese, vedtaksstatuskode
         val saksnummer: String,
@@ -92,7 +110,7 @@ data class Maksimum(
     class Periode(
         val fraOgMedDato: LocalDate?,
         val tilOgMedDato: LocalDate?
-    ){
+    ) {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (javaClass != other?.javaClass) return false
@@ -109,6 +127,10 @@ data class Maksimum(
             var result = fraOgMedDato?.hashCode() ?: 0
             result = 31 * result + (tilOgMedDato?.hashCode() ?: 0)
             return result
+        }
+
+        override fun toString(): String {
+            return "Periode(fraOgMedDato=$fraOgMedDato, tilOgMedDato=$tilOgMedDato)"
         }
 
     }

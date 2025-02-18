@@ -2,7 +2,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 
 val ktorVersion = "3.1.0"
-val komponenterVersjon = "1.0.135"
+val komponenterVersjon = "1.0.146"
 val junitVersjon = "5.11.4"
 
 plugins {
@@ -79,13 +79,15 @@ dependencies {
     implementation("no.nav.aap.kelvin:verdityper:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:tidslinje:$komponenterVersjon")
 
+    // Auditlogging
+    runtimeOnly(group = "com.papertrailapp", name = "logback-syslog4j", version = "1.0.0")
 
     implementation(project(":api"))
     implementation(project(":behandlingsflyt"))
     implementation(project(":kontrakt"))
     implementation(project(":repository"))
     implementation("com.zaxxer:HikariCP:6.2.1")
-    implementation("org.flywaydb:flyway-database-postgresql:11.3.1")
+    implementation("org.flywaydb:flyway-database-postgresql:11.3.2")
     runtimeOnly("org.postgresql:postgresql:42.7.5")
     implementation("ch.qos.logback:logback-classic:1.5.16")
 

@@ -6,8 +6,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_END
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.OppgittStudent
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
@@ -35,7 +35,7 @@ class SøknadService private constructor(
             return SøknadService(
                 MottaDokumentService(mottattDokumentRepository),
                 repositoryProvider.provide<StudentRepository>(),
-                BarnRepository(connection),
+                repositoryProvider.provide(),
                 medlemskapArbeidInntektRepository
             )
         }
@@ -64,7 +64,11 @@ class SøknadService private constructor(
             }
 
             if (ubehandletSøknad.utenlandsOppholdData != null) {
-                medlemskapArbeidInntektRepository.lagreOppgittUtenlandsOppplysninger(kontekst.behandlingId, ubehandletSøknad.journalpostId, ubehandletSøknad.utenlandsOppholdData)
+                medlemskapArbeidInntektRepository.lagreOppgittUtenlandsOppplysninger(
+                    kontekst.behandlingId,
+                    ubehandletSøknad.journalpostId,
+                    ubehandletSøknad.utenlandsOppholdData
+                )
             }
 
             mottaDokumentService.knyttTilBehandling(

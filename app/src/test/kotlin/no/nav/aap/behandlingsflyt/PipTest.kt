@@ -24,6 +24,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.get
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.lookup.repository.RepositoryProvider
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -95,7 +96,7 @@ class PipTest {
                 TypeBehandling.Førstegangsbehandling, null
             )
 
-            val barnRepository = BarnRepository(connection)
+            val barnRepository = RepositoryProvider(connection).provide<BarnRepository>()
 
             barnRepository.lagreRegisterBarn(behandling.id, setOf(Ident("regbarn")))
             barnRepository.lagreOppgitteBarn(behandling.id, OppgitteBarn(identer = setOf(Ident("oppgittbarn"))))
@@ -147,7 +148,7 @@ class PipTest {
                 TypeBehandling.Førstegangsbehandling, null
             )
 
-            val barnRepository = BarnRepository(connection)
+            val barnRepository = RepositoryProvider(connection).provide<BarnRepository>()
 
             barnRepository.lagreRegisterBarn(behandling.id, setOf(Ident("regbarn")))
             barnRepository.lagreOppgitteBarn(behandling.id, OppgitteBarn(identer = setOf(Ident("oppgittbarn"))))

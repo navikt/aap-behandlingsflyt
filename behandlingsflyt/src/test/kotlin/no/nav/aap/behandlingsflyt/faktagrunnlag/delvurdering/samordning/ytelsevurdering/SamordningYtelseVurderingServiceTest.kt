@@ -2,6 +2,8 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsev
 
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
+import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusSykepengerGateway
+import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningYtelseVurderingRepositoryImpl
@@ -17,12 +19,25 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.lookup.gateway.GatewayProvider
+import no.nav.aap.lookup.gateway.GatewayRegistry
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 @Fakes
 class SamordningYtelseVurderingServiceTest {
+
+    companion object {
+        @BeforeAll
+        @JvmStatic
+        fun beforeAll() {
+            GatewayRegistry
+                .register<AbakusForeldrepengerGateway>()
+                .register<AbakusSykepengerGateway>()
+        }
+    }
 
     @Test
     fun `krever avklaring når endringer kommer`() {
@@ -31,7 +46,7 @@ class SamordningYtelseVurderingServiceTest {
             val sakRepository = SakRepositoryImpl(connection)
             val service = SamordningYtelseVurderingService(
                 SamordningYtelseVurderingRepositoryImpl(connection),
-                SakService(sakRepository)
+                SakService(sakRepository),
             )
             val kontekst = opprettSakdata(connection)
 

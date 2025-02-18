@@ -208,6 +208,12 @@ public enum class Definisjon(
         løsesISteg = StegType.VURDER_LOVVALG,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
         defaultFrist = Period.ofYears(5),
+    ),
+    AVKLAR_FORUTGÅENDE_MEDLEMSKAP(
+        kode = AvklaringsbehovKode.`5020`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.VURDER_MEDLEMSKAP,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     );
 
     public companion object {

@@ -16,6 +16,52 @@ import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.datadelingAPI(datasource: DataSource) {
     route("/api/datadeling") {
+        route("/perioder") {
+            post<Unit, List<Maksimum.Periode>, InternVedtakRequest> { request, body ->
+                val person = datasource.transaction { conn ->
+                    val repositoryProvider = RepositoryProvider(conn)
+                    val personRepository = repositoryProvider.provide<PersonRepository>()
+                    personRepository.finn(Ident(body.personidentifikator))
+                }
+                if (person != null) {
+                    val saker = datasource.transaction { conn ->
+                        val repositoryProvider = RepositoryProvider(conn)
+                        val sakRepository = repositoryProvider.provide<SakRepository>()
+                        sakRepository.finnSakerFor(person)
+                    }
+                    respond(saker.map { sak ->
+                        Maksimum.Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.tom)
+                    })
+                } else {
+                    respond(emptyList())
+                }
+            }
+            route("/aktivitetsfase") {
+                post<Unit, List<PeriodeMedAktFaseKode>, InternVedtakRequest> { request, body ->
+                    val person = datasource.transaction { conn ->
+                        val repositoryProvider = RepositoryProvider(conn)
+                        val personRepository = repositoryProvider.provide<PersonRepository>()
+                        personRepository.finn(Ident(body.personidentifikator))
+                    }
+                    if (person != null) {
+                        val saker = datasource.transaction { conn ->
+                            val repositoryProvider = RepositoryProvider(conn)
+                            val sakRepository = repositoryProvider.provide<SakRepository>()
+                            sakRepository.finnSakerFor(person)
+                        }
+                        respond(saker.map { sak ->
+                            PeriodeMedAktFaseKode(
+                                aktivitetsfaseKode = "",
+                                aktivitetsfaseNavn = "",
+                                periode = Maksimum.Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.tom)
+                            )
+                        })
+                    } else {
+                        respond(emptyList())
+                    }
+                }
+            }
+        }
         route("/sakerByFnr") {
             post<Unit, List<SakStatus>, SakerRequest> { request, body ->
                 val person = datasource.transaction { conn ->
@@ -31,7 +77,7 @@ fun NormalOpenAPIRoute.datadelingAPI(datasource: DataSource) {
                     }
                     respond(saker.map { sak ->
                         SakStatus.fromKelvin(
-                            sak.id.toString(),
+                            sak.id.id.toString(),
                             sak.status(),
                             Maksimum.Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.tom),
                         )
@@ -79,6 +125,7 @@ fun NormalOpenAPIRoute.datadelingAPI(datasource: DataSource) {
 
                 respond(Maksimum(tilkjentYtelse.map { segment ->
                     Maksimum.Vedtak(
+                        vedtaksId = "", // TODO: hvor finner jeg denne?
                         dagsats = beregning.grunnlaget().verdi()
                             .toInt(), // TODO: Her må vi gange med dagens grunnbeløp og dele på 260
                         status = "OK", // TODO: Denne må mappes ut til noe som gir mening

@@ -14,6 +14,12 @@ object GatewayProvider {
         return internalCreate(gatewayKlass)
     }
 
+    inline fun <reified T : Gateway> provide(): T {
+        val repositoryKlass = GatewayRegistry.fetch(T::class.starProjectedType)
+
+        return internalCreate(repositoryKlass)
+    }
+
     inline fun <reified T : Gateway> internalCreate(gatewayKlass: KClass<Gateway>): T {
         val companionObjectType = gatewayKlass.companionObject
         if (companionObjectType == null && gatewayKlass.objectInstance != null

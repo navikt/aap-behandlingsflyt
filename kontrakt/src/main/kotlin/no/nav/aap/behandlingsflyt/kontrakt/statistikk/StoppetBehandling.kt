@@ -60,3 +60,16 @@ public enum class ÅrsakTilBehandling {
     REVURDER_YRKESSKADE,
     REVURDER_BEREGNING
 }
+
+/**
+ * Eksponert versjon av [no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType].
+ *
+ * @param hjemmel Hvilken paragraf
+ */
+public enum class RettighetsType(public val hjemmel: String) {
+    BISTANDSBEHOV(hjemmel = "§ 11-6"),
+    SYKEPENGEERSTATNING(hjemmel = "§ 11-13"),
+    STUDENT(hjemmel = "§ 11-14"),
+    ARBEIDSSØKER(hjemmel = "§ 11-17"),
+    VURDERES_FOR_UFØRETRYGD(hjemmel = "§ 11-18"),
+}

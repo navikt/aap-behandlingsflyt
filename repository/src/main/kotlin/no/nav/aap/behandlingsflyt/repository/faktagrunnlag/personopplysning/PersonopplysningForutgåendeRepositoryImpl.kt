@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.FolkeregisterStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningForutgåendeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikk
@@ -96,7 +97,7 @@ class PersonopplysningForutgåendeRepositoryImpl(
                     fødselsdato = Fødselsdato(row.getLocalDate("FODSELSDATO")),
                     dødsdato = row.getLocalDateOrNull("DODSDATO")?.let { Dødsdato(it) },
                     statsborgerskap = hentStatsborgerskap(row.getLong("LANDKODER_ID")),
-                    statuser = hentStatuser(row.getLong("STATUSER_ID"))
+                    folkeregisterStatuser = hentStatuser(row.getLong("STATUSER_ID"))
                 )
             }
         }
@@ -122,10 +123,12 @@ class PersonopplysningForutgåendeRepositoryImpl(
         }
 
         val statuserId = connection.executeReturnKey("INSERT INTO BRUKER_STATUSER_FORUTGAAENDE_AGGREGAT DEFAULT VALUES"){}
-        connection.executeBatch("INSERT INTO BRUKER_STATUSER_FORUTGAAENDE (STATUS, STATUSER_ID) VALUES (?, ?)", personopplysning.statuser){
+        connection.executeBatch("INSERT INTO BRUKER_STATUSER_FORUTGAAENDE (STATUS, STATUSER_ID, GYLDIGHETSTIDSPUNKT, OPPHOERSTIDSPUNKT) VALUES (?, ?, ?, ?)", personopplysning.folkeregisterStatuser){
             setParams {
-                setEnumName(1, it)
+                setEnumName(1, it.status)
                 setLong(2, statuserId)
+                setLocalDate(3, it.gyldighetstidspunkt)
+                setLocalDate(4, it.opphoerstidspunkt)
             }
         }
 
@@ -168,7 +171,7 @@ class PersonopplysningForutgåendeRepositoryImpl(
         }
     }
 
-    private fun hentStatuser(id: Long): List<PersonStatus> {
+    private fun hentStatuser(id: Long): List<FolkeregisterStatus> {
         return connection.queryList(
             """
                 SELECT * FROM BRUKER_STATUSER_FORUTGAAENDE
@@ -179,7 +182,11 @@ class PersonopplysningForutgåendeRepositoryImpl(
                 setLong(1, id)
             }
             setRowMapper { row ->
-                row.getEnum("STATUS")
+                FolkeregisterStatus(
+                    row.getEnum("STATUS"),
+                    row.getLocalDateOrNull("GYLDIGHETSTIDSPUNKT"),
+                    row.getLocalDateOrNull("OPPHOERSTIDSPUNKT")
+                )
             }
         }
     }

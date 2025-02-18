@@ -1,5 +1,11 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting
+package no.nav.aap.behandlingsflyt.integrasjon.dokumentinnhenting
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.BrevRequest
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.BrevResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.DokumentinnhentingGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringBestillingRequest
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringPurringRequest
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringStatusResponse
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
@@ -9,21 +15,28 @@ import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
+import no.nav.aap.lookup.gateway.Factory
 import java.net.URI
 
 /**
  * Bestiller dokumenter fra dokumentinnhenting
  */
-class DokumeninnhentingGateway {
+class DokumentinnhentingGatewayImpl : DokumentinnhentingGateway {
     private val syfoUri = requiredConfigForKey("integrasjon.dokumentinnhenting.url") + "/syfo"
-    val config = ClientConfig(scope = requiredConfigForKey("integrasjon.dokumentinnhenting.scope"))
+    private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.dokumentinnhenting.scope"))
 
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
         tokenProvider = ClientCredentialsTokenProvider,
     )
 
-    fun bestillLegeerklæring(request: LegeerklæringBestillingRequest): String {
+    companion object : Factory<DokumentinnhentingGateway>{
+        override fun konstruer(): DokumentinnhentingGateway {
+            return DokumentinnhentingGatewayImpl()
+        }
+    }
+
+    override fun bestillLegeerklæring(request: LegeerklæringBestillingRequest): String {
         val request = PostRequest(
             body = request,
             additionalHeaders = listOf(
@@ -39,7 +52,7 @@ class DokumeninnhentingGateway {
         }
     }
 
-    fun purrPåLegeerklæring(purringRequest: LegeerklæringPurringRequest): String {
+    override fun purrPåLegeerklæring(purringRequest: LegeerklæringPurringRequest): String {
         val request = PostRequest(
             body = purringRequest,
             additionalHeaders = listOf(
@@ -55,7 +68,7 @@ class DokumeninnhentingGateway {
         }
     }
 
-    fun legeerklæringStatus(saksnummer: String): List<LegeerklæringStatusResponse> {
+    override fun legeerklæringStatus(saksnummer: String): List<LegeerklæringStatusResponse> {
         val request = GetRequest(
             additionalHeaders = listOf(
                 Header("Nav-Consumer-Id", "aap-behandlingsflyt"),
@@ -70,7 +83,7 @@ class DokumeninnhentingGateway {
         }
     }
 
-    fun forhåndsvisBrev(request: BrevRequest): BrevResponse {
+    override fun forhåndsvisBrev(request: BrevRequest): BrevResponse {
         val request = PostRequest(
             body = request,
             additionalHeaders = listOf(

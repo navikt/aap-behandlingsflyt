@@ -3,12 +3,12 @@ package no.nav.aap.behandlingsflyt.behandling.lovvalg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikkGrunnlag
 
 data class ForutgåendeMedlemskapGrunnlag(
     val medlemskapArbeidInntektGrunnlag: ForutgåendeMedlemskapArbeidInntektGrunnlag?,
-    val personopplysningGrunnlag: PersonopplysningGrunnlag,
+    val personopplysningGrunnlag: PersonopplysningMedHistorikkGrunnlag,
     var nyeSoknadGrunnlag: UtenlandsOppholdData?
 ) : Faktagrunnlag
 

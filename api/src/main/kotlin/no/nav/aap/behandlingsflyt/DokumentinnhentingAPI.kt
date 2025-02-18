@@ -12,7 +12,7 @@ import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.HentStatusLegeer
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.PurringLegeerklæring
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.BrevRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.BrevResponse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.DokumeninnhentingGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.DokumentinnhentingGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringBestillingRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringPurringRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringStatusResponse
@@ -35,15 +35,16 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
+import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
-import no.nav.aap.tilgang.Operasjon
 import java.time.LocalDate
 import java.time.Period
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
+    val dokumentinnhentingGateway = GatewayProvider.provide<DokumentinnhentingGateway>()
     route("/api/dokumentinnhenting/syfo") {
         route("/bestill") {
             authorizedPost<Unit, String, BestillLegeerklæringDto>(
@@ -92,7 +93,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
 
                         behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
 
-                        val bestillingUUID: String = DokumeninnhentingGateway().bestillLegeerklæring(
+                        val bestillingUUID: String = dokumentinnhentingGateway.bestillLegeerklæring(
                             LegeerklæringBestillingRequest(
                                 req.behandlerRef,
                                 req.behandlerNavn,
@@ -123,7 +124,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
                     sakPathParam = SakPathParam("saksnummer")
                 )
             ) { par ->
-                val status = DokumeninnhentingGateway().legeerklæringStatus(par.saksnummer)
+                val status = dokumentinnhentingGateway.legeerklæringStatus(par.saksnummer)
                 respond(status)
             }
         }
@@ -149,7 +150,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
                         req.fritekst,
                         req.dokumentasjonType,
                     )
-                    DokumeninnhentingGateway().forhåndsvisBrev(brevRequest)
+                    dokumentinnhentingGateway.forhåndsvisBrev(brevRequest)
                 }
                 respond(brevPreview)
             }
@@ -158,7 +159,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
         route("/purring/{dialogmeldinguuid}") {
             post<PurringLegeerklæring, String, Unit> { par, _ ->
                 val request = LegeerklæringPurringRequest(par.dialogmeldingPurringUUID)
-                val bestillingUUID = DokumeninnhentingGateway().purrPåLegeerklæring(request)
+                val bestillingUUID = dokumentinnhentingGateway.purrPåLegeerklæring(request)
                 respond(bestillingUUID)
             }
         }

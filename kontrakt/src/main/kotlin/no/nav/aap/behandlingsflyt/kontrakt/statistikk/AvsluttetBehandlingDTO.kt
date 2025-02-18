@@ -12,12 +12,19 @@ public data class AvsluttetBehandlingDTO(
     val vilkårsResultat: VilkårsResultatDTO,
     val beregningsGrunnlag: BeregningsgrunnlagDTO?,
     val diagnoser: Diagnoser? = null,
+    val rettighetstypePerioder: List<RettighetstypePeriode>
 )
 
 public data class Diagnoser(
     val kodeverk: String,
     val diagnosekode: String,
     val bidiagnoser: List<String>
+)
+
+public data class RettighetstypePeriode(
+    val fraDato: LocalDate,
+    val tilDato: LocalDate,
+    val rettighetstype: RettighetsType
 )
 
 

@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.FolkeregisterStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikk
@@ -68,7 +69,9 @@ object PdlPersonopplysningGateway : PersonopplysningGateway {
         val foedselsdato = PdlParser.utledFødselsdato(response.data?.hentPerson?.foedselsdato)
             ?: return null
 
-        val statuser = requireNotNull(response.data?.hentPerson?.folkeregisterpersonstatus?.map { it.status }) // TODO: Her mangler vi periode hvor disse er gyldige
+        val folkeregisterStatuser = requireNotNull(response.data?.hentPerson?.folkeregisterpersonstatus?.map {
+            FolkeregisterStatus(it.status, it.folkeregistermetadata?.gyldighetstidspunkt?.toLocalDate(), it.folkeregistermetadata?.opphoerstidspunkt?.toLocalDate())
+        })
         val statsborgerskap = requireNotNull(response.data?.hentPerson?.statsborgerskap?.map {
             Statsborgerskap(
                 land = it.land,
@@ -82,7 +85,7 @@ object PdlPersonopplysningGateway : PersonopplysningGateway {
             fødselsdato = foedselsdato,
             dødsdato = response.data?.hentPerson?.doedsfall?.firstOrNull()?.doedsdato?.let { Dødsdato.parse(it) },
             statsborgerskap = statsborgerskap,
-            statuser = statuser
+            folkeregisterStatuser = folkeregisterStatuser
         )
     }
 }
@@ -122,7 +125,11 @@ val PERSON_QUERY_HISTORIKK = """
             gyldigTilOgMed
         },
         folkeregisterpersonstatus(historikk: true) {
-            status
+            status,
+            folkeregistermetadata {
+                gyldighetstidspunkt,
+                opphoerstidspunkt
+            }
         }
       }
     }

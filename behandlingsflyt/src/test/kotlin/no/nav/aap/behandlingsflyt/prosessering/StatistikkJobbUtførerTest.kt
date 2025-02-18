@@ -394,7 +394,9 @@ class StatistikkJobbUtførerTest {
                                 )
                             )
                         )
-                    ), diagnoser = Diagnoser(kodeverk = "KODEVERK", diagnosekode = "PEST", bidiagnoser = listOf("KOLERA"))
+                    ),
+                diagnoser = Diagnoser(kodeverk = "KODEVERK", diagnosekode = "PEST", bidiagnoser = listOf("KOLERA")),
+                rettighetstypePerioder = listOf()
             ).toString()
         )
     }

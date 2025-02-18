@@ -1,12 +1,25 @@
 package no.nav.aap.behandlingsflyt
 
 import no.nav.aap.behandlingsflyt.behandling.beregning.Beregning
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelseService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Input
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisperiodeId
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.GUnit
+import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.TimerArbeid
 import java.io.InputStream
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -44,7 +57,8 @@ data class CSVLine(
     val inntektNestSisteAar: Int,
     val inntektTredjeSisteAar: Int,
     val grunnlagFraArena: Int,
-    val personKode: Int
+    val personKode: Int,
+    val fødselsdato: Fødselsdato
 )
 
 fun readCSV(inputStream: InputStream): List<CSVLine> {
@@ -64,36 +78,74 @@ fun readCSV(inputStream: InputStream): List<CSVLine> {
                 inntektNestSisteAar = splitted[6].toInt(),
                 inntektTredjeSisteAar = splitted[7].toInt(),
                 grunnlagFraArena = splitted[11].toInt(),
-                personKode = splitted[12].toInt()
+                personKode = splitted[12].toInt(),
+                fødselsdato = Fødselsdato(LocalDate.parse(splitted[13]))
             )
         }.toList()
 }
 
-fun tilInput(csvLine: CSVLine): Input{
+fun tilInput(csvLine: CSVLine): Pair<Input, Fødselsdato> {
 
-    return Input(
-        nedsettelsesDato = LocalDate.of(csvLine.beregningsAar, 1, 1),
-        inntekter = csvLine.let { (intSiste, intNestSiste, intTredjeSiste, _, inntektSisteAar, inntektNestSisteAar, inntektTredjeSisteAar) ->
-            setOf(
-                InntektPerÅr(inntektSisteAar, Beløp(intSiste)),
-                InntektPerÅr(inntektNestSisteAar, Beløp(intNestSiste)),
-                InntektPerÅr(inntektTredjeSisteAar, Beløp(intTredjeSiste))
-            )
-        },
-        uføregrad = null,
-        yrkesskadevurdering = null,
-        registrerteYrkesskader = null,
-        beregningGrunnlag = null
+    return Pair(
+        Input(
+            nedsettelsesDato = LocalDate.of(csvLine.beregningsAar, 1, 1),
+            inntekter = csvLine.let { (intSiste, intNestSiste, intTredjeSiste, _, inntektSisteAar, inntektNestSisteAar, inntektTredjeSisteAar) ->
+                setOf(
+                    InntektPerÅr(inntektSisteAar, Beløp(intSiste)),
+                    InntektPerÅr(inntektNestSisteAar, Beløp(intNestSiste)),
+                    InntektPerÅr(inntektTredjeSisteAar, Beløp(intTredjeSiste))
+                )
+            },
+            uføregrad = null,
+            yrkesskadevurdering = null,
+            registrerteYrkesskader = null,
+            beregningGrunnlag = null
+        ), csvLine.fødselsdato
     )
 }
 
-fun beregnForInput(input: Input): Pair<Year, GUnit> {
-    val beregnet = Beregning(Inntektsbehov((input))).beregneMedInput().grunnlaget()
+fun beregnForInput(input: Input, fødselsdato: Fødselsdato): Triple<Year, GUnit, Double> {
+    val beregnet = Beregning(Inntektsbehov((input))).beregneMedInput()
 
-    return Pair(Year.of(input.nedsettelsesDato.year), beregnet)
+    val tilkjent = BeregnTilkjentYtelseService(
+        fødselsdato = fødselsdato,
+        beregningsgrunnlag = beregnet,
+        underveisgrunnlag = UnderveisGrunnlag(
+            id = 0,
+            perioder = listOf(
+                Underveisperiode(
+                    periode = Periode(LocalDate.now().withMonth(1), LocalDate.MAX),
+                    meldePeriode = Periode(LocalDate.MIN, LocalDate.MAX),
+                    utfall = Utfall.OPPFYLT,
+                    avslagsårsak = null,
+                    grenseverdi = Prosent.`100_PROSENT`,
+                    gradering = Gradering(
+                        totaltAntallTimer = TimerArbeid(
+                            antallTimer = BigDecimal(0)
+                        ),
+                        andelArbeid = Prosent.`100_PROSENT`,
+                        fastsattArbeidsevne = Prosent.`100_PROSENT`, // TODO
+                        gradering = Prosent.`100_PROSENT`,
+                    ),
+                    trekk = Dagsatser(0),
+                    brukerAvKvoter = setOf(),
+                    bruddAktivitetspliktId = BruddAktivitetspliktId(0),
+                    id = UnderveisperiodeId(0)
+                )
+            )
+        ),
+        barnetilleggGrunnlag = BarnetilleggGrunnlag(
+            id = 0,
+            perioder = listOf()
+        )
+    )
+
+    val dagsats = tilkjent.beregnTilkjentYtelse().mapValue { it.dagsats }.komprimer().first().verdi.verdi
+
+    return Triple(Year.of(input.nedsettelsesDato.year), beregnet.grunnlaget(), dagsats.toDouble())
 }
 
-fun printRad(år: Year, arenaBeløp: Int, beregnetGUnit: GUnit, personKode: Int) {
+fun printRad(år: Year, arenaBeløp: Int, beregnetGUnit: GUnit, personKode: Int, dagsats: Double) {
     val arenaGUnit =
         Grunnbeløp.finnGUnit(år.atDay(355), Beløp(arenaBeløp)).gUnit
 
@@ -106,7 +158,7 @@ fun printRad(år: Year, arenaBeløp: Int, beregnetGUnit: GUnit, personKode: Int)
                 arenaGUnit.verdi(),
                 beregnetGUnit.verdi()
             )
-        },$personKode"
+        },$personKode,$dagsats"
     )
 }
 
@@ -117,10 +169,13 @@ fun prosentDiff(a: BigDecimal, b: BigDecimal): BigDecimal {
 fun main() {
     val readRows = readCSV(System.`in`)
 
-    println("FRA_ARENA_BELOP,FRA_ARENA_GUNIT,FRA_KELVIN_BELOP,FRA_KELVIN_GUNIT,DIFF_PROSENT,PERSON_KODE")
+    println("FRA_ARENA_BELOP,FRA_ARENA_GUNIT,FRA_KELVIN_BELOP,FRA_KELVIN_GUNIT,DIFF_PROSENT,PERSON_KODE,DAGSATS")
     for (row in readRows) {
-        val beregnet = beregnForInput(tilInput(row)).second
-        printRad(Year.of(row.beregningsAar), row.grunnlagFraArena, beregnet, row.personKode)
+        val (inp, år) = tilInput(row)
+        val beregnForInput = beregnForInput(inp, år)
+        val beregnet = beregnForInput.second
+        val dagsats = beregnForInput.third
+        printRad(Year.of(row.beregningsAar), row.grunnlagFraArena, beregnet, row.personKode, dagsats)
     }
 }
 
