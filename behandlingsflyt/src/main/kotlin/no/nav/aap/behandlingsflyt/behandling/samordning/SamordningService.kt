@@ -9,6 +9,7 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Prosent
 import kotlin.math.max
+import kotlin.math.min
 
 class SamordningService(
     private val samordningYtelseVurderingRepository: SamordningYtelseVurderingRepository,
@@ -28,6 +29,7 @@ class SamordningService(
         return vurderRegler
     }
 
+    // TODO: håndter tilfellet at det kommer ny info
     fun harGjortVurdering(behandlingId: BehandlingId): Boolean {
         val samordningYtelseVurderingGrunnlag = samordningYtelseVurderingRepository.hentHvisEksisterer(behandlingId)
 
@@ -90,7 +92,7 @@ class SamordningService(
                     Segment(
                         periode, SamordningGradering(
                             gradering = Prosent(
-                                max(
+                                min(
                                     100,
                                     høyre.verdi.gradering.prosentverdi() + venstre.verdi.gradering.prosentverdi()
                                 )

@@ -19,9 +19,15 @@ import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.BestillLegeerkl�
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.ForhåndsvisBrevRequest
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.HentStatusLegeerklæring
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.PurringLegeerklæring
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Anvist
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerRequest
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Utbetalingsgrad
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.UtbetaltePerioder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelser
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringStatusResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.MeldingStatusType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektRequest
@@ -137,14 +143,14 @@ object FakeServers : AutoCloseable {
                     cause
                 )
                 call.respond(
-                    status = HttpStatusCode.Companion.InternalServerError,
+                    status = HttpStatusCode.InternalServerError,
                     message = ErrorRespons(cause.message)
                 )
             }
         }
         routing {
             post("/oppdater-oppgaver") {
-                call.respond(HttpStatusCode.Companion.NoContent)
+                call.respond(HttpStatusCode.NoContent)
             }
         }
     }
@@ -157,7 +163,7 @@ object FakeServers : AutoCloseable {
             exception<Throwable> { call, cause ->
                 this@pesysFake.log.info("Inntekt :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
                 call.respond(
-                    status = HttpStatusCode.Companion.InternalServerError,
+                    status = HttpStatusCode.InternalServerError,
                     message = ErrorRespons(cause.message)
                 )
             }
@@ -167,14 +173,14 @@ object FakeServers : AutoCloseable {
                 val ident = requireNotNull(call.request.header("fnr"))
                 val hentPerson = FakePersoner.hentPerson(ident)
                 if (hentPerson == null) {
-                    call.respond(HttpStatusCode.Companion.NotFound, "Fant ikke person med fnr $ident")
+                    call.respond(HttpStatusCode.NotFound, "Fant ikke person med fnr $ident")
                     return@get
                 }
                 val uføregrad = hentPerson.uføre?.prosentverdi()
                 if (uføregrad == null) {
                     call.respond(HttpStatusCode.OK, UføreRespons(uforegrad = 0))
                 } else {
-                    call.respond(HttpStatusCode.Companion.OK, UføreRespons(uforegrad = uføregrad))
+                    call.respond(HttpStatusCode.OK, UføreRespons(uforegrad = uføregrad))
                 }
             }
         }
@@ -188,7 +194,7 @@ object FakeServers : AutoCloseable {
             exception<Throwable> { call, cause ->
                 this@poppFake.log.info("Inntekt :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
                 call.respond(
-                    status = HttpStatusCode.Companion.InternalServerError,
+                    status = HttpStatusCode.InternalServerError,
                     message = ErrorRespons(cause.message)
                 )
             }
@@ -225,7 +231,7 @@ object FakeServers : AutoCloseable {
             exception<Throwable> { call, cause ->
                 this@pdlFake.log.info("PDL :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
                 call.respond(
-                    status = HttpStatusCode.Companion.InternalServerError,
+                    status = HttpStatusCode.InternalServerError,
                     message = ErrorRespons(cause.message)
                 )
             }
@@ -242,7 +248,7 @@ object FakeServers : AutoCloseable {
                     PdlPersoninfoGateway.PERSONINFO_BOLK_QUERY -> call.respond(bolknavn(req))
                     BARN_RELASJON_QUERY -> call.respond(barnRelasjoner(req))
                     PERSON_BOLK_QUERY -> call.respond(barn(req))
-                    else -> call.respond(HttpStatusCode.Companion.BadRequest)
+                    else -> call.respond(HttpStatusCode.BadRequest)
                 }
             }
         }
@@ -260,7 +266,7 @@ object FakeServers : AutoCloseable {
                     cause
                 )
                 call.respond(
-                    status = HttpStatusCode.Companion.InternalServerError,
+                    status = HttpStatusCode.InternalServerError,
                     message = ErrorRespons(cause.message)
                 )
             }
@@ -299,7 +305,7 @@ object FakeServers : AutoCloseable {
                     cause
                 )
                 call.respond(
-                    status = HttpStatusCode.Companion.InternalServerError,
+                    status = HttpStatusCode.InternalServerError,
                     message = ErrorRespons(cause.message)
                 )
             }
@@ -386,7 +392,7 @@ object FakeServers : AutoCloseable {
                     cause
                 )
                 call.respond(
-                    status = HttpStatusCode.Companion.InternalServerError,
+                    status = HttpStatusCode.InternalServerError,
                     message = ErrorRespons(cause.message)
                 )
             }
@@ -395,17 +401,63 @@ object FakeServers : AutoCloseable {
             post("/stoppetBehandling") {
                 val receive = call.receive<StoppetBehandling>()
                 statistikkHendelser.add(receive)
-                call.respond(status = HttpStatusCode.Companion.Accepted, message = "{}")
+                call.respond(status = HttpStatusCode.Accepted, message = "{}")
             }
         }
     }
 
     private fun Application.fpFake() {
-        @Language("JSON")
-        val foreldrepengerOgSvangerskapspengerResponse = """
+        install(ContentNegotiation) {
+            jackson {
+                registerModule(JavaTimeModule())
+                disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+            }
+        }
+        install(StatusPages) {
+            exception<Throwable> { call, cause ->
+                this@fpFake.log.info(
+                    "FORELDREPENGER :: Ukjent feil ved kall til '{}'",
+                    call.request.local.uri,
+                    cause
+                )
+                call.respond(
+                    status = HttpStatusCode.InternalServerError,
+                    message = ErrorRespons(cause.message)
+                )
+            }
+        }
+        routing {
+            post("/hent-ytelse-vedtak") {
+                val req = call.receive<ForeldrepengerRequest>()
+                val ident = req.ident.verdi
+                val fakePerson = FakePersoner.hentPerson(ident)
+                if (fakePerson?.foreldrepenger != null) {
+                    val foreldrepenger = fakePerson.foreldrepenger
+
+                    // TODO:  utvid til å støtte andre ytelser
+                    val response = ForeldrepengerResponse(
+                        ytelser = listOf(
+                            Ytelse(
+                                ytelse = Ytelser.FORELDREPENGER,
+                                saksnummer = 352017890,
+                                kildesystem = "FPSAK",
+                                ytelseStatus = "UNDER_BEHANDLING", // burde kanskje være LØPENDE?
+                                vedtattTidspunkt = LocalDate.now().minusMonths(2),
+                                anvist = foreldrepenger.map {
+                                    Anvist(
+                                        periode = it.periode,
+                                        utbetalingsgrad = Utbetalingsgrad(it.grad),
+                                        beløp = null,
+                                    )
+                                }
+                            )
+                        ))
+
+                    @Language("JSON")
+                    val foreldrepengerOgSvangerskapspengerResponse = """
            [{
             "aktor": {
-                "verdi": 2325108100427
+                "verdi": $ident
             },
             "vedtattTidspunkt": "2024-08-22T14:52:09.94",
             "ytelse": "FORELDREPENGER",
@@ -512,27 +564,11 @@ object FakeServers : AutoCloseable {
             ]
         }]
         """
+                    call.respond(response.ytelser)
 
-        install(ContentNegotiation) {
-            jackson()
-        }
-        install(StatusPages) {
-            exception<Throwable> { call, cause ->
-                this@fpFake.log.info(
-                    "FORELDREPENGER :: Ukjent feil ved kall til '{}'",
-                    call.request.local.uri,
-                    cause
-                )
-                call.respond(
-                    status = HttpStatusCode.Companion.InternalServerError,
-                    message = ErrorRespons(cause.message)
-                )
-            }
-        }
-        routing {
-            post("/hent-ytelse-vedtak") {
-                call.receive<String>()
-                call.respond(foreldrepengerOgSvangerskapspengerResponse)
+                } else {
+                    call.respond(emptyList<Ytelse>())
+                }
             }
         }
     }
@@ -648,7 +684,7 @@ object FakeServers : AutoCloseable {
                     cause
                 )
                 call.respond(
-                    status = HttpStatusCode.Companion.InternalServerError,
+                    status = HttpStatusCode.InternalServerError,
                     message = ErrorRespons(cause.message)
                 )
             }
@@ -710,7 +746,7 @@ object FakeServers : AutoCloseable {
                     cause
                 )
                 call.respond(
-                    status = HttpStatusCode.Companion.InternalServerError,
+                    status = HttpStatusCode.InternalServerError,
                     message = ErrorRespons(cause.message)
                 )
             }
@@ -735,7 +771,7 @@ object FakeServers : AutoCloseable {
             get("/rest/hentdokument/{journalpostId}/{dokumentInfoId}/{variantFormat}") {
                 call.response.header(
                     HttpHeaders.ContentDisposition,
-                    ContentDisposition.Companion.Attachment.withParameter(
+                    ContentDisposition.Attachment.withParameter(
                         ContentDisposition.Parameters.FileName,
                         "ktor_logo.pdf"
                     )
@@ -861,7 +897,7 @@ object FakeServers : AutoCloseable {
                     )
                 } else {
                     print("FEIL KALL")
-                    call.respond(HttpStatusCode.Companion.BadRequest)
+                    call.respond(HttpStatusCode.BadRequest)
                 }
             }
         }
@@ -877,7 +913,7 @@ object FakeServers : AutoCloseable {
             exception<Throwable> { call, cause ->
                 this@inst2Fake.log.info("INST2 :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
                 call.respond(
-                    status = HttpStatusCode.Companion.InternalServerError,
+                    status = HttpStatusCode.InternalServerError,
                     message = ErrorRespons(cause.message)
                 )
             }
@@ -902,7 +938,7 @@ object FakeServers : AutoCloseable {
             exception<Throwable> { call, cause ->
                 this@medlFake.log.info("MEDL :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
                 call.respond(
-                    status = HttpStatusCode.Companion.InternalServerError,
+                    status = HttpStatusCode.InternalServerError,
                     message = ErrorRespons(cause.message)
                 )
             }
@@ -962,7 +998,7 @@ object FakeServers : AutoCloseable {
                     cause
                 )
                 call.respond(
-                    status = HttpStatusCode.Companion.InternalServerError,
+                    status = HttpStatusCode.InternalServerError,
                     message = ErrorRespons(cause.message)
                 )
             }
@@ -1210,7 +1246,7 @@ object FakeServers : AutoCloseable {
             exception<Throwable> { call, cause ->
                 this@azureFake.log.info("AZURE :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
                 call.respond(
-                    status = HttpStatusCode.Companion.InternalServerError,
+                    status = HttpStatusCode.InternalServerError,
                     message = ErrorRespons(cause.message)
                 )
             }
@@ -1246,7 +1282,7 @@ object FakeServers : AutoCloseable {
             exception<Throwable> { call, cause ->
                 this@brevFake.log.info("BREV :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
                 call.respond(
-                    status = HttpStatusCode.Companion.InternalServerError,
+                    status = HttpStatusCode.InternalServerError,
                     message = ErrorRespons(cause.message)
                 )
             }

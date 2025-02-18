@@ -14,8 +14,10 @@ data class ForeldrepengerResponse(
 
 /**
  * [Kilde for denne](https://github.com/navikt/fp-abakus/blob/master/kontrakt-vedtak/src/main/java/no/nav/abakus/vedtak/ytelse/Ytelser.java#L3)
+ * og [denne](https://github.com/navikt/fp-abakus/blob/master/kontrakt-vedtak/src/main/java/no/nav/abakus/vedtak/ytelse/v1/YtelseV1.java)
  *
  * @param ytelseStatus Mulige verdier: UNDER_BEHANDLING_LØPENDE,AVSLUTTET,UKJENT.
+ * @param kildesystem Mulige verdier: FPSAK og K9SAK
  */
 data class Ytelse(
     val ytelse: Ytelser,

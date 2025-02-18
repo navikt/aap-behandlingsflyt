@@ -38,9 +38,12 @@ class TestPerson(
     inntekter: List<InntektPerÅr> = defaultInntekt(),
     val personStatus: PdlFolkeregisterPersonStatus = PdlFolkeregisterPersonStatus(PersonStatus.bosatt, null),
     val statsborgerskap: PdlStatsborgerskap = PdlStatsborgerskap("NOR", LocalDate.now().minusYears(5), null),
-    val sykepenger: List<Sykepenger>? = null
+    val sykepenger: List<Sykepenger>? = null,
+    val foreldrepenger: List<ForeldrePenger>? = null
 ) {
     data class Sykepenger(val grad: Number, val periode: Periode)
+    data class ForeldrePenger(val grad: Number, val periode: Periode)
+
 
     private val inntekter: MutableList<InntektPerÅr> = inntekter.toMutableList()
 
@@ -54,11 +57,11 @@ class TestPerson(
         }
     }
 
-    override fun toString(): String {
-        return "TestPerson(fødselsdato=$fødselsdato, identer=$identer, dødsdato=$dødsdato, barn=$barn, navn=$navn, yrkesskade=$yrkesskade, institusjonsopphold=$institusjonsopphold, inntekter=$inntekter, personStatus=$personStatus, statsborgerskap=$statsborgerskap)"
-    }
-
     fun aktivIdent(): Ident {
         return identer.single { it.aktivIdent }
+    }
+
+    override fun toString(): String {
+        return "TestPerson(barn=$barn, fødselsdato=$fødselsdato, identer=$identer, dødsdato=$dødsdato, navn=$navn, yrkesskade=$yrkesskade, institusjonsopphold=$institusjonsopphold, uføre=$uføre, personStatus=$personStatus, statsborgerskap=$statsborgerskap, sykepenger=$sykepenger, foreldrepenger=$foreldrepenger, inntekter=$inntekter)"
     }
 }
