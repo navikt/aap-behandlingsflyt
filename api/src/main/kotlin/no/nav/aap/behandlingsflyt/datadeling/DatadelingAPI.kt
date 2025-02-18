@@ -112,7 +112,24 @@ fun NormalOpenAPIRoute.datadelingAPI(datasource: DataSource) {
         }
         route("/vedtak") {
             post<Unit, Maksimum, DatadelingRequest> { request, body ->
-                val behandling = selectLastBehandling(datasource, body.personidentifikator)
+                val person = datasource.transaction(readOnly = true) { conn ->
+                    val repositoryProvider = RepositoryProvider(conn)
+                    val personRepository = repositoryProvider.provide<PersonRepository>()
+                    personRepository.finn(Ident("12345678910"))
+                }
+                if (person == null) {
+                    respond(Maksimum(emptyList()))
+                }
+                val sak = datasource.transaction(readOnly = true) { conn ->
+                    val repositoryProvider = RepositoryProvider(conn)
+                    val sakRepository = repositoryProvider.provide<SakRepository>()
+                    sakRepository.finnSakerFor(person!!)
+                }
+                val behandling = datasource.transaction(readOnly = true) { conn ->
+                    val repositoryProvider = RepositoryProvider(conn)
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    behandlingRepository.finnSisteBehandlingFor(sak.last().id)
+                }
 
                 val tilkjentYtelse = requireNotNull(datasource.transaction(readOnly = true) { conn ->
                     val repositoryProvider = RepositoryProvider(conn)
@@ -125,8 +142,6 @@ fun NormalOpenAPIRoute.datadelingAPI(datasource: DataSource) {
                     val tilkjentYtelseRepository = repositoryProvider.provide<BeregningsgrunnlagRepository>()
                     tilkjentYtelseRepository.hentHvisEksisterer(behandling!!.id)
                 })
-
-
 
                 respond(Maksimum(tilkjentYtelse.map { segment ->
                     Maksimum.Vedtak(
