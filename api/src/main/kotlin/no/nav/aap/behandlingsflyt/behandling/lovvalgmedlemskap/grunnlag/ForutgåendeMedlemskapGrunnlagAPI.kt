@@ -27,7 +27,7 @@ fun NormalOpenAPIRoute.forutgåendeMedlemskapAPI(dataSource: DataSource) {
 
                     val response = if (data != null) {
                         ForutgåendeMedlemskapGrunnlagDto(
-                            ManuellVurderingForForutgåendeMedlemskap(data.begrunnelse, data.harForutgåendeMedlemskap, data.oppfyllerUnntaksVilkår)
+                            ManuellVurderingForForutgåendeMedlemskap(data.begrunnelse, data.harForutgåendeMedlemskap, data.varMedlemMedNedsattArbeidsevne, data.medlemMedUnntakAvMaksFemAar)
                         )
                     } else {
                         ForutgåendeMedlemskapGrunnlagDto(null)
