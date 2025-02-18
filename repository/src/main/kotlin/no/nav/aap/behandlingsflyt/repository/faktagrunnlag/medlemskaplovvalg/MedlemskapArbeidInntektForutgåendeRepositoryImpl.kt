@@ -194,8 +194,8 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                 ManuellVurderingForForutgåendeMedlemskap(
                     begrunnelse = it.getString("begrunnelse"),
                     harForutgåendeMedlemskap = it.getBoolean("har_forutgaaende_medlemskap"),
-                    varMedlemMedNedsattArbeidsevne = it.getBoolean("var_medlem_med_nedsatt_arbeidsevne"),
-                    medlemMedUnntakAvMaksFemAar = it.getBoolean("medlem_med_unntak_av_maks_fem_aar")
+                    varMedlemMedNedsattArbeidsevne = it.getBooleanOrNull("var_medlem_med_nedsatt_arbeidsevne"),
+                    medlemMedUnntakAvMaksFemAar = it.getBooleanOrNull("medlem_med_unntak_av_maks_fem_aar")
                 )
             }
         }
