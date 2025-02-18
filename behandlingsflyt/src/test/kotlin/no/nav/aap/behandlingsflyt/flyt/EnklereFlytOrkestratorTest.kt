@@ -137,6 +137,7 @@ class EnklereFlytOrkestratorTest {
         val flytKontekst2 = flytOrkestrator.opprettKontekst(behandling.sakId, behandling.id)
         flytOrkestrator.forberedOgProsesserBehandling(flytKontekst)
 
+
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         assertThat(behandling.aktivtSteg()).isEqualTo(StegType.AVKLAR_SYKDOM)
         assertThat(behandling.stegHistorikk()).isNotEmpty()
