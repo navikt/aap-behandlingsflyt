@@ -11,7 +11,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.Faktagrunnlag.FristDato11_7
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.Faktagrunnlag.GrunnlagBeregning
-import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.Faktagrunnlag.Testverdi
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.FaktagrunnlagType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -59,9 +58,6 @@ class FaktagrunnlagService(
     ): Faktagrunnlag? {
         return when (faktagrunnlagType) {
             FaktagrunnlagType.FRIST_DATO_11_7 -> hentFristDato11_7(behandlingId)
-
-            // TODO fjern testverdi når det er fjernet fra brevinnhold
-            FaktagrunnlagType.TESTVERDI -> Testverdi("Test string")
 
             FaktagrunnlagType.GRUNNLAG_BEREGNING -> hentGrunnlagBeregning(behandlingId)
         }
