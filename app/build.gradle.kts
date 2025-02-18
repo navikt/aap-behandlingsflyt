@@ -79,6 +79,8 @@ dependencies {
     implementation("no.nav.aap.kelvin:verdityper:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:tidslinje:$komponenterVersjon")
 
+    // Auditlogging
+    runtimeOnly(group = "com.papertrailapp", name = "logback-syslog4j", version = "1.0.0")
 
     implementation(project(":api"))
     implementation(project(":behandlingsflyt"))

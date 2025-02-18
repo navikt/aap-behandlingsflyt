@@ -15,6 +15,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.aap.behandlingsflyt.api.actuator.actuator
 import no.nav.aap.behandlingsflyt.api.config.definisjoner.configApi
+import no.nav.aap.behandlingsflyt.auditlog.auditlogApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.avklaringsbehovApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.fatteVedtakGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.utledSubtypesTilAvklaringsbehovLøsning
@@ -214,6 +215,7 @@ internal fun Application.server(dbConfig: DbConfig) {
                 motorApi(dataSource)
                 behandlingsflytPip(dataSource)
                 aktivitetspliktApi(dataSource)
+                auditlogApi(dataSource)
                 // Flytt
                 brevApi(dataSource)
                 dokumentinnhentingAPI(dataSource)

@@ -1387,6 +1387,7 @@ object FakeServers : AutoCloseable {
     }
 
     private fun setProperties() {
+        System.setProperty("nais.app.name", "behandlingsflyt")
 
         // Brev
         System.setProperty("integrasjon.brev.url", "http://localhost:${brev.port()}")
