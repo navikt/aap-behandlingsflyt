@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseReposi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -24,7 +23,7 @@ class BeregnTilkjentYtelseSteg private constructor(
     private val beregningsgrunnlagRepository: BeregningsgrunnlagRepository,
     private val personopplysningRepository: PersonopplysningRepository,
     private val barnetilleggRepository: BarnetilleggRepository,
-    private val tilkjentYtelseRepository: TilkjentYtelseRepository,
+    private val tilkjentYtelseRepository: TilkjentYtelseRepository
 ) : BehandlingSteg {
     private val log = LoggerFactory.getLogger(BeregnTilkjentYtelseSteg::class.java)
 
@@ -48,7 +47,6 @@ class BeregnTilkjentYtelseSteg private constructor(
                 repositoryProvider.provide<PersonopplysningRepository>()
             val tilkjentYtelseRepository =
                 repositoryProvider.provide<TilkjentYtelseRepository>()
-            val samordningRepository = repositoryProvider.provide<SamordningRepository>()
             val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
             val barnetilleggRepository = repositoryProvider.provide<BarnetilleggRepository>()
 
