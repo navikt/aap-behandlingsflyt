@@ -22,6 +22,9 @@ class VurderForutgåendeMedlemskapSteg private constructor(
         val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
         val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.MEDLEMSKAP)
 
+        // TODO: IF YRKESSKADE, SKIP
+        // TODO: Revurdering må inn her
+
         for (periode in kontekst.perioder()) {
             vilkår.leggTilVurdering(
                 Vilkårsperiode(
