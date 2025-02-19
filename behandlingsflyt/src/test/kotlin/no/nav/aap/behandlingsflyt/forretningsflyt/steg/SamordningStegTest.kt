@@ -118,7 +118,7 @@ class SamordningStegTest {
     }
 
     @Test
-    fun `det kommer ny informasjon, avklbehov opprettes igjen`() {
+    fun `om det kommer ny informasjon, avklaringsbehov opprettes igjen`() {
         val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
         val steg = settOppRessurser(Ytelse.SYKEPENGER, behandling.id)
         val kontekst = FlytKontekstMedPerioder(
