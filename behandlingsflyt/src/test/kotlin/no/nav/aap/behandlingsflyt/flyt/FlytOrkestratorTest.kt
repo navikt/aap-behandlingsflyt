@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.Totri
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.ÅrsakTilReturKode
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarForutgåendeMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsning
@@ -40,6 +41,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReposito
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøknadsTidspunkt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunkt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
@@ -115,6 +117,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlFolkeregisterPersonStatus
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlFolkeregistermetadata
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlStatsborgerskap
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonStatus
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.ident
@@ -1824,7 +1830,7 @@ class FlytOrkestratorTest {
     }
 
     @Test
-    fun `Går videre i medlemskapsteget når manuell vurdering mottas`() {
+    fun `Går videre i forutgåendemedlemskapsteget når manuell vurdering mottas`() {
         val ident = ident()
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
@@ -1853,50 +1859,188 @@ class FlytOrkestratorTest {
                 periode = periode
             )
         )
-
         util.ventPåSvar()
+
         val sak = hentSak(ident, periode)
-        var behandling = requireNotNull(hentBehandling(sak.id))
+        var behandling = hentBehandling(sak.id)
+
+        løsFramTilForutgåendeMedlemskap(behandling, sak, false, ident)
 
         // Validér avklaring
         dataSource.transaction { connection ->
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
-            assertThat(avklaringsbehov.åpne().all { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
+            assertThat(avklaringsbehov.åpne().all { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP })
         }
 
         // Trigger manuell vurdering
-        dataSource.transaction { connection ->
-            AvklaringsbehovHendelseHåndterer(
-                AvklaringsbehovOrkestrator(
-                    connection,
-                    BehandlingHendelseServiceImpl(
-                        FlytJobbRepository(connection),
-                        SakService(SakRepositoryImpl(connection))
-                    )
-                ),
-                AvklaringsbehovRepositoryImpl(connection),
-                BehandlingRepositoryImpl(connection)
-            ).håndtere(
-                behandling.id,
-                LøsAvklaringsbehovHendelse(
-                    løsning = AvklarLovvalgMedlemskapLøsning(
-                        manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskap(
-                            LovvalgVedSøknadsTidspunkt("crazy lovvalgsland vurdering", EØSLand.NOR),
-                            MedlemskapVedSøknadsTidspunkt("crazy medlemskap vurdering", true)
-                        ),
-                        behovstype = AvklaringsbehovKode.`5017`
+        løsAvklaringsBehov(
+            behandling,
+            LøsAvklaringsbehovHendelse(
+                løsning = AvklarForutgåendeMedlemskapLøsning(
+                    manuellVurderingForForutgåendeMedlemskap = ManuellVurderingForForutgåendeMedlemskap(
+                        "begrunnelse", true, null, null
                     ),
-                    behandlingVersjon = behandling.versjon,
-                    bruker = Bruker("SAKSBEHANDLER")
-                )
+                    behovstype = AvklaringsbehovKode.`5020`
+                ),
+                behandlingVersjon = behandling.versjon,
+                bruker = Bruker("SAKSBEHANDLER")
             )
-        }
+        )
         util.ventPåSvar()
 
         // Validér avklaring
         dataSource.transaction { connection ->
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
             assertThat(avklaringsbehov.åpne().none())
+        }
+    }
+
+    @Test
+    fun `Oppfyller ikke forutgående medlemskap når unntak ikke oppfylles og ikke medlem i folketrygden`() {
+        val ident = ident()
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        // Oppretter vanlig søknad
+        hendelsesMottak.håndtere(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("1502"),
+                mottattTidspunkt = LocalDateTime.now(),
+                strukturertDokument = StrukturertDokument(
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                        medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null
+                        ),
+                    ),
+                ),
+                periode = periode
+            )
+        )
+        util.ventPåSvar()
+
+        val sak = hentSak(ident, periode)
+        var behandling = hentBehandling(sak.id)
+
+        løsFramTilForutgåendeMedlemskap(behandling, sak, false, ident)
+
+        // Validér avklaring
+        dataSource.transaction { connection ->
+            val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
+            assertThat(avklaringsbehov.åpne().all { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP })
+        }
+
+        // Trigger manuell vurdering
+        løsAvklaringsBehov(
+            behandling,
+            LøsAvklaringsbehovHendelse(
+                løsning = AvklarForutgåendeMedlemskapLøsning(
+                    manuellVurderingForForutgåendeMedlemskap = ManuellVurderingForForutgåendeMedlemskap(
+                        "begrunnelseforutgående", false, false, null
+                    ),
+                    behovstype = AvklaringsbehovKode.`5020`
+                ),
+                behandlingVersjon = behandling.versjon,
+                bruker = Bruker("SAKSBEHANDLER")
+            )
+        )
+        util.ventPåSvar()
+
+        // Validér riktig resultat
+        dataSource.transaction { connection ->
+            val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
+            val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder()
+            assertThat(avklaringsbehov.åpne().none())
+            assertTrue(vilkårsResultat.none { it.erOppfylt() })
+        }
+    }
+
+    @Test
+    fun `Oppfyller forutgående medlemskap når unntak finnes`() {
+        val ident = ident()
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        // Oppretter vanlig søknad
+        hendelsesMottak.håndtere(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("10111"),
+                mottattTidspunkt = LocalDateTime.now(),
+                strukturertDokument = StrukturertDokument(
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                        medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null
+                        ),
+                    ),
+                ),
+                periode = periode
+            )
+        )
+        util.ventPåSvar()
+
+        val sak = hentSak(ident, periode)
+        var behandling = hentBehandling(sak.id)
+
+        løsFramTilForutgåendeMedlemskap(behandling, sak, false, ident)
+
+        // Validér avklaring
+        dataSource.transaction { connection ->
+            val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
+            assertThat(avklaringsbehov.åpne().all { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP })
+        }
+
+        // Trigger manuell vurdering
+        løsAvklaringsBehov(
+            behandling,
+            LøsAvklaringsbehovHendelse(
+                løsning = AvklarForutgåendeMedlemskapLøsning(
+                    manuellVurderingForForutgåendeMedlemskap = ManuellVurderingForForutgåendeMedlemskap(
+                        "begrunnelse", true, true, null
+                    ),
+                    behovstype = AvklaringsbehovKode.`5020`
+                ),
+                behandlingVersjon = behandling.versjon,
+                bruker = Bruker("SAKSBEHANDLER")
+            )
+        )
+        util.ventPåSvar()
+
+        // Validér riktig resultat
+        dataSource.transaction { connection ->
+            val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
+            val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder()
+            assertThat(avklaringsbehov.åpne().none())
+            assertTrue(vilkårsResultat.all { it.erOppfylt() })
+        }
+    }
+
+    @Test
+    fun `Går forbi forutgåendemedlemskapsteget når yrkesskade eksisterer`() {
+        val ident = ident()
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        // Oppretter vanlig søknad
+        hendelsesMottak.håndtere(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("1050"),
+                mottattTidspunkt = LocalDateTime.now(),
+                strukturertDokument = StrukturertDokument(
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"), yrkesskade = "JA", oppgitteBarn = null,
+                        medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null),
+                    ),
+                ),
+                periode = periode
+            )
+        )
+        util.ventPåSvar()
+
+        val sak = hentSak(ident, periode)
+        var behandling = hentBehandling(sak.id)
+
+        løsFramTilForutgåendeMedlemskap(behandling, sak, true, ident)
+
+        // Validér avklaring
+        dataSource.transaction { connection ->
+            val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
+            assertThat(avklaringsbehov.åpne().none { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP })
         }
     }
 
@@ -2187,4 +2331,127 @@ class FlytOrkestratorTest {
             BrevbestillingRepositoryImpl(it).hent(behandling.id)
                 .first { it.typeBrev == typeBrev }
         }
+
+    private fun løsFramTilForutgåendeMedlemskap(behandling: Behandling, sak: Sak, løsYrkesskade: Boolean = false, ident: Ident) {
+        FakePersoner.leggTil(
+            TestPerson(
+                identer = setOf(ident),
+                statsborgerskap = listOf(PdlStatsborgerskap("MAC", LocalDate.now().minusYears(5), LocalDate.now())),
+                personStatus = listOf(
+                    PdlFolkeregisterPersonStatus(
+                        PersonStatus.bosatt,
+                        PdlFolkeregistermetadata(
+                            LocalDateTime.now(),
+                            LocalDateTime.now().plusYears(2)
+                        )
+                    ),
+                    PdlFolkeregisterPersonStatus(
+                        PersonStatus.ikkeBosatt,
+                        PdlFolkeregistermetadata(
+                            LocalDateTime.now().minusYears(5),
+                            LocalDateTime.now().minusYears(2)
+                        )
+                    ),
+                )
+            )
+        )
+
+        var behandling = behandling
+        løsAvklaringsBehov(
+            behandling, LøsAvklaringsbehovHendelse(
+                løsning = AvklarSykdomLøsning(
+                    sykdomsvurdering = SykdomsvurderingDto(
+                        begrunnelse = "Er syk nok",
+                        dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
+                        harSkadeSykdomEllerLyte = true,
+                        erSkadeSykdomEllerLyteVesentligdel = true,
+                        erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                        erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                        erArbeidsevnenNedsatt = true,
+                        yrkesskadeBegrunnelse = null,
+                        vurderingenGjelderFra = null,
+                    )
+                ),
+                behandlingVersjon = behandling.versjon,
+                bruker = Bruker("SAKSBEHANDLER")
+            )
+        )
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
+        behandling = hentBehandling(sak.id)
+
+        løsAvklaringsBehov(
+            behandling, LøsAvklaringsbehovHendelse(
+                løsning = AvklarBistandsbehovLøsning(
+                    bistandsVurdering = BistandVurderingDto(
+                        begrunnelse = "Trenger hjelp fra nav",
+                        erBehovForAktivBehandling = true,
+                        erBehovForArbeidsrettetTiltak = false,
+                        erBehovForAnnenOppfølging = null
+                    ),
+                ),
+                behandlingVersjon = behandling.versjon,
+                bruker = Bruker("SAKSBEHANDLER")
+            )
+        )
+
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
+        behandling = hentBehandling(sak.id)
+
+        val alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling.id)
+        løsAvklaringsBehov(
+            behandling, LøsAvklaringsbehovHendelse(
+                løsning = KvalitetssikringLøsning(
+                    alleAvklaringsbehov
+                        .filter { behov -> behov.erTotrinn() }
+                        .map { behov ->
+                            TotrinnsVurdering(
+                                behov.definisjon.kode,
+                                true,
+                                "begrunnelse",
+                                emptyList()
+                            )
+                        }),
+                behandlingVersjon = behandling.versjon,
+                bruker = Bruker("SAKSBEHANDLER")
+            )
+        )
+
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
+        behandling = hentBehandling(sak.id)
+        if (løsYrkesskade) {
+            løsAvklaringsBehov(
+                behandling, LøsAvklaringsbehovHendelse(
+                    løsning = AvklarYrkesskadeLøsning(
+                        yrkesskadesvurdering = YrkesskadevurderingDto(
+                            begrunnelse = "",
+                            relevanteSaker = listOf(),
+                            andelAvNedsettelsen = null,
+                            erÅrsakssammenheng = false
+                        )
+                    ),
+                    behandlingVersjon = behandling.versjon,
+                    bruker = Bruker("SAKSBEHANDLER")
+                )
+            )
+        }
+
+        behandling = hentBehandling(sak.id)
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
+        løsAvklaringsBehov(
+            behandling, LøsAvklaringsbehovHendelse(
+                løsning = FastsettBeregningstidspunktLøsning(
+                    beregningVurdering = BeregningstidspunktVurdering(
+                        begrunnelse = "Trenger hjelp fra Nav",
+                        nedsattArbeidsevneDato = LocalDate.now(),
+                        ytterligereNedsattArbeidsevneDato = null,
+                        ytterligereNedsattBegrunnelse = null
+                    ),
+                ),
+                behandlingVersjon = behandling.versjon,
+                bruker = Bruker("SAKSBEHANDLER")
+            )
+        )
+        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
+    }
 }
