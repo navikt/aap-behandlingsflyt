@@ -10,6 +10,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.lookup.gateway.Factory
 import java.net.URI
 
 class MedlemskapGateway : MedlemskapGateway {
@@ -20,6 +21,12 @@ class MedlemskapGateway : MedlemskapGateway {
         config = config,
         tokenProvider = ClientCredentialsTokenProvider
     )
+
+    companion object : Factory<MedlemskapGateway>{
+        override fun konstruer(): MedlemskapGateway {
+            return MedlemskapGateway()
+        }
+    }
 
     private fun query(request: MedlemskapRequest): List<MedlemskapResponse> {
         val urlWithParam = URI.create(url+"?fraOgMed=${request.periode.fom}&tilOgMed=${request.periode.tom}")

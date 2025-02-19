@@ -9,7 +9,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.Arbeidsfor
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektkomponentenGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapResponse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -19,15 +18,17 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.YearMonth
 
 class ForutgåendeMedlemskapService private constructor(
-    private val medlemskapGateway: MedlemskapGateway,
     private val sakService: SakService,
     private val medlemskapForutgåendeRepository: MedlemskapForutgåendeRepository,
     private val grunnlagRepository: MedlemskapArbeidInntektForutgåendeRepository
 ) : Informasjonskrav {
+    private val medlemskapGateway = GatewayProvider.provide<MedlemskapGateway>()
+
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
 
@@ -81,7 +82,6 @@ class ForutgåendeMedlemskapService private constructor(
             val sakRepository = repositoryProvider.provide<SakRepository>()
             val grunnlagRepository = repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>()
             return ForutgåendeMedlemskapService(
-                MedlemskapGateway(),
                 SakService(sakRepository),
                 MedlemskapForutgåendeRepository(connection),
                 grunnlagRepository

@@ -39,6 +39,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunkt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
@@ -184,13 +185,15 @@ class FlytOrkestratorTest {
                 .register<PersonopplysningForutgåendeRepositoryImpl>()
                 .register<BarnRepositoryImpl>()
                 .status()
-            GatewayRegistry.register<PdlBarnGateway>()
+            GatewayRegistry
+                .register<PdlBarnGateway>()
                 .register<PdlIdentGateway>()
                 .register<PdlPersoninfoBulkGateway>()
                 .register<PdlPersoninfoGateway>()
                 .register<AbakusSykepengerGateway>()
                 .register<AbakusForeldrepengerGateway>()
                 .register<DokumentinnhentingGatewayImpl>()
+                .register<MedlemskapGateway>()
             motor.start()
         }
 

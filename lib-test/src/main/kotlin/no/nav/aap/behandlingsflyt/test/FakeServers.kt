@@ -33,6 +33,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.Meld
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.SumPi
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PERSON_QUERY
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PERSON_QUERY_HISTORIKK
@@ -239,6 +240,8 @@ object FakeServers : AutoCloseable {
         routing {
             post {
                 val req = call.receive<PdlRequest>()
+
+                FakePersoner.hentPerson(req.query)
 
                 when (req.query) {
                     IDENT_QUERY -> call.respond(identer(req))
@@ -948,11 +951,24 @@ object FakeServers : AutoCloseable {
             get {
                 call.response.header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
 
-                @Language("JSON") val respons =
-                    """[
+                val ident = call.request.header("Nav-Personident")
+
+                if (ident != null) {
+
+                    val fakePerson = FakePersoner.hentPerson(ident)
+
+                    if (fakePerson != null) {
+                        call.respond(fakePerson.medlStatus)
+                    } else {
+                        call.respond<List<MedlemskapResponse>>(emptyList())
+                    }
+
+                    @Suppress("UNUSED_VARIABLE")
+                    @Language("JSON") val eksempelRespons =
+                        """[
   {
     "unntakId": 100087727,
-    "ident": "02429118789",
+    "ident": "$ident",
     "fraOgMed": "2021-07-08",
     "tilOgMed": "2022-07-07",
     "status": "GYLD",
@@ -964,7 +980,7 @@ object FakeServers : AutoCloseable {
   },
   {
     "unntakId": 100087729,
-    "ident": "02429118789",
+    "ident": "$ident",
     "fraOgMed": "2014-07-10",
     "tilOgMed": "2016-07-14",
     "status": "GYLD",
@@ -975,10 +991,9 @@ object FakeServers : AutoCloseable {
     "lovvalgsland": "NOR"
   }
 ]"""
-
-                call.respond(
-                    respons
-                )
+                } else {
+                    call.respond(HttpStatusCode.BadRequest, "Mangler fødselnr i header")
+                }
             }
         }
     }
@@ -1108,6 +1123,7 @@ object FakeServers : AutoCloseable {
         )
     }
 
+    // TODO!?
     private fun hentEllerGenererTestPerson(forespurtIdent: String): TestPerson {
         val person = FakePersoner.hentPerson(forespurtIdent)
         if (person == null) {
@@ -1141,7 +1157,16 @@ object FakeServers : AutoCloseable {
             errors = null,
             extensions = null,
             data = PdlPersoninfoData(
-                hentPerson = mapPerson(testPerson)
+                hentPerson = PdlPersoninfo(
+                    foedselsdato = listOf(
+                        PdlFoedsel(
+                            testPerson.fødselsdato.toFormatedString(),
+                            "" + testPerson.fødselsdato.toLocalDate().year
+                        )
+                    ),
+                    statsborgerskap = setOf(PdlStatsborgerskap("NOR", LocalDate.now(), LocalDate.now())),
+                    folkeregisterpersonstatus = setOf(PdlFolkeregisterPersonStatus(PersonStatus.bosatt, null))
+                )
             ),
         )
     }
@@ -1152,7 +1177,18 @@ object FakeServers : AutoCloseable {
             errors = null,
             extensions = null,
             data = PdlPersoninfoData(
-                hentPerson = mapPersonHistorikk(testPerson)
+                hentPerson = testPerson.let { person ->
+                    PdlPersoninfo(
+                        foedselsdato = listOf(
+                            PdlFoedsel(
+                                person.fødselsdato.toFormatedString(),
+                                "" + person.fødselsdato.toLocalDate().year
+                            )
+                        ),
+                        statsborgerskap = person.statsborgerskap.toSet(),
+                        folkeregisterpersonstatus = person.personStatus.toSet(),
+                    )
+                }
             ),
         )
     }
@@ -1196,45 +1232,6 @@ object FakeServers : AutoCloseable {
             errors = null,
             extensions = null,
             data = HentPerson(hentPersonBolk = navnData)
-        )
-    }
-
-    private fun mapPerson(person: TestPerson?): PdlPersoninfo? {
-        if (person == null) {
-            return null
-        }
-        return PdlPersoninfo(
-            foedselsdato = listOf(
-                PdlFoedsel(
-                    person.fødselsdato.toFormatedString(),
-                    "" + person.fødselsdato.toLocalDate().year
-                )
-            ),
-            statsborgerskap = setOf(PdlStatsborgerskap("NOR", LocalDate.now(), LocalDate.now())),
-            folkeregisterpersonstatus = setOf(PdlFolkeregisterPersonStatus(PersonStatus.bosatt, null))
-        )
-    }
-
-
-    private fun mapPersonHistorikk(person: TestPerson?): PdlPersoninfo? {
-        if (person == null) {
-            return null
-        }
-        return PdlPersoninfo(
-            foedselsdato = listOf(
-                PdlFoedsel(
-                    person.fødselsdato.toFormatedString(),
-                    "" + person.fødselsdato.toLocalDate().year
-                )
-            ),
-            statsborgerskap = setOf(
-                PdlStatsborgerskap("NOR", LocalDate.now(), LocalDate.now()),
-                PdlStatsborgerskap("MAC", LocalDate.now().minusYears(5), LocalDate.now()),
-            ),
-            folkeregisterpersonstatus = setOf(
-                PdlFolkeregisterPersonStatus(PersonStatus.bosatt, null),
-                PdlFolkeregisterPersonStatus(PersonStatus.ikkeBosatt, null)
-            )
         )
     }
 
