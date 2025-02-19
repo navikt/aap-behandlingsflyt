@@ -38,7 +38,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktR
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøknadsTidspunkt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunkt
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn.BarnRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurdering
@@ -88,6 +87,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.Med
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningForutgåendeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn.BarnRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.uføre.UføreRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.yrkesskade.YrkesskadeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepositoryImpl
@@ -131,7 +131,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -151,6 +150,47 @@ class FlytOrkestratorTest {
         @BeforeAll
         @JvmStatic
         internal fun beforeAll() {
+            RepositoryRegistry
+                .register<BehandlingRepositoryImpl>()
+                .register<PersonRepositoryImpl>()
+                .register<SakRepositoryImpl>()
+                .register<AvklaringsbehovRepositoryImpl>()
+                .register<VilkårsresultatRepositoryImpl>()
+                .register<PipRepositoryImpl>()
+                .register<TaSkriveLåsRepositoryImpl>()
+                .register<BeregningsgrunnlagRepositoryImpl>()
+                .register<PersonopplysningRepositoryImpl>()
+                .register<TilkjentYtelseRepositoryImpl>()
+                .register<AktivitetspliktRepositoryImpl>()
+                .register<BrevbestillingRepositoryImpl>()
+                .register<SamordningRepositoryImpl>()
+                .register<MottattDokumentRepositoryImpl>()
+                .register<PliktkortRepositoryImpl>()
+                .register<UnderveisRepositoryImpl>()
+                .register<ArbeidsevneRepositoryImpl>()
+                .register<Effektuer11_7RepositoryImpl>()
+                .register<BarnetilleggRepositoryImpl>()
+                .register<BistandRepositoryImpl>()
+                .register<BeregningVurderingRepositoryImpl>()
+                .register<SykdomRepositoryImpl>()
+                .register<YrkesskadeRepositoryImpl>()
+                .register<UføreRepositoryImpl>()
+                .register<MedlemskapArbeidInntektRepositoryImpl>()
+                .register<SykepengerErstatningRepositoryImpl>()
+                .register<SamordningYtelseVurderingRepositoryImpl>()
+                .register<StudentRepositoryImpl>()
+                .register<MeldepliktRepositoryImpl>()
+                .register<MedlemskapArbeidInntektForutgåendeRepositoryImpl>()
+                .register<PersonopplysningForutgåendeRepositoryImpl>()
+                .register<BarnRepositoryImpl>()
+                .status()
+            GatewayRegistry.register<PdlBarnGateway>()
+                .register<PdlIdentGateway>()
+                .register<PdlPersoninfoBulkGateway>()
+                .register<PdlPersoninfoGateway>()
+                .register<AbakusSykepengerGateway>()
+                .register<AbakusForeldrepengerGateway>()
+                .register<DokumentinnhentingGatewayImpl>()
             motor.start()
         }
 
@@ -159,51 +199,6 @@ class FlytOrkestratorTest {
         internal fun afterAll() {
             motor.stop()
         }
-    }
-
-    @BeforeEach
-    fun setUp() {
-        RepositoryRegistry
-            .register<BehandlingRepositoryImpl>()
-            .register<PersonRepositoryImpl>()
-            .register<SakRepositoryImpl>()
-            .register<AvklaringsbehovRepositoryImpl>()
-            .register<VilkårsresultatRepositoryImpl>()
-            .register<PipRepositoryImpl>()
-            .register<TaSkriveLåsRepositoryImpl>()
-            .register<BeregningsgrunnlagRepositoryImpl>()
-            .register<PersonopplysningRepositoryImpl>()
-            .register<TilkjentYtelseRepositoryImpl>()
-            .register<AktivitetspliktRepositoryImpl>()
-            .register<BrevbestillingRepositoryImpl>()
-            .register<SamordningRepositoryImpl>()
-            .register<MottattDokumentRepositoryImpl>()
-            .register<PliktkortRepositoryImpl>()
-            .register<UnderveisRepositoryImpl>()
-            .register<ArbeidsevneRepositoryImpl>()
-            .register<Effektuer11_7RepositoryImpl>()
-            .register<BarnetilleggRepositoryImpl>()
-            .register<BistandRepositoryImpl>()
-            .register<BeregningVurderingRepositoryImpl>()
-            .register<SykdomRepositoryImpl>()
-            .register<YrkesskadeRepositoryImpl>()
-            .register<UføreRepositoryImpl>()
-            .register<MedlemskapArbeidInntektRepositoryImpl>()
-            .register<SykepengerErstatningRepositoryImpl>()
-            .register<SamordningYtelseVurderingRepositoryImpl>()
-            .register<StudentRepositoryImpl>()
-            .register<MeldepliktRepositoryImpl>()
-            .register<MedlemskapArbeidInntektForutgåendeRepositoryImpl>()
-            .register<PersonopplysningForutgåendeRepositoryImpl>()
-            .register<BarnRepositoryImpl>()
-            .status()
-        GatewayRegistry.register<PdlBarnGateway>()
-            .register<PdlIdentGateway>()
-            .register<PdlPersoninfoBulkGateway>()
-            .register<PdlPersoninfoGateway>()
-            .register<AbakusSykepengerGateway>()
-            .register<AbakusForeldrepengerGateway>()
-            .register<DokumentinnhentingGatewayImpl>()
     }
 
     @Test

@@ -637,7 +637,6 @@ class VarighetRegelTest {
     fun `alle måter å dele opp periode i to`() {
         val rettighetsperiode = Periode(11 november 2024, 26 november 2024)
         Periode(rettighetsperiode.fom.plusDays(1), rettighetsperiode.tom).dager().forEach {
-            println(it)
             val vurderinger = regel.vurder(
                 tomUnderveisInput.copy(
                     rettighetsperiode = rettighetsperiode,
@@ -686,7 +685,6 @@ class VarighetRegelTest {
     fun `alle måter å dele opp periode i to hvor antall dager i kvote er lik hverdagene`() {
         val rettighetsperiode = Periode(11 november 2024, 26 november 2024)
         Periode(rettighetsperiode.fom.plusDays(1), rettighetsperiode.tom).dager().forEach {
-            println(it)
             val vurderinger = regel.vurder(
                 tomUnderveisInput.copy(
                     rettighetsperiode = rettighetsperiode,

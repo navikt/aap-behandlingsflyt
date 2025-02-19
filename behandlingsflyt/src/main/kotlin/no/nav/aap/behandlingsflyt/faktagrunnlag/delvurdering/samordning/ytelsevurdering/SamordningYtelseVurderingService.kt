@@ -6,10 +6,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Aktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerRequest
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerRequest
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.UtbetaltePerioder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelser
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -20,6 +19,7 @@ import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelse as ForeldrePengerResponseYtelse
 
 class SamordningYtelseVurderingService(
     private val samordningYtelseVurderingRepository: SamordningYtelseVurderingRepository,
@@ -45,23 +45,23 @@ class SamordningYtelseVurderingService(
         return Informasjonskrav.Endret.IKKE_ENDRET
     }
 
-    private fun hentYtelseForeldrepenger(personIdent: String, fom: LocalDate, tom: LocalDate): ForeldrepengerResponse {
+    private fun hentYtelseForeldrepenger(personIdent: String, fom: LocalDate, tom: LocalDate): List<ForeldrePengerResponseYtelse> {
         return fpGateway.hentVedtakYtelseForPerson(
             ForeldrepengerRequest(
                 Aktør(personIdent),
                 Periode(fom, tom)
             )
-        )
+        ).ytelser
     }
 
-    private fun hentYtelseSykepenger(personIdent: String, fom: LocalDate, tom: LocalDate): SykepengerResponse {
+    private fun hentYtelseSykepenger(personIdent: String, fom: LocalDate, tom: LocalDate): List<UtbetaltePerioder> {
         return spGateway.hentYtelseSykepenger(
             SykepengerRequest(
                 setOf(personIdent),
                 fom,
                 tom
             )
-        )
+        ).utbetaltePerioder
     }
 
     private fun harEndringerIYtelser(
@@ -72,14 +72,14 @@ class SamordningYtelseVurderingService(
     }
 
     private fun mapTilSamordningYtelse(
-        foreldrepenger: ForeldrepengerResponse,
-        sykepenger: SykepengerResponse,
+        foreldrepenger: List<ForeldrePengerResponseYtelse>,
+        sykepenger: List<UtbetaltePerioder>,
         saksNummer: String
     ): List<SamordningYtelse> {
         val samordningYtelser = mutableListOf<SamordningYtelse>()
         val sykepengerKilde = "INFOTRYGDSPEIL"
 
-        for (ytelse in foreldrepenger.ytelser) {
+        for (ytelse in foreldrepenger) {
             val ytelsePerioder = ytelse.anvist.map {
                 SamordningYtelsePeriode(
                     periode = it.periode,
@@ -97,7 +97,7 @@ class SamordningYtelseVurderingService(
             )
         }
 
-        val ytelsePerioder = sykepenger.utbetaltePerioder.map {
+        val ytelsePerioder = sykepenger.map {
             SamordningYtelsePeriode(
                 Periode(it.fom, it.tom),
                 Prosent(it.grad.toInt()),
@@ -118,7 +118,7 @@ class SamordningYtelseVurderingService(
         return samordningYtelser
     }
 
-    private fun konverterFraForeldrePengerDomene(ytelse: no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelse) =
+    private fun konverterFraForeldrePengerDomene(ytelse: ForeldrePengerResponseYtelse) =
         when (ytelse.ytelse) {
             Ytelser.PLEIEPENGER_SYKT_BARN -> TODO()
             Ytelser.PLEIEPENGER_NÆRSTÅENDE -> Ytelse.PLEIEPENGER_NÆR_FAMILIE
