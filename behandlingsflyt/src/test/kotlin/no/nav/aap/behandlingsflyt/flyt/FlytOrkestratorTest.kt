@@ -938,6 +938,7 @@ class FlytOrkestratorTest {
         util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
         behandling = hentBehandling(sak.id)
 
+
         løsAvklaringsBehov(
             behandling, LøsAvklaringsbehovHendelse(
                 løsning = AvklarBistandsbehovLøsning(
@@ -1842,18 +1843,7 @@ class FlytOrkestratorTest {
                 strukturertDokument = StrukturertDokument(
                     SøknadV0(
                         student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
-                        medlemskap = SøknadMedlemskapDto(
-                            "JA", null, "JA", null,
-                            listOf(
-                                UtenlandsPeriodeDto(
-                                    "SWE",
-                                    LocalDate.now().plusMonths(1),
-                                    LocalDate.now().minusMonths(1),
-                                    "JA",
-                                    null
-                                )
-                            )
-                        ),
+                        medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null),
                     ),
                 ),
                 periode = periode
@@ -1862,7 +1852,7 @@ class FlytOrkestratorTest {
         util.ventPåSvar()
 
         val sak = hentSak(ident, periode)
-        var behandling = hentBehandling(sak.id)
+        val behandling = hentBehandling(sak.id)
 
         løsFramTilForutgåendeMedlemskap(behandling, sak, false, ident)
 
@@ -1908,7 +1898,8 @@ class FlytOrkestratorTest {
                 strukturertDokument = StrukturertDokument(
                     SøknadV0(
                         student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
-                        medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null
+                        medlemskap = SøknadMedlemskapDto(
+                            "JA", null, "NEI", null, null
                         ),
                     ),
                 ),
@@ -1966,7 +1957,8 @@ class FlytOrkestratorTest {
                 strukturertDokument = StrukturertDokument(
                     SøknadV0(
                         student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
-                        medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null
+                        medlemskap = SøknadMedlemskapDto(
+                            "JA", null, "NEI", null, null
                         ),
                     ),
                 ),
@@ -2255,11 +2247,11 @@ class FlytOrkestratorTest {
         }
 
         // Validér riktig resultat
-        dataSource.transaction { connection ->
-            val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder()
-            assertTrue(vilkårsResultat.none { it.erOppfylt() })
-            assertThat(Avslagsårsak.IKKE_MEDLEM == vilkårsResultat.first().avslagsårsak)
-        }
+
+        val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder()
+        assertTrue(vilkårsResultat.none { it.erOppfylt() })
+        assertThat(Avslagsårsak.IKKE_MEDLEM == vilkårsResultat.first().avslagsårsak)
+
     }
 
     private fun løsAvklaringsBehov(behandling: Behandling, løsAvklaringsbehovHendelse: LøsAvklaringsbehovHendelse) {
@@ -2332,51 +2324,37 @@ class FlytOrkestratorTest {
                 .first { it.typeBrev == typeBrev }
         }
 
-    private fun løsFramTilForutgåendeMedlemskap(behandling: Behandling, sak: Sak, løsYrkesskade: Boolean = false, ident: Ident) {
-        FakePersoner.leggTil(
-            TestPerson(
-                identer = setOf(ident),
-                statsborgerskap = listOf(PdlStatsborgerskap("MAC", LocalDate.now().minusYears(5), LocalDate.now())),
-                personStatus = listOf(
-                    PdlFolkeregisterPersonStatus(
-                        PersonStatus.bosatt,
-                        PdlFolkeregistermetadata(
-                            LocalDateTime.now(),
-                            LocalDateTime.now().plusYears(2)
-                        )
-                    ),
-                    PdlFolkeregisterPersonStatus(
-                        PersonStatus.ikkeBosatt,
-                        PdlFolkeregistermetadata(
-                            LocalDateTime.now().minusYears(5),
-                            LocalDateTime.now().minusYears(2)
-                        )
-                    ),
-                )
-            )
-        )
-
-        var behandling = behandling
-        løsAvklaringsBehov(
-            behandling, LøsAvklaringsbehovHendelse(
-                løsning = AvklarSykdomLøsning(
-                    sykdomsvurdering = SykdomsvurderingDto(
-                        begrunnelse = "Er syk nok",
-                        dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
-                        harSkadeSykdomEllerLyte = true,
-                        erSkadeSykdomEllerLyteVesentligdel = true,
-                        erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                        erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-                        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                        erArbeidsevnenNedsatt = true,
-                        yrkesskadeBegrunnelse = null,
-                        vurderingenGjelderFra = null,
+    private fun løsFramTilForutgåendeMedlemskap(
+        behandling: Behandling,
+        sak: Sak,
+        harYrkesskade: Boolean = false,
+        ident: Ident
+    ) {
+        val person = TestPerson(
+            identer = setOf(ident),
+            statsborgerskap = listOf(PdlStatsborgerskap("MAC", LocalDate.now().minusYears(5), LocalDate.now())),
+            yrkesskade = if (harYrkesskade) listOf(TestYrkesskade()) else emptyList(),
+            personStatus = listOf(
+                PdlFolkeregisterPersonStatus(
+                    PersonStatus.bosatt,
+                    PdlFolkeregistermetadata(
+                        LocalDateTime.now(),
+                        LocalDateTime.now().plusYears(2)
                     )
                 ),
-                behandlingVersjon = behandling.versjon,
-                bruker = Bruker("SAKSBEHANDLER")
+                PdlFolkeregisterPersonStatus(
+                    PersonStatus.ikkeBosatt,
+                    PdlFolkeregistermetadata(
+                        LocalDateTime.now().minusYears(5),
+                        LocalDateTime.now().minusYears(2)
+                    )
+                ),
             )
         )
+        FakePersoner.leggTil(person)
+
+        var behandling = behandling
+        løsSykdom(behandling)
         util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
         behandling = hentBehandling(sak.id)
 
@@ -2419,7 +2397,7 @@ class FlytOrkestratorTest {
 
         util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
         behandling = hentBehandling(sak.id)
-        if (løsYrkesskade) {
+        if (harYrkesskade) {
             løsAvklaringsBehov(
                 behandling, LøsAvklaringsbehovHendelse(
                     løsning = AvklarYrkesskadeLøsning(
