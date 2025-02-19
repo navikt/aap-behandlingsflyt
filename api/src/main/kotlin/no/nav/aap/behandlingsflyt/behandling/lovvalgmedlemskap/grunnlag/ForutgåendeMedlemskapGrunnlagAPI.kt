@@ -15,7 +15,7 @@ import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.forutgåendeMedlemskapAPI(dataSource: DataSource) {
     route("/api/behandling") {
-        route("/{referanse}/grunnlag/lovvalgmedlemskap") {
+        route("/{referanse}/grunnlag/forutgaaendemedlemskap") {
             get<BehandlingReferanse, ForutgåendeMedlemskapGrunnlagDto> { req ->
                 val grunnlag = dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
