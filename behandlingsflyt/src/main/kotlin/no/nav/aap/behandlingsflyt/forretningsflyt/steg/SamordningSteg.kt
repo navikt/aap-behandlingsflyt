@@ -1,11 +1,9 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.behandling.samordning.AvklaringsType
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -27,28 +25,43 @@ class SamordningSteg(
     private val log = LoggerFactory.getLogger(SamordningSteg::class.java)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val samordningTidslinje = samordningService.vurder(kontekst.behandlingId)
+        // Logikkplan
+        // 1.  hent vurderinger som har vært gjort tidligere
+        // 2.  finn perioder av ytelser som krever manuell vurdering som ikke har blitt vurdert
+        // 2.1 hvis ikke-tom -> avklaringsbehov for å vurdere manuelt
+        // 2.2 for foreldrepenger: ha infokrav om oppstartdato, lag manuelt frivillig behov
+        // 3.  hvis har all tilgjengelig data:
+        // 3.1 lag tidslinje av prosentgradering og lagre i SamordningRepository
 
-        if (samordningTidslinje.segmenter().any { segment ->
-                segment.verdi.ytelsesGraderinger.any {
-                    it.ytelse.type == AvklaringsType.MANUELL
-                }
-            }) {
-            if (!samordningService.harGjortVurdering(kontekst.behandlingId)) {
-                return FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_GRADERING)
-            }
+        val tidligereVurderinger = samordningService.tidligereVurderinger(behandlingId = kontekst.behandlingId)
+
+        val perioderSomIkkeHarBlittVurdert = samordningService.perioderSomIkkeHarBlittVurdert(
+            kontekst.behandlingId, tidligereVurderinger
+        )
+
+
+        if (perioderSomIkkeHarBlittVurdert.isNotEmpty()) {
+            log.info("Fant perioder som ikke har blitt vurdert: $perioderSomIkkeHarBlittVurdert")
+            return FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_GRADERING)
         }
 
-        samordningRepository.lagre(
-            kontekst.behandlingId,
-            samordningTidslinje.segmenter()
-                .map {
-                    SamordningPeriode(
-                        it.periode,
-                        it.verdi.gradering
-                    )
-                }
-        )
+        val samordningTidslinje =
+            samordningService.vurder(behandlingId = kontekst.behandlingId, tidligereVurderinger)
+
+
+        if (!samordningTidslinje.isEmpty()) {
+            samordningRepository.lagre(
+                kontekst.behandlingId,
+                samordningTidslinje.segmenter()
+                    .map {
+                        SamordningPeriode(
+                            it.periode,
+                            it.verdi.gradering
+                        )
+                    }
+            )
+        }
+
 
         log.info("Samordning tidslinje $samordningTidslinje")
         return Fullført
@@ -67,11 +80,11 @@ class SamordningSteg(
             val repositoryProvider = RepositoryProvider(connection)
             val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
             val samordningRepository = repositoryProvider.provide<SamordningRepository>()
-            val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
+
             return SamordningSteg(
                 SamordningService(
                     repositoryProvider.provide(),
-                    underveisRepository
+                    samordningRepository = repositoryProvider.provide()
                 ),
                 samordningRepository,
                 avklaringsbehovRepository
