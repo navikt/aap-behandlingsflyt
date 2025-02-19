@@ -1331,9 +1331,9 @@ class FlytOrkestratorTest {
                 strukturertDokument = StrukturertDokument(
                     SøknadV0(
                         student = SøknadStudentDto("NEI"),
-                        yrkesskade = "NEI",
+                        yrkesskade = "JA",
                         oppgitteBarn = null,
-                        medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
+                        medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null),
                     ),
 
                     ),

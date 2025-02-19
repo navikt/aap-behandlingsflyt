@@ -65,14 +65,15 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         deaktiverGrunnlag(behandlingId)
 
         val manuellVurderingQuery = """
-            INSERT INTO FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERING (BEGRUNNELSE, HAR_FORUTGAAENDE_MEDLEMSKAP, OPPFYLLER_UNNTAKS_VILKÅR) VALUES (?, ?, ?)
+            INSERT INTO FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERING (BEGRUNNELSE, HAR_FORUTGAAENDE_MEDLEMSKAP, VAR_MEDLEM_MED_NEDSATT_ARBEIDSEVNE, MEDLEM_MED_UNNTAK_AV_MAKS_FEM_AAR) VALUES (?, ?, ?, ?)
         """.trimIndent()
 
         val manuellVurderingId = connection.executeReturnKey(manuellVurderingQuery) {
             setParams {
                 setString(1, manuellVurdering.begrunnelse)
                 setBoolean(2, manuellVurdering.harForutgåendeMedlemskap)
-                setBoolean(3, manuellVurdering.oppfyllerUnntaksVilkår)
+                setBoolean(3, manuellVurdering.varMedlemMedNedsattArbeidsevne)
+                setBoolean(4, manuellVurdering.medlemMedUnntakAvMaksFemAar)
             }
         }
 
@@ -193,7 +194,8 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                 ManuellVurderingForForutgåendeMedlemskap(
                     begrunnelse = it.getString("begrunnelse"),
                     harForutgåendeMedlemskap = it.getBoolean("har_forutgaaende_medlemskap"),
-                    oppfyllerUnntaksVilkår = it.getBooleanOrNull("oppfyller_unntaks_vilkår")
+                    varMedlemMedNedsattArbeidsevne = it.getBooleanOrNull("var_medlem_med_nedsatt_arbeidsevne"),
+                    medlemMedUnntakAvMaksFemAar = it.getBooleanOrNull("medlem_med_unntak_av_maks_fem_aar")
                 )
             }
         }

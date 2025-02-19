@@ -108,14 +108,6 @@ object Revurdering : BehandlingType {
                 )
             )
             .medSteg(
-                steg = VurderForutgåendeMedlemskapSteg,
-                informasjonskrav = listOf(PersonopplysningForutgåendeService, ForutgåendeMedlemskapService),
-                årsakRelevanteForSteg = listOf(
-                    ÅrsakTilBehandling.MOTTATT_SØKNAD,
-                    ÅrsakTilBehandling.REVURDER_MEDLEMSKAP
-                )
-            )
-            .medSteg(
                 steg = BeregningAvklarFaktaSteg, årsakRelevanteForSteg = listOf(
                     ÅrsakTilBehandling.MOTTATT_SØKNAD,
                     ÅrsakTilBehandling.REVURDER_BEREGNING,
@@ -128,6 +120,14 @@ object Revurdering : BehandlingType {
                     ÅrsakTilBehandling.MOTTATT_SØKNAD,
                     ÅrsakTilBehandling.REVURDER_BEREGNING,
                     ÅrsakTilBehandling.REVURDER_YRKESSKADE
+                )
+            )
+            .medSteg(
+                steg = VurderForutgåendeMedlemskapSteg,
+                informasjonskrav = listOf(PersonopplysningForutgåendeService, ForutgåendeMedlemskapService),
+                årsakRelevanteForSteg = listOf(
+                    ÅrsakTilBehandling.MOTTATT_SØKNAD,
+                    ÅrsakTilBehandling.REVURDER_MEDLEMSKAP
                 )
             )
             .medSteg(steg = BarnetilleggSteg, informasjonskrav = listOf(BarnService))
