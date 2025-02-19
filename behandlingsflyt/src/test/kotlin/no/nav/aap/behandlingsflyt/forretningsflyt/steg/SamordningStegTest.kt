@@ -171,11 +171,11 @@ class SamordningStegTest {
     ): SamordningSteg {
         val steg = SamordningSteg(
             samordningService = SamordningService(
-                samordningYtelseVurderingRepository = InMemorySamordningYtelseVurderingRepository
+                samordningYtelseVurderingRepository = InMemorySamordningYtelseVurderingRepository,
+                samordningRepository = InMemorySamordningRepository
             ),
             samordningRepository = InMemorySamordningRepository,
-            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-            samordningYtelseVurderingRepository = InMemorySamordningYtelseVurderingRepository
+            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
         )
 
         lagreYtelseGrunnlag(behandlingId, ytelse, Periode(LocalDate.now().minusYears(1), LocalDate.now()))

@@ -4,9 +4,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningYtelseVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningYtelseVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -14,11 +15,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
 
 class SamordningServiceTest {
@@ -31,22 +33,27 @@ class SamordningServiceTest {
             opprettYtelseData(ytelseVurderingRepo, behandlingId)
             opprettVurderingData(ytelseVurderingRepo, behandlingId)
 
-            val service = SamordningService(ytelseVurderingRepo)
-            assertThat(service.vurder(behandlingId)).isNotEmpty
+            val service = SamordningService(
+                ytelseVurderingRepo, SamordningRepositoryImpl(connection)
+            )
+            val tidligereVurderinger = service.tidligereVurderinger(behandlingId)
+            assertThat(service.vurder(behandlingId, tidligereVurderinger)).isNotEmpty
         }
     }
 
     @Test
-    fun `kan hente og gjøre vurdering uten vurderinger`() {
+    fun `krever vurdering om det finnes samordningdata`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val ytelseVurderingRepo = SamordningYtelseVurderingRepositoryImpl(connection)
             val behandlingId = opprettSakdata(connection)
             opprettYtelseData(ytelseVurderingRepo, behandlingId)
 
-            val service = SamordningService(ytelseVurderingRepo)
-            val tidslinje = service.vurder(behandlingId)
+            val service = SamordningService(
+                ytelseVurderingRepo, SamordningRepositoryImpl(connection)
+            )
+            val tidligereVurderinger = service.tidligereVurderinger(behandlingId)
 
-            assertThat(tidslinje).hasSize(1)
+            assertThrows<IllegalArgumentException> { service.vurder(behandlingId, tidligereVurderinger) }
         }
     }
 
@@ -56,25 +63,12 @@ class SamordningServiceTest {
             val ytelseVurderingRepo = SamordningYtelseVurderingRepositoryImpl(connection)
             val behandlingId = opprettSakdata(connection)
 
-            val service = SamordningService(ytelseVurderingRepo)
-            val tidslinje = service.vurder(behandlingId)
+            val service = SamordningService(
+                ytelseVurderingRepo, SamordningRepositoryImpl(connection)
+            )
+            val tidslinje = service.vurder(behandlingId, Tidslinje.empty())
 
             assertThat(tidslinje).isEmpty()
-        }
-    }
-
-    @Test
-    fun `sjekker om det er gjort vurderinger`() {
-        InitTestDatabase.dataSource.transaction { connection ->
-            val ytelseVurderingRepo = SamordningYtelseVurderingRepositoryImpl(connection)
-            val behandlingId = opprettSakdata(connection)
-            opprettYtelseData(ytelseVurderingRepo, behandlingId)
-
-            val service = SamordningService(ytelseVurderingRepo)
-            assertEquals(false, service.harGjortVurdering(behandlingId))
-
-            opprettVurderingData(ytelseVurderingRepo, behandlingId)
-            assertEquals(true, service.harGjortVurdering(behandlingId))
         }
     }
 
