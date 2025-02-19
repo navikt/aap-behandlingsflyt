@@ -58,6 +58,7 @@ class YrkesskadeService private constructor(
     ): YrkesskadeModell? {
         val mottattDokumenter = mottattDokumentRepository.hentDokumenterAvType(id, InnsendingType.SØKNAD)
 
+        // TODO dette er kun fake data!?
         if (mottattDokumenter.any { dokument ->
                 val data = dokument.strukturerteData<Søknad>()?.data
                 val yrkesskadeString = when (data) {

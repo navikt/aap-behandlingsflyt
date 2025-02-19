@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.test.modell
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.adapter.InstitusjonsoppholdJSON
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlFolkeregisterPersonStatus
@@ -15,7 +16,6 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.Year
 
 fun genererIdent(fødselsdato: LocalDate): Ident {
@@ -36,8 +36,20 @@ class TestPerson(
     val institusjonsopphold: List<InstitusjonsoppholdJSON> = emptyList(),
     val uføre: Prosent? = Prosent(0),
     inntekter: List<InntektPerÅr> = defaultInntekt(),
-    val personStatus: PdlFolkeregisterPersonStatus = PdlFolkeregisterPersonStatus(PersonStatus.bosatt, null),
-    val statsborgerskap: PdlStatsborgerskap = PdlStatsborgerskap("NOR", LocalDate.now().minusYears(5), null),
+    val personStatus: List<PdlFolkeregisterPersonStatus> = listOf(
+        PdlFolkeregisterPersonStatus(
+            PersonStatus.bosatt,
+            null
+        )
+    ),
+    val statsborgerskap: List<PdlStatsborgerskap> = listOf(
+        PdlStatsborgerskap(
+            "NOR",
+            LocalDate.now().minusYears(5),
+            null
+        )
+    ),
+    val medlStatus: List<MedlemskapResponse> = listOf(),
     val sykepenger: List<Sykepenger>? = null,
     val foreldrepenger: List<ForeldrePenger>? = null
 ) {

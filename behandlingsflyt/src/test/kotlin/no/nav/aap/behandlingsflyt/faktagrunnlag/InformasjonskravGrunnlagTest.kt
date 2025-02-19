@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.yrkesskade.YrkesskadeRepositoryImpl
@@ -35,6 +36,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.lookup.gateway.GatewayRegistry
 import no.nav.aap.lookup.repository.RepositoryRegistry
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -64,6 +66,8 @@ class InformasjonskravGrunnlagTest {
             .register<MedlemskapArbeidInntektRepositoryImpl>()
             .register<MedlemskapArbeidInntektForutgåendeRepositoryImpl>()
             .register<PersonopplysningForutgåendeRepositoryImpl>()
+
+        GatewayRegistry.register<MedlemskapGateway>()
     }
 
     @Test
@@ -188,7 +192,10 @@ class InformasjonskravGrunnlagTest {
             connection,
             PersonRepositoryImpl(connection)
         )
-        personopplysningRepository.lagre(behandling.id, Personopplysning(Fødselsdato(LocalDate.now().minusYears(20)), land = "NOR", status = PersonStatus.bosatt))
+        personopplysningRepository.lagre(
+            behandling.id,
+            Personopplysning(Fødselsdato(LocalDate.now().minusYears(20)), land = "NOR", status = PersonStatus.bosatt)
+        )
 
         val flytKontekst = behandling.flytKontekst()
         return ident to FlytKontekstMedPerioder(
