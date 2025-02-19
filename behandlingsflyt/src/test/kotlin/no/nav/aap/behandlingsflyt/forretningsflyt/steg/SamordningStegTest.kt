@@ -3,15 +3,11 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseVurderingRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -22,9 +18,15 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseVurderingRepository
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import java.time.LocalDate
@@ -64,7 +66,13 @@ class SamordningStegTest {
             behandling.id, listOf(
                 SamordningVurdering(
                     ytelseType = ytelse,
-                    vurderingPerioder = listOf()
+                    vurderingPerioder = listOf(
+                        SamordningVurderingPeriode(
+                            periode = Periode(LocalDate.now().minusYears(1), LocalDate.now()),
+                            gradering = Prosent(50),
+                            kronesum = null
+                        )
+                    )
                 )
             )
         )
@@ -109,6 +117,54 @@ class SamordningStegTest {
         assertThat(res).isEqualTo(Fullført)
     }
 
+    @Test
+    fun `det kommer ny informasjon, avklbehov opprettes igjen`() {
+        val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
+        val steg = settOppRessurser(Ytelse.SYKEPENGER, behandling.id)
+        val kontekst = FlytKontekstMedPerioder(
+            sakId = behandling.sakId,
+            behandlingId = behandling.id,
+            behandlingType = TypeBehandling.Revurdering,
+            perioderTilVurdering = setOf(
+                Vurdering(
+                    type = VurderingType.REVURDERING,
+                    årsaker = listOf(ÅrsakTilBehandling.MOTTATT_MELDEKORT),
+                    periode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
+                )
+            )
+        )
+
+        val res = steg.utfør(kontekst = kontekst)
+
+        assertThat(res).isEqualTo(FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_GRADERING))
+
+        InMemorySamordningYtelseVurderingRepository.lagreVurderinger(
+            behandling.id, listOf(
+                SamordningVurdering(
+                    ytelseType = Ytelse.SYKEPENGER,
+                    vurderingPerioder = listOf(
+                        SamordningVurderingPeriode(
+                            periode = Periode(LocalDate.now().minusYears(1), LocalDate.now()),
+                            gradering = Prosent(50),
+                            kronesum = null
+                        )
+                    )
+                )
+            )
+        )
+
+        val res2 = steg.utfør(kontekst = kontekst)
+
+        assertThat(res2).isEqualTo(Fullført)
+
+        lagreYtelseGrunnlag(behandling.id, Ytelse.SYKEPENGER, Periode(LocalDate.now().minusYears(2), LocalDate.now()))
+
+        val res3 = steg.utfør(kontekst = kontekst)
+
+        assertThat(res3).isEqualTo(FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_GRADERING))
+
+    }
+
     private fun settOppRessurser(
         ytelse: Ytelse,
         behandlingId: BehandlingId
@@ -118,16 +174,18 @@ class SamordningStegTest {
                 samordningYtelseVurderingRepository = InMemorySamordningYtelseVurderingRepository
             ),
             samordningRepository = InMemorySamordningRepository,
-            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
+            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+            samordningYtelseVurderingRepository = InMemorySamordningYtelseVurderingRepository
         )
 
-        lagreYtelseGrunnlag(behandlingId, ytelse)
+        lagreYtelseGrunnlag(behandlingId, ytelse, Periode(LocalDate.now().minusYears(1), LocalDate.now()))
         return steg
     }
 
     private fun lagreYtelseGrunnlag(
         behandlingId: BehandlingId,
-        ytelse: Ytelse
+        ytelse: Ytelse,
+        periode: Periode
     ) {
         InMemorySamordningYtelseVurderingRepository.lagreYtelser(
             behandlingId, listOf(
@@ -135,7 +193,7 @@ class SamordningStegTest {
                     ytelseType = ytelse,
                     ytelsePerioder = listOf(
                         SamordningYtelsePeriode(
-                            periode = Periode(LocalDate.now().minusYears(1), LocalDate.now()),
+                            periode = periode,
                             gradering = Prosent(50),
                             kronesum = 1234
                         )
