@@ -1842,18 +1842,7 @@ class FlytOrkestratorTest {
                 strukturertDokument = StrukturertDokument(
                     SøknadV0(
                         student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
-                        medlemskap = SøknadMedlemskapDto(
-                            "JA", null, "JA", null,
-                            listOf(
-                                UtenlandsPeriodeDto(
-                                    "SWE",
-                                    LocalDate.now().plusMonths(1),
-                                    LocalDate.now().minusMonths(1),
-                                    "JA",
-                                    null
-                                )
-                            )
-                        ),
+                        medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null),
                     ),
                 ),
                 periode = periode
