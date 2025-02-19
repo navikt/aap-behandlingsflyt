@@ -51,40 +51,21 @@ class SamordningSteg(
             faktaGrunnlag.ytelser.filter { it.ytelseType.type == AvklaringsType.MANUELL }.map { ytelse ->
                 Tidslinje(ytelse.ytelsePerioder.map { Segment(it.periode, Pair(ytelse.ytelseType, it)) })
             }.fold(Tidslinje.empty<List<Pair<Ytelse, SamordningYtelsePeriode>>>()) { acc, curr ->
-                acc.kombiner(curr, JoinStyle.OUTER_JOIN { periode, venstre, høyre ->
-                    if (venstre == null && høyre == null) {
-                        null
-                    } else if (venstre != null && høyre == null) {
-                        Segment(periode, venstre.verdi)
-                    } else if (høyre != null && venstre == null) {
-                        Segment(periode, listOf(høyre.verdi))
-                    } else {
-                        Segment(periode, venstre?.verdi.orEmpty() + listOfNotNull(høyre?.verdi))
-                    }
-                })
+                acc.kombiner(curr, slåSammenTilListe())
             }
 
         val vurderinger =
             faktaGrunnlag.vurderinger.filter { it.ytelseType.type == AvklaringsType.MANUELL }.map { ytelse ->
                 Tidslinje(ytelse.vurderingPerioder.map { Segment(it.periode, Pair(ytelse.ytelseType, it)) })
             }.fold(Tidslinje.empty<List<Pair<Ytelse, SamordningVurderingPeriode>>>()) { acc, curr ->
-                acc.kombiner(curr, JoinStyle.OUTER_JOIN { periode, venstre, høyre ->
-                    if (venstre == null && høyre == null) {
-                        null
-                    } else if (venstre != null && høyre == null) {
-                        Segment(periode, venstre.verdi)
-                    } else if (høyre != null && venstre == null) {
-                        Segment(periode, listOf(høyre.verdi))
-                    } else {
-                        Segment(periode, venstre?.verdi.orEmpty() + listOfNotNull(høyre?.verdi))
-                    }
-                })
+                acc.kombiner(curr, slåSammenTilListe())
             }
 
         val perioderSomIkkeHarBlittVurdert =
             hentedeYtelserByManuelleYtelser.kombiner(vurderinger, StandardSammenslåere.minus())
 
         if (perioderSomIkkeHarBlittVurdert.isNotEmpty()) {
+            log.info("Fant perioder som ikke har blitt vurdert: $perioderSomIkkeHarBlittVurdert")
             return FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_GRADERING)
         }
 
@@ -94,23 +75,14 @@ class SamordningSteg(
             faktaGrunnlag.ytelser.map { ytelse ->
                 Tidslinje(ytelse.ytelsePerioder.map { Segment(it.periode, Pair(ytelse.ytelseType, it)) })
             }.fold(Tidslinje.empty<List<Pair<Ytelse, SamordningYtelsePeriode>>>()) { acc, curr ->
-                acc.kombiner(curr, JoinStyle.OUTER_JOIN { periode, venstre, høyre ->
-                    if (venstre == null && høyre == null) {
-                        null
-                    } else if (venstre != null && høyre == null) {
-                        Segment(periode, venstre.verdi)
-                    } else if (høyre != null && venstre == null) {
-                        Segment(periode, listOf(høyre.verdi))
-                    } else {
-                        Segment(periode, venstre?.verdi.orEmpty() + listOfNotNull(høyre?.verdi))
-                    }
-                })
+                acc.kombiner(curr, slåSammenTilListe())
             }
 
         // Slå sammen med vurderinger og regn ut graderinger
 
         val samordningTidslinje =
             hentedeYtelserFraRegister.kombiner(vurderinger, JoinStyle.OUTER_JOIN { periode, venstre, høyre ->
+                // Vi har allerede verifisert at periodene overlapper
                 requireNotNull(venstre)
                 requireNotNull(høyre)
 
@@ -143,6 +115,19 @@ class SamordningSteg(
         log.info("Samordning tidslinje $samordningTidslinje")
         return Fullført
     }
+
+    private fun <E> slåSammenTilListe(): JoinStyle.OUTER_JOIN<List<Pair<Ytelse, E>>, Pair<Ytelse, E>, List<Pair<Ytelse, E>>> =
+        JoinStyle.OUTER_JOIN { periode, venstre, høyre ->
+            if (venstre == null && høyre == null) {
+                null
+            } else if (venstre != null && høyre == null) {
+                Segment(periode, venstre.verdi)
+            } else if (høyre != null && venstre == null) {
+                Segment(periode, listOf(høyre.verdi))
+            } else {
+                Segment(periode, venstre?.verdi.orEmpty() + listOfNotNull(høyre?.verdi))
+            }
+        }
 
     override fun vedTilbakeføring(kontekst: FlytKontekstMedPerioder) {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)

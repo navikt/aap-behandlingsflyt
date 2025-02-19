@@ -26,10 +26,13 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevL
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLand
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
@@ -122,6 +125,7 @@ import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.gateway.GatewayRegistry
 import no.nav.aap.lookup.repository.RepositoryRegistry
 import no.nav.aap.motor.FlytJobbRepository
@@ -153,6 +157,47 @@ class FlytOrkestratorTest {
         @BeforeAll
         @JvmStatic
         internal fun beforeAll() {
+            RepositoryRegistry
+                .register<BehandlingRepositoryImpl>()
+                .register<PersonRepositoryImpl>()
+                .register<SakRepositoryImpl>()
+                .register<AvklaringsbehovRepositoryImpl>()
+                .register<VilkårsresultatRepositoryImpl>()
+                .register<PipRepositoryImpl>()
+                .register<TaSkriveLåsRepositoryImpl>()
+                .register<BeregningsgrunnlagRepositoryImpl>()
+                .register<PersonopplysningRepositoryImpl>()
+                .register<TilkjentYtelseRepositoryImpl>()
+                .register<AktivitetspliktRepositoryImpl>()
+                .register<BrevbestillingRepositoryImpl>()
+                .register<SamordningRepositoryImpl>()
+                .register<MottattDokumentRepositoryImpl>()
+                .register<PliktkortRepositoryImpl>()
+                .register<UnderveisRepositoryImpl>()
+                .register<ArbeidsevneRepositoryImpl>()
+                .register<Effektuer11_7RepositoryImpl>()
+                .register<BarnetilleggRepositoryImpl>()
+                .register<BistandRepositoryImpl>()
+                .register<BeregningVurderingRepositoryImpl>()
+                .register<SykdomRepositoryImpl>()
+                .register<YrkesskadeRepositoryImpl>()
+                .register<UføreRepositoryImpl>()
+                .register<MedlemskapArbeidInntektRepositoryImpl>()
+                .register<SykepengerErstatningRepositoryImpl>()
+                .register<SamordningYtelseVurderingRepositoryImpl>()
+                .register<StudentRepositoryImpl>()
+                .register<MeldepliktRepositoryImpl>()
+                .register<MedlemskapArbeidInntektForutgåendeRepositoryImpl>()
+                .register<PersonopplysningForutgåendeRepositoryImpl>()
+                .register<BarnRepositoryImpl>()
+                .status()
+            GatewayRegistry.register<PdlBarnGateway>()
+                .register<PdlIdentGateway>()
+                .register<PdlPersoninfoBulkGateway>()
+                .register<PdlPersoninfoGateway>()
+                .register<AbakusSykepengerGateway>()
+                .register<AbakusForeldrepengerGateway>()
+                .register<DokumentinnhentingGatewayImpl>()
             motor.start()
         }
 
@@ -161,51 +206,6 @@ class FlytOrkestratorTest {
         internal fun afterAll() {
             motor.stop()
         }
-    }
-
-    @BeforeEach
-    fun setUp() {
-        RepositoryRegistry
-            .register<BehandlingRepositoryImpl>()
-            .register<PersonRepositoryImpl>()
-            .register<SakRepositoryImpl>()
-            .register<AvklaringsbehovRepositoryImpl>()
-            .register<VilkårsresultatRepositoryImpl>()
-            .register<PipRepositoryImpl>()
-            .register<TaSkriveLåsRepositoryImpl>()
-            .register<BeregningsgrunnlagRepositoryImpl>()
-            .register<PersonopplysningRepositoryImpl>()
-            .register<TilkjentYtelseRepositoryImpl>()
-            .register<AktivitetspliktRepositoryImpl>()
-            .register<BrevbestillingRepositoryImpl>()
-            .register<SamordningRepositoryImpl>()
-            .register<MottattDokumentRepositoryImpl>()
-            .register<PliktkortRepositoryImpl>()
-            .register<UnderveisRepositoryImpl>()
-            .register<ArbeidsevneRepositoryImpl>()
-            .register<Effektuer11_7RepositoryImpl>()
-            .register<BarnetilleggRepositoryImpl>()
-            .register<BistandRepositoryImpl>()
-            .register<BeregningVurderingRepositoryImpl>()
-            .register<SykdomRepositoryImpl>()
-            .register<YrkesskadeRepositoryImpl>()
-            .register<UføreRepositoryImpl>()
-            .register<MedlemskapArbeidInntektRepositoryImpl>()
-            .register<SykepengerErstatningRepositoryImpl>()
-            .register<SamordningYtelseVurderingRepositoryImpl>()
-            .register<StudentRepositoryImpl>()
-            .register<MeldepliktRepositoryImpl>()
-            .register<MedlemskapArbeidInntektForutgåendeRepositoryImpl>()
-            .register<PersonopplysningForutgåendeRepositoryImpl>()
-            .register<BarnRepositoryImpl>()
-            .status()
-        GatewayRegistry.register<PdlBarnGateway>()
-            .register<PdlIdentGateway>()
-            .register<PdlPersoninfoBulkGateway>()
-            .register<PdlPersoninfoGateway>()
-            .register<AbakusSykepengerGateway>()
-            .register<AbakusForeldrepengerGateway>()
-            .register<DokumentinnhentingGatewayImpl>()
     }
 
     @Test
@@ -879,41 +879,18 @@ class FlytOrkestratorTest {
     }
 
     @Test
-    fun `samordning fsdf s`() {
+    fun `stopper opp ved samordning ved funn av sykepenger, og løses ved info fra saksbehandler`() {
         val fom = LocalDate.now().minusMonths(3)
         val periode = Periode(fom, fom.plusYears(3))
 
         // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
+        val sykePengerPeriode = Periode(LocalDate.now().minusMonths(1), LocalDate.now().plusMonths(1))
         val person = TestPerson(
             fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
-            yrkesskade = listOf(TestYrkesskade()),
-            barn = listOf(
-                TestPerson(
-                    identer = setOf(Ident("1234123")),
-                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(3)),
-                    yrkesskade = listOf(),
-                    barn = listOf(),
-                    inntekter = listOf()
-                )
-            ),
             sykepenger = listOf(
                 TestPerson.Sykepenger(
                     grad = 50,
-                    periode = Periode(LocalDate.now().minusMonths(1), LocalDate.now().plusMonths(1))
-                )
-            ),
-            inntekter = listOf(
-                InntektPerÅr(
-                    Year.now().minusYears(1),
-                    Beløp(1000000)
-                ),
-                InntektPerÅr(
-                    Year.now().minusYears(2),
-                    Beløp(1000000)
-                ),
-                InntektPerÅr(
-                    Year.now().minusYears(3),
-                    Beløp(1000000)
+                    periode = sykePengerPeriode
                 )
             )
         )
@@ -995,24 +972,6 @@ class FlytOrkestratorTest {
 
         løsAvklaringsBehov(
             behandling, LøsAvklaringsbehovHendelse(
-                løsning = AvklarYrkesskadeLøsning(
-                    yrkesskadesvurdering = YrkesskadevurderingDto(
-                        begrunnelse = "Ikke årsakssammenheng",
-                        relevanteSaker = listOf(),
-                        andelAvNedsettelsen = null,
-                        erÅrsakssammenheng = false
-                    )
-                ),
-                behandlingVersjon = behandling.versjon,
-                bruker = Bruker("SAKSBEHANDLER")
-            )
-        )
-
-        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
-        behandling = hentBehandling(sak.id)
-
-        løsAvklaringsBehov(
-            behandling, LøsAvklaringsbehovHendelse(
                 løsning = FastsettBeregningstidspunktLøsning(
                     beregningVurdering = BeregningstidspunktVurdering(
                         begrunnelse = "Trenger hjelp fra Nav",
@@ -1036,7 +995,18 @@ class FlytOrkestratorTest {
             behandling, LøsAvklaringsbehovHendelse(
                 løsning = AvklarSamordningGraderingLøsning(
                     vurderingerForSamordning = VurderingerForSamordning(
-                        vurderteSamordninger = listOf()
+                        vurderteSamordninger = listOf(
+                            SamordningVurdering(
+                                ytelseType = Ytelse.SYKEPENGER,
+                                vurderingPerioder = listOf(
+                                    SamordningVurderingPeriode(
+                                        periode = sykePengerPeriode,
+                                        gradering = Prosent(90),
+                                        kronesum = null
+                                    )
+                                )
+                            )
+                        )
                     ),
                 ),
                 behandlingVersjon = behandling.versjon,
@@ -1045,7 +1015,7 @@ class FlytOrkestratorTest {
         )
         util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
 
-        assertThat(hentÅpneAvklaringsbehov(behandling.id).map { it.definisjon }).isEmpty()
+        assertThat(hentÅpneAvklaringsbehov(behandling.id).map { it.definisjon }).isEqualTo(listOf(Definisjon.FORESLÅ_VEDTAK))
     }
 
     private fun løsSykdom(behandling: Behandling) {
@@ -1497,7 +1467,7 @@ class FlytOrkestratorTest {
         util.ventPåSvar()
 
         val sak = hentSak(ident, periode)
-        var behandling = requireNotNull(hentBehandling(sak.id))
+        var behandling = hentBehandling(sak.id)
 
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
 
@@ -1583,7 +1553,7 @@ class FlytOrkestratorTest {
 
         util.ventPåSvar()
         val sak = hentSak(ident, periode)
-        var behandling = requireNotNull(hentBehandling(sak.id))
+        val behandling = hentBehandling(sak.id)
 
         // Validér avklaring
         var alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling.id)
