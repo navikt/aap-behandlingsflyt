@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak.VARIGHETSKVOTE_BRUKT_OPP
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak.STUDENT
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.IKKE_OPPFYLT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
@@ -37,6 +38,7 @@ class VarighetRegelTest {
             Tidslinje(
                 rettighetsperiode,
                 Vurdering(
+                    fårAapEtter = RettighetsType.BISTANDSBEHOV,
                     vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
                 )
             )
@@ -66,6 +68,7 @@ class VarighetRegelTest {
             Tidslinje(
                 rettighetsperiode,
                 Vurdering(
+                    fårAapEtter = RettighetsType.BISTANDSBEHOV,
                     vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
                 )
             )
@@ -95,6 +98,7 @@ class VarighetRegelTest {
             Tidslinje(
                 rettighetsperiode,
                 Vurdering(
+                    fårAapEtter = RettighetsType.BISTANDSBEHOV,
                     vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
                 )
             )
@@ -124,6 +128,7 @@ class VarighetRegelTest {
             Tidslinje(
                 rettighetsperiode,
                 Vurdering(
+                    fårAapEtter = RettighetsType.BISTANDSBEHOV,
                     vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
                 )
             )
@@ -155,6 +160,7 @@ class VarighetRegelTest {
                 Segment(
                     Periode(18 november 2024, 18 november 2024),
                     Vurdering(
+                        fårAapEtter = RettighetsType.BISTANDSBEHOV,
                         vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
                     )
                 ),
@@ -165,6 +171,7 @@ class VarighetRegelTest {
                 Segment(
                     Periode(21 november 2024, 22 november 2024),
                     Vurdering(
+                        fårAapEtter = RettighetsType.BISTANDSBEHOV,
                         vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
                     )
                 ),
@@ -209,6 +216,7 @@ class VarighetRegelTest {
                     Segment(
                         Periode(18 november 2024, 19 november 2024),
                         Vurdering(
+                            fårAapEtter = RettighetsType.SYKEPENGEERSTATNING,
                             vurderinger = listOf(
                                 VilkårVurdering(
                                     Vilkårtype.SYKEPENGEERSTATNING,
@@ -221,6 +229,7 @@ class VarighetRegelTest {
                     Segment(
                         Periode(20 november 2024, 22 november 2024),
                         Vurdering(
+                            fårAapEtter = RettighetsType.BISTANDSBEHOV,
                             vurderinger = listOf(
                                 VilkårVurdering(
                                     Vilkårtype.SYKDOMSVILKÅRET,
@@ -268,6 +277,7 @@ class VarighetRegelTest {
                     Segment(
                         Periode(18 november 2024, 19 november 2024),
                         Vurdering(
+                            fårAapEtter = RettighetsType.SYKEPENGEERSTATNING,
                             vurderinger = listOf(
                                 VilkårVurdering(
                                     Vilkårtype.SYKEPENGEERSTATNING,
@@ -280,6 +290,7 @@ class VarighetRegelTest {
                     Segment(
                         Periode(20 november 2024, 22 november 2024),
                         Vurdering(
+                            fårAapEtter = RettighetsType.BISTANDSBEHOV,
                             vurderinger = listOf(
                                 VilkårVurdering(
                                     Vilkårtype.SYKDOMSVILKÅRET,
@@ -336,6 +347,7 @@ class VarighetRegelTest {
                     Segment(
                         Periode(20 november 2024, 22 november 2024),
                         Vurdering(
+                            fårAapEtter = RettighetsType.BISTANDSBEHOV,
                             vurderinger = listOf(
                                 VilkårVurdering(
                                     Vilkårtype.SYKDOMSVILKÅRET,
@@ -381,6 +393,7 @@ class VarighetRegelTest {
                     Segment(
                         Periode(18 november 2024, 19 november 2024),
                         Vurdering(
+                            fårAapEtter = RettighetsType.BISTANDSBEHOV,
                             vurderinger = listOf(
                                 VilkårVurdering(
                                     Vilkårtype.SYKDOMSVILKÅRET,
@@ -393,6 +406,7 @@ class VarighetRegelTest {
                     Segment(
                         Periode(20 november 2024, 20 november 2024),
                         Vurdering(
+                            fårAapEtter = RettighetsType.BISTANDSBEHOV,
                             vurderinger = listOf(
                                 VilkårVurdering(
                                     Vilkårtype.SYKDOMSVILKÅRET,
@@ -405,6 +419,7 @@ class VarighetRegelTest {
                     Segment(
                         Periode(21 november 2024, 22 november 2024),
                         Vurdering(
+                            fårAapEtter = RettighetsType.BISTANDSBEHOV,
                             vurderinger = listOf(
                                 VilkårVurdering(
                                     Vilkårtype.SYKDOMSVILKÅRET,
@@ -443,6 +458,7 @@ class VarighetRegelTest {
                     Segment(
                         Periode(18 november 2024, 19 november 2024),
                         Vurdering(
+                            fårAapEtter = RettighetsType.BISTANDSBEHOV,
                             vurderinger = listOf(
                                 VilkårVurdering(
                                     Vilkårtype.SYKDOMSVILKÅRET,
@@ -455,6 +471,7 @@ class VarighetRegelTest {
                     Segment(
                         Periode(20 november 2024, 20 november 2024),
                         Vurdering(
+                            fårAapEtter = RettighetsType.BISTANDSBEHOV,
                             vurderinger = listOf(
                                 VilkårVurdering(
                                     Vilkårtype.SYKDOMSVILKÅRET,
@@ -467,6 +484,7 @@ class VarighetRegelTest {
                     Segment(
                         Periode(21 november 2024, 22 november 2024),
                         Vurdering(
+                            fårAapEtter = RettighetsType.BISTANDSBEHOV,
                             vurderinger = listOf(
                                 VilkårVurdering(
                                     Vilkårtype.SYKDOMSVILKÅRET,
@@ -514,12 +532,14 @@ class VarighetRegelTest {
                 Segment(
                     Periode(18 november 2024, 21 november 2024),
                     Vurdering(
+                        fårAapEtter = RettighetsType.STUDENT,
                         vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, STUDENT)),
                     )
                 ),
                 Segment(
                     Periode(22 november 2024, 26 november 2024),
                     Vurdering(
+                        fårAapEtter = RettighetsType.BISTANDSBEHOV,
                         vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
                     )
                 ),
@@ -568,12 +588,14 @@ class VarighetRegelTest {
                 Segment(
                     Periode(18 november 2024, 21 november 2024),
                     Vurdering(
+                        fårAapEtter = RettighetsType.BISTANDSBEHOV,
                         vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
                     )
                 ),
                 Segment(
                     Periode(22 november 2024, 26 november 2024),
                     Vurdering(
+                        fårAapEtter = RettighetsType.STUDENT,
                         vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, STUDENT)),
                     )
                 ),
@@ -611,6 +633,7 @@ class VarighetRegelTest {
             Tidslinje(
                 Periode(8 november 2024, 10 november 2024),
                 Vurdering(
+                    fårAapEtter = RettighetsType.BISTANDSBEHOV,
                     vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
                 )
             )
@@ -647,12 +670,14 @@ class VarighetRegelTest {
                     Segment(
                         Periode(11 november 2024, it.minusDays(1)),
                         Vurdering(
+                            fårAapEtter = RettighetsType.BISTANDSBEHOV,
                             vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
                         )
                     ),
                     Segment(
                         Periode(it, 26 november 2024),
                         Vurdering(
+                            fårAapEtter = RettighetsType.BISTANDSBEHOV,
                             vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
                         )
                     ),
@@ -695,12 +720,14 @@ class VarighetRegelTest {
                     Segment(
                         Periode(11 november 2024, it.minusDays(1)),
                         Vurdering(
+                            fårAapEtter = RettighetsType.BISTANDSBEHOV,
                             vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
                         )
                     ),
                     Segment(
                         Periode(it, 26 november 2024),
                         Vurdering(
+                            fårAapEtter = RettighetsType.BISTANDSBEHOV,
                             vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
                         )
                     ),
@@ -741,18 +768,21 @@ class VarighetRegelTest {
                 Segment(
                     Periode(11 november 2024, 13 november 2024),
                     Vurdering(
+                        fårAapEtter = RettighetsType.BISTANDSBEHOV,
                         vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
                     )
                 ),
                 Segment(
                     Periode(14 november 2024, 18 november 2024),
                     Vurdering(
+                        fårAapEtter = RettighetsType.STUDENT,
                         vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, STUDENT)),
                     )
                 ),
                 Segment(
                     Periode(19 november 2024, 21 november 2024),
                     Vurdering(
+                        fårAapEtter = RettighetsType.SYKEPENGEERSTATNING,
                         vurderinger = listOf(
                             VilkårVurdering(Vilkårtype.SYKEPENGEERSTATNING, Utfall.OPPFYLT, null),
                             VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null),
@@ -762,18 +792,21 @@ class VarighetRegelTest {
                 Segment(
                     Periode(22 november 2024, 24 november 2024),
                     Vurdering(
+                        fårAapEtter = RettighetsType.BISTANDSBEHOV,
                         vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
                     )
                 ),
                 Segment(
                     Periode(25 november 2024, 25 november 2024),
                     Vurdering(
+                        fårAapEtter = RettighetsType.STUDENT,
                         vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, STUDENT)),
                     )
                 ),
                 Segment(
                     Periode(26 november 2024, 26 november 2024),
                     Vurdering(
+                        fårAapEtter = RettighetsType.SYKEPENGEERSTATNING,
                         vurderinger = listOf(
                             VilkårVurdering(Vilkårtype.SYKEPENGEERSTATNING, Utfall.OPPFYLT, null),
                             VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null),
