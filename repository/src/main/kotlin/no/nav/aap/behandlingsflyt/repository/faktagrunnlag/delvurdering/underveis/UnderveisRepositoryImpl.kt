@@ -136,20 +136,19 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
             """.trimIndent()
         connection.executeBatch(query, underveisperioder) {
             setParams { periode ->
-                var c = 1
-                setLong(c++, perioderId)
-                setPeriode(c++, periode.periode)
-                setEnumName(c++, periode.utfall)
-                setEnumName(c++, periode.rettighetsType)
-                setEnumName(c++, periode.avslagsårsak)
-                setInt(c++, periode.grenseverdi.prosentverdi())
-                setBigDecimal(c++, periode.gradering.totaltAntallTimer.antallTimer)
-                setInt(c++, periode.gradering.gradering.prosentverdi())
-                setPeriode(c++, periode.meldePeriode)
-                setInt(c++, periode.trekk.antall)
-                setInt(c++, periode.gradering.fastsattArbeidsevne.prosentverdi())
-                setArray(c++, periode.brukerAvKvoter.map { it.name })
-                setLong(c++, periode.bruddAktivitetspliktId?.id)
+                setLong(1, perioderId)
+                setPeriode(2, periode.periode)
+                setEnumName(3, periode.utfall)
+                setEnumName(4, periode.rettighetsType)
+                setEnumName(5, periode.avslagsårsak)
+                setInt(6, periode.grenseverdi.prosentverdi())
+                setBigDecimal(7, periode.gradering.totaltAntallTimer.antallTimer)
+                setInt(8, periode.gradering.gradering.prosentverdi())
+                setPeriode(9, periode.meldePeriode)
+                setInt(10, periode.trekk.antall)
+                setInt(11, periode.gradering.fastsattArbeidsevne.prosentverdi())
+                setArray(12, periode.brukerAvKvoter.map { it.name })
+                setLong(13, periode.bruddAktivitetspliktId?.id)
             }
         }
 
