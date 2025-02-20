@@ -30,8 +30,9 @@ class Institusjon(
     }
 
     override fun toString(): String {
-        return "Institusjon(type=$type, kategori=$kategori, orgnr='$orgnr', navn='$navn')"
+        return "Institusjon(kategori=$kategori, type=$type, orgnr='$orgnr', navn='$navn')"
     }
+
 }
 
 /**

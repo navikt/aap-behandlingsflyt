@@ -1,5 +1,6 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold
+package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.institusjonsopphold
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.*
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soningsvurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -7,9 +8,10 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.lookup.repository.Factory
 
-class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) : InstitusjonsoppholdRepository {
+class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
+    InstitusjonsoppholdRepository {
 
-    companion object :Factory<InstitusjonsoppholdRepository> {
+    companion object : Factory<InstitusjonsoppholdRepository> {
         override fun konstruer(connection: DBConnection): InstitusjonsoppholdRepository {
             return InstitusjonsoppholdRepositoryImpl(connection)
         }
@@ -246,7 +248,10 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) : 
         return vurderingerId
     }
 
-    override fun lagreHelseVurdering(behandlingId: BehandlingId, helseinstitusjonVurderinger: List<HelseinstitusjonVurdering>) {
+    override fun lagreHelseVurdering(
+        behandlingId: BehandlingId,
+        helseinstitusjonVurderinger: List<HelseinstitusjonVurdering>
+    ) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
 
         if (eksisterendeGrunnlag != null) {

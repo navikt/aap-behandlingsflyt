@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Helsei
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 
-data class Helseoppholdvurderinger(internal val id: Long?, val vurderinger: List<HelseinstitusjonVurdering>) {
+data class Helseoppholdvurderinger(val id: Long?, val vurderinger: List<HelseinstitusjonVurdering>) {
     fun tilTidslinje(): Tidslinje<HelseinstitusjonVurdering> {
         return Tidslinje(vurderinger.map { Segment(it.periode, it) })
     }
