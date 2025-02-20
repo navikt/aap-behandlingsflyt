@@ -26,7 +26,9 @@ class ForutgåendeMedlemskapvilkåret(
         var vurdertManuelt = false
         val vurderingsResultat = if (manuellVurdering != null) {
             vurdertManuelt = true
-            if (!manuellVurdering.harForutgåendeMedlemskap && (manuellVurdering.medlemMedUnntakAvMaksFemAar == false || manuellVurdering.varMedlemMedNedsattArbeidsevne == false)) {
+            if (!manuellVurdering.harForutgåendeMedlemskap
+                && (manuellVurdering.medlemMedUnntakAvMaksFemAar != true && manuellVurdering.varMedlemMedNedsattArbeidsevne != true)
+            ) {
                 VurderingsResultat(Utfall.IKKE_OPPFYLT, Avslagsårsak.IKKE_MEDLEM_FORUTGÅENDE, null)
             } else {
                 VurderingsResultat(Utfall.OPPFYLT, null, null)
