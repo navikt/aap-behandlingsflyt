@@ -10,7 +10,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskap
 import no.nav.aap.komponenter.type.Periode
-import org.slf4j.LoggerFactory
 
 class ForutgåendeMedlemskapvilkåret(
     vilkårsresultat: Vilkårsresultat,
@@ -18,7 +17,6 @@ class ForutgåendeMedlemskapvilkåret(
     private val manuellVurdering: ManuellVurderingForForutgåendeMedlemskap?
 ) : Vilkårsvurderer<ForutgåendeMedlemskapGrunnlag> {
     private val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.MEDLEMSKAP)
-    private val logger =  LoggerFactory.getLogger(ForutgåendeMedlemskapvilkåret::class.java)
 
     override fun vurder(grunnlag: ForutgåendeMedlemskapGrunnlag) {
         val forutgåendePeriode = Periode(rettighetsPeriode.fom.minusYears(5), rettighetsPeriode.tom)
@@ -40,8 +38,6 @@ class ForutgåendeMedlemskapvilkåret(
             val utfall = if (kanBehandlesAutomatisk) Utfall.OPPFYLT else Utfall.IKKE_VURDERT
             VurderingsResultat(utfall, null, null)
         }
-
-        logger.info("la til vurdering for forutgående: $vurderingsResultat, med grunnlag $grunnlag")
 
         leggTilVurdering(forutgåendePeriode, grunnlag, vurderingsResultat, vurdertManuelt)
     }
