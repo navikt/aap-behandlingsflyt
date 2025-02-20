@@ -44,7 +44,7 @@ class SoningRegelTest {
     fun vurder() {
         val periode = Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 1))
         val vurderingFraTidligereResultat = Vurdering(
-            emptyList(), MeldepliktVurdering(
+            emptyList(), null, MeldepliktVurdering(
                 null,
                 Utfall.OPPFYLT
             ), null, null, null, Gradering(
@@ -53,7 +53,7 @@ class SoningRegelTest {
                 fastsattArbeidsevne = Prosent.`0_PROSENT`,
                 gradering = Prosent.`100_PROSENT`
             ), grenseverdi = Prosent(60)
-        ).leggTilVurdering(EnkelVurdering(Vilkårtype.ALDERSVILKÅRET, Utfall.OPPFYLT))
+        ).leggTilVurdering(VilkårVurdering(Vilkårtype.ALDERSVILKÅRET, Utfall.OPPFYLT))
         val tidligereResultatTidslinje = Tidslinje(listOf(Segment(periode, vurderingFraTidligereResultat)))
 
         val utlederInput = EtAnnetStedInput(

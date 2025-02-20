@@ -16,15 +16,16 @@ class RettTilRegel : UnderveisRegel {
         input: UnderveisInput,
         resultat: Tidslinje<Vurdering>
     ): Tidslinje<Vurdering> {
-        require(input.relevanteVilkår.any { it.type == Vilkårtype.ALDERSVILKÅRET })
-        require(input.relevanteVilkår.any { it.type == Vilkårtype.BISTANDSVILKÅRET })
-        require(input.relevanteVilkår.any { it.type == Vilkårtype.MEDLEMSKAP })
-        require(input.relevanteVilkår.any { it.type == Vilkårtype.SYKDOMSVILKÅRET })
-        require(input.relevanteVilkår.distinctBy { it.type } == input.relevanteVilkår)
+        val relevanteVilkår = input.vilkårsresultat.alle().filter { it.type.obligatorisk }
+        require(relevanteVilkår.any { it.type == Vilkårtype.ALDERSVILKÅRET })
+        require(relevanteVilkår.any { it.type == Vilkårtype.BISTANDSVILKÅRET })
+        require(relevanteVilkår.any { it.type == Vilkårtype.MEDLEMSKAP })
+        require(relevanteVilkår.any { it.type == Vilkårtype.SYKDOMSVILKÅRET })
+        require(relevanteVilkår.distinctBy { it.type }.size == relevanteVilkår.size)
 
-        return input.relevanteVilkår.fold(resultat) { retur, vilkår ->
+        return relevanteVilkår.fold(resultat) { retur, vilkår ->
             val segmenter = vilkår.vilkårsperioder()
-                .map { Segment(it.periode, EnkelVurdering(vilkår.type, it.utfall, it.innvilgelsesårsak)) }
+                .map { Segment(it.periode, VilkårVurdering(vilkår.type, it.utfall, it.innvilgelsesårsak)) }
 
             retur.leggTilVurderinger(Tidslinje(segmenter), Vurdering::leggTilVurdering)
         }

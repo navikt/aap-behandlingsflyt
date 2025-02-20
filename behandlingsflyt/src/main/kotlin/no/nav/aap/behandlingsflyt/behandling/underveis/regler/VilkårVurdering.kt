@@ -4,4 +4,4 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.In
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 
-data class EnkelVurdering(val vilkår: Vilkårtype, val utfall: Utfall, val innvilgelsesårsak: Innvilgelsesårsak? = null)
+data class VilkårVurdering(val vilkår: Vilkårtype, val utfall: Utfall, val innvilgelsesårsak: Innvilgelsesårsak? = null)

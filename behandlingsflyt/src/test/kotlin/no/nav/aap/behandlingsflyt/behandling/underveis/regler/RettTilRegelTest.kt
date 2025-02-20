@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Av
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -72,7 +73,10 @@ class RettTilRegelTest {
 
         val input = tomUnderveisInput.copy(
             rettighetsperiode = periode,
-            relevanteVilkår = listOf(aldersVilkåret, sykdomsVilkåret, medlemskapVilkåret, bistandVilkåret),
+            vilkårsresultat = Vilkårsresultat(
+                null,
+                listOf(aldersVilkåret, sykdomsVilkåret, medlemskapVilkåret, bistandVilkåret)
+            ),
             kvoter = kvoter,
         )
         val grunnleggendeRettTidslinje = regel.vurder(input = input, Tidslinje())
@@ -148,7 +152,14 @@ class RettTilRegelTest {
 
         val input = tomUnderveisInput.copy(
             rettighetsperiode = periode,
-            relevanteVilkår = listOf(aldersVilkåret, sykdomsVilkåret, medlemskapVilkåret, bistandVilkåret),
+            vilkårsresultat = Vilkårsresultat(
+                vilkår = listOf(
+                    aldersVilkåret,
+                    sykdomsVilkåret,
+                    medlemskapVilkåret,
+                    bistandVilkåret
+                )
+            ),
             kvoter = kvoter,
         )
         val grunnleggendeRettTidslinje = regel.vurder(input = input, Tidslinje())

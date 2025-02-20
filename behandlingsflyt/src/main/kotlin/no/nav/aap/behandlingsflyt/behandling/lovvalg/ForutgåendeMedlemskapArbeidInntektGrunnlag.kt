@@ -14,7 +14,7 @@ data class ForutgåendeMedlemskapGrunnlag(
 
 data class ForutgåendeMedlemskapArbeidInntektGrunnlag(
     val medlemskapGrunnlag: MedlemskapUnntakGrunnlag?,
-    val inntekterINorgeGrunnlag : List<InntektINorgeGrunnlag>,
-    val arbeiderINorgeGrunnlag : List<ArbeidINorgeGrunnlag>,
+    val inntekterINorgeGrunnlag: List<InntektINorgeGrunnlag>,
+    val arbeiderINorgeGrunnlag: List<ArbeidINorgeGrunnlag>,
     val manuellVurdering: ManuellVurderingForForutgåendeMedlemskap?
 )

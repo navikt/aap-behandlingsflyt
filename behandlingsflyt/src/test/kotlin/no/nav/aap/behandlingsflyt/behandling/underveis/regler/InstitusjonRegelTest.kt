@@ -42,6 +42,7 @@ class InstitusjonRegelTest {
         val periode = Periode(LocalDate.of(2024, 1, 5), LocalDate.of(2025, 5, 1))
         val vurderingFraTidligereResultat = Vurdering(
             emptyList(),
+            null,
             MeldepliktVurdering(
                 null, Utfall.OPPFYLT
             ),
@@ -55,7 +56,7 @@ class InstitusjonRegelTest {
                 gradering = Prosent.`100_PROSENT`
             ),
             grenseverdi = Prosent(60)
-        ).leggTilVurdering(EnkelVurdering(Vilkårtype.ALDERSVILKÅRET, Utfall.OPPFYLT))
+        ).leggTilVurdering(VilkårVurdering(Vilkårtype.ALDERSVILKÅRET, Utfall.OPPFYLT))
 
         val utlederInput = EtAnnetStedInput(
             institusjonsOpphold = listOf(

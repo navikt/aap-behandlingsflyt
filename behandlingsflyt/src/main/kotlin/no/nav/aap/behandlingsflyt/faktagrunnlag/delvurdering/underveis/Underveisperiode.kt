@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktId
 import no.nav.aap.komponenter.type.Periode
@@ -13,6 +14,7 @@ data class Underveisperiode(
     val periode: Periode,
     val meldePeriode: Periode,
     val utfall: Utfall,
+    val rettighetsType: RettighetsType?,
     val avslagsårsak: UnderveisÅrsak?,
     val grenseverdi: Prosent,
     val gradering: Gradering,
@@ -32,10 +34,4 @@ data class Underveisperiode(
     override fun compareTo(other: Underveisperiode): Int {
         return periode.compareTo(other.periode)
     }
-
-
-    override fun toString(): String {
-        return "Underveisperiode(periode=$periode, utfall=$utfall, utbetalingsgrad=${utbetalingsgrad()}, avslagsårsak=$avslagsårsak, grenseverdi=$grenseverdi, gradering=$gradering, trekk=$trekk, id=$id)"
-    }
-
 }

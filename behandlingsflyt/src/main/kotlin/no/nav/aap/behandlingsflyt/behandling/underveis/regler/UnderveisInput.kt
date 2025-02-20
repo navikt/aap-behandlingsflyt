@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetSted
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Pliktkort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneGrunnlag
@@ -14,7 +15,7 @@ import java.time.LocalDate
 
 data class UnderveisInput(
     val rettighetsperiode: Periode,
-    val relevanteVilkår: List<Vilkår>,
+    val vilkårsresultat: Vilkårsresultat,
     val opptrappingPerioder: List<Periode>,
     val pliktkort: List<Pliktkort>,
     val innsendingsTidspunkt: Map<LocalDate, JournalpostId>,
