@@ -55,7 +55,7 @@ class VilkårsresultatRepositoryImplTest {
                                 Utfall.IKKE_OPPFYLT,
                                 false,
                                 null,
-                                avslagsårsak = Avslagsårsak.BRUKER_OVER_67,
+                                avslagsårsak = Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL,
                                 faktagrunnlag = null
                             )
                         )

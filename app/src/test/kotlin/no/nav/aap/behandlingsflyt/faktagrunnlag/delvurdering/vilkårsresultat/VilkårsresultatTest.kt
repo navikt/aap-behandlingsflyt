@@ -75,6 +75,37 @@ class VilkårsresultatTest {
         }
 
         @Test
+        fun `om bistands-vilkåret ikke er i midten får vi brudd på tidslinjen`() {
+            val v = Vilkårsresultat()
+            v.leggTilHvisIkkeEksisterer(Vilkårtype.BISTANDSVILKÅRET).leggTilVurdering(
+                Vilkårsperiode(
+                    Periode(LocalDate.now(), LocalDate.now().plusDays(10)),
+                    utfall = Utfall.OPPFYLT,
+                    begrunnelse = null,
+                )
+            )
+            v.leggTilHvisIkkeEksisterer(Vilkårtype.BISTANDSVILKÅRET).leggTilVurdering(
+                Vilkårsperiode(
+                    Periode(LocalDate.now().plusDays(10), LocalDate.now().plusDays(20)),
+                    utfall = Utfall.IKKE_OPPFYLT,
+                    avslagsårsak = Avslagsårsak.IKKE_MEDLEM,
+                    begrunnelse = null,
+                )
+            )
+            v.leggTilHvisIkkeEksisterer(Vilkårtype.BISTANDSVILKÅRET).leggTilVurdering(
+                Vilkårsperiode(
+                    Periode(LocalDate.now().plusDays(20), LocalDate.now().plusDays(30)),
+                    utfall = Utfall.OPPFYLT,
+                    begrunnelse = null,
+                )
+            )
+            val tidslinje = v.rettighetstypeTidslinje()
+            assertThat(tidslinje.segmenter()).hasSize(2)
+            assertThat(tidslinje.erSammenhengende()).isFalse
+            assertThat(tidslinje.helePerioden()).isEqualTo(Periode(LocalDate.now(), LocalDate.now().plusDays(30)))
+        }
+
+        @Test
         fun `overlapp mellom vilkår (sykepenge-erstatning først, så student)`() {
             val v = Vilkårsresultat()
             v.leggTilHvisIkkeEksisterer(Vilkårtype.SYKEPENGEERSTATNING).leggTilVurdering(

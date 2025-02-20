@@ -21,7 +21,10 @@ enum class Vilkårtype(
         kode = "AAP-5",
         spesielleInnvilgelsesÅrsaker = listOf(Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG, Innvilgelsesårsak.STUDENT),
         avslagsårsaker = listOf(
-            Avslagsårsak.MANGLENDE_DOKUMENTASJON
+            Avslagsårsak.MANGLENDE_DOKUMENTASJON,
+            Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL,
+            Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE,
+            Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET
         ),
         hjemmel = "§ 11-5"
     ),
@@ -41,7 +44,9 @@ enum class Vilkårtype(
         kode = "AAP-2",
         spesielleInnvilgelsesÅrsaker = listOf(),
         avslagsårsaker = listOf(
-            Avslagsårsak.MANGLENDE_DOKUMENTASJON
+            Avslagsårsak.MANGLENDE_DOKUMENTASJON,
+            Avslagsårsak.IKKE_MEDLEM,
+            Avslagsårsak.IKKE_MEDLEM_FORUTGÅENDE
         ),
         hjemmel = "§ 11-2"
     ),

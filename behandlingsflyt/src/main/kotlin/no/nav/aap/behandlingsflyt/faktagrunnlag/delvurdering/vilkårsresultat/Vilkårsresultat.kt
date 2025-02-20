@@ -41,7 +41,10 @@ class Vilkårsresultat(
             Vilkårtype.BISTANDSVILKÅRET
         )
             .mapNotNull { v -> this.optionalVilkår(v) }
-            .map { vilkår -> Tidslinje(vilkår.vilkårsperioder().map { Segment(it.periode, Pair(vilkår, it)) }) }
+            .map { vilkår ->
+                Tidslinje(vilkår.vilkårsperioder().filter { it.utfall == Utfall.OPPFYLT }
+                    .map { Segment(it.periode, Pair(vilkår, it)) })
+            }
             .fold(Tidslinje.empty<Set<Pair<Vilkårtype, Innvilgelsesårsak?>>>()) { acc, curr ->
                 acc.kombiner(curr, JoinStyle.OUTER_JOIN { periode, venstre, høyre ->
                     if (høyre == null && venstre == null) {
