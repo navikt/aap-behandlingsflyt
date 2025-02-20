@@ -24,7 +24,7 @@ class GrunnbeløpTest {
         val periodeForGjennomsnitt: Tidslinje<Any?> = Tidslinje(Periode(31 desember 2009, 1 januar 2010), null)
         val utregnetTidslinjeGjennomsnitt = periodeForGjennomsnitt.kombiner(
             other = tidslinjeGjennomsnitt,
-            joinStyle = StandardSammenslåere.kunHøyreLeftJoin()
+            joinStyle = StandardSammenslåere.kunHøyre()
         )
 
         assertThat(utregnetTidslinjeGjennomsnitt)
@@ -41,7 +41,7 @@ class GrunnbeløpTest {
         val periodeForTidslinje: Tidslinje<Any?> = Tidslinje(Periode(30 april 2010, 1 mai 2010), null)
         val utregnetTidslinje = periodeForTidslinje.kombiner(
             other = tidslinje,
-            joinStyle = StandardSammenslåere.kunHøyreLeftJoin()
+            joinStyle = StandardSammenslåere.kunHøyre()
         )
 
         assertThat(utregnetTidslinje)

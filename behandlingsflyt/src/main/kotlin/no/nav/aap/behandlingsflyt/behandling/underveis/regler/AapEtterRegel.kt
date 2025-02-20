@@ -14,7 +14,7 @@ class AapEtterRegel : UnderveisRegel {
         val tidslinje = input.vilkårsresultat.rettighetstypeTidslinje()
 
         val filtrerBortPerioderUtenOppfylteVilkår =
-            kunMedOppfylteVilkår.kombiner(tidslinje, StandardSammenslåere.kunHøyreLeftJoin())
+            kunMedOppfylteVilkår.kombiner(tidslinje, StandardSammenslåere.kunHøyre())
         return resultat.leggTilVurderinger(filtrerBortPerioderUtenOppfylteVilkår, Vurdering::leggTilRettighetstype)
     }
 }
