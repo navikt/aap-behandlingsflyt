@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 
-import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
@@ -84,7 +83,7 @@ class TilkjentYtelseRepositoryImplTest {
     @Test
     fun `finner ingen tilkjentYtelse hvis den ikke eksisterer`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val sak = runBlocking { sak(connection) }
+            val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
             val tilkjentYtelseRepository = TilkjentYtelseRepositoryImpl(connection)

@@ -1,5 +1,8 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt
+package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.inntekt
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
@@ -7,7 +10,8 @@ import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.Factory
 import java.time.Year
 
-class InntektGrunnlagRepositoryImpl(private val connection: DBConnection) : InntektGrunnlagRepository {
+class InntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
+    InntektGrunnlagRepository {
 
     companion object : Factory<InntektGrunnlagRepository> {
         override fun konstruer(connection: DBConnection): InntektGrunnlagRepository {

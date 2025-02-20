@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.flyt.steg
 
-import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlagImpl
@@ -37,13 +36,12 @@ class StegOrkestratorTest {
             val ident = Ident("123123123126")
             val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
-            val sak = runBlocking {
-                PersonOgSakService(
-                    FakePdlGateway,
-                    PersonRepositoryImpl(connection),
-                    SakRepositoryImpl(connection)
-                ).finnEllerOpprett(ident, periode)
-            }
+            val sak = PersonOgSakService(
+                FakePdlGateway,
+                PersonRepositoryImpl(connection),
+                SakRepositoryImpl(connection)
+            ).finnEllerOpprett(ident, periode)
+
             val behandling = SakOgBehandlingService(
                 GrunnlagKopierer(connection), SakRepositoryImpl(connection),
                 BehandlingRepositoryImpl(connection)
