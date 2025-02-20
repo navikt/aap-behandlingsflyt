@@ -24,8 +24,8 @@ dependencies {
     implementation("no.nav.aap.kelvin:verdityper:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:tidslinje:$komponenterVersjon")
     implementation(kotlin("reflect"))
+    // TODO: fjern når alle api er flyttet til api-modul
     compileOnly("io.ktor:ktor-http-jvm:$ktorVersion")
-    implementation("com.zaxxer:HikariCP:6.2.1")
     implementation("org.flywaydb:flyway-database-postgresql:11.3.3")
     runtimeOnly("org.postgresql:postgresql:42.7.5")
 
