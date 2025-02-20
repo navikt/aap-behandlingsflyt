@@ -45,6 +45,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunkt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurdering
@@ -196,6 +197,7 @@ class FlytOrkestratorTest {
                 .register<MedlemskapArbeidInntektForutgåendeRepositoryImpl>()
                 .register<PersonopplysningForutgåendeRepositoryImpl>()
                 .register<BarnRepositoryImpl>()
+                .register<InstitusjonsoppholdRepositoryImpl>()
                 .status()
             GatewayRegistry
                 .register<PdlBarnGateway>()

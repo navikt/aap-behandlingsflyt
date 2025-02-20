@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soningsvurdering
@@ -32,7 +32,7 @@ class SoningRegelTest {
     private val mockConnection = MockConnection().toDBConnection()
     val utlederService = EtAnnetStedUtlederService(
         BarnetilleggRepositoryImpl(mockConnection),
-        InstitusjonsoppholdRepository(mockConnection),
+        InstitusjonsoppholdRepositoryImpl(mockConnection),
         SakRepositoryImpl(mockConnection),
         BehandlingRepositoryImpl(mockConnection)
     )

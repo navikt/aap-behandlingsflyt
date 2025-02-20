@@ -20,14 +20,14 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class InstitusjonsoppholdRepositoryTest {
+class InstitusjonsoppholdRepositoryImplTest {
     @Test
     fun `Tom tidslinje dersom ingen opphold finnes`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val institusjonsoppholdRepository = InstitusjonsoppholdRepository(connection)
+            val institusjonsoppholdRepository = InstitusjonsoppholdRepositoryImpl(connection)
             val institusjonsoppholdTidslinje = institusjonsoppholdRepository.hentHvisEksisterer(behandling.id)
             assertThat(institusjonsoppholdTidslinje).isNull()
         }
@@ -39,7 +39,7 @@ class InstitusjonsoppholdRepositoryTest {
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val institusjonsoppholdRepository = InstitusjonsoppholdRepository(connection)
+            val institusjonsoppholdRepository = InstitusjonsoppholdRepositoryImpl(connection)
             val institusjonsopphold = listOf(
                 Institusjonsopphold.nyttOpphold(
                     "AS",
@@ -74,7 +74,7 @@ class InstitusjonsoppholdRepositoryTest {
             val sak = sak(connection)
             val behandling = behandling(connection, sak)
 
-            val institusjonsoppholdRepository = InstitusjonsoppholdRepository(connection)
+            val institusjonsoppholdRepository = InstitusjonsoppholdRepositoryImpl(connection)
             val institusjonsopphold = listOf(
                 Institusjonsopphold.nyttOpphold(
                     "AS",

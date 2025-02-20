@@ -56,7 +56,7 @@ class InstitusjonsoppholdService private constructor(
             val sakRepository = repositoryProvider.provide<SakRepository>()
             return InstitusjonsoppholdService(
                 SakService(sakRepository),
-                InstitusjonsoppholdRepository(connection),
+                repositoryProvider.provide(),
                 InstitusjonsoppholdGateway
             )
         }

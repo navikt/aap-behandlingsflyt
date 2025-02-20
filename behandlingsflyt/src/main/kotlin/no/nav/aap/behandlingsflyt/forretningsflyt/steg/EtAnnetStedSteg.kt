@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -67,7 +66,6 @@ class EtAnnetStedSteg(
 
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
-            val institusjonsoppholdRepository = InstitusjonsoppholdRepository(connection)
             val repositoryProvider = RepositoryProvider(connection)
             val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
             val sakRepository = repositoryProvider.provide<SakRepository>()
@@ -78,7 +76,7 @@ class EtAnnetStedSteg(
             return EtAnnetStedSteg(
                 avklaringsbehovRepository, EtAnnetStedUtlederService(
                     barnetilleggRepository,
-                    institusjonsoppholdRepository,
+                    repositoryProvider.provide(),
                     sakRepository,
                     behandlingRepository
                 )

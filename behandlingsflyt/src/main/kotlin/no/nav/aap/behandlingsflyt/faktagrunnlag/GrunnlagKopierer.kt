@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -14,7 +13,6 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class GrunnlagKopierer(connection: DBConnection) {
 
     private val repositoryProvider = RepositoryProvider(connection)
-    private val institusjonsoppholdRepository = InstitusjonsoppholdRepository(connection)
     private val inntektGrunnlagRepository = InntektGrunnlagRepository(connection)
 
     fun overfør(fraBehandlingId: BehandlingId, tilBehandlingId: BehandlingId) {
@@ -22,7 +20,6 @@ class GrunnlagKopierer(connection: DBConnection) {
 
         repositoryProvider.provideAlle().forEach { repository -> repository.kopier(fraBehandlingId, tilBehandlingId) }
 
-        institusjonsoppholdRepository.kopier(fraBehandlingId, tilBehandlingId)
         inntektGrunnlagRepository.kopier(fraBehandlingId, tilBehandlingId)
     }
 }

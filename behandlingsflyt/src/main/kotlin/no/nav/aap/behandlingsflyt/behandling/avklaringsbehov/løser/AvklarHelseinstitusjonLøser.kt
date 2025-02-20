@@ -19,7 +19,7 @@ class AvklarHelseinstitusjonLøser(connection: DBConnection) :
 
     private val repositoryProvider = RepositoryProvider(connection)
     private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-    private val helseinstitusjonRepository = InstitusjonsoppholdRepository(connection)
+    private val helseinstitusjonRepository = repositoryProvider.provide<InstitusjonsoppholdRepository>()
 
     override fun løs(
         kontekst: AvklaringsbehovKontekst,

@@ -9,7 +9,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -62,7 +61,7 @@ class UnderveisSteg(private val underveisService: UnderveisService) : Behandling
                     aktivitetspliktRepository = aktivitetspliktRepository,
                     etAnnetStedUtlederService = EtAnnetStedUtlederService(
                         barnetilleggRepository,
-                        InstitusjonsoppholdRepository(connection),
+                        repositoryProvider.provide(),
                         sakRepository,
                         behandlingRepository
                     ),

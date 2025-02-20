@@ -20,7 +20,7 @@ class AvklarSoningsforholdLøser(connection: DBConnection) :
 
     private val repositoryProvider = RepositoryProvider(connection)
     private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-    private val soningRepository = InstitusjonsoppholdRepository(connection)
+    private val soningRepository = repositoryProvider.provide<InstitusjonsoppholdRepository>()
 
     override fun løs(
         kontekst: AvklaringsbehovKontekst,
