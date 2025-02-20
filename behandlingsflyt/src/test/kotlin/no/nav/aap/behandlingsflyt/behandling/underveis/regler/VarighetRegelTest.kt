@@ -37,7 +37,7 @@ class VarighetRegelTest {
             Tidslinje(
                 rettighetsperiode,
                 Vurdering(
-                    vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
+                    vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
                 )
             )
         )
@@ -66,7 +66,7 @@ class VarighetRegelTest {
             Tidslinje(
                 rettighetsperiode,
                 Vurdering(
-                    vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
+                    vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
                 )
             )
         )
@@ -95,7 +95,7 @@ class VarighetRegelTest {
             Tidslinje(
                 rettighetsperiode,
                 Vurdering(
-                    vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
+                    vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
                 )
             )
         )
@@ -124,7 +124,7 @@ class VarighetRegelTest {
             Tidslinje(
                 rettighetsperiode,
                 Vurdering(
-                    vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
+                    vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
                 )
             )
         )
@@ -155,7 +155,7 @@ class VarighetRegelTest {
                 Segment(
                     Periode(18 november 2024, 18 november 2024),
                     Vurdering(
-                        vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
+                        vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
                     )
                 ),
                 Segment(
@@ -165,7 +165,7 @@ class VarighetRegelTest {
                 Segment(
                     Periode(21 november 2024, 22 november 2024),
                     Vurdering(
-                        vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
+                        vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
                     )
                 ),
             ).let { Tidslinje(it) }
@@ -210,7 +210,7 @@ class VarighetRegelTest {
                         Periode(18 november 2024, 19 november 2024),
                         Vurdering(
                             vurderinger = listOf(
-                                EnkelVurdering(
+                                VilkårVurdering(
                                     Vilkårtype.SYKEPENGEERSTATNING,
                                     Utfall.OPPFYLT,
                                     null
@@ -222,7 +222,7 @@ class VarighetRegelTest {
                         Periode(20 november 2024, 22 november 2024),
                         Vurdering(
                             vurderinger = listOf(
-                                EnkelVurdering(
+                                VilkårVurdering(
                                     Vilkårtype.SYKDOMSVILKÅRET,
                                     Utfall.OPPFYLT,
                                     null
@@ -269,7 +269,7 @@ class VarighetRegelTest {
                         Periode(18 november 2024, 19 november 2024),
                         Vurdering(
                             vurderinger = listOf(
-                                EnkelVurdering(
+                                VilkårVurdering(
                                     Vilkårtype.SYKEPENGEERSTATNING,
                                     Utfall.OPPFYLT,
                                     null
@@ -281,7 +281,7 @@ class VarighetRegelTest {
                         Periode(20 november 2024, 22 november 2024),
                         Vurdering(
                             vurderinger = listOf(
-                                EnkelVurdering(
+                                VilkårVurdering(
                                     Vilkårtype.SYKDOMSVILKÅRET,
                                     Utfall.OPPFYLT,
                                     null
@@ -327,9 +327,9 @@ class VarighetRegelTest {
                         Periode(18 november 2024, 19 november 2024),
                         Vurdering(
                             vurderinger = listOf(
-                                EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, IKKE_OPPFYLT, null),
-                                EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, IKKE_OPPFYLT, STUDENT),
-                                EnkelVurdering(Vilkårtype.SYKEPENGEERSTATNING, IKKE_OPPFYLT, null),
+                                VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, IKKE_OPPFYLT, null),
+                                VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, IKKE_OPPFYLT, STUDENT),
+                                VilkårVurdering(Vilkårtype.SYKEPENGEERSTATNING, IKKE_OPPFYLT, null),
                             )
                         )
                     ),
@@ -337,7 +337,7 @@ class VarighetRegelTest {
                         Periode(20 november 2024, 22 november 2024),
                         Vurdering(
                             vurderinger = listOf(
-                                EnkelVurdering(
+                                VilkårVurdering(
                                     Vilkårtype.SYKDOMSVILKÅRET,
                                     Utfall.OPPFYLT,
                                     null
@@ -382,7 +382,7 @@ class VarighetRegelTest {
                         Periode(18 november 2024, 19 november 2024),
                         Vurdering(
                             vurderinger = listOf(
-                                EnkelVurdering(
+                                VilkårVurdering(
                                     Vilkårtype.SYKDOMSVILKÅRET,
                                     Utfall.OPPFYLT,
                                     null
@@ -394,7 +394,7 @@ class VarighetRegelTest {
                         Periode(20 november 2024, 20 november 2024),
                         Vurdering(
                             vurderinger = listOf(
-                                EnkelVurdering(
+                                VilkårVurdering(
                                     Vilkårtype.SYKDOMSVILKÅRET,
                                     Utfall.OPPFYLT,
                                     null
@@ -406,7 +406,7 @@ class VarighetRegelTest {
                         Periode(21 november 2024, 22 november 2024),
                         Vurdering(
                             vurderinger = listOf(
-                                EnkelVurdering(
+                                VilkårVurdering(
                                     Vilkårtype.SYKDOMSVILKÅRET,
                                     Utfall.OPPFYLT,
                                     null
@@ -444,7 +444,7 @@ class VarighetRegelTest {
                         Periode(18 november 2024, 19 november 2024),
                         Vurdering(
                             vurderinger = listOf(
-                                EnkelVurdering(
+                                VilkårVurdering(
                                     Vilkårtype.SYKDOMSVILKÅRET,
                                     Utfall.OPPFYLT,
                                     null
@@ -456,7 +456,7 @@ class VarighetRegelTest {
                         Periode(20 november 2024, 20 november 2024),
                         Vurdering(
                             vurderinger = listOf(
-                                EnkelVurdering(
+                                VilkårVurdering(
                                     Vilkårtype.SYKDOMSVILKÅRET,
                                     Utfall.OPPFYLT,
                                     null
@@ -468,7 +468,7 @@ class VarighetRegelTest {
                         Periode(21 november 2024, 22 november 2024),
                         Vurdering(
                             vurderinger = listOf(
-                                EnkelVurdering(
+                                VilkårVurdering(
                                     Vilkårtype.SYKDOMSVILKÅRET,
                                     Utfall.OPPFYLT,
                                     null
@@ -514,13 +514,13 @@ class VarighetRegelTest {
                 Segment(
                     Periode(18 november 2024, 21 november 2024),
                     Vurdering(
-                        vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, STUDENT)),
+                        vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, STUDENT)),
                     )
                 ),
                 Segment(
                     Periode(22 november 2024, 26 november 2024),
                     Vurdering(
-                        vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
+                        vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
                     )
                 ),
             ).let(::Tidslinje)
@@ -568,13 +568,13 @@ class VarighetRegelTest {
                 Segment(
                     Periode(18 november 2024, 21 november 2024),
                     Vurdering(
-                        vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
+                        vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
                     )
                 ),
                 Segment(
                     Periode(22 november 2024, 26 november 2024),
                     Vurdering(
-                        vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, STUDENT)),
+                        vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, STUDENT)),
                     )
                 ),
             ).let(::Tidslinje)
@@ -611,7 +611,7 @@ class VarighetRegelTest {
             Tidslinje(
                 Periode(8 november 2024, 10 november 2024),
                 Vurdering(
-                    vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
+                    vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
                 )
             )
         )
@@ -647,13 +647,13 @@ class VarighetRegelTest {
                     Segment(
                         Periode(11 november 2024, it.minusDays(1)),
                         Vurdering(
-                            vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
+                            vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
                         )
                     ),
                     Segment(
                         Periode(it, 26 november 2024),
                         Vurdering(
-                            vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
+                            vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
                         )
                     ),
                 ).let(::Tidslinje)
@@ -695,13 +695,13 @@ class VarighetRegelTest {
                     Segment(
                         Periode(11 november 2024, it.minusDays(1)),
                         Vurdering(
-                            vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
+                            vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
                         )
                     ),
                     Segment(
                         Periode(it, 26 november 2024),
                         Vurdering(
-                            vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
+                            vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
                         )
                     ),
                 ).let(::Tidslinje)
@@ -741,42 +741,42 @@ class VarighetRegelTest {
                 Segment(
                     Periode(11 november 2024, 13 november 2024),
                     Vurdering(
-                        vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
+                        vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
                     )
                 ),
                 Segment(
                     Periode(14 november 2024, 18 november 2024),
                     Vurdering(
-                        vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, STUDENT)),
+                        vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, STUDENT)),
                     )
                 ),
                 Segment(
                     Periode(19 november 2024, 21 november 2024),
                     Vurdering(
                         vurderinger = listOf(
-                            EnkelVurdering(Vilkårtype.SYKEPENGEERSTATNING, Utfall.OPPFYLT, null),
-                            EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null),
+                            VilkårVurdering(Vilkårtype.SYKEPENGEERSTATNING, Utfall.OPPFYLT, null),
+                            VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null),
                         ),
                     )
                 ),
                 Segment(
                     Periode(22 november 2024, 24 november 2024),
                     Vurdering(
-                        vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
+                        vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null)),
                     )
                 ),
                 Segment(
                     Periode(25 november 2024, 25 november 2024),
                     Vurdering(
-                        vurderinger = listOf(EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, STUDENT)),
+                        vurderinger = listOf(VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, STUDENT)),
                     )
                 ),
                 Segment(
                     Periode(26 november 2024, 26 november 2024),
                     Vurdering(
                         vurderinger = listOf(
-                            EnkelVurdering(Vilkårtype.SYKEPENGEERSTATNING, Utfall.OPPFYLT, null),
-                            EnkelVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null),
+                            VilkårVurdering(Vilkårtype.SYKEPENGEERSTATNING, Utfall.OPPFYLT, null),
+                            VilkårVurdering(Vilkårtype.SYKDOMSVILKÅRET, Utfall.OPPFYLT, null),
                         ),
                     )
                 ),

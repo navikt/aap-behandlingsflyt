@@ -185,6 +185,6 @@ class GraderingArbeidRegelTest {
         return regel.vurder(
             input,
             UtledMeldeperiodeRegel().vurder(input, Tidslinje())
-        ).mapValue { it.copy(vurderinger = listOf(EnkelVurdering(Vilkårtype.ALDERSVILKÅRET, Utfall.OPPFYLT, null))) }
+        ).mapValue { it.copy(vurderinger = listOf(VilkårVurdering(Vilkårtype.ALDERSVILKÅRET, Utfall.OPPFYLT, null))) }
     }
 }
