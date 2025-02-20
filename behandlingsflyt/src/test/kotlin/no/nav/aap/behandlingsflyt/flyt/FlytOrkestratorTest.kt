@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt
 
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovHendelseHåndterer
@@ -128,7 +130,7 @@ import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbmigrering.Migrering
 import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
@@ -145,20 +147,46 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
+import org.testcontainers.containers.PostgreSQLContainer
+import org.testcontainers.junit.jupiter.Container
+import org.testcontainers.junit.jupiter.Testcontainers
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Year
 import java.util.*
+import javax.sql.DataSource
+
+fun initDatasource(postgres: PostgreSQLContainer<out PostgreSQLContainer<*>>): DataSource = HikariDataSource(HikariConfig().apply {
+    jdbcUrl = postgres.jdbcUrl
+    username = postgres.username
+    password = postgres.password
+    minimumIdle = 1
+    initializationFailTimeout = 30000
+    idleTimeout = 10000
+    connectionTimeout = 50000
+    maxLifetime = 900000
+    connectionTestQuery = "SELECT 1"
+    maximumPoolSize = 1000
+    validate()
+
+})
+
 
 @Fakes
+@Execution(ExecutionMode.CONCURRENT)
+@Testcontainers
 class FlytOrkestratorTest {
 
+
     companion object {
-        private val dataSource = InitTestDatabase.dataSource
-        private val motor = Motor(dataSource, 2, jobber = ProsesseringsJobber.alle())
-        private val hendelsesMottak = TestHendelsesMottak(dataSource)
-        private val util =
-            TestUtil(dataSource, ProsesseringsJobber.alle().filter { it.cron() != null }.map { it.type() })
+        @Container
+        private val postgres = PostgreSQLContainer<_>("postgres:16")
+        private lateinit var dataSource: DataSource
+        private lateinit var motor: Motor
+        private lateinit var hendelsesMottak: TestHendelsesMottak
+        private lateinit var util: TestUtil
 
         @BeforeAll
         @JvmStatic
@@ -206,7 +234,14 @@ class FlytOrkestratorTest {
                 .register<AbakusForeldrepengerGateway>()
                 .register<DokumentinnhentingGatewayImpl>()
                 .register<MedlemskapGateway>()
+            postgres.start()
+            dataSource = initDatasource(postgres)
+            Migrering.migrate(dataSource)
+            motor = Motor(dataSource, 1, jobber = ProsesseringsJobber.alle())
+            util = TestUtil(dataSource, ProsesseringsJobber.alle().filter { it.cron() != null }.map { it.type() })
+            hendelsesMottak = TestHendelsesMottak(dataSource)
             motor.start()
+            Thread.sleep(1000)
         }
 
         @AfterAll
@@ -1443,6 +1478,7 @@ class FlytOrkestratorTest {
         util.ventPåSvar()
 
         assertThat(hentBehandling(sak.id).status()).isEqualTo(Status.AVSLUTTET)
+        util.ventPåSvar()
         assertThat(hendelser.last().behandlingStatus).isEqualTo(Status.AVSLUTTET)
     }
 

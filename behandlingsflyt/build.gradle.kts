@@ -40,6 +40,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-params:$junitVersjon")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersjon")
     testImplementation("org.assertj:assertj-core:3.27.3")
+    testImplementation("org.testcontainers:junit-jupiter:1.20.4")
     testImplementation("org.testcontainers:postgresql:1.20.4")
     constraints {
         implementation("org.apache.commons:commons-compress:1.27.1") {
