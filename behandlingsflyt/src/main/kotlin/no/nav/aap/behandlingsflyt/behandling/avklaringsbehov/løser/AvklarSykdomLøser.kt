@@ -26,7 +26,7 @@ class AvklarSykdomLøser(connection: DBConnection) : AvklaringsbehovsLøser<Avkl
             løsning.sykdomsvurderinger != null -> løsning.sykdomsvurderinger
             else -> listOf(løsning.sykdomsvurdering!!)
         }
-            .map { it.toSykdomsvurdering() }
+            .map { it.toSykdomsvurdering(kontekst.bruker) }
             .let {
                 SykdomGrunnlag(
                     id = null,

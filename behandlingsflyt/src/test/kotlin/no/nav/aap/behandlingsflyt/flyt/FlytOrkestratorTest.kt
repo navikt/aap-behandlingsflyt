@@ -54,7 +54,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Yrkesska
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.YrkesskadevurderingDto
 import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.TestHendelsesMottak
@@ -610,7 +610,7 @@ class FlytOrkestratorTest {
         løsAvklaringsBehov(
             behandling, LøsAvklaringsbehovHendelse(
                 løsning = AvklarSykdomLøsning(
-                    sykdomsvurdering = SykdomsvurderingDto(
+                    sykdomsvurdering = SykdomsvurderingLøsningDto(
                         begrunnelse = "Er syk nok",
                         dokumenterBruktIVurdering = listOf(JournalpostId("1349532")),
                         harSkadeSykdomEllerLyte = true,
@@ -1034,7 +1034,7 @@ class FlytOrkestratorTest {
         løsAvklaringsBehov(
             behandling, LøsAvklaringsbehovHendelse(
                 løsning = AvklarSykdomLøsning(
-                    sykdomsvurdering = SykdomsvurderingDto(
+                    sykdomsvurdering = SykdomsvurderingLøsningDto(
                         begrunnelse = "Er syk nok",
                         dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                         harSkadeSykdomEllerLyte = true,
@@ -1120,7 +1120,7 @@ class FlytOrkestratorTest {
         løsAvklaringsBehov(
             behandling, LøsAvklaringsbehovHendelse(
                 løsning = AvklarSykdomLøsning(
-                    sykdomsvurdering = SykdomsvurderingDto(
+                    sykdomsvurdering = SykdomsvurderingLøsningDto(
                         begrunnelse = "Arbeidsevnen er nedsatt med mer enn halvparten",
                         dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                         harSkadeSykdomEllerLyte = true,
@@ -1264,7 +1264,7 @@ class FlytOrkestratorTest {
         løsAvklaringsBehov(
             behandling, LøsAvklaringsbehovHendelse(
                 løsning = AvklarSykdomLøsning(
-                    sykdomsvurdering = SykdomsvurderingDto(
+                    sykdomsvurdering = SykdomsvurderingLøsningDto(
                         begrunnelse = "Er syk nok",
                         dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                         harSkadeSykdomEllerLyte = true,

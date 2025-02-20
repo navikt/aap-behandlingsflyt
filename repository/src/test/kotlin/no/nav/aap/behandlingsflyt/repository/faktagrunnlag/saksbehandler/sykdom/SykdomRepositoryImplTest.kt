@@ -17,10 +17,12 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import java.time.Instant
 import java.time.LocalDate
 
 class SykdomRepositoryImplTest {
@@ -95,6 +97,8 @@ class SykdomRepositoryImplTest {
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
             yrkesskadeBegrunnelse = "b",
             erArbeidsevnenNedsatt = true,
+            vurdertAv = Bruker("Z00000"),
+            opprettet = Instant.now(),
         )
 
         private val sykdomsvurdering2 = Sykdomsvurdering(
@@ -108,6 +112,8 @@ class SykdomRepositoryImplTest {
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
             yrkesskadeBegrunnelse = null,
             erArbeidsevnenNedsatt = true,
+            vurdertAv = Bruker("Z00000"),
+            opprettet = Instant.now(),
         )
 
         fun assertEquals(expected: List<Sykdomsvurdering>, actual: List<Sykdomsvurdering>) {

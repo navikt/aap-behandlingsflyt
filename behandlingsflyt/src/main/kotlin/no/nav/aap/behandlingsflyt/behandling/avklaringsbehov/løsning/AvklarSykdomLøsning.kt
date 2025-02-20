@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarSykdomLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_SYKDOM_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -15,8 +15,8 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 @JsonTypeName(value = AVKLAR_SYKDOM_KODE)
 class AvklarSykdomLøsning(
     @Deprecated("skal over på sykdomsvurderinger")
-    @JsonProperty("sykdomsvurdering", required = false) val sykdomsvurdering: SykdomsvurderingDto? = null,
-    @JsonProperty("sykdomsvurderinger", required = false) val sykdomsvurderinger: List<SykdomsvurderingDto>? = null,
+    @JsonProperty("sykdomsvurdering", required = false) val sykdomsvurdering: SykdomsvurderingLøsningDto? = null,
+    @JsonProperty("sykdomsvurderinger", required = false) val sykdomsvurderinger: List<SykdomsvurderingLøsningDto>? = null,
     @JsonProperty(
         "behovstype",
         required = true,

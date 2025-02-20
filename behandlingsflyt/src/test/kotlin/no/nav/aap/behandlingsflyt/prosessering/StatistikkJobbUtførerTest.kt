@@ -74,6 +74,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -85,6 +86,7 @@ import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -312,6 +314,8 @@ class StatistikkJobbUtførerTest {
                     hoveddiagnose = "PEST",
                     bidiagnoser = listOf("KOLERA"),
                     vurderingenGjelderFra = null,
+                    vurdertAv = Bruker("Z0000"),
+                    opprettet = Instant.now(),
                 )
             )
 

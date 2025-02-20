@@ -2,10 +2,12 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.YrkesskadevurderingDto
+import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
+import java.time.Instant
 import java.time.LocalDate
-import java.time.LocalDateTime
+import java.time.ZoneId
 
 class Sykdomsvurdering(
     val id: Long? = null,
@@ -22,7 +24,8 @@ class Sykdomsvurdering(
     val kodeverk: String? = null,
     val hoveddiagnose: String? = null,
     val bidiagnoser: List<String>? = emptyList(),
-    val opprettet: LocalDateTime? = null,
+    val opprettet: Instant,
+    val vurdertAv: Bruker,
 ) {
     fun toDto(): SykdomsvurderingDto {
         return SykdomsvurderingDto(
@@ -39,6 +42,8 @@ class Sykdomsvurdering(
             kodeverk = kodeverk,
             hoveddiagnose = hoveddiagnose,
             bidiagnoser = bidiagnoser,
+            vurdertAvIdent = vurdertAv.ident,
+            vurdertDato = opprettet.atZone(ZoneId.of("Europe/Oslo")).toLocalDate(),
         )
     }
 

@@ -58,7 +58,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(dataSource: DataSource) {
                         ),
                         skalVurdereYrkesskade = innhentedeYrkesskader.isNotEmpty(),
                         sykdomsvurdering = sykdomsvurderinger
-                            .maxByOrNull { it.opprettet ?: LocalDateTime.MIN }
+                            .maxByOrNull { it.opprettet }
                             ?.toDto(),
                         sykdomsvurderinger = sykdomsvurderinger
                             .sortedBy { it.vurderingenGjelderFra ?: LocalDate.MIN }

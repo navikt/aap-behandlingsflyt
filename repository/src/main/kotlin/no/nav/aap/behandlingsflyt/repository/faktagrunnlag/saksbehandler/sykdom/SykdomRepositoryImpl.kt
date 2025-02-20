@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
+import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.Factory
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -135,9 +136,9 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                 ER_SYKDOM_SKADE_LYTE_VESETLING_DEL, ER_NEDSETTELSE_MER_ENN_HALVPARTEN,
                 ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE, ER_NEDSETTELSE_AV_EN_VISS_VARIGHET,
                 YRKESSKADE_BEGRUNNELSE, KODEVERK,
-                DIAGNOSE, OPPRETTET_TID)
+                DIAGNOSE, OPPRETTET_TID, VURDERT_AV_IDENT)
             VALUES
-            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """.trimIndent()
 
         for (vurdering in vurderinger) {
@@ -155,7 +156,8 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                     setString(10, vurdering.yrkesskadeBegrunnelse)
                     setString(11, vurdering.kodeverk)
                     setString(12, vurdering.hoveddiagnose)
-                    setLocalDateTime(13, vurdering.opprettet ?: LocalDateTime.now())
+                    setInstant(13, vurdering.opprettet)
+                    setString(14, vurdering.vurdertAv.ident)
                 }
             }
 
@@ -242,7 +244,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
     private fun mapSykdommer(sykdomVurderingerId: Long?): List<Sykdomsvurdering> {
         return connection.queryList(
         """
-            SELECT id, BEGRUNNELSE, VURDERINGEN_GJELDER_FRA, HAR_SYKDOM_SKADE_LYTE, ER_SYKDOM_SKADE_LYTE_VESETLING_DEL, ER_NEDSETTELSE_MER_ENN_HALVPARTEN, ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE, ER_NEDSETTELSE_AV_EN_VISS_VARIGHET, ER_ARBEIDSEVNE_NEDSATT, YRKESSKADE_BEGRUNNELSE, KODEVERK, DIAGNOSE, OPPRETTET_TID
+            SELECT id, BEGRUNNELSE, VURDERINGEN_GJELDER_FRA, HAR_SYKDOM_SKADE_LYTE, ER_SYKDOM_SKADE_LYTE_VESETLING_DEL, ER_NEDSETTELSE_MER_ENN_HALVPARTEN, ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE, ER_NEDSETTELSE_AV_EN_VISS_VARIGHET, ER_ARBEIDSEVNE_NEDSATT, YRKESSKADE_BEGRUNNELSE, KODEVERK, DIAGNOSE, OPPRETTET_TID, VURDERT_AV_IDENT
             FROM SYKDOM_VURDERING WHERE SYKDOM_VURDERINGER_ID = ?
             """.trimIndent()
         ) {
@@ -271,7 +273,8 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             kodeverk = row.getStringOrNull("KODEVERK"),
             hoveddiagnose = row.getStringOrNull("DIAGNOSE"),
             bidiagnoser = hentBidiagnoser(vurderingId = sykdomsvurderingId),
-            opprettet = row.getLocalDateTimeOrNull("OPPRETTET_TID"),
+            opprettet = row.getInstant("OPPRETTET_TID"),
+            vurdertAv = Bruker(row.getString("VURDERT_AV_IDENT")),
         )
     }
 

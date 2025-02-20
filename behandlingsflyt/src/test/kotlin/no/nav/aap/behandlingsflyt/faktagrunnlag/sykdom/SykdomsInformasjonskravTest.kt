@@ -2,8 +2,10 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
+import no.nav.aap.komponenter.httpklient.auth.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import java.time.Instant
 
 class SykdomsInformasjonskravTest {
 
@@ -23,6 +25,8 @@ class SykdomsInformasjonskravTest {
                 erArbeidsevnenNedsatt = true,
                 yrkesskadeBegrunnelse = null,
                 vurderingenGjelderFra = null,
+                vurdertAv = Bruker("Z00000"),
+                opprettet = Instant.now(),
             )
         )
 
@@ -45,6 +49,8 @@ class SykdomsInformasjonskravTest {
                 erArbeidsevnenNedsatt = true,
                 yrkesskadeBegrunnelse = null,
                 vurderingenGjelderFra = null,
+                vurdertAv = Bruker("Z00000"),
+                opprettet = Instant.now(),
             )
         )
 
@@ -67,6 +73,8 @@ class SykdomsInformasjonskravTest {
                 erArbeidsevnenNedsatt = true,
                 yrkesskadeBegrunnelse = null,
                 vurderingenGjelderFra = null,
+                vurdertAv = Bruker("Z00000"),
+                opprettet = Instant.now(),
             )
         )
 
@@ -89,6 +97,8 @@ class SykdomsInformasjonskravTest {
                 erArbeidsevnenNedsatt = true,
                 yrkesskadeBegrunnelse = null,
                 vurderingenGjelderFra = null,
+                vurdertAv = Bruker("Z00000"),
+                opprettet = Instant.now(),
             )
         )
 
@@ -111,6 +121,8 @@ class SykdomsInformasjonskravTest {
                 erArbeidsevnenNedsatt = true,
                 yrkesskadeBegrunnelse = null,
                 vurderingenGjelderFra = null,
+                vurdertAv = Bruker("Z00000"),
+                opprettet = Instant.now(),
             )
         )
 
@@ -133,6 +145,8 @@ class SykdomsInformasjonskravTest {
                 erArbeidsevnenNedsatt = true,
                 yrkesskadeBegrunnelse = null,
                 vurderingenGjelderFra = null,
+                vurdertAv = Bruker("Z00000"),
+                opprettet = Instant.now(),
             )
         )
 
@@ -155,6 +169,8 @@ class SykdomsInformasjonskravTest {
                 erArbeidsevnenNedsatt = true,
                 yrkesskadeBegrunnelse = null,
                 vurderingenGjelderFra = null,
+                vurdertAv = Bruker("Z00000"),
+                opprettet = Instant.now(),
             )
         )
 
@@ -177,6 +193,8 @@ class SykdomsInformasjonskravTest {
                 erArbeidsevnenNedsatt = true,
                 yrkesskadeBegrunnelse = null,
                 vurderingenGjelderFra = null,
+                vurdertAv = Bruker("Z00000"),
+                opprettet = Instant.now(),
             )
         )
 
@@ -199,6 +217,8 @@ class SykdomsInformasjonskravTest {
                 erArbeidsevnenNedsatt = true,
                 yrkesskadeBegrunnelse = null,
                 vurderingenGjelderFra = null,
+                vurdertAv = Bruker("Z00000"),
+                opprettet = Instant.now(),
             )
         )
 

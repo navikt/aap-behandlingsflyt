@@ -4,8 +4,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
+import no.nav.aap.komponenter.httpklient.auth.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import java.time.Instant
 import java.time.LocalDate
 
 
@@ -32,6 +34,8 @@ class SykdomsvilkårTest {
                     erArbeidsevnenNedsatt = true,
                     yrkesskadeBegrunnelse = null,
                     vurderingenGjelderFra = null,
+                    vurdertAv = Bruker("Z00000"),
+                    opprettet = Instant.now(),
                 ),
                 studentvurdering = null
             )
@@ -56,6 +60,8 @@ class SykdomsvilkårTest {
                     erArbeidsevnenNedsatt = true,
                     yrkesskadeBegrunnelse = null,
                     vurderingenGjelderFra = null,
+                    vurdertAv = Bruker("Z00000"),
+                    opprettet = Instant.now(),
                 ),
                 studentvurdering = null
             )
