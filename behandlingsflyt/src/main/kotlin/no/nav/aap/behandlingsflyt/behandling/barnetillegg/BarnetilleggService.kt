@@ -38,7 +38,7 @@ class BarnetilleggService(
 
         resultat =
             resultat.kombiner(folkeregisterBarnTidslinje, JoinStyle.LEFT_JOIN { periode, venstreSegment, høyreSegment ->
-                val venstreVerdi = venstreSegment.verdi
+                val venstreVerdi = venstreSegment.verdi.copy()
                 if (høyreSegment?.verdi != null) {
                     venstreVerdi.leggTilFolkeregisterBarn(høyreSegment.verdi)
                 }
@@ -51,7 +51,7 @@ class BarnetilleggService(
         val oppgittBarnTidslinje = tilTidslinje(oppgittBarn)
         resultat =
             resultat.kombiner(oppgittBarnTidslinje, JoinStyle.LEFT_JOIN { periode, venstreSegment, høyreSegment ->
-                val venstreVerdi = venstreSegment.verdi
+                val venstreVerdi = venstreSegment.verdi.copy()
                 if (høyreSegment?.verdi != null) {
                     venstreVerdi.leggTilOppgitteBarn(høyreSegment.verdi)
                 }
@@ -66,7 +66,7 @@ class BarnetilleggService(
                 barn.tilTidslinje(),
                 JoinStyle.OUTER_JOIN { periode, venstreSegment, høyreSegment ->
                     val høyreVerdi = høyreSegment?.verdi
-                    val nyVenstreVerdi = venstreSegment?.verdi ?: RettTilBarnetillegg()
+                    val nyVenstreVerdi = venstreSegment?.verdi?.copy() ?: RettTilBarnetillegg()
                     if (høyreVerdi != null) {
                         if (høyreVerdi.harForeldreAnsvar) {
                             nyVenstreVerdi.godkjenteBarn(setOf(barn.ident))
