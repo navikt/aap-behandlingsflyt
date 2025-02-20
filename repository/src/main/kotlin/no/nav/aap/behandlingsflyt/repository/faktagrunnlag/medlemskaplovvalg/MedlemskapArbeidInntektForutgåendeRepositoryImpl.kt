@@ -16,6 +16,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
 
 class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: DBConnection):
     MedlemskapArbeidInntektForutgåendeRepository {
@@ -24,6 +25,8 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
             return MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
         }
     }
+
+    private val logger = LoggerFactory.getLogger(MedlemskapArbeidInntektForutgåendeRepositoryImpl::class.java)
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): ForutgåendeMedlemskapArbeidInntektGrunnlag? {
         val query = """
@@ -63,6 +66,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
     override fun lagreManuellVurdering(behandlingId: BehandlingId, manuellVurdering: ManuellVurderingForForutgåendeMedlemskap){
         val grunnlagOppslag = hentGrunnlag(behandlingId)
         deaktiverGrunnlag(behandlingId)
+        logger.info("mottok manuell vurdering for forutgående: $manuellVurdering")
 
         val manuellVurderingQuery = """
             INSERT INTO FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERING (BEGRUNNELSE, HAR_FORUTGAAENDE_MEDLEMSKAP, VAR_MEDLEM_MED_NEDSATT_ARBEIDSEVNE, MEDLEM_MED_UNNTAK_AV_MAKS_FEM_AAR) VALUES (?, ?, ?, ?)
