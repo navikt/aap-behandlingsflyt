@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.tomUnderveisInput
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktId
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
@@ -281,6 +282,7 @@ class Effektuer11_7StegTest {
         periode = sak.rettighetsperiode,
         meldePeriode = Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.fom.plusDays(14)),
         utfall = Utfall.OPPFYLT,
+        rettighetsType = RettighetsType.BISTANDSBEHOV,
         avslagsårsak = null,
         grenseverdi = Prosent.`100_PROSENT`,
         gradering = Gradering(

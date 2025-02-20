@@ -131,6 +131,14 @@ data class Vurdering(
         return gradering == null || grenseverdi() >= gradering.andelArbeid
     }
 
+    fun rettighetsType(): RettighetsType? {
+        return if (ingenVilkårErAvslått()) {
+            requireNotNull(fårAapEtter) { "Om alle vilkår er oppfylt, skal rettighetstype være ikken-null." }
+        } else {
+            null
+        }
+    }
+
     fun grenseverdi(): Prosent {
         return requireNotNull(grenseverdi)
     }
@@ -147,6 +155,7 @@ data class Vurdering(
                     Prosent.`50_PROSENT`,
                 )
             )
+
             harRett() -> gradering
             else -> gradering.copy(gradering = Prosent.`0_PROSENT`)
         }

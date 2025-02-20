@@ -87,6 +87,7 @@ class UnderveisService(
                         periode = it.periode,
                         meldePeriode = it.verdi.meldeperiode(),
                         utfall = it.verdi.utfall(),
+                        rettighetsType = it.verdi.rettighetsType(),
                         avslagsårsak = it.verdi.avslagsårsak(),
                         grenseverdi = it.verdi.grenseverdi(),
                         gradering = it.verdi.gradering(),

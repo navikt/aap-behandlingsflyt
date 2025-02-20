@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7RepositoryImpl
@@ -147,6 +148,7 @@ class Effektuer11_7RepositoryImplTest {
         periode = sak.rettighetsperiode,
         meldePeriode = Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.fom.plusDays(14)),
         utfall = Utfall.OPPFYLT,
+        rettighetsType = RettighetsType.BISTANDSBEHOV,
         avslagsårsak = null,
         grenseverdi = Prosent.`100_PROSENT`,
         gradering = Gradering(
