@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.komponenter.type.Periode
 import java.time.DayOfWeek
@@ -52,29 +53,26 @@ enum class Kvote(val avslagsårsak: VarighetVurdering.Avslagsårsak, val tellerM
     STUDENT(VarighetVurdering.Avslagsårsak.STUDENTKVOTE_BRUKT_OPP, ::skalTelleMotStudentKvote),
     ETABLERINGSFASE(VarighetVurdering.Avslagsårsak.ETABLERINGSFASEKVOTE_BRUKT_OPP, { false }),
     UTVIKLINGSFASE(VarighetVurdering.Avslagsårsak.UTVIKLINGSFASEKVOTE_BRUKT_OPP, { false }),
-    SYKEPENGEERSTATNING(VarighetVurdering.Avslagsårsak.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP, ::skalTelleMotSykepengeKvote);
+    SYKEPENGEERSTATNING(
+        VarighetVurdering.Avslagsårsak.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP,
+        ::skalTelleMotSykepengeKvote
+    );
 }
 
 private fun skalTelleMotOrdinærKvote(vurdering: Vurdering): Boolean {
-    return vurdering.harRett() &&
-            (vurdering.fårAapEtter(Vilkårtype.SYKDOMSVILKÅRET, null) ||
-                    vurdering.fårAapEtter(
-                        Vilkårtype.SYKDOMSVILKÅRET,
-                        no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak.STUDENT
-                    )) && !skalTelleMotSykepengeKvote(vurdering)
+    return vurdering.harRett() && vurdering.rettighetsType() in setOf(
+        RettighetsType.BISTANDSBEHOV,
+        RettighetsType.STUDENT
+    ) && !skalTelleMotSykepengeKvote(vurdering)
 }
 
 private fun skalTelleMotStudentKvote(vurdering: Vurdering): Boolean {
-    return vurdering.harRett() && vurdering.fårAapEtter(
-        Vilkårtype.SYKDOMSVILKÅRET,
-        no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak.STUDENT
-    )
+    return vurdering.harRett() && vurdering.rettighetsType() == RettighetsType.STUDENT
 }
 
 private fun skalTelleMotSykepengeKvote(vurdering: Vurdering): Boolean {
-    return vurdering.harRett() && vurdering.fårAapEtter(Vilkårtype.SYKEPENGEERSTATNING, null)
+    return vurdering.harRett() && vurdering.rettighetsType() == RettighetsType.SYKEPENGEERSTATNING
 }
-
 
 
 data class KvoteTilstand(

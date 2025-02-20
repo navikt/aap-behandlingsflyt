@@ -84,14 +84,11 @@ class Vilkårsresultat(
 
         if (bistandVilkåret.second != null) {
             val innvilgelsesårsak = requireNotNull(bistandVilkåret.second)
-            val r = when (innvilgelsesårsak) {
-                Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG -> null
-                Innvilgelsesårsak.STUDENT -> RettighetsType.STUDENT
-                Innvilgelsesårsak.ARBEIDSSØKER -> RettighetsType.ARBEIDSSØKER
-                Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD -> RettighetsType.VURDERES_FOR_UFØRETRYGD
-            }
-            if (r != null) {
-                return r
+            when (innvilgelsesårsak) {
+                Innvilgelsesårsak.STUDENT -> return RettighetsType.STUDENT
+                Innvilgelsesårsak.ARBEIDSSØKER -> return RettighetsType.ARBEIDSSØKER
+                Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD -> return RettighetsType.VURDERES_FOR_UFØRETRYGD
+                Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG -> {}
             }
         }
 

@@ -6,11 +6,9 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAkt
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ReduksjonAktivitetspliktVurdering.Vilkårsvurdering.VILKÅR_FOR_REDUKSJON_OPPFYLT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -39,14 +37,6 @@ data class Vurdering(
 
     fun leggTilRettighetstype(rettighetstype: RettighetsType): Vurdering {
         return copy(fårAapEtter = rettighetstype)
-    }
-
-    // TODO: bruk tidslinjen på vilkårsresultat-klassen
-    fun fårAapEtter(vilkårtype: Vilkårtype, innvilgelsesårsak: Innvilgelsesårsak?): Boolean {
-        // TODO: finn ut om et vilkår kan være oppfylt uten at det er det vilkåret som medlemmet
-        // får AAP etter i betydningen fra § 11-12 fjerde ledd. Trenger i så fall prioritering, kanskje?
-        // TODO: bruk
-        return vurderinger.any { it.vilkår == vilkårtype && it.innvilgelsesårsak == innvilgelsesårsak && it.utfall == OPPFYLT }
     }
 
     fun leggTilGradering(gradering: Gradering): Vurdering {
