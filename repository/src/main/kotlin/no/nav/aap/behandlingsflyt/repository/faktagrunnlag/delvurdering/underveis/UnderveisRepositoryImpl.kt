@@ -89,6 +89,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
             periode = it.getPeriode("periode"),
             meldePeriode = it.getPeriode("meldeperiode"),
             utfall = it.getEnum("utfall"),
+            rettighetsType = it.getEnumOrNull("rettighetstype"),
             avslagsårsak = it.getEnumOrNull("avslagsarsak"),
             grenseverdi = Prosent(it.getInt("grenseverdi")),
             gradering = gradering,
@@ -128,22 +129,27 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
         val perioderId = connection.executeReturnKey(pliktkorteneQuery)
 
         val query = """
-            INSERT INTO UNDERVEIS_PERIODE (perioder_id, periode, utfall, avslagsarsak, grenseverdi, timer_arbeid, gradering, meldeperiode, trekk_dagsatser, andel_arbeidsevne, bruker_av_kvoter, brudd_aktivitetsplikt_id) VALUES (?, ?::daterange, ?, ?, ?, ?, ?, ?::daterange, ?, ?, ?, ?)
+            INSERT INTO UNDERVEIS_PERIODE (perioder_id, periode, utfall, rettighetstype, avslagsarsak,
+                                           grenseverdi, timer_arbeid, gradering, meldeperiode, trekk_dagsatser,
+                                           andel_arbeidsevne, bruker_av_kvoter, brudd_aktivitetsplikt_id)
+            VALUES (?, ?::daterange, ?, ?, ?, ?, ?, ?, ?::daterange, ?, ?, ?, ?)
             """.trimIndent()
         connection.executeBatch(query, underveisperioder) {
             setParams { periode ->
-                setLong(1, perioderId)
-                setPeriode(2, periode.periode)
-                setEnumName(3, periode.utfall)
-                setEnumName(4, periode.avslagsårsak)
-                setInt(5, periode.grenseverdi.prosentverdi())
-                setBigDecimal(6, periode.gradering.totaltAntallTimer.antallTimer)
-                setInt(7, periode.gradering.gradering.prosentverdi())
-                setPeriode(8, periode.meldePeriode)
-                setInt(9, periode.trekk.antall)
-                setInt(10, periode.gradering.fastsattArbeidsevne.prosentverdi())
-                setArray(11, periode.brukerAvKvoter.map { it.name })
-                setLong(12, periode.bruddAktivitetspliktId?.id)
+                var c = 1
+                setLong(c++, perioderId)
+                setPeriode(c++, periode.periode)
+                setEnumName(c++, periode.utfall)
+                setEnumName(c++, periode.rettighetsType)
+                setEnumName(c++, periode.avslagsårsak)
+                setInt(c++, periode.grenseverdi.prosentverdi())
+                setBigDecimal(c++, periode.gradering.totaltAntallTimer.antallTimer)
+                setInt(c++, periode.gradering.gradering.prosentverdi())
+                setPeriode(c++, periode.meldePeriode)
+                setInt(c++, periode.trekk.antall)
+                setInt(c++, periode.gradering.fastsattArbeidsevne.prosentverdi())
+                setArray(c++, periode.brukerAvKvoter.map { it.name })
+                setLong(c++, periode.bruddAktivitetspliktId?.id)
             }
         }
 

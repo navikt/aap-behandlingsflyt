@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis
 
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederService
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AapEtterRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.GraderingArbeidRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.InstitusjonRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MapInstitusjonoppholdTilRegel
@@ -16,7 +17,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortRepository
@@ -45,6 +45,7 @@ class UnderveisService(
     companion object {
         private val regelset = listOf(
             RettTilRegel(),
+            AapEtterRegel(),
             UtledMeldeperiodeRegel(),
             InstitusjonRegel(),
             SoningRegel(),
@@ -65,6 +66,7 @@ class UnderveisService(
                 }
             }
 
+            checkAvhengighet(forventetFør = RettTilRegel::class, forventetEtter = AapEtterRegel::class)
             checkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = MeldepliktRegel::class)
             checkAvhengighet(
                 forventetFør = UtledMeldeperiodeRegel::class,
@@ -86,6 +88,7 @@ class UnderveisService(
                         periode = it.periode,
                         meldePeriode = it.verdi.meldeperiode(),
                         utfall = it.verdi.utfall(),
+                        rettighetsType = it.verdi.rettighetsType(),
                         avslagsårsak = it.verdi.avslagsårsak(),
                         grenseverdi = it.verdi.grenseverdi(),
                         gradering = it.verdi.gradering(),
@@ -108,17 +111,6 @@ class UnderveisService(
     private fun genererInput(behandlingId: BehandlingId): UnderveisInput {
         val sak = behandlingService.hentSakFor(behandlingId)
         val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
-        val relevanteVilkår = vilkårsresultat
-            .alle()
-            .filter { v ->
-                v.type in setOf(
-                    Vilkårtype.ALDERSVILKÅRET,
-                    Vilkårtype.MEDLEMSKAP,
-                    Vilkårtype.SYKDOMSVILKÅRET,
-                    Vilkårtype.BISTANDSVILKÅRET,
-                    Vilkårtype.SYKEPENGEERSTATNING,
-                )
-            }
 
         val pliktkortGrunnlag = pliktkortRepository.hentHvisEksisterer(behandlingId)
         val pliktkort = pliktkortGrunnlag?.pliktkort() ?: listOf()
@@ -139,7 +131,7 @@ class UnderveisService(
 
         return UnderveisInput(
             rettighetsperiode = sak.rettighetsperiode,
-            relevanteVilkår = relevanteVilkår,
+            vilkårsresultat = vilkårsresultat,
             opptrappingPerioder = listOf(),
             pliktkort = pliktkort,
             innsendingsTidspunkt = innsendingsTidspunkt,

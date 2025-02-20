@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ReduksjonAktivitet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
@@ -17,7 +18,8 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 
 data class Vurdering(
-    private val vurderinger: List<EnkelVurdering> = emptyList(),
+    private val vurderinger: List<VilkårVurdering> = emptyList(),
+    internal val fårAapEtter: RettighetsType? = null,
     internal val meldepliktVurdering: MeldepliktVurdering? = null,
     internal val fraværFastsattAktivitetVurdering: FraværFastsattAktivitetVurdering? = null,
     internal val reduksjonAktivitetspliktVurdering: ReduksjonAktivitetspliktVurdering? = null,
@@ -31,13 +33,19 @@ data class Vurdering(
     val varighetVurdering: VarighetVurdering? = null,
 ) {
 
-    fun leggTilVurdering(enkelVurdering: EnkelVurdering): Vurdering {
-        return copy(vurderinger = vurderinger + enkelVurdering)
+    fun leggTilVurdering(vilkårVurdering: VilkårVurdering): Vurdering {
+        return copy(vurderinger = vurderinger + vilkårVurdering)
     }
 
+    fun leggTilRettighetstype(rettighetstype: RettighetsType): Vurdering {
+        return copy(fårAapEtter = rettighetstype)
+    }
+
+    // TODO: bruk tidslinjen på vilkårsresultat-klassen
     fun fårAapEtter(vilkårtype: Vilkårtype, innvilgelsesårsak: Innvilgelsesårsak?): Boolean {
         // TODO: finn ut om et vilkår kan være oppfylt uten at det er det vilkåret som medlemmet
         // får AAP etter i betydningen fra § 11-12 fjerde ledd. Trenger i så fall prioritering, kanskje?
+        // TODO: bruk
         return vurderinger.any { it.vilkår == vilkårtype && it.innvilgelsesårsak == innvilgelsesårsak && it.utfall == OPPFYLT }
     }
 
@@ -123,6 +131,14 @@ data class Vurdering(
         return gradering == null || grenseverdi() >= gradering.andelArbeid
     }
 
+    fun rettighetsType(): RettighetsType? {
+        return if (ingenVilkårErAvslått()) {
+            requireNotNull(fårAapEtter) { "Om alle vilkår er oppfylt, skal rettighetstype være ikken-null." }
+        } else {
+            null
+        }
+    }
+
     fun grenseverdi(): Prosent {
         return requireNotNull(grenseverdi)
     }
@@ -139,6 +155,7 @@ data class Vurdering(
                     Prosent.`50_PROSENT`,
                 )
             )
+
             harRett() -> gradering
             else -> gradering.copy(gradering = Prosent.`0_PROSENT`)
         }
