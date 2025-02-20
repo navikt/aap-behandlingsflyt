@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag1
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7Repository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.Faktagrunnlag.FristDato11_7
@@ -31,7 +30,7 @@ class FaktagrunnlagService(
                 effektuer117repository = repositoryProvider.provide<Effektuer11_7Repository>(),
                 beregningService =
                     BeregningService(
-                        inntektGrunnlagRepository = InntektGrunnlagRepository(connection),
+                        inntektGrunnlagRepository = repositoryProvider.provide(),
                         sykdomRepository = repositoryProvider.provide(),
                         studentRepository = repositoryProvider.provide(),
                         uføreRepository = repositoryProvider.provide(),

@@ -118,7 +118,7 @@ class InntektService private constructor(
 
             return InntektService(
                 sakService = SakService(sakRepository),
-                inntektGrunnlagRepository = InntektGrunnlagRepository(connection),
+                inntektGrunnlagRepository = repositoryProvider.provide(),
                 vilkårsresultatRepository = vilkårsresultatRepository,
                 sykdomRepository = repositoryProvider.provide(),
                 uføreRepository = repositoryProvider.provide(),
