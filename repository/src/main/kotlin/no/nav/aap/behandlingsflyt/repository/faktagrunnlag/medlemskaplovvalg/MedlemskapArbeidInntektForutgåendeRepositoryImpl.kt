@@ -16,7 +16,6 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
-import org.slf4j.LoggerFactory
 
 class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: DBConnection):
     MedlemskapArbeidInntektForutgåendeRepository {
