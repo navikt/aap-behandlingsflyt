@@ -77,4 +77,12 @@ class RettTilBarnetillegg(barn: Set<Ident> = emptySet()) {
         return "RettTilBarnetillegg(antallBarn=${barnMedRettTil()}, harBarnTilAvklaring=${harBarnTilAvklaring()})"
     }
 
+    fun copy(): RettTilBarnetillegg {
+        val kopi = RettTilBarnetillegg()
+        kopi.barnMedFolkeregisterRelasjonTil.addAll(this.barnMedFolkeregisterRelasjonTil)
+        kopi.uavklarteBarn.addAll(uavklarteBarn)
+        kopi.godkjenteUavklarteBarn.addAll(godkjenteUavklarteBarn)
+        kopi.underkjenteUavklarteBarn.addAll(underkjenteUavklarteBarn)
+        return kopi
+    }
 }
