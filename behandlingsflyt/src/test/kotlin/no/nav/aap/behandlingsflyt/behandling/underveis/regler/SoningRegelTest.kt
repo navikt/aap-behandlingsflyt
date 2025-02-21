@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedInput
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederService
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.barnetillegg.BarnetilleggRepositoryImpl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
@@ -47,7 +47,7 @@ class SoningRegelTest {
             emptyList(), null, MeldepliktVurdering(
                 null,
                 Utfall.OPPFYLT
-            ), null, null, null, Gradering(
+            ), null, null, null, ArbeidsGradering(
                 totaltAntallTimer = TimerArbeid(BigDecimal.ZERO),
                 andelArbeid = Prosent(0),
                 fastsattArbeidsevne = Prosent.`0_PROSENT`,
@@ -112,7 +112,7 @@ class SoningRegelTest {
             Periode(LocalDate.of(2024, 1, 1), (LocalDate.of(2024, 1, 5))),
             resultat.segmenter().elementAt(0).periode
         )
-        assertEquals(Prosent.`100_PROSENT`, resultat.segmenter().elementAt(0).verdi.gradering().gradering)
+        assertEquals(Prosent.`100_PROSENT`, resultat.segmenter().elementAt(0).verdi.arbeidsgradering().gradering)
         assertEquals(null, resultat.segmenter().elementAt(0).verdi.avslagsårsak())
 
         //Formue under forvaltning og soner i fengsel
@@ -120,7 +120,7 @@ class SoningRegelTest {
             Periode(LocalDate.of(2024, 1, 6), (LocalDate.of(2024, 1, 15))),
             resultat.segmenter().elementAt(1).periode
         )
-        assertEquals(Prosent.`0_PROSENT`, resultat.segmenter().elementAt(1).verdi.gradering().gradering)
+        assertEquals(Prosent.`0_PROSENT`, resultat.segmenter().elementAt(1).verdi.arbeidsgradering().gradering)
         assertEquals(UnderveisÅrsak.SONER_STRAFF, resultat.segmenter().elementAt(1).verdi.avslagsårsak())
 
         // Arbeider utenfor anstalten og soner i ved frigang
@@ -128,7 +128,7 @@ class SoningRegelTest {
             Periode(LocalDate.of(2024, 1, 16), (LocalDate.of(2024, 12, 1))),
             resultat.segmenter().elementAt(2).periode
         )
-        assertEquals(Prosent.`100_PROSENT`, resultat.segmenter().elementAt(2).verdi.gradering().gradering)
+        assertEquals(Prosent.`100_PROSENT`, resultat.segmenter().elementAt(2).verdi.arbeidsgradering().gradering)
 
     }
 }

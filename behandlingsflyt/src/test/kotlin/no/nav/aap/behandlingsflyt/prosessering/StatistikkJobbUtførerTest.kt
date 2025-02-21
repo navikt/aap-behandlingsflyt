@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseReposi
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
@@ -343,7 +343,7 @@ class StatistikkJobbUtførerTest {
                         utfall = Utfall.OPPFYLT,
                         rettighetsType = RettighetsType.STUDENT,
                         grenseverdi = Prosent.`100_PROSENT`,
-                        arbeidsGradering = Gradering(
+                        arbeidsgradering = ArbeidsGradering(
                             totaltAntallTimer = TimerArbeid(BigDecimal(22)),
                             andelArbeid = Prosent(33),
                             fastsattArbeidsevne = Prosent(23),

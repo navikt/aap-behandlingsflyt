@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.underveis
 
 import com.papsign.ktor.openapigen.annotations.properties.description.Description
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
@@ -27,7 +27,7 @@ data class UnderveisperiodeDto(
         utfall = underveisperiode.utfall,
         rettighetsType = underveisperiode.rettighetsType,
         avslagsårsak = underveisperiode.avslagsårsak,
-        gradering = GraderingDto(underveisperiode.arbeidsGradering, underveisperiode.grenseverdi),
+        gradering = GraderingDto(underveisperiode.arbeidsgradering, underveisperiode.grenseverdi),
         trekk = Dagsatser(underveisperiode.trekk.antall * underveisperiode.periode.antallDager()),
         brukerAvKvoter = underveisperiode.brukerAvKvoter.toList(),
     )
@@ -43,10 +43,10 @@ data class GraderingDto(
     @property:Description("Maksverdi for endelig gradering (i prosent)")
     val grenseverdi: Int
 ) {
-    constructor(gradering: Gradering, grenseverdi: Prosent) : this(
-        gradering = gradering.gradering.prosentverdi(),
-        andelArbeid = gradering.andelArbeid.prosentverdi(),
-        fastsattArbeidsevne = gradering.fastsattArbeidsevne.prosentverdi(),
+    constructor(arbeidsGradering: ArbeidsGradering, grenseverdi: Prosent) : this(
+        gradering = arbeidsGradering.gradering.prosentverdi(),
+        andelArbeid = arbeidsGradering.andelArbeid.prosentverdi(),
+        fastsattArbeidsevne = arbeidsGradering.fastsattArbeidsevne.prosentverdi(),
         grenseverdi = grenseverdi.prosentverdi()
     )
 }

@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AktivitetspliktVur
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Utfall.STANS
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FraværFastsattAktivitetVurdering.Utfall.UNNTAK
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ReduksjonAktivitetspliktVurdering.Vilkårsvurdering.VILKÅR_FOR_REDUKSJON_OPPFYLT
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
@@ -22,7 +22,8 @@ data class Vurdering(
     internal val fraværFastsattAktivitetVurdering: FraværFastsattAktivitetVurdering? = null,
     internal val reduksjonAktivitetspliktVurdering: ReduksjonAktivitetspliktVurdering? = null,
     internal val aktivitetspliktVurdering: AktivitetspliktVurdering? = null,
-    private val gradering: Gradering? = null,
+    private val gradering: ArbeidsGradering? = null,
+    private val samordningProsent: Prosent? = null,
     private val grenseverdi: Prosent? = null,
     internal val institusjonVurdering: InstitusjonVurdering? = null,
     internal val soningsVurdering: SoningVurdering? = null,
@@ -39,8 +40,12 @@ data class Vurdering(
         return copy(fårAapEtter = rettighetstype)
     }
 
-    fun leggTilGradering(gradering: Gradering): Vurdering {
-        return copy(gradering = gradering)
+    fun leggTilSamordningsprosent(samordningProsent: Prosent): Vurdering {
+        return copy(samordningProsent = samordningProsent)
+    }
+
+    fun leggTilGradering(arbeidsGradering: ArbeidsGradering): Vurdering {
+        return copy(gradering = arbeidsGradering)
     }
 
     fun leggTilMeldepliktVurdering(meldepliktVurdering: MeldepliktVurdering): Vurdering {
@@ -137,17 +142,22 @@ data class Vurdering(
         return requireNotNull(meldeperiode)
     }
 
-    fun gradering(): Gradering {
+    fun arbeidsGradering(): ArbeidsGradering {
         return when {
             gradering == null -> error("gradering er ikke lagt til enda")
-            harRett() && institusjonVurdering?.skalReduseres == true -> gradering.copy(
-                gradering = gradering.gradering.minus(
-                    Prosent.`50_PROSENT`,
-                )
-            )
-
             harRett() -> gradering
             else -> gradering.copy(gradering = Prosent.`0_PROSENT`)
+        }
+    }
+
+    fun samordningProsent(): Prosent {
+        return requireNotNull(samordningProsent)
+    }
+
+    fun arbeidsgradering(): ArbeidsGradering {
+        return when {
+            gradering == null -> error("gradering er ikke lagt til enda")
+            else -> gradering
         }
     }
 

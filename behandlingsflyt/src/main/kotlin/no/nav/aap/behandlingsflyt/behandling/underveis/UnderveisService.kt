@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MapInstitusjonopph
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.RettTilRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.SammenstiltAktivitetspliktRegel
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.SamordningRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.SoningRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UnderveisInput
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UtledMeldeperiodeRegel
@@ -27,6 +28,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Meldepl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Dagsatser
+import no.nav.aap.komponenter.verdityper.Prosent
 import kotlin.reflect.KClass
 
 class UnderveisService(
@@ -52,7 +54,7 @@ class UnderveisService(
             MeldepliktRegel(),
             SammenstiltAktivitetspliktRegel(),
             GraderingArbeidRegel(),
-            //SamordningRegel(),
+            SamordningRegel(),
             VarighetRegel(),
         )
 
@@ -92,11 +94,12 @@ class UnderveisService(
                         rettighetsType = it.verdi.rettighetsType(),
                         avslagsårsak = it.verdi.avslagsårsak(),
                         grenseverdi = it.verdi.grenseverdi(),
-                        arbeidsGradering = it.verdi.gradering(),
+                        arbeidsgradering = it.verdi.arbeidsgradering(),
                         trekk = if (it.verdi.skalReduseresDagsatser()) Dagsatser(1) else Dagsatser(0),
                         brukerAvKvoter = it.verdi.varighetVurdering?.brukerAvKvoter.orEmpty(),
                         bruddAktivitetspliktId = it.verdi.aktivitetspliktVurdering?.dokument?.metadata?.id,
-                        samordningGradering = TODO(),
+                        samordningGradering = it.verdi.samordningProsent(),
+                        institusjonsoppholdReduksjon = if (it.verdi.institusjonVurdering?.skalReduseres == true) Prosent.`50_PROSENT` else Prosent.`0_PROSENT`
                     )
                 },
             input
@@ -142,6 +145,7 @@ class UnderveisService(
             etAnnetSted = etAnnetSted,
             arbeidsevneGrunnlag = arbeidsevneGrunnlag,
             meldepliktGrunnlag = meldepliktGrunnlag,
+            samordningGrunnlag = TODO(),
         )
     }
 }

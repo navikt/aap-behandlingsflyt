@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
@@ -77,7 +77,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
         val graderingProsent = it.getInt("gradering")
         val andelArbeidsevne = it.getInt("andel_arbeidsevne")
 
-        val gradering = Gradering(
+        val arbeidsGradering = ArbeidsGradering(
             totaltAntallTimer = TimerArbeid(antallTimer),
             andelArbeid = Prosent.`100_PROSENT`.minus(Prosent(graderingProsent)),
             fastsattArbeidsevne = Prosent(andelArbeidsevne),
@@ -92,11 +92,13 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
             rettighetsType = it.getEnumOrNull("rettighetstype"),
             avslagsårsak = it.getEnumOrNull("avslagsarsak"),
             grenseverdi = Prosent(it.getInt("grenseverdi")),
-            arbeidsGradering = gradering,
+            arbeidsgradering = arbeidsGradering,
             trekk = Dagsatser(it.getInt("trekk_dagsatser")),
             brukerAvKvoter = it.getArray("bruker_av_kvoter", String::class).map { Kvote.valueOf(it) }.toSet(),
             bruddAktivitetspliktId = it.getLongOrNull("brudd_aktivitetsplikt_id")?.let { BruddAktivitetspliktId(it) },
             id = UnderveisperiodeId(it.getLong("id")),
+            samordningGradering = TODO(),
+            institusjonsoppholdReduksjon = TODO(),
         )
     }
 
@@ -142,11 +144,11 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
                 setEnumName(4, periode.rettighetsType)
                 setEnumName(5, periode.avslagsårsak)
                 setInt(6, periode.grenseverdi.prosentverdi())
-                setBigDecimal(7, periode.arbeidsGradering.totaltAntallTimer.antallTimer)
-                setInt(8, periode.arbeidsGradering.gradering.prosentverdi())
+                setBigDecimal(7, periode.arbeidsgradering.totaltAntallTimer.antallTimer)
+                setInt(8, periode.arbeidsgradering.gradering.prosentverdi())
                 setPeriode(9, periode.meldePeriode)
                 setInt(10, periode.trekk.antall)
-                setInt(11, periode.arbeidsGradering.fastsattArbeidsevne.prosentverdi())
+                setInt(11, periode.arbeidsgradering.fastsattArbeidsevne.prosentverdi())
                 setArray(12, periode.brukerAvKvoter.map { it.name })
                 setLong(13, periode.bruddAktivitetspliktId?.id)
             }

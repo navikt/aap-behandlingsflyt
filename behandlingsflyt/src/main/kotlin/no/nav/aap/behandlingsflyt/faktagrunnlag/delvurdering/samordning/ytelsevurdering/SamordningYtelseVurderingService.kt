@@ -89,7 +89,7 @@ class SamordningYtelseVurderingService(
             }
             samordningYtelser.add(
                 SamordningYtelse(
-                    ytelseType = konverterFraForeldrePengerDomene(ytelse),
+                    ytelseType = Ytelse.PLEIEPENGER_BARN, // konverterFraForeldrePengerDomene(ytelse),
                     ytelsePerioder = ytelsePerioder,
                     kilde = ytelse.kildesystem,
                     saksRef = ytelse.saksnummer.toString()

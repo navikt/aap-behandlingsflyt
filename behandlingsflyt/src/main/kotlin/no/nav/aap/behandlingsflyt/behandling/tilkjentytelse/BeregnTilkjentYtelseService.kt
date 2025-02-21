@@ -69,6 +69,8 @@ class BeregnTilkjentYtelseService(
             årligYtelseTidslinje,
             JoinStyle.INNER_JOIN { periode, venstre, høyre ->
                 val dagsats = høyre.verdi.dividert(ANTALL_ÅRLIGE_ARBEIDSDAGER)
+                // Ikke bruk metoden under, men hent inn prosentene her
+                // inst-opphold,
                 val utbetalingsgrad = venstre.verdi.utbetalingsgrad()
                 Segment(periode, TilkjentGUnit(dagsats, utbetalingsgrad))
             })
