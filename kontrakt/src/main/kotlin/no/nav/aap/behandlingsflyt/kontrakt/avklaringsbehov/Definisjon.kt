@@ -220,6 +220,18 @@ public enum class Definisjon(
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.VURDER_MEDLEMSKAP,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+    ),
+    MANUELL_OVERSTYRING_LOVVALG(
+        kode = AvklaringsbehovKode.`5021`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.VURDER_LOVVALG,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+    ),
+    MANUELL_OVERSTYRING_MEDLEMSKAP(
+        kode = AvklaringsbehovKode.`5022`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.VURDER_MEDLEMSKAP,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     );
 
     public companion object {

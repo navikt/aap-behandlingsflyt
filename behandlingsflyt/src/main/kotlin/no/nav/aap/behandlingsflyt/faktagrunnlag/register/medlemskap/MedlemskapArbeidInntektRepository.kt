@@ -14,6 +14,6 @@ interface MedlemskapArbeidInntektRepository : Repository {
     fun hentOppgittUtenlandsOppholdHvisEksisterer(behandlingId: BehandlingId): UtenlandsOppholdData?
     fun lagreArbeidsforholdOgInntektINorge(behandlingId: BehandlingId, arbeidGrunnlag: List<ArbeidsforholdOversikt>, inntektGrunnlag: List<ArbeidsInntektMaaned>, medlId: Long?)
     fun lagreOppgittUtenlandsOppplysninger(behandlingId: BehandlingId, journalpostId: JournalpostId, utenlandsOppholdData: UtenlandsOppholdData)
-    fun lagreManuellVurdering(behandlingId: BehandlingId, manuellVurdering: ManuellVurderingForLovvalgMedlemskap)
+    fun lagreManuellVurdering(behandlingId: BehandlingId, manuellVurdering: ManuellVurderingForLovvalgMedlemskap, overstyrt: Boolean = false)
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
 }

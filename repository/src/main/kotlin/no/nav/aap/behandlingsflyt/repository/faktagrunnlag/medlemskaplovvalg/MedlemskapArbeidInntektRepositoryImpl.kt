@@ -62,12 +62,12 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         }
     }
 
-    override fun lagreManuellVurdering(behandlingId: BehandlingId, manuellVurdering: ManuellVurderingForLovvalgMedlemskap){
+    override fun lagreManuellVurdering(behandlingId: BehandlingId, manuellVurdering: ManuellVurderingForLovvalgMedlemskap, overstyrt: Boolean){
         val grunnlagOppslag = hentGrunnlag(behandlingId)
         deaktiverGrunnlag(behandlingId)
 
         val manuellVurderingQuery = """
-            INSERT INTO LOVVALG_MEDLEMSKAP_MANUELL_VURDERING (tekstvurdering_lovvalg, lovvalgs_land, tekstvurdering_medlemskap, var_medlem_i_folketrygden) VALUES (?, ?, ?, ?)
+            INSERT INTO LOVVALG_MEDLEMSKAP_MANUELL_VURDERING (tekstvurdering_lovvalg, lovvalgs_land, tekstvurdering_medlemskap, var_medlem_i_folketrygden, overstyrt) VALUES (?, ?, ?, ?, ?)
         """.trimIndent()
 
         val manuellVurderingId = connection.executeReturnKey(manuellVurderingQuery) {
@@ -76,6 +76,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 setEnumName(2, manuellVurdering.lovvalgVedSøknadsTidspunkt.lovvalgsEØSLand)
                 setString(3, manuellVurdering.medlemskapVedSøknadsTidspunkt?.begrunnelse)
                 setBoolean(4, manuellVurdering.medlemskapVedSøknadsTidspunkt?.varMedlemIFolketrygd)
+                setBoolean(5, overstyrt)
             }
         }
 
@@ -252,7 +253,8 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                     medlemskapVedSøknadsTidspunkt = MedlemskapVedSøknadsTidspunkt(
                         begrunnelse = it.getStringOrNull("tekstvurdering_medlemskap"),
                         varMedlemIFolketrygd = it.getBooleanOrNull("var_medlem_i_folketrygden")
-                    )
+                    ),
+                    overstyrt = it.getBoolean("overstyrt")
                 )
             }
         }

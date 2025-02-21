@@ -29,6 +29,8 @@ public const val AVKLAR_LOVVALG_MEDLEMSKAP_KODE: String = "5017"
 public const val VENTE_PÅ_FIRST_EFFEKTUER_11_7_KODE: String = "5018"
 public const val AVKLAR_UTENLANDSK_MEDLEMSKAP_KODE: String = "5019"
 public const val AVKLAR_FORUTGÅENDE_MEDLEMSKAP_KODE: String = "5020"
+public const val MANUELL_OVERSTYRING_LOVVALG: String = "5021"
+public const val MANUELL_OVERSTYRING_MEDLEMSKAP: String = "5022"
 
 @Suppress("EnumEntryName")
 public enum class AvklaringsbehovKode {
@@ -87,6 +89,12 @@ public enum class AvklaringsbehovKode {
     `5097`,
     `5098`,
     `5099`,
+
+    /**
+     * [MANUELL_OVERSTYRING]
+     */
+    `5021`,
+    `5022`,
 
     /**
      * [AVKLAR_UTENLANDSK_MEDLEMSKAP_KODE]

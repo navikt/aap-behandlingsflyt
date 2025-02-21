@@ -2098,7 +2098,8 @@ class FlytOrkestratorTest {
                     løsning = AvklarLovvalgMedlemskapLøsning(
                         manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskap(
                             LovvalgVedSøknadsTidspunkt("crazy lovvalgsland vurdering", null),
-                            MedlemskapVedSøknadsTidspunkt("crazy medlemskap vurdering", true)
+                            MedlemskapVedSøknadsTidspunkt("crazy medlemskap vurdering", true),
+                            false
                         ),
                         behovstype = AvklaringsbehovKode.`5017`
                     ),
@@ -2163,7 +2164,7 @@ class FlytOrkestratorTest {
                 løsning = AvklarLovvalgMedlemskapLøsning(
                     manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskap(
                         LovvalgVedSøknadsTidspunkt("crazy lovvalgsland vurdering", EØSLand.DNK),
-                        MedlemskapVedSøknadsTidspunkt(null, null)
+                        MedlemskapVedSøknadsTidspunkt(null, null), false
                     ),
                     behovstype = AvklaringsbehovKode.`5017`
                 ),
@@ -2233,7 +2234,7 @@ class FlytOrkestratorTest {
                 løsning = AvklarLovvalgMedlemskapLøsning(
                     manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskap(
                         LovvalgVedSøknadsTidspunkt("crazy lovvalgsland vurdering", EØSLand.NOR),
-                        MedlemskapVedSøknadsTidspunkt("crazy medlemskap vurdering", false)
+                        MedlemskapVedSøknadsTidspunkt("crazy medlemskap vurdering", false), false
                     ),
                     behovstype = AvklaringsbehovKode.`5017`
                 ),

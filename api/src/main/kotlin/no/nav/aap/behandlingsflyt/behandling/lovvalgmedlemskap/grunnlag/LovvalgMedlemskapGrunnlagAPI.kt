@@ -27,7 +27,7 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagAPI(dataSource: DataSource) {
 
                     val response = if (data?.lovvalgVedSøknadsTidspunkt != null) {
                         LovvalgMedlemskapGrunnlagDto(
-                            ManuellVurderingForLovvalgMedlemskap(data.lovvalgVedSøknadsTidspunkt, data.medlemskapVedSøknadsTidspunkt)
+                            ManuellVurderingForLovvalgMedlemskap(data.lovvalgVedSøknadsTidspunkt, data.medlemskapVedSøknadsTidspunkt, data.overstyrt)
                         )
                     } else {
                         LovvalgMedlemskapGrunnlagDto(null)
