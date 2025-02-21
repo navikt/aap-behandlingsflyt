@@ -32,6 +32,7 @@ class Bistandsvilkåret(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<B
         // TODO!!!
         // 11-18 - under behandling av krav om uføretrygd
         // 11-17 - i perioden som arbeidssøker
+        // VIKTIG
 
         lagre(
             grunnlag, VurderingsResultat(

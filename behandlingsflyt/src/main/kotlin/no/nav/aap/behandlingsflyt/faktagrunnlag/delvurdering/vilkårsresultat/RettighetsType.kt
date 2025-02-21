@@ -13,4 +13,6 @@ enum class RettighetsType(val hjemmel: String) {
 
     VURDERES_FOR_UFØRETRYGD(hjemmel = "§ 11-18"),
     // TODO: skal 11-22 (yrkesskade) inn her?
+    // TODO: Bør 11-23 sjette ledd inn her? Se GraderingArbeidRegel
+    //       Dette er gammel aktivitetsfase UA
 }

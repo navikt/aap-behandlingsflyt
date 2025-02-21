@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
@@ -60,6 +61,7 @@ class StatistikkJobbUtfører(
     private val pipRepository: PipRepository,
     private val dokumentRepository: MottattDokumentRepository,
     private val sykdomRepository: SykdomRepository,
+    private val underveisRepository: UnderveisRepository,
 ) : JobbUtfører {
     override fun utfør(input: JobbInput) {
         log.info("Utfører jobbinput statistikk: $input")
@@ -198,19 +200,20 @@ class StatistikkJobbUtfører(
 
         log.info("Kaller aap-statistikk for sak ${sak.saksnummer}.")
 
-        val rettighetstypePerioder = vilkårsresultat.rettighetstypeTidslinje().map {
-            RettighetstypePeriode(
-                fraDato = it.periode.fom,
-                tilDato = it.periode.tom,
-                rettighetstype = when (it.verdi) {
-                    RettighetsType.BISTANDSBEHOV -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.BISTANDSBEHOV
-                    RettighetsType.SYKEPENGEERSTATNING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.SYKEPENGEERSTATNING
-                    RettighetsType.STUDENT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.STUDENT
-                    RettighetsType.ARBEIDSSØKER -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.ARBEIDSSØKER
-                    RettighetsType.VURDERES_FOR_UFØRETRYGD -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.VURDERES_FOR_UFØRETRYGD
-                }
-            )
-        }
+        val rettighetstypePerioder =
+            underveisRepository.hent(behandling.id).perioder.filter { it.rettighetsType != null }.map {
+                RettighetstypePeriode(
+                    fraDato = it.periode.fom,
+                    tilDato = it.periode.tom,
+                    rettighetstype = when (requireNotNull(it.rettighetsType)) {
+                        RettighetsType.BISTANDSBEHOV -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.BISTANDSBEHOV
+                        RettighetsType.SYKEPENGEERSTATNING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.SYKEPENGEERSTATNING
+                        RettighetsType.STUDENT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.STUDENT
+                        RettighetsType.ARBEIDSSØKER -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.ARBEIDSSØKER
+                        RettighetsType.VURDERES_FOR_UFØRETRYGD -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.VURDERES_FOR_UFØRETRYGD
+                    }
+                )
+            }
 
         val avsluttetBehandlingDTO = AvsluttetBehandlingDTO(
             vilkårsResultat = VilkårsResultatDTO(
@@ -333,7 +336,8 @@ class StatistikkJobbUtfører(
                 beregningsgrunnlagRepository,
                 pipRepository = pipRepository,
                 dokumentRepository = mottattDokumentRepository,
-                sykdomRepository = repositoryProvider.provide()
+                sykdomRepository = repositoryProvider.provide(),
+                underveisRepository = repositoryProvider.provide()
             )
         }
 
