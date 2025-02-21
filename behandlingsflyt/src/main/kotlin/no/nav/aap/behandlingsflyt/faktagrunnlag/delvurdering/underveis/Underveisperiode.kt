@@ -10,6 +10,9 @@ import no.nav.aap.komponenter.verdityper.Prosent
 
 data class UnderveisperiodeId(val asLong: Long)
 
+/**
+ * @param samordningGradering
+ */
 data class Underveisperiode(
     val periode: Periode,
     val meldePeriode: Periode,
@@ -17,7 +20,8 @@ data class Underveisperiode(
     val rettighetsType: RettighetsType?,
     val avslagsårsak: UnderveisÅrsak?,
     val grenseverdi: Prosent,
-    val gradering: Gradering,
+    val samordningGradering: Prosent,
+    val arbeidsGradering: Gradering,
     val trekk: Dagsatser,
     val brukerAvKvoter: Set<Kvote>,
     val bruddAktivitetspliktId: BruddAktivitetspliktId?,
@@ -28,7 +32,7 @@ data class Underveisperiode(
         if (utfall == Utfall.IKKE_OPPFYLT) {
             return Prosent.`0_PROSENT`
         }
-        return gradering.gradering
+        return Prosent(samordningGradering.prosentverdi() + arbeidsGradering.gradering.prosentverdi())
     }
 
     override fun compareTo(other: Underveisperiode): Int {

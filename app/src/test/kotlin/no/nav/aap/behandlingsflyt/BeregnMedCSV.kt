@@ -121,7 +121,7 @@ fun beregnForInput(input: Input, fødselsdato: Fødselsdato): Triple<Year, GUnit
                     rettighetsType = RettighetsType.BISTANDSBEHOV,
                     avslagsårsak = null,
                     grenseverdi = Prosent.`100_PROSENT`,
-                    gradering = Gradering(
+                    arbeidsGradering = Gradering(
                         totaltAntallTimer = TimerArbeid(
                             antallTimer = BigDecimal(0)
                         ),

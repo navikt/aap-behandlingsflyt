@@ -52,6 +52,7 @@ class UnderveisService(
             MeldepliktRegel(),
             SammenstiltAktivitetspliktRegel(),
             GraderingArbeidRegel(),
+            //SamordningRegel(),
             VarighetRegel(),
         )
 
@@ -91,10 +92,11 @@ class UnderveisService(
                         rettighetsType = it.verdi.rettighetsType(),
                         avslagsårsak = it.verdi.avslagsårsak(),
                         grenseverdi = it.verdi.grenseverdi(),
-                        gradering = it.verdi.gradering(),
+                        arbeidsGradering = it.verdi.gradering(),
                         trekk = if (it.verdi.skalReduseresDagsatser()) Dagsatser(1) else Dagsatser(0),
                         brukerAvKvoter = it.verdi.varighetVurdering?.brukerAvKvoter.orEmpty(),
-                        bruddAktivitetspliktId = it.verdi.aktivitetspliktVurdering?.dokument?.metadata?.id
+                        bruddAktivitetspliktId = it.verdi.aktivitetspliktVurdering?.dokument?.metadata?.id,
+                        samordningGradering = TODO(),
                     )
                 },
             input

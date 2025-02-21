@@ -154,7 +154,7 @@ class Effektuer11_7RepositoryImplTest {
         rettighetsType = RettighetsType.BISTANDSBEHOV,
         avslagsårsak = null,
         grenseverdi = Prosent.`100_PROSENT`,
-        gradering = Gradering(
+        arbeidsGradering = Gradering(
             totaltAntallTimer = TimerArbeid(BigDecimal(0)),
             andelArbeid = Prosent.`0_PROSENT`,
             fastsattArbeidsevne = Prosent.`100_PROSENT`,

@@ -118,17 +118,19 @@ class SamordningYtelseVurderingService(
         return samordningYtelser
     }
 
-    private fun konverterFraForeldrePengerDomene(ytelse: ForeldrePengerResponseYtelse) =
-        when (ytelse.ytelse) {
-            Ytelser.PLEIEPENGER_SYKT_BARN -> TODO()
+    private fun konverterFraForeldrePengerDomene(ytelse: ForeldrePengerResponseYtelse): Ytelse? {
+        // TODO
+        return when (ytelse.ytelse) {
+            Ytelser.PLEIEPENGER_SYKT_BARN -> Ytelse.PLEIEPENGER_BARN
             Ytelser.PLEIEPENGER_NÆRSTÅENDE -> Ytelse.PLEIEPENGER_NÆR_FAMILIE
             Ytelser.OMSORGSPENGER -> Ytelse.OMSORGSPENGER
             Ytelser.OPPLÆRINGSPENGER -> Ytelse.OPPLÆRINGSPENGER
-            Ytelser.ENGANGSTØNAD -> TODO()
+            Ytelser.ENGANGSTØNAD -> null
             Ytelser.FORELDREPENGER -> Ytelse.FORELDREPENGER
             Ytelser.SVANGERSKAPSPENGER -> Ytelse.SVANGERSKAPSPENGER
-            Ytelser.FRISINN -> TODO()
+            Ytelser.FRISINN -> null
         }
+    }
 
     companion object : Informasjonskravkonstruktør {
         override fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {

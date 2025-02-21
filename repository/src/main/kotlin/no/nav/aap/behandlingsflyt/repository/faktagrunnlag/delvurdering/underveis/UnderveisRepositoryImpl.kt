@@ -92,7 +92,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
             rettighetsType = it.getEnumOrNull("rettighetstype"),
             avslagsårsak = it.getEnumOrNull("avslagsarsak"),
             grenseverdi = Prosent(it.getInt("grenseverdi")),
-            gradering = gradering,
+            arbeidsGradering = gradering,
             trekk = Dagsatser(it.getInt("trekk_dagsatser")),
             brukerAvKvoter = it.getArray("bruker_av_kvoter", String::class).map { Kvote.valueOf(it) }.toSet(),
             bruddAktivitetspliktId = it.getLongOrNull("brudd_aktivitetsplikt_id")?.let { BruddAktivitetspliktId(it) },
@@ -142,11 +142,11 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
                 setEnumName(4, periode.rettighetsType)
                 setEnumName(5, periode.avslagsårsak)
                 setInt(6, periode.grenseverdi.prosentverdi())
-                setBigDecimal(7, periode.gradering.totaltAntallTimer.antallTimer)
-                setInt(8, periode.gradering.gradering.prosentverdi())
+                setBigDecimal(7, periode.arbeidsGradering.totaltAntallTimer.antallTimer)
+                setInt(8, periode.arbeidsGradering.gradering.prosentverdi())
                 setPeriode(9, periode.meldePeriode)
                 setInt(10, periode.trekk.antall)
-                setInt(11, periode.gradering.fastsattArbeidsevne.prosentverdi())
+                setInt(11, periode.arbeidsGradering.fastsattArbeidsevne.prosentverdi())
                 setArray(12, periode.brukerAvKvoter.map { it.name })
                 setLong(13, periode.bruddAktivitetspliktId?.id)
             }

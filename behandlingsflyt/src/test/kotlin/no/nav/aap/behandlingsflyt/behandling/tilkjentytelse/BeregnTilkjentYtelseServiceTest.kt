@@ -303,7 +303,7 @@ class BeregnTilkjentYtelseServiceTest {
                     rettighetsType = RettighetsType.BISTANDSBEHOV,
                     avslagsårsak = null,
                     grenseverdi = Prosent.`100_PROSENT`,
-                    gradering = Gradering(
+                    arbeidsGradering = Gradering(
                         totaltAntallTimer = TimerArbeid(BigDecimal(10)),
                         andelArbeid = Prosent.`50_PROSENT`,
                         fastsattArbeidsevne = Prosent.`50_PROSENT`,

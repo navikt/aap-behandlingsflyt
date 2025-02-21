@@ -43,7 +43,6 @@ import no.nav.aap.komponenter.verdityper.TimerArbeid
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertInstanceOf
-import org.junit.jupiter.api.assertThrows
 import java.math.BigDecimal
 import java.time.Duration
 import java.time.Instant
@@ -285,7 +284,7 @@ class Effektuer11_7StegTest {
         rettighetsType = RettighetsType.BISTANDSBEHOV,
         avslagsårsak = null,
         grenseverdi = Prosent.`100_PROSENT`,
-        gradering = Gradering(
+        arbeidsGradering = Gradering(
             totaltAntallTimer = TimerArbeid(BigDecimal.ZERO),
             andelArbeid = Prosent.`100_PROSENT`,
             fastsattArbeidsevne = Prosent.`100_PROSENT`,

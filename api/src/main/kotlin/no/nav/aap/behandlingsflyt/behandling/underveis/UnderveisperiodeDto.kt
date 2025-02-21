@@ -27,7 +27,7 @@ data class UnderveisperiodeDto(
         utfall = underveisperiode.utfall,
         rettighetsType = underveisperiode.rettighetsType,
         avslagsårsak = underveisperiode.avslagsårsak,
-        gradering = GraderingDto(underveisperiode.gradering, underveisperiode.grenseverdi),
+        gradering = GraderingDto(underveisperiode.arbeidsGradering, underveisperiode.grenseverdi),
         trekk = Dagsatser(underveisperiode.trekk.antall * underveisperiode.periode.antallDager()),
         brukerAvKvoter = underveisperiode.brukerAvKvoter.toList(),
     )
