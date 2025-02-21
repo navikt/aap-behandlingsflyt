@@ -53,6 +53,14 @@ class Avklaringsbehovene(
         }
     }
 
+    fun leggTilOverstyringHvisMangler(definisjon: Definisjon, bruker: Bruker) {
+        if (definisjon.erOverstyring()) {
+            if (hentBehovForDefinisjon(definisjon) == null) {
+                leggTil(definisjoner = listOf(definisjon), funnetISteg = definisjon.løsesISteg, bruker = bruker)
+            }
+        }
+    }
+
     /**
      * Legger til nye avklaringsbehov.
      *

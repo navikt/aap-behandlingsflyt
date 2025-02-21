@@ -223,13 +223,13 @@ public enum class Definisjon(
     ),
     MANUELL_OVERSTYRING_LOVVALG(
         kode = AvklaringsbehovKode.`5021`,
-        type = BehovType.MANUELT_PÅKREVD,
+        type = BehovType.OVERSTYR,
         løsesISteg = StegType.VURDER_LOVVALG,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     ),
     MANUELL_OVERSTYRING_MEDLEMSKAP(
         kode = AvklaringsbehovKode.`5022`,
-        type = BehovType.MANUELT_PÅKREVD,
+        type = BehovType.OVERSTYR,
         løsesISteg = StegType.VURDER_MEDLEMSKAP,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     );
@@ -284,7 +284,13 @@ public enum class Definisjon(
          * Ventebehov kan opprettes av saksbehandler og system, det er et behov som venter på tid og/eller en hendelse
          * (f.eks et dokument)
          */
-        VENTEPUNKT(Definisjon::validerVentepunkt)
+        VENTEPUNKT(Definisjon::validerVentepunkt),
+
+        /**
+         * Overstyr er at saksbehandler kan overstryre automatiske vurderinger og trigge behovet
+         * (f.eks et dokument)
+         */
+        OVERSTYR(Definisjon::validerManuelt)
     }
 
     public fun skalLøsesISteg(steg: StegType, funnetISteg: StegType): Boolean {
@@ -343,6 +349,10 @@ public enum class Definisjon(
 
     public fun erVentebehov(): Boolean {
         return type == BehovType.VENTEPUNKT || erBrevVentebehov()
+    }
+
+    public fun erOverstyring(): Boolean {
+        return type == BehovType.OVERSTYR
     }
 
     public fun erBrevVentebehov(): Boolean {
