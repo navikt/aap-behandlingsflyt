@@ -62,7 +62,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         }
     }
 
-    override fun lagreManuellVurdering(behandlingId: BehandlingId, manuellVurdering: ManuellVurderingForLovvalgMedlemskap, overstyrt: Boolean){
+    override fun lagreManuellVurdering(behandlingId: BehandlingId, manuellVurdering: ManuellVurderingForLovvalgMedlemskap){
         val grunnlagOppslag = hentGrunnlag(behandlingId)
         deaktiverGrunnlag(behandlingId)
 
@@ -76,7 +76,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 setEnumName(2, manuellVurdering.lovvalgVedSøknadsTidspunkt.lovvalgsEØSLand)
                 setString(3, manuellVurdering.medlemskapVedSøknadsTidspunkt?.begrunnelse)
                 setBoolean(4, manuellVurdering.medlemskapVedSøknadsTidspunkt?.varMedlemIFolketrygd)
-                setBoolean(5, overstyrt)
+                setBoolean(5, manuellVurdering.overstyrt)
             }
         }
 
