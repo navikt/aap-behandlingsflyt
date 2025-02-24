@@ -45,6 +45,7 @@ class Vilkårsresultat(
                 Tidslinje(vilkår.vilkårsperioder().filter { it.utfall == Utfall.OPPFYLT }
                     .map { Segment(it.periode, Pair(vilkår, it)) })
             }
+            .map { it.filter { it.verdi.second.erOppfylt() } }
             .fold(Tidslinje.empty<Set<Pair<Vilkårtype, Innvilgelsesårsak?>>>()) { acc, curr ->
                 acc.kombiner(curr, JoinStyle.OUTER_JOIN { periode, venstre, høyre ->
                     if (høyre == null && venstre == null) {
