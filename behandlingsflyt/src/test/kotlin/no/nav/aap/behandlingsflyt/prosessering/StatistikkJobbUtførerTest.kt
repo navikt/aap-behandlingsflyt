@@ -352,7 +352,8 @@ class StatistikkJobbUtførerTest {
                         trekk = Dagsatser(0),
                         brukerAvKvoter = setOf(Kvote.STUDENT, Kvote.ORDINÆR),
                         bruddAktivitetspliktId = null,
-                        avslagsårsak = null
+                        avslagsårsak = null,
+                        institusjonsoppholdReduksjon = Prosent.`0_PROSENT`,
                     )
                 ),
                 input = object : Faktagrunnlag {}

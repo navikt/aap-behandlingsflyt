@@ -152,7 +152,7 @@ class InstitusjonRegelTest {
             Periode(LocalDate.of(2024, 5, 1), (LocalDate.of(2024, 7, 15))),
             resultat.segmenter().elementAt(2).periode
         )
-        assertEquals(Prosent.`50_PROSENT`, resultat.segmenter().elementAt(2).verdi.arbeidsgradering().gradering)
+        assertEquals(Prosent.`50_PROSENT`, resultat.segmenter().elementAt(2).verdi.institusjonVurdering?.grad)
         assertEquals(Årsak.KOST_OG_LOSJI, resultat.segmenter().elementAt(2).verdi.institusjonVurdering?.årsak)
 
         // Innlagt fra 20/7, som er innen for 3 måneder fra forrige innleggese. reduksjon fra 1/8
@@ -174,7 +174,7 @@ class InstitusjonRegelTest {
             Periode(LocalDate.of(2024, 8, 1), (LocalDate.of(2024, 9, 15))),
             resultat.segmenter().elementAt(5).periode
         )
-        assertEquals(Prosent.`50_PROSENT`, resultat.segmenter().elementAt(5).verdi.arbeidsgradering().gradering)
+        assertEquals(Prosent.`50_PROSENT`, resultat.segmenter().elementAt(5).verdi.institusjonVurdering?.grad)
         assertEquals(
             Årsak.KOST_OG_LOSJI,
             resultat.segmenter().elementAt(5).verdi.institusjonVurdering?.årsak

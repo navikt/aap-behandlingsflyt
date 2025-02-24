@@ -120,7 +120,6 @@ class SoningRegelTest {
             Periode(LocalDate.of(2024, 1, 6), (LocalDate.of(2024, 1, 15))),
             resultat.segmenter().elementAt(1).periode
         )
-        assertEquals(Prosent.`0_PROSENT`, resultat.segmenter().elementAt(1).verdi.arbeidsgradering().gradering)
         assertEquals(UnderveisÅrsak.SONER_STRAFF, resultat.segmenter().elementAt(1).verdi.avslagsårsak())
 
         // Arbeider utenfor anstalten og soner i ved frigang

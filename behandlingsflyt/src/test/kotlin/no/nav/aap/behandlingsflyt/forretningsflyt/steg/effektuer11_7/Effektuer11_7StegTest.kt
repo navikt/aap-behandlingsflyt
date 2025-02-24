@@ -293,6 +293,7 @@ class Effektuer11_7StegTest {
         trekk = Dagsatser(0),
         brukerAvKvoter = setOf(),
         bruddAktivitetspliktId = null,
+        institusjonsoppholdReduksjon = Prosent.`0_PROSENT`
     )
 
     private fun kontekst(

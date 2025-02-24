@@ -8,7 +8,6 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MapInstitusjonopph
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.RettTilRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.SammenstiltAktivitetspliktRegel
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.SamordningRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.SoningRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UnderveisInput
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UtledMeldeperiodeRegel
@@ -54,7 +53,6 @@ class UnderveisService(
             MeldepliktRegel(),
             SammenstiltAktivitetspliktRegel(),
             GraderingArbeidRegel(),
-            SamordningRegel(),
             VarighetRegel(),
         )
 
@@ -98,7 +96,6 @@ class UnderveisService(
                         trekk = if (it.verdi.skalReduseresDagsatser()) Dagsatser(1) else Dagsatser(0),
                         brukerAvKvoter = it.verdi.varighetVurdering?.brukerAvKvoter.orEmpty(),
                         bruddAktivitetspliktId = it.verdi.aktivitetspliktVurdering?.dokument?.metadata?.id,
-                        samordningGradering = it.verdi.samordningProsent(),
                         institusjonsoppholdReduksjon = if (it.verdi.institusjonVurdering?.skalReduseres == true) Prosent.`50_PROSENT` else Prosent.`0_PROSENT`
                     )
                 },
@@ -145,7 +142,6 @@ class UnderveisService(
             etAnnetSted = etAnnetSted,
             arbeidsevneGrunnlag = arbeidsevneGrunnlag,
             meldepliktGrunnlag = meldepliktGrunnlag,
-            samordningGrunnlag = TODO(),
         )
     }
 }

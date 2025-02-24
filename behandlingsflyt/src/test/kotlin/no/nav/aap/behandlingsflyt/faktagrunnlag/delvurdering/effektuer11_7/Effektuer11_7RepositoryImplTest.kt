@@ -163,5 +163,6 @@ class Effektuer11_7RepositoryImplTest {
         trekk = Dagsatser(0),
         brukerAvKvoter = setOf(),
         bruddAktivitetspliktId = null,
+        institusjonsoppholdReduksjon = Prosent.`0_PROSENT`
     )
 }

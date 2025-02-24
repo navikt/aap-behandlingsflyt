@@ -16,7 +16,6 @@ import java.time.LocalDate
 data class UnderveisInput(
     val rettighetsperiode: Periode,
     val vilkårsresultat: Vilkårsresultat,
-    val samordningGrunnlag: SamordningGrunnlag,
     val opptrappingPerioder: List<Periode>,
     val pliktkort: List<Pliktkort>,
     val innsendingsTidspunkt: Map<LocalDate, JournalpostId>,
