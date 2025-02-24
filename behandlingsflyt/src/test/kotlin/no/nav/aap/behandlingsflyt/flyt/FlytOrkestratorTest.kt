@@ -2120,9 +2120,9 @@ class FlytOrkestratorTest {
 
         løsAvklaringsBehov(
             behandling, AvklarOverstyrtLovvalgMedlemskapLøsning(
-                manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskap(
+                manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskapDto(
                     LovvalgVedSøknadsTidspunkt("crazy lovvalgsland vurdering", EØSLand.NOR),
-                    MedlemskapVedSøknadsTidspunkt("crazy medlemskap vurdering", false), true
+                    MedlemskapVedSøknadsTidspunkt("crazy medlemskap vurdering", false)
                 ),
                 behovstype = AvklaringsbehovKode.`5021`
             )

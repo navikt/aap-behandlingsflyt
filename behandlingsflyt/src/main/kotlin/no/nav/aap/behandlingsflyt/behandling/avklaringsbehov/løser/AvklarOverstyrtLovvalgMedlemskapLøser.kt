@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderi
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.Medlemskapvilkåret
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -24,7 +25,13 @@ class AvklarOverstyrtLovvalgMedlemskapLøser(connection: DBConnection): Avklarin
     private val personopplysningRepository = repositoryProvider.provide<PersonopplysningRepository>()
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarOverstyrtLovvalgMedlemskapLøsning): LøsningsResultat {
-        medlemskapArbeidInntektRepository.lagreManuellVurdering(kontekst.behandlingId(), løsning.manuellVurderingForLovvalgMedlemskap, true)
+        medlemskapArbeidInntektRepository.lagreManuellVurdering(kontekst.behandlingId(),
+            ManuellVurderingForLovvalgMedlemskap(
+                løsning.manuellVurderingForLovvalgMedlemskap.lovvalgVedSøknadsTidspunkt,
+                løsning.manuellVurderingForLovvalgMedlemskap.medlemskapVedSøknadsTidspunkt,
+                true
+            )
+        )
 
         val overstyrtManuellVurdering = medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId())?.manuellVurdering
 
