@@ -17,6 +17,16 @@ enum class Vilkårtype(
         ),
         hjemmel = "§ 11-4"
     ),
+    LOVVALG(
+        kode = "AAP-3",
+        spesielleInnvilgelsesÅrsaker = listOf(),
+        avslagsårsaker = listOf(
+            Avslagsårsak.MANGLENDE_DOKUMENTASJON,
+            Avslagsårsak.IKKE_MEDLEM,
+            Avslagsårsak.NORGE_IKKE_KOMPETENT_STAT
+        ),
+        hjemmel = "§ 11-3"
+    ),
     SYKDOMSVILKÅRET(
         kode = "AAP-5",
         spesielleInnvilgelsesÅrsaker = listOf(Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG, Innvilgelsesårsak.STUDENT),
@@ -46,9 +56,7 @@ enum class Vilkårtype(
         avslagsårsaker = listOf(
             Avslagsårsak.MANGLENDE_DOKUMENTASJON,
             Avslagsårsak.IKKE_MEDLEM,
-            Avslagsårsak.IKKE_MEDLEM_FORUTGÅENDE,
-            Avslagsårsak.NORGE_IKKE_KOMPETENT_STAT
-
+            Avslagsårsak.IKKE_MEDLEM_FORUTGÅENDE
         ),
         hjemmel = "§ 11-2"
     ),

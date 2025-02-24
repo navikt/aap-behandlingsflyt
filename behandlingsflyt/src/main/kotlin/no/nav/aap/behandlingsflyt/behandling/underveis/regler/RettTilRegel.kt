@@ -20,6 +20,7 @@ class RettTilRegel : UnderveisRegel {
         require(relevanteVilkår.any { it.type == Vilkårtype.ALDERSVILKÅRET })
         require(relevanteVilkår.any { it.type == Vilkårtype.BISTANDSVILKÅRET })
         require(relevanteVilkår.any { it.type == Vilkårtype.MEDLEMSKAP })
+        require(relevanteVilkår.any { it.type == Vilkårtype.LOVVALG })
         require(relevanteVilkår.any { it.type == Vilkårtype.SYKDOMSVILKÅRET })
         require(relevanteVilkår.distinctBy { it.type }.size == relevanteVilkår.size)
 

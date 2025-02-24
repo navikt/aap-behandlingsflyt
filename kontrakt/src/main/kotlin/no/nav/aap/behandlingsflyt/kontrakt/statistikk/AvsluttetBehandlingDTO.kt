@@ -56,7 +56,9 @@ public enum class Utfall {
 public enum class Vilkårtype {
     ALDERSVILKÅRET,
     SYKDOMSVILKÅRET,
-    BISTANDSVILKÅRET, MEDLEMSKAP,
+    BISTANDSVILKÅRET,
+    MEDLEMSKAP,
+    LOVVALG,
     GRUNNLAGET,
     SYKEPENGEERSTATNING
 }
