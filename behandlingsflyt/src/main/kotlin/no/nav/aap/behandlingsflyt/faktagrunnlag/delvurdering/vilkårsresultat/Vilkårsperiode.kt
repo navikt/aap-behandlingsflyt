@@ -31,6 +31,9 @@ class Vilkårsperiode(
         if (utfall == Utfall.IKKE_OPPFYLT && avslagsårsak == null) {
             throw IllegalStateException("Avslagsårsak må være satt ved IKKE_OPPFYLT som utfall")
         }
+        if (avslagsårsak != null && innvilgelsesårsak != null) {
+            throw IllegalStateException("Kan ikke sette både avslagsårsak ${avslagsårsak}og innvilgelsesårsak $innvilgelsesårsak.")
+        }
     }
 
     fun erOppfylt(): Boolean {

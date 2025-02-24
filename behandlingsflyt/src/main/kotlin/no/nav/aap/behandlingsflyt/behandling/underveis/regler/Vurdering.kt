@@ -117,6 +117,10 @@ data class Vurdering(
         return vurderinger.isNotEmpty() && vurderinger.none { it.utfall == Utfall.IKKE_OPPFYLT }
     }
 
+    internal fun alleVilkårErOppfylt(): Boolean {
+        return vurderinger.isNotEmpty() && vurderinger.all { it.utfall == OPPFYLT }
+    }
+
     private fun arbeiderMindreEnnGrenseverdi(): Boolean {
         return gradering == null || grenseverdi() >= gradering.andelArbeid
     }

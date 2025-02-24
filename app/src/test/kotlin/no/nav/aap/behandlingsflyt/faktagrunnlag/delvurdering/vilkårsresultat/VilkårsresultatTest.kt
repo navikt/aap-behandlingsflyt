@@ -88,7 +88,7 @@ class VilkårsresultatTest {
                 Vilkårsperiode(
                     Periode(LocalDate.now().plusDays(10), LocalDate.now().plusDays(20)),
                     utfall = Utfall.IKKE_OPPFYLT,
-                    avslagsårsak = Avslagsårsak.IKKE_MEDLEM,
+                    avslagsårsak = Avslagsårsak.MANGLENDE_DOKUMENTASJON,
                     begrunnelse = null,
                 )
             )
@@ -143,6 +143,53 @@ class VilkårsresultatTest {
             )
             // Student-hjemmel får prioritet
             assertThat(res.segmenter().toList()[1].verdi).isEqualTo(RettighetsType.STUDENT)
+            assertThat(res.segmenter().toList()[1].periode).isEqualTo(
+                Periode(
+                    LocalDate.now().plusDays(1),
+                    LocalDate.now().plusDays(15)
+                )
+            )
+        }
+
+
+        @Test
+        fun `ignorerer perioder hvor bistandsvilkåret ikke er oppfylt`() {
+            val v = Vilkårsresultat()
+            v.leggTilHvisIkkeEksisterer(Vilkårtype.BISTANDSVILKÅRET).leggTilVurdering(
+                Vilkårsperiode(
+                    Periode(LocalDate.now().minusDays(5), LocalDate.now().plusDays(3)),
+                    utfall = Utfall.OPPFYLT,
+                    begrunnelse = null,
+                )
+            )
+            v.leggTilHvisIkkeEksisterer(Vilkårtype.BISTANDSVILKÅRET).leggTilVurdering(
+                Vilkårsperiode(
+                    Periode(LocalDate.now().minusDays(2), LocalDate.now()),
+                    utfall = Utfall.IKKE_OPPFYLT,
+                    avslagsårsak = Avslagsårsak.MANGLENDE_DOKUMENTASJON,
+                    begrunnelse = null,
+                )
+            )
+            v.leggTilHvisIkkeEksisterer(Vilkårtype.BISTANDSVILKÅRET).leggTilVurdering(
+                Vilkårsperiode(
+                    Periode(LocalDate.now().plusDays(1), LocalDate.now().plusDays(15)),
+                    utfall = Utfall.OPPFYLT,
+                    begrunnelse = null,
+                )
+            )
+
+            val res = v.rettighetstypeTidslinje().komprimer()
+            assertThat(res.segmenter()).hasSize(2)
+            assertThat(res.segmenter().first().verdi).isEqualTo(RettighetsType.BISTANDSBEHOV)
+            // Kun sykepengererstatning først
+            assertThat(res.segmenter().first().periode).isEqualTo(
+                Periode(
+                    LocalDate.now().minusDays(5),
+                    LocalDate.now().minusDays(3)
+                )
+            )
+            // Student-hjemmel får prioritet
+            assertThat(res.segmenter().toList()[1].verdi).isEqualTo(RettighetsType.BISTANDSBEHOV)
             assertThat(res.segmenter().toList()[1].periode).isEqualTo(
                 Periode(
                     LocalDate.now().plusDays(1),

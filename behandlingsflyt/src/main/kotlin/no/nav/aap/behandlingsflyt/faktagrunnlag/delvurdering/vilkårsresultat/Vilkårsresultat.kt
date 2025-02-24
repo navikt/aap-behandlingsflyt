@@ -65,6 +65,7 @@ class Vilkårsresultat(
                     }
                 })
             }
+            .filter { it.verdi.any { it.first == Vilkårtype.BISTANDSVILKÅRET } }
             .mapValue { prioriterVilkår(it) }
             .komprimer()
     }

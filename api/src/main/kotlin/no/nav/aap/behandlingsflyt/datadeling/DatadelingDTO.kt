@@ -80,7 +80,9 @@ data class InternVedtakRequest(
 
 data class PeriodeMedAktFaseKode(
     val periode: Maksimum.Periode,
+    // TODO: bør ikke bruke ordet aktivitetsfaseKode i Kelvin
     val aktivitetsfaseKode: String,
+    // TODO: bør ikke bruke ordet aktivitetsfaseKode i Kelvin
     val aktivitetsfaseNavn: String
 )
 

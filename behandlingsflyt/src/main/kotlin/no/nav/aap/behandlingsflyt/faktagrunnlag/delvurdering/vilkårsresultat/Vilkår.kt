@@ -11,12 +11,20 @@ class Vilkår(
     vilkårsperioder: Set<Vilkårsperiode> = emptySet()
 ) {
     init {
+        validerKombinasjon(type, vilkårsperioder)
+    }
+
+    private fun validerKombinasjon(
+        type: Vilkårtype,
+        vilkårsperioder: Set<Vilkårsperiode> = emptySet()
+    ) {
         require(
             vilkårsperioder.mapNotNull { it.innvilgelsesårsak }.all { it in type.spesielleInnvilgelsesÅrsaker }) {
             "Spesielle innvilgelsesårsaker må være definert i VilkårType."
         }
         require(vilkårsperioder.mapNotNull { it.avslagsårsak }
             .all { it in type.avslagsårsaker }) { "Ugyldig avslagsårsak for $type" }
+
     }
 
     private var vilkårTidslinje = Tidslinje(vilkårsperioder.map { vp -> Segment(vp.periode, Vilkårsvurdering(vp)) })
@@ -27,6 +35,7 @@ class Vilkår(
     }
 
     fun leggTilVurdering(vilkårsperiode: Vilkårsperiode) {
+        validerKombinasjon(type, setOf(vilkårsperiode))
         vilkårTidslinje = vilkårTidslinje.kombiner(
             Tidslinje(
                 listOf(
