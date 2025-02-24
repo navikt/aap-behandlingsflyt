@@ -2090,14 +2090,13 @@ class FlytOrkestratorTest {
         }
 
         // Validér riktig resultat
-
-        val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
+        val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder()
         assertTrue(vilkårsResultat.none { it.erOppfylt() })
         assertThat(Avslagsårsak.IKKE_MEDLEM == vilkårsResultat.first().avslagsårsak)
     }
 
     @Test
-    fun `Kan løse overstyringsbehov til ikke oppfylt`() {
+    fun `Kan løse overstyringsbehov`() {
         val ident = ident()
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
@@ -2121,9 +2120,9 @@ class FlytOrkestratorTest {
 
         løsAvklaringsBehov(
             behandling, AvklarOverstyrtLovvalgMedlemskapLøsning(
-                manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskapDto(
+                manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskap(
                     LovvalgVedSøknadsTidspunkt("crazy lovvalgsland vurdering", EØSLand.NOR),
-                    MedlemskapVedSøknadsTidspunkt("crazy medlemskap vurdering", false)
+                    MedlemskapVedSøknadsTidspunkt("crazy medlemskap vurdering", false), true
                 ),
                 behovstype = AvklaringsbehovKode.`5021`
             )
