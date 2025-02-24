@@ -72,7 +72,7 @@ class SamordningYtelseVurderingService(
         eksisterende: SamordningYtelseVurderingGrunnlag?,
         samordningYtelser: List<SamordningYtelse>
     ): Boolean {
-        return samordningYtelser != eksisterende?.ytelser
+        return samordningYtelser != eksisterende?.ytelseGrunnlag?.ytelser
     }
 
     private fun mapTilSamordningYtelse(

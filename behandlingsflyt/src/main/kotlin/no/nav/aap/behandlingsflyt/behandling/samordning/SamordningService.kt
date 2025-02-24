@@ -22,11 +22,12 @@ class SamordningService(
             samordningYtelseVurderingRepository.hentHvisEksisterer(behandlingId) ?: return Tidslinje.empty()
 
         val vurderinger =
-            faktaGrunnlag.vurderinger.filter { it.ytelseType.type == AvklaringsType.MANUELL }.map { ytelse ->
-                Tidslinje(ytelse.vurderingPerioder.map { Segment(it.periode, Pair(ytelse.ytelseType, it)) })
-            }.fold(Tidslinje.empty<List<Pair<Ytelse, SamordningVurderingPeriode>>>()) { acc, curr ->
-                acc.kombiner(curr, slåSammenTilListe())
-            }
+            faktaGrunnlag.vurderingGrunnlag.vurderinger.filter { it.ytelseType.type == AvklaringsType.MANUELL }
+                .map { ytelse ->
+                    Tidslinje(ytelse.vurderingPerioder.map { Segment(it.periode, Pair(ytelse.ytelseType, it)) })
+                }.fold(Tidslinje.empty<List<Pair<Ytelse, SamordningVurderingPeriode>>>()) { acc, curr ->
+                    acc.kombiner(curr, slåSammenTilListe())
+                }
 
 
         return vurderinger
@@ -40,7 +41,7 @@ class SamordningService(
             samordningYtelseVurderingRepository.hentHvisEksisterer(behandlingId) ?: return Tidslinje.empty()
 
         val hentedeYtelserByManuelleYtelser =
-            faktaGrunnlag.ytelser.filter { it.ytelseType.type == AvklaringsType.MANUELL }.map { ytelse ->
+            faktaGrunnlag.ytelseGrunnlag.ytelser.filter { it.ytelseType.type == AvklaringsType.MANUELL }.map { ytelse ->
                 Tidslinje(ytelse.ytelsePerioder.map { Segment(it.periode, Pair(ytelse.ytelseType, it)) })
             }.fold(Tidslinje.empty<List<Pair<Ytelse, SamordningYtelsePeriode>>>()) { acc, curr ->
                 acc.kombiner(curr, slåSammenTilListe())
@@ -60,7 +61,7 @@ class SamordningService(
             ?: return Tidslinje.empty()
 
         val hentedeYtelserFraRegister =
-            samordningYtelseVurderingGrunnlag.ytelser.map { ytelse ->
+            samordningYtelseVurderingGrunnlag.ytelseGrunnlag.ytelser.map { ytelse ->
                 Tidslinje(ytelse.ytelsePerioder.map { Segment(it.periode, Pair(ytelse.ytelseType, it)) })
             }.fold(Tidslinje.empty<List<Pair<Ytelse, SamordningYtelsePeriode>>>()) { acc, curr ->
                 acc.kombiner(curr, slåSammenTilListe())
@@ -77,7 +78,8 @@ class SamordningService(
                 }
 
                 val manueltVurderteGraderinger =
-                    høyre?.verdi.orEmpty().associate { it.first to it.second }.mapValues { it.value.gradering!! }
+                    høyre?.verdi.orEmpty().associate { it.first to it.second }
+                        .mapValues { it.value.gradering!! }
                         .filterKeys { it.type == AvklaringsType.MANUELL }
 
                 val registerVurderinger = venstre.verdi.associate { it.first to it.second.gradering!! }

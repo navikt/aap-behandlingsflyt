@@ -1,7 +1,9 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -16,10 +18,8 @@ object InMemorySamordningYtelseVurderingRepository : SamordningYtelseVurderingRe
     override fun hentHvisEksisterer(behandlingId: BehandlingId): SamordningYtelseVurderingGrunnlag? {
         val vurderinger = vurderinger[behandlingId] ?: emptyList()
         return SamordningYtelseVurderingGrunnlag(
-            vurderingerId = 1,
-            ytelserId = 2,
-            ytelser = ytelser[behandlingId] ?: emptyList(),
-            vurderinger = vurderinger
+            ytelseGrunnlag = SamordningYtelseGrunnlag(ytelseId = 2, ytelser[behandlingId] ?: emptyList()),
+            vurderingGrunnlag = SamordningVurderingGrunnlag(vurderingerId = 1, vurderinger = vurderinger)
         )
     }
 

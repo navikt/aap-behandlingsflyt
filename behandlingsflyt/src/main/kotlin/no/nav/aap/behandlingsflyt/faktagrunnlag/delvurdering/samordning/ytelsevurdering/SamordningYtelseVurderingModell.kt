@@ -29,8 +29,16 @@ data class SamordningVurderingPeriode(
 )
 
 data class SamordningYtelseVurderingGrunnlag(
-    val vurderingerId: Long?,
-    val ytelserId: Long,
+    val ytelseGrunnlag: SamordningYtelseGrunnlag,
+    val vurderingGrunnlag: SamordningVurderingGrunnlag
+)
+
+data class SamordningYtelseGrunnlag(
+    val ytelseId: Long,
     val ytelser: List<SamordningYtelse>,
+)
+
+data class SamordningVurderingGrunnlag(
+    val vurderingerId: Long?,
     val vurderinger: List<SamordningVurdering>,
 )

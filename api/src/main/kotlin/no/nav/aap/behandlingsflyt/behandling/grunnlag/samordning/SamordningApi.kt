@@ -73,7 +73,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
                 } else {
                     respond(
                         SamordningYtelseVurderingGrunnlagDTO(
-                            ytelser = samordning.ytelser.map { it ->
+                            ytelser = samordning.ytelseGrunnlag.ytelser.map { it ->
                                 SamordningYtelseDTO(
                                     ytelseType = it.ytelseType,
                                     ytelsePerioder = it.ytelsePerioder.map { it.tilDTO() },
@@ -81,7 +81,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
                                     saksRef = it.saksRef
                                 )
                             },
-                            vurderinger = samordning.vurderinger.map {
+                            vurderinger = samordning.vurderingGrunnlag.vurderinger.map {
                                 SamordningVurderingDTO(
                                     ytelseType = it.ytelseType,
                                     vurderingPerioder = it.vurderingPerioder.map { it.tilDTO() }

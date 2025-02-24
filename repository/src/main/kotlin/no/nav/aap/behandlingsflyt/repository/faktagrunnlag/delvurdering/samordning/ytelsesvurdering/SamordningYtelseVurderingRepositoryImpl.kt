@@ -1,6 +1,13 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.*
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -25,24 +32,25 @@ class SamordningYtelseVurderingRepositoryImpl(private val connection: DBConnecti
             }
             setRowMapper {
                 SamordningYtelseVurderingGrunnlag(
-                    vurderingerId = it.getLongOrNull("vurderinger_id"),
-                    ytelserId = it.getLong("ytelser_id"),
-                    vurderinger = hentSamordningVurderinger(it.getLongOrNull("vurderinger_id")),
-                    ytelser = hentSamordningYtelser(it.getLong("ytelser_id"))
+                    vurderingGrunnlag = hentSamordningVurderinger(it.getLongOrNull("vurderinger_id")),
+                    ytelseGrunnlag = hentSamordningYtelser(it.getLong("ytelser_id"))
                 )
             }
         }
     }
 
-    private fun hentSamordningVurderinger(vurderingerId: Long?): List<SamordningVurdering> {
+    private fun hentSamordningVurderinger(vurderingerId: Long?): SamordningVurderingGrunnlag {
         if (vurderingerId == null) {
-            return listOf()
+            return SamordningVurderingGrunnlag(
+                vurderingerId = null,
+                vurderinger = emptyList()
+            )
         }
 
         val query = """
             SELECT * FROM SAMORDNING_VURDERING WHERE vurderinger_id = ?
         """.trimIndent()
-        return connection.queryList(query) {
+        val vurderinger = connection.queryList(query) {
             setParams {
                 setLong(1, vurderingerId)
             }
@@ -53,6 +61,7 @@ class SamordningYtelseVurderingRepositoryImpl(private val connection: DBConnecti
                 )
             }
         }
+        return SamordningVurderingGrunnlag(vurderingerId, vurderinger)
     }
 
     private fun hentSamordningVurderingPerioder(vurderingId: Long): List<SamordningVurderingPeriode> {
@@ -73,11 +82,11 @@ class SamordningYtelseVurderingRepositoryImpl(private val connection: DBConnecti
         }
     }
 
-    private fun hentSamordningYtelser(ytelserId: Long): List<SamordningYtelse> {
+    private fun hentSamordningYtelser(ytelserId: Long): SamordningYtelseGrunnlag {
         val query = """
             SELECT * FROM SAMORDNING_YTELSE WHERE ytelser_id = ?
         """.trimIndent()
-        return connection.queryList(query) {
+        val ytelser = connection.queryList(query) {
             setParams {
                 setLong(1, ytelserId)
             }
@@ -90,6 +99,7 @@ class SamordningYtelseVurderingRepositoryImpl(private val connection: DBConnecti
                 )
             }
         }
+        return SamordningYtelseGrunnlag(ytelserId, ytelser)
     }
 
     private fun hentSamordningYtelsePerioder(ytelseId: Long): List<SamordningYtelsePeriode> {
@@ -116,7 +126,7 @@ class SamordningYtelseVurderingRepositoryImpl(private val connection: DBConnecti
             deaktiverGrunnlag(behandlingId)
         }
 
-        val ytelserId = eksisterendeGrunnlag?.ytelserId
+        val ytelserId = eksisterendeGrunnlag?.ytelseGrunnlag?.ytelseId
         requireNotNull(ytelserId) {
             "Må sette inn ytelse først"
         }
@@ -201,12 +211,13 @@ class SamordningYtelseVurderingRepositoryImpl(private val connection: DBConnecti
         }
 
         val grunnlagQuery = """
-            INSERT INTO SAMORDNING_YTELSEVURDERING_GRUNNLAG (behandling_id, ytelser_id) VALUES (?, ?)
+            INSERT INTO SAMORDNING_YTELSEVURDERING_GRUNNLAG (behandling_id, ytelser_id, vurderinger_id) VALUES (?, ?, ?)
         """.trimIndent()
         connection.execute(grunnlagQuery) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, ytelserId)
+                setLong(3, eksisterendeGrunnlag?.vurderingGrunnlag?.vurderingerId)
             }
         }
     }
