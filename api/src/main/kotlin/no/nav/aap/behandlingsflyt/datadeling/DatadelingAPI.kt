@@ -66,9 +66,9 @@ fun NormalOpenAPIRoute.datadelingAPI(datasource: DataSource) {
                     }
                 }
             }
-            route("/meldekort"){ //take in InternVedtakRequest and select person, then sak, then last behandling using last sak, then select belonging underveisRepository
-                post<Unit, List<Periode>, Ident>{ request, body ->
-                    val behandling = selectLastBehandling(datasource, body.identifikator)
+            route("/meldekort"){
+                post<Unit, List<Periode>, InternVedtakRequest>{ request, body ->
+                    val behandling = selectLastBehandling(datasource, body.personidentifikator)
 
                     val underveisGrunnlag = requireNotNull(datasource.transaction(readOnly = true) { conn ->
                         val repositoryProvider = RepositoryProvider(conn)
@@ -182,22 +182,16 @@ fun NormalOpenAPIRoute.datadelingAPI(datasource: DataSource) {
 }
 
 fun selectLastBehandling(datasource: DataSource, fnr: String):  Behandling? {
-    val person = datasource.transaction(readOnly = true) { conn ->
-        val repositoryProvider = RepositoryProvider(conn)
-        val personRepository = repositoryProvider.provide<PersonRepository>()
-        personRepository.finn(Ident(fnr))
-    }
-    if (person == null) {
-        return null
-    }
-    val sak = datasource.transaction(readOnly = true) { conn ->
-        val repositoryProvider = RepositoryProvider(conn)
-        val sakRepository = repositoryProvider.provide<SakRepository>()
-        sakRepository.finnSakerFor(person)
-    }
     return datasource.transaction(readOnly = true) { conn ->
         val repositoryProvider = RepositoryProvider(conn)
+        val personRepository = repositoryProvider.provide<PersonRepository>()
+        val sakRepository = repositoryProvider.provide<SakRepository>()
         val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+
+        val person = personRepository.finn(Ident(fnr)) ?: return@transaction null
+        val sak = sakRepository.finnSakerFor(person)
+
+        /* TODO: her ønsker vi vel siste avsluttede behandling? */
         behandlingRepository.finnSisteBehandlingFor(sak.last().id)
     }
 }
