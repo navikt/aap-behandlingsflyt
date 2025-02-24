@@ -431,10 +431,11 @@ private fun hentUtRelevantVilkårForSteg(vilkårsresultat: Vilkårsresultat, ste
     if (stegType == StegType.VURDER_BISTANDSBEHOV) {
         vilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
     }
+    /*
     if (stegType == StegType.VURDER_LOVVALG) {
         vilkår = vilkårsresultat.finnVilkår(Vilkårtype.LOVVALG)
-    }
-    if ( stegType == StegType.VURDER_MEDLEMSKAP) {
+    }*/
+    if ( stegType == StegType.VURDER_MEDLEMSKAP || stegType == StegType.VURDER_LOVVALG) {
         vilkår = vilkårsresultat.finnVilkår(Vilkårtype.MEDLEMSKAP)
     }
     if (vilkår == null) {

@@ -46,7 +46,7 @@ class RettTilRegelTest {
                     )
                 )
             )
-        val lovvalgsVilkåret =
+        /*val lovvalgsVilkåret =
             Vilkår(
                 Vilkårtype.LOVVALG, setOf(
                     Vilkårsperiode(
@@ -57,7 +57,7 @@ class RettTilRegelTest {
                         faktagrunnlag = null
                     )
                 )
-            )
+            )*/
         val medlemskapVilkåret =
             Vilkår(
                 Vilkårtype.MEDLEMSKAP, setOf(
@@ -87,7 +87,7 @@ class RettTilRegelTest {
             rettighetsperiode = periode,
             vilkårsresultat = Vilkårsresultat(
                 null,
-                listOf(aldersVilkåret, lovvalgsVilkåret, sykdomsVilkåret, medlemskapVilkåret, bistandVilkåret)
+                listOf(aldersVilkåret, /*lovvalgsVilkåret,*/ sykdomsVilkåret, medlemskapVilkåret, bistandVilkåret)
             ),
             kvoter = kvoter,
         )
@@ -136,7 +136,7 @@ class RettTilRegelTest {
                         faktagrunnlag = null
                     )
                 )
-            )
+            )/*
         val lovvalgsVilkåret =
             Vilkår(
                 Vilkårtype.LOVVALG, setOf(
@@ -149,6 +149,7 @@ class RettTilRegelTest {
                     )
                 )
             )
+            */
         val medlemskapVilkåret =
             Vilkår(
                 Vilkårtype.MEDLEMSKAP, setOf(
@@ -179,7 +180,7 @@ class RettTilRegelTest {
             vilkårsresultat = Vilkårsresultat(
                 vilkår = listOf(
                     aldersVilkåret,
-                    lovvalgsVilkåret,
+                    /*lovvalgsVilkåret,*/
                     sykdomsVilkåret,
                     medlemskapVilkåret,
                     bistandVilkåret

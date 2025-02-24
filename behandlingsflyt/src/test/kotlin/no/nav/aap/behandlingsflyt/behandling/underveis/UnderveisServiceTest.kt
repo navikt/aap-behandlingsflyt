@@ -68,7 +68,7 @@ class UnderveisServiceTest {
                         )
                     )
                 )
-            val lovvalgVilkåret =
+           /* val lovvalgVilkåret =
                 Vilkår(
                     Vilkårtype.LOVVALG, setOf(
                         Vilkårsperiode(
@@ -79,7 +79,7 @@ class UnderveisServiceTest {
                             faktagrunnlag = null
                         )
                     )
-                )
+                )*/
             val sykdomsVilkåret =
                 Vilkår(
                     Vilkårtype.SYKDOMSVILKÅRET, setOf(
@@ -116,7 +116,7 @@ class UnderveisServiceTest {
                         )
                     )
                 )
-            val relevanteVilkår = listOf(aldersVilkåret, lovvalgVilkåret, bistandVilkåret, medlemskapVilkåret, sykdomsVilkåret)
+            val relevanteVilkår = listOf(aldersVilkåret, /*lovvalgVilkåret,*/ bistandVilkåret, medlemskapVilkåret, sykdomsVilkåret)
             val input = tomUnderveisInput.copy(
                 rettighetsperiode = periode,
                 vilkårsresultat =  Vilkårsresultat(null, relevanteVilkår),
