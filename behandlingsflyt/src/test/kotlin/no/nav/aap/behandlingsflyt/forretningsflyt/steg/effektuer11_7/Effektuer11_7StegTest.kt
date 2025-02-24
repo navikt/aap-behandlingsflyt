@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRefer
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.tomUnderveisInput
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
@@ -43,7 +43,6 @@ import no.nav.aap.komponenter.verdityper.TimerArbeid
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertInstanceOf
-import org.junit.jupiter.api.assertThrows
 import java.math.BigDecimal
 import java.time.Duration
 import java.time.Instant
@@ -285,7 +284,7 @@ class Effektuer11_7StegTest {
         rettighetsType = RettighetsType.BISTANDSBEHOV,
         avslagsårsak = null,
         grenseverdi = Prosent.`100_PROSENT`,
-        gradering = Gradering(
+        arbeidsgradering = ArbeidsGradering(
             totaltAntallTimer = TimerArbeid(BigDecimal.ZERO),
             andelArbeid = Prosent.`100_PROSENT`,
             fastsattArbeidsevne = Prosent.`100_PROSENT`,
@@ -294,6 +293,7 @@ class Effektuer11_7StegTest {
         trekk = Dagsatser(0),
         brukerAvKvoter = setOf(),
         bruddAktivitetspliktId = null,
+        institusjonsoppholdReduksjon = Prosent.`0_PROSENT`
     )
 
     private fun kontekst(

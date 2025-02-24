@@ -59,10 +59,5 @@ enum class Ytelser {
      */
     ENGANGSTØNAD,
     FORELDREPENGER,
-    SVANGERSKAPSPENGER,
-
-    /**
-     * Midlertidig ytelse for Selvstendig næringsdrivende og Frilansere (Anmodning 10).
-     */
-    FRISINN
+    SVANGERSKAPSPENGER
 }

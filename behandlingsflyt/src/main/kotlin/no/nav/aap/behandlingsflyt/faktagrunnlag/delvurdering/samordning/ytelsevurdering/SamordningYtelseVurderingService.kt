@@ -45,7 +45,11 @@ class SamordningYtelseVurderingService(
         return Informasjonskrav.Endret.IKKE_ENDRET
     }
 
-    private fun hentYtelseForeldrepenger(personIdent: String, fom: LocalDate, tom: LocalDate): List<ForeldrePengerResponseYtelse> {
+    private fun hentYtelseForeldrepenger(
+        personIdent: String,
+        fom: LocalDate,
+        tom: LocalDate
+    ): List<ForeldrePengerResponseYtelse> {
         return fpGateway.hentVedtakYtelseForPerson(
             ForeldrepengerRequest(
                 Aktør(personIdent),
@@ -87,14 +91,17 @@ class SamordningYtelseVurderingService(
                     kronesum = it.beløp
                 )
             }
-            samordningYtelser.add(
-                SamordningYtelse(
-                    ytelseType = konverterFraForeldrePengerDomene(ytelse),
-                    ytelsePerioder = ytelsePerioder,
-                    kilde = ytelse.kildesystem,
-                    saksRef = ytelse.saksnummer.toString()
+            val c = konverterFraForeldrePengerDomene(ytelse)
+            if (c != null) {
+                samordningYtelser.add(
+                    SamordningYtelse(
+                        ytelseType = c,
+                        ytelsePerioder = ytelsePerioder,
+                        kilde = ytelse.kildesystem,
+                        saksRef = ytelse.saksnummer.toString()
+                    )
                 )
-            )
+            }
         }
 
         val ytelsePerioder = sykepenger.map {
@@ -118,17 +125,18 @@ class SamordningYtelseVurderingService(
         return samordningYtelser
     }
 
-    private fun konverterFraForeldrePengerDomene(ytelse: ForeldrePengerResponseYtelse) =
-        when (ytelse.ytelse) {
-            Ytelser.PLEIEPENGER_SYKT_BARN -> TODO()
+    private fun konverterFraForeldrePengerDomene(ytelse: ForeldrePengerResponseYtelse): Ytelse? {
+        // TODO
+        return when (ytelse.ytelse) {
+            Ytelser.PLEIEPENGER_SYKT_BARN -> Ytelse.PLEIEPENGER_BARN
             Ytelser.PLEIEPENGER_NÆRSTÅENDE -> Ytelse.PLEIEPENGER_NÆR_FAMILIE
             Ytelser.OMSORGSPENGER -> Ytelse.OMSORGSPENGER
             Ytelser.OPPLÆRINGSPENGER -> Ytelse.OPPLÆRINGSPENGER
-            Ytelser.ENGANGSTØNAD -> TODO()
+            Ytelser.ENGANGSTØNAD -> null
             Ytelser.FORELDREPENGER -> Ytelse.FORELDREPENGER
             Ytelser.SVANGERSKAPSPENGER -> Ytelse.SVANGERSKAPSPENGER
-            Ytelser.FRISINN -> TODO()
         }
+    }
 
     companion object : Informasjonskravkonstruktør {
         override fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {

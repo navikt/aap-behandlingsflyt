@@ -17,18 +17,15 @@ data class Underveisperiode(
     val rettighetsType: RettighetsType?,
     val avslagsårsak: UnderveisÅrsak?,
     val grenseverdi: Prosent,
-    val gradering: Gradering,
+    val institusjonsoppholdReduksjon: Prosent,
+    val arbeidsgradering: ArbeidsGradering,
     val trekk: Dagsatser,
     val brukerAvKvoter: Set<Kvote>,
     val bruddAktivitetspliktId: BruddAktivitetspliktId?,
     val id: UnderveisperiodeId? = null,
 ) : Comparable<Underveisperiode> {
-
-    fun utbetalingsgrad(): Prosent {
-        if (utfall == Utfall.IKKE_OPPFYLT) {
-            return Prosent.`0_PROSENT`
-        }
-        return gradering.gradering
+    init {
+        if (utfall == Utfall.IKKE_OPPFYLT) requireNotNull(avslagsårsak)
     }
 
     override fun compareTo(other: Underveisperiode): Int {

@@ -7,11 +7,10 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseReposi
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisperiodeId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
@@ -344,7 +343,7 @@ class StatistikkJobbUtførerTest {
                         utfall = Utfall.OPPFYLT,
                         rettighetsType = RettighetsType.STUDENT,
                         grenseverdi = Prosent.`100_PROSENT`,
-                        gradering = Gradering(
+                        arbeidsgradering = ArbeidsGradering(
                             totaltAntallTimer = TimerArbeid(BigDecimal(22)),
                             andelArbeid = Prosent(33),
                             fastsattArbeidsevne = Prosent(23),
@@ -353,7 +352,8 @@ class StatistikkJobbUtførerTest {
                         trekk = Dagsatser(0),
                         brukerAvKvoter = setOf(Kvote.STUDENT, Kvote.ORDINÆR),
                         bruddAktivitetspliktId = null,
-                        avslagsårsak = null
+                        avslagsårsak = null,
+                        institusjonsoppholdReduksjon = Prosent.`0_PROSENT`,
                     )
                 ),
                 input = object : Faktagrunnlag {}

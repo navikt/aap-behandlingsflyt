@@ -54,7 +54,7 @@ class GraderingArbeidRegelTest {
         )
         val vurdering = vurder(input)
 
-        assertEquals(Prosent.`50_PROSENT`, vurdering.segment(rettighetsperiode.fom)?.verdi?.gradering()?.gradering)
+        assertEquals(Prosent.`50_PROSENT`, vurdering.segment(rettighetsperiode.fom)?.verdi?.arbeidsgradering()?.gradering)
     }
 
     @Test
@@ -68,7 +68,7 @@ class GraderingArbeidRegelTest {
         )
         val vurdering = vurder(input)
 
-        assertEquals(Prosent.`50_PROSENT`, vurdering.segment(rettighetsperiode.fom)?.verdi?.gradering()?.gradering)
+        assertEquals(Prosent.`50_PROSENT`, vurdering.segment(rettighetsperiode.fom)?.verdi?.arbeidsgradering()?.gradering)
     }
 
     @Test
@@ -81,7 +81,7 @@ class GraderingArbeidRegelTest {
         )
         val vurdering = vurder(input)
 
-        assertEquals(Prosent.`70_PROSENT`, vurdering.segment(rettighetsperiode.fom)?.verdi?.gradering()?.gradering)
+        assertEquals(Prosent.`70_PROSENT`, vurdering.segment(rettighetsperiode.fom)?.verdi?.arbeidsgradering()?.gradering)
     }
 
     @Test
@@ -95,7 +95,7 @@ class GraderingArbeidRegelTest {
         )
         val vurdering = vurder(input)
 
-        assertEquals(Prosent.`50_PROSENT`, vurdering.segment(rettighetsperiode.fom)?.verdi?.gradering()?.gradering)
+        assertEquals(Prosent.`50_PROSENT`, vurdering.segment(rettighetsperiode.fom)?.verdi?.arbeidsGradering()?.gradering)
     }
 
     @Test
@@ -109,7 +109,7 @@ class GraderingArbeidRegelTest {
         )
         val vurdering = vurder(input)
 
-        assertEquals(Prosent.`0_PROSENT`, vurdering.segment(rettighetsperiode.fom)?.verdi?.gradering()?.gradering)
+        assertEquals(Prosent.`0_PROSENT`, vurdering.segment(rettighetsperiode.fom)?.verdi?.arbeidsgradering()?.gradering)
     }
 
     @Test
@@ -124,8 +124,8 @@ class GraderingArbeidRegelTest {
         )
         val vurdering = vurder(input)
 
-        assertEquals(Prosent.`70_PROSENT`, vurdering.segment(meldeperiode1.fom)?.verdi?.gradering()?.gradering)
-        assertEquals(Prosent.`50_PROSENT`, vurdering.segment(meldeperiode2.fom)?.verdi?.gradering()?.gradering)
+        assertEquals(Prosent.`70_PROSENT`, vurdering.segment(meldeperiode1.fom)?.verdi?.arbeidsgradering()?.gradering)
+        assertEquals(Prosent.`50_PROSENT`, vurdering.segment(meldeperiode2.fom)?.verdi?.arbeidsgradering()?.gradering)
     }
 
     @Test
@@ -143,8 +143,8 @@ class GraderingArbeidRegelTest {
         )
         val vurdering = vurder(input)
 
-        assertEquals(Prosent.`70_PROSENT`, vurdering.segment(meldeperiode1.fom)?.verdi?.gradering()?.gradering)
-        assertEquals(Prosent.`50_PROSENT`, vurdering.segment(meldeperiode2.fom)?.verdi?.gradering()?.gradering)
+        assertEquals(Prosent.`70_PROSENT`, vurdering.segment(meldeperiode1.fom)?.verdi?.arbeidsgradering()?.gradering)
+        assertEquals(Prosent.`50_PROSENT`, vurdering.segment(meldeperiode2.fom)?.verdi?.arbeidsgradering()?.gradering)
     }
 
     private fun underveisInput(

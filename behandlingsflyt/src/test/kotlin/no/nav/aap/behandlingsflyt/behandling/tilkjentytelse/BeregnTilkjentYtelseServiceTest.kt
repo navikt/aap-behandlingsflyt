@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
@@ -53,7 +53,7 @@ class BeregnTilkjentYtelseServiceTest {
                 periode = Periode(LocalDate.of(2023, 4, 30), LocalDate.of(2023, 4, 30)),
                 verdi = Tilkjent(
                     dagsats = Beløp("1131.92"), //4*0.66*111477/260
-                    gradering = Prosent.`0_PROSENT`,
+                    gradering = Prosent.`100_PROSENT`,
                     grunnlag = Beløp("1131.92"),
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("111477"),
@@ -66,7 +66,7 @@ class BeregnTilkjentYtelseServiceTest {
                 periode = Periode(LocalDate.of(2023, 5, 1), LocalDate.of(2023, 5, 1)),
                 verdi = Tilkjent(
                     dagsats = Beløp("1204.45"), //4*0.66*118620/260
-                    gradering = Prosent.`0_PROSENT`,
+                    gradering = Prosent.`100_PROSENT`,
                     grunnlag = Beløp("1204.45"),
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620.00"),
@@ -113,7 +113,7 @@ class BeregnTilkjentYtelseServiceTest {
                 periode = Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1)),
                 verdi = Tilkjent(
                     dagsats = Beløp("1204.45"), //4*0.66*118620/260+36
-                    gradering = Prosent.`0_PROSENT`,
+                    gradering = Prosent.`100_PROSENT`,
                     grunnlag = Beløp("1204.45"),
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
@@ -126,7 +126,7 @@ class BeregnTilkjentYtelseServiceTest {
     }
 
     @Test
-    fun `Hva skjed med etterpåklatt`() {
+    fun `Hva skjer med etterpåklatt`() {
         val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
         val beregningsgrunnlag = Grunnlag11_19(
             grunnlaget = GUnit(BigDecimal(4)),
@@ -162,7 +162,7 @@ class BeregnTilkjentYtelseServiceTest {
                 periode = Periode(LocalDate.of(2023, 12, 30), LocalDate.of(2023, 12, 31)),
                 verdi = Tilkjent(
                     dagsats = Beløp("1204.45"), //4*0.66*118620/260+36
-                    gradering = Prosent.`0_PROSENT`,
+                    gradering = Prosent.`100_PROSENT`,
                     grunnlag = Beløp("1204.45"),
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
@@ -175,7 +175,7 @@ class BeregnTilkjentYtelseServiceTest {
                 periode = Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1)),
                 verdi = Tilkjent(
                     dagsats = Beløp("1204.45"), //4*0.66*118620/260+36
-                    gradering = Prosent.`0_PROSENT`,
+                    gradering = Prosent.`100_PROSENT`,
                     grunnlag = Beløp("1204.45"),
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
@@ -214,7 +214,7 @@ class BeregnTilkjentYtelseServiceTest {
                 periode = Periode(LocalDate.of(2024, 6, 30), LocalDate.of(2024, 6, 30)),
                 verdi = Tilkjent(
                     dagsats = Beløp("954.06"), //118620*2/260
-                    gradering = Prosent.`0_PROSENT`,
+                    gradering = Prosent.`100_PROSENT`,
                     grunnlag = Beløp("954.06"),
                     grunnlagsfaktor = GUnit("0.0076923077"),
                     grunnbeløp = Beløp("124028"),
@@ -227,7 +227,7 @@ class BeregnTilkjentYtelseServiceTest {
                 periode = Periode(LocalDate.of(2024, 7, 1), LocalDate.of(2024, 7, 1)),
                 verdi = Tilkjent(
                     dagsats = Beløp("973.62"), // 124_028 * 2.041/260
-                    gradering = Prosent.`0_PROSENT`,
+                    gradering = Prosent.`100_PROSENT`,
                     grunnlag = Beløp("973.62"),
                     grunnlagsfaktor = GUnit("0.0078500000"),
                     grunnbeløp = Beløp("124028"),
@@ -266,7 +266,7 @@ class BeregnTilkjentYtelseServiceTest {
                 periode = Periode(LocalDate.of(2020, 3, 31), LocalDate.of(2020, 3, 31)),
                 verdi = Tilkjent(
                     dagsats = Beløp("512.09"), //2*2/3*99858/260
-                    gradering = Prosent.`0_PROSENT`,
+                    gradering = Prosent.`100_PROSENT`,
                     grunnlag = Beløp("512.09"),
                     grunnlagsfaktor = GUnit("0.0051282051"),
                     grunnbeløp = Beløp("99858"),
@@ -279,7 +279,7 @@ class BeregnTilkjentYtelseServiceTest {
                 periode = Periode(LocalDate.of(2020, 4, 1), LocalDate.of(2020, 4, 1)),
                 verdi = Tilkjent(
                     dagsats = Beløp("768.14"), //2*99858/260
-                    gradering = Prosent.`0_PROSENT`,
+                    gradering = Prosent.`100_PROSENT`,
                     grunnlag = Beløp("768.14"),
                     grunnlagsfaktor = GUnit("0.0076923077"),
                     grunnbeløp = Beløp("99858"),
@@ -303,7 +303,7 @@ class BeregnTilkjentYtelseServiceTest {
                     rettighetsType = RettighetsType.BISTANDSBEHOV,
                     avslagsårsak = null,
                     grenseverdi = Prosent.`100_PROSENT`,
-                    gradering = Gradering(
+                    arbeidsgradering = ArbeidsGradering(
                         totaltAntallTimer = TimerArbeid(BigDecimal(10)),
                         andelArbeid = Prosent.`50_PROSENT`,
                         fastsattArbeidsevne = Prosent.`50_PROSENT`,
@@ -312,6 +312,7 @@ class BeregnTilkjentYtelseServiceTest {
                     trekk = Dagsatser(0),
                     brukerAvKvoter = setOf(Kvote.ORDINÆR),
                     bruddAktivitetspliktId = BruddAktivitetspliktId(1),
+                    institusjonsoppholdReduksjon = Prosent.`0_PROSENT`
                 )
             )
         )

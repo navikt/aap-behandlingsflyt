@@ -91,9 +91,13 @@ public enum class AvklaringsbehovKode {
     `5099`,
 
     /**
-     * [MANUELL_OVERSTYRING]
+     * [MANUELL_OVERSTYRING_LOVVALG]
      */
     `5021`,
+
+    /**
+     * [MANUELL_OVERSTYRING_MEDLEMSKAP]
+     */
     `5022`,
 
     /**

@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.barnetillegg.RettTilBarnetillegg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.komponenter.tidslinje.JoinStyle
@@ -69,7 +70,14 @@ class BeregnTilkjentYtelseService(
             årligYtelseTidslinje,
             JoinStyle.INNER_JOIN { periode, venstre, høyre ->
                 val dagsats = høyre.verdi.dividert(ANTALL_ÅRLIGE_ARBEIDSDAGER)
-                val utbetalingsgrad = venstre.verdi.utbetalingsgrad()
+
+                val utbetalingsgrad = if (venstre.verdi.utfall == Utfall.IKKE_OPPFYLT) {
+                    Prosent.`0_PROSENT`
+                } else {
+                    val institusjonsOppholdReduksjon = venstre.verdi.institusjonsoppholdReduksjon
+                    val arbeidsgradering = venstre.verdi.arbeidsgradering.gradering
+                    Prosent.`100_PROSENT`.minus(institusjonsOppholdReduksjon).minus(arbeidsgradering)
+                }
                 Segment(periode, TilkjentGUnit(dagsats, utbetalingsgrad))
             })
 

@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
@@ -77,13 +77,12 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
         val graderingProsent = it.getInt("gradering")
         val andelArbeidsevne = it.getInt("andel_arbeidsevne")
 
-        val gradering = Gradering(
+        val arbeidsGradering = ArbeidsGradering(
             totaltAntallTimer = TimerArbeid(antallTimer),
             andelArbeid = Prosent.`100_PROSENT`.minus(Prosent(graderingProsent)),
             fastsattArbeidsevne = Prosent(andelArbeidsevne),
             gradering = Prosent(graderingProsent),
         )
-
 
         return Underveisperiode(
             periode = it.getPeriode("periode"),
@@ -92,11 +91,12 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
             rettighetsType = it.getEnumOrNull("rettighetstype"),
             avslagsårsak = it.getEnumOrNull("avslagsarsak"),
             grenseverdi = Prosent(it.getInt("grenseverdi")),
-            gradering = gradering,
+            arbeidsgradering = arbeidsGradering,
             trekk = Dagsatser(it.getInt("trekk_dagsatser")),
             brukerAvKvoter = it.getArray("bruker_av_kvoter", String::class).map { Kvote.valueOf(it) }.toSet(),
             bruddAktivitetspliktId = it.getLongOrNull("brudd_aktivitetsplikt_id")?.let { BruddAktivitetspliktId(it) },
             id = UnderveisperiodeId(it.getLong("id")),
+            institusjonsoppholdReduksjon = Prosent(it.getInt("institusjonsoppholdreduksjon"))
         )
     }
 
@@ -131,8 +131,8 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
         val query = """
             INSERT INTO UNDERVEIS_PERIODE (perioder_id, periode, utfall, rettighetstype, avslagsarsak,
                                            grenseverdi, timer_arbeid, gradering, meldeperiode, trekk_dagsatser,
-                                           andel_arbeidsevne, bruker_av_kvoter, brudd_aktivitetsplikt_id)
-            VALUES (?, ?::daterange, ?, ?, ?, ?, ?, ?, ?::daterange, ?, ?, ?, ?)
+                                           andel_arbeidsevne, bruker_av_kvoter, brudd_aktivitetsplikt_id, institusjonsoppholdreduksjon)
+            VALUES (?, ?::daterange, ?, ?, ?, ?, ?, ?, ?::daterange, ?, ?, ?, ?, ?)
             """.trimIndent()
         connection.executeBatch(query, underveisperioder) {
             setParams { periode ->
@@ -142,13 +142,14 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
                 setEnumName(4, periode.rettighetsType)
                 setEnumName(5, periode.avslagsårsak)
                 setInt(6, periode.grenseverdi.prosentverdi())
-                setBigDecimal(7, periode.gradering.totaltAntallTimer.antallTimer)
-                setInt(8, periode.gradering.gradering.prosentverdi())
+                setBigDecimal(7, periode.arbeidsgradering.totaltAntallTimer.antallTimer)
+                setInt(8, periode.arbeidsgradering.gradering.prosentverdi())
                 setPeriode(9, periode.meldePeriode)
                 setInt(10, periode.trekk.antall)
-                setInt(11, periode.gradering.fastsattArbeidsevne.prosentverdi())
+                setInt(11, periode.arbeidsgradering.fastsattArbeidsevne.prosentverdi())
                 setArray(12, periode.brukerAvKvoter.map { it.name })
                 setLong(13, periode.bruddAktivitetspliktId?.id)
+                setInt(14, periode.institusjonsoppholdReduksjon.prosentverdi())
             }
         }
 

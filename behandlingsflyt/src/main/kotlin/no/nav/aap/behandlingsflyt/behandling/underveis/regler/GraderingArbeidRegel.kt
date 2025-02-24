@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UtledMeldeperiodeRegel.Companion.groupByMeldeperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneVurdering.Companion.tidslinje
 import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -71,7 +71,7 @@ class GraderingArbeidRegel : UnderveisRegel {
             .leggTilVurderinger(graderingsgrenseverdier, Vurdering::leggTilGrenseverdi)
     }
 
-    private fun graderingerTidslinje(resultat: Tidslinje<Vurdering>, input: UnderveisInput): Tidslinje<Gradering> {
+    private fun graderingerTidslinje(resultat: Tidslinje<Vurdering>, input: UnderveisInput): Tidslinje<ArbeidsGradering> {
         val timerArbeidetTidslinje = timerArbeidetTidslinje(input)
         val arbeidsevneVurdering = input.arbeidsevneGrunnlag.vurderinger.tidslinje()
 
@@ -125,7 +125,7 @@ class GraderingArbeidRegel : UnderveisRegel {
         val arbeidsevne: Prosent?,
     )
 
-    private fun regnUtGradering(arbeidMeldeperioden: Tidslinje<Arbeid>): Tidslinje<Gradering> {
+    private fun regnUtGradering(arbeidMeldeperioden: Tidslinje<Arbeid>): Tidslinje<ArbeidsGradering> {
         val arbeidstimerMeldeperioden =
             arbeidMeldeperioden.sumOf { it.verdi.timerArbeid?.antallTimer ?: BigDecimal.ZERO }
 
@@ -145,7 +145,7 @@ class GraderingArbeidRegel : UnderveisRegel {
 
         return arbeidMeldeperioden.mapValue { arbeid ->
             val fastsattArbeidsevne = arbeid.arbeidsevne ?: `0_PROSENT`
-            Gradering(
+            ArbeidsGradering(
                 totaltAntallTimer = arbeid.timerArbeid ?: TimerArbeid(BigDecimal.ZERO),
                 andelArbeid = andelArbeid,
                 fastsattArbeidsevne = fastsattArbeidsevne,

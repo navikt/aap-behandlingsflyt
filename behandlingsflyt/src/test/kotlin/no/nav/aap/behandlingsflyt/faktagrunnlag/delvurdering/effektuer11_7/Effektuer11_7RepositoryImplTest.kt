@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.tomUnderveisInput
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Gradering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
@@ -154,7 +154,7 @@ class Effektuer11_7RepositoryImplTest {
         rettighetsType = RettighetsType.BISTANDSBEHOV,
         avslagsårsak = null,
         grenseverdi = Prosent.`100_PROSENT`,
-        gradering = Gradering(
+        arbeidsgradering = ArbeidsGradering(
             totaltAntallTimer = TimerArbeid(BigDecimal(0)),
             andelArbeid = Prosent.`0_PROSENT`,
             fastsattArbeidsevne = Prosent.`100_PROSENT`,
@@ -163,5 +163,6 @@ class Effektuer11_7RepositoryImplTest {
         trekk = Dagsatser(0),
         brukerAvKvoter = setOf(),
         bruddAktivitetspliktId = null,
+        institusjonsoppholdReduksjon = Prosent.`0_PROSENT`
     )
 }

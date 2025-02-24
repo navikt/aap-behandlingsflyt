@@ -11,7 +11,7 @@ import no.nav.aap.komponenter.verdityper.Prosent
  */
 data class SamordningGrunnlag(
     val id: Long,
-    val samordningPerioder: List<SamordningPeriode>
+    val samordningPerioder: List<SamordningPeriode>,
 )
 
 /**

@@ -132,8 +132,8 @@ object Revurdering : BehandlingType {
             )
             .medSteg(steg = BarnetilleggSteg, informasjonskrav = listOf(BarnService))
             .medSteg(steg = EtAnnetStedSteg, informasjonskrav = listOf(InstitusjonsoppholdService))
-            .medSteg(steg = SamordningSteg, informasjonskrav = listOf(SamordningYtelseVurderingService))
             .medSteg(steg = UnderveisSteg, informasjonskrav = listOf(PliktkortService, AktivitetspliktInformasjonskrav))
+            .medSteg(steg = SamordningSteg, informasjonskrav = listOf(SamordningYtelseVurderingService))
             .medSteg(steg = Effektuer11_7Steg)
             .medSteg(
                 steg = BeregnTilkjentYtelseSteg,
