@@ -28,7 +28,6 @@ data class Vurdering(
     internal val institusjonVurdering: InstitusjonVurdering? = null,
     internal val soningsVurdering: SoningVurdering? = null,
     private val meldeperiode: Periode? = null,
-
     val varighetVurdering: VarighetVurdering? = null,
 ) {
 
@@ -38,10 +37,6 @@ data class Vurdering(
 
     fun leggTilRettighetstype(rettighetstype: RettighetsType): Vurdering {
         return copy(fårAapEtter = rettighetstype)
-    }
-
-    fun leggTilSamordningsprosent(samordningProsent: Prosent): Vurdering {
-        return copy(samordningProsent = samordningProsent)
     }
 
     fun leggTilGradering(arbeidsGradering: ArbeidsGradering): Vurdering {
@@ -148,10 +143,6 @@ data class Vurdering(
             harRett() -> gradering
             else -> gradering.copy(gradering = Prosent.`0_PROSENT`)
         }
-    }
-
-    fun samordningProsent(): Prosent {
-        return requireNotNull(samordningProsent)
     }
 
     fun arbeidsgradering(): ArbeidsGradering {

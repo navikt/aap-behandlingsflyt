@@ -135,7 +135,6 @@ class SamordningYtelseVurderingService(
             Ytelser.ENGANGSTØNAD -> null
             Ytelser.FORELDREPENGER -> Ytelse.FORELDREPENGER
             Ytelser.SVANGERSKAPSPENGER -> Ytelse.SVANGERSKAPSPENGER
-            Ytelser.FRISINN -> null
         }
     }
 

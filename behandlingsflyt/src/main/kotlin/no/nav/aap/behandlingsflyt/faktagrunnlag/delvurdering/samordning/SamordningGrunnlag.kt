@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning
 
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
-import java.time.LocalDate
 
 /**
  * Grunnlag fra smordningssteget som brukes i følgende steg.
@@ -13,7 +12,6 @@ import java.time.LocalDate
 data class SamordningGrunnlag(
     val id: Long,
     val samordningPerioder: List<SamordningPeriode>,
-    val foreldrePengeSluttDato: LocalDate? = null
 )
 
 /**

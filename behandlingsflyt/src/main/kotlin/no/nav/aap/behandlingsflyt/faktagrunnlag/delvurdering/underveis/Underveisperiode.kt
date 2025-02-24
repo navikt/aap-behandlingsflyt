@@ -10,8 +10,6 @@ import no.nav.aap.komponenter.verdityper.Prosent
 
 data class UnderveisperiodeId(val asLong: Long)
 
-/**
- */
 data class Underveisperiode(
     val periode: Periode,
     val meldePeriode: Periode,
@@ -26,6 +24,9 @@ data class Underveisperiode(
     val bruddAktivitetspliktId: BruddAktivitetspliktId?,
     val id: UnderveisperiodeId? = null,
 ) : Comparable<Underveisperiode> {
+    init {
+        if (utfall == Utfall.IKKE_OPPFYLT) requireNotNull(avslagsårsak)
+    }
 
     override fun compareTo(other: Underveisperiode): Int {
         return periode.compareTo(other.periode)
