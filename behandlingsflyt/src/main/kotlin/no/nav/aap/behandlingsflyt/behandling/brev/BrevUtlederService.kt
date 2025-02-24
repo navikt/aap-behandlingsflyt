@@ -1,20 +1,15 @@
 package no.nav.aap.behandlingsflyt.behandling.brev
 
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.komponenter.tidslinje.JoinStyle
-import no.nav.aap.komponenter.tidslinje.Segment
-import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.komponenter.type.Periode
 
 class BrevUtlederService(
     private val behandlingRepository: BehandlingRepository,
-    private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val underveisRepository: UnderveisRepository,
 ) {
 
     fun utledBehovForMeldingOmVedtak(behandlingId: BehandlingId): BrevBehov {
@@ -25,9 +20,9 @@ class BrevUtlederService(
             return BrevBehov(null)
         }
 
-        val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
+        val underveisGrunnlag = underveisRepository.hent(behandlingId)
 
-        val oppfyltePerioder = finnOppfyltePerioder(vilkårsresultat)
+        val oppfyltePerioder = underveisGrunnlag.perioder.filter { it.utfall == Utfall.OPPFYLT }
 
         return if (oppfyltePerioder.isNotEmpty()) {
             // FIX LOGIKK
@@ -37,24 +32,5 @@ class BrevUtlederService(
         } else {
             BrevBehov(TypeBrev.VEDTAK_AVSLAG)
         }
-    }
-
-    private fun finnOppfyltePerioder(vilkårsresultat: Vilkårsresultat): List<Periode> {
-        return vilkårsresultat.alle().map { vilkår ->
-            Tidslinje(vilkår.vilkårsperioder().map { Segment(it.periode, Vilkårsvurdering(it)) })
-        }.fold(Tidslinje<Boolean>()) { resultatTidslinje, vilkårsvurderingTidslinje ->
-            resultatTidslinje.kombiner(
-                vilkårsvurderingTidslinje,
-                JoinStyle.OUTER_JOIN { periode, erOppfylt, vilkårsvurdering ->
-                    if (vilkårsvurdering == null) {
-                        erOppfylt
-                    } else {
-                        Segment(
-                            periode,
-                            vilkårsvurdering.verdi.erOppfylt() && erOppfylt?.verdi != false
-                        )
-                    }
-                })
-        }.segmenter().filter { it.verdi }.map { it.periode }
     }
 }

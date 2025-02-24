@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.BrevUtlederService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevGateway
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantVentebehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -52,15 +52,15 @@ class MeldingOmVedtakBrevSteg private constructor(
             val repositoryProvider = RepositoryProvider(connection)
             val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
             val sakRepository = repositoryProvider.provide<SakRepository>()
-            val vilkårsresultatRepository =
-                repositoryProvider.provide<VilkårsresultatRepository>()
             val brevbestillingRepository =
                 repositoryProvider.provide<BrevbestillingRepository>()
+            val underveisRepository =
+                repositoryProvider.provide<UnderveisRepository>()
 
             return MeldingOmVedtakBrevSteg(
                 BrevUtlederService(
                     behandlingRepository = behandlingRepository,
-                    vilkårsresultatRepository = vilkårsresultatRepository
+                    underveisRepository = underveisRepository,
                 ),
                 BrevbestillingService(
                     brevbestillingGateway = BrevGateway(),
