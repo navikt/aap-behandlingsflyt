@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarOverstyrtLovvalgMedlemskapLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.MANUELL_OVERSTYRING_LOVVALG
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -14,7 +14,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = MANUELL_OVERSTYRING_LOVVALG)
 class AvklarOverstyrtLovvalgMedlemskapLøsning(
-    @JsonProperty("manuellVurderingForLovvalgMedlemskap", required = true) val manuellVurderingForLovvalgMedlemskap: ManuellVurderingForLovvalgMedlemskap,
+    @JsonProperty("manuellVurderingForLovvalgMedlemskap", required = true) val manuellVurderingForLovvalgMedlemskap: ManuellVurderingForLovvalgMedlemskapDto,
     @JsonProperty("behovstype", required = true, defaultValue = MANUELL_OVERSTYRING_LOVVALG) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5021`
 ) : AvklaringsbehovLøsning {
     override fun løs(connection: DBConnection, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
