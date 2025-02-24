@@ -50,15 +50,3 @@ data class GraderingDto(
         grenseverdi = grenseverdi.prosentverdi()
     )
 }
-
-/*
-class Underveisperiode(
-    val periode: Periode,
-    val meldePeriode: Periode?,
-    val utfall: Utfall,
-    val avslagsårsak: UnderveisÅrsak?,
-    val grenseverdi: Prosent,
-    val gradering: Gradering?,
-    val trekk: Dagsatser
-)
- */
