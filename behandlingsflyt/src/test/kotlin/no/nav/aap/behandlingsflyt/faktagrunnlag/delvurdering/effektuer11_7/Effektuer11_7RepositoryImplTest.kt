@@ -69,9 +69,10 @@ class Effektuer11_7RepositoryImplTest {
             underveisRepository.lagre(behandling.id, listOf(underveisperiode), tomUnderveisInput)
 
             val varsel = Effektuer11_7Forhåndsvarsel(
-                LocalDate.now(),
-                LocalDate.now().plusDays(1),
-                underveisRepository.hent(behandling.id).perioder,
+                referanse = null,
+                datoVarslet = LocalDate.now(),
+                frist = LocalDate.now().plusDays(1),
+                underveisperioder = underveisRepository.hent(behandling.id).perioder,
             )
 
             effektuer11_7Repository.lagreVarsel(behandling.id, varsel)
@@ -99,9 +100,10 @@ class Effektuer11_7RepositoryImplTest {
             underveisRepository.lagre(behandling.id, listOf(underveisperiode), tomUnderveisInput)
 
             val varsel = Effektuer11_7Forhåndsvarsel(
-                LocalDate.now(),
-                LocalDate.now().plusDays(1),
-                underveisRepository.hent(behandling.id).perioder,
+                referanse = null,
+                datoVarslet = LocalDate.now(),
+                frist = LocalDate.now().plusDays(1),
+                underveisperioder = underveisRepository.hent(behandling.id).perioder,
             )
 
             effektuer11_7Repository.lagreVarsel(behandling.id, varsel)
@@ -112,9 +114,10 @@ class Effektuer11_7RepositoryImplTest {
             )
 
             val varsel2 = Effektuer11_7Forhåndsvarsel(
-                LocalDate.now().plusDays(1),
-                LocalDate.now().plusDays(2),
-                underveisRepository.hent(behandling.id).perioder,
+                referanse = null,
+                datoVarslet = LocalDate.now().plusDays(1),
+                frist = LocalDate.now().plusDays(2),
+                underveisperioder = underveisRepository.hent(behandling.id).perioder,
             )
 
             effektuer11_7Repository.lagreVarsel(behandling.id, varsel2)

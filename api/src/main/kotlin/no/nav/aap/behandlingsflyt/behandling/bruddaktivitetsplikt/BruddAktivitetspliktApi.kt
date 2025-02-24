@@ -7,6 +7,7 @@ import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.Tags
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
@@ -23,6 +24,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.brev.kontrakt.Status
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.Bruker
@@ -47,6 +49,7 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
                 val repositoryProvider = RepositoryProvider(conn)
                 val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
                 val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                val brevGateway = BrevGateway()
                 val aktivitetspliktRepository =
                     repositoryProvider.provide<AktivitetspliktRepository>()
                 val effektuer117Repository =
@@ -69,11 +72,18 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
                     }
 
                 val effektuer11_7Grunnlag = effektuer117Repository.hentHvisEksisterer(behandlingId)
-                val sisteVarsel = effektuer11_7Grunnlag?.varslinger?.maxByOrNull { it.datoVarslet }
+                val brevBestillingReferanse = effektuer11_7Grunnlag
+                    ?.varslinger
+                    ?.maxByOrNull { it.datoVarslet }
+                    ?.referanse
+                val forhåndsvarselDato = brevBestillingReferanse
+                    ?.let { brevGateway.hent(it) }
+                    ?.takeIf { it.status == Status.FERDIGSTILT }
+                    ?.oppdatert?.toLocalDate()
 
                 Effektuer11_7Dto(
                     begrunnelse = effektuer11_7Grunnlag?.vurdering?.begrunnelse,
-                    forhåndsvarselDato = sisteVarsel?.datoVarslet,
+                    forhåndsvarselDato = forhåndsvarselDato,
                     forhåndsvarselSvar = null,
                     gjeldendeBrudd = brudd,
                 )

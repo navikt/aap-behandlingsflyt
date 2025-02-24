@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevGateway
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FULLFØRT
@@ -70,22 +71,23 @@ class Effektuer11_7Steg(
             )
         ) {
 
+            val vårReferanse = "${behandling.referanse}-$typeBrev-${effektuer117grunnlag?.varslinger?.size ?: 0}"
+
+            // XXX: skulle gjerne "avbrutt" tidligere bestilling av brev, men det er ikke mulig i dag.
+            val brevReferanse = brevbestillingService.bestill(
+                kontekst.behandlingId,
+                typeBrev,
+                vårReferanse
+            )
+
             effektuer117repository.lagreVarsel(
                 behandling.id,
                 varsel = Effektuer11_7Forhåndsvarsel(
                     datoVarslet = LocalDate.now(),
                     frist = LocalDate.now().plusWeeks(3),
                     underveisperioder = bruddSomSkalSanksjoneres.toList().map { it.verdi },
+                    referanse = BrevbestillingReferanse(brevReferanse),
                 ),
-            )
-
-            val unikReferanse = "${behandling.referanse}-$typeBrev-${effektuer117grunnlag?.varslinger?.size ?: 0}"
-
-            // XXX: skulle gjerne "avbrutt" tidligere bestilling av brev, men det er ikke mulig i dag.
-            brevbestillingService.bestill(
-                kontekst.behandlingId,
-                typeBrev,
-                unikReferanse
             )
 
             return FantVentebehov(

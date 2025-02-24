@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.effektuer11_7
 
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7Forhåndsvarsel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7Repository
@@ -48,15 +49,19 @@ class Effektuer11_7RepositoryImpl(private val connection: DBConnection) : Effekt
     override fun lagreVarsel(behandlingId: BehandlingId, varsel: Effektuer11_7Forhåndsvarsel) {
         val varslingerId = connection.executeReturnKey("insert into effektuer_11_7_varslinger default values")
 
-        val varselId = connection.executeReturnKey("insert into effektuer_11_7_varsel(varslinger_id, dato_varslet, frist) values(?, ?, ?)") {
-            setParams {
-                setLong(1, varslingerId)
-                setLocalDate(2, varsel.datoVarslet)
-                setLocalDate(3, varsel.frist)
+        val varselId =
+            connection.executeReturnKey("insert into effektuer_11_7_varsel(varslinger_id, dato_varslet, frist) values(?, ?, ?)") {
+                setParams {
+                    setLong(1, varslingerId)
+                    setLocalDate(2, varsel.datoVarslet)
+                    setLocalDate(3, varsel.frist)
+                }
             }
-        }
 
-        connection.executeBatch("insert into effektuer_11_7_brudd(varsel_id, underveis_periode_id) values(?, ?)", varsel.underveisperioder) {
+        connection.executeBatch(
+            "insert into effektuer_11_7_brudd(varsel_id, underveis_periode_id) values(?, ?)",
+            varsel.underveisperioder
+        ) {
             setParams {
                 setLong(1, varselId)
                 setLong(2, it.id!!.asLong)
@@ -109,7 +114,7 @@ class Effektuer11_7RepositoryImpl(private val connection: DBConnection) : Effekt
 
     private fun hentVarslinger(varslingerId: Long): List<Effektuer11_7Forhåndsvarsel> {
         val query = """
-            select varsel.dato_varslet, varsel.frist, array_agg(brudd.underveis_periode_id) as underveisperioder
+            select varsel.dato_varslet, varsel.frist, array_agg(brudd.underveis_periode_id) as underveisperioder, varsel.brev_referanse
             from effektuer_11_7_varslinger varslinger
             join effektuer_11_7_varsel varsel on varslinger.id = varsel.varslinger_id
             join effektuer_11_7_brudd brudd on varsel.id = brudd.varsel_id
@@ -125,7 +130,10 @@ class Effektuer11_7RepositoryImpl(private val connection: DBConnection) : Effekt
                     datoVarslet = row.getLocalDate("dato_varslet"),
                     frist = row.getLocalDateOrNull("frist"),
                     underveisperioder = row.getArray("underveisperioder", Long::class)
-                        .let { UnderveisRepositoryImpl(connection).hentPerioder(it.map { UnderveisperiodeId(it) }).sorted() }
+                        .let {
+                            UnderveisRepositoryImpl(connection).hentPerioder(it.map { UnderveisperiodeId(it) }).sorted()
+                        },
+                    referanse = row.getUUIDOrNull("brev_referanse")?.let { BrevbestillingReferanse(it) },
                 )
             }
         }
