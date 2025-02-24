@@ -94,7 +94,9 @@ class InnsendingTest {
                         LocalDate.parse("2024-12-31"),
                         LocalDate.parse("2024-12-31").plusDays(3),
                         "nei",
-                        "utenlandsId"
+                        "utenlandsId",
+                        LocalDate.parse("2024-12-31"),
+                        LocalDate.parse("2024-12-31").plusDays(3),
                     )
                 )
             )

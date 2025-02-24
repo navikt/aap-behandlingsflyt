@@ -51,8 +51,8 @@ data class UbehandletSøknad(
                         val utenlandsOpphold = it.utenlandsOpphold?.map { opphold ->
                             UtenlandsPeriode(
                                 land = opphold.land,
-                                tilDato = opphold.tilDato,
-                                fraDato = opphold.fraDato,
+                                tilDato = opphold.tilDatoLocalDate,
+                                fraDato = opphold.fraDatoLocalDate,
                                 iArbeid = opphold.iArbeid?.uppercase() == "JA",
                                 utenlandsId = opphold.utenlandsId,
                             )
