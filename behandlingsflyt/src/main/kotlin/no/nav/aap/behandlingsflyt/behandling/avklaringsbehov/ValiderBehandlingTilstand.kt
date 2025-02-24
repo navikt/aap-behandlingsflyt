@@ -18,7 +18,7 @@ internal object ValiderBehandlingTilstand {
         validerStatus(behandling.status())
         if (avklaringsbehov != null) {
             if (!eksisterendeAvklaringsbehov.map { a -> a.definisjon }
-                    .contains(avklaringsbehov) && !avklaringsbehov.erFrivillig()) {
+                    .contains(avklaringsbehov) && !avklaringsbehov.erFrivillig() && !avklaringsbehov.erOverstyring()) {
                 logger.warn("Forsøker å løse avklaringsbehov $avklaringsbehov ikke knyttet til behandlingen, har $eksisterendeAvklaringsbehov")
                 throw IllegalArgumentException("Forsøker å løse avklaringsbehov $avklaringsbehov ikke knyttet til behandlingen, har $eksisterendeAvklaringsbehov")
             }
