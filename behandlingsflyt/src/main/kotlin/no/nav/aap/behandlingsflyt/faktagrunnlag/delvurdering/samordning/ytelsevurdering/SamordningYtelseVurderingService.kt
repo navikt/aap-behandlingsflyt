@@ -45,7 +45,11 @@ class SamordningYtelseVurderingService(
         return Informasjonskrav.Endret.IKKE_ENDRET
     }
 
-    private fun hentYtelseForeldrepenger(personIdent: String, fom: LocalDate, tom: LocalDate): List<ForeldrePengerResponseYtelse> {
+    private fun hentYtelseForeldrepenger(
+        personIdent: String,
+        fom: LocalDate,
+        tom: LocalDate
+    ): List<ForeldrePengerResponseYtelse> {
         return fpGateway.hentVedtakYtelseForPerson(
             ForeldrepengerRequest(
                 Aktør(personIdent),
@@ -87,14 +91,17 @@ class SamordningYtelseVurderingService(
                     kronesum = it.beløp
                 )
             }
-            samordningYtelser.add(
-                SamordningYtelse(
-                    ytelseType = Ytelse.PLEIEPENGER_BARN, // konverterFraForeldrePengerDomene(ytelse),
-                    ytelsePerioder = ytelsePerioder,
-                    kilde = ytelse.kildesystem,
-                    saksRef = ytelse.saksnummer.toString()
+            val c = konverterFraForeldrePengerDomene(ytelse)
+            if (c != null) {
+                samordningYtelser.add(
+                    SamordningYtelse(
+                        ytelseType = c,
+                        ytelsePerioder = ytelsePerioder,
+                        kilde = ytelse.kildesystem,
+                        saksRef = ytelse.saksnummer.toString()
+                    )
                 )
-            )
+            }
         }
 
         val ytelsePerioder = sykepenger.map {
