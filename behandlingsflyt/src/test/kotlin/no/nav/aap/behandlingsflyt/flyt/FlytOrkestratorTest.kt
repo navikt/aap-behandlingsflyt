@@ -2096,7 +2096,7 @@ class FlytOrkestratorTest {
     }
 
     @Test
-    fun `Kan løse overstyringsbehov`() {
+    fun `Kan løse overstyringsbehov til ikke oppfylt`() {
         val ident = ident()
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
