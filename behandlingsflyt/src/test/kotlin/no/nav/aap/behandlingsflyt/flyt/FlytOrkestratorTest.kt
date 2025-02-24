@@ -2096,7 +2096,7 @@ class FlytOrkestratorTest {
     }
 
     @Test
-    fun `Kan løse overstyringsbehov`() {
+    fun `Kan løse overstyringsbehov til ikke oppfylt`() {
         val ident = ident()
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
@@ -2139,6 +2139,56 @@ class FlytOrkestratorTest {
         val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder()
         assertTrue(vilkårsResultat.none { it.erOppfylt() })
         assertThat(Avslagsårsak.IKKE_MEDLEM == vilkårsResultat.first().avslagsårsak)
+    }
+
+    @Test
+    fun `Kan løse overstyringsbehov til oppfylt`() {
+        val ident = ident()
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        // Oppretter vanlig søknad
+        hendelsesMottak.håndtere(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("451"),
+                mottattTidspunkt = LocalDateTime.now(),
+                strukturertDokument = StrukturertDokument(
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                        medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null)
+                    ),
+                ),
+                periode = periode
+            )
+        )
+        util.ventPåSvar()
+        val sak = hentSak(ident, periode)
+        val behandling = hentBehandling(sak.id)
+
+        løsAvklaringsBehov(
+            behandling, AvklarOverstyrtLovvalgMedlemskapLøsning(
+                manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskap(
+                    LovvalgVedSøknadsTidspunkt("crazy lovvalgsland vurdering", EØSLand.NOR),
+                    MedlemskapVedSøknadsTidspunkt("crazy medlemskap vurdering", true), true
+                ),
+                behovstype = AvklaringsbehovKode.`5021`
+            )
+        )
+        util.ventPåSvar()
+
+        // Validér avklaring
+        dataSource.transaction { connection ->
+            val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
+            assertThat(avklaringsbehov.åpne().none{Definisjon.MANUELL_OVERSTYRING_LOVVALG == it.definisjon})
+        }
+
+        // Validér riktig resultat
+        dataSource.transaction { connection ->
+            val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder()
+            val overstyrtManuellVurdering = MedlemskapArbeidInntektRepositoryImpl(connection).hentHvisEksisterer(behandling.id)?.manuellVurdering?.overstyrt
+
+            assertTrue(vilkårsResultat.all { it.erOppfylt() })
+            assertThat(overstyrtManuellVurdering)
+        }
     }
 
     private fun løsAvklaringsBehov(
