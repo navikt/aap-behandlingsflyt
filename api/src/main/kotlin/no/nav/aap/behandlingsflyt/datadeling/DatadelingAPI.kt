@@ -56,7 +56,7 @@ fun NormalOpenAPIRoute.datadelingAPI(datasource: DataSource) {
                         }
                         respond(saker.map { sak ->
                             PeriodeMedAktFaseKode(
-                                aktivitetsfaseKode = "",
+                                aktivitetsfaseKode = "", // Snakk med fredrik - rettighetsType
                                 aktivitetsfaseNavn = "",
                                 periode = Maksimum.Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.tom)
                             )
@@ -64,23 +64,6 @@ fun NormalOpenAPIRoute.datadelingAPI(datasource: DataSource) {
                     } else {
                         respond(emptyList())
                     }
-                }
-            }
-            route("/meldekort"){
-                post<Unit, List<Periode>, InternVedtakRequest>{ request, body ->
-                    val behandling = selectLastBehandling(datasource, body.personidentifikator)
-
-                    val underveisGrunnlag = requireNotNull(datasource.transaction(readOnly = true) { conn ->
-                        val repositoryProvider = RepositoryProvider(conn)
-                        val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
-                        underveisRepository.hent(behandling!!.id)
-                    })
-
-                    val perioder = underveisGrunnlag.perioder.map { periode ->
-                        periode.meldePeriode
-                    }.toSet()
-
-                    respond(perioder.toList())
                 }
             }
         }
@@ -161,7 +144,7 @@ fun NormalOpenAPIRoute.datadelingAPI(datasource: DataSource) {
                         kildesystem = "Kelvin",
                         samordningsId = null, //TODO: mangler en så lenge
                         opphorsAarsak = null, // TODO: mengler en så lenge,
-                        utbetaling = listOf(
+                        utbetaling = listOf( // Regner oss frem til utbetaling
                             Maksimum.UtbetalingMedMer( //TODO: Denne må utvides når vi vet mer om hvordan utbetalinger ser ut
                                 null,
                                 segment.verdi.gradering.prosentverdi(), // TODO: dobbelsjekk at dette er riktig
