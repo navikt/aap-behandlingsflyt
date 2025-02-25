@@ -2090,7 +2090,7 @@ class FlytOrkestratorTest {
         }
 
         // Validér riktig resultat
-        val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder()
+        val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
         assertTrue(vilkårsResultat.none { it.erOppfylt() })
         assertThat(Avslagsårsak.IKKE_MEDLEM == vilkårsResultat.first().avslagsårsak)
     }
