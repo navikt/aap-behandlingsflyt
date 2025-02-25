@@ -49,6 +49,17 @@ class ForutgåendeMedlemskapvilkåret(
         leggTilVurdering(forutgåendePeriode, grunnlag, vurderingsResultat, vurdertManuelt)
     }
 
+    fun vurderOverstyrt(grunnlag: ForutgåendeMedlemskapGrunnlag) {
+        val forutgåendePeriode = Periode(rettighetsPeriode.fom.minusYears(5), rettighetsPeriode.tom)
+        val vurderingsResultat = if (manuellVurdering!!.harForutgåendeMedlemskap
+            && (manuellVurdering.medlemMedUnntakAvMaksFemAar != true && manuellVurdering.varMedlemMedNedsattArbeidsevne != true)) {
+                VurderingsResultat(Utfall.IKKE_OPPFYLT, Avslagsårsak.IKKE_MEDLEM_FORUTGÅENDE, null)
+            } else {
+                VurderingsResultat(Utfall.OPPFYLT, null, null)
+            }
+        leggTilVurdering(forutgåendePeriode, grunnlag, vurderingsResultat, true)
+    }
+
     private fun leggTilVurdering(
         periode: Periode,
         grunnlag: ForutgåendeMedlemskapGrunnlag,
