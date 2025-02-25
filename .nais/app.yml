@@ -200,3 +200,7 @@ spec:
       value: https://team-inntekt-proxy.dev-fss-pub.nais.io/proxy/inntektskomponenten-q2/rs/api/v1
     - name: INTEGRASJON_INNTEKTSKOMPONENTEN_SCOPE
       value: api://dev-fss.team-inntekt.inntektskomponenten/.default
+    - name: INTEGRASJON_DATADELING_URL
+      value: http://api-intern
+    - name: INTEGRASJON_DATADELING_SCOPE
+      value: api://dev-gcp.aap.api-intern/.default

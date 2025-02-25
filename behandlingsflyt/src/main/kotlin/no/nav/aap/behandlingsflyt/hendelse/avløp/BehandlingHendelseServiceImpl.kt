@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendels
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.EndringDTO
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.ÅrsakTilSettPåVent
+import no.nav.aap.behandlingsflyt.prosessering.DatadelingJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.StatistikkJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.StoppetHendelseJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -65,6 +66,11 @@ class BehandlingHendelseServiceImpl(
         flytJobbRepository.leggTil(
             JobbInput(jobb = StatistikkJobbUtfører).medPayload(hendelse)
         )
+        if (behandling.status().erAvsluttet()) {
+            flytJobbRepository.leggTil(
+                JobbInput(jobb = DatadelingJobbUtfører).medPayload(hendelse)
+            )
+        }
     }
 
     private fun DomeneÅrsakTilRetur.oversettTilKontrakt(): ÅrsakTilReturKodeKontrakt {
