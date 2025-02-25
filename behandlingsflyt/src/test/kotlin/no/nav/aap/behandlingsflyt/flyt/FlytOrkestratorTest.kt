@@ -1951,7 +1951,7 @@ class FlytOrkestratorTest {
         // Validér riktig resultat
         dataSource.transaction { connection ->
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
-            val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.MEDLEMSKAP/*Vilkårtype.LOVVALG*/).vilkårsperioder()
+            val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
             assertThat(avklaringsbehov.åpne().none())
             assertTrue(vilkårsResultat.all { it.erOppfylt() })
         }
@@ -2016,7 +2016,7 @@ class FlytOrkestratorTest {
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
         assertThat(åpneAvklaringsbehov.none())
         dataSource.transaction { connection ->
-            val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.MEDLEMSKAP/*Vilkårtype.LOVVALG*/).vilkårsperioder()
+            val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
             assertTrue(vilkårsResultat.none { it.erOppfylt() })
         }
     }
@@ -2082,7 +2082,7 @@ class FlytOrkestratorTest {
 
         // Validér riktig resultat
 
-        val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.MEDLEMSKAP/*Vilkårtype.LOVVALG*/).vilkårsperioder()
+        val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
         assertTrue(vilkårsResultat.none { it.erOppfylt() })
         assertThat(Avslagsårsak.IKKE_MEDLEM == vilkårsResultat.first().avslagsårsak)
 

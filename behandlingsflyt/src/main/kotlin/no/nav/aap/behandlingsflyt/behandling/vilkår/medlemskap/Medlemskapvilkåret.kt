@@ -16,7 +16,7 @@ class Medlemskapvilkåret(
     private val rettighetsPeriode: Periode,
     private val manuellVurderingForLovvalgMedlemskap: ManuellVurderingForLovvalgMedlemskap?
 ) : Vilkårsvurderer<MedlemskapLovvalgGrunnlag> {
-    private val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.MEDLEMSKAP/*Vilkårtype.LOVVALG*/)
+    private val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.LOVVALG)
 
     override fun vurder(grunnlag: MedlemskapLovvalgGrunnlag) {
         var vurdertManuelt = false

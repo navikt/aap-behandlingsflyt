@@ -9,7 +9,7 @@ class AapEtterRegel : UnderveisRegel {
      * vilkårene inkludert i [input].
      */
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
-        val kunMedOppfylteVilkår = resultat.filter { it.verdi.alleVilkårErOppfylt() }
+        val kunMedOppfylteVilkår = resultat.filter { it.verdi.ingenVilkårErAvslått() }
 
         val tidslinje = input.vilkårsresultat.rettighetstypeTidslinje()
 

@@ -45,8 +45,8 @@ class VurderLovvalgSteg private constructor(
         }
         // TODO: Revurdering må inn her
 
-        val måOverføresTilAnnetLand = vilkårsresultatRepository.hent(kontekst.behandlingId).finnVilkår(Vilkårtype.MEDLEMSKAP/*Vilkårtype.LOVVALG*/).vilkårsperioder().any{it.avslagsårsak == Avslagsårsak.NORGE_IKKE_KOMPETENT_STAT}
-        val alleVilkårOppfylt = vilkårsresultatRepository.hent(kontekst.behandlingId).finnVilkår(Vilkårtype.MEDLEMSKAP/*Vilkårtype.LOVVALG*/).vilkårsperioder().all{it.erOppfylt()}
+        val måOverføresTilAnnetLand = vilkårsresultatRepository.hent(kontekst.behandlingId).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder().any{it.avslagsårsak == Avslagsårsak.NORGE_IKKE_KOMPETENT_STAT}
+        val alleVilkårOppfylt = vilkårsresultatRepository.hent(kontekst.behandlingId).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder().all{it.erOppfylt()}
 
         if (måOverføresTilAnnetLand) {
             return FantVentebehov(

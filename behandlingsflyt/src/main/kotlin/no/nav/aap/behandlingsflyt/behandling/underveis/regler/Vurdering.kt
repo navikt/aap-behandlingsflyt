@@ -126,11 +126,7 @@ data class Vurdering(
     }
 
     fun rettighetsType(): RettighetsType? {
-        return if (ingenVilkårErAvslått()) {
-            requireNotNull(fårAapEtter) { "Om alle vilkår er oppfylt, skal rettighetstype være ikke-null." }
-        } else {
-            null
-        }
+        return if (alleVilkårErOppfylt()) fårAapEtter else null
     }
 
     fun grenseverdi(): Prosent {

@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapGrunn
 import no.nav.aap.behandlingsflyt.behandling.vilkår.Vilkårsvurderer
 import no.nav.aap.behandlingsflyt.behandling.vilkår.VurderingsResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
@@ -17,9 +18,15 @@ class ForutgåendeMedlemskapvilkåret(
     private val manuellVurdering: ManuellVurderingForForutgåendeMedlemskap?
 ) : Vilkårsvurderer<ForutgåendeMedlemskapGrunnlag> {
     private val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.MEDLEMSKAP)
+    private val tidligereVilkårsresultat = vilkårsresultat
 
     override fun vurder(grunnlag: ForutgåendeMedlemskapGrunnlag) {
         val forutgåendePeriode = Periode(rettighetsPeriode.fom.minusYears(5), rettighetsPeriode.tom)
+
+        if (tidligereVilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET).vilkårsperioder().any { it.innvilgelsesårsak == Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG }){
+            leggTilVurdering(forutgåendePeriode, grunnlag, VurderingsResultat(Utfall.OPPFYLT, null, Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG), false)
+            return
+        }
 
         var vurdertManuelt = false
         val vurderingsResultat = if (manuellVurdering != null) {

@@ -46,13 +46,13 @@ class UnderveisService(
     companion object {
         private val regelset = listOf(
             RettTilRegel(),
-            AapEtterRegel(),
             UtledMeldeperiodeRegel(),
             InstitusjonRegel(),
             SoningRegel(),
             MeldepliktRegel(),
             SammenstiltAktivitetspliktRegel(),
             GraderingArbeidRegel(),
+            AapEtterRegel(),
             VarighetRegel(),
         )
 
