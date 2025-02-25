@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.EndringDTO
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.TypeBrev
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.prosessering.DatadelingJobbUtfører
@@ -65,7 +66,7 @@ class BehandlingHendelseServiceImpl(
                                 )
                             })
                     },
-                    typeBrev = brevbestilling?.typeBrev?.name
+                    typeBrev = brevbestilling?.typeBrev?.oversettTilKontrakt()
                 )
             },
             opprettetTidspunkt = behandling.opprettetTidspunkt,
@@ -105,6 +106,15 @@ class BehandlingHendelseServiceImpl(
             no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent.VENTER_PÅ_SVAR_FRA_BRUKER -> ÅrsakTilSettPåVent.VENTER_PÅ_SVAR_FRA_BRUKER
             no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent.VENTER_PÅ_MASKINELL_AVKLARING -> ÅrsakTilSettPåVent.VENTER_PÅ_MASKINELL_AVKLARING
             no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent.VENTER_PÅ_UTENLANDSK_VIDEREFORING_AVKLARING -> ÅrsakTilSettPåVent.VENTER_PÅ_UTENLANDSK_VIDEREFORING_AVKLARING
+        }
+    }
+
+    private fun no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.oversettTilKontrakt(): TypeBrev {
+        return when (this) {
+            no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VEDTAK_AVSLAG -> TypeBrev.VEDTAK_AVSLAG
+            no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VEDTAK_INNVILGELSE -> TypeBrev.VEDTAK_INNVILGELSE
+            no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VARSEL_OM_BESTILLING -> TypeBrev.VARSEL_OM_BESTILLING
+            no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT -> TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT
         }
     }
 }
