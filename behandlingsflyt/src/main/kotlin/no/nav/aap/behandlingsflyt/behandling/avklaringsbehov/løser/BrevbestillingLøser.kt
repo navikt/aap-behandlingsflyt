@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.BrevbestillingLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
@@ -28,7 +29,8 @@ class BrevbestillingLøser(val connection: DBConnection) :
     private val sakRepository = repositoryProvider.provide<SakRepository>()
     private val behandlingHendelseService = BehandlingHendelseServiceImpl(
         FlytJobbRepository(connection),
-        SakService(sakRepository)
+        repositoryProvider.provide<BrevbestillingRepository>(),
+        SakService(sakRepository),
     )
 
     override fun løs(

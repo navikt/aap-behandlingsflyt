@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt.internals
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepositoryImpl
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
@@ -42,7 +43,11 @@ class TestHendelsesMottak(private val dataSource: DataSource) {
         dataSource.transaction { connection ->
             AvklaringsbehovOrkestrator(
                 connection,
-                BehandlingHendelseServiceImpl(FlytJobbRepository(connection), SakService(SakRepositoryImpl(connection)))
+                BehandlingHendelseServiceImpl(
+                    FlytJobbRepository(connection),
+                    BrevbestillingRepositoryImpl(connection),
+                    SakService(SakRepositoryImpl(connection))
+                )
             ).settBehandlingPåVent(key, hendelse)
         }
     }

@@ -8,16 +8,12 @@ metadata:
     sub: behandlingsflyt
 spec:
   image: {{image}}
-  # Setter utrullingsstrategi til Recreate for test. Settes til default før prodsetting
-#  strategy:
-#    type: Recreate
   ingresses:
       - "https://aap-behandlingsflyt.intern.dev.nav.no"
   replicas:
-    cpuThresholdPercentage: 90
     disableAutoScaling: true
-    max: 1
-    min: 1
+    max: 2
+    min: 2
   resources:
     limits:
       memory: 1024Mi

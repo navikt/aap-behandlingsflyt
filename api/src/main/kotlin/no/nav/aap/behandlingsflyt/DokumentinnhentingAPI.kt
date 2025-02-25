@@ -6,6 +6,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.BestillLegeerklæringDto
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.ForhåndsvisBrevRequest
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.HentStatusLegeerklæring
@@ -89,7 +90,11 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(dataSource: DataSource) {
 
                         val sakService = SakService(repositoryProvider.provide<SakRepository>())
                         val behandlingHendelseService =
-                            BehandlingHendelseServiceImpl(FlytJobbRepository((connection)), sakService)
+                            BehandlingHendelseServiceImpl(
+                                FlytJobbRepository((connection)),
+                                repositoryProvider.provide<BrevbestillingRepository>(),
+                                sakService
+                            )
 
                         behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
 
