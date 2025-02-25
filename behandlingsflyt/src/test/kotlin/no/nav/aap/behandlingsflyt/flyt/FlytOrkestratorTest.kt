@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovHend
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehovHendelse
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarOverstyrtLovvalgMedlemskapLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.BREV_SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.ÅrsakTilReturKode
@@ -13,6 +14,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSet
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarForutgåendeMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarLovvalgMedlemskapLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOverstyrtLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
@@ -44,6 +46,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktR
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøknadsTidspunkt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunkt
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.inntekt.InntektGrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
@@ -2097,11 +2100,105 @@ class FlytOrkestratorTest {
         }
 
         // Validér riktig resultat
-
         val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
         assertTrue(vilkårsResultat.none { it.erOppfylt() })
         assertThat(Avslagsårsak.IKKE_MEDLEM == vilkårsResultat.first().avslagsårsak)
+    }
 
+    @Test
+    fun `Kan løse overstyringsbehov til ikke oppfylt`() {
+        val ident = ident()
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        // Oppretter vanlig søknad
+        hendelsesMottak.håndtere(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("451"),
+                mottattTidspunkt = LocalDateTime.now(),
+                strukturertDokument = StrukturertDokument(
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                        medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null)
+                    ),
+                ),
+                periode = periode
+            )
+        )
+        util.ventPåSvar()
+        val sak = hentSak(ident, periode)
+        val behandling = hentBehandling(sak.id)
+
+        løsAvklaringsBehov(
+            behandling, AvklarOverstyrtLovvalgMedlemskapLøsning(
+                manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskapDto(
+                    LovvalgVedSøknadsTidspunkt("crazy lovvalgsland vurdering", EØSLand.NOR),
+                    MedlemskapVedSøknadsTidspunkt("crazy medlemskap vurdering", false)
+                ),
+                behovstype = AvklaringsbehovKode.`5021`
+            )
+        )
+        util.ventPåSvar()
+
+        // Validér avklaring
+        dataSource.transaction { connection ->
+            val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
+            assertThat(avklaringsbehov.åpne().none{Definisjon.MANUELL_OVERSTYRING_LOVVALG == it.definisjon})
+        }
+
+        // Validér riktig resultat
+        val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder()
+        assertTrue(vilkårsResultat.none { it.erOppfylt() })
+        assertThat(Avslagsårsak.IKKE_MEDLEM == vilkårsResultat.first().avslagsårsak)
+    }
+
+    @Test
+    fun `Kan løse overstyringsbehov til oppfylt`() {
+        val ident = ident()
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        // Oppretter vanlig søknad
+        hendelsesMottak.håndtere(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("451"),
+                mottattTidspunkt = LocalDateTime.now(),
+                strukturertDokument = StrukturertDokument(
+                    SøknadV0(
+                        student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                        medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null)
+                    ),
+                ),
+                periode = periode
+            )
+        )
+        util.ventPåSvar()
+        val sak = hentSak(ident, periode)
+        val behandling = hentBehandling(sak.id)
+
+        løsAvklaringsBehov(
+            behandling, AvklarOverstyrtLovvalgMedlemskapLøsning(
+                manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskapDto(
+                    LovvalgVedSøknadsTidspunkt("crazy lovvalgsland vurdering", EØSLand.NOR),
+                    MedlemskapVedSøknadsTidspunkt("crazy medlemskap vurdering", true)
+                ),
+                behovstype = AvklaringsbehovKode.`5021`
+            )
+        )
+        util.ventPåSvar()
+
+        // Validér avklaring
+        dataSource.transaction { connection ->
+            val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
+            assertThat(avklaringsbehov.åpne().none{Definisjon.MANUELL_OVERSTYRING_LOVVALG == it.definisjon})
+        }
+
+        // Validér riktig resultat
+        dataSource.transaction { connection ->
+            val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
+            val overstyrtManuellVurdering = MedlemskapArbeidInntektRepositoryImpl(connection).hentHvisEksisterer(behandling.id)?.manuellVurdering?.overstyrt
+
+            assertTrue(vilkårsResultat.all { it.erOppfylt() })
+            assertThat(overstyrtManuellVurdering)
+        }
     }
 
     private fun løsAvklaringsBehov(
