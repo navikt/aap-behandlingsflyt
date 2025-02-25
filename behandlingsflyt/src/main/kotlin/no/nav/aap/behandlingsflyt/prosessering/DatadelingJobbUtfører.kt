@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
@@ -45,7 +46,7 @@ class DatadelingJobbUtfører(
             val underveisRepository: UnderveisRepository = repositoryProvider.provide<UnderveisRepository>()
 
             return DatadelingJobbUtfører(
-                ApiInternGateway(),
+                GatewayProvider.provide(),
                 behandlingRepository,
                 sakRepository,
                 underveisRepository

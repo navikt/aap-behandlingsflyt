@@ -124,6 +124,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlFolkeregisterP
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlFolkeregistermetadata
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PdlStatsborgerskap
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.PersonStatus
+import no.nav.aap.behandlingsflyt.test.FakeApiInternGateway
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.ident
@@ -211,6 +212,7 @@ class FlytOrkestratorTest {
                 .register<AbakusForeldrepengerGateway>()
                 .register<DokumentinnhentingGatewayImpl>()
                 .register<MedlemskapGateway>()
+                .register<FakeApiInternGateway>()
             motor.start()
         }
 
