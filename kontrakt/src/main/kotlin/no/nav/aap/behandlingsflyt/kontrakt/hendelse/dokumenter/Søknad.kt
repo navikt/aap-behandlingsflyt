@@ -53,7 +53,9 @@ public data class UtenlandsPeriodeDto(
     val tilDato: LocalDate?,
     val fraDato: LocalDate?,
     @JsonAlias("iarbeid") val iArbeid: String?,
-    val utenlandsId: String?
+    val utenlandsId: String?,
+    val tilDatoLocalDate: LocalDate?,
+    val fraDatoLocalDate: LocalDate?
 )
 
 public data class OppgitteBarn(public val identer: Set<Ident>)
