@@ -1468,6 +1468,10 @@ object FakeServers : AutoCloseable {
         System.setProperty("integrasjon.tilgang.url", "http://localhost:${tilgang.port()}")
         System.setProperty("integrasjon.tilgang.scope", "scope")
 
+        // Datadeling
+
+        System.setProperty("integrasjon.datadeling.url", "http://localhost:1234}")
+        System.setProperty("integrasjon.datadeling.scope", "scope")
 
         // Foreldrepenger
         System.setProperty("integrasjon.foreldrepenger.url", "http://localhost:${foreldrepenger.port()}")

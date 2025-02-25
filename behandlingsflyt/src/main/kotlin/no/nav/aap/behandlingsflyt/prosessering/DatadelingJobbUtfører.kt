@@ -16,7 +16,7 @@ class DatadelingJobbUtfører(
     private val behandlingRepository: BehandlingRepository,
     private val sakRepository: SakRepository,
     private val underveisRepository: UnderveisRepository,
-): JobbUtfører {
+) : JobbUtfører {
     override fun utfør(input: JobbInput) {
         val behandling = behandlingRepository.hent(BehandlingId(input.behandlingId()))
         val sak = sakRepository.hent(behandling.sakId)
@@ -28,12 +28,7 @@ class DatadelingJobbUtfører(
             periode.meldePeriode
         }.toSet().toList()
 
-
-        try {
-            apiInternGateway.sendPerioder(personIdent, perioder)
-        } catch (e: Exception) {
-            throw RuntimeException("Feil ved sending av perioder til datadeling", e)
-        }
+        apiInternGateway.sendPerioder(personIdent, perioder)
 
     }
 
