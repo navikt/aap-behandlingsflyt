@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.flyt.testutil.DummyBehandlingHendelseService
 import no.nav.aap.behandlingsflyt.flyt.testutil.DummyInformasjonskravGrunnlag
 import no.nav.aap.behandlingsflyt.flyt.testutil.DummyStegKonstruktør
@@ -78,7 +79,7 @@ class EnklereFlytOrkestratorTest {
 
         val behandlingHendelseService = object : BehandlingHendelseService {
             val hendelser = mutableListOf<Pair<Behandling, Avklaringsbehovene>>()
-            override fun stoppet(behandling: Behandling, avklaringsbehovene: Avklaringsbehovene) {
+            override fun stoppet(behandling: Behandling, avklaringsbehovene: Avklaringsbehovene, typeBrev: TypeBrev?) {
                 hendelser.add(Pair(behandling, avklaringsbehovene))
             }
         }

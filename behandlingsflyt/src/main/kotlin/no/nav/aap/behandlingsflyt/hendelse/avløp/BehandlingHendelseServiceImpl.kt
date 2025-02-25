@@ -2,7 +2,9 @@ package no.nav.aap.behandlingsflyt.hendelse.avløp
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.ÅrsakTilReturKode
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.EndringDTO
@@ -26,7 +28,9 @@ class BehandlingHendelseServiceImpl(
     private val flytJobbRepository: FlytJobbRepository, private val sakService: SakService
 ) : BehandlingHendelseService {
 
-    override fun stoppet(behandling: Behandling, avklaringsbehovene: Avklaringsbehovene) {
+    override fun stoppet(behandling: Behandling,
+                         avklaringsbehovene: Avklaringsbehovene,
+                         typeBrev: TypeBrev?) {
         val sak = sakService.hent(behandling.sakId)
 
         // TODO: Utvide med flere parametere for prioritering
@@ -37,6 +41,11 @@ class BehandlingHendelseServiceImpl(
             behandlingType = behandling.typeBehandling(),
             status = behandling.status(),
             avklaringsbehov = avklaringsbehovene.alle().map { avklaringsbehov ->
+                val typeBrevSkrivBrev = if (typeBrev != null && avklaringsbehov.definisjon == Definisjon.SKRIV_BREV) {
+                    typeBrev.name
+                } else {
+                    null
+                }
                 AvklaringsbehovHendelseDto(
                     avklaringsbehovDefinisjon = avklaringsbehov.definisjon,
                     status = avklaringsbehov.status(),
@@ -52,7 +61,9 @@ class BehandlingHendelseServiceImpl(
                                     it.oversettTilKontrakt()
                                 )
                             })
-                    })
+                    },
+                    typeBrev = typeBrevSkrivBrev
+                )
             },
             opprettetTidspunkt = behandling.opprettetTidspunkt,
             hendelsesTidspunkt = LocalDateTime.now(),

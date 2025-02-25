@@ -13,7 +13,9 @@ import java.time.LocalDateTime
 public data class AvklaringsbehovHendelseDto(
     val avklaringsbehovDefinisjon: Definisjon,
     val status: Status,
-    val endringer: List<EndringDTO>
+    val endringer: List<EndringDTO>,
+// TODO flytt TypeBrev eller lag en mer generisk type "definisjon tillegsinfo" e.l.?
+    val typeBrev: String? = null,
 )
 
 public data class EndringDTO(
