@@ -2184,7 +2184,7 @@ class FlytOrkestratorTest {
 
         // Validér riktig resultat
         dataSource.transaction { connection ->
-            val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder()
+            val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
             val overstyrtManuellVurdering = MedlemskapArbeidInntektRepositoryImpl(connection).hentHvisEksisterer(behandling.id)?.manuellVurdering?.overstyrt
 
             assertTrue(vilkårsResultat.all { it.erOppfylt() })
