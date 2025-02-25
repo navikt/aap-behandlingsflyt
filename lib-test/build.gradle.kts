@@ -34,7 +34,7 @@ dependencies {
 
     implementation("ch.qos.logback:logback-classic:1.5.16")
 
-    implementation("com.nimbusds:nimbus-jose-jwt:10.0.1")
+    implementation("com.nimbusds:nimbus-jose-jwt:10.0.2")
 
     implementation("org.junit.jupiter:junit-jupiter-api:$junitVersjon")
 }
