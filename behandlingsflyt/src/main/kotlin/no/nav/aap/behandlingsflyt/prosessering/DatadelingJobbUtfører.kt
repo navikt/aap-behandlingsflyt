@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -19,7 +19,8 @@ class DatadelingJobbUtfører(
     private val underveisRepository: UnderveisRepository,
 ) : JobbUtfører {
     override fun utfør(input: JobbInput) {
-        val behandling = behandlingRepository.hent(BehandlingId(input.behandlingId()))
+        val hendelse = input.payload<BehandlingFlytStoppetHendelse>()
+        val behandling = behandlingRepository.hent(hendelse.referanse)
         val sak = sakRepository.hent(behandling.sakId)
         val personIdent = sak.person.aktivIdent().identifikator
 
