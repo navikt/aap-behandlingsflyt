@@ -79,7 +79,7 @@ class EnklereFlytOrkestratorTest {
 
         val behandlingHendelseService = object : BehandlingHendelseService {
             val hendelser = mutableListOf<Pair<Behandling, Avklaringsbehovene>>()
-            override fun stoppet(behandling: Behandling, avklaringsbehovene: Avklaringsbehovene, typeBrev: TypeBrev?) {
+            override fun stoppet(behandling: Behandling, avklaringsbehovene: Avklaringsbehovene) {
                 hendelser.add(Pair(behandling, avklaringsbehovene))
             }
         }

@@ -5,7 +5,6 @@ import no.nav.aap.lookup.repository.Repository
 
 interface BrevbestillingRepository : Repository {
     fun hent(behandlingId: BehandlingId): List<Brevbestilling>
-    fun hent(brevbestillingReferanse: BrevbestillingReferanse): Brevbestilling
     fun lagre(
         behandlingId: BehandlingId,
         typeBrev: TypeBrev,

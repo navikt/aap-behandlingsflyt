@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.BrevbestillingLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
@@ -28,7 +29,8 @@ class BrevbestillingLøser(val connection: DBConnection) :
     private val sakRepository = repositoryProvider.provide<SakRepository>()
     private val behandlingHendelseService = BehandlingHendelseServiceImpl(
         FlytJobbRepository(connection),
-        SakService(sakRepository)
+        repositoryProvider.provide<BrevbestillingRepository>(),
+        SakService(sakRepository),
     )
 
     override fun løs(
@@ -52,13 +54,11 @@ class BrevbestillingLøser(val connection: DBConnection) :
         )
 
         if (status == Status.FORHÅNDSVISNING_KLAR) {
-            val brevbestilling =
-                brevbestillingRepository.hent(BrevbestillingReferanse(løsning.oppdatertStatusForBestilling.bestillingReferanse))
             val behandling = behandlingRepository.hent(kontekst.behandlingId())
             val avklaringsbehovene =
                 avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId = kontekst.behandlingId())
             avklaringsbehovene.leggTil(listOf(Definisjon.SKRIV_BREV), behandling.aktivtSteg())
-            behandlingHendelseService.stoppet(behandling, avklaringsbehovene, brevbestilling.typeBrev)
+            behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
         }
 
         return LøsningsResultat("Oppdatert brevbestilling")

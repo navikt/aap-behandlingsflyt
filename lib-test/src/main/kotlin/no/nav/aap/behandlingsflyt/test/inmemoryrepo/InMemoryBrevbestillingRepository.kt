@@ -13,10 +13,6 @@ object InMemoryBrevbestillingRepository: BrevbestillingRepository {
         return bestilling.filter { it.behandlingId == behandlingId }.toList()
     }
 
-    override fun hent(brevbestillingReferanse: BrevbestillingReferanse): Brevbestilling {
-        return bestilling.first { it.referanse == brevbestillingReferanse }
-    }
-
     override fun lagre(
         behandlingId: BehandlingId,
         typeBrev: TypeBrev,

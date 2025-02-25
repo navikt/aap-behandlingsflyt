@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
@@ -47,6 +48,7 @@ class AvklaringsbehovOrkestratorTest {
             val behandlingHendelseService =
                 BehandlingHendelseServiceImpl(
                     FlytJobbRepository(connection),
+                    BrevbestillingRepositoryImpl(connection),
                     SakService(SakRepositoryImpl(connection))
                 )
 
