@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovHend
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehovHendelse
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarOverstyrtLovvalgMedlemskapLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.BREV_SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.ÅrsakTilReturKode
@@ -44,8 +43,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReposito
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøknadsTidspunkt
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskap
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunkt
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.inntekt.InntektGrunnlagRepositoryImpl
@@ -1732,7 +1730,7 @@ class FlytOrkestratorTest {
         løsAvklaringsBehov(
             behandling,
             AvklarForutgåendeMedlemskapLøsning(
-                manuellVurderingForForutgåendeMedlemskap = ManuellVurderingForForutgåendeMedlemskap(
+                manuellVurderingForForutgåendeMedlemskap = ManuellVurderingForForutgåendeMedlemskapDto(
                     "begrunnelse", true, null, null
                 ),
                 behovstype = AvklaringsbehovKode.`5020`
@@ -1785,7 +1783,7 @@ class FlytOrkestratorTest {
         løsAvklaringsBehov(
             behandling,
             AvklarForutgåendeMedlemskapLøsning(
-                manuellVurderingForForutgåendeMedlemskap = ManuellVurderingForForutgåendeMedlemskap(
+                manuellVurderingForForutgåendeMedlemskap = ManuellVurderingForForutgåendeMedlemskapDto(
                     "begrunnelseforutgående", false, false, null
                 ),
                 behovstype = AvklaringsbehovKode.`5020`
@@ -1839,7 +1837,7 @@ class FlytOrkestratorTest {
         // Trigger manuell vurdering
         løsAvklaringsBehov(
             behandling, AvklarForutgåendeMedlemskapLøsning(
-                manuellVurderingForForutgåendeMedlemskap = ManuellVurderingForForutgåendeMedlemskap(
+                manuellVurderingForForutgåendeMedlemskap = ManuellVurderingForForutgåendeMedlemskapDto(
                     "begrunnelse", true, true, null
                 ),
                 behovstype = AvklaringsbehovKode.`5020`
@@ -1949,10 +1947,9 @@ class FlytOrkestratorTest {
                 behandling.id,
                 LøsAvklaringsbehovHendelse(
                     løsning = AvklarLovvalgMedlemskapLøsning(
-                        manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskap(
+                        manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskapDto(
                             LovvalgVedSøknadsTidspunkt("crazy lovvalgsland vurdering", null),
-                            MedlemskapVedSøknadsTidspunkt("crazy medlemskap vurdering", true),
-                            false
+                            MedlemskapVedSøknadsTidspunkt("crazy medlemskap vurdering", true)
                         ),
                         behovstype = AvklaringsbehovKode.`5017`
                     ),
@@ -2016,9 +2013,9 @@ class FlytOrkestratorTest {
         // Trigger manuell vurdering
         løsAvklaringsBehov(
             behandling, AvklarLovvalgMedlemskapLøsning(
-                manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskap(
+                manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskapDto(
                     LovvalgVedSøknadsTidspunkt("crazy lovvalgsland vurdering", EØSLand.DNK),
-                    MedlemskapVedSøknadsTidspunkt(null, null), false
+                    MedlemskapVedSøknadsTidspunkt(null, null)
                 ),
                 behovstype = AvklaringsbehovKode.`5017`
             )
@@ -2084,9 +2081,9 @@ class FlytOrkestratorTest {
         // Trigger manuell vurdering
         løsAvklaringsBehov(
             behandling, AvklarLovvalgMedlemskapLøsning(
-                manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskap(
+                manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskapDto(
                     LovvalgVedSøknadsTidspunkt("crazy lovvalgsland vurdering", EØSLand.NOR),
-                    MedlemskapVedSøknadsTidspunkt("crazy medlemskap vurdering", false), false
+                    MedlemskapVedSøknadsTidspunkt("crazy medlemskap vurdering", false)
                 ),
                 behovstype = AvklaringsbehovKode.`5017`
             )

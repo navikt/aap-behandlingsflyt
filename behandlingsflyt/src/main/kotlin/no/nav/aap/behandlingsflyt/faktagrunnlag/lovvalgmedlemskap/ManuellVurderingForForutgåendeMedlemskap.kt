@@ -5,4 +5,12 @@ data class ManuellVurderingForForutgåendeMedlemskap (
     val harForutgåendeMedlemskap: Boolean,
     val varMedlemMedNedsattArbeidsevne: Boolean?,
     val medlemMedUnntakAvMaksFemAar: Boolean?,
+    val overstyrt: Boolean = false
+)
+
+data class ManuellVurderingForForutgåendeMedlemskapDto (
+    val begrunnelse: String,
+    val harForutgåendeMedlemskap: Boolean,
+    val varMedlemMedNedsattArbeidsevne: Boolean?,
+    val medlemMedUnntakAvMaksFemAar: Boolean?,
 )

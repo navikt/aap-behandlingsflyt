@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarLovvalgMedlemskapLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_LOVVALG_MEDLEMSKAP_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -14,7 +15,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = AVKLAR_LOVVALG_MEDLEMSKAP_KODE)
 class AvklarLovvalgMedlemskapLøsning(
-    @JsonProperty("manuellVurderingForLovvalgMedlemskap", required = true) val manuellVurderingForLovvalgMedlemskap: ManuellVurderingForLovvalgMedlemskap,
+    @JsonProperty("manuellVurderingForLovvalgMedlemskap", required = true) val manuellVurderingForLovvalgMedlemskap: ManuellVurderingForLovvalgMedlemskapDto,
     @JsonProperty("behovstype", required = true, defaultValue = AVKLAR_LOVVALG_MEDLEMSKAP_KODE) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5017`
 ) : AvklaringsbehovLøsning {
     override fun løs(connection: DBConnection, kontekst: AvklaringsbehovKontekst): LøsningsResultat {

@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarLovvalgMedlemskapLøsning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -12,7 +13,13 @@ class AvklarLovvalgMedlemskapLøser(connection: DBConnection): AvklaringsbehovsL
     private val medlemskapArbeidInntektRepository = repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarLovvalgMedlemskapLøsning): LøsningsResultat {
-        medlemskapArbeidInntektRepository.lagreManuellVurdering(kontekst.behandlingId(), løsning.manuellVurderingForLovvalgMedlemskap)
+        medlemskapArbeidInntektRepository.lagreManuellVurdering(kontekst.behandlingId(),
+            ManuellVurderingForLovvalgMedlemskap(
+                løsning.manuellVurderingForLovvalgMedlemskap.lovvalgVedSøknadsTidspunkt,
+                løsning.manuellVurderingForLovvalgMedlemskap.medlemskapVedSøknadsTidspunkt,
+                false
+            )
+        )
         return LøsningsResultat("Vurdert lovvalg & medlemskap manuelt.")
     }
 

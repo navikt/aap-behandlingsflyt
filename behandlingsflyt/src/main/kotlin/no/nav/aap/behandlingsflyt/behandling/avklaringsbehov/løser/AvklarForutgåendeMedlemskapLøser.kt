@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarForutgåendeMedlemskapLøsning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektForutgåendeRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -12,7 +13,15 @@ class AvklarForutgåendeMedlemskapLøser(connection: DBConnection): Avklaringsbe
     private val forutgåendeMedlemskapRepository = repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>()
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarForutgåendeMedlemskapLøsning): LøsningsResultat {
-        forutgåendeMedlemskapRepository.lagreManuellVurdering(kontekst.behandlingId(), løsning.manuellVurderingForForutgåendeMedlemskap)
+        forutgåendeMedlemskapRepository.lagreManuellVurdering(kontekst.behandlingId(),
+            ManuellVurderingForForutgåendeMedlemskap(
+                løsning.manuellVurderingForForutgåendeMedlemskap.begrunnelse,
+                løsning.manuellVurderingForForutgåendeMedlemskap.harForutgåendeMedlemskap,
+                løsning.manuellVurderingForForutgåendeMedlemskap.varMedlemMedNedsattArbeidsevne,
+                løsning.manuellVurderingForForutgåendeMedlemskap.medlemMedUnntakAvMaksFemAar,
+                false
+            )
+        )
         return LøsningsResultat("Vurdert forutgående medlemskap manuelt.")
     }
 
