@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlagImpl
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.steg.internal.StegKonstruktørImpl
@@ -66,6 +67,7 @@ class ProsesserBehandlingJobbUtfører(
                     ),
                     behandlingHendelseService = BehandlingHendelseServiceImpl(
                         FlytJobbRepository(connection),
+                        repositoryProvider.provide<BrevbestillingRepository>(),
                         SakService(sakRepository)
                     ),
                 )

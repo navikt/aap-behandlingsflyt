@@ -1446,7 +1446,10 @@ class FlytOrkestratorTest {
         dataSource.transaction { connection ->
             val avklaringsbehovene = hentAvklaringsbehov(behandling.id, connection)
             val sakService = SakService(SakRepositoryImpl(connection))
-            val behandlingHendelseService = BehandlingHendelseServiceImpl(FlytJobbRepository((connection)), sakService)
+            val behandlingHendelseService = BehandlingHendelseServiceImpl(
+                FlytJobbRepository((connection)),
+                BrevbestillingRepositoryImpl(connection),
+                sakService)
             avklaringsbehovene.leggTil(
                 definisjoner = listOf(Definisjon.BESTILL_LEGEERKLÆRING),
                 funnetISteg = behandling.aktivtSteg(),
@@ -1558,7 +1561,11 @@ class FlytOrkestratorTest {
         dataSource.transaction { connection ->
             val avklaringsbehovene = hentAvklaringsbehov(behandling.id, connection)
             val sakService = SakService(SakRepositoryImpl(connection))
-            val behandlingHendelseService = BehandlingHendelseServiceImpl(FlytJobbRepository((connection)), sakService)
+            val behandlingHendelseService = BehandlingHendelseServiceImpl(
+                FlytJobbRepository((connection)),
+                BrevbestillingRepositoryImpl(connection),
+                sakService
+            )
             avklaringsbehovene.leggTil(
                 definisjoner = listOf(Definisjon.BESTILL_LEGEERKLÆRING),
                 funnetISteg = behandling.aktivtSteg(),
@@ -1929,6 +1936,7 @@ class FlytOrkestratorTest {
                     connection,
                     BehandlingHendelseServiceImpl(
                         FlytJobbRepository(connection),
+                        BrevbestillingRepositoryImpl(connection),
                         SakService(SakRepositoryImpl(connection))
                     )
                 ),
@@ -2106,7 +2114,11 @@ class FlytOrkestratorTest {
             AvklaringsbehovHendelseHåndterer(
                 AvklaringsbehovOrkestrator(
                     it,
-                    BehandlingHendelseServiceImpl(FlytJobbRepository(it), SakService(SakRepositoryImpl(it)))
+                    BehandlingHendelseServiceImpl(
+                        FlytJobbRepository(it),
+                        BrevbestillingRepositoryImpl(it),
+                        SakService(SakRepositoryImpl(it))
+                    )
                 ), AvklaringsbehovRepositoryImpl(it), BehandlingRepositoryImpl(it)
             ).håndtere(
                 behandling.id, LøsAvklaringsbehovHendelse(

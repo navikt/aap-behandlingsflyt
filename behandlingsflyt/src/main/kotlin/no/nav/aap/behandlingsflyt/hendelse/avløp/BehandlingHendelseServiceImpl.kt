@@ -2,10 +2,14 @@ package no.nav.aap.behandlingsflyt.hendelse.avløp
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.ÅrsakTilReturKode
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.EndringDTO
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.TypeBrev
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.prosessering.DatadelingJobbUtfører
@@ -23,10 +27,13 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.ÅrsakTilReturKode as Årsak
 private val log = LoggerFactory.getLogger(BehandlingHendelseServiceImpl::class.java)
 
 class BehandlingHendelseServiceImpl(
-    private val flytJobbRepository: FlytJobbRepository, private val sakService: SakService
+    private val flytJobbRepository: FlytJobbRepository,
+    private val brevbestillingRepository: BrevbestillingRepository,
+    private val sakService: SakService
 ) : BehandlingHendelseService {
 
-    override fun stoppet(behandling: Behandling, avklaringsbehovene: Avklaringsbehovene) {
+    override fun stoppet(behandling: Behandling,
+                         avklaringsbehovene: Avklaringsbehovene) {
         val sak = sakService.hent(behandling.sakId)
 
         // TODO: Utvide med flere parametere for prioritering
@@ -37,6 +44,12 @@ class BehandlingHendelseServiceImpl(
             behandlingType = behandling.typeBehandling(),
             status = behandling.status(),
             avklaringsbehov = avklaringsbehovene.alle().map { avklaringsbehov ->
+                val brevbestilling = if (avklaringsbehov.definisjon == Definisjon.SKRIV_BREV) {
+                    brevbestillingRepository.hent(behandling.id)
+                        .firstOrNull { it.status == Status.FORHÅNDSVISNING_KLAR }
+                } else {
+                    null
+                }
                 AvklaringsbehovHendelseDto(
                     avklaringsbehovDefinisjon = avklaringsbehov.definisjon,
                     status = avklaringsbehov.status(),
@@ -52,7 +65,9 @@ class BehandlingHendelseServiceImpl(
                                     it.oversettTilKontrakt()
                                 )
                             })
-                    })
+                    },
+                    typeBrev = brevbestilling?.typeBrev?.oversettTilKontrakt()
+                )
             },
             opprettetTidspunkt = behandling.opprettetTidspunkt,
             hendelsesTidspunkt = LocalDateTime.now(),
@@ -91,6 +106,15 @@ class BehandlingHendelseServiceImpl(
             no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent.VENTER_PÅ_SVAR_FRA_BRUKER -> ÅrsakTilSettPåVent.VENTER_PÅ_SVAR_FRA_BRUKER
             no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent.VENTER_PÅ_MASKINELL_AVKLARING -> ÅrsakTilSettPåVent.VENTER_PÅ_MASKINELL_AVKLARING
             no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent.VENTER_PÅ_UTENLANDSK_VIDEREFORING_AVKLARING -> ÅrsakTilSettPåVent.VENTER_PÅ_UTENLANDSK_VIDEREFORING_AVKLARING
+        }
+    }
+
+    private fun no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.oversettTilKontrakt(): TypeBrev {
+        return when (this) {
+            no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VEDTAK_AVSLAG -> TypeBrev.VEDTAK_AVSLAG
+            no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VEDTAK_INNVILGELSE -> TypeBrev.VEDTAK_INNVILGELSE
+            no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VARSEL_OM_BESTILLING -> TypeBrev.VARSEL_OM_BESTILLING
+            no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT -> TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT
         }
     }
 }

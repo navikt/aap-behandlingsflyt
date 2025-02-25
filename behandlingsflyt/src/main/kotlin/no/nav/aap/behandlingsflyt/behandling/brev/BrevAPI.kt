@@ -208,6 +208,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                                             connection,
                                             BehandlingHendelseServiceImpl(
                                                 FlytJobbRepository(connection),
+                                                repositoryProvider.provide(),
                                                 SakService(sakRepository)
                                             )
                                         ),

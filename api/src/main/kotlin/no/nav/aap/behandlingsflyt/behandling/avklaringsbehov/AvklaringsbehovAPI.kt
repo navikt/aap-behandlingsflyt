@@ -7,6 +7,7 @@ import com.papsign.ktor.openapigen.route.tag
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.LøsAvklaringsbehovPåBehandling
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.mdc.LogKontekst
@@ -59,7 +60,9 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(dataSource: DataSource) {
                         AvklaringsbehovHendelseHåndterer(
                             AvklaringsbehovOrkestrator(
                                 connection, BehandlingHendelseServiceImpl(
-                                    flytJobbRepository, SakService(sakRepository)
+                                    flytJobbRepository,
+                                    repositoryProvider.provide<BrevbestillingRepository>(),
+                                    SakService(sakRepository)
                                 )
                             ), avklaringsbehovRepository, behandlingRepository
                         ).håndtere(
