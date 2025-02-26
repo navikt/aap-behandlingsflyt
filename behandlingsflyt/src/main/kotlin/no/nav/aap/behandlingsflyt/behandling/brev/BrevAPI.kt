@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.SKRIV_BREV_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.FaktagrunnlagDto
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.HentFaktaGrunnlagRequest
@@ -41,8 +42,10 @@ import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
+import no.nav.aap.tilgang.authorizedPut
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
+import java.util.UUID
 import javax.sql.DataSource
 
 private val log = LoggerFactory.getLogger("BrevAPI")
@@ -169,9 +172,30 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                 }
             }
 
-            // TODO : trenger auth
             route("/{brevbestillingReferanse}/oppdater") {
-                put<BrevbestillingReferanse, String, Brev> { brevbestillingReferanse, brev ->
+                authorizedPut<BrevbestillingReferanse, String, Brev>(
+                    AuthorizationParamPathConfig(
+                        operasjon = Operasjon.SAKSBEHANDLE,
+                        avklaringsbehovKode = SKRIV_BREV_KODE,
+                        behandlingPathParam = BehandlingPathParam(
+                            "brevbestillingReferanse",
+                            {
+                                val brevbestillingReferanse = BrevbestillingReferanse(UUID.fromString(it))
+                                dataSource.transaction { connection ->
+                                    val repositoryProvider = RepositoryProvider(connection)
+                                    val brevbestillingRepository =
+                                        repositoryProvider.provide<BrevbestillingRepository>()
+                                    val behandlingRepository =
+                                        repositoryProvider.provide<BehandlingRepository>()
+
+                                    val behandlingId =
+                                        brevbestillingRepository.hent(brevbestillingReferanse).behandlingId
+
+                                    behandlingRepository.hent(behandlingId).referanse.referanse
+                                }
+                            })
+                    )
+                ) { brevbestillingReferanse, brev ->
                     BrevGateway().oppdater(brevbestillingReferanse, brev)
                     respond("{}", HttpStatusCode.Accepted)
                 }
