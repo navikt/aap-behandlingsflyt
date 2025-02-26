@@ -8,7 +8,7 @@ val junitVersjon = "5.12.0"
 dependencies {
     implementation(project(":behandlingsflyt"))
 
-    implementation("ch.qos.logback:logback-classic:1.5.16")
+    implementation("ch.qos.logback:logback-classic:1.5.17")
     implementation("no.nav.aap.kelvin:dbconnect:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:verdityper:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:dbmigrering:$komponenterVersjon")

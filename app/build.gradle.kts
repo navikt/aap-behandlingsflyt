@@ -65,7 +65,7 @@ dependencies {
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
 
     implementation("io.micrometer:micrometer-registry-prometheus:1.14.4")
-    implementation("ch.qos.logback:logback-classic:1.5.16")
+    implementation("ch.qos.logback:logback-classic:1.5.17")
     implementation("net.logstash.logback:logstash-logback-encoder:8.0")
 
     implementation("no.nav.aap.kelvin:motor:$komponenterVersjon")
@@ -89,7 +89,7 @@ dependencies {
     implementation("com.zaxxer:HikariCP:6.2.1")
     implementation("org.flywaydb:flyway-database-postgresql:11.3.3")
     runtimeOnly("org.postgresql:postgresql:42.7.5")
-    implementation("ch.qos.logback:logback-classic:1.5.16")
+    implementation("ch.qos.logback:logback-classic:1.5.17")
 
     testImplementation(project(":lib-test"))
     testImplementation("no.nav.aap.kelvin:dbtest:$komponenterVersjon")
