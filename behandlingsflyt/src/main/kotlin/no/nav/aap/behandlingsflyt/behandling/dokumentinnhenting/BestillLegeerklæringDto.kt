@@ -20,7 +20,7 @@ data class BestillLegeerklæringDto (
         return Definisjon.BESTILL_LEGEERKLÆRING.kode.toString()
     }
 
-    override fun hentBehandlingsreferanse(): String {
+    override fun behandlingsreferanseResolverInput(): String {
         return behandlingsReferanse.toString()
     }
 }

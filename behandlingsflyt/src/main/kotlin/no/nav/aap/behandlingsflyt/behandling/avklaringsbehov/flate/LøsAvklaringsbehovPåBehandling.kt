@@ -19,7 +19,7 @@ data class LøsAvklaringsbehovPåBehandling(
         return behov.definisjon().kode.toString()
     }
 
-    override fun hentBehandlingsreferanse(): String {
+    override fun behandlingsreferanseResolverInput(): String {
         return referanse.toString()
     }
 }
