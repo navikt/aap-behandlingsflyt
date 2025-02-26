@@ -62,6 +62,9 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
 
     override fun lagreManuellVurdering(behandlingId: BehandlingId, manuellVurdering: ManuellVurderingForForutgåendeMedlemskap){
         val grunnlagOppslag = hentGrunnlag(behandlingId)
+        val eksisterendeManuellVurdering = hentManuellVurdering(grunnlagOppslag?.manuellVurderingId)
+        val overstyrt = manuellVurdering.overstyrt || eksisterendeManuellVurdering?.overstyrt == true
+
         deaktiverGrunnlag(behandlingId)
 
         val manuellVurderingQuery = """
@@ -74,7 +77,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                 setBoolean(2, manuellVurdering.harForutgåendeMedlemskap)
                 setBoolean(3, manuellVurdering.varMedlemMedNedsattArbeidsevne)
                 setBoolean(4, manuellVurdering.medlemMedUnntakAvMaksFemAar)
-                setBoolean(5, manuellVurdering.overstyrt)
+                setBoolean(5, overstyrt)
             }
         }
 
