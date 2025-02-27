@@ -118,6 +118,7 @@ spec:
         - application: pensjon-pen-q2
           namespace: pensjon-q2
           cluster: dev-fss
+        - application: api-intern
 
   env:
     - name: INTEGRASJON_PDL_URL
@@ -197,6 +198,6 @@ spec:
     - name: INTEGRASJON_INNTEKTSKOMPONENTEN_SCOPE
       value: api://dev-fss.team-inntekt.inntektskomponenten/.default
     - name: INTEGRASJON_DATADELING_URL
-      value: http://api-intern
+      value: http://dev-gcp:aap:api-intern
     - name: INTEGRASJON_DATADELING_SCOPE
       value: api://dev-gcp.aap.api-intern/.default
