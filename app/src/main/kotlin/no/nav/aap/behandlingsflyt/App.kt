@@ -74,7 +74,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordni
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningYtelseVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.dokument.arbeid.PliktkortRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.dokument.arbeid.MeldekortRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektForutgåendeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningForutgåendeRepositoryImpl
@@ -267,7 +267,7 @@ private fun registerRepositories() {
         .register<BrevbestillingRepositoryImpl>()
         .register<SamordningRepositoryImpl>()
         .register<MottattDokumentRepositoryImpl>()
-        .register<PliktkortRepositoryImpl>()
+        .register<MeldekortRepositoryImpl>()
         .register<UnderveisRepositoryImpl>()
         .register<ArbeidsevneRepositoryImpl>()
         .register<Effektuer11_7RepositoryImpl>()

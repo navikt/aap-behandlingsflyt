@@ -1,19 +1,22 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.adapter
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Pliktkort
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PliktkortV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Meldekort
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.verdityper.dokument.JournalpostId
 
-data class UbehandletPliktkort(val journalpostId: JournalpostId, val timerArbeidPerPeriode: Set<ArbeidIPeriode>) {
+data class UbehandletMeldekort(val journalpostId: JournalpostId, val timerArbeidPerPeriode: Set<ArbeidIPeriode>) {
     companion object {
-        fun fraKontrakt(pliktkort: Pliktkort, journalpostId: JournalpostId): UbehandletPliktkort {
-            return when (pliktkort) {
-                is PliktkortV0 -> UbehandletPliktkort(
+        fun fraKontrakt(
+            meldekort: Meldekort,
+            journalpostId: JournalpostId
+        ): UbehandletMeldekort {
+            return when (meldekort) {
+                is MeldekortV0 -> UbehandletMeldekort(
                     journalpostId = journalpostId,
-                    timerArbeidPerPeriode = pliktkort.timerArbeidPerPeriode.map {
+                    timerArbeidPerPeriode = meldekort.timerArbeidPerPeriode.map {
                         ArbeidIPeriode(
                             periode = Periode(it.fraOgMedDato, it.tilOgMedDato),
                             timerArbeid = TimerArbeid(it.timerArbeid.toBigDecimal())

@@ -129,11 +129,11 @@ class InnsendingTest {
     }
 
     @Test
-    fun `serialisere og deserialisere pliktkort`() {
-        val aktivitetskort = PliktkortV0(
+    fun `serialisere og deserialisere meldekort`() {
+        val aktivitetskort = MeldekortV0(
             harDuArbeidet = true,
             timerArbeidPerPeriode = listOf(
-                ArbeidIPeriode(
+                ArbeidIPeriodeV0(
                     fraOgMedDato = LocalDate.of(2023, 1, 1),
                     tilOgMedDato = LocalDate.of(2023, 1, 31),
                     timerArbeid = 25.0,

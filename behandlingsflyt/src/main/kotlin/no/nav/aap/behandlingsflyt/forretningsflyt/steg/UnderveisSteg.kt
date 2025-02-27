@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.Barnet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -48,7 +48,7 @@ class UnderveisSteg(private val underveisService: UnderveisService) : Behandling
                 )
             val aktivitetspliktRepository =
                 repositoryProvider.provide<AktivitetspliktRepository>()
-            val plikortkortRepository = repositoryProvider.provide<PliktkortRepository>()
+            val plikortkortRepository = repositoryProvider.provide<MeldekortRepository>()
             val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
             val barnetilleggRepository = repositoryProvider.provide<BarnetilleggRepository>()
 
@@ -56,7 +56,7 @@ class UnderveisSteg(private val underveisService: UnderveisService) : Behandling
                 UnderveisService(
                     behandlingService = behandlingService,
                     vilkårsresultatRepository = vilkårsresultatRepository,
-                    pliktkortRepository = plikortkortRepository,
+                    meldekortRepository = plikortkortRepository,
                     underveisRepository = underveisRepository,
                     aktivitetspliktRepository = aktivitetspliktRepository,
                     etAnnetStedUtlederService = EtAnnetStedUtlederService(

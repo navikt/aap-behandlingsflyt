@@ -19,6 +19,7 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.verdityper.dokument.Kanal
 import javax.sql.DataSource
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 
 class TestHendelsesMottak(private val dataSource: DataSource) {
 

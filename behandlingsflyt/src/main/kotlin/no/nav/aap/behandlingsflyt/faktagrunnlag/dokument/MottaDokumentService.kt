@@ -1,14 +1,14 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.adapter.UbehandletPliktkort
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.adapter.UbehandletMeldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.UbehandletDialogmelding
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.UbehandletLegeerklæring
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.adapter.UbehandletSøknad
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingId
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Pliktkort
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Meldekort
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -41,17 +41,17 @@ class MottaDokumentService(
         )
     }
 
-    fun pliktkortSomIkkeErBehandlet(sakId: SakId): Set<UbehandletPliktkort> {
-        val ubehandledePliktkort =
-            mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, InnsendingType.PLIKTKORT)
+    fun meldekortSomIkkeErBehandlet(sakId: SakId): Set<UbehandletMeldekort> {
+        val ubehandledeMeldekort =
+            mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, InnsendingType.MELDEKORT)
 
-        return ubehandledePliktkort
-            .map { UbehandletPliktkort.fraKontrakt(pliktkort(it), it.referanse.asJournalpostId) }
+        return ubehandledeMeldekort
+            .map { UbehandletMeldekort.fraKontrakt(meldekort(it), it.referanse.asJournalpostId) }
             .toSet()
     }
 
-    private fun pliktkort(dokument: MottattDokument): Pliktkort {
-        return requireNotNull(dokument.strukturerteData<Pliktkort>()?.data)
+    private fun meldekort(dokument: MottattDokument): Meldekort {
+        return requireNotNull(dokument.strukturerteData<Meldekort>()?.data)
     }
 
     fun aktivitetskortSomIkkeErBehandlet(sakId: SakId): Set<InnsendingId> {
