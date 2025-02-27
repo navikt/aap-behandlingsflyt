@@ -24,7 +24,7 @@ class ForutgåendeMedlemskapvilkåret(
         val forutgåendePeriode = Periode(rettighetsPeriode.fom.minusYears(5), rettighetsPeriode.tom)
 
         if (tidligereVilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET).vilkårsperioder().any { it.innvilgelsesårsak == Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG }){
-            leggTilVurdering(forutgåendePeriode, grunnlag, VurderingsResultat(Utfall.OPPFYLT, null, Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG), false)
+            leggTilVurdering(rettighetsPeriode, grunnlag, VurderingsResultat(Utfall.OPPFYLT, null, Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG), false)
             return
         }
 
@@ -46,7 +46,7 @@ class ForutgåendeMedlemskapvilkåret(
             VurderingsResultat(utfall, null, null)
         }
 
-        leggTilVurdering(forutgåendePeriode, grunnlag, vurderingsResultat, vurdertManuelt)
+        leggTilVurdering(rettighetsPeriode, grunnlag, vurderingsResultat, vurdertManuelt)
     }
 
     fun vurderOverstyrt(grunnlag: ForutgåendeMedlemskapGrunnlag) {
