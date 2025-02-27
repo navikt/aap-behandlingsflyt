@@ -36,7 +36,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
             val forutgåendeMedlemskapArbeidInntektGrunnlag = forutgåendeMedlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)
             val oppgittUtenlandsOppholdGrunnlag = forutgåendeMedlemskapArbeidInntektRepository.hentOppgittUtenlandsOppholdHvisEksisterer(kontekst.behandlingId)
 
-            ForutgåendeMedlemskapvilkåret(vilkårsresultat, sak.rettighetsperiode, manuellVurdering).vurder(
+            ForutgåendeMedlemskapvilkåret(vilkårsresultat, sak.rettighetsperiode).vurder(
                 ForutgåendeMedlemskapGrunnlag(forutgåendeMedlemskapArbeidInntektGrunnlag, personopplysningForutgåendeGrunnlag, oppgittUtenlandsOppholdGrunnlag)
             )
             vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)

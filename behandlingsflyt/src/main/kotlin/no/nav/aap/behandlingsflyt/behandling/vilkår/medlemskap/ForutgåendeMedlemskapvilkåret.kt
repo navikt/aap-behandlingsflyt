@@ -14,14 +14,14 @@ import no.nav.aap.komponenter.type.Periode
 
 class ForutgåendeMedlemskapvilkåret(
     vilkårsresultat: Vilkårsresultat,
-    private val rettighetsPeriode: Periode,
-    private val manuellVurdering: ManuellVurderingForForutgåendeMedlemskap?
+    private val rettighetsPeriode: Periode
 ) : Vilkårsvurderer<ForutgåendeMedlemskapGrunnlag> {
     private val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.MEDLEMSKAP)
     private val tidligereVilkårsresultat = vilkårsresultat
 
     override fun vurder(grunnlag: ForutgåendeMedlemskapGrunnlag) {
         val forutgåendePeriode = Periode(rettighetsPeriode.fom.minusYears(5), rettighetsPeriode.tom)
+        val manuellVurdering = grunnlag.medlemskapArbeidInntektGrunnlag?.manuellVurdering
 
         if (tidligereVilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET).vilkårsperioder().any { it.innvilgelsesårsak == Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG }){
             leggTilVurdering(rettighetsPeriode, grunnlag, VurderingsResultat(Utfall.OPPFYLT, null, Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG), false)
@@ -50,6 +50,7 @@ class ForutgåendeMedlemskapvilkåret(
     }
 
     fun vurderOverstyrt(grunnlag: ForutgåendeMedlemskapGrunnlag) {
+        val manuellVurdering = grunnlag.medlemskapArbeidInntektGrunnlag?.manuellVurdering
         val vurderingsResultat = if (!manuellVurdering!!.harForutgåendeMedlemskap
             && (manuellVurdering.medlemMedUnntakAvMaksFemAar != true && manuellVurdering.varMedlemMedNedsattArbeidsevne != true)) {
                 VurderingsResultat(Utfall.IKKE_OPPFYLT, Avslagsårsak.IKKE_MEDLEM_FORUTGÅENDE, null)

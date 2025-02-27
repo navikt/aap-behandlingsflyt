@@ -46,7 +46,7 @@ class AvklarOverstyrtForutgåendeMedlemskapLøser(connection: DBConnection): Avk
         val medlemskapArbeidInntektGrunnlag = forutgåendeMedlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId())
         val oppgittUtenlandsOppholdGrunnlag = forutgåendeMedlemskapArbeidInntektRepository.hentOppgittUtenlandsOppholdHvisEksisterer(kontekst.behandlingId())
 
-        ForutgåendeMedlemskapvilkåret(vilkårsresultat, sak.rettighetsperiode, medlemskapArbeidInntektGrunnlag?.manuellVurdering).vurderOverstyrt(
+        ForutgåendeMedlemskapvilkåret(vilkårsresultat, sak.rettighetsperiode).vurderOverstyrt(
             ForutgåendeMedlemskapGrunnlag(medlemskapArbeidInntektGrunnlag, personopplysningGrunnlag, oppgittUtenlandsOppholdGrunnlag)
         )
         vilkårsresultatRepository.lagre(kontekst.behandlingId(), vilkårsresultat)
