@@ -29,9 +29,19 @@ class Vilkår(
 
     private var vilkårTidslinje = Tidslinje(vilkårsperioder.map { vp -> Segment(vp.periode, Vilkårsvurdering(vp)) })
 
+    fun tidslinje(): Tidslinje<Vilkårsvurdering> {
+        return vilkårTidslinje
+    }
+
     fun vilkårsperioder(): List<Vilkårsperiode> {
         return vilkårTidslinje.segmenter()
             .map { segment -> Vilkårsperiode(segment.periode, segment.verdi) }
+    }
+
+    fun leggTilVurderinger(tidslinje: Tidslinje<Vilkårsvurdering>) {
+        vilkårTidslinje = vilkårTidslinje.kombiner(
+            tidslinje, StandardSammenslåere.prioriterHøyreSideCrossJoin()
+        )
     }
 
     fun leggTilVurdering(vilkårsperiode: Vilkårsperiode) {
