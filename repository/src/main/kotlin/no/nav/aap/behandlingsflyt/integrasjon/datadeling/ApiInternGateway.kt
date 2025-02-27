@@ -31,8 +31,8 @@ class ApiInternGatewayImpl(restClient: RestClient<String>? = null) : ApiInternGa
         restClient.post<_, Unit>(
             uri = uri.resolve("/api/insert/meldeperioder"),
             request = PostRequest(body = MeldekortPerioderDTO(ident, perioder)),
-            mapper = { body, _ ->
-                DefaultJsonMapper.fromJson(body as InputStream)
+            mapper = { _, _ ->
+                Unit
             })
     }
 
