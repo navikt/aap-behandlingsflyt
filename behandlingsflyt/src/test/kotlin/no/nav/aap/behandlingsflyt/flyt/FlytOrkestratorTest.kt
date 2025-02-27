@@ -2105,7 +2105,6 @@ class FlytOrkestratorTest {
         assertThat(Avslagsårsak.IKKE_MEDLEM == vilkårsResultat.first().avslagsårsak)
     }
 
-    @Test
     fun `Kan løse forutgående overstyringsbehov til ikke oppfylt`() {
         val ident = ident()
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
