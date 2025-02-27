@@ -1623,12 +1623,12 @@ class FlytOrkestratorTest {
         // Oppretter vanlig søknad
         hendelsesMottak.håndtere(
             ident, DokumentMottattPersonHendelse(
-                journalpost = JournalpostId("2"),
+                journalpost = JournalpostId("26789"),
                 mottattTidspunkt = LocalDateTime.now(),
                 strukturertDokument = StrukturertDokument(
                     SøknadV0(
                         student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
-                        medlemskap = SøknadMedlemskapDto("JA", "JA", "JA", "NEI", null)
+                        medlemskap = SøknadMedlemskapDto("NEI", null, "JA", null, null)
                     ),
                 ),
                 periode = periode
@@ -1642,7 +1642,7 @@ class FlytOrkestratorTest {
         // Validér avklaring
         dataSource.transaction { connection ->
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
-            assertThat(avklaringsbehov.åpne().all { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
+            assertTrue(avklaringsbehov.åpne().all { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
         }
     }
 
@@ -1679,7 +1679,7 @@ class FlytOrkestratorTest {
                 strukturertDokument = StrukturertDokument(
                     SøknadV0(
                         student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
-                        medlemskap = SøknadMedlemskapDto("JA", "JA", "NEI", "NEI", null)
+                        medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null)
                     ),
                 ),
                 periode = periode
@@ -1693,7 +1693,7 @@ class FlytOrkestratorTest {
         // Validér avklaring
         dataSource.transaction { connection ->
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
-            assertThat(avklaringsbehov.åpne().none())
+            assertTrue(avklaringsbehov.åpne().none { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
         }
     }
 
@@ -1721,12 +1721,12 @@ class FlytOrkestratorTest {
         val sak = hentSak(ident, periode)
         val behandling = hentBehandling(sak.id)
 
-        løsFramTilForutgåendeMedlemskap(behandling, sak, false, ident)
+        løsFramTilForutgåendeMedlemskap(behandling, sak, false, ident, true)
 
         // Validér avklaring
         dataSource.transaction { connection ->
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
-            assertThat(avklaringsbehov.åpne().all { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP })
+            assertTrue(avklaringsbehov.åpne().all { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP })
         }
 
         // Trigger manuell vurdering
@@ -1744,7 +1744,7 @@ class FlytOrkestratorTest {
         // Validér avklaring
         dataSource.transaction { connection ->
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
-            assertThat(avklaringsbehov.åpne().none())
+            assertTrue(avklaringsbehov.åpne().none { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP })
         }
     }
 
@@ -1774,12 +1774,12 @@ class FlytOrkestratorTest {
         val sak = hentSak(ident, periode)
         val behandling = hentBehandling(sak.id)
 
-        løsFramTilForutgåendeMedlemskap(behandling, sak, false, ident)
+        løsFramTilForutgåendeMedlemskap(behandling, sak, false, ident, true)
 
         // Validér avklaring
         dataSource.transaction { connection ->
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
-            assertThat(avklaringsbehov.åpne().all { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP })
+            assertTrue(avklaringsbehov.åpne().all { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP })
         }
 
         // Trigger manuell vurdering
@@ -1798,7 +1798,7 @@ class FlytOrkestratorTest {
         dataSource.transaction { connection ->
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
             val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder()
-            assertThat(avklaringsbehov.åpne().none())
+            assertTrue(avklaringsbehov.åpne().none { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP })
             assertTrue(vilkårsResultat.none { it.erOppfylt() })
         }
     }
@@ -1829,12 +1829,12 @@ class FlytOrkestratorTest {
         val sak = hentSak(ident, periode)
         val behandling = hentBehandling(sak.id)
 
-        løsFramTilForutgåendeMedlemskap(behandling, sak, false, ident)
+        løsFramTilForutgåendeMedlemskap(behandling, sak, false, ident, true)
 
         // Validér avklaring
         dataSource.transaction { connection ->
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
-            assertThat(avklaringsbehov.åpne().all { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP })
+                assertTrue(avklaringsbehov.åpne().all { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP })
         }
 
         // Trigger manuell vurdering
@@ -1852,7 +1852,7 @@ class FlytOrkestratorTest {
         dataSource.transaction { connection ->
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
             val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder()
-            assertThat(avklaringsbehov.åpne().none())
+            assertTrue(avklaringsbehov.åpne().none{ it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP })
             assertTrue(vilkårsResultat.all { it.erOppfylt() })
         }
     }
@@ -1886,7 +1886,7 @@ class FlytOrkestratorTest {
         // Validér avklaring
         dataSource.transaction { connection ->
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
-            assertThat(avklaringsbehov.åpne().none { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP })
+            assertTrue(avklaringsbehov.åpne().none { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP })
         }
     }
 
@@ -1930,7 +1930,7 @@ class FlytOrkestratorTest {
         // Validér avklaring
         dataSource.transaction { connection ->
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
-            assertThat(avklaringsbehov.åpne().all { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
+            assertTrue(avklaringsbehov.åpne().all { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
         }
 
         // Trigger manuell vurdering
@@ -1967,7 +1967,7 @@ class FlytOrkestratorTest {
         dataSource.transaction { connection ->
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
             val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
-            assertThat(avklaringsbehov.åpne().none())
+            assertTrue(avklaringsbehov.åpne().none{ it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP })
             assertTrue(vilkårsResultat.all { it.erOppfylt() })
         }
     }
@@ -2011,7 +2011,7 @@ class FlytOrkestratorTest {
 
         // Validér avklaring
         var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
-        assertThat(åpneAvklaringsbehov.all { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
+        assertTrue(åpneAvklaringsbehov.all { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
 
         // Trigger manuell vurdering
         løsAvklaringsBehov(
@@ -2025,15 +2025,11 @@ class FlytOrkestratorTest {
         )
         util.ventPåSvar()
 
-        // Validér avklaring
-        dataSource.transaction { connection ->
-        }
-
         // Validér riktig resultat
-        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
-        assertThat(åpneAvklaringsbehov.none())
         dataSource.transaction { connection ->
+            val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
             val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
+            assertTrue(åpneAvklaringsbehov.none{ it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
             assertTrue(vilkårsResultat.none { it.erOppfylt() })
         }
     }
@@ -2078,7 +2074,7 @@ class FlytOrkestratorTest {
         // Validér avklaring
         dataSource.transaction { connection ->
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
-            assertThat(avklaringsbehov.åpne().all { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
+            assertTrue(avklaringsbehov.åpne().all { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
         }
 
         // Trigger manuell vurdering
@@ -2102,9 +2098,10 @@ class FlytOrkestratorTest {
         // Validér riktig resultat
         val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
         assertTrue(vilkårsResultat.none { it.erOppfylt() })
-        assertThat(Avslagsårsak.IKKE_MEDLEM == vilkårsResultat.first().avslagsårsak)
+        assertTrue(Avslagsårsak.IKKE_MEDLEM == vilkårsResultat.first().avslagsårsak)
     }
 
+    @Test
     fun `Kan løse forutgående overstyringsbehov til ikke oppfylt`() {
         val ident = ident()
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
@@ -2127,18 +2124,17 @@ class FlytOrkestratorTest {
         val sak = hentSak(ident, periode)
         val behandling = hentBehandling(sak.id)
 
-        løsFramTilForutgåendeMedlemskap(behandling, sak, true, ident)
+        løsFramTilForutgåendeMedlemskap(behandling, sak, false, ident, false)
 
         // Validér avklaring
         dataSource.transaction { connection ->
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
-            assertThat(avklaringsbehov.åpne().none{Definisjon.MANUELL_OVERSTYRING_MEDLEMSKAP == it.definisjon})
+            assertTrue(avklaringsbehov.åpne().none{Definisjon.MANUELL_OVERSTYRING_MEDLEMSKAP == it.definisjon})
         }
 
         // Validér riktig resultat
         var vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder()
-        assertTrue(vilkårsResultat.none { it.erOppfylt() })
-        assertThat(Avslagsårsak.IKKE_MEDLEM == vilkårsResultat.first().avslagsårsak)
+        assertTrue(vilkårsResultat.all { it.erOppfylt() })
 
         løsAvklaringsBehov(
             behandling, AvklarOverstyrtForutgåendeMedlemskapLøsning(
@@ -2153,13 +2149,13 @@ class FlytOrkestratorTest {
         // Validér avklaring
         dataSource.transaction { connection ->
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
-            assertThat(avklaringsbehov.åpne().none{Definisjon.MANUELL_OVERSTYRING_MEDLEMSKAP == it.definisjon})
+            assertTrue(avklaringsbehov.åpne().none{Definisjon.MANUELL_OVERSTYRING_MEDLEMSKAP == it.definisjon})
         }
 
         // Validér riktig resultat
         vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder()
         assertTrue(vilkårsResultat.none { it.erOppfylt() })
-        assertThat(Avslagsårsak.IKKE_MEDLEM == vilkårsResultat.first().avslagsårsak)
+        assertTrue(Avslagsårsak.IKKE_MEDLEM_FORUTGÅENDE == vilkårsResultat.first().avslagsårsak)
     }
 
     @Test
@@ -2199,13 +2195,13 @@ class FlytOrkestratorTest {
         // Validér avklaring
         dataSource.transaction { connection ->
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
-            assertThat(avklaringsbehov.åpne().none{Definisjon.MANUELL_OVERSTYRING_LOVVALG == it.definisjon})
+            assertTrue(avklaringsbehov.åpne().none{Definisjon.MANUELL_OVERSTYRING_LOVVALG == it.definisjon})
         }
 
         // Validér riktig resultat
         val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
         assertTrue(vilkårsResultat.none { it.erOppfylt() })
-        assertThat(Avslagsårsak.IKKE_MEDLEM == vilkårsResultat.first().avslagsårsak)
+        assertTrue(Avslagsårsak.IKKE_MEDLEM == vilkårsResultat.first().avslagsårsak)
     }
 
     @Test
@@ -2245,7 +2241,7 @@ class FlytOrkestratorTest {
         // Validér avklaring
         dataSource.transaction { connection ->
             val avklaringsbehov = hentAvklaringsbehov(behandling.id, connection)
-            assertThat(avklaringsbehov.åpne().none{Definisjon.MANUELL_OVERSTYRING_LOVVALG == it.definisjon})
+            assertTrue(avklaringsbehov.åpne().none{Definisjon.MANUELL_OVERSTYRING_LOVVALG == it.definisjon})
         }
 
         // Validér riktig resultat
@@ -2254,7 +2250,7 @@ class FlytOrkestratorTest {
             val overstyrtManuellVurdering = MedlemskapArbeidInntektRepositoryImpl(connection).hentHvisEksisterer(behandling.id)?.manuellVurdering?.overstyrt
 
             assertTrue(vilkårsResultat.all { it.erOppfylt() })
-            assertThat(overstyrtManuellVurdering)
+            assertTrue(overstyrtManuellVurdering == true)
         }
     }
 
@@ -2353,28 +2349,37 @@ class FlytOrkestratorTest {
         behandling: Behandling,
         sak: Sak,
         harYrkesskade: Boolean = false,
-        ident: Ident
+        ident: Ident,
+        harUtenlandskOpphold: Boolean = false
     ) {
         val person = TestPerson(
             identer = setOf(ident),
-            statsborgerskap = listOf(PdlStatsborgerskap("MAC", LocalDate.now().minusYears(5), LocalDate.now())),
+            statsborgerskap = if (harUtenlandskOpphold) listOf(PdlStatsborgerskap("MAC", LocalDate.now().minusYears(5), LocalDate.now()))
+                else listOf(PdlStatsborgerskap("NOR", LocalDate.now().minusYears(5), LocalDate.now())),
             yrkesskade = if (harYrkesskade) listOf(TestYrkesskade()) else emptyList(),
-            personStatus = listOf(
+            personStatus = if (!harUtenlandskOpphold) listOf(
                 PdlFolkeregisterPersonStatus(
                     PersonStatus.bosatt,
                     PdlFolkeregistermetadata(
                         LocalDateTime.now(),
                         LocalDateTime.now().plusYears(2)
                     )
-                ),
+                )
+            ) else listOf(
                 PdlFolkeregisterPersonStatus(
-                    PersonStatus.ikkeBosatt,
-                    PdlFolkeregistermetadata(
-                        LocalDateTime.now().minusYears(5),
-                        LocalDateTime.now().minusYears(2)
+                PersonStatus.bosatt,
+                PdlFolkeregistermetadata(
+                    LocalDateTime.now(),
+                    LocalDateTime.now().plusYears(2)
                     )
                 ),
-            )
+                PdlFolkeregisterPersonStatus(
+                PersonStatus.ikkeBosatt,
+                PdlFolkeregistermetadata(
+                    LocalDateTime.now().minusYears(5),
+                    LocalDateTime.now().minusYears(2)
+                )
+            ))
         )
         FakePersoner.leggTil(person)
 
@@ -2424,7 +2429,7 @@ class FlytOrkestratorTest {
                         begrunnelse = "",
                         relevanteSaker = listOf(),
                         andelAvNedsettelsen = null,
-                        erÅrsakssammenheng = false
+                        erÅrsakssammenheng = true
                     )
                 ),
             )
