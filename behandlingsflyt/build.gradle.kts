@@ -44,6 +44,6 @@ dependencies {
             because("https://github.com/advisories/GHSA-4g9r-vxhx-9pgx")
         }
     }
-    testImplementation("io.mockk:mockk:1.13.16")
+    testImplementation("io.mockk:mockk:1.13.17")
     testImplementation(kotlin("test"))
 }
