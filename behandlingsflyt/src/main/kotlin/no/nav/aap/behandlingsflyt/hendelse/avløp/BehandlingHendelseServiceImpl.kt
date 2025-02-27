@@ -32,8 +32,10 @@ class BehandlingHendelseServiceImpl(
     private val sakService: SakService
 ) : BehandlingHendelseService {
 
-    override fun stoppet(behandling: Behandling,
-                         avklaringsbehovene: Avklaringsbehovene) {
+    override fun stoppet(
+        behandling: Behandling,
+        avklaringsbehovene: Avklaringsbehovene
+    ) {
         val sak = sakService.hent(behandling.sakId)
 
         // TODO: Utvide med flere parametere for prioritering
@@ -81,11 +83,10 @@ class BehandlingHendelseServiceImpl(
         flytJobbRepository.leggTil(
             JobbInput(jobb = StatistikkJobbUtfører).medPayload(hendelse)
         )
-        if (behandling.status().erAvsluttet()) {
-            flytJobbRepository.leggTil(
-                JobbInput(jobb = DatadelingJobbUtfører).medPayload(hendelse)
-            )
-        }
+        flytJobbRepository.leggTil(
+            JobbInput(jobb = DatadelingJobbUtfører).medPayload(hendelse)
+        )
+
     }
 
     private fun DomeneÅrsakTilRetur.oversettTilKontrakt(): ÅrsakTilReturKodeKontrakt {

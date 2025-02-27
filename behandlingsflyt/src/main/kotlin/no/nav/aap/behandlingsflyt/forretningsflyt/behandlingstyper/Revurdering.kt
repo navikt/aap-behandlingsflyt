@@ -23,6 +23,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BeregningAvklarFaktaSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.EtAnnetStedSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettArbeidsevneSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettGrunnlagSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettMeldeperiodeSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettSykdomsvilkåretSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FatteVedtakSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.ForeslåVedtakSteg
@@ -58,6 +59,7 @@ object Revurdering : BehandlingType {
                     ÅrsakTilBehandling.REVURDER_MEDLEMSKAP
                 )
             )
+            .medSteg(steg = FastsettMeldeperiodeSteg)
             .medSteg(steg = VurderAlderSteg)
             .medSteg(steg = VurderStudentSteg)
             .medSteg(

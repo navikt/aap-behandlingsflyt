@@ -23,6 +23,10 @@ public enum class StegType(
         gruppe = StegGruppe.MEDLEMSKAP,
         status = Status.UTREDES
     ),
+    FASTSETT_MELDEPERIODER(
+        gruppe = StegGruppe.UDEFINERT,
+        status = Status.UTREDES
+    ),
     AVKLAR_STUDENT(
         gruppe = StegGruppe.STUDENT,
         status = Status.UTREDES

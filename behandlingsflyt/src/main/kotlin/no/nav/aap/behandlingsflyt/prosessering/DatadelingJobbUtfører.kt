@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
@@ -16,7 +17,7 @@ class DatadelingJobbUtfører(
     private val apiInternGateway: ApiInternGateway,
     private val behandlingRepository: BehandlingRepository,
     private val sakRepository: SakRepository,
-    private val underveisRepository: UnderveisRepository,
+    private val meldeperiodeRepository: MeldeperiodeRepository
 ) : JobbUtfører {
     override fun utfør(input: JobbInput) {
         val hendelse = input.payload<BehandlingFlytStoppetHendelse>()
@@ -24,12 +25,11 @@ class DatadelingJobbUtfører(
         val sak = sakRepository.hent(behandling.sakId)
         val personIdent = sak.person.aktivIdent().identifikator
 
-        val underveisGrunnlag = underveisRepository.hent(behandling.id)
+        val perioder = meldeperiodeRepository.hentHvisEksisterer(behandling.id)
 
-        val perioder = underveisGrunnlag.perioder.map { periode ->
-            periode.meldePeriode
-        }.toSet().toList()
-
+        if (perioder == null) {
+            return
+        }
         apiInternGateway.sendPerioder(personIdent, perioder)
 
     }
@@ -44,13 +44,13 @@ class DatadelingJobbUtfører(
             val repositoryProvider = RepositoryProvider(connection)
             val behandlingRepository: BehandlingRepository = repositoryProvider.provide<BehandlingRepository>()
             val sakRepository: SakRepository = repositoryProvider.provide<SakRepository>()
-            val underveisRepository: UnderveisRepository = repositoryProvider.provide<UnderveisRepository>()
+            val meldeperiodeRepository: MeldeperiodeRepository = repositoryProvider.provide<MeldeperiodeRepository>()
 
             return DatadelingJobbUtfører(
                 GatewayProvider.provide(),
                 behandlingRepository,
                 sakRepository,
-                underveisRepository
+                meldeperiodeRepository
             )
         }
 

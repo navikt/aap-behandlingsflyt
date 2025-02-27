@@ -128,6 +128,7 @@ class EnklereFlytOrkestratorTest {
             listOf(
                 StegType.START_BEHANDLING,
                 StegType.VURDER_LOVVALG,
+                StegType.FASTSETT_MELDEPERIODER,
                 StegType.VURDER_ALDER,
                 StegType.AVKLAR_STUDENT,
                 StegType.AVKLAR_SYKDOM
@@ -145,6 +146,7 @@ class EnklereFlytOrkestratorTest {
             listOf(
                 StegType.START_BEHANDLING,
                 StegType.VURDER_LOVVALG,
+                StegType.FASTSETT_MELDEPERIODER,
                 StegType.VURDER_ALDER,
                 StegType.AVKLAR_STUDENT,
                 StegType.AVKLAR_SYKDOM
@@ -221,6 +223,11 @@ class EnklereFlytOrkestratorTest {
                     aktiv = false
                 ),
                 StegTilstand(stegType = StegType.VURDER_LOVVALG, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
+                StegTilstand(stegType=StegType.FASTSETT_MELDEPERIODER, stegStatus=StegStatus.START, aktiv=false),
+                StegTilstand(stegType=StegType.FASTSETT_MELDEPERIODER, stegStatus=StegStatus.OPPDATER_FAKTAGRUNNLAG, aktiv=false),
+                StegTilstand(stegType=StegType.FASTSETT_MELDEPERIODER, stegStatus=StegStatus.UTFØRER, aktiv=false),
+                StegTilstand(stegType=StegType.FASTSETT_MELDEPERIODER, stegStatus=StegStatus.AVKLARINGSPUNKT, aktiv=false),
+                StegTilstand(stegType=StegType.FASTSETT_MELDEPERIODER, stegStatus=StegStatus.AVSLUTTER, aktiv=false),
                 StegTilstand(stegType = StegType.VURDER_ALDER, stegStatus = StegStatus.START, aktiv = false),
                 StegTilstand(
                     stegType = StegType.VURDER_ALDER,
@@ -293,6 +300,11 @@ class EnklereFlytOrkestratorTest {
                     aktiv = false
                 ),
                 StegTilstand(stegType = StegType.VURDER_LOVVALG, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
+                StegTilstand(stegType=StegType.FASTSETT_MELDEPERIODER, stegStatus=StegStatus.START, aktiv=false),
+                StegTilstand(stegType=StegType.FASTSETT_MELDEPERIODER, stegStatus=StegStatus.OPPDATER_FAKTAGRUNNLAG, aktiv=false),
+                StegTilstand(stegType=StegType.FASTSETT_MELDEPERIODER, stegStatus=StegStatus.UTFØRER, aktiv=false),
+                StegTilstand(stegType=StegType.FASTSETT_MELDEPERIODER, stegStatus=StegStatus.AVKLARINGSPUNKT, aktiv=false),
+                StegTilstand(stegType=StegType.FASTSETT_MELDEPERIODER, stegStatus=StegStatus.AVSLUTTER, aktiv=false),
                 StegTilstand(stegType = StegType.VURDER_ALDER, stegStatus = StegStatus.START, aktiv = false),
                 StegTilstand(
                     stegType = StegType.VURDER_ALDER,
