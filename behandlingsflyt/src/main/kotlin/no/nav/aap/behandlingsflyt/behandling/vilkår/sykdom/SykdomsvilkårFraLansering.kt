@@ -1,58 +1,98 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom
 
 import no.nav.aap.behandlingsflyt.behandling.vilkår.Vilkårsvurderer
-import no.nav.aap.behandlingsflyt.behandling.vilkår.VurderingsResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
+import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 
 class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<SykdomsFaktagrunnlag> {
     private val vilkår: Vilkår = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
 
     override fun vurder(grunnlag: SykdomsFaktagrunnlag) {
+        val studentVurderingTidslinje = Tidslinje(
+            Periode(grunnlag.vurderingsdato, grunnlag.sisteDagMedMuligYtelse),
+            grunnlag.studentvurdering
+        )
+
+        val yrkesskadeVurderingTidslinje = Tidslinje(
+            Periode(grunnlag.vurderingsdato, grunnlag.sisteDagMedMuligYtelse),
+            grunnlag.yrkesskadevurdering
+        )
+
+        val sykdomsvurderingTidslinje = grunnlag.sykdomsvurderinger
+            .sortedBy { it.opprettet }
+            .map { vurdering ->
+                Tidslinje(
+                    Periode(
+                        fom = vurdering.vurderingenGjelderFra ?: grunnlag.vurderingsdato,
+                        tom = grunnlag.sisteDagMedMuligYtelse
+                    ),
+                    vurdering
+                )
+            }
+            .fold(Tidslinje<Sykdomsvurdering>()) { t1, t2 ->
+                t1.kombiner(t2, StandardSammenslåere.prioriterHøyreSideCrossJoin())
+            }
+
+        val tidslinje =
+            Tidslinje.zip3(studentVurderingTidslinje, yrkesskadeVurderingTidslinje, sykdomsvurderingTidslinje)
+                .mapValue { (studentVurdering, yrkesskadeVurdering, sykdomVurdering) ->
+                    opprettVilkårsvurdering(studentVurdering, sykdomVurdering, yrkesskadeVurdering, grunnlag)
+                }
+
+        vilkår.leggTilVurderinger(tidslinje)
+    }
+
+    private fun opprettVilkårsvurdering(
+        studentVurdering: StudentVurdering?,
+        sykdomVurdering: Sykdomsvurdering?,
+        yrkesskadeVurdering: Yrkesskadevurdering?,
+        grunnlag: SykdomsFaktagrunnlag
+    ): Vilkårsvurdering {
         val utfall: Utfall
         var avslagsårsak: Avslagsårsak? = null
         var innvilgelsesårsak: Innvilgelsesårsak? = null
 
-        val sykdomsvurdering = grunnlag.sykdomsvurdering
-        val studentVurdering = grunnlag.studentvurdering
-        val yrkesskadevurdering = grunnlag.yrkesskadevurdering
-
-
         if (studentVurdering?.erOppfylt() == true) {
             utfall = Utfall.OPPFYLT
             innvilgelsesårsak = Innvilgelsesårsak.STUDENT
-        } else if (harSykdomBlittVurdertTilGodkjent(sykdomsvurdering, yrkesskadevurdering)) {
+        } else if (harSykdomBlittVurdertTilGodkjent(sykdomVurdering, yrkesskadeVurdering)) {
             utfall = Utfall.OPPFYLT
-            if (yrkesskadevurdering != null && yrkesskadevurdering.erÅrsakssammenheng) {
+            if (yrkesskadeVurdering != null && yrkesskadeVurdering.erÅrsakssammenheng) {
                 innvilgelsesårsak = Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG
             }
         } else {
             utfall = Utfall.IKKE_OPPFYLT
-            avslagsårsak = if (sykdomsvurdering?.erSkadeSykdomEllerLyteVesentligdel == false) {
+            avslagsårsak = if (sykdomVurdering?.erSkadeSykdomEllerLyteVesentligdel == false) {
                 Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL
-            } else if (sykdomsvurdering?.erNedsettelseIArbeidsevneMerEnnHalvparten == false && sykdomsvurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != true) {
+            } else if (sykdomVurdering?.erNedsettelseIArbeidsevneMerEnnHalvparten == false && sykdomVurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != true) {
                 Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE
-            } else if (sykdomsvurdering?.erNedsettelseIArbeidsevneAvEnVissVarighet == false) {
+            } else if (sykdomVurdering?.erNedsettelseIArbeidsevneAvEnVissVarighet == false) {
                 Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET
             } else {
                 Avslagsårsak.MANGLENDE_DOKUMENTASJON // TODO noe mer rett
             }
         }
 
-        lagre(
-            grunnlag,
-            VurderingsResultat(
+        return Vilkårsvurdering(
+            Vilkårsperiode(
+                periode = Periode(grunnlag.vurderingsdato, grunnlag.sisteDagMedMuligYtelse),
                 utfall = utfall,
+                begrunnelse = null,
+                innvilgelsesårsak = innvilgelsesårsak,
                 avslagsårsak = avslagsårsak,
-                innvilgelsesårsak = innvilgelsesårsak
+                faktagrunnlag = grunnlag,
             )
         )
     }
@@ -71,21 +111,5 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
                         (sykdomsvurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true && yrkesskadevurdering?.erÅrsakssammenheng == true))
     }
 
-    private fun lagre(grunnlag: SykdomsFaktagrunnlag, vurderingsResultat: VurderingsResultat): VurderingsResultat {
-        vilkår.leggTilVurdering(
-            Vilkårsperiode(
-                Periode(grunnlag.vurderingsdato, grunnlag.sisteDagMedMuligYtelse),
-                vurderingsResultat.utfall,
-                false,
-                null,
-                vurderingsResultat.innvilgelsesårsak,
-                vurderingsResultat.avslagsårsak,
-                grunnlag,
-                vurderingsResultat.versjon()
-            )
-        )
-
-        return vurderingsResultat
-    }
 
 }

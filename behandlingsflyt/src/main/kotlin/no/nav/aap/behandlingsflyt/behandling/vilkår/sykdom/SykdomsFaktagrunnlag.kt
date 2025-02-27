@@ -10,6 +10,6 @@ class SykdomsFaktagrunnlag(
     val vurderingsdato: LocalDate,
     val sisteDagMedMuligYtelse: LocalDate,
     val yrkesskadevurdering: Yrkesskadevurdering?,
-    val sykdomsvurdering: Sykdomsvurdering?,
+    val sykdomsvurderinger: List<Sykdomsvurdering>,
     val studentvurdering: StudentVurdering?
 ) : Faktagrunnlag
