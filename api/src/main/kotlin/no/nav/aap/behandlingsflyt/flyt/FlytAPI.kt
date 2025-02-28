@@ -425,19 +425,19 @@ private fun vilkårResultat(
 private fun hentUtRelevantVilkårForSteg(vilkårsresultat: Vilkårsresultat, stegType: StegType): VilkårDTO? {
     var vilkår: Vilkår? = null
     if (stegType == StegType.AVKLAR_SYKDOM) {
-        vilkår = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
+        vilkår = vilkårsresultat.optionalVilkår(Vilkårtype.SYKDOMSVILKÅRET)
     }
     if (stegType == StegType.VURDER_ALDER) {
-        vilkår = vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET)
+        vilkår = vilkårsresultat.optionalVilkår(Vilkårtype.ALDERSVILKÅRET)
     }
     if (stegType == StegType.VURDER_BISTANDSBEHOV) {
-        vilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
+        vilkår = vilkårsresultat.optionalVilkår(Vilkårtype.BISTANDSVILKÅRET)
     }
     if (stegType == StegType.VURDER_LOVVALG) {
-        vilkår = vilkårsresultat.finnVilkår(Vilkårtype.LOVVALG)
+        vilkår = vilkårsresultat.optionalVilkår(Vilkårtype.LOVVALG)
     }
     if ( stegType == StegType.VURDER_MEDLEMSKAP) {
-        vilkår = vilkårsresultat.finnVilkår(Vilkårtype.MEDLEMSKAP)
+        vilkår = vilkårsresultat.optionalVilkår(Vilkårtype.MEDLEMSKAP)
     }
     if (vilkår == null) {
         return null
