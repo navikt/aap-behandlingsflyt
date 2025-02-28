@@ -41,41 +41,43 @@ class VurderSykdomSteg private constructor(
         val vilkårResultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
         val studentVurdering = studentGrunnlag?.studentvurdering
 
-        kontekst.perioderTilVurdering.forEach { periodeTilVurdering ->
-            when (periodeTilVurdering.type) {
-                VurderingType.FØRSTEGANGSBEHANDLING -> {
+        when (kontekst.vurdering.vurderingType) {
+            VurderingType.FØRSTEGANGSBEHANDLING -> {
 
-                    if (skalStoppeIFørstegangsbehandling(
-                            vilkårResultat,
-                            studentVurdering,
-                            sykdomsGrunnlag,
-                            yrkesskadeGrunnlag,
-                            avklaringsbehovene
-                        )
-                    ) {
-                        return FantAvklaringsbehov(Definisjon.AVKLAR_SYKDOM)
-                    } else {
-                        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)
-                        if (avklaringsbehov != null && avklaringsbehov.erÅpent() && studentVurdering?.erOppfylt() == true) {
-                            avklaringsbehovene.avbryt(Definisjon.AVKLAR_SYKDOM)
-                        }
+                if (skalStoppeIFørstegangsbehandling(
+                        vilkårResultat,
+                        studentVurdering,
+                        sykdomsGrunnlag,
+                        yrkesskadeGrunnlag,
+                        avklaringsbehovene
+                    )
+                ) {
+                    return FantAvklaringsbehov(Definisjon.AVKLAR_SYKDOM)
+                } else {
+                    val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)
+                    if (avklaringsbehov != null && avklaringsbehov.erÅpent() && studentVurdering?.erOppfylt() == true) {
+                        avklaringsbehovene.avbryt(Definisjon.AVKLAR_SYKDOM)
                     }
                 }
+            }
 
-                VurderingType.REVURDERING -> {
-                    if (harVærtVurdertMinstEnGangIBehandlingen(avklaringsbehovene)) {
-                        return FantAvklaringsbehov(Definisjon.AVKLAR_SYKDOM)
-                    } else {
-                        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)
-                        if (avklaringsbehov != null && avklaringsbehov.erÅpent()) {
-                            avklaringsbehovene.avbryt(Definisjon.AVKLAR_SYKDOM)
-                        }
+            VurderingType.REVURDERING -> {
+                if (harVærtVurdertMinstEnGangIBehandlingen(avklaringsbehovene)) {
+                    return FantAvklaringsbehov(Definisjon.AVKLAR_SYKDOM)
+                } else {
+                    val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)
+                    if (avklaringsbehov != null && avklaringsbehov.erÅpent()) {
+                        avklaringsbehovene.avbryt(Definisjon.AVKLAR_SYKDOM)
                     }
                 }
+            }
 
-                VurderingType.FORLENGELSE -> {
-                    // Skal ikke tvinge noen form for vurdering
-                }
+            VurderingType.FORLENGELSE -> {
+                // Skal ikke tvinge noen form for vurdering
+            }
+
+            VurderingType.IKKE_RELEVANT -> {
+                // Do nothing
             }
         }
 

@@ -2,14 +2,17 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.periodisering.VurderingTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
@@ -35,7 +38,13 @@ class ForeslåVedtakStegTest {
         val sak = sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
         val behandling =
             behandlingRepository.opprettBehandling(sak.id, listOf(), TypeBehandling.Førstegangsbehandling, null)
-        val kontekstMedPerioder = FlytKontekstMedPerioder(sak.id, behandling.id, behandling.typeBehandling(), setOf())
+        val kontekstMedPerioder = FlytKontekstMedPerioder(
+            sak.id, behandling.id, behandling.typeBehandling(), VurderingTilBehandling(
+                vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
+                årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
+                rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
+            )
+        )
 
         val resultat = steg.utfør(kontekstMedPerioder)
 
@@ -55,7 +64,13 @@ class ForeslåVedtakStegTest {
             funnetISteg = StegType.AVKLAR_SYKDOM
         )
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, "ja", "TESTEN")
-        val kontekstMedPerioder = FlytKontekstMedPerioder(sak.id, behandling.id, behandling.typeBehandling(), setOf())
+        val kontekstMedPerioder = FlytKontekstMedPerioder(
+            sak.id, behandling.id, behandling.typeBehandling(), VurderingTilBehandling(
+                vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
+                årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
+                rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
+            )
+        )
 
         val resultat = steg.utfør(kontekstMedPerioder)
 
@@ -80,7 +95,13 @@ class ForeslåVedtakStegTest {
             funnetISteg = StegType.FORESLÅ_VEDTAK
         )
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.FORESLÅ_VEDTAK, "ja", "TESTEN")
-        val kontekstMedPerioder = FlytKontekstMedPerioder(sak.id, behandling.id, behandling.typeBehandling(), setOf())
+        val kontekstMedPerioder = FlytKontekstMedPerioder(
+            sak.id, behandling.id, behandling.typeBehandling(), VurderingTilBehandling(
+                vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
+                årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
+                rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
+            )
+        )
 
         steg.vedTilbakeføring(kontekstMedPerioder)
         val resultat = steg.utfør(kontekstMedPerioder)

@@ -19,6 +19,7 @@ class PersonopplysningForutgåendeService private constructor(
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
 
+        // TODO: Henrik - Skal kun innhente hvis vi skal vurdere forutgående medlemskap, skal ikke innhente hvis yrkesskade
         val personopplysninger = personopplysningGateway.innhentMedHistorikk(sak.person) ?: error("fødselsdato skal alltid eksistere i PDL")
         val eksisterendeData = personopplysningForutgåendeRepository.hentHvisEksisterer(kontekst.behandlingId)
 
@@ -30,10 +31,6 @@ class PersonopplysningForutgåendeService private constructor(
     }
 
     companion object : Informasjonskravkonstruktør {
-        override fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
-            // Skal alltid innhente ferske opplysninger
-            return true
-        }
 
         override fun konstruer(connection: DBConnection): PersonopplysningForutgåendeService {
             val repositoryProvider = RepositoryProvider(connection)

@@ -124,7 +124,8 @@ class AvklaringsbehovOrkestrator(
             sakRepository = sakFlytRepository,
             perioderTilVurderingService = PerioderTilVurderingService(
                 SakService(sakRepository),
-                behandlingRepository
+                behandlingRepository,
+                repositoryProvider.provide()
             ),
             behandlingHendelseService = behandlingHendelseService
         )

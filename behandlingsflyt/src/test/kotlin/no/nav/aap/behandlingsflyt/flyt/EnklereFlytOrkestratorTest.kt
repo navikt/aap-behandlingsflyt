@@ -5,9 +5,6 @@ import no.nav.aap.behandlingsflyt.flyt.testutil.DummyBehandlingHendelseService
 import no.nav.aap.behandlingsflyt.flyt.testutil.DummyInformasjonskravGrunnlag
 import no.nav.aap.behandlingsflyt.flyt.testutil.DummyStegKonstruktør
 import no.nav.aap.behandlingsflyt.flyt.testutil.DummyVentebehovEvaluererService
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Førstegangsbehandling
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -20,6 +17,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
@@ -38,7 +39,8 @@ class EnklereFlytOrkestratorTest {
         stegKonstruktør = DummyStegKonstruktør(),
         perioderTilVurderingService = PerioderTilVurderingService(
             sakService = sakService,
-            behandlingRepository = behandlingRepository
+            behandlingRepository = behandlingRepository,
+            vilkårsresultatRepository = InMemoryVilkårsresultatRepository
         ),
         informasjonskravGrunnlag = DummyInformasjonskravGrunnlag(),
         behandlingRepository = behandlingRepository,
@@ -86,7 +88,8 @@ class EnklereFlytOrkestratorTest {
             stegKonstruktør = DummyStegKonstruktør(),
             perioderTilVurderingService = PerioderTilVurderingService(
                 sakService = sakService,
-                behandlingRepository = behandlingRepository
+                behandlingRepository = behandlingRepository,
+                vilkårsresultatRepository = InMemoryVilkårsresultatRepository
             ),
             informasjonskravGrunnlag = DummyInformasjonskravGrunnlag(),
             behandlingRepository = behandlingRepository,

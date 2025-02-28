@@ -26,6 +26,7 @@ class UnderveisSteg(private val underveisService: UnderveisService) : Behandling
     private val log = LoggerFactory.getLogger(UnderveisSteg::class.java)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        // Skal alltid kjøres uavhengig av vurderingstype
         val underveisTidslinje = underveisService.vurder(kontekst.behandlingId)
 
         log.debug("Underveis tidslinje {}", underveisTidslinje)

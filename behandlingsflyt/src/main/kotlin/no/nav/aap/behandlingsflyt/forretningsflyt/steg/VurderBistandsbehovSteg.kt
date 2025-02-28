@@ -23,7 +23,6 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
@@ -46,52 +45,62 @@ class VurderBistandsbehovSteg private constructor(
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
-        kontekst.perioderTilVurdering.forEach { periodeTilVurdering ->
-            when (periodeTilVurdering.type) {
-                VurderingType.FØRSTEGANGSBEHANDLING -> {
-                    // sjekk behovet for avklaring for periode
-                    if (erBehovForAvklarForPerioden(
-                            periodeTilVurdering.periode,
-                            studentGrunnlag,
-                            sykdomsvurdering,
-                            bistandsGrunnlag,
-                            vilkårsresultat,
-                            avklaringsbehovene
-                        )
-                    ) {
-                        return FantAvklaringsbehov(Definisjon.AVKLAR_BISTANDSBEHOV)
-                    }
-
-                    // Vurder vilkår
-                    vurderVilkårForPeriode(periodeTilVurdering, bistandsGrunnlag, studentGrunnlag, vilkårsresultat)
+        when (kontekst.vurdering.vurderingType) {
+            VurderingType.FØRSTEGANGSBEHANDLING -> {
+                // sjekk behovet for avklaring for periode
+                if (erBehovForAvklarForPerioden(
+                        kontekst.vurdering.rettighetsperiode,
+                        studentGrunnlag,
+                        sykdomsvurdering,
+                        bistandsGrunnlag,
+                        vilkårsresultat,
+                        avklaringsbehovene
+                    )
+                ) {
+                    return FantAvklaringsbehov(Definisjon.AVKLAR_BISTANDSBEHOV)
                 }
 
-                VurderingType.REVURDERING -> {
-                    // sjekk behovet for avklaring for periode
-                    if (erBehovForAvklarForPerioden(
-                            periodeTilVurdering.periode,
-                            studentGrunnlag,
-                            sykdomsvurdering,
-                            bistandsGrunnlag,
-                            vilkårsresultat,
-                            avklaringsbehovene
-                        )
-                    ) {
-                        return FantAvklaringsbehov(Definisjon.AVKLAR_BISTANDSBEHOV)
-                    }
-
-                    // Vurder vilkår for periode
-                    vurderVilkårForPeriode(periodeTilVurdering, bistandsGrunnlag, studentGrunnlag, vilkårsresultat)
-                }
-
-                VurderingType.FORLENGELSE -> {
-                    val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
-
-                    vilkår.forleng(periodeTilVurdering.periode)
-                }
+                // Vurder vilkår
+                vurderVilkårForPeriode(
+                    kontekst.vurdering.rettighetsperiode,
+                    bistandsGrunnlag,
+                    studentGrunnlag,
+                    vilkårsresultat
+                )
             }
+
+            VurderingType.REVURDERING -> {
+                // sjekk behovet for avklaring for periode
+                if (erBehovForAvklarForPerioden(
+                        kontekst.vurdering.rettighetsperiode,
+                        studentGrunnlag,
+                        sykdomsvurdering,
+                        bistandsGrunnlag,
+                        vilkårsresultat,
+                        avklaringsbehovene
+                    )
+                ) {
+                    return FantAvklaringsbehov(Definisjon.AVKLAR_BISTANDSBEHOV)
+                }
+
+                // Vurder vilkår for periode
+                vurderVilkårForPeriode(
+                    kontekst.vurdering.rettighetsperiode,
+                    bistandsGrunnlag,
+                    studentGrunnlag,
+                    vilkårsresultat
+                )
+            }
+
+            VurderingType.FORLENGELSE -> {
+                val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
+
+                vilkår.forleng(requireNotNull(kontekst.vurdering.forlengensePeriode))
+            }
+
+            VurderingType.IKKE_RELEVANT -> TODO()
         }
-        if (kontekst.perioderTilVurdering.isNotEmpty()) {
+        if (kontekst.vurdering.skalVurdereNoe()) {
             vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
         }
 
@@ -136,14 +145,14 @@ class VurderBistandsbehovSteg private constructor(
 
 
     private fun vurderVilkårForPeriode(
-        periode: Vurdering,
+        periode: Periode,
         bistandsGrunnlag: BistandGrunnlag?,
         studentGrunnlag: StudentGrunnlag?,
         vilkårsresultat: Vilkårsresultat
     ) {
         val grunnlag = BistandFaktagrunnlag(
-            periode.periode.fom,
-            periode.periode.tom,
+            periode.fom,
+            periode.tom,
             bistandsGrunnlag?.vurdering,
             studentGrunnlag?.studentvurdering
         )

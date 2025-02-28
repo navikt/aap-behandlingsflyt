@@ -63,7 +63,8 @@ class ProsesserBehandlingJobbUtfører(
                     sakRepository = sakFlytRepository,
                     perioderTilVurderingService = PerioderTilVurderingService(
                         SakService(sakRepository),
-                        behandlingRepository
+                        behandlingRepository,
+                        repositoryProvider.provide()
                     ),
                     behandlingHendelseService = BehandlingHendelseServiceImpl(
                         FlytJobbRepository(connection),

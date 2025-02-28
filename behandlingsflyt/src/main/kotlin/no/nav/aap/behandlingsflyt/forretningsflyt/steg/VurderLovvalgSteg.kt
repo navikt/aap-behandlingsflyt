@@ -18,7 +18,6 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Ventebehov
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -33,22 +32,26 @@ class VurderLovvalgSteg private constructor(
         val manuellVurdering = medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)?.manuellVurdering
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
 
-        /*kontekst.perioderTilVurdering.forEach { periodeTilVurdering ->
-            when (periodeTilVurdering.type) {
-                VurderingType.FØRSTEGANGSBEHANDLING -> {
-                    TODO() //
-                }
+        /*
+        // TODO: Henrik - fiks her
+        when (kontekst.vurdering.vurderingType) {
+            VurderingType.FØRSTEGANGSBEHANDLING -> vurderVilkår(kontekst) // TODO: Stopp ved behov
+            VurderingType.REVURDERING -> vurderVilkår(kontekst) // TODO: Stopp ved behov
+            VurderingType.FORLENGELSE -> {
+                // Forleng vilkåret
+                val forlengensePeriode = requireNotNull(kontekst.vurdering.forlengensePerioder)
+                val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+                vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET).forleng(
+                    forlengensePeriode
+                )
+                vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+            }
 
-                VurderingType.REVURDERING -> {
-                    TODO() // ?
-                }
-
-                VurderingType.FORLENGELSE -> {
-                    TODO() // Skal bare forlenges med perioden den får inn, kommer senere
-                }
+            VurderingType.IKKE_RELEVANT -> {
+                // Do nothing
             }
         }*/
-        if (kontekst.perioderTilVurdering.isNotEmpty()) {
+        if (kontekst.harNoeTilBehandling()) {
             val sak = sakRepository.hent(kontekst.sakId)
             val personopplysningGrunnlag = personopplysningRepository.hentHvisEksisterer(kontekst.behandlingId)
                 ?: throw IllegalStateException("Forventet å finne personopplysninger")

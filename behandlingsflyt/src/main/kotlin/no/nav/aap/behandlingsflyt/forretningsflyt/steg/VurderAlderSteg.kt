@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import no.nav.aap.behandlingsflyt.behandling.vilkår.alder.Aldersgrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.alder.Aldersvilkåret
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -10,6 +11,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -20,20 +22,39 @@ class VurderAlderSteg private constructor(
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
 
-        if (kontekst.perioderTilVurdering.isNotEmpty()) {
-            val personopplysningGrunnlag = personopplysningRepository.hentHvisEksisterer(kontekst.behandlingId)
-                ?: throw IllegalStateException("Forventet å finne personopplysninger")
-
-            val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-            for (periode in kontekst.perioder()) {
-                val aldersgrunnlag =
-                    Aldersgrunnlag(periode, personopplysningGrunnlag.brukerPersonopplysning.fødselsdato)
-                Aldersvilkåret(vilkårsresultat).vurder(aldersgrunnlag)
+        when (kontekst.vurdering.vurderingType) {
+            VurderingType.FØRSTEGANGSBEHANDLING -> vurderVilkår(kontekst)
+            VurderingType.REVURDERING -> vurderVilkår(kontekst)
+            VurderingType.FORLENGELSE -> {
+                // Forleng vilkåret
+                val forlengensePeriode = requireNotNull(kontekst.vurdering.forlengensePeriode)
+                val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+                vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET).forleng(
+                    forlengensePeriode
+                )
+                vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
             }
-            vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+
+            VurderingType.IKKE_RELEVANT -> {
+                // Do nothing
+            }
         }
 
         return Fullført
+    }
+
+    private fun vurderVilkår(kontekst: FlytKontekstMedPerioder) {
+        val personopplysningGrunnlag = personopplysningRepository.hentHvisEksisterer(kontekst.behandlingId)
+            ?: throw IllegalStateException("Forventet å finne personopplysninger")
+
+        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+        val aldersgrunnlag =
+            Aldersgrunnlag(
+                kontekst.vurdering.rettighetsperiode,
+                personopplysningGrunnlag.brukerPersonopplysning.fødselsdato
+            )
+        Aldersvilkåret(vilkårsresultat).vurder(aldersgrunnlag)
+        vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
     }
 
     companion object : FlytSteg {
