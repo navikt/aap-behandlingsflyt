@@ -1,8 +1,16 @@
 package no.nav.aap.behandlingsflyt.datadeling
 
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
+
+data class SakStatusDTO(
+    val ident: String,
+    val status: SakStatus
+)
 
 data class SakStatus(
     val sakId: String,
@@ -72,3 +80,9 @@ data class SakStatus(
         return result
     }
 }
+
+data class BehandlingDatadeling(
+    val rettighetsPeriode: Periode,
+    val behandling: Behandling,
+    val tilkjent: Tidslinje<Tilkjent>,
+)

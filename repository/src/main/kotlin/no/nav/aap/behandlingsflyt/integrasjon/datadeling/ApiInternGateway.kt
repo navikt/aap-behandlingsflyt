@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.integrasjon.datadeling
 
+import no.nav.aap.behandlingsflyt.datadeling.SakStatus
+import no.nav.aap.behandlingsflyt.datadeling.SakStatusDTO
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.MeldekortPerioderDTO
 import no.nav.aap.komponenter.config.requiredConfigForKey
@@ -29,6 +31,15 @@ class ApiInternGatewayImpl(restClient: RestClient<String>? = null) : ApiInternGa
         restClient.post<_, Unit>(
             uri = uri.resolve("/api/insert/meldeperioder"),
             request = PostRequest(body = MeldekortPerioderDTO(ident, perioder)),
+            mapper = { _, _ ->
+                Unit
+            })
+    }
+
+    override fun sendSakStatus(ident: String, sakStatus: SakStatus) {
+        restClient.post<_, Unit>(
+            uri = uri.resolve("/api/insert/sakstatus"),
+            request = PostRequest(body = SakStatusDTO(ident, sakStatus)),
             mapper = { _, _ ->
                 Unit
             })

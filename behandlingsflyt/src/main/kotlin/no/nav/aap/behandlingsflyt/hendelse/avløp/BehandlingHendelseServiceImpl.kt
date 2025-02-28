@@ -12,7 +12,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.EndringDTO
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.TypeBrev
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.ÅrsakTilSettPåVent
-import no.nav.aap.behandlingsflyt.prosessering.DatadelingJobbUtfører
+import no.nav.aap.behandlingsflyt.prosessering.DatadelingMeldePerioderJobbUtfører
+import no.nav.aap.behandlingsflyt.prosessering.DatadelingSakStatusJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.StatistikkJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.StoppetHendelseJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -84,7 +85,10 @@ class BehandlingHendelseServiceImpl(
             JobbInput(jobb = StatistikkJobbUtfører).medPayload(hendelse)
         )
         flytJobbRepository.leggTil(
-            JobbInput(jobb = DatadelingJobbUtfører).medPayload(hendelse)
+            JobbInput(jobb = DatadelingMeldePerioderJobbUtfører).medPayload(hendelse)
+        )
+        flytJobbRepository.leggTil(
+            JobbInput(jobb = DatadelingSakStatusJobbUtfører).medPayload(hendelse)
         )
 
     }
