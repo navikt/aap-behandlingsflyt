@@ -58,7 +58,7 @@ class DatadelingMeldePerioderJobbUtfører(
         }
 
         override fun type(): String {
-            return "flyt.datadeling"
+            return "flyt.DatadelingMeldePerioder"
         }
 
     }
