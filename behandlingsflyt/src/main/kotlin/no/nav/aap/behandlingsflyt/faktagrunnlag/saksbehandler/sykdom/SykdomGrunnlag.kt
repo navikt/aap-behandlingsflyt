@@ -13,13 +13,17 @@ class SykdomGrunnlag(
     constructor(id: Long?, yrkesskadevurdering: Yrkesskadevurdering?, sykdomsvurdering: Sykdomsvurdering?) :
             this(id, yrkesskadevurdering, listOfNotNull(sykdomsvurdering))
 
+
     fun erKonsistentForSykdom(harYrkesskadeRegistrert: Boolean): Boolean {
-        return sykdomsvurderinger.firstOrNull()?.erKonsistentForSykdom(harYrkesskadeRegistrert) ?: false
+        if (sykdomsvurderinger.isEmpty()) {
+            return false
+        }
+        return sykdomsvurderinger.all { it.erKonsistentForSykdom(harYrkesskadeRegistrert) }
     }
 
     fun somSykdomsvurderingstidslinje(startDato: LocalDate): Tidslinje<Sykdomsvurdering> {
         return sykdomsvurderinger
-            .sortedBy { it.vurderingenGjelderFra ?: startDato }
+            .sortedBy { it.opprettet }
             .fold(Tidslinje()) { tidslinje, vurdering ->
                 tidslinje.kombiner(
                     Tidslinje(Periode(vurdering.vurderingenGjelderFra ?: startDato, LocalDate.MAX), vurdering),

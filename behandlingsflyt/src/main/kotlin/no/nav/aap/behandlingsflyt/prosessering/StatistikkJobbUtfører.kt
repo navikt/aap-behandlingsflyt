@@ -243,7 +243,7 @@ class StatistikkJobbUtfører(
     }
 
     private fun hentDiagnose(behandling: Behandling): Diagnoser? {
-        val sykdomsvurdering = sykdomRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger?.last()
+        val sykdomsvurdering = sykdomRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger?.last() // TODO: Det kan være flere vurderinger og diagnoser som er aktuelle for statistikk - ikke bare én, men dette støttes ikke i kontrakten nedenfor?
 
         if (sykdomsvurdering == null) {
             log.info("Fant ikke sykdomsvurdering for behandling ${behandling.referanse} (id: ${behandling.id})")
