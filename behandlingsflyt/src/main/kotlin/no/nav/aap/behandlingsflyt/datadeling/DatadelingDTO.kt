@@ -1,16 +1,17 @@
 package no.nav.aap.behandlingsflyt.datadeling
 
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
+import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 
 data class SakStatus(
     val sakId: String,
     val statusKode: VedtakStatus,
-    val periode: Maksimum.Periode,
+    val periode: Periode,
     val kilde: Kilde = Kilde.KELVIN
 ) {
     companion object {
-        fun fromKelvin(saksnummer: String, status: Status, periode: Maksimum.Periode): SakStatus {
+        fun fromKelvin(saksnummer: String, status: Status, periode: Periode): SakStatus {
             return SakStatus(
                 sakId = saksnummer,
                 statusKode = SakStatus.fromStatus(status),
@@ -70,89 +71,4 @@ data class SakStatus(
         result = 31 * result + kilde.hashCode()
         return result
     }
-}
-
-data class InternVedtakRequest(
-    val personidentifikator: String,
-    val fraOgMedDato: LocalDate,
-    val tilOgMedDato: LocalDate
-)
-
-data class PeriodeMedAktFaseKode(
-    val periode: Maksimum.Periode,
-    // TODO: bør ikke bruke ordet aktivitetsfaseKode i Kelvin
-    val aktivitetsfaseKode: String,
-    // TODO: bør ikke bruke ordet aktivitetsfaseKode i Kelvin
-    val aktivitetsfaseNavn: String
-)
-
-data class VedtakData(
-    val personidentifikator: String,
-    val maksimum: Maksimum
-)
-
-data class Maksimum(
-    val vedtak: List<Vedtak>
-) {
-
-    data class Vedtak(
-        val vedtaksId: String,
-        val dagsats: Int,
-        val status: String, //Hypotese, vedtaksstatuskode
-        val saksnummer: String,
-        val vedtaksdato: String, //reg_dato
-        val periode: Periode,
-        val rettighetsType: String, ////aktivitetsfase //Aktfasekode
-        val beregningsgrunnlag: Int,
-        val barnMedStonad: Int,
-        val kildesystem: String = "Kelvin",
-        val samordningsId: String? = null,
-        val opphorsAarsak: String? = null,
-        val vedtaksTypeKode: String,
-        val vedtaksTypeNavn: String,
-        val utbetaling: List<UtbetalingMedMer>,
-    )
-
-    class Periode(
-        val fraOgMedDato: LocalDate?,
-        val tilOgMedDato: LocalDate?
-    ) {
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (javaClass != other?.javaClass) return false
-
-            other as Periode
-
-            if (fraOgMedDato != other.fraOgMedDato) return false
-            if (tilOgMedDato != other.tilOgMedDato) return false
-
-            return true
-        }
-
-        override fun hashCode(): Int {
-            var result = fraOgMedDato?.hashCode() ?: 0
-            result = 31 * result + (tilOgMedDato?.hashCode() ?: 0)
-            return result
-        }
-
-        override fun toString(): String {
-            return "Periode(fraOgMedDato=$fraOgMedDato, tilOgMedDato=$tilOgMedDato)"
-        }
-
-    }
-
-    data class UtbetalingMedMer(
-        val reduksjon: Reduksjon? = null,
-        val utbetalingsgrad: Int? = null,
-        val periode: Periode,
-        val belop: Int,
-        val dagsats: Int,
-        val barnetilegg: Int,
-    )
-
-    data class Reduksjon(
-        val timerArbeidet: Double,
-        val annenReduksjon: Float
-    )
-
 }

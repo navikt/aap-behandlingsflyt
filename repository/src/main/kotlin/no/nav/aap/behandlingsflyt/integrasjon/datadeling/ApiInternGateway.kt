@@ -1,7 +1,5 @@
 package no.nav.aap.behandlingsflyt.integrasjon.datadeling
 
-import no.nav.aap.behandlingsflyt.datadeling.Maksimum
-import no.nav.aap.behandlingsflyt.datadeling.VedtakData
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.MeldekortPerioderDTO
 import no.nav.aap.komponenter.config.requiredConfigForKey
@@ -35,14 +33,4 @@ class ApiInternGatewayImpl(restClient: RestClient<String>? = null) : ApiInternGa
                 Unit
             })
     }
-
-    override fun sendVedtakData(ident: String, vedtakData: Maksimum) {
-        restClient.post<_, Unit>(
-            uri = uri.resolve("/api/insert/vedtak"),
-            request = PostRequest(body = VedtakData(ident, vedtakData)),
-            mapper = { _, _ ->
-                Unit
-            })
-    }
-
 }
