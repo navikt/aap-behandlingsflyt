@@ -29,8 +29,6 @@ class AvklarOverstyrtLovvalgMedlemskapLøser(connection: DBConnection): Avklarin
             )
         )
 
-        val overstyrtManuellVurdering = medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId())?.manuellVurdering
-
         val sak = sakRepository.hent(kontekst.kontekst.sakId)
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId())
         val personopplysningGrunnlag = personopplysningRepository.hentHvisEksisterer(kontekst.behandlingId())
@@ -38,7 +36,7 @@ class AvklarOverstyrtLovvalgMedlemskapLøser(connection: DBConnection): Avklarin
         val medlemskapArbeidInntektGrunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId())
         val oppgittUtenlandsOppholdGrunnlag = medlemskapArbeidInntektRepository.hentOppgittUtenlandsOppholdHvisEksisterer(kontekst.behandlingId())
 
-        Medlemskapvilkåret(vilkårsresultat, sak.rettighetsperiode, overstyrtManuellVurdering).vurderOverstyrt(
+        Medlemskapvilkåret(vilkårsresultat, sak.rettighetsperiode).vurderOverstyrt(
             MedlemskapLovvalgGrunnlag(medlemskapArbeidInntektGrunnlag, personopplysningGrunnlag, oppgittUtenlandsOppholdGrunnlag)
         )
         vilkårsresultatRepository.lagre(kontekst.behandlingId(), vilkårsresultat)

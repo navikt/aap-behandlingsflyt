@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Ventebehov
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -30,20 +31,34 @@ class VurderLovvalgSteg private constructor(
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val manuellVurdering = medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)?.manuellVurdering
+        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
 
+        /*kontekst.perioderTilVurdering.forEach { periodeTilVurdering ->
+            when (periodeTilVurdering.type) {
+                VurderingType.FØRSTEGANGSBEHANDLING -> {
+                    TODO() //
+                }
+
+                VurderingType.REVURDERING -> {
+                    TODO() // ?
+                }
+
+                VurderingType.FORLENGELSE -> {
+                    TODO() // Skal bare forlenges med perioden den får inn, kommer senere
+                }
+            }
+        }*/
         if (kontekst.perioderTilVurdering.isNotEmpty()) {
             val sak = sakRepository.hent(kontekst.sakId)
-            val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
             val personopplysningGrunnlag = personopplysningRepository.hentHvisEksisterer(kontekst.behandlingId)
                 ?: throw IllegalStateException("Forventet å finne personopplysninger")
             val medlemskapArbeidInntektGrunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)
             val oppgittUtenlandsOppholdGrunnlag = medlemskapArbeidInntektRepository.hentOppgittUtenlandsOppholdHvisEksisterer(kontekst.behandlingId)
-            Medlemskapvilkåret(vilkårsresultat, sak.rettighetsperiode, manuellVurdering).vurder(
+            Medlemskapvilkåret(vilkårsresultat, sak.rettighetsperiode).vurder(
                 MedlemskapLovvalgGrunnlag(medlemskapArbeidInntektGrunnlag, personopplysningGrunnlag, oppgittUtenlandsOppholdGrunnlag)
             )
             vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
         }
-        // TODO: Revurdering må inn her
 
         val måOverføresTilAnnetLand = vilkårsresultatRepository.hent(kontekst.behandlingId).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder().any{it.avslagsårsak == Avslagsårsak.NORGE_IKKE_KOMPETENT_STAT}
         val alleVilkårOppfylt = vilkårsresultatRepository.hent(kontekst.behandlingId).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder().all{it.erOppfylt()}

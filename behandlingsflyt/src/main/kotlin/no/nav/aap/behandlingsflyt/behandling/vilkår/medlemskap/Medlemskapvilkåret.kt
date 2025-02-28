@@ -14,12 +14,13 @@ import no.nav.aap.komponenter.type.Periode
 class Medlemskapvilkåret(
     vilkårsresultat: Vilkårsresultat,
     private val rettighetsPeriode: Periode,
-    private val manuellVurderingForLovvalgMedlemskap: ManuellVurderingForLovvalgMedlemskap?
 ) : Vilkårsvurderer<MedlemskapLovvalgGrunnlag> {
     private val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.LOVVALG)
 
     override fun vurder(grunnlag: MedlemskapLovvalgGrunnlag) {
         var vurdertManuelt = false
+        val manuellVurderingForLovvalgMedlemskap = grunnlag.medlemskapArbeidInntektGrunnlag?.manuellVurdering
+
         val vurderingsResultat = if (manuellVurderingForLovvalgMedlemskap != null) {
             vurdertManuelt = true
             val lovvalgsLand = manuellVurderingForLovvalgMedlemskap.lovvalgVedSøknadsTidspunkt.lovvalgsEØSLand
@@ -47,6 +48,7 @@ class Medlemskapvilkåret(
     }
 
     fun vurderOverstyrt(grunnlag: MedlemskapLovvalgGrunnlag) {
+        val manuellVurderingForLovvalgMedlemskap = grunnlag.medlemskapArbeidInntektGrunnlag?.manuellVurdering
         val lovvalgsLand = manuellVurderingForLovvalgMedlemskap?.lovvalgVedSøknadsTidspunkt?.lovvalgsEØSLand
         val varMedlemIFolketrygd = manuellVurderingForLovvalgMedlemskap?.medlemskapVedSøknadsTidspunkt?.varMedlemIFolketrygd
 

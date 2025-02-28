@@ -134,6 +134,12 @@ class PerioderTilVurderingService(
                 rettighetsperiode
             )
 
+            ÅrsakTilBehandling.REVURDER_LOVVALG -> Vurdering(
+                VurderingType.REVURDERING,
+                listOf(årsak.type),
+                rettighetsperiode
+            )
+
             ÅrsakTilBehandling.REVURDER_BEREGNING -> Vurdering(
                 VurderingType.REVURDERING,
                 listOf(årsak.type),

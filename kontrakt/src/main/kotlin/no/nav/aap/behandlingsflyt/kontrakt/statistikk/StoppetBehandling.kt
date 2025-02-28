@@ -58,7 +58,8 @@ public enum class ÅrsakTilBehandling {
     G_REGULERING,
     REVURDER_MEDLEMSKAP,
     REVURDER_YRKESSKADE,
-    REVURDER_BEREGNING
+    REVURDER_BEREGNING,
+    REVURDER_LOVVALG
 }
 
 /**

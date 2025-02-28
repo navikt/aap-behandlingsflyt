@@ -56,7 +56,7 @@ object Revurdering : BehandlingType {
                 informasjonskrav = listOf(PersonopplysningService, LovvalgService),
                 årsakRelevanteForSteg = listOf(
                     ÅrsakTilBehandling.MOTTATT_SØKNAD,
-                    ÅrsakTilBehandling.REVURDER_MEDLEMSKAP
+                    ÅrsakTilBehandling.REVURDER_LOVVALG
                 )
             )
             .medSteg(steg = FastsettMeldeperiodeSteg)

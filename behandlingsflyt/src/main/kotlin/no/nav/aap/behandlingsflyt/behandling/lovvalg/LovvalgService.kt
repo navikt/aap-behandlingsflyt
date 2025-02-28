@@ -75,7 +75,7 @@ class LovvalgService private constructor(
             if (kontekst.skalBehandlesSomFørstegangsbehandling()) {
                 return true
             }
-            val relevanteÅrsaker = setOf(ÅrsakTilBehandling.REVURDER_MEDLEMSKAP)
+            val relevanteÅrsaker = setOf(ÅrsakTilBehandling.REVURDER_LOVVALG)
             return kontekst.perioderTilVurdering.flatMap { vurdering -> vurdering.årsaker }
                 .any { årsak -> relevanteÅrsaker.contains(årsak) }
         }
