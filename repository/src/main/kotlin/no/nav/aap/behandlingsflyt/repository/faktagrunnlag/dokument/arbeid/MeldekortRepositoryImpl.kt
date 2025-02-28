@@ -117,7 +117,7 @@ class MeldekortRepositoryImpl(private val connection: DBConnection) : MeldekortR
 
         meldekortene.forEach { meldekort ->
             val query = """
-            INSERT INTO MELDEKORT (journalpost, pliktkortene_id) VALUES (?, ?)
+            INSERT INTO MELDEKORT (journalpost, meldekortene_id) VALUES (?, ?)
             """.trimIndent()
             val meldekortId = connection.executeReturnKey(query) {
                 setParams {
@@ -127,7 +127,7 @@ class MeldekortRepositoryImpl(private val connection: DBConnection) : MeldekortR
             }
 
             val kortQuery = """
-                INSERT INTO MELDEKORT_PERIODE (pliktkort_id, periode, timer_arbeid) VALUES (?, ?::daterange, ?)
+                INSERT INTO MELDEKORT_PERIODE (meldekort_id, periode, timer_arbeid) VALUES (?, ?::daterange, ?)
             """.trimIndent()
 
             connection.executeBatch(kortQuery, meldekort.timerArbeidPerPeriode) {
@@ -165,7 +165,7 @@ class MeldekortRepositoryImpl(private val connection: DBConnection) : MeldekortR
             return
         }
         val query = """
-            INSERT INTO MELDEKORT_GRUNNLAG (behandling_id, pliktkortene_id) SELECT ?, pliktkortene_id from MELDEKORT_GRUNNLAG where behandling_id = ? and aktiv
+            INSERT INTO MELDEKORT_GRUNNLAG (behandling_id, meldekortene_id) SELECT ?, meldekortene_id from MELDEKORT_GRUNNLAG where behandling_id = ? and aktiv
         """.trimIndent()
 
         connection.execute(query) {
