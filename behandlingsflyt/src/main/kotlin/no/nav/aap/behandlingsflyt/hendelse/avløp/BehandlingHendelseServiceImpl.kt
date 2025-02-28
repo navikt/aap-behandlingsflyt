@@ -97,6 +97,7 @@ class BehandlingHendelseServiceImpl(
         return when (this.årsak) {
             ÅrsakTilReturKode.MANGELFULL_BEGRUNNELSE -> ÅrsakTilReturKodeKontrakt.MANGELFULL_BEGRUNNELSE
             ÅrsakTilReturKode.MANGLENDE_UTREDNING -> ÅrsakTilReturKodeKontrakt.MANGLENDE_UTREDNING
+            ÅrsakTilReturKode.MANGELFULL_VILKAARSVURDERING -> ÅrsakTilReturKodeKontrakt.MANGELFULL_VILKAARSVURDERING
             ÅrsakTilReturKode.FEIL_LOVANVENDELSE -> ÅrsakTilReturKodeKontrakt.FEIL_LOVANVENDELSE
             ÅrsakTilReturKode.ANNET -> ÅrsakTilReturKodeKontrakt.ANNET
         }

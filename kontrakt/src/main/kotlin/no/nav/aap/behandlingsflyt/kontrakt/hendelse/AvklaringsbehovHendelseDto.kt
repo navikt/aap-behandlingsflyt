@@ -39,6 +39,7 @@ public data class ÅrsakTilRetur(val årsak: ÅrsakTilReturKode)
 public enum class ÅrsakTilReturKode {
     MANGELFULL_BEGRUNNELSE,
     MANGLENDE_UTREDNING,
+    MANGELFULL_VILKAARSVURDERING,
     FEIL_LOVANVENDELSE,
     ANNET
 }
