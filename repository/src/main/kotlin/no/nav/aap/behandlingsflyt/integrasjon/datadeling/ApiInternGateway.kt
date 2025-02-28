@@ -38,7 +38,7 @@ class ApiInternGatewayImpl(restClient: RestClient<String>? = null) : ApiInternGa
 
     override fun sendSakStatus(ident: String, sakStatus: SakStatus) {
         restClient.post<_, Unit>(
-            uri = uri.resolve("/api/insert/sakstatus"),
+            uri = uri.resolve("/api/insert/sakStatus"),
             request = PostRequest(body = SakStatusDTO(ident, sakStatus)),
             mapper = { _, _ ->
                 Unit
