@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.integrasjon.datadeling
 
+import no.nav.aap.behandlingsflyt.datadeling.Maksimum
+import no.nav.aap.behandlingsflyt.datadeling.VedtakData
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.MeldekortPerioderDTO
 import no.nav.aap.komponenter.config.requiredConfigForKey
@@ -7,10 +9,8 @@ import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
-import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.gateway.Factory
-import java.io.InputStream
 import java.net.URI
 
 class ApiInternGatewayImpl(restClient: RestClient<String>? = null) : ApiInternGateway {
@@ -31,6 +31,15 @@ class ApiInternGatewayImpl(restClient: RestClient<String>? = null) : ApiInternGa
         restClient.post<_, Unit>(
             uri = uri.resolve("/api/insert/meldeperioder"),
             request = PostRequest(body = MeldekortPerioderDTO(ident, perioder)),
+            mapper = { _, _ ->
+                Unit
+            })
+    }
+
+    override fun sendVedtakData(ident: String, vedtakData: Maksimum) {
+        restClient.post<_, Unit>(
+            uri = uri.resolve("/api/insert/vedtak"),
+            request = PostRequest(body = VedtakData(ident, vedtakData)),
             mapper = { _, _ ->
                 Unit
             })

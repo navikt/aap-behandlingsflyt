@@ -86,6 +86,10 @@ data class PeriodeMedAktFaseKode(
     val aktivitetsfaseNavn: String
 )
 
+data class VedtakData(
+    val personidentifikator: String,
+    val maksimum: Maksimum
+)
 
 data class Maksimum(
     val vedtak: List<Vedtak>

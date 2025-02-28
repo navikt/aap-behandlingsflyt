@@ -6,3 +6,4 @@ data class MeldekortPerioderDTO (
     val personIdent: String,
     val meldekortPerioder: List<Periode>
 )
+
