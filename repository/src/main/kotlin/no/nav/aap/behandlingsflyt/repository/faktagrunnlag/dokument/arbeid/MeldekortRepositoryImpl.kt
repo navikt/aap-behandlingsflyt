@@ -83,7 +83,7 @@ class MeldekortRepositoryImpl(private val connection: DBConnection) : MeldekortR
 
     private fun hentTimerPerPeriode(id: Long): Set<ArbeidIPeriode> {
         val query = """
-            SELECT * FROM MELDEKORT_PERIODE WHERE pliktkort_id = ?
+            SELECT * FROM MELDEKORT_PERIODE WHERE meldekort_id = ?
         """.trimIndent()
 
         return connection.queryList(query) {
