@@ -23,7 +23,7 @@ class SykdomGrunnlag(
 
     fun somSykdomsvurderingstidslinje(startDato: LocalDate): Tidslinje<Sykdomsvurdering> {
         return sykdomsvurderinger
-            .sortedBy { it.opprettet }
+            .sortedBy { it.vurderingenGjelderFra ?: startDato }
             .fold(Tidslinje()) { tidslinje, vurdering ->
                 tidslinje.kombiner(
                     Tidslinje(Periode(vurdering.vurderingenGjelderFra ?: startDato, LocalDate.MAX), vurdering),
