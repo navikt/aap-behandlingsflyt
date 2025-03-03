@@ -56,7 +56,7 @@ class StegOrkestrator(
                 sakId = kontekst.sakId,
                 behandlingId = kontekst.behandlingId,
                 behandlingType = kontekst.behandlingType,
-                perioderTilVurdering = perioderTilVurderingService.utled(
+                vurdering = perioderTilVurderingService.utled(
                     kontekst = kontekst,
                     stegType = aktivtSteg.type()
                 )
@@ -98,7 +98,7 @@ class StegOrkestrator(
                     sakId = kontekst.sakId,
                     behandlingId = kontekst.behandlingId,
                     behandlingType = kontekst.behandlingType,
-                    perioderTilVurdering = perioderTilVurderingService.utled(
+                    vurdering = perioderTilVurderingService.utled(
                         kontekst = kontekst,
                         stegType = aktivtSteg.type()
                     )

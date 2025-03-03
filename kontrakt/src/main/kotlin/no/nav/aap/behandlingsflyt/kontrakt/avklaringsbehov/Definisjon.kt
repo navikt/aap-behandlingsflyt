@@ -161,15 +161,6 @@ public enum class Definisjon(
         løsesISteg = StegType.SAMORDNING_GRADERING,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     ),
-    //? ????
-//    GJENOPPTA_FRA_FORELDREPENGER(
-//        kode = AvklaringsbehovKode.`5013`,
-//        type = BehovType.MANUELT_FRIVILLIG,
-//        løsesISteg = StegType.SAMORDNING_GRADERING,
-//        kreverToTrinn = true,
-//        kvalitetssikres = true,
-//        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
-//    ),
     FORHÅNDSVARSEL_AKTIVITETSPLIKT(
         kode = AvklaringsbehovKode.`5016`,
         type = BehovType.BREV_VENTEPUNKT,
@@ -188,6 +179,7 @@ public enum class Definisjon(
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.VURDER_LOVVALG,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+        kreverToTrinn = true,
     ),
     EFFEKTUER_11_7(
         kode = AvklaringsbehovKode.`5015`,
@@ -219,19 +211,22 @@ public enum class Definisjon(
         kode = AvklaringsbehovKode.`5020`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.VURDER_MEDLEMSKAP,
+        kreverToTrinn = true,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     ),
     MANUELL_OVERSTYRING_LOVVALG(
         kode = AvklaringsbehovKode.`5021`,
         type = BehovType.OVERSTYR,
         løsesISteg = StegType.VURDER_LOVVALG,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+        kreverToTrinn = true
     ),
     MANUELL_OVERSTYRING_MEDLEMSKAP(
         kode = AvklaringsbehovKode.`5022`,
         type = BehovType.OVERSTYR,
         løsesISteg = StegType.VURDER_MEDLEMSKAP,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+        kreverToTrinn = true
     );
 
     public companion object {

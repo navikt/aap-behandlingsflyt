@@ -44,6 +44,7 @@ class BarnetilleggSteg(
         )
         log.info("Barnetillegg {}", barnetillegg)
 
+        // TODO: Bør det inn sjekk om dette skjer i revurdering osv
         if (barnetillegg.segmenter().any { it.verdi.harBarnTilAvklaring() }) {
             return FantAvklaringsbehov(Definisjon.AVKLAR_BARNETILLEGG)
         }

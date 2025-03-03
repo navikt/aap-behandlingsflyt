@@ -1,14 +1,13 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt
 
+import no.nav.aap.behandlingsflyt.behandling.beregning.AvklarFaktaBeregningService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Input
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
@@ -19,7 +18,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRep
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -30,7 +28,7 @@ import java.time.LocalDate
 class InntektService private constructor(
     private val sakService: SakService,
     private val inntektGrunnlagRepository: InntektGrunnlagRepository,
-    private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val avklarFaktaBeregningService: AvklarFaktaBeregningService,
     private val sykdomRepository: SykdomRepository,
     private val uføreRepository: UføreRepository,
     private val studentRepository: StudentRepository,
@@ -41,11 +39,10 @@ class InntektService private constructor(
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val behandlingId = kontekst.behandlingId
-        val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
 
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
 
-        val inntekter = if (skalInnhenteOpplysninger(vilkårsresultat)) {
+        val inntekter = if (avklarFaktaBeregningService.skalFastsetteGrunnlag(behandlingId)) {
             val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
             val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId)
             val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
@@ -76,13 +73,6 @@ class InntektService private constructor(
         return if (eksisterendeGrunnlag?.inntekter == inntekter) IKKE_ENDRET else ENDRET
     }
 
-    private fun skalInnhenteOpplysninger(vilkårsresultat: Vilkårsresultat): Boolean {
-        val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
-        val bistandsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
-
-        return sykdomsvilkåret.harPerioderSomErOppfylt() && bistandsvilkåret.harPerioderSomErOppfylt()
-    }
-
     private fun utledNedsettelsesdato(
         beregningVurdering: BeregningstidspunktVurdering?,
         studentGrunnlag: StudentGrunnlag?
@@ -100,16 +90,6 @@ class InntektService private constructor(
     }
 
     companion object : Informasjonskravkonstruktør {
-        override fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
-            // Skal kun innhente på nytt når det skal beregnes, førstegengasbehandling
-            if (kontekst.skalBehandlesSomFørstegangsbehandling()) {
-                return true
-            }
-            val relevanteÅrsaker = setOf(ÅrsakTilBehandling.REVURDER_BEREGNING)
-            return kontekst.perioderTilVurdering.flatMap { vurdering -> vurdering.årsaker }
-                .any { årsak -> relevanteÅrsaker.contains(årsak) }
-        }
-
         override fun konstruer(connection: DBConnection): InntektService {
             val repositoryProvider = RepositoryProvider(connection)
             val sakRepository = repositoryProvider.provide<SakRepository>()
@@ -119,7 +99,7 @@ class InntektService private constructor(
             return InntektService(
                 sakService = SakService(sakRepository),
                 inntektGrunnlagRepository = repositoryProvider.provide(),
-                vilkårsresultatRepository = vilkårsresultatRepository,
+                avklarFaktaBeregningService = AvklarFaktaBeregningService(vilkårsresultatRepository),
                 sykdomRepository = repositoryProvider.provide(),
                 uføreRepository = repositoryProvider.provide(),
                 studentRepository = repositoryProvider.provide(),

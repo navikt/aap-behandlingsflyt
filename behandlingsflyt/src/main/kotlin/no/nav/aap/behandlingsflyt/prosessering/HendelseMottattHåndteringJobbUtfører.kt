@@ -22,6 +22,7 @@ import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.verdityper.dokument.Kanal
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
 private const val BREVKODE = "brevkode"
@@ -29,10 +30,13 @@ private const val KANAL = "kanal"
 private const val MOTTATT_DOKUMENT_REFERANSE = "referanse"
 private const val MOTTATT_TIDSPUNKT = "mottattTidspunkt"
 
+private val logger = LoggerFactory.getLogger(HendelseMottattHåndteringJobbUtfører::class.java)
+
 class HendelseMottattHåndteringJobbUtfører(
     private val låsRepository: TaSkriveLåsRepository,
     private val hånderMottattDokumentService: HåndterMottattDokumentService,
-    private val mottaDokumentService: MottaDokumentService
+    private val mottaDokumentService: MottaDokumentService,
+    private val mottattDokumentRepository: MottattDokumentRepository
 ) : JobbUtfører {
 
     override fun utfør(input: JobbInput) {
@@ -49,6 +53,11 @@ class HendelseMottattHåndteringJobbUtfører(
         } else null
 
         val referanse = DefaultJsonMapper.fromJson<InnsendingReferanse>(input.parameter(MOTTATT_DOKUMENT_REFERANSE))
+
+        if (kjennerTilDokumentFraFør(referanse, innsendingType, sakId)) {
+            logger.warn("Allerede håndtert dokument med referanse {}", referanse)
+            return
+        }
 
         // DO WORK
         mottaDokumentService.mottattDokument(
@@ -70,7 +79,17 @@ class HendelseMottattHåndteringJobbUtfører(
 
         låsRepository.verifiserSkrivelås(sakSkrivelås)
     }
-    
+
+    private fun kjennerTilDokumentFraFør(
+        innsendingReferanse: InnsendingReferanse,
+        innsendingType: InnsendingType,
+        sakId: SakId,
+    ): Boolean {
+        val innsendinger = mottattDokumentRepository.hentDokumenterAvType(sakId, innsendingType)
+
+        return innsendinger.any { dokument -> dokument.referanse == innsendingReferanse }
+    }
+
     companion object : Jobb {
         fun nyJobb(
             sakId: SakId,
@@ -108,7 +127,8 @@ class HendelseMottattHåndteringJobbUtfører(
                     låsRepository,
                     ProsesserBehandlingService(FlytJobbRepository(connection))
                 ),
-                MottaDokumentService(mottattDokumentRepository)
+                MottaDokumentService(mottattDokumentRepository),
+                mottattDokumentRepository
             )
         }
 

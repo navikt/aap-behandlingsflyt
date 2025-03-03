@@ -12,7 +12,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.Inntektkompone
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapResponse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -68,14 +67,6 @@ class ForutgåendeMedlemskapService private constructor(
     }
 
     companion object : Informasjonskravkonstruktør {
-        override fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
-            if (kontekst.skalBehandlesSomFørstegangsbehandling()) {
-                return true
-            }
-            val relevanteÅrsaker = setOf(ÅrsakTilBehandling.REVURDER_MEDLEMSKAP)
-            return kontekst.perioderTilVurdering.flatMap { vurdering -> vurdering.årsaker }
-                .any { årsak -> relevanteÅrsaker.contains(årsak) }
-        }
 
         override fun konstruer(connection: DBConnection): ForutgåendeMedlemskapService {
             val repositoryProvider = RepositoryProvider(connection)

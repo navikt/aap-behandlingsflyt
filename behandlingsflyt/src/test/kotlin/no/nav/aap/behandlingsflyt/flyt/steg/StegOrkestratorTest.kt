@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.periodisering.PerioderTilVurderingService
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -60,7 +61,8 @@ class StegOrkestratorTest {
                 avklaringsbehovRepository = AvklaringsbehovRepositoryImpl(connection),
                 perioderTilVurderingService = PerioderTilVurderingService(
                     SakService(SakRepositoryImpl(connection)),
-                    BehandlingRepositoryImpl(connection)
+                    BehandlingRepositoryImpl(connection),
+                    VilkårsresultatRepositoryImpl(connection)
                 ),
                 stegKonstruktør = StegKonstruktørImpl(connection)
             ).utfør(

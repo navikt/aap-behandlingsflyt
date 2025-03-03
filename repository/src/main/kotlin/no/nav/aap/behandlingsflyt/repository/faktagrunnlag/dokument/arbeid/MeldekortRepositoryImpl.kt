@@ -2,9 +2,9 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.dokument.arbeid
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Pliktkort
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -14,24 +14,24 @@ import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.lookup.repository.Factory
 import no.nav.aap.verdityper.dokument.JournalpostId
 
-class PliktkortRepositoryImpl(private val connection: DBConnection) : PliktkortRepository {
+class MeldekortRepositoryImpl(private val connection: DBConnection) : MeldekortRepository {
 
-    companion object : Factory<PliktkortRepositoryImpl> {
-        override fun konstruer(connection: DBConnection): PliktkortRepositoryImpl {
-            return PliktkortRepositoryImpl(connection)
+    companion object : Factory<MeldekortRepositoryImpl> {
+        override fun konstruer(connection: DBConnection): MeldekortRepositoryImpl {
+            return MeldekortRepositoryImpl(connection)
         }
     }
 
     // Ekte impl her, siden dette er inni en ekte impl
     private val mottattDokumentRepository = MottattDokumentRepositoryImpl(connection)
 
-    override fun hent(behandlingId: BehandlingId): PliktkortGrunnlag {
+    override fun hent(behandlingId: BehandlingId): MeldekortGrunnlag {
         return requireNotNull(hentHvisEksisterer(behandlingId))
     }
 
-    override fun hentHvisEksisterer(behandlingId: BehandlingId): PliktkortGrunnlag? {
+    override fun hentHvisEksisterer(behandlingId: BehandlingId): MeldekortGrunnlag? {
         val query = """
-            SELECT * FROM PLIKKORT_GRUNNLAG WHERE behandling_id = ? and aktiv = true
+            SELECT * FROM MELDEKORT_GRUNNLAG WHERE behandling_id = ? and aktiv = true
         """.trimIndent()
         return connection.queryFirstOrNull(query) {
             setParams {
@@ -43,26 +43,26 @@ class PliktkortRepositoryImpl(private val connection: DBConnection) : PliktkortR
         }
     }
 
-    private fun mapGrunnlag(row: Row, behandlingId: BehandlingId): PliktkortGrunnlag {
+    private fun mapGrunnlag(row: Row, behandlingId: BehandlingId): MeldekortGrunnlag {
         val sakId = hentSakId(behandlingId)
-        val pliktkorteneId = row.getLong("pliktkortene_id")
+        val meldekorteneId = row.getLong("meldekortene_id")
 
         val query = """
-            SELECT * FROM PLIKTKORT WHERE pliktkortene_id = ?
+            SELECT * FROM MELDEKORT WHERE meldekortene_id = ?
         """.trimIndent()
 
-        val pliktkortene = connection.queryList(query) {
+        val meldekortene = connection.queryList(query) {
             setParams {
-                setLong(1, pliktkorteneId)
+                setLong(1, meldekorteneId)
             }
             setRowMapper {
-                Pliktkort(JournalpostId(it.getString("journalpost")), hentTimerPerPeriode(it.getLong("id")))
+                Meldekort(JournalpostId(it.getString("journalpost")), hentTimerPerPeriode(it.getLong("id")))
             }
         }.toSet()
 
-        val dokumentRekkefølge = mottattDokumentRepository.hentDokumentRekkefølge(sakId, InnsendingType.PLIKTKORT)
+        val dokumentRekkefølge = mottattDokumentRepository.hentDokumentRekkefølge(sakId, InnsendingType.MELDEKORT)
 
-        return PliktkortGrunnlag(pliktkortene, dokumentRekkefølge)
+        return MeldekortGrunnlag(meldekortene, dokumentRekkefølge)
     }
 
 
@@ -83,7 +83,7 @@ class PliktkortRepositoryImpl(private val connection: DBConnection) : PliktkortR
 
     private fun hentTimerPerPeriode(id: Long): Set<ArbeidIPeriode> {
         val query = """
-            SELECT * FROM PLIKTKORT_PERIODE WHERE pliktkort_id = ?
+            SELECT * FROM MELDEKORT_PERIODE WHERE meldekort_id = ?
         """.trimIndent()
 
         return connection.queryList(query) {
@@ -96,43 +96,43 @@ class PliktkortRepositoryImpl(private val connection: DBConnection) : PliktkortR
         }.toSet()
     }
 
-    override fun lagre(behandlingId: BehandlingId, pliktkortene: Set<Pliktkort>) {
+    override fun lagre(behandlingId: BehandlingId, meldekortene: Set<Meldekort>) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
-        val eksisterendeKort = eksisterendeGrunnlag?.pliktkort()?.toSet() ?: emptySet()
+        val eksisterendeKort = eksisterendeGrunnlag?.meldekort()?.toSet() ?: emptySet()
 
-        if (eksisterendeKort != pliktkortene) {
+        if (eksisterendeKort != meldekortene) {
             if (eksisterendeGrunnlag != null) {
                 deaktiverGrunnlag(behandlingId)
             }
 
-            lagreNyttGrunnlag(behandlingId, pliktkortene)
+            lagreNyttGrunnlag(behandlingId, meldekortene)
         }
     }
 
-    private fun lagreNyttGrunnlag(behandlingId: BehandlingId, pliktkortene: Set<Pliktkort>) {
-        val pliktkorteneQuery = """
-            INSERT INTO PLIKTKORTENE DEFAULT VALUES
+    private fun lagreNyttGrunnlag(behandlingId: BehandlingId, meldekortene: Set<Meldekort>) {
+        val meldekorteneQuery = """
+            INSERT INTO MELDEKORTENE DEFAULT VALUES
             """.trimIndent()
-        val pliktkorteneId = connection.executeReturnKey(pliktkorteneQuery)
+        val meldekorteneId = connection.executeReturnKey(meldekorteneQuery)
 
-        pliktkortene.forEach { pliktkort ->
+        meldekortene.forEach { meldekort ->
             val query = """
-            INSERT INTO PLIKTKORT (journalpost, pliktkortene_id) VALUES (?, ?)
+            INSERT INTO MELDEKORT (journalpost, meldekortene_id) VALUES (?, ?)
             """.trimIndent()
-            val pliktkortId = connection.executeReturnKey(query) {
+            val meldekortId = connection.executeReturnKey(query) {
                 setParams {
-                    setString(1, pliktkort.journalpostId.identifikator)
-                    setLong(2, pliktkorteneId)
+                    setString(1, meldekort.journalpostId.identifikator)
+                    setLong(2, meldekorteneId)
                 }
             }
 
             val kortQuery = """
-                INSERT INTO PLIKTKORT_PERIODE (pliktkort_id, periode, timer_arbeid) VALUES (?, ?::daterange, ?)
+                INSERT INTO MELDEKORT_PERIODE (meldekort_id, periode, timer_arbeid) VALUES (?, ?::daterange, ?)
             """.trimIndent()
 
-            connection.executeBatch(kortQuery, pliktkort.timerArbeidPerPeriode) {
+            connection.executeBatch(kortQuery, meldekort.timerArbeidPerPeriode) {
                 setParams { periode ->
-                    setLong(1, pliktkortId)
+                    setLong(1, meldekortId)
                     setPeriode(2, periode.periode)
                     setBigDecimal(3, periode.timerArbeid.antallTimer)
                 }
@@ -140,18 +140,18 @@ class PliktkortRepositoryImpl(private val connection: DBConnection) : PliktkortR
         }
 
         val grunnlagQuery = """
-            INSERT INTO PLIKKORT_GRUNNLAG (behandling_id, PLIKTKORTENE_ID) VALUES (?, ?)
+            INSERT INTO MELDEKORT_GRUNNLAG (behandling_id, MELDEKORTENE_ID) VALUES (?, ?)
         """.trimIndent()
         connection.execute(grunnlagQuery) {
             setParams {
                 setLong(1, behandlingId.toLong())
-                setLong(2, pliktkorteneId)
+                setLong(2, meldekorteneId)
             }
         }
     }
 
     private fun deaktiverGrunnlag(behandlingId: BehandlingId) {
-        connection.execute("UPDATE PLIKKORT_GRUNNLAG set aktiv = false WHERE behandling_id = ? and aktiv = true") {
+        connection.execute("UPDATE MELDEKORT_GRUNNLAG set aktiv = false WHERE behandling_id = ? and aktiv = true") {
             setParams {
                 setLong(1, behandlingId.toLong())
             }
@@ -165,7 +165,7 @@ class PliktkortRepositoryImpl(private val connection: DBConnection) : PliktkortR
             return
         }
         val query = """
-            INSERT INTO PLIKKORT_GRUNNLAG (behandling_id, pliktkortene_id) SELECT ?, pliktkortene_id from PLIKKORT_GRUNNLAG where behandling_id = ? and aktiv
+            INSERT INTO MELDEKORT_GRUNNLAG (behandling_id, meldekortene_id) SELECT ?, meldekortene_id from MELDEKORT_GRUNNLAG where behandling_id = ? and aktiv
         """.trimIndent()
 
         connection.execute(query) {

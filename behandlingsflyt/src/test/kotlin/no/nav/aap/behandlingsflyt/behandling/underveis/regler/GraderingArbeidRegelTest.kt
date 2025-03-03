@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Pliktkort
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneVurdering
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -50,7 +50,7 @@ class GraderingArbeidRegelTest {
         val input = underveisInput(
             rettighetsperiode = rettighetsperiode,
             fastsattArbeidsevne = Prosent.`50_PROSENT`,
-            pliktkort = pliktKort(periode to BigDecimal(10))
+            meldekort = meldekort(periode to BigDecimal(10))
         )
         val vurdering = vurder(input)
 
@@ -64,7 +64,7 @@ class GraderingArbeidRegelTest {
         val input = underveisInput(
             rettighetsperiode = rettighetsperiode,
             fastsattArbeidsevne = Prosent.`30_PROSENT`,
-            pliktkort = pliktKort(periode to BigDecimal(37.5))
+            meldekort = meldekort(periode to BigDecimal(37.5))
         )
         val vurdering = vurder(input)
 
@@ -77,7 +77,7 @@ class GraderingArbeidRegelTest {
         val input = underveisInput(
             rettighetsperiode = rettighetsperiode,
             fastsattArbeidsevne = Prosent.`30_PROSENT`,
-            pliktkort = emptyList()
+            meldekort = emptyList()
         )
         val vurdering = vurder(input)
 
@@ -91,7 +91,7 @@ class GraderingArbeidRegelTest {
         val input = underveisInput(
             rettighetsperiode = rettighetsperiode,
             fastsattArbeidsevne = null,
-            pliktkort = pliktKort(periode to BigDecimal(37.5))
+            meldekort = meldekort(periode to BigDecimal(37.5))
         )
         val vurdering = vurder(input)
 
@@ -105,7 +105,7 @@ class GraderingArbeidRegelTest {
         val input = underveisInput(
             rettighetsperiode = rettighetsperiode,
             fastsattArbeidsevne = null,
-            pliktkort = pliktKort(periode to BigDecimal(100))
+            meldekort = meldekort(periode to BigDecimal(100))
         )
         val vurdering = vurder(input)
 
@@ -120,7 +120,7 @@ class GraderingArbeidRegelTest {
         val input = underveisInput(
             rettighetsperiode = rettighetsperiode,
             fastsattArbeidsevne = Prosent.`30_PROSENT`,
-            pliktkort = pliktKort(meldeperiode1 to BigDecimal.ZERO, meldeperiode2 to BigDecimal(37.5))
+            meldekort = meldekort(meldeperiode1 to BigDecimal.ZERO, meldeperiode2 to BigDecimal(37.5))
         )
         val vurdering = vurder(input)
 
@@ -129,14 +129,14 @@ class GraderingArbeidRegelTest {
     }
 
     @Test
-    fun `pliktkort som overlapper blir prioritert fra tidligst til nyligst innsendt`() {
+    fun `meldekort som overlapper blir prioritert fra tidligst til nyligst innsendt`() {
         val rettighetsperiode = Periode(LocalDate.parse("2022-10-31"), LocalDate.parse("2023-10-31"))
         val meldeperiode1 = Periode(rettighetsperiode.fom, rettighetsperiode.fom.plusDays(13))
         val meldeperiode2 = Periode(meldeperiode1.tom.plusDays(1), meldeperiode1.tom.plusDays(14))
         val input = underveisInput(
             rettighetsperiode = rettighetsperiode,
             fastsattArbeidsevne = Prosent.`30_PROSENT`,
-            pliktkort = pliktKort(
+            meldekort = meldekort(
                 meldeperiode1.utvid(Periode(meldeperiode2.fom, meldeperiode2.fom.plusDays(3))) to BigDecimal.ZERO,
                 meldeperiode2 to BigDecimal(37.5)
             )
@@ -150,11 +150,11 @@ class GraderingArbeidRegelTest {
     private fun underveisInput(
         rettighetsperiode: Periode,
         fastsattArbeidsevne: Prosent?,
-        pliktkort: List<Pliktkort>
+        meldekort: List<Meldekort>
     ) = tomUnderveisInput.copy(
-        innsendingsTidspunkt = pliktkort.associate { it.timerArbeidPerPeriode.first().periode.fom.minusDays(1) to it.journalpostId },
+        innsendingsTidspunkt = meldekort.associate { it.timerArbeidPerPeriode.first().periode.fom.minusDays(1) to it.journalpostId },
         rettighetsperiode = rettighetsperiode,
-        pliktkort = pliktkort,
+        meldekort = meldekort,
         arbeidsevneGrunnlag = ArbeidsevneGrunnlag(
             listOfNotNull(fastsattArbeidsevne?.let {
                 ArbeidsevneVurdering(
@@ -167,9 +167,9 @@ class GraderingArbeidRegelTest {
         )
     )
 
-    private fun pliktKort(vararg periodeOgTimerArbeidet: Pair<Periode, BigDecimal>): List<Pliktkort> {
+    private fun meldekort(vararg periodeOgTimerArbeidet: Pair<Periode, BigDecimal>): List<Meldekort> {
         return periodeOgTimerArbeidet.mapIndexed { i, (periode, timerArbeidet) ->
-            Pliktkort(
+            Meldekort(
                 journalpostId = JournalpostId(i.toString()),
                 timerArbeidPerPeriode = setOf(
                     ArbeidIPeriode(

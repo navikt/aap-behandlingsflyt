@@ -7,7 +7,7 @@ public enum class InnsendingType {
      * typen opprettes i Kelvin.
      */
     AKTIVITETSKORT,
-    PLIKTKORT,
+    MELDEKORT,
     LEGEERKLÆRING,
     LEGEERKLÆRING_AVVIST,
     DIALOGMELDING,

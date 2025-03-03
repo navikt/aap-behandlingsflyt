@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -30,18 +31,38 @@ class VurderYrkesskadeSteg private constructor(
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val behandlingId = kontekst.behandlingId
-
         val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
         val yrkesskader = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
         val sykdomsgrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
         val sykdomsvurderingTidslinje = sykdomsgrunnlag?.somSykdomsvurderingstidslinje(LocalDate.MIN)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
 
-        val erBehovForAvklaring = erBehovForAvklaring(vilkårsresultat, yrkesskader, sykdomsvurderingTidslinje)
-        if (erBehovForAvklaring && sykdomsgrunnlag?.yrkesskadevurdering == null) {
-            return FantAvklaringsbehov(Definisjon.AVKLAR_YRKESSKADE)
-        } else if (!erBehovForAvklaring && avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_YRKESSKADE) != null) {
-            avklaringsbehovene.avbryt(Definisjon.AVKLAR_YRKESSKADE)
+        when (kontekst.vurdering.vurderingType) {
+            VurderingType.FØRSTEGANGSBEHANDLING -> {
+                val erBehovForAvklaring = erBehovForAvklaring(vilkårsresultat, yrkesskader, sykdomsvurderingTidslinje)
+                if (erBehovForAvklaring && sykdomsgrunnlag?.yrkesskadevurdering == null) {
+                    return FantAvklaringsbehov(Definisjon.AVKLAR_YRKESSKADE)
+                } else if (!erBehovForAvklaring && avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_YRKESSKADE) != null) {
+                    avklaringsbehovene.avbryt(Definisjon.AVKLAR_YRKESSKADE)
+                }
+            }
+
+            VurderingType.REVURDERING -> {
+                val erBehovForAvklaring = erBehovForAvklaring(vilkårsresultat, yrkesskader, sykdomsvurderingTidslinje)
+                if (erBehovForAvklaring && sykdomsgrunnlag?.yrkesskadevurdering == null) {
+                    return FantAvklaringsbehov(Definisjon.AVKLAR_YRKESSKADE)
+                } else if (!erBehovForAvklaring && avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_YRKESSKADE) != null) {
+                    avklaringsbehovene.avbryt(Definisjon.AVKLAR_YRKESSKADE)
+                }
+            }
+
+            VurderingType.FORLENGELSE -> {
+                // Do nothing
+            }
+
+            VurderingType.IKKE_RELEVANT -> {
+                // Do nothing
+            }
         }
 
         return Fullført

@@ -77,11 +77,11 @@ class GraderingArbeidRegel : UnderveisRegel {
 
         // Regner kun ut gradering for perioden det er sendt noe inn for
         val arbeidsTidslinje = timerArbeidetTidslinje.kombiner(
-            arbeidsevneVurdering, JoinStyle.OUTER_JOIN { periode, pliktkort, arbeidsevne ->
+            arbeidsevneVurdering, JoinStyle.OUTER_JOIN { periode, meldekort, arbeidsevne ->
                 Segment(
                     periode,
                     Arbeid(
-                        timerArbeid = pliktkort?.verdi,
+                        timerArbeid = meldekort?.verdi,
                         arbeidsevne = arbeidsevne?.verdi?.arbeidsevne
                     )
                 )
@@ -108,8 +108,8 @@ class GraderingArbeidRegel : UnderveisRegel {
     private fun timerArbeidetTidslinje(input: UnderveisInput): Tidslinje<TimerArbeid> {
         var tidslinje = Tidslinje(listOf(Segment(input.rettighetsperiode, TimerArbeid(BigDecimal.ZERO))))
         val innsendt = input.innsendingsTidspunkt.map { it.value to it.key }.toMap()
-        for (pliktkort in input.pliktkort.sortedBy { innsendt[it.journalpostId] }) {
-            tidslinje = tidslinje.kombiner(Tidslinje(pliktkort.timerArbeidPerPeriode.map {
+        for (meldekort in input.meldekort.sortedBy { innsendt[it.journalpostId] }) {
+            tidslinje = tidslinje.kombiner(Tidslinje(meldekort.timerArbeidPerPeriode.map {
                 Segment(
                     it.periode,
                     it.arbeidPerDag() // Smører timene meldt over alle dagene de er meldt for

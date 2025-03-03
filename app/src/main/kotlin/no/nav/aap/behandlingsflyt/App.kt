@@ -38,7 +38,6 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.lovvalgMedlemskap
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilkjentYtelseAPI
 import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerAPI
-import no.nav.aap.behandlingsflyt.datadeling.datadelingAPI
 import no.nav.aap.behandlingsflyt.exception.ErrorRespons
 import no.nav.aap.behandlingsflyt.exception.FlytOperasjonException
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
@@ -74,7 +73,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordni
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningYtelseVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.dokument.arbeid.PliktkortRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.dokument.arbeid.MeldekortRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektForutgåendeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningForutgåendeRepositoryImpl
@@ -229,7 +228,6 @@ internal fun Application.server(dbConfig: DbConfig) {
                 underveisVurderingerAPI(dataSource)
                 lovvalgMedlemskapAPI(dataSource)
                 lovvalgMedlemskapGrunnlagAPI(dataSource)
-                datadelingAPI(dataSource)
                 samordningGrunnlag(dataSource)
                 forutgåendeMedlemskapAPI(dataSource)
             }
@@ -267,7 +265,7 @@ private fun registerRepositories() {
         .register<BrevbestillingRepositoryImpl>()
         .register<SamordningRepositoryImpl>()
         .register<MottattDokumentRepositoryImpl>()
-        .register<PliktkortRepositoryImpl>()
+        .register<MeldekortRepositoryImpl>()
         .register<UnderveisRepositoryImpl>()
         .register<ArbeidsevneRepositoryImpl>()
         .register<Effektuer11_7RepositoryImpl>()

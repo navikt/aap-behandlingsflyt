@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktInformasjonskrav
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.SøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnService
@@ -56,7 +56,7 @@ object Revurdering : BehandlingType {
                 informasjonskrav = listOf(PersonopplysningService, LovvalgService),
                 årsakRelevanteForSteg = listOf(
                     ÅrsakTilBehandling.MOTTATT_SØKNAD,
-                    ÅrsakTilBehandling.REVURDER_MEDLEMSKAP
+                    ÅrsakTilBehandling.REVURDER_LOVVALG
                 )
             )
             .medSteg(steg = FastsettMeldeperiodeSteg)
@@ -134,7 +134,7 @@ object Revurdering : BehandlingType {
             )
             .medSteg(steg = BarnetilleggSteg, informasjonskrav = listOf(BarnService))
             .medSteg(steg = EtAnnetStedSteg, informasjonskrav = listOf(InstitusjonsoppholdService))
-            .medSteg(steg = UnderveisSteg, informasjonskrav = listOf(PliktkortService, AktivitetspliktInformasjonskrav))
+            .medSteg(steg = UnderveisSteg, informasjonskrav = listOf(MeldekortService, AktivitetspliktInformasjonskrav))
             .medSteg(steg = SamordningSteg, informasjonskrav = listOf(SamordningYtelseVurderingService))
             .medSteg(steg = Effektuer11_7Steg)
             .medSteg(

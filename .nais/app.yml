@@ -118,6 +118,7 @@ spec:
         - application: pensjon-pen-q2
           namespace: pensjon-q2
           cluster: dev-fss
+        - application: api-intern
 
   env:
     - name: INTEGRASJON_PDL_URL

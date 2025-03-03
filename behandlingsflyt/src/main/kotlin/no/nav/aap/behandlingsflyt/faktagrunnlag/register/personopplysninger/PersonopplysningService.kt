@@ -33,7 +33,7 @@ class PersonopplysningService private constructor(
 
     companion object : Informasjonskravkonstruktør {
         override fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
-            // Skal alltid innhente ferske opplysninger
+            // Skal alltid innhente ferske opplysninger da denne innhenter for alder og dødsfall
             return true
         }
 

@@ -12,7 +12,8 @@ object ProsesseringsJobber {
             GjenopptaBehandlingJobbUtfører,
             HendelseMottattHåndteringJobbUtfører,
             StatistikkJobbUtfører,
-            DatadelingJobbUtfører
+            DatadelingMeldePerioderJobbUtfører,
+            DatadelingSakStatusJobbUtfører
         )
     }
 }

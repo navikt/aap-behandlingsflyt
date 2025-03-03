@@ -19,7 +19,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.PliktkortRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
@@ -33,7 +33,7 @@ import kotlin.reflect.KClass
 class UnderveisService(
     private val behandlingService: SakOgBehandlingService,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val pliktkortRepository: PliktkortRepository,
+    private val meldekortRepository: MeldekortRepository,
     private val underveisRepository: UnderveisRepository,
     private val aktivitetspliktRepository: AktivitetspliktRepository,
     private val etAnnetStedUtlederService: EtAnnetStedUtlederService,
@@ -114,9 +114,9 @@ class UnderveisService(
         val sak = behandlingService.hentSakFor(behandlingId)
         val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
 
-        val pliktkortGrunnlag = pliktkortRepository.hentHvisEksisterer(behandlingId)
-        val pliktkort = pliktkortGrunnlag?.pliktkort() ?: listOf()
-        val innsendingsTidspunkt = pliktkortGrunnlag?.innsendingsdatoPerMelding() ?: mapOf()
+        val meldekortGrunnlag = meldekortRepository.hentHvisEksisterer(behandlingId)
+        val meldekort = meldekortGrunnlag?.meldekort() ?: listOf()
+        val innsendingsTidspunkt = meldekortGrunnlag?.innsendingsdatoPerMelding() ?: mapOf()
         val kvote = kvoteService.beregn(behandlingId)
         val utlederResultat = etAnnetStedUtlederService.utled(behandlingId)
 
@@ -135,7 +135,7 @@ class UnderveisService(
             rettighetsperiode = sak.rettighetsperiode,
             vilkårsresultat = vilkårsresultat,
             opptrappingPerioder = listOf(),
-            pliktkort = pliktkort,
+            meldekort = meldekort,
             innsendingsTidspunkt = innsendingsTidspunkt,
             kvoter = kvote,
             aktivitetspliktGrunnlag = aktivitetspliktGrunnlag,

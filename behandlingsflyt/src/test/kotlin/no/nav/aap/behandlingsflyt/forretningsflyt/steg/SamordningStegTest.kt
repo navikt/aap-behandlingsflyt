@@ -10,10 +10,10 @@ import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.periodisering.VurderingTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
@@ -50,12 +50,10 @@ class SamordningStegTest {
                 sakId = behandling.sakId,
                 behandlingId = behandling.id,
                 behandlingType = TypeBehandling.Revurdering,
-                perioderTilVurdering = setOf(
-                    Vurdering(
-                        type = VurderingType.REVURDERING,
-                        årsaker = listOf(ÅrsakTilBehandling.MOTTATT_MELDEKORT),
-                        periode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
-                    )
+                vurdering = VurderingTilBehandling(
+                    vurderingType = VurderingType.REVURDERING,
+                    årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
+                    rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
                 )
             )
         )
@@ -82,12 +80,10 @@ class SamordningStegTest {
                 sakId = behandling.sakId,
                 behandlingId = behandling.id,
                 behandlingType = TypeBehandling.Revurdering,
-                perioderTilVurdering = setOf(
-                    Vurdering(
-                        type = VurderingType.REVURDERING,
-                        årsaker = listOf(ÅrsakTilBehandling.MOTTATT_MELDEKORT),
-                        periode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
-                    )
+                vurdering = VurderingTilBehandling(
+                    vurderingType = VurderingType.REVURDERING,
+                    årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
+                    rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
                 )
             )
         )
@@ -110,7 +106,12 @@ class SamordningStegTest {
                 sakId = behandling.sakId,
                 behandlingId = behandling.id,
                 behandlingType = TypeBehandling.Førstegangsbehandling,
-                perioderTilVurdering = setOf()
+                vurdering = VurderingTilBehandling(
+                    vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
+                    årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
+                    rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
+                )
+
             )
         )
 
@@ -125,12 +126,10 @@ class SamordningStegTest {
             sakId = behandling.sakId,
             behandlingId = behandling.id,
             behandlingType = TypeBehandling.Revurdering,
-            perioderTilVurdering = setOf(
-                Vurdering(
-                    type = VurderingType.REVURDERING,
-                    årsaker = listOf(ÅrsakTilBehandling.MOTTATT_MELDEKORT),
-                    periode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
-                )
+            vurdering = VurderingTilBehandling(
+                vurderingType = VurderingType.REVURDERING,
+                årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
+                rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
             )
         )
 

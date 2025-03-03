@@ -3,20 +3,20 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDate
 
-data class PliktkortGrunnlag(
-    internal val pliktkortene: Set<Pliktkort>,
+data class MeldekortGrunnlag(
+    internal val meldekortene: Set<Meldekort>,
     private val rekkefølge: Set<DokumentRekkefølge>
 ) {
     init {
-        require(rekkefølge.size >= pliktkortene.size)
-        require(rekkefølge.all { pliktkortene.any { pk -> it.referanse.asJournalpostId == pk.journalpostId } })
+        require(rekkefølge.size >= meldekortene.size)
+        require(rekkefølge.all { meldekortene.any { pk -> it.referanse.asJournalpostId == pk.journalpostId } })
     }
 
     /**
      * Returnerer sortert stigende på innsendingstidspunkt
      */
-    fun pliktkort(): List<Pliktkort> {
-        return pliktkortene.sortedWith(compareBy { rekkefølge.first { at -> at.referanse.asJournalpostId == it.journalpostId }.mottattTidspunkt })
+    fun meldekort(): List<Meldekort> {
+        return meldekortene.sortedWith(compareBy { rekkefølge.first { at -> at.referanse.asJournalpostId == it.journalpostId }.mottattTidspunkt })
     }
 
     fun innsendingsdatoPerMelding(): Map<LocalDate, JournalpostId> {

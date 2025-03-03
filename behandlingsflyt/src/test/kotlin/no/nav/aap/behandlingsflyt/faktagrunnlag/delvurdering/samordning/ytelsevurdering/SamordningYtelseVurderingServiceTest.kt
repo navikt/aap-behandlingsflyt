@@ -2,9 +2,10 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsev
 
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
-import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusSykepengerGateway
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusForeldrepengerGateway
+import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusSykepengerGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.periodisering.VurderingTilBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningYtelseVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
@@ -12,6 +13,7 @@ import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -19,7 +21,6 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
-import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.gateway.GatewayRegistry
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeAll
@@ -106,9 +107,10 @@ class SamordningYtelseVurderingServiceTest {
 
     private fun opprettSakdata(connection: DBConnection): FlytKontekstMedPerioder {
         val person = PersonRepositoryImpl(connection).finnEllerOpprett(listOf(Ident("ident", true)))
+        val rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusDays(5))
         val sakId = SakRepositoryImpl(connection).finnEllerOpprett(
             person,
-            Periode(LocalDate.now(), LocalDate.now().plusDays(5))
+            rettighetsperiode
         ).id
         val behandlingId = BehandlingRepositoryImpl(connection).opprettBehandling(
             sakId,
@@ -116,6 +118,9 @@ class SamordningYtelseVurderingServiceTest {
             TypeBehandling.Førstegangsbehandling,
             null
         ).id
-        return FlytKontekstMedPerioder(sakId, behandlingId, TypeBehandling.Førstegangsbehandling, setOf())
+        return FlytKontekstMedPerioder(
+            sakId, behandlingId, TypeBehandling.Førstegangsbehandling,
+            VurderingTilBehandling(VurderingType.FØRSTEGANGSBEHANDLING, rettighetsperiode, null, setOf())
+        )
     }
 }

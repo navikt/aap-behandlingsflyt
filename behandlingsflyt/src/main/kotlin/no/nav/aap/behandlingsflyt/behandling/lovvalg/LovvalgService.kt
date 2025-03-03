@@ -16,7 +16,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapRe
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapResponse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -30,13 +29,14 @@ class LovvalgService private constructor(
     private val sakService: SakService,
     private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
     private val medlemskapRepository: MedlemskapRepository
-): Informasjonskrav {
+) : Informasjonskrav {
     private val medlemskapGateway = GatewayProvider.provide<MedlemskapGateway>()
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
 
-        val medlemskapPerioder = medlemskapGateway.innhent(sak.person, Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.fom))
+        val medlemskapPerioder =
+            medlemskapGateway.innhent(sak.person, Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.fom))
         val arbeidGrunnlag = innhentAARegisterGrunnlag(sak)
         val inntektGrunnlag = innhentAInntektGrunnlag(sak)
 
@@ -65,20 +65,25 @@ class LovvalgService private constructor(
         ).arbeidsInntektMaaned
     }
 
-    private fun lagre(behandlingId: BehandlingId, medlemskapGrunnlag: List<MedlemskapResponse>, arbeidGrunnlag: List<ArbeidsforholdOversikt>, inntektGrunnlag: List<ArbeidsInntektMaaned>) {
-        val medlId = if (medlemskapGrunnlag.isNotEmpty()) medlemskapRepository.lagreUnntakMedlemskap(behandlingId, medlemskapGrunnlag) else null
-        medlemskapArbeidInntektRepository.lagreArbeidsforholdOgInntektINorge(behandlingId, arbeidGrunnlag, inntektGrunnlag, medlId)
+    private fun lagre(
+        behandlingId: BehandlingId,
+        medlemskapGrunnlag: List<MedlemskapResponse>,
+        arbeidGrunnlag: List<ArbeidsforholdOversikt>,
+        inntektGrunnlag: List<ArbeidsInntektMaaned>
+    ) {
+        val medlId = if (medlemskapGrunnlag.isNotEmpty()) medlemskapRepository.lagreUnntakMedlemskap(
+            behandlingId,
+            medlemskapGrunnlag
+        ) else null
+        medlemskapArbeidInntektRepository.lagreArbeidsforholdOgInntektINorge(
+            behandlingId,
+            arbeidGrunnlag,
+            inntektGrunnlag,
+            medlId
+        )
     }
 
     companion object : Informasjonskravkonstruktør {
-        override fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
-            if (kontekst.skalBehandlesSomFørstegangsbehandling()) {
-                return true
-            }
-            val relevanteÅrsaker = setOf(ÅrsakTilBehandling.REVURDER_MEDLEMSKAP)
-            return kontekst.perioderTilVurdering.flatMap { vurdering -> vurdering.årsaker }
-                .any { årsak -> relevanteÅrsaker.contains(årsak) }
-        }
 
         override fun konstruer(connection: DBConnection): LovvalgService {
             val repositoryProvider = RepositoryProvider(connection)

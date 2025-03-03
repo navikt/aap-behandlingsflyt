@@ -1,10 +1,9 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.flyt
 
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.periodisering.VurderingTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.komponenter.type.Periode
-import java.util.*
 
 /**
  * Kontekst for behandlingen som inneholder hvilke perioder som er til vurdering for det enkelte steget som skal vurderes
@@ -14,21 +13,18 @@ data class FlytKontekstMedPerioder(
     val sakId: SakId,
     val behandlingId: BehandlingId,
     val behandlingType: TypeBehandling,
-    val perioderTilVurdering: Set<Vurdering>
+    val vurdering: VurderingTilBehandling
 ) {
-    fun perioder(): NavigableSet<Periode> {
-        return perioderTilVurdering.map { it.periode }.toCollection(TreeSet())
-    }
 
     fun skalBehandlesSomFørstegangsbehandling(): Boolean {
-        return perioderTilVurdering.any { vurdering -> vurdering.type == VurderingType.FØRSTEGANGSBEHANDLING }
+        return vurdering.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING
     }
 
     fun harNoeTilBehandling(): Boolean {
-        return perioderTilVurdering.isNotEmpty()
+        return vurdering.skalVurdereNoe()
     }
 
     fun skalBehandlesSomEntenFørstegangsbehandlingEllerRevurdering(): Boolean {
-        return perioderTilVurdering.any { vurdering -> vurdering.type == VurderingType.FØRSTEGANGSBEHANDLING || vurdering.type == VurderingType.REVURDERING }
+        return vurdering.vurderingType in setOf(VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING)
     }
 }

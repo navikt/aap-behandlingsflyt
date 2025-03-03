@@ -37,10 +37,10 @@ public class Innsending(
                 require(referanse.type == InnsendingReferanse.Type.BRUDD_AKTIVITETSPLIKT_INNSENDING_ID)
             }
 
-            InnsendingType.PLIKTKORT -> {
+            InnsendingType.MELDEKORT -> {
                 require(InnsendingReferanse.Type.JOURNALPOST == referanse.type)
                 requireNotNull(melding)
-                require(melding is Pliktkort)
+                require(melding is Meldekort)
             }
 
             InnsendingType.LEGEERKLÆRING -> {
@@ -77,7 +77,7 @@ public sealed interface Melding
 
 public fun Melding.innsendingType(): InnsendingType = when (this) {
     is Aktivitetskort -> InnsendingType.AKTIVITETSKORT
-    is Pliktkort -> InnsendingType.PLIKTKORT
+    is Meldekort -> InnsendingType.MELDEKORT
     is Søknad -> InnsendingType.SØKNAD
     is AnnetRelevantDokument -> InnsendingType.ANNET_RELEVANT_DOKUMENT
 }
@@ -92,8 +92,8 @@ private fun example(innsending: Innsending) {
             is SøknadV0 -> TODO()
         }
 
-        is Pliktkort -> when (innsending.melding) {
-            is PliktkortV0 -> TODO()
+        is Meldekort -> when (innsending.melding) {
+            is MeldekortV0 -> TODO()
         }
 
         is Aktivitetskort -> TODO()

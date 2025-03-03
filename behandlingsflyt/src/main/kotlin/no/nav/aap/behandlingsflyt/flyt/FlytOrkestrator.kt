@@ -111,7 +111,7 @@ class FlytOrkestrator(
                     sakId = kontekst.sakId,
                     behandlingId = kontekst.behandlingId,
                     behandlingType = kontekst.behandlingType,
-                    perioderTilVurdering = perioderTilVurderingService.utled(
+                    vurdering = perioderTilVurderingService.utled(
                         kontekst = kontekst,
                         stegType = behandling.aktivtSteg()
                     )

@@ -2,9 +2,9 @@ plugins {
     id("behandlingsflyt.conventions")
 }
 
-val komponenterVersjon = "1.0.156"
+val komponenterVersjon = "1.0.159"
 val ktorVersion = "3.1.1"
-val tilgangVersjon = "1.0.10"
+val tilgangVersjon = "1.0.14"
 val junitVersjon = "5.12.0"
 
 dependencies {
@@ -15,7 +15,7 @@ dependencies {
 
     api("no.nav.aap.tilgang:plugin:$tilgangVersjon")
     api("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
-    api("no.nav.aap.brev:kontrakt:0.0.62")
+    api("no.nav.aap.brev:kontrakt:0.0.67")
     api("no.nav.aap.kelvin:motor:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:dbconnect:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
@@ -26,7 +26,7 @@ dependencies {
     implementation(kotlin("reflect"))
     // TODO: fjern når alle api er flyttet til api-modul
     compileOnly("io.ktor:ktor-http-jvm:$ktorVersion")
-    implementation("org.flywaydb:flyway-database-postgresql:11.3.3")
+    implementation("org.flywaydb:flyway-database-postgresql:11.3.4")
     runtimeOnly("org.postgresql:postgresql:42.7.5")
 
 
@@ -44,6 +44,6 @@ dependencies {
             because("https://github.com/advisories/GHSA-4g9r-vxhx-9pgx")
         }
     }
-    testImplementation("io.mockk:mockk:1.13.16")
+    testImplementation("io.mockk:mockk:1.13.17")
     testImplementation(kotlin("test"))
 }

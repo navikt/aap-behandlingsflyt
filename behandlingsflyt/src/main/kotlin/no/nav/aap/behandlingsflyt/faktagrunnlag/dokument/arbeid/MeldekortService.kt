@@ -11,9 +11,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
 
-class PliktkortService private constructor(
+class MeldekortService private constructor(
     private val mottaDokumentService: MottaDokumentService,
-    private val pliktkortRepository: PliktkortRepository
+    private val meldekortRepository: MeldekortRepository
 ) : Informasjonskrav {
 
     companion object : Informasjonskravkonstruktør {
@@ -22,39 +22,39 @@ class PliktkortService private constructor(
             return true
         }
 
-        override fun konstruer(connection: DBConnection): PliktkortService {
+        override fun konstruer(connection: DBConnection): MeldekortService {
             val repositoryProvider = RepositoryProvider(connection)
-            return PliktkortService(
+            return MeldekortService(
                 MottaDokumentService(repositoryProvider.provide<MottattDokumentRepository>()),
-                repositoryProvider.provide<PliktkortRepository>()
+                repositoryProvider.provide<MeldekortRepository>()
             )
         }
     }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
-        val pliktkortSomIkkeErBehandlet = mottaDokumentService.pliktkortSomIkkeErBehandlet(kontekst.sakId)
-        if (pliktkortSomIkkeErBehandlet.isEmpty()) {
+        val meldekortSomIkkeErBehandlet = mottaDokumentService.meldekortSomIkkeErBehandlet(kontekst.sakId)
+        if (meldekortSomIkkeErBehandlet.isEmpty()) {
             return IKKE_ENDRET
         }
 
-        val eksisterendeGrunnlag = pliktkortRepository.hentHvisEksisterer(kontekst.behandlingId)
-        val eksisterendePliktkort = eksisterendeGrunnlag?.pliktkortene ?: emptySet()
-        val allePlussNye = HashSet<Pliktkort>(eksisterendePliktkort)
+        val eksisterendeGrunnlag = meldekortRepository.hentHvisEksisterer(kontekst.behandlingId)
+        val eksisterendeMeldekort = eksisterendeGrunnlag?.meldekortene ?: emptySet()
+        val allePlussNye = HashSet<Meldekort>(eksisterendeMeldekort)
 
-        for (ubehandletPliktkort in pliktkortSomIkkeErBehandlet) {
-            val nyttPliktkort = Pliktkort(
-                journalpostId = ubehandletPliktkort.journalpostId,
-                timerArbeidPerPeriode = ubehandletPliktkort.timerArbeidPerPeriode
+        for (ubehandletMeldekort in meldekortSomIkkeErBehandlet) {
+            val nyttMeldekort = Meldekort(
+                journalpostId = ubehandletMeldekort.journalpostId,
+                timerArbeidPerPeriode = ubehandletMeldekort.timerArbeidPerPeriode
             )
             mottaDokumentService.knyttTilBehandling(
                 sakId = kontekst.sakId,
                 behandlingId = kontekst.behandlingId,
-                referanse = InnsendingReferanse(ubehandletPliktkort.journalpostId)
+                referanse = InnsendingReferanse(ubehandletMeldekort.journalpostId)
             )
-            allePlussNye.add(nyttPliktkort)
+            allePlussNye.add(nyttMeldekort)
         }
 
-        pliktkortRepository.lagre(behandlingId = kontekst.behandlingId, pliktkortene = allePlussNye)
+        meldekortRepository.lagre(behandlingId = kontekst.behandlingId, meldekortene = allePlussNye)
 
         return ENDRET // Antar her at alle nye kort gir en endring vi må ta hensyn til
     }

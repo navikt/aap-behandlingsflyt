@@ -5,9 +5,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Aktivitetskort
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AktivitetskortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AnnetRelevantDokumentV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Meldekort
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Pliktkort
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PliktkortV0
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.tilÅrsakTilBehandling
@@ -54,7 +54,7 @@ class HåndterMottattDokumentService(
     private fun utledÅrsak(brevkategori: InnsendingType, melding: Melding?, periode: Periode?): Årsak {
         return when (brevkategori) {
             InnsendingType.SØKNAD -> Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD)
-            InnsendingType.PLIKTKORT ->
+            InnsendingType.MELDEKORT ->
                 Årsak(
                     ÅrsakTilBehandling.MOTTATT_MELDEKORT,
                     periode
@@ -91,14 +91,14 @@ class HåndterMottattDokumentService(
 
             } else error("Må være aktivitetskort")
 
-            InnsendingType.PLIKTKORT -> if (melding is Pliktkort) {
+            InnsendingType.MELDEKORT -> if (melding is Meldekort) {
                 when (melding) {
-                    is PliktkortV0 -> Periode(
+                    is MeldekortV0 -> Periode(
                         fom = melding.fom() ?: mottattTidspunkt.toLocalDate(),
                         tom = melding.tom() ?: mottattTidspunkt.toLocalDate()
                     )
                 }
-            } else error("Må være Pliktkort")
+            } else error("Må være meldekort")
 
             else -> null
         }

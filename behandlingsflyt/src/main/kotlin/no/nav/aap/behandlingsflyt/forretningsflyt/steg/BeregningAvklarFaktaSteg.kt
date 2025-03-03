@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -36,11 +37,12 @@ class BeregningAvklarFaktaSteg private constructor(
         val behandlingId = kontekst.behandlingId
 
         if (!avklarFaktaBeregningService.skalFastsetteGrunnlag(behandlingId)) {
+            // TODO: Avbryte eventuelle avklaringsbehov som henger her hvis de er aktive
             return Fullført
         }
 
-        if (kontekst.harNoeTilBehandling()) {
-            if (kontekst.skalBehandlesSomFørstegangsbehandling()) {
+        when (kontekst.vurdering.vurderingType) {
+            VurderingType.FØRSTEGANGSBEHANDLING -> {
                 val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
 
                 val vilkårsresultat = vilkårsresultatRepository1.hent(behandlingId)
@@ -54,8 +56,9 @@ class BeregningAvklarFaktaSteg private constructor(
                 } else if (avklaringsbehov != null) {
                     avklaringsbehovene.avbryt(Definisjon.FASTSETT_YRKESSKADEINNTEKT)
                 }
-            } else {
-                // Revurdering
+            }
+
+            VurderingType.REVURDERING -> {
                 val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
 
                 val vilkårsresultat = vilkårsresultatRepository1.hent(behandlingId)
@@ -73,6 +76,14 @@ class BeregningAvklarFaktaSteg private constructor(
                 } else if (avklaringsbehov != null) {
                     avklaringsbehovene.avbryt(Definisjon.FASTSETT_YRKESSKADEINNTEKT)
                 }
+            }
+
+            VurderingType.FORLENGELSE -> {
+                // Ikke relevant i et avklar fakta steg
+            }
+
+            VurderingType.IKKE_RELEVANT -> {
+                // Allways do nothing
             }
         }
         return Fullført

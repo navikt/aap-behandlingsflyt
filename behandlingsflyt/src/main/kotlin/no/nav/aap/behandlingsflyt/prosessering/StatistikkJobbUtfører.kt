@@ -117,6 +117,7 @@ class StatistikkJobbUtfører(
                     ÅrsakTilBehandling.REVURDER_MEDLEMSKAP -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.REVURDER_MEDLEMSKAP
                     ÅrsakTilBehandling.REVURDER_BEREGNING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.REVURDER_BEREGNING
                     ÅrsakTilBehandling.REVURDER_YRKESSKADE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.REVURDER_YRKESSKADE
+                    ÅrsakTilBehandling.REVURDER_LOVVALG -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.REVURDER_LOVVALG
                 }
             }.distinct()
         )

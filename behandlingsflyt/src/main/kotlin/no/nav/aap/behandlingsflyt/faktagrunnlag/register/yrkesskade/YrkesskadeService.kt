@@ -92,10 +92,6 @@ class YrkesskadeService private constructor(
     }
 
     companion object : Informasjonskravkonstruktør {
-        override fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
-            // Skal kun innhente når 11-5 skal vurderes
-            return true
-        }
 
         override fun konstruer(connection: DBConnection): YrkesskadeService {
             val repositoryProvider = RepositoryProvider(connection)

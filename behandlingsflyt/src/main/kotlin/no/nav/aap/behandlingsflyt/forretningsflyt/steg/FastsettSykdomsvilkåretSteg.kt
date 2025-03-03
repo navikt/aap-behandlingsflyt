@@ -11,28 +11,51 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class FastsettSykdomsvilkåretSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val sykdomRepository: SykdomRepository,
-    private val studentRepository: StudentRepository,
-    private val sakService: SakService
+    private val studentRepository: StudentRepository
 ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val behandlingId = kontekst.behandlingId
 
-        val sak = sakService.hent(kontekst.sakId)
+        when (kontekst.vurdering.vurderingType) {
+            VurderingType.FØRSTEGANGSBEHANDLING -> {
+                vurderVilkåret(kontekst)
+            }
+
+            VurderingType.REVURDERING -> {
+                vurderVilkåret(kontekst)
+            }
+
+            VurderingType.FORLENGELSE -> {
+                // Skal ikke tvinge noen form for vurdering
+            }
+
+            VurderingType.IKKE_RELEVANT -> {
+                // Do nothing
+            }
+        }
+
+        return Fullført
+    }
+
+    private fun vurderVilkåret(
+        kontekst: FlytKontekstMedPerioder,
+    ) {
+        val behandlingId = kontekst.behandlingId
         val vilkårResultat = vilkårsresultatRepository.hent(behandlingId)
         val sykdomsGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
         val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId)
 
+        val rettighetsperiode = kontekst.vurdering.rettighetsperiode
         val faktagrunnlag = SykdomsFaktagrunnlag(
-            sak.rettighetsperiode.fom,
-            sak.rettighetsperiode.tom,
+            rettighetsperiode.fom,
+            rettighetsperiode.tom,
             sykdomsGrunnlag?.yrkesskadevurdering,
             sykdomsGrunnlag?.sykdomsvurderinger ?: emptyList(),
             studentGrunnlag?.studentvurdering
@@ -40,8 +63,6 @@ class FastsettSykdomsvilkåretSteg private constructor(
         Sykdomsvilkår(vilkårResultat).vurder(faktagrunnlag)
 
         vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårResultat)
-
-        return Fullført
     }
 
     companion object : FlytSteg {
@@ -52,8 +73,7 @@ class FastsettSykdomsvilkåretSteg private constructor(
             return FastsettSykdomsvilkåretSteg(
                 vilkårsresultatRepository,
                 repositoryProvider.provide(),
-                repositoryProvider.provide(),
-                SakService(repositoryProvider.provide())
+                repositoryProvider.provide()
             )
         }
 

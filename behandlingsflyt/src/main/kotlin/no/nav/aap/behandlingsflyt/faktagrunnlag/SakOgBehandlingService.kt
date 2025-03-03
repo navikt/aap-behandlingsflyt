@@ -77,7 +77,7 @@ class SakOgBehandlingService(
     }
 
     fun oppdaterRettighetsperioden(sakId: SakId, brevkategori: InnsendingType, mottattDato: LocalDate) {
-        if (setOf(InnsendingType.SØKNAD, InnsendingType.PLIKTKORT).contains(brevkategori)) {
+        if (setOf(InnsendingType.SØKNAD, InnsendingType.MELDEKORT).contains(brevkategori)) {
             val rettighetsperiode = sakRepository.hent(sakId).rettighetsperiode
             val periode = Periode(
                 rettighetsperiode.fom,

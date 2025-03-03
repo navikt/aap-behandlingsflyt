@@ -2,7 +2,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 
 val ktorVersion = "3.1.1"
-val komponenterVersjon = "1.0.156"
+val komponenterVersjon = "1.0.159"
 val junitVersjon = "5.12.0"
 
 plugins {
@@ -87,7 +87,7 @@ dependencies {
     implementation(project(":kontrakt"))
     implementation(project(":repository"))
     implementation("com.zaxxer:HikariCP:6.2.1")
-    implementation("org.flywaydb:flyway-database-postgresql:11.3.3")
+    implementation("org.flywaydb:flyway-database-postgresql:11.3.4")
     runtimeOnly("org.postgresql:postgresql:42.7.5")
     implementation("ch.qos.logback:logback-classic:1.5.17")
 

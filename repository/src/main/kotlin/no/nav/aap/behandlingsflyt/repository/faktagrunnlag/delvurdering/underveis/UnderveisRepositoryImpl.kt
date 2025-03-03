@@ -43,7 +43,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
     }
 
     private fun mapGrunnlag(row: Row): UnderveisGrunnlag {
-        val pliktkorteneId = row.getLong("perioder_id")
+        val meldekorteneId = row.getLong("perioder_id")
 
         val query = """
             SELECT * FROM UNDERVEIS_PERIODE WHERE perioder_id = ?
@@ -51,7 +51,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
 
         val underveisperioder = connection.queryList(query) {
             setParams {
-                setLong(1, pliktkorteneId)
+                setLong(1, meldekorteneId)
             }
             setRowMapper {
                 mapPeriode(it)
@@ -123,10 +123,10 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
         underveisperioder: List<Underveisperiode>,
         input: Faktagrunnlag
     ) {
-        val pliktkorteneQuery = """
+        val meldekorteneQuery = """
             INSERT INTO UNDERVEIS_PERIODER DEFAULT VALUES
             """.trimIndent()
-        val perioderId = connection.executeReturnKey(pliktkorteneQuery)
+        val perioderId = connection.executeReturnKey(meldekorteneQuery)
 
         val query = """
             INSERT INTO UNDERVEIS_PERIODE (perioder_id, periode, utfall, rettighetstype, avslagsarsak,

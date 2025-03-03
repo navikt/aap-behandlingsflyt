@@ -4,20 +4,20 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
-public sealed interface Pliktkort : Melding {
+public sealed interface Meldekort : Melding {
     public fun fom(): LocalDate?
     public fun tom(): LocalDate?
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public data class PliktkortV0(
+public data class MeldekortV0(
     public val harDuArbeidet: Boolean,
-    public val timerArbeidPerPeriode: List<ArbeidIPeriode>,
-) : Pliktkort {
+    public val timerArbeidPerPeriode: List<ArbeidIPeriodeV0>,
+) : Meldekort {
 
     init {
         require(!overlappendePerioder(timerArbeidPerPeriode)) {
-            "kan ikke gi overlappende opplysninger i ett meldekort"
+            "kan ikke gi overlappende opplysninger i et meldekort"
         }
 
         require(timerArbeidetSamsvarerMedArbeidetSvar(harDuArbeidet, timerArbeidPerPeriode)) {
@@ -34,7 +34,7 @@ public data class PliktkortV0(
     }
 
     public companion object {
-        public fun overlappendePerioder(timerArbeidPerPeriode: List<ArbeidIPeriode>): Boolean {
+        public fun overlappendePerioder(timerArbeidPerPeriode: List<ArbeidIPeriodeV0>): Boolean {
             for (i in timerArbeidPerPeriode.indices) {
                 for (j in i + 1..<timerArbeidPerPeriode.size) {
                     if (timerArbeidPerPeriode[i].overlapper(timerArbeidPerPeriode[j])) {
@@ -47,7 +47,7 @@ public data class PliktkortV0(
 
         public fun timerArbeidetSamsvarerMedArbeidetSvar(
             harDuArbeidet: Boolean,
-            timerArbeidPerPeriode: List<ArbeidIPeriode>
+            timerArbeidPerPeriode: List<ArbeidIPeriodeV0>
         ): Boolean {
             return if (harDuArbeidet) {
                 timerArbeidPerPeriode.sumOf { it.timerArbeid } > 0.0
@@ -58,7 +58,8 @@ public data class PliktkortV0(
     }
 }
 
-public data class ArbeidIPeriode(
+@JsonIgnoreProperties(ignoreUnknown = true)
+public data class ArbeidIPeriodeV0(
     val fraOgMedDato: LocalDate,
     val tilOgMedDato: LocalDate,
     val timerArbeid: Double,
@@ -69,7 +70,7 @@ public data class ArbeidIPeriode(
         }
     }
 
-    public fun overlapper(other: ArbeidIPeriode): Boolean {
+    public fun overlapper(other: ArbeidIPeriodeV0): Boolean {
         return this.fraOgMedDato <= other.tilOgMedDato && other.fraOgMedDato <= this.tilOgMedDato
     }
 

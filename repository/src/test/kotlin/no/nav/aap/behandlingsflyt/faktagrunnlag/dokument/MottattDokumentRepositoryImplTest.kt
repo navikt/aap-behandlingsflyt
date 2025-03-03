@@ -125,12 +125,12 @@ class MottattDokumentRepositoryImplTest {
             strukturertDokument = null,
         )
 
-        val pliktkortDokument = MottattDokument(
+        val meldekortDokument = MottattDokument(
             referanse = InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, "referanse2"),
             sakId = sak.id,
             behandlingId = null,
             mottattTidspunkt = LocalDateTime.now(),
-            type = InnsendingType.PLIKTKORT,
+            type = InnsendingType.MELDEKORT,
             status = Status.MOTTATT,
             kanal = Kanal.DIGITAL,
             strukturertDokument = null,
@@ -138,7 +138,7 @@ class MottattDokumentRepositoryImplTest {
 
         // ACT
         settInnDokument(søknadDokument)
-        settInnDokument(pliktkortDokument)
+        settInnDokument(meldekortDokument)
 
 
         val res = hentDokumenterAvType(sak, InnsendingType.SØKNAD)
@@ -150,13 +150,13 @@ class MottattDokumentRepositoryImplTest {
                 søknadDokument.behandlingId, søknadDokument.sakId, søknadDokument.type
             )
 
-        val res2 = hentDokumenterAvType(sak, InnsendingType.PLIKTKORT)
+        val res2 = hentDokumenterAvType(sak, InnsendingType.MELDEKORT)
 
         assertThat(res2).hasSize(1)
         assertThat(res2.first()).extracting(
             MottattDokument::behandlingId, MottattDokument::sakId, MottattDokument::type
         ).containsExactly(
-            pliktkortDokument.behandlingId, pliktkortDokument.sakId, pliktkortDokument.type
+            meldekortDokument.behandlingId, meldekortDokument.sakId, meldekortDokument.type
         )
 
     }
