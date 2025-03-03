@@ -106,7 +106,6 @@ class FastsettGrunnlagSteg(
             val repositoryProvider = RepositoryProvider(connection)
             val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
             val beregningVurderingRepository = repositoryProvider.provide<BeregningVurderingRepository>()
-            val sakRepository = repositoryProvider.provide<SakRepository>()
             return FastsettGrunnlagSteg(
                 BeregningService(
                     repositoryProvider.provide(),
