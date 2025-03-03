@@ -98,7 +98,9 @@ class VurderBistandsbehovSteg private constructor(
                 vilkår.forleng(requireNotNull(kontekst.vurdering.forlengensePeriode))
             }
 
-            VurderingType.IKKE_RELEVANT -> TODO()
+            VurderingType.IKKE_RELEVANT -> {
+                // Skal ikke gjøre noe
+            }
         }
         if (kontekst.vurdering.skalVurdereNoe()) {
             vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
