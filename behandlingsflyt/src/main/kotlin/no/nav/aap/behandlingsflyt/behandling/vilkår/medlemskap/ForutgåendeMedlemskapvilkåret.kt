@@ -9,7 +9,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskap
 import no.nav.aap.komponenter.type.Periode
 
 class ForutgåendeMedlemskapvilkåret(
@@ -17,16 +16,10 @@ class ForutgåendeMedlemskapvilkåret(
     private val rettighetsPeriode: Periode
 ) : Vilkårsvurderer<ForutgåendeMedlemskapGrunnlag> {
     private val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.MEDLEMSKAP)
-    private val tidligereVilkårsresultat = vilkårsresultat
 
     override fun vurder(grunnlag: ForutgåendeMedlemskapGrunnlag) {
         val forutgåendePeriode = Periode(rettighetsPeriode.fom.minusYears(5), rettighetsPeriode.tom)
         val manuellVurdering = grunnlag.medlemskapArbeidInntektGrunnlag?.manuellVurdering
-
-        if (tidligereVilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET).vilkårsperioder().any { it.innvilgelsesårsak == Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG }){
-            leggTilVurdering(rettighetsPeriode, grunnlag, VurderingsResultat(Utfall.OPPFYLT, null, Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG), false)
-            return
-        }
 
         var vurdertManuelt = false
         val vurderingsResultat = if (manuellVurdering != null) {
@@ -46,7 +39,7 @@ class ForutgåendeMedlemskapvilkåret(
             VurderingsResultat(utfall, null, null)
         }
 
-        leggTilVurdering(rettighetsPeriode, grunnlag, vurderingsResultat, vurdertManuelt)
+        leggTilVurdering(grunnlag, vurderingsResultat, vurdertManuelt)
     }
 
     fun vurderOverstyrt(grunnlag: ForutgåendeMedlemskapGrunnlag) {
@@ -57,18 +50,32 @@ class ForutgåendeMedlemskapvilkåret(
             } else {
                 VurderingsResultat(Utfall.OPPFYLT, null, null)
             }
-        leggTilVurdering(rettighetsPeriode, grunnlag, vurderingsResultat, true)
+        leggTilVurdering(grunnlag, vurderingsResultat, true)
+    }
+
+    fun leggTilYrkesskadeVurdering() {
+        val vurderingsResultat = VurderingsResultat(Utfall.OPPFYLT, null, Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG)
+        vilkår.leggTilVurdering(
+            Vilkårsperiode(
+                periode = rettighetsPeriode,
+                utfall = vurderingsResultat.utfall,
+                avslagsårsak = null,
+                begrunnelse = vurderingsResultat.innvilgelsesårsak.toString(),
+                faktagrunnlag = null,
+                versjon = vurderingsResultat.versjon(),
+                manuellVurdering = false
+            )
+        )
     }
 
     private fun leggTilVurdering(
-        periode: Periode,
         grunnlag: ForutgåendeMedlemskapGrunnlag,
         vurderingsResultat: VurderingsResultat,
         vurdertManuelt: Boolean
     ) {
         vilkår.leggTilVurdering(
             Vilkårsperiode(
-                periode = periode,
+                periode = rettighetsPeriode,
                 utfall = vurderingsResultat.utfall,
                 avslagsårsak = vurderingsResultat.avslagsårsak,
                 begrunnelse = grunnlag.medlemskapArbeidInntektGrunnlag?.manuellVurdering?.begrunnelse,
@@ -78,4 +85,6 @@ class ForutgåendeMedlemskapvilkåret(
             )
         )
     }
+
+
 }
