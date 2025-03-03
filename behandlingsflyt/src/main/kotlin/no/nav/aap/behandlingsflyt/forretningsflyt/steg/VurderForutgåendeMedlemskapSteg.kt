@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.ForutgåendeMedlemskapvilkåret
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
@@ -14,6 +15,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -22,13 +24,23 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class VurderForutgåendeMedlemskapSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val forutgåendeMedlemskapArbeidInntektRepository: MedlemskapArbeidInntektForutgåendeRepository,
-    private val personopplysningForutgåendeRepository: PersonopplysningForutgåendeRepository
+    private val personopplysningForutgåendeRepository: PersonopplysningForutgåendeRepository,
+    private val avklaringsbehovRepository: AvklaringsbehovRepository
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        val avslag = harTidligereAvslag(kontekst.behandlingId)
+        if (avslag) {
+            val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+            val medlemskapBehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
+            if (medlemskapBehov != null && medlemskapBehov.erÅpent()) {
+                avklaringsbehovene.avbryt(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
+            }
+        }
+
         when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
                 val vilkårsVurdering = vurderVilkår(kontekst)
-                if (vilkårsVurdering != null) return vilkårsVurdering
+                if (vilkårsVurdering != null ) return vilkårsVurdering
             }
 
             VurderingType.REVURDERING -> {
@@ -82,16 +94,35 @@ class VurderForutgåendeMedlemskapSteg private constructor(
         return null
     }
 
+    private fun harTidligereAvslag(behandlingId: BehandlingId): Boolean {
+        val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
+
+        val lovvalgvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.LOVVALG)
+        val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
+        val bistandsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
+        val bistandsvilkåretEllerSykepengerErstatningHvisIkke = if (!bistandsvilkåret.harPerioderSomErOppfylt()) {
+            vilkårsresultat.optionalVilkår(Vilkårtype.SYKEPENGEERSTATNING)?.harPerioderSomErOppfylt() == true
+        } else {
+            bistandsvilkåret.harPerioderSomErOppfylt()
+        }
+
+        return !sykdomsvilkåret.harPerioderSomErOppfylt()
+            && !bistandsvilkåretEllerSykepengerErstatningHvisIkke
+            && !lovvalgvilkåret.harPerioderSomErOppfylt()
+    }
+
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
             val repositoryProvider = RepositoryProvider(connection)
             val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
             val forutgåendeRepository = repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>()
             val personopplysningForutgåendeRepository = repositoryProvider.provide<PersonopplysningForutgåendeRepository>()
+            val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
             return VurderForutgåendeMedlemskapSteg(
                 vilkårsresultatRepository,
                 forutgåendeRepository,
-                personopplysningForutgåendeRepository
+                personopplysningForutgåendeRepository,
+                avklaringsbehovRepository
             )
         }
 

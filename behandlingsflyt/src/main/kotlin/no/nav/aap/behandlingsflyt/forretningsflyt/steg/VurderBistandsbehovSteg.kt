@@ -182,8 +182,9 @@ class VurderBistandsbehovSteg private constructor(
         vilkårsresultat: Vilkårsresultat,
         sykdomsvurdering: Sykdomsvurdering?
     ): Boolean {
-        return vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET)
-            .harPerioderSomErOppfylt() && sykdomsvurdering?.erOppfylt() != false
+        return vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET).harPerioderSomErOppfylt()
+            && vilkårsresultat.finnVilkår(Vilkårtype.LOVVALG).harPerioderSomErOppfylt()
+            && sykdomsvurdering?.erOppfylt() != false
     }
 
 
