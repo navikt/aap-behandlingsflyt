@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Ventebehov
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -29,19 +30,22 @@ class VurderLovvalgSteg private constructor(
     private val sakRepository: SakRepository
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val manuellVurdering = medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)?.manuellVurdering
-        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
 
-        /*
-        // TODO: Henrik - fiks her
         when (kontekst.vurdering.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING -> vurderVilkår(kontekst) // TODO: Stopp ved behov
-            VurderingType.REVURDERING -> vurderVilkår(kontekst) // TODO: Stopp ved behov
+            VurderingType.FØRSTEGANGSBEHANDLING -> {
+                val vurdering = vurderVilkår(kontekst)
+                if (vurdering != null) return vurdering
+            }
+
+            VurderingType.REVURDERING -> {
+                val vurdering = vurderVilkår(kontekst)
+                if (vurdering != null) return vurdering
+            }
+
             VurderingType.FORLENGELSE -> {
-                // Forleng vilkåret
-                val forlengensePeriode = requireNotNull(kontekst.vurdering.forlengensePerioder)
+                val forlengensePeriode = requireNotNull(kontekst.vurdering.forlengensePeriode)
                 val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-                vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET).forleng(
+                vilkårsresultat.finnVilkår(Vilkårtype.LOVVALG).forleng(
                     forlengensePeriode
                 )
                 vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
@@ -50,7 +54,14 @@ class VurderLovvalgSteg private constructor(
             VurderingType.IKKE_RELEVANT -> {
                 // Do nothing
             }
-        }*/
+        }
+        return Fullført
+    }
+
+    private fun vurderVilkår(kontekst: FlytKontekstMedPerioder): StegResultat? {
+        val manuellVurdering = medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)?.manuellVurdering
+        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+
         if (kontekst.harNoeTilBehandling()) {
             val sak = sakRepository.hent(kontekst.sakId)
             val personopplysningGrunnlag = personopplysningRepository.hentHvisEksisterer(kontekst.behandlingId)
@@ -77,8 +88,7 @@ class VurderLovvalgSteg private constructor(
         if (!alleVilkårOppfylt && manuellVurdering == null) {
             return FantAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
         }
-
-        return Fullført
+        return null
     }
 
     companion object : FlytSteg {

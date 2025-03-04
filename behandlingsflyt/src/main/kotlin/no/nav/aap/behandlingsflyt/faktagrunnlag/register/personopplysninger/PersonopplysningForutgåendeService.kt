@@ -4,6 +4,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PdlPersonopplysningGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -15,11 +18,16 @@ class PersonopplysningForutgåendeService private constructor(
     private val sakService: SakService,
     private val personopplysningForutgåendeRepository: PersonopplysningForutgåendeRepository,
     private val personopplysningGateway: PersonopplysningGateway,
+    private val vilkårsresultatRepository: VilkårsresultatRepository
 ) : Informasjonskrav {
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
 
-        // TODO: Henrik - Skal kun innhente hvis vi skal vurdere forutgående medlemskap, skal ikke innhente hvis yrkesskade
+        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+        if (vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET).vilkårsperioder().any { it.innvilgelsesårsak == Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG }){
+            return IKKE_ENDRET
+        }
+
         val personopplysninger = personopplysningGateway.innhentMedHistorikk(sak.person) ?: error("fødselsdato skal alltid eksistere i PDL")
         val eksisterendeData = personopplysningForutgåendeRepository.hentHvisEksisterer(kontekst.behandlingId)
 
@@ -36,10 +44,12 @@ class PersonopplysningForutgåendeService private constructor(
             val repositoryProvider = RepositoryProvider(connection)
             val sakRepository = repositoryProvider.provide<SakRepository>()
             val personopplysningRepository = repositoryProvider.provide<PersonopplysningForutgåendeRepository>()
+            val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
             return PersonopplysningForutgåendeService(
                 SakService(sakRepository),
                 personopplysningRepository,
-                PdlPersonopplysningGateway
+                PdlPersonopplysningGateway,
+                vilkårsresultatRepository
             )
         }
     }

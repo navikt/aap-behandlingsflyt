@@ -98,7 +98,9 @@ class VurderBistandsbehovSteg private constructor(
                 vilkår.forleng(requireNotNull(kontekst.vurdering.forlengensePeriode))
             }
 
-            VurderingType.IKKE_RELEVANT -> TODO()
+            VurderingType.IKKE_RELEVANT -> {
+                // Skal ikke gjøre noe
+            }
         }
         if (kontekst.vurdering.skalVurdereNoe()) {
             vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
@@ -180,8 +182,9 @@ class VurderBistandsbehovSteg private constructor(
         vilkårsresultat: Vilkårsresultat,
         sykdomsvurderinger: List<Sykdomsvurdering>
     ): Boolean {
-        return vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET)
-            .harPerioderSomErOppfylt() && sykdomsvurderinger.all { it.erOppfylt() }
+        return vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET).harPerioderSomErOppfylt()
+            && vilkårsresultat.finnVilkår(Vilkårtype.LOVVALG).harPerioderSomErOppfylt()
+            && sykdomsvurderinger.all { it.erOppfylt() }
     }
 
 

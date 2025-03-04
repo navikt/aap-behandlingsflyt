@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykdomsFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.Sykdomsvilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -33,7 +34,13 @@ class FastsettSykdomsvilkåretSteg private constructor(
             }
 
             VurderingType.FORLENGELSE -> {
-                // Skal ikke tvinge noen form for vurdering
+                // Forleng vilkåret
+                val forlengensePeriode = requireNotNull(kontekst.vurdering.forlengensePeriode)
+                val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+                vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET).forleng(
+                    forlengensePeriode
+                )
+                vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
             }
 
             VurderingType.IKKE_RELEVANT -> {

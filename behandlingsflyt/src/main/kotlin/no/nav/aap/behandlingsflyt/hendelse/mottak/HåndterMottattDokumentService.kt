@@ -38,6 +38,9 @@ class HåndterMottattDokumentService(
         val element = utledÅrsak(brevkategori, melding, periode)
         val beriketBehandling =
             sakOgBehandlingService.finnEllerOpprettBehandling(sak.saksnummer, listOf(element))
+        // TODO: Evaluer at at behandlingen faktisk kan motta endringene
+        // Står hos beslutter - Hvilke endringer kan da håndteres
+        // P.d.d. ingen da de feilaktig kobles på behandling men ikke tas hensyn til
 
         val behandlingSkrivelås = låsRepository.låsBehandling(beriketBehandling.behandling.id)
 

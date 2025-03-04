@@ -79,11 +79,11 @@ class BeregningAvklarFaktaSteg private constructor(
             }
 
             VurderingType.FORLENGELSE -> {
-                // Ikke relevant i et avklar fakta steg
+                // Ikke relevant i et avklar fakta-steg
             }
 
             VurderingType.IKKE_RELEVANT -> {
-                // Allways do nothing
+                // Always do nothing
             }
         }
         return Fullført

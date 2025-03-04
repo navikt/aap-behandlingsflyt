@@ -11,7 +11,7 @@ val junitVersion = "5.11.3"
 val komponenterVersjon = "1.0.159"
 
 dependencies {
-    api("com.fasterxml.jackson.core:jackson-annotations:2.18.2")
+    api("com.fasterxml.jackson.core:jackson-annotations:2.18.3")
     api("no.nav:ktor-openapi-generator:1.0.81")
     compileOnly("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
 

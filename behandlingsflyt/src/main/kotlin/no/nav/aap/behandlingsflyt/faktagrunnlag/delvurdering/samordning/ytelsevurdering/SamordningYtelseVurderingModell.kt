@@ -8,13 +8,13 @@ data class SamordningYtelse(
     val ytelseType: Ytelse,
     val ytelsePerioder: List<SamordningYtelsePeriode>,
     val kilde: String,
-    val saksRef: String?,
+    val saksRef: String? = null,
 )
 
 data class SamordningYtelsePeriode(
     val periode: Periode,
     val gradering: Prosent?,
-    val kronesum: Number?
+    val kronesum: Number? = null
 )
 
 data class SamordningVurdering(
@@ -25,7 +25,7 @@ data class SamordningVurdering(
 data class SamordningVurderingPeriode(
     val periode: Periode,
     val gradering: Prosent?,
-    val kronesum: Number?
+    val kronesum: Number? = null
 )
 
 data class SamordningYtelseVurderingGrunnlag(

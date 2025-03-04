@@ -12,6 +12,8 @@ import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
@@ -25,9 +27,12 @@ import java.time.LocalDate
 
 class SamordningServiceTest {
 
+
+    private val dataSource = InitTestDatabase.dataSource
+
     @Test
     fun `gjør vurderinger når all data er tilstede`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val ytelseVurderingRepo = SamordningYtelseVurderingRepositoryImpl(connection)
             val behandlingId = opprettSakdata(connection)
             opprettYtelseData(ytelseVurderingRepo, behandlingId)
@@ -42,8 +47,66 @@ class SamordningServiceTest {
     }
 
     @Test
+    fun `sammenlign perioder med registerdata, finner ikke-vurderte perioder`() {
+        val behandlingId = dataSource.transaction { opprettSakdata(it) }
+
+        // Opprett registerdata med vurdering fra 1 januar til 10 januar
+        dataSource.transaction { connection ->
+            val ytelseVurderingRepo = SamordningYtelseVurderingRepositoryImpl(connection)
+            opprettYtelseData(
+                ytelseVurderingRepo, behandlingId, ytelser = listOf(
+                    SamordningYtelse(
+                        ytelseType = Ytelse.SYKEPENGER,
+                        ytelsePerioder = listOf(
+                            SamordningYtelsePeriode(
+                                periode = Periode(1 januar 2024, 10 januar 2024),
+                                gradering = Prosent.`70_PROSENT`
+                            )
+                        ),
+                        kilde = "kilde",
+                    )
+                )
+            )
+        }
+
+        // Registrer vurdering fra 5 januar til 10 januar
+        dataSource.transaction { connection ->
+            val ytelseVurderingRepo = SamordningYtelseVurderingRepositoryImpl(connection)
+            opprettVurderingData(
+                ytelseVurderingRepo, behandlingId, vurderinger = listOf(
+                    SamordningVurdering(
+                        ytelseType = Ytelse.SYKEPENGER,
+                        vurderingPerioder = listOf(
+                            SamordningVurderingPeriode(
+                                periode = Periode(5 januar 2024, 10 januar 2024),
+                                gradering = Prosent.`50_PROSENT`,
+                            )
+                        )
+                    )
+                )
+            )
+        }
+
+        val ikkeVurdertePerioder = dataSource.transaction { connection ->
+            val service = SamordningService(
+                SamordningYtelseVurderingRepositoryImpl(connection),
+                SamordningRepositoryImpl(connection)
+            )
+
+            val tidligereVurderinger = service.tidligereVurderinger(behandlingId)
+            service.perioderSomIkkeHarBlittVurdert(behandlingId, tidligereVurderinger)
+        }
+
+        // Forvent at ikke-vurderte perioder er fra 1 jan til 4 jan
+        assertThat(ikkeVurdertePerioder).hasSize(1)
+        assertThat(ikkeVurdertePerioder.first().periode).isEqualTo(
+            Periode(1 januar 2024, 4 januar 2024)
+        )
+    }
+
+    @Test
     fun `krever vurdering om det finnes samordningdata`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val ytelseVurderingRepo = SamordningYtelseVurderingRepositoryImpl(connection)
             val behandlingId = opprettSakdata(connection)
             opprettYtelseData(ytelseVurderingRepo, behandlingId)
@@ -59,7 +122,7 @@ class SamordningServiceTest {
 
     @Test
     fun `om ingen data, er svaret en tom tidslinje`() {
-        InitTestDatabase.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val ytelseVurderingRepo = SamordningYtelseVurderingRepositoryImpl(connection)
             val behandlingId = opprettSakdata(connection)
 
@@ -72,42 +135,44 @@ class SamordningServiceTest {
         }
     }
 
-    private fun opprettVurderingData(repo: SamordningYtelseVurderingRepositoryImpl, behandlingId: BehandlingId) {
-        repo.lagreVurderinger(
-            behandlingId,
-            listOf(
-                SamordningVurdering(
-                    Ytelse.SYKEPENGER,
-                    listOf(
-                        SamordningVurderingPeriode(
-                            Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
-                            Prosent(50),
-                            0
-                        )
+    private fun opprettVurderingData(
+        repo: SamordningYtelseVurderingRepositoryImpl,
+        behandlingId: BehandlingId,
+        vurderinger: List<SamordningVurdering> = listOf(
+            SamordningVurdering(
+                Ytelse.SYKEPENGER,
+                listOf(
+                    SamordningVurderingPeriode(
+                        Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
+                        Prosent(50),
+                        0
                     )
                 )
             )
         )
+    ) {
+        repo.lagreVurderinger(behandlingId, vurderinger)
     }
 
-    private fun opprettYtelseData(repo: SamordningYtelseVurderingRepositoryImpl, behandlingId: BehandlingId) {
-        repo.lagreYtelser(
-            behandlingId,
-            listOf(
-                SamordningYtelse(
-                    Ytelse.SYKEPENGER,
-                    listOf(
-                        SamordningYtelsePeriode(
-                            Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
-                            Prosent(50),
-                            0
-                        )
-                    ),
-                    "kilde",
-                    "ref"
-                )
+    private fun opprettYtelseData(
+        repo: SamordningYtelseVurderingRepositoryImpl,
+        behandlingId: BehandlingId,
+        ytelser: List<SamordningYtelse> = listOf(
+            SamordningYtelse(
+                Ytelse.SYKEPENGER,
+                listOf(
+                    SamordningYtelsePeriode(
+                        Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
+                        Prosent(50),
+                        0
+                    )
+                ),
+                "kilde",
+                "ref"
             )
         )
+    ) {
+        repo.lagreYtelser(behandlingId, ytelser)
     }
 
     private fun opprettSakdata(connection: DBConnection): BehandlingId {
