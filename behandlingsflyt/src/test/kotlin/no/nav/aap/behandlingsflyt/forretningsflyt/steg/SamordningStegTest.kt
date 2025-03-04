@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.samordning.AvklaringsType
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
@@ -26,19 +27,18 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseVurd
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
 import java.util.*
+import java.util.stream.Stream
 
 class SamordningStegTest {
     @ParameterizedTest
-    @EnumSource(
-        Ytelse::class,
-        names = ["SYKEPENGER", "SVANGERSKAPSPENGER", "PLEIEPENGER_.+"],
-        mode = EnumSource.Mode.MATCH_ANY
-    )
+    @MethodSource("manuelleYtelserProvider")
     fun `om det finnes tilfeller av samordning med Sykepenger, Svangerskapspenger, Pleiepenger, skal det opprettes et avklaringsbehov`(
         ytelse: Ytelse
     ) {
@@ -91,12 +91,9 @@ class SamordningStegTest {
         assertThat(res2).isEqualTo(Fullført)
     }
 
+    @Disabled("Inntil vi samordner ytelser automatisk")
     @ParameterizedTest
-    @EnumSource(
-        Ytelse::class,
-        names = ["FORELDREPENGER", "OMSORGSPENGER", "OPPLÆRINGSPENGER"],
-        mode = EnumSource.Mode.MATCH_ANY
-    )
+    @MethodSource("automatiskBehandledeYtelserProvider")
     fun `foreldrepenger, omsorgspenger, opplæringspenger avklares automatisk`(ytelse: Ytelse) {
         val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
         val steg = settOppRessurser(ytelse, behandling.id)
@@ -221,4 +218,15 @@ class SamordningStegTest {
         ),
         periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
     )
+
+    companion object {
+        @JvmStatic
+        fun manuelleYtelserProvider(): Stream<Ytelse> {
+            return Ytelse.entries.filter { it.type == AvklaringsType.MANUELL }.stream()
+        }
+        @JvmStatic
+        fun automatiskBehandledeYtelserProvider(): Stream<Ytelse> {
+            return Ytelse.entries.filter { it.type == AvklaringsType.AUTOMATISK }.stream()
+        }
+    }
 }

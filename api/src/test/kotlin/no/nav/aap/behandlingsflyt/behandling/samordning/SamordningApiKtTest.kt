@@ -55,7 +55,7 @@ class SamordningApiKtTest {
         InMemorySamordningYtelseVurderingRepository.lagreYtelser(
             behandling.id, listOf(
                 SamordningYtelse(
-                    ytelseType = Ytelse.PLEIEPENGER_NÆR_FAMILIE,
+                    ytelseType = Ytelse.PLEIEPENGER,
                     ytelsePerioder = listOf(
                         SamordningYtelsePeriode(
                             periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1)),
@@ -81,7 +81,7 @@ class SamordningApiKtTest {
                 SamordningYtelseVurderingGrunnlagDTO(
                     ytelser = listOf(
                         SamordningYtelseDTO(
-                            ytelseType = Ytelse.PLEIEPENGER_NÆR_FAMILIE,
+                            ytelseType = Ytelse.PLEIEPENGER,
                             ytelsePerioder = listOf(
                                 SamordningYtelsePeriodeDTO(
                                     fom = LocalDate.now(),

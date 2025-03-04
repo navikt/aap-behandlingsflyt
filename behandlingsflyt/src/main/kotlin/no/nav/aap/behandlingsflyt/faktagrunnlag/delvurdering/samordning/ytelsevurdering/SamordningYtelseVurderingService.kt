@@ -19,7 +19,7 @@ import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelse as ForeldrePengerResponseYtelse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelse as ForeldrePengerYtelse
 
 class SamordningYtelseVurderingService(
     private val samordningYtelseVurderingRepository: SamordningYtelseVurderingRepository,
@@ -35,7 +35,7 @@ class SamordningYtelseVurderingService(
         val sykepenger = hentYtelseSykepenger(personIdent, sak.rettighetsperiode.fom, sak.rettighetsperiode.tom)
 
         val eksisterendeData = samordningYtelseVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
-        val samordningYtelser = mapTilSamordningYtelse(foreldrepenger, sykepenger, sak.saksnummer.toString())
+        val samordningYtelser = mapTilSamordningYtelse(foreldrepenger, sykepenger)
 
         if (harEndringerIYtelser(eksisterendeData, samordningYtelser)) {
             samordningYtelseVurderingRepository.lagreYtelser(kontekst.behandlingId, samordningYtelser)
@@ -49,7 +49,7 @@ class SamordningYtelseVurderingService(
         personIdent: String,
         fom: LocalDate,
         tom: LocalDate
-    ): List<ForeldrePengerResponseYtelse> {
+    ): List<ForeldrePengerYtelse> {
         return fpGateway.hentVedtakYtelseForPerson(
             ForeldrepengerRequest(
                 Aktør(personIdent),
@@ -76,60 +76,47 @@ class SamordningYtelseVurderingService(
     }
 
     private fun mapTilSamordningYtelse(
-        foreldrepenger: List<ForeldrePengerResponseYtelse>,
-        sykepenger: List<UtbetaltePerioder>,
-        saksNummer: String
+        foreldrepenger: List<ForeldrePengerYtelse>,
+        sykepenger: List<UtbetaltePerioder>
     ): List<SamordningYtelse> {
-        val samordningYtelser = mutableListOf<SamordningYtelse>()
+        val foreldrepengerKildeMapped = foreldrepenger
+            .filter { konverterFraForeldrePengerDomene(it) != null }
+            .map { ytelse ->
+                SamordningYtelse(
+                    ytelseType = konverterFraForeldrePengerDomene(ytelse)!!,
+                    ytelsePerioder = ytelse.anvist.map {
+                        SamordningYtelsePeriode(
+                            periode = it.periode,
+                            gradering = Prosent(it.utbetalingsgrad.verdi.toInt()),
+                            kronesum = it.beløp
+                        )
+                    },
+                    kilde = ytelse.kildesystem,
+                    saksRef = ytelse.saksnummer.toString()
+                )
+            }
+
+
         val sykepengerKilde = "INFOTRYGDSPEIL"
-
-        for (ytelse in foreldrepenger) {
-            val ytelsePerioder = ytelse.anvist.map {
+        val sykepengerYtelse = if (sykepenger.isEmpty()) {
+            null
+        } else {
+            SamordningYtelse(ytelseType = Ytelse.SYKEPENGER, ytelsePerioder = sykepenger.map {
                 SamordningYtelsePeriode(
-                    periode = it.periode,
-                    gradering = Prosent(it.utbetalingsgrad.verdi.toInt()),
-                    kronesum = it.beløp
+                    Periode(it.fom, it.tom),
+                    Prosent(it.grad.toInt()),
+                    null
                 )
-            }
-            val c = konverterFraForeldrePengerDomene(ytelse)
-            if (c != null) {
-                samordningYtelser.add(
-                    SamordningYtelse(
-                        ytelseType = c,
-                        ytelsePerioder = ytelsePerioder,
-                        kilde = ytelse.kildesystem,
-                        saksRef = ytelse.saksnummer.toString()
-                    )
-                )
-            }
+            }, kilde = sykepengerKilde)
         }
 
-        val ytelsePerioder = sykepenger.map {
-            SamordningYtelsePeriode(
-                Periode(it.fom, it.tom),
-                Prosent(it.grad.toInt()),
-                null
-            )
-        }
-
-        // Sykepenger har ikke saksref, benytter samme som i vår for noe tracing
-        samordningYtelser.add(
-            SamordningYtelse(
-                ytelseType = Ytelse.SYKEPENGER,
-                ytelsePerioder = ytelsePerioder,
-                kilde = sykepengerKilde,
-                saksRef = saksNummer
-            )
-        )
-
-        return samordningYtelser
+        return foreldrepengerKildeMapped.plus(listOfNotNull(sykepengerYtelse))
     }
 
-    private fun konverterFraForeldrePengerDomene(ytelse: ForeldrePengerResponseYtelse): Ytelse? {
-        // TODO
+    private fun konverterFraForeldrePengerDomene(ytelse: ForeldrePengerYtelse): Ytelse? {
         return when (ytelse.ytelse) {
-            Ytelser.PLEIEPENGER_SYKT_BARN -> Ytelse.PLEIEPENGER_BARN
-            Ytelser.PLEIEPENGER_NÆRSTÅENDE -> Ytelse.PLEIEPENGER_NÆR_FAMILIE
+            Ytelser.PLEIEPENGER_SYKT_BARN -> Ytelse.PLEIEPENGER
+            Ytelser.PLEIEPENGER_NÆRSTÅENDE -> Ytelse.PLEIEPENGER
             Ytelser.OMSORGSPENGER -> Ytelse.OMSORGSPENGER
             Ytelser.OPPLÆRINGSPENGER -> Ytelse.OPPLÆRINGSPENGER
             Ytelser.ENGANGSTØNAD -> null
