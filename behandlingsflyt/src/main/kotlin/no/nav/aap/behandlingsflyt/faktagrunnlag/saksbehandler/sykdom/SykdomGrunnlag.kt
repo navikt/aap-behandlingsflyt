@@ -10,15 +10,15 @@ class SykdomGrunnlag(
     val yrkesskadevurdering: Yrkesskadevurdering?,
     val sykdomsvurderinger: List<Sykdomsvurdering>,
 ) {
-    @Deprecated("kan være flere enn en sykdomsvurdering, bruk `sykdomsvurderinger`")
-    val sykdomsvurdering: Sykdomsvurdering?
-        get() = sykdomsvurderinger.firstOrNull()
-
-    constructor(id: Long?, yrkesskadevurdering: Yrkesskadevurdering?, sykdomsvurdering: Sykdomsvurdering?):
+    constructor(id: Long?, yrkesskadevurdering: Yrkesskadevurdering?, sykdomsvurdering: Sykdomsvurdering?) :
             this(id, yrkesskadevurdering, listOfNotNull(sykdomsvurdering))
 
+
     fun erKonsistentForSykdom(harYrkesskadeRegistrert: Boolean): Boolean {
-        return sykdomsvurdering?.erKonsistentForSykdom(harYrkesskadeRegistrert) ?: false
+        if (sykdomsvurderinger.isEmpty()) {
+            return false
+        }
+        return sykdomsvurderinger.all { it.erKonsistentForSykdom(harYrkesskadeRegistrert) }
     }
 
     fun somSykdomsvurderingstidslinje(startDato: LocalDate): Tidslinje<Sykdomsvurdering> {

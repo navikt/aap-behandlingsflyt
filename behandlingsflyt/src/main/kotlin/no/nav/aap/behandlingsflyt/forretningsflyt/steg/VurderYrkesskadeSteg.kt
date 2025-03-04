@@ -6,8 +6,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -18,7 +18,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.LocalDate
 
 class VurderYrkesskadeSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
@@ -32,11 +34,12 @@ class VurderYrkesskadeSteg private constructor(
         val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
         val yrkesskader = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
         val sykdomsgrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
+        val sykdomsvurderingTidslinje = sykdomsgrunnlag?.somSykdomsvurderingstidslinje(LocalDate.MIN)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
 
         when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
-                val erBehovForAvklaring = erBehovForAvklaring(vilkårsresultat, yrkesskader, sykdomsgrunnlag)
+                val erBehovForAvklaring = erBehovForAvklaring(vilkårsresultat, yrkesskader, sykdomsvurderingTidslinje)
                 if (erBehovForAvklaring && sykdomsgrunnlag?.yrkesskadevurdering == null) {
                     return FantAvklaringsbehov(Definisjon.AVKLAR_YRKESSKADE)
                 } else if (!erBehovForAvklaring && avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_YRKESSKADE) != null) {
@@ -45,7 +48,7 @@ class VurderYrkesskadeSteg private constructor(
             }
 
             VurderingType.REVURDERING -> {
-                val erBehovForAvklaring = erBehovForAvklaring(vilkårsresultat, yrkesskader, sykdomsgrunnlag)
+                val erBehovForAvklaring = erBehovForAvklaring(vilkårsresultat, yrkesskader, sykdomsvurderingTidslinje)
                 if (erBehovForAvklaring && sykdomsgrunnlag?.yrkesskadevurdering == null) {
                     return FantAvklaringsbehov(Definisjon.AVKLAR_YRKESSKADE)
                 } else if (!erBehovForAvklaring && avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_YRKESSKADE) != null) {
@@ -68,7 +71,7 @@ class VurderYrkesskadeSteg private constructor(
     private fun erBehovForAvklaring(
         vilkårsresultat: Vilkårsresultat,
         yrkesskadeGrunnlag: YrkesskadeGrunnlag?,
-        sykdomGrunnlag: SykdomGrunnlag?
+        sykdomGrunnlagTidslinje: Tidslinje<Sykdomsvurdering>?
     ): Boolean {
         if (!vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET).harPerioderSomErOppfylt()) {
             return false
@@ -76,7 +79,7 @@ class VurderYrkesskadeSteg private constructor(
         if (yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() != true) {
             return false
         }
-        if (sykdomGrunnlag?.sykdomsvurdering?.erOppfyltSettBortIfraVissVarighet() != true) {
+        if (sykdomGrunnlagTidslinje?.all { it.verdi.erOppfyltSettBortIfraVissVarighet() } != true) {
             return false
         }
 

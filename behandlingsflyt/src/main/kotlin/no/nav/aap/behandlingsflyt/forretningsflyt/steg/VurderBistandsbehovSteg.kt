@@ -40,7 +40,7 @@ class VurderBistandsbehovSteg private constructor(
 
         val bistandsGrunnlag = bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
         val studentGrunnlag = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
-        val sykdomsvurdering = sykdomsRepository.hentHvisEksisterer(kontekst.behandlingId)?.sykdomsvurdering
+        val sykdomsvurderinger = sykdomsRepository.hentHvisEksisterer(kontekst.behandlingId)?.sykdomsvurderinger ?: emptyList()
 
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
@@ -51,7 +51,7 @@ class VurderBistandsbehovSteg private constructor(
                 if (erBehovForAvklarForPerioden(
                         kontekst.vurdering.rettighetsperiode,
                         studentGrunnlag,
-                        sykdomsvurdering,
+                        sykdomsvurderinger,
                         bistandsGrunnlag,
                         vilkårsresultat,
                         avklaringsbehovene
@@ -74,7 +74,7 @@ class VurderBistandsbehovSteg private constructor(
                 if (erBehovForAvklarForPerioden(
                         kontekst.vurdering.rettighetsperiode,
                         studentGrunnlag,
-                        sykdomsvurdering,
+                        sykdomsvurderinger,
                         bistandsGrunnlag,
                         vilkårsresultat,
                         avklaringsbehovene
@@ -127,13 +127,13 @@ class VurderBistandsbehovSteg private constructor(
     private fun erBehovForAvklarForPerioden(
         periode: Periode,
         studentGrunnlag: StudentGrunnlag?,
-        sykdomsvurdering: Sykdomsvurdering?,
+        sykdomsvurderinger: List<Sykdomsvurdering>,
         bistandsGrunnlag: BistandGrunnlag?,
         vilkårsresultat: Vilkårsresultat,
         avklaringsbehovene: Avklaringsbehovene
     ): Boolean {
         val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
-        val erIkkeAvslagPåVilkårTidligere = erIkkeAvslagPåVilkårTidligere(vilkårsresultat, sykdomsvurdering)
+        val erIkkeAvslagPåVilkårTidligere = erIkkeAvslagPåVilkårTidligere(vilkårsresultat, sykdomsvurderinger)
         if (!erIkkeAvslagPåVilkårTidligere || studentGrunnlag?.studentvurdering?.erOppfylt() == true) {
             return false
         }
@@ -180,11 +180,11 @@ class VurderBistandsbehovSteg private constructor(
 
     private fun erIkkeAvslagPåVilkårTidligere(
         vilkårsresultat: Vilkårsresultat,
-        sykdomsvurdering: Sykdomsvurdering?
+        sykdomsvurderinger: List<Sykdomsvurdering>
     ): Boolean {
         return vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET).harPerioderSomErOppfylt()
             && vilkårsresultat.finnVilkår(Vilkårtype.LOVVALG).harPerioderSomErOppfylt()
-            && sykdomsvurdering?.erOppfylt() != false
+            && sykdomsvurderinger.all { it.erOppfylt() }
     }
 
 
