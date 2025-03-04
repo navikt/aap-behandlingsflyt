@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningerMedBegrunnelse
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
@@ -78,8 +79,10 @@ class SamordningYtelseVurderingRepositoryImplTest {
         dataSource.transaction {
             SamordningYtelseVurderingRepositoryImpl(it).lagreVurderinger(
                 behandlingId = behandling.id,
-                samordningVurderinger = listOf(
-                    vurdering
+                samordningVurderinger = SamordningerMedBegrunnelse(
+                    "En god begrunnelse", listOf(
+                        vurdering
+                    )
                 )
             )
         }
@@ -136,8 +139,10 @@ class SamordningYtelseVurderingRepositoryImplTest {
             dataSource.transaction {
                 SamordningYtelseVurderingRepositoryImpl(it).lagreVurderinger(
                     behandlingId = behandling.id,
-                    samordningVurderinger = listOf(
-                        vurdering
+                    samordningVurderinger = SamordningerMedBegrunnelse(
+                        "En god begrunnelse", listOf(
+                            vurdering
+                        )
                     )
                 )
             }

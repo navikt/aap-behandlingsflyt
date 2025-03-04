@@ -18,6 +18,11 @@ data class SamordningYtelsePeriode(
     val kronesum: Number? = null
 )
 
+data class SamordningerMedBegrunnelse(
+    val begrunnelse: String,
+    val vurdering: List<SamordningVurdering>,
+)
+
 data class SamordningVurdering(
     val ytelseType: Ytelse,
     val vurderingPerioder: List<SamordningVurderingPeriode>,

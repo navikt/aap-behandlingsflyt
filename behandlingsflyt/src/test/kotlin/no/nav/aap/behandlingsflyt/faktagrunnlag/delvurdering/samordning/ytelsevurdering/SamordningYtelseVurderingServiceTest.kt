@@ -70,14 +70,17 @@ class SamordningYtelseVurderingServiceTest {
     private fun opprettVurderingData(repo: SamordningYtelseVurderingRepositoryImpl, behandlingId: BehandlingId) {
         repo.lagreVurderinger(
             behandlingId,
-            listOf(
-                SamordningVurdering(
-                    Ytelse.SYKEPENGER,
-                    listOf(
-                        SamordningVurderingPeriode(
-                            Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
-                            Prosent(50),
-                            0
+            SamordningerMedBegrunnelse(
+                "En god begrunnelse",
+                listOf(
+                    SamordningVurdering(
+                        Ytelse.SYKEPENGER,
+                        listOf(
+                            SamordningVurderingPeriode(
+                                Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
+                                Prosent(50),
+                                0
+                            )
                         )
                     )
                 )

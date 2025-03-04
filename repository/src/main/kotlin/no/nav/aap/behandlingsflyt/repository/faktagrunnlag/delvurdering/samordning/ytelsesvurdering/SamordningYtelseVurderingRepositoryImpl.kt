@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningerMedBegrunnelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -120,7 +121,7 @@ class SamordningYtelseVurderingRepositoryImpl(private val connection: DBConnecti
         }
     }
 
-    override fun lagreVurderinger(behandlingId: BehandlingId, samordningVurderinger: List<SamordningVurdering>) {
+    override fun lagreVurderinger(behandlingId: BehandlingId, samordningVurderinger: SamordningerMedBegrunnelse) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         if (eksisterendeGrunnlag != null) {
             deaktiverGrunnlag(behandlingId)
@@ -136,7 +137,7 @@ class SamordningYtelseVurderingRepositoryImpl(private val connection: DBConnecti
             """.trimIndent()
         val vurderingerId = connection.executeReturnKey(samordningVurderingerQuery)
 
-        for (vurdering in samordningVurderinger) {
+        for (vurdering in samordningVurderinger.vurdering) {
             val vurderingQuery = """
                 INSERT INTO SAMORDNING_VURDERING (vurderinger_id, ytelse_type) VALUES (?, ?)
                 """.trimIndent()

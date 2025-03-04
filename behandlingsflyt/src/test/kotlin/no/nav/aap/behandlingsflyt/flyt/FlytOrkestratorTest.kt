@@ -36,6 +36,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningerMedBegrunnelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
@@ -901,14 +902,16 @@ class FlytOrkestratorTest {
             behandling,
             AvklarSamordningGraderingLøsning(
                 vurderingerForSamordning = VurderingerForSamordning(
-                    vurderteSamordninger = listOf(
-                        SamordningVurdering(
-                            ytelseType = Ytelse.SYKEPENGER,
-                            vurderingPerioder = listOf(
-                                SamordningVurderingPeriode(
-                                    periode = sykePengerPeriode,
-                                    gradering = Prosent(90),
-                                    kronesum = null
+                    vurderteSamordninger = SamordningerMedBegrunnelse(
+                        "En god begrunnelse", listOf(
+                            SamordningVurdering(
+                                ytelseType = Ytelse.SYKEPENGER,
+                                vurderingPerioder = listOf(
+                                    SamordningVurderingPeriode(
+                                        periode = sykePengerPeriode,
+                                        gradering = Prosent(90),
+                                        kronesum = null
+                                    )
                                 )
                             )
                         )

@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningerMedBegrunnelse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningYtelseVurderingRepositoryImpl
@@ -71,13 +72,15 @@ class SamordningServiceTest {
         dataSource.transaction { connection ->
             val ytelseVurderingRepo = SamordningYtelseVurderingRepositoryImpl(connection)
             opprettVurderingData(
-                ytelseVurderingRepo, behandlingId, vurderinger = listOf(
-                    SamordningVurdering(
-                        ytelseType = Ytelse.SYKEPENGER,
-                        vurderingPerioder = listOf(
-                            SamordningVurderingPeriode(
-                                periode = Periode(5 januar 2024, 10 januar 2024),
-                                gradering = Prosent.`50_PROSENT`,
+                ytelseVurderingRepo, behandlingId, vurderinger = SamordningerMedBegrunnelse(
+                    "En god begrunnelse", listOf(
+                        SamordningVurdering(
+                            ytelseType = Ytelse.SYKEPENGER,
+                            vurderingPerioder = listOf(
+                                SamordningVurderingPeriode(
+                                    periode = Periode(5 januar 2024, 10 januar 2024),
+                                    gradering = Prosent.`50_PROSENT`,
+                                )
                             )
                         )
                     )
@@ -122,14 +125,16 @@ class SamordningServiceTest {
     private fun opprettVurderingData(
         repo: SamordningYtelseVurderingRepositoryImpl,
         behandlingId: BehandlingId,
-        vurderinger: List<SamordningVurdering> = listOf(
-            SamordningVurdering(
-                Ytelse.SYKEPENGER,
-                listOf(
-                    SamordningVurderingPeriode(
-                        Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
-                        Prosent(50),
-                        0
+        vurderinger: SamordningerMedBegrunnelse = SamordningerMedBegrunnelse(
+            "En god begrunnelse", listOf(
+                SamordningVurdering(
+                    Ytelse.SYKEPENGER,
+                    listOf(
+                        SamordningVurderingPeriode(
+                            Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
+                            Prosent(50),
+                            0
+                        )
                     )
                 )
             )
