@@ -5,12 +5,8 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -24,9 +20,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class VurderSykdomSteg private constructor(
-    private val sykdomRepository: SykdomRepository,
     private val studentRepository: StudentRepository,
-    private val yrkesskadeRepository: YrkesskadeRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
 ) : BehandlingSteg {
@@ -34,9 +28,7 @@ class VurderSykdomSteg private constructor(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
-        val sykdomsGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId = kontekst.behandlingId)
         val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId = kontekst.behandlingId)
-        val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId = kontekst.behandlingId)
 
         val vilkårResultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
         val studentVurdering = studentGrunnlag?.studentvurdering
@@ -47,8 +39,6 @@ class VurderSykdomSteg private constructor(
                 if (skalStoppeIFørstegangsbehandling(
                         vilkårResultat,
                         studentVurdering,
-                        sykdomsGrunnlag,
-                        yrkesskadeGrunnlag,
                         avklaringsbehovene
                     )
                 ) {
@@ -94,20 +84,12 @@ class VurderSykdomSteg private constructor(
     private fun skalStoppeIFørstegangsbehandling(
         vilkårResultat: Vilkårsresultat,
         studentVurdering: StudentVurdering?,
-        sykdomsGrunnlag: SykdomGrunnlag?,
-        yrkesskadeGrunnlag: YrkesskadeGrunnlag?,
         avklaringsbehovene: Avklaringsbehovene
     ): Boolean {
         if (!erIkkeAvslagPåVilkårTidligere(vilkårResultat) || studentVurdering?.erOppfylt() == true) {
             return false
         }
-        return sykdomsGrunnlag?.erKonsistentForSykdom(harYrkesskade(yrkesskadeGrunnlag)) != true || harVærtVurdertMinstEnGangIBehandlingen(
-            avklaringsbehovene
-        )
-    }
-
-    private fun harYrkesskade(yrkesskadeGrunnlag: YrkesskadeGrunnlag?): Boolean {
-        return yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true
+        return harVærtVurdertMinstEnGangIBehandlingen(avklaringsbehovene)
     }
 
     private fun erIkkeAvslagPåVilkårTidligere(vilkårsresultat: Vilkårsresultat): Boolean {
@@ -120,8 +102,6 @@ class VurderSykdomSteg private constructor(
             val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
             val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
             return VurderSykdomSteg(
-                repositoryProvider.provide(),
-                repositoryProvider.provide(),
                 repositoryProvider.provide(),
                 vilkårsresultatRepository,
                 avklaringsbehovRepository,
