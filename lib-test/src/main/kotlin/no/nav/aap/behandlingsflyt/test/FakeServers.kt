@@ -124,6 +124,7 @@ object FakeServers : AutoCloseable {
     private val dokumentinnhenting = embeddedServer(Netty, port = 0, module = { dokumentinnhentingFake() })
     private val ainntekt = embeddedServer(Netty, port = 0, module = { ainntektFake() })
     private val aareg = embeddedServer(Netty, port = 0, module = { aaregFake() })
+    private val datadeling = embeddedServer(Netty, port = 0, module = { datadelingFake() })
 
     internal val statistikkHendelser = mutableListOf<StoppetBehandling>()
     internal val legeerklæringStatuser = mutableListOf<LegeerklæringStatusResponse>()
@@ -757,6 +758,24 @@ object FakeServers : AutoCloseable {
         routing {
             post("/hentinntektliste") {
                 call.respond(ainntektResponse)
+            }
+        }
+    }
+
+    private fun Application.datadelingFake() {
+        install(ContentNegotiation) {
+            jackson {
+                registerModule(JavaTimeModule())
+                disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+            }
+        }
+
+        routing {
+            post("/api/insert/meldeperioder") {
+                call.respond("datadeling Reponse")
+            }
+            post("/api/insert/sakStatus") {
+                call.respond("datadeling Reponse")
             }
         }
     }
@@ -1403,6 +1422,7 @@ object FakeServers : AutoCloseable {
         dokumentinnhenting.start()
         ainntekt.start()
         aareg.start()
+        datadeling.start()
 
         println("AZURE PORT ${azure.port()}")
 
@@ -1487,6 +1507,10 @@ object FakeServers : AutoCloseable {
         // Inntektskomponenten
         System.setProperty("integrasjon.inntektskomponenten.url", "http://localhost:${ainntekt.port()}")
         System.setProperty("integrasjon.inntektskomponenten.scope", "scope")
+
+        // Datadeling
+        System.setProperty("integrasjon.datadeling.url", "http://localhost:${datadeling.port()}")
+        System.setProperty("integrasjon.datadeling.scope", "scope")
     }
 
     override fun close() {
@@ -1509,6 +1533,7 @@ object FakeServers : AutoCloseable {
         dokumentinnhenting.stop(0L, 0L)
         ainntekt.stop(0L, 0L)
         aareg.stop(0L, 0L)
+        datadeling.stop(0L, 0L)
     }
 }
 
