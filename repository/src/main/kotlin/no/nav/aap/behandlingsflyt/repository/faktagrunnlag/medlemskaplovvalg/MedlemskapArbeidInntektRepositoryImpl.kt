@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapArbeidInntektGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.HistoriskManuellVurderingForLovvalgMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøknadsTidspunkt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunkt
@@ -13,8 +14,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.Unntak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
@@ -124,6 +128,37 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 setLong(3, inntekterINorgeId)
                 setLong(4, medlId)
                 setLong(5, grunnlagOppslag?.manuellVurderingId)
+            }
+        }
+    }
+
+    override fun hentHistoriskeVurderinger(sakId: SakId): List<HistoriskManuellVurderingForLovvalgMedlemskap> {
+        val query = """
+            SELECT vurdering.*
+            FROM MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG grunnlag
+            INNER JOIN LOVVALG_MEDLEMSKAP_MANUELL_VURDERING vurdering ON grunnlag.MANUELL_VURDERING_ID = vurdering.ID
+            JOIN BEHANDLING behandling ON grunnlag.BEHANDLING_ID = behandling.ID
+            WHERE grunnlag.AKTIV AND behandling.SAK_ID = ?
+        """.trimIndent()
+
+        return connection.queryList(query) {
+            setParams {
+                setLong(1, sakId.id)
+            }
+            setRowMapper {
+                HistoriskManuellVurderingForLovvalgMedlemskap(
+                    manuellVurdering = ManuellVurderingForLovvalgMedlemskap(
+                    lovvalgVedSøknadsTidspunkt =  LovvalgVedSøknadsTidspunkt(
+                        begrunnelse = it.getString("tekstvurdering_lovvalg"),
+                        lovvalgsEØSLand = it.getEnumOrNull("lovvalgs_land")
+                    ),
+                    medlemskapVedSøknadsTidspunkt = MedlemskapVedSøknadsTidspunkt(
+                        begrunnelse = it.getStringOrNull("tekstvurdering_medlemskap"),
+                        varMedlemIFolketrygd = it.getBooleanOrNull("var_medlem_i_folketrygden")
+                    ),
+                    overstyrt = it.getBoolean("overstyrt")),
+                    opprettet = it.getLocalDate("opprettet_tid")
+                )
             }
         }
     }

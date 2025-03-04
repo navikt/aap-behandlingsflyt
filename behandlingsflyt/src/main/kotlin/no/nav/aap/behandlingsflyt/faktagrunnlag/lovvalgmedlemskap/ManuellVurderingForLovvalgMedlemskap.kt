@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap
 
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLand
+import java.time.LocalDate
 
 data class ManuellVurderingForLovvalgMedlemskap (
     val lovvalgVedSøknadsTidspunkt: LovvalgVedSøknadsTidspunkt,
@@ -11,6 +12,11 @@ data class ManuellVurderingForLovvalgMedlemskap (
 data class ManuellVurderingForLovvalgMedlemskapDto (
     val lovvalgVedSøknadsTidspunkt: LovvalgVedSøknadsTidspunkt,
     val medlemskapVedSøknadsTidspunkt: MedlemskapVedSøknadsTidspunkt?
+)
+
+data class HistoriskManuellVurderingForLovvalgMedlemskap (
+    val manuellVurdering: ManuellVurderingForLovvalgMedlemskap,
+    val opprettet: LocalDate
 )
 
 data class LovvalgVedSøknadsTidspunkt(
