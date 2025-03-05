@@ -1,5 +1,7 @@
-package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
+package no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse
 
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -10,7 +12,8 @@ import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.Factory
 
-class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) : TilkjentYtelseRepository {
+class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
+    TilkjentYtelseRepository {
     companion object : Factory<TilkjentYtelseRepositoryImpl> {
         override fun konstruer(connection: DBConnection): TilkjentYtelseRepositoryImpl {
             return TilkjentYtelseRepositoryImpl(connection)

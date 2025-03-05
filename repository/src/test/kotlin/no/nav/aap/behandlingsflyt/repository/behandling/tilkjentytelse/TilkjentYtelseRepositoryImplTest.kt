@@ -1,8 +1,9 @@
-package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
+package no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.FakePdlGateway
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
