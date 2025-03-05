@@ -33,20 +33,37 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapAPI(dataSource: DataSource) {
             ) { req ->
                 val vurdering = dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
-                    val behandling = repositoryProvider.provide<BehandlingRepository>().hent(BehandlingReferanse(req.referanse))
+                    val behandling =
+                        repositoryProvider.provide<BehandlingRepository>().hent(BehandlingReferanse(req.referanse))
                     val sak = repositoryProvider.provide<SakRepository>().hent(behandling.sakId)
 
-                    val personopplysningGrunnlag = repositoryProvider.provide<PersonopplysningRepository>().hentHvisEksisterer(behandling.id)
-                        ?: throw IllegalStateException("Forventet å finne personopplysninger")
-                    val medlemskapArbeidInntektGrunnlag = repositoryProvider.provide<MedlemskapArbeidInntektRepository>().hentHvisEksisterer(behandling.id)
-                    val oppgittUtenlandsOppholdGrunnlag = repositoryProvider.provide<MedlemskapArbeidInntektRepository>().hentOppgittUtenlandsOppholdHvisEksisterer(behandling.id)
+                    val personopplysningGrunnlag =
+                        repositoryProvider.provide<PersonopplysningRepository>().hentHvisEksisterer(behandling.id)
+                    if (personopplysningGrunnlag == null) {
+                        // Steget har ikke fått kjørt enda, så
+                        return@transaction null
+                    }
+                    val medlemskapArbeidInntektGrunnlag =
+                        repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
+                            .hentHvisEksisterer(behandling.id)
+                    val oppgittUtenlandsOppholdGrunnlag =
+                        repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
+                            .hentOppgittUtenlandsOppholdHvisEksisterer(behandling.id)
 
                     MedlemskapLovvalgVurderingService().vurderTilhørighet(
-                        MedlemskapLovvalgGrunnlag(medlemskapArbeidInntektGrunnlag, personopplysningGrunnlag, oppgittUtenlandsOppholdGrunnlag),
+                        MedlemskapLovvalgGrunnlag(
+                            medlemskapArbeidInntektGrunnlag,
+                            personopplysningGrunnlag,
+                            oppgittUtenlandsOppholdGrunnlag
+                        ),
                         sak.rettighetsperiode
                     )
                 }
-                respond(vurdering)
+                if (vurdering == null) {
+                    respond(KanBehandlesAutomatiskVurdering(false, listOf()))
+                } else {
+                    respond(vurdering)
+                }
             }
         }
         route("/forutgaaendevurdering/{referanse}") {
@@ -56,16 +73,24 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapAPI(dataSource: DataSource) {
             ) { req ->
                 val vurdering = dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
-                    val behandling = repositoryProvider.provide<BehandlingRepository>().hent(BehandlingReferanse(req.referanse))
+                    val behandling =
+                        repositoryProvider.provide<BehandlingRepository>().hent(BehandlingReferanse(req.referanse))
                     val sak = repositoryProvider.provide<SakRepository>().hent(behandling.sakId)
 
-                    val personopplysningGrunnlag = repositoryProvider.provide<PersonopplysningForutgåendeRepository>().hentHvisEksisterer(behandling.id)
+                    val personopplysningGrunnlag = repositoryProvider.provide<PersonopplysningForutgåendeRepository>()
+                        .hentHvisEksisterer(behandling.id)
                         ?: throw IllegalStateException("Forventet å finne forutgående personopplysninger")
-                    val medlemskapArbeidInntektGrunnlag = repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>().hentHvisEksisterer(behandling.id)
-                    val oppgittUtenlandsOppholdGrunnlag = repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>().hentOppgittUtenlandsOppholdHvisEksisterer(behandling.id)
+                    val medlemskapArbeidInntektGrunnlag =
+                        repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>()
+                            .hentHvisEksisterer(behandling.id)
+                    val oppgittUtenlandsOppholdGrunnlag =
+                        repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>()
+                            .hentOppgittUtenlandsOppholdHvisEksisterer(behandling.id)
 
-                    ForutgåendeMedlemskapLovvalgVurderingService().vurderTilhørighet(ForutgåendeMedlemskapGrunnlag(
-                        medlemskapArbeidInntektGrunnlag, personopplysningGrunnlag, oppgittUtenlandsOppholdGrunnlag),
+                    ForutgåendeMedlemskapLovvalgVurderingService().vurderTilhørighet(
+                        ForutgåendeMedlemskapGrunnlag(
+                            medlemskapArbeidInntektGrunnlag, personopplysningGrunnlag, oppgittUtenlandsOppholdGrunnlag
+                        ),
                         sak.rettighetsperiode
                     )
                 }
