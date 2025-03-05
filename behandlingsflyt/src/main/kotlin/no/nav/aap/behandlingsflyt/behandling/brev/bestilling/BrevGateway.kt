@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.brev.bestilling
 
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.brev.kontrakt.AvbrytBrevbestillingRequest
 import no.nav.aap.brev.kontrakt.BestillBrevRequest
 import no.nav.aap.brev.kontrakt.BestillBrevResponse
@@ -38,7 +39,8 @@ class BrevGateway : BrevbestillingGateway {
     private val client = RestClient(
         config = config,
         tokenProvider = ClientCredentialsTokenProvider,
-        responseHandler = HåndterConflictResponseHandler()
+        responseHandler = HåndterConflictResponseHandler(),
+        prometheus = prometheus
     )
 
     override fun bestillBrev(

@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.integrasjon.ident
 
+import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.IdentVariables
@@ -55,7 +56,8 @@ object PdlPersoninfoGateway : PersoninfoGateway {
     private val client = RestClient(
         config = config,
         tokenProvider = OnBehalfOfTokenProvider,
-        responseHandler = PdlResponseHandler()
+        responseHandler = PdlResponseHandler(),
+        prometheus = prometheus
     )
 
     private fun query(request: PdlRequest, currentToken: OidcToken): PdlPersonNavnDataResponse {

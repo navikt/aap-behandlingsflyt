@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.integrasjon.ident
 
+import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.IdentVariables
@@ -26,7 +27,8 @@ object PdlIdentGateway : IdentGateway {
     private val client = RestClient(
         config = config,
         tokenProvider = ClientCredentialsTokenProvider,
-        responseHandler = PdlResponseHandler()
+        responseHandler = PdlResponseHandler(),
+        prometheus = prometheus
     )
 
     private fun query(request: PdlRequest): PdlIdenterDataResponse {

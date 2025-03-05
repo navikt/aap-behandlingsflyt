@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.hendelse.oppgavestyring
 
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
+import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
@@ -16,6 +17,7 @@ object OppgavestyringGateway {
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
         tokenProvider = ClientCredentialsTokenProvider,
+        prometheus = prometheus
     )
 
     fun varsleHendelse(hendelse: BehandlingFlytStoppetHendelse) {

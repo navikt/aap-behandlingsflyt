@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.Doku
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringBestillingRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringPurringRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringStatusResponse
+import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
@@ -28,9 +29,10 @@ class DokumentinnhentingGatewayImpl : DokumentinnhentingGateway {
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
         tokenProvider = ClientCredentialsTokenProvider,
+        prometheus = prometheus
     )
 
-    companion object : Factory<DokumentinnhentingGateway>{
+    companion object : Factory<DokumentinnhentingGateway> {
         override fun konstruer(): DokumentinnhentingGateway {
             return DokumentinnhentingGatewayImpl()
         }
@@ -47,7 +49,7 @@ class DokumentinnhentingGatewayImpl : DokumentinnhentingGateway {
 
         try {
             return requireNotNull(client.post(uri = URI.create("$syfoUri/dialogmeldingbestilling"), request))
-        } catch (e : Exception) {
+        } catch (e: Exception) {
             throw RuntimeException("Feil ved bestilling av legeerklæring i aap-dokumentinnhenting: ${e.message}")
         }
     }
@@ -63,7 +65,7 @@ class DokumentinnhentingGatewayImpl : DokumentinnhentingGateway {
 
         try {
             return requireNotNull(client.post(uri = URI.create("$syfoUri/purring"), request))
-        } catch (e : Exception) {
+        } catch (e: Exception) {
             throw RuntimeException("Feil ved purring av legeerklæring i aap-dokumentinnhenting: ${e.message}")
         }
     }
@@ -77,7 +79,12 @@ class DokumentinnhentingGatewayImpl : DokumentinnhentingGateway {
         )
 
         try {
-            return requireNotNull(client.get(uri = URI.create("$syfoUri/status/$saksnummer"), request = request, mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }))
+            return requireNotNull(
+                client.get(
+                    uri = URI.create("$syfoUri/status/$saksnummer"),
+                    request = request,
+                    mapper = { body, _ -> DefaultJsonMapper.fromJson(body) })
+            )
         } catch (e: Exception) {
             throw RuntimeException("Feil ved innhentning av status til legeerklæring i aap-dokumentinnhenting: ${e.message}")
         }
