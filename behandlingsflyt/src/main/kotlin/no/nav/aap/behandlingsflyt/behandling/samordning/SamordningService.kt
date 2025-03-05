@@ -1,9 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.samordning
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningPeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.tidslinje.JoinStyle
@@ -14,15 +13,15 @@ import no.nav.aap.komponenter.verdityper.Prosent
 
 class SamordningService(
     private val samordningYtelseVurderingRepository: SamordningYtelseVurderingRepository,
-    private val samordningRepository: SamordningRepository,
 ) {
 
-    fun tidligereVurderinger(behandlingId: BehandlingId): Tidslinje<List<Pair<Ytelse, SamordningVurderingPeriode>>> {
-        val faktaGrunnlag =
-            samordningYtelseVurderingRepository.hentHvisEksisterer(behandlingId) ?: return Tidslinje.empty()
+    fun hentInput(behandlingId: BehandlingId): SamordningYtelseVurderingGrunnlag? {
+        return samordningYtelseVurderingRepository.hentHvisEksisterer(behandlingId)
+    }
 
+    fun tidligereVurderinger(grunnlag: SamordningYtelseVurderingGrunnlag): Tidslinje<List<Pair<Ytelse, SamordningVurderingPeriode>>> {
         val vurderinger =
-            faktaGrunnlag.vurderingGrunnlag.vurderinger.filter { it.ytelseType.type == AvklaringsType.MANUELL }
+            grunnlag.vurderingGrunnlag.vurderinger.filter { it.ytelseType.type == AvklaringsType.MANUELL }
                 .map { ytelse ->
                     Tidslinje(ytelse.vurderingPerioder.map { Segment(it.periode, Pair(ytelse.ytelseType, it)) })
                 }.fold(Tidslinje.empty<List<Pair<Ytelse, SamordningVurderingPeriode>>>()) { acc, curr ->
@@ -34,14 +33,11 @@ class SamordningService(
     }
 
     fun perioderSomIkkeHarBlittVurdert(
-        behandlingId: BehandlingId,
+        grunnlag: SamordningYtelseVurderingGrunnlag,
         tidligereVurderinger: Tidslinje<List<Pair<Ytelse, SamordningVurderingPeriode>>>
     ): Tidslinje<List<Pair<Ytelse, SamordningYtelsePeriode>>> {
-        val faktaGrunnlag =
-            samordningYtelseVurderingRepository.hentHvisEksisterer(behandlingId) ?: return Tidslinje.empty()
-
         val hentedeYtelserByManuelleYtelser =
-            faktaGrunnlag.ytelseGrunnlag.ytelser.filter { it.ytelseType.type == AvklaringsType.MANUELL }.map { ytelse ->
+            grunnlag.ytelseGrunnlag.ytelser.filter { it.ytelseType.type == AvklaringsType.MANUELL }.map { ytelse ->
                 Tidslinje(ytelse.ytelsePerioder.map { Segment(it.periode, Pair(ytelse.ytelseType, it)) })
             }.fold(Tidslinje.empty<List<Pair<Ytelse, SamordningYtelsePeriode>>>()) { acc, curr ->
                 acc.kombiner(curr, slåSammenTilListe())
@@ -54,14 +50,11 @@ class SamordningService(
     }
 
     fun vurder(
-        behandlingId: BehandlingId,
+        grunnlag: SamordningYtelseVurderingGrunnlag,
         vurderinger: Tidslinje<List<Pair<Ytelse, SamordningVurderingPeriode>>>
     ): Tidslinje<SamordningGradering> {
-        val samordningYtelseVurderingGrunnlag = samordningYtelseVurderingRepository.hentHvisEksisterer(behandlingId)
-            ?: return Tidslinje.empty()
-
         val hentedeYtelserFraRegister =
-            samordningYtelseVurderingGrunnlag.ytelseGrunnlag.ytelser.map { ytelse ->
+            grunnlag.ytelseGrunnlag.ytelser.map { ytelse ->
                 Tidslinje(ytelse.ytelsePerioder.map { Segment(it.periode, Pair(ytelse.ytelseType, it)) })
             }.fold(Tidslinje.empty<List<Pair<Ytelse, SamordningYtelsePeriode>>>()) { acc, curr ->
                 acc.kombiner(curr, slåSammenTilListe())
@@ -95,20 +88,6 @@ class SamordningService(
                     )
                 )
             })
-
-        if (!samordningTidslinje.isEmpty()) {
-            samordningRepository.lagre(
-                behandlingId,
-                samordningTidslinje.segmenter()
-                    .map {
-                        SamordningPeriode(
-                            it.periode,
-                            it.verdi.gradering,
-                        )
-                    }
-            )
-        }
-
 
         return samordningTidslinje
     }

@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.komponenter.dbconnect.DBConnection
 
 class LazyFaktaGrunnlag(private val periodeId: Long, private val connection: DBConnection) : Faktagrunnlag {

@@ -31,7 +31,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
 import java.util.*
@@ -211,8 +210,7 @@ class SamordningStegTest {
     ): SamordningSteg {
         val steg = SamordningSteg(
             samordningService = SamordningService(
-                samordningYtelseVurderingRepository = InMemorySamordningYtelseVurderingRepository,
-                samordningRepository = InMemorySamordningRepository
+                samordningYtelseVurderingRepository = InMemorySamordningYtelseVurderingRepository
             ),
             samordningRepository = InMemorySamordningRepository,
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository

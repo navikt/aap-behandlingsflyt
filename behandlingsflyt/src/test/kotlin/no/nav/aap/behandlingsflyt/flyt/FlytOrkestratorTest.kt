@@ -70,6 +70,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.dokumentinnhenting.Dokumentinnhent
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoBulkGateway
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoGateway
+import no.nav.aap.behandlingsflyt.integrasjon.inntekt.InntektGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusSykepengerGateway
 import no.nav.aap.behandlingsflyt.integrasjon.utbetaling.UtbetalingGatewayImpl
@@ -224,6 +225,7 @@ class FlytOrkestratorTest {
                 .register<UtbetalingGatewayImpl>()
                 .register<AARegisterGateway>()
                 .register<StatistikkGatewayImpl>()
+                .register<InntektGatewayImpl>()
             motor.start()
         }
 

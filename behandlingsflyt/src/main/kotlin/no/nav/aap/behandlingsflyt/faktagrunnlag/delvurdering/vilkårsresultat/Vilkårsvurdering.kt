@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
+
 class Vilkårsvurdering(vilkårsperiode: Vilkårsperiode) {
     val utfall: Utfall = vilkårsperiode.utfall
     val manuellVurdering: Boolean = vilkårsperiode.manuellVurdering

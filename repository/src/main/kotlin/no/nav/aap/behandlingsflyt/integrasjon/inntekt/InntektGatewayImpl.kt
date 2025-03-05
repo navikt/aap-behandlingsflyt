@@ -1,7 +1,10 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter
+package no.nav.aap.behandlingsflyt.integrasjon.inntekt
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektRegisterGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektRequest
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektResponse
+import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
@@ -15,12 +18,14 @@ import java.net.URI
 import java.time.Year
 
 
-object InntektGateway : InntektRegisterGateway {
+object InntektGatewayImpl : InntektRegisterGateway {
     private val url = URI.create(requiredConfigForKey("integrasjon.inntekt.url"))
     val config = ClientConfig(scope = requiredConfigForKey("integrasjon.inntekt.scope"))
+
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
-        tokenProvider = ClientCredentialsTokenProvider
+        tokenProvider = ClientCredentialsTokenProvider,
+        prometheus = prometheus
     )
 
     private fun query(request: InntektRequest): InntektResponse {

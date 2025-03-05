@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.datadeling.SakStatus
 import no.nav.aap.behandlingsflyt.datadeling.SakStatusDTO
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.MeldekortPerioderDTO
+import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
@@ -13,16 +14,17 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.gateway.Factory
 import java.net.URI
 
-class ApiInternGatewayImpl(restClient: RestClient<String>? = null) : ApiInternGateway {
+class ApiInternGatewayImpl() : ApiInternGateway {
     companion object : Factory<ApiInternGateway> {
         override fun konstruer(): ApiInternGateway {
             return ApiInternGatewayImpl()
         }
     }
 
-    private val restClient = restClient ?: RestClient.withDefaultResponseHandler(
+    private val restClient = RestClient.withDefaultResponseHandler(
         config = ClientConfig(scope = requiredConfigForKey("integrasjon.datadeling.scope")),
-        tokenProvider = ClientCredentialsTokenProvider
+        tokenProvider = ClientCredentialsTokenProvider,
+        prometheus = prometheus
     )
 
     private val uri = URI.create(requiredConfigForKey("integrasjon.datadeling.url"))
@@ -37,7 +39,7 @@ class ApiInternGatewayImpl(restClient: RestClient<String>? = null) : ApiInternGa
     }
 
     override fun sendSakStatus(ident: String, sakStatus: SakStatus) {
-        restClient.post<_, Unit>(
+        restClient.post(
             uri = uri.resolve("/api/insert/sakStatus"),
             request = PostRequest(body = SakStatusDTO(ident, sakStatus)),
             mapper = { _, _ ->

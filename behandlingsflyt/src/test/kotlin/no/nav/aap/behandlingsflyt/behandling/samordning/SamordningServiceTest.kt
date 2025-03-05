@@ -6,14 +6,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningYtelseVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.januar
-import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
@@ -38,11 +36,11 @@ class SamordningServiceTest {
             opprettYtelseData(ytelseVurderingRepo, behandlingId)
             opprettVurderingData(ytelseVurderingRepo, behandlingId)
 
-            val service = SamordningService(
-                ytelseVurderingRepo, SamordningRepositoryImpl(connection)
-            )
-            val tidligereVurderinger = service.tidligereVurderinger(behandlingId)
-            assertThat(service.vurder(behandlingId, tidligereVurderinger)).isNotEmpty
+            val service = SamordningService(ytelseVurderingRepo)
+
+            val grunnlag = ytelseVurderingRepo.hentHvisEksisterer(behandlingId)!!
+            val tidligereVurderinger = service.tidligereVurderinger(grunnlag)
+            assertThat(service.vurder(grunnlag, tidligereVurderinger)).isNotEmpty
         }
     }
 
@@ -87,14 +85,14 @@ class SamordningServiceTest {
             )
         }
 
+        val input = dataSource.transaction { connection ->
+            SamordningYtelseVurderingRepositoryImpl(connection).hentHvisEksisterer(behandlingId)!!
+        }
         val ikkeVurdertePerioder = dataSource.transaction { connection ->
-            val service = SamordningService(
-                SamordningYtelseVurderingRepositoryImpl(connection),
-                SamordningRepositoryImpl(connection)
-            )
+            val service = SamordningService(SamordningYtelseVurderingRepositoryImpl(connection))
 
-            val tidligereVurderinger = service.tidligereVurderinger(behandlingId)
-            service.perioderSomIkkeHarBlittVurdert(behandlingId, tidligereVurderinger)
+            val tidligereVurderinger = service.tidligereVurderinger(input)
+            service.perioderSomIkkeHarBlittVurdert(input, tidligereVurderinger)
         }
 
         // Forvent at ikke-vurderte perioder er fra 1 jan til 4 jan
@@ -112,26 +110,12 @@ class SamordningServiceTest {
             opprettYtelseData(ytelseVurderingRepo, behandlingId)
 
             val service = SamordningService(
-                ytelseVurderingRepo, SamordningRepositoryImpl(connection)
+                ytelseVurderingRepo
             )
-            val tidligereVurderinger = service.tidligereVurderinger(behandlingId)
+            val input = ytelseVurderingRepo.hentHvisEksisterer(behandlingId)!!
+            val tidligereVurderinger = service.tidligereVurderinger(input)
 
-            assertThrows<IllegalArgumentException> { service.vurder(behandlingId, tidligereVurderinger) }
-        }
-    }
-
-    @Test
-    fun `om ingen data, er svaret en tom tidslinje`() {
-        dataSource.transaction { connection ->
-            val ytelseVurderingRepo = SamordningYtelseVurderingRepositoryImpl(connection)
-            val behandlingId = opprettSakdata(connection)
-
-            val service = SamordningService(
-                ytelseVurderingRepo, SamordningRepositoryImpl(connection)
-            )
-            val tidslinje = service.vurder(behandlingId, Tidslinje.empty())
-
-            assertThat(tidslinje).isEmpty()
+            assertThrows<IllegalArgumentException> { service.vurder(input, tidligereVurderinger) }
         }
     }
 

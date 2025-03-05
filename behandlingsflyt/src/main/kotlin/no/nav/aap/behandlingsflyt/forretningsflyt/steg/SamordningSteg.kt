@@ -33,10 +33,12 @@ class SamordningSteg(
         // 3.  hvis har all tilgjengelig data:
         // 3.1 lag tidslinje av prosentgradering og lagre i SamordningRepository
 
-        val tidligereVurderinger = samordningService.tidligereVurderinger(behandlingId = kontekst.behandlingId)
+        val input = requireNotNull(samordningService.hentInput(behandlingId = kontekst.behandlingId))
+
+        val tidligereVurderinger = samordningService.tidligereVurderinger(input)
 
         val perioderSomIkkeHarBlittVurdert = samordningService.perioderSomIkkeHarBlittVurdert(
-            kontekst.behandlingId, tidligereVurderinger
+            input, tidligereVurderinger
         )
 
 
@@ -46,7 +48,7 @@ class SamordningSteg(
         }
 
         val samordningTidslinje =
-            samordningService.vurder(behandlingId = kontekst.behandlingId, tidligereVurderinger)
+            samordningService.vurder(input, tidligereVurderinger)
 
         samordningRepository.lagre(
             kontekst.behandlingId,
@@ -56,7 +58,8 @@ class SamordningSteg(
                         it.periode,
                         it.verdi.gradering
                     )
-                }
+                },
+            input
         )
 
         log.info("Samordning tidslinje $samordningTidslinje")
@@ -79,8 +82,7 @@ class SamordningSteg(
 
             return SamordningSteg(
                 SamordningService(
-                    repositoryProvider.provide(),
-                    samordningRepository = repositoryProvider.provide()
+                    repositoryProvider.provide()
                 ),
                 samordningRepository,
                 avklaringsbehovRepository

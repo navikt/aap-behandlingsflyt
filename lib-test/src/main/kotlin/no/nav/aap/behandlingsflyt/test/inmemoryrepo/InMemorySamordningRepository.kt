@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
@@ -15,7 +16,7 @@ object InMemorySamordningRepository : SamordningRepository {
         return grunnlag[behandlingId]
     }
 
-    override fun lagre(behandlingId: BehandlingId, samordningPerioder: List<SamordningPeriode>) {
+    override fun lagre(behandlingId: BehandlingId, samordningPerioder: List<SamordningPeriode>, input: Faktagrunnlag) {
         grunnlag[behandlingId] = SamordningGrunnlag(
             id = id.getAndIncrement(),
             samordningPerioder = samordningPerioder

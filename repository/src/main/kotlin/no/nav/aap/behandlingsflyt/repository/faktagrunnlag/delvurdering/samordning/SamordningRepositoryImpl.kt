@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
@@ -53,7 +54,7 @@ class SamordningRepositoryImpl(private val connection: DBConnection) : Samordnin
         return SamordningGrunnlag(row.getLong("id"), samordningPerioder)
     }
 
-    override fun lagre(behandlingId: BehandlingId, samordningPerioder: List<SamordningPeriode>) {
+    override fun lagre(behandlingId: BehandlingId, samordningPerioder: List<SamordningPeriode>, input: Faktagrunnlag) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         val eksisterendePerioder = eksisterendeGrunnlag?.samordningPerioder ?: emptySet()
 
@@ -62,11 +63,15 @@ class SamordningRepositoryImpl(private val connection: DBConnection) : Samordnin
                 deaktiverGrunnlag(behandlingId)
             }
 
-            lagreNyttGrunnlag(behandlingId, samordningPerioder)
+            lagreNyttGrunnlag(behandlingId, samordningPerioder, input)
         }
     }
 
-    private fun lagreNyttGrunnlag(behandlingId: BehandlingId, samordningPerioder: List<SamordningPeriode>) {
+    private fun lagreNyttGrunnlag(
+        behandlingId: BehandlingId,
+        samordningPerioder: List<SamordningPeriode>,
+        input: Faktagrunnlag
+    ) {
         val samordningeneQuery = """
             INSERT INTO SAMORDNING_PERIODER DEFAULT VALUES
             """.trimIndent()
@@ -92,6 +97,8 @@ class SamordningRepositoryImpl(private val connection: DBConnection) : Samordnin
                 setLong(2, perioderId)
             }
         }
+
+        // TODO: lagre faktagrunnlag for sporing
     }
 
     private fun deaktiverGrunnlag(behandlingId: BehandlingId) {
