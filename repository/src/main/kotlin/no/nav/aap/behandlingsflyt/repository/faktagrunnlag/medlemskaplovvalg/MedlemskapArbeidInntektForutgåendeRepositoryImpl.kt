@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapArbeidInntektGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.HistoriskManuellVurderingForForutgåendeMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdOversikt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
@@ -12,6 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsoppho
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektForutgåendeRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
@@ -56,6 +58,34 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
             }
             setRowMapper {
                 hentOppgittUtenlandsOpphold(it.getLong("oppgitt_utenlandsopphold_id"))
+            }
+        }
+    }
+
+    override fun hentHistoriskeVurderinger(sakId: SakId): List<HistoriskManuellVurderingForForutgåendeMedlemskap> {
+        val query = """
+            SELECT vurdering.*
+            FROM FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG grunnlag
+            INNER JOIN FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERING vurdering ON grunnlag.MANUELL_VURDERING_ID = vurdering.ID
+            JOIN BEHANDLING behandling ON grunnlag.BEHANDLING_ID = behandling.ID
+            WHERE grunnlag.AKTIV AND behandling.SAK_ID = ?
+        """.trimIndent()
+
+        return connection.queryList(query) {
+            setParams {
+                setLong(1, sakId.id)
+            }
+            setRowMapper {
+                HistoriskManuellVurderingForForutgåendeMedlemskap(
+                    ManuellVurderingForForutgåendeMedlemskap(
+                        begrunnelse = it.getString("begrunnelse"),
+                        harForutgåendeMedlemskap = it.getBoolean("har_forutgaaende_medlemskap"),
+                        varMedlemMedNedsattArbeidsevne = it.getBooleanOrNull("var_medlem_med_nedsatt_arbeidsevne"),
+                        medlemMedUnntakAvMaksFemAar = it.getBooleanOrNull("medlem_med_unntak_av_maks_fem_aar"),
+                        overstyrt = it.getBoolean("overstyrt")
+                    ),
+                    opprettet = it.getLocalDate("opprettet_tid")
+                )
             }
         }
     }
