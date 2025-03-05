@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.integrasjon.utbetaling
 
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.HåndterConflictResponseHandler
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingGateway
+import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
@@ -18,7 +19,8 @@ object UtbetalingGatewayImpl: UtbetalingGateway {
     private val client = RestClient(
         config = config,
         tokenProvider = ClientCredentialsTokenProvider,
-        responseHandler = HåndterConflictResponseHandler()
+        responseHandler = HåndterConflictResponseHandler(),
+        prometheus = prometheus
     )
 
     override fun utbetal(tilkjentYtelseDto: TilkjentYtelseDto) {

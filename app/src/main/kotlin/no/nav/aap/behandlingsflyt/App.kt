@@ -52,6 +52,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.flate.stud
 import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
 import no.nav.aap.behandlingsflyt.hendelse.mottattHendelseApi
+import no.nav.aap.behandlingsflyt.integrasjon.aaregisteret.AARegisterGateway
 import no.nav.aap.behandlingsflyt.integrasjon.barn.PdlBarnGateway
 import no.nav.aap.behandlingsflyt.integrasjon.datadeling.ApiInternGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.dokumentinnhenting.DokumentinnhentingGatewayImpl
@@ -249,6 +250,7 @@ private fun registerGateways() {
         .register<MedlemskapGateway>()
         .register<ApiInternGatewayImpl>()
         .register<UtbetalingGatewayImpl>()
+        .register<AARegisterGateway>()
         .status()
 }
 
