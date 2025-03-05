@@ -20,7 +20,9 @@ class Tilkjent(
     val utbetalingsdato: LocalDate
 ) {
 
-
+    /**
+     * Hent ut full dagsats etter reduksjon.
+     */
     fun redusertDagsats(): Beløp {
         return dagsats.multiplisert(gradering).pluss(barnetillegg.multiplisert(gradering))
     }

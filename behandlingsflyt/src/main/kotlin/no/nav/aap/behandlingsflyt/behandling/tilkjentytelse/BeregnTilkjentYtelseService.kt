@@ -3,6 +3,8 @@ package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.RettTilBarnetillegg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
@@ -19,9 +21,10 @@ import java.time.LocalDate
 
 class BeregnTilkjentYtelseService(
     private val fødselsdato: Fødselsdato,
-    private val beregningsgrunnlag: Beregningsgrunnlag?,
+    private val beregningsgrunnlag: Grunnlag?,
     private val underveisgrunnlag: UnderveisGrunnlag,
-    private val barnetilleggGrunnlag: BarnetilleggGrunnlag
+    private val barnetilleggGrunnlag: BarnetilleggGrunnlag,
+    private val samordningGrunnlag: SamordningGrunnlag
 ) {
 
     private fun tilTidslinje(barnetilleggGrunnlag: BarnetilleggGrunnlag): Tidslinje<RettTilBarnetillegg> {
@@ -66,10 +69,11 @@ class BeregnTilkjentYtelseService(
             maxOf(minsteÅrligYtelse, utgangspunktForÅrligYtelse)
         }
 
+        val samordningTidslinje = samordningGrunnlag.samordningPerioder.map { Segment(it.periode, it) }.let(::Tidslinje)
+
         // TODO: Hvis vi har eget grunnlag for samordning må vi slå sammen denne tidslinjen her
         val gradertÅrligYtelseTidslinje = underveisTidslinje.kombiner(
-            årligYtelseTidslinje,
-            JoinStyle.INNER_JOIN { periode, venstre, høyre ->
+            årligYtelseTidslinje, JoinStyle.INNER_JOIN { periode, venstre, høyre ->
                 val dagsats = høyre.verdi.dividert(ANTALL_ÅRLIGE_ARBEIDSDAGER)
 
                 val utbetalingsgrad = if (venstre.verdi.utfall == Utfall.IKKE_OPPFYLT) {
@@ -77,16 +81,29 @@ class BeregnTilkjentYtelseService(
                 } else {
                     val institusjonsOppholdReduksjon = venstre.verdi.institusjonsoppholdReduksjon
                     val arbeidsgradering = venstre.verdi.arbeidsgradering.gradering
-                    Prosent.`100_PROSENT`.minus(institusjonsOppholdReduksjon).minus(arbeidsgradering)
+                    Prosent.`100_PROSENT`
+                        .minus(institusjonsOppholdReduksjon)
+                        .minus(arbeidsgradering) // minus samordninggradering her
                 }
                 Segment(periode, TilkjentGUnit(dagsats, utbetalingsgrad, venstre.verdi.meldePeriode.tom.plusDays(1)))
             })
 
+        val gradertÅrligYtelseTidslinjeMedSamordning =
+            gradertÅrligYtelseTidslinje.kombiner(samordningTidslinje, JoinStyle.LEFT_JOIN { periode, venstre, høyre ->
+                if (høyre == null) {
+                    venstre
+                } else {
+                    val tilkjentGUnit = venstre.verdi
+                    val nyGradering =
+                        tilkjentGUnit.copy(gradering = tilkjentGUnit.gradering.minus(høyre.verdi.gradering))
+                    Segment(periode, nyGradering)
+                }
+            })
 
-        val gradertÅrligTilkjentYtelseBeløp = gradertÅrligYtelseTidslinje.kombiner(
-            Grunnbeløp.tilTidslinje(),
-            JoinStyle.INNER_JOIN { periode, venstre, høyre ->
-                val dagsats = høyre.verdi.multiplisert(venstre.verdi.dagsats)
+
+        val gradertÅrligTilkjentYtelseBeløp = gradertÅrligYtelseTidslinjeMedSamordning.kombiner(
+            Grunnbeløp.tilTidslinje(), JoinStyle.INNER_JOIN { periode, venstre, grunnbeløp ->
+                val dagsats = grunnbeløp.verdi.multiplisert(venstre.verdi.dagsats)
 
                 val utbetalingsgrad = venstre.verdi.gradering
                 Segment(
@@ -95,7 +112,7 @@ class BeregnTilkjentYtelseService(
                         gradering = utbetalingsgrad,
                         grunnlag = dagsats,
                         grunnlagsfaktor = venstre.verdi.dagsats,
-                        grunnbeløp = høyre.verdi,
+                        grunnbeløp = grunnbeløp.verdi,
                         utbetalingsdato = venstre.verdi.utbetalingsdato
                     )
                 )

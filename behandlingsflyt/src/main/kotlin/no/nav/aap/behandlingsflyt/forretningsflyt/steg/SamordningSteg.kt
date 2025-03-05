@@ -48,20 +48,16 @@ class SamordningSteg(
         val samordningTidslinje =
             samordningService.vurder(behandlingId = kontekst.behandlingId, tidligereVurderinger)
 
-
-        if (!samordningTidslinje.isEmpty()) {
-            samordningRepository.lagre(
-                kontekst.behandlingId,
-                samordningTidslinje.segmenter()
-                    .map {
-                        SamordningPeriode(
-                            it.periode,
-                            it.verdi.gradering
-                        )
-                    }
-            )
-        }
-
+        samordningRepository.lagre(
+            kontekst.behandlingId,
+            samordningTidslinje.segmenter()
+                .map {
+                    SamordningPeriode(
+                        it.periode,
+                        it.verdi.gradering
+                    )
+                }
+        )
 
         log.info("Samordning tidslinje $samordningTidslinje")
         return Fullført

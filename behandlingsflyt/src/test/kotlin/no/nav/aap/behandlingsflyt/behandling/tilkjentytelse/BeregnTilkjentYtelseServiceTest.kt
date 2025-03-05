@@ -3,7 +3,10 @@ package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
@@ -12,6 +15,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.BruddAktivitetspliktId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.test.april
+import no.nav.aap.behandlingsflyt.test.august
+import no.nav.aap.behandlingsflyt.test.juli
+import no.nav.aap.behandlingsflyt.test.juni
+import no.nav.aap.behandlingsflyt.test.mai
+import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
@@ -36,17 +45,19 @@ class BeregnTilkjentYtelseServiceTest {
             inntekter = emptyList()
         )
         val periode = Periode(LocalDate.of(2023, 4, 30), LocalDate.of(2023, 5, 1))
-        val underveisgrunnlag =
-            underveisgrunnlag(periode)
 
+        val underveisgrunnlag = underveisgrunnlag(periode)
 
         val barnetilleggGrunnlag = BarnetilleggGrunnlag(1L, emptyList())
+
+        val samordningsgrunnlag = SamordningGrunnlag(0L, emptyList())
 
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
             fødselsdato,
             beregningsgrunnlag,
             underveisgrunnlag,
-            barnetilleggGrunnlag
+            barnetilleggGrunnlag,
+            samordningsgrunnlag
         ).beregnTilkjentYtelse()
 
         assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
@@ -91,9 +102,8 @@ class BeregnTilkjentYtelseServiceTest {
             inntekter = emptyList()
         )
         val periode = Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1))
-        val underveisgrunnlag = underveisgrunnlag(
-            periode
-        )
+
+        val underveisgrunnlag = underveisgrunnlag(periode)
 
         val barnetilleggGrunnlag = BarnetilleggGrunnlag(
             1L,
@@ -105,16 +115,19 @@ class BeregnTilkjentYtelseServiceTest {
             )
         )
 
+        val samordningsgrunnlag = SamordningGrunnlag(0L, emptyList())
+
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
             fødselsdato,
             beregningsgrunnlag,
             underveisgrunnlag,
-            barnetilleggGrunnlag
+            barnetilleggGrunnlag,
+            samordningsgrunnlag
         ).beregnTilkjentYtelse()
 
         assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
             Segment(
-                periode = Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1)),
+                periode = periode,
                 verdi = Tilkjent(
                     dagsats = Beløp("1204.45"), //4*0.66*118620/260+36
                     gradering = Prosent.`100_PROSENT`,
@@ -156,11 +169,14 @@ class BeregnTilkjentYtelseServiceTest {
             )
         )
 
+        val samordningsgrunnlag = SamordningGrunnlag(0L, emptyList())
+
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
             fødselsdato,
             beregningsgrunnlag,
             underveisgrunnlag,
-            barnetilleggGrunnlag
+            barnetilleggGrunnlag,
+            samordningsgrunnlag
         ).beregnTilkjentYtelse()
 
         assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
@@ -208,6 +224,7 @@ class BeregnTilkjentYtelseServiceTest {
         val periode = Periode(LocalDate.of(2024, 6, 30), LocalDate.of(2024, 7, 1))
         val underveisgrunnlag = underveisgrunnlag(periode)
 
+        val samordningsgrunnlag = SamordningGrunnlag(0L, emptyList())
 
         val barnetilleggGrunnlag = BarnetilleggGrunnlag(1L, emptyList())
 
@@ -215,7 +232,8 @@ class BeregnTilkjentYtelseServiceTest {
             fødeselsdato,
             beregningsgrunnlag,
             underveisgrunnlag,
-            barnetilleggGrunnlag
+            barnetilleggGrunnlag,
+            samordningsgrunnlag
         ).beregnTilkjentYtelse()
 
         assertThat(beregnetTilkjentYtelse.segmenter()).containsExactly(
@@ -231,6 +249,7 @@ class BeregnTilkjentYtelseServiceTest {
                     barnetilleggsats = Beløp("0"),
                     barnetillegg = Beløp("0"),
                     utbetalingsdato = periode.tom.plusDays(1)
+
                 )
             ),
             Segment(
@@ -266,11 +285,14 @@ class BeregnTilkjentYtelseServiceTest {
             emptyList()
         )
 
+        val samordningsgrunnlag = SamordningGrunnlag(0L, emptyList())
+
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
             fødselsdato,
             beregningsgrunnlag,
             underveisgrunnlag,
-            barnetilleggGrunnlag
+            barnetilleggGrunnlag,
+            samordningsgrunnlag
         ).beregnTilkjentYtelse()
 
         assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
@@ -286,6 +308,7 @@ class BeregnTilkjentYtelseServiceTest {
                     barnetilleggsats = Beløp("0"),
                     barnetillegg = Beløp("0"),
                     utbetalingsdato = periode.tom.plusDays(1)
+
                 )
             ),
             Segment(
@@ -296,6 +319,78 @@ class BeregnTilkjentYtelseServiceTest {
                     grunnlag = Beløp("768.14"),
                     grunnlagsfaktor = GUnit("0.0076923077"),
                     grunnbeløp = Beløp("99858"),
+                    antallBarn = 0,
+                    barnetilleggsats = Beløp("0"),
+                    barnetillegg = Beløp("0"),
+                    utbetalingsdato = periode.tom.plusDays(1)
+                )
+            )
+        )
+    }
+
+    @Test
+    fun `graderer tilkjent ytelse med samordning-gradering`() {
+        val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
+        val beregningsgrunnlag = object : Grunnlag {
+            override fun grunnlaget(): GUnit {
+                return GUnit(BigDecimal(4))
+            }
+        }
+        val periode = Periode(1 juni 2023, 1 august 2023)
+
+        val underveisgrunnlag = underveisgrunnlag(periode)
+
+        val barnetilleggGrunnlag = BarnetilleggGrunnlag(1L, emptyList())
+
+        // Samordning-perioden overlapper delvis med perioden det beregnes for
+        val samordningsgrunnlag = SamordningGrunnlag(
+            0L, listOf(
+                SamordningPeriode(
+                    periode = Periode(1 mars 2023, 1 juli 2023),
+                    gradering = Prosent.`70_PROSENT`
+                )
+            )
+        )
+
+        val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
+            fødselsdato,
+            beregningsgrunnlag,
+            underveisgrunnlag,
+            barnetilleggGrunnlag,
+            samordningsgrunnlag
+        ).beregnTilkjentYtelse()
+
+        // Forventer 30 prosent grunnlag først, deretter 100 prosent
+        assertThat(
+            beregnTilkjentYtelseService.segmenter().map { it.verdi.gradering }).containsExactly(
+            Prosent.`30_PROSENT`,
+            Prosent.`100_PROSENT`
+        )
+
+        assertThat(beregnTilkjentYtelseService.segmenter()).hasSize(2)
+        assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
+            Segment(
+                periode = Periode(1 juni 2023, 1 juli 2023),
+                verdi = Tilkjent(
+                    dagsats = Beløp("1204.45"), //4*0.66*111477/260
+                    gradering = Prosent.`30_PROSENT`,
+                    grunnlag = Beløp("1204.45"),
+                    grunnlagsfaktor = GUnit("0.0101538462"),
+                    grunnbeløp = Beløp("118620"),
+                    antallBarn = 0,
+                    barnetilleggsats = Beløp("0"),
+                    barnetillegg = Beløp("0"),
+                    utbetalingsdato = periode.tom.plusDays(1)
+                )
+            ),
+            Segment(
+                periode = Periode(2 juli 2023, 1 august 2023),
+                verdi = Tilkjent(
+                    dagsats = Beløp("1204.45"), //4*0.66*118620/260
+                    gradering = Prosent.`100_PROSENT`,
+                    grunnlag = Beløp("1204.45"),
+                    grunnlagsfaktor = GUnit("0.0101538462"),
+                    grunnbeløp = Beløp("118620.00"),
                     antallBarn = 0,
                     barnetilleggsats = Beløp("0"),
                     barnetillegg = Beløp("0"),
