@@ -1,11 +1,13 @@
-package no.nav.aap.behandlingsflyt.behandling.brev.bestilling
+package no.nav.aap.behandlingsflyt.repository.behandling.brev.bestilling
 
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.*
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
 
-class BrevbestillingRepositoryImpl(private val connection: DBConnection) : BrevbestillingRepository {
+class BrevbestillingRepositoryImpl(private val connection: DBConnection) :
+    BrevbestillingRepository {
 
     companion object : Factory<BrevbestillingRepositoryImpl> {
         override fun konstruer(connection: DBConnection): BrevbestillingRepositoryImpl {
