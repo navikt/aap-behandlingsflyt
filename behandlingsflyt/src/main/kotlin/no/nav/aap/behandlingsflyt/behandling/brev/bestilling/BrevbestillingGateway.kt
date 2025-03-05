@@ -20,4 +20,6 @@ interface BrevbestillingGateway {
     fun hent(bestillingReferanse: BrevbestillingReferanse): BrevbestillingResponse
 
     fun oppdater(bestillingReferanse: BrevbestillingReferanse, brev: Brev)
+
+    fun avbryt(bestillingReferanse: BrevbestillingReferanse)
 }

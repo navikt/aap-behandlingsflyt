@@ -59,7 +59,25 @@ class BrevbestillingService(
         brevbestillingRepository.oppdaterStatus(behandlingId, referanse, status)
     }
 
-    fun ferdigstill(referanse: BrevbestillingReferanse): Boolean {
-        return brevbestillingGateway.ferdigstill(referanse)
+    fun ferdigstill(behandlingId: BehandlingId, referanse: BrevbestillingReferanse) {
+        val ferdigstilt = brevbestillingGateway.ferdigstill(referanse)
+        if (!ferdigstilt) {
+            throw IllegalArgumentException("Brevet er ikke gyldig ferdigstilt, fullfør brevet og prøv på nytt.")
+        } else {
+            brevbestillingRepository.oppdaterStatus(
+                behandlingId = behandlingId,
+                referanse = referanse,
+                status = Status.FULLFØRT
+            )
+        }
+    }
+
+    fun avbryt(behandlingId: BehandlingId, referanse: BrevbestillingReferanse) {
+        brevbestillingGateway.avbryt(referanse)
+        brevbestillingRepository.oppdaterStatus(
+            behandlingId = behandlingId,
+            referanse = referanse,
+            status = Status.AVBRUTT
+        )
     }
 }

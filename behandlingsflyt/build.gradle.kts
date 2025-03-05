@@ -16,7 +16,7 @@ dependencies {
 
     api("no.nav.aap.tilgang:plugin:$tilgangVersjon")
     api("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
-    api("no.nav.aap.brev:kontrakt:0.0.67")
+    api("no.nav.aap.brev:kontrakt:0.0.71")
     api("no.nav.aap.kelvin:motor:$komponenterVersjon")
     api("no.nav.aap.utbetal:api-kontrakt:$utbetalVersjon")
     implementation("no.nav.aap.kelvin:dbconnect:$komponenterVersjon")

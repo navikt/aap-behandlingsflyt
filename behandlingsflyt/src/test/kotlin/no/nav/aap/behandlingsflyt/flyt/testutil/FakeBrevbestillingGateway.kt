@@ -43,11 +43,15 @@ class FakeBrevbestillingGateway : BrevbestillingGateway {
         return true
     }
 
+    override fun avbryt(bestillingReferanse: BrevbestillingReferanse) {
+        brevbestillingResponse = brevbestillingResponse!!.copy(status = Status.AVBRUTT)
+    }
+
     override fun hent(bestillingReferanse: BrevbestillingReferanse): BrevbestillingResponse {
         return brevbestillingResponse!!
     }
 
     override fun oppdater(bestillingReferanse: BrevbestillingReferanse, brev: Brev) {
-        TODO("Not yet implemented")
+        brevbestillingResponse = brevbestillingResponse!!.copy(brev = brev)
     }
 }

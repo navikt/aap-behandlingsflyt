@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevGateway
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -31,18 +30,17 @@ class SkrivBrevLøser(val connection: DBConnection) : AvklaringsbehovsLøser<Skr
             sakRepository = sakRepository
         )
         val brevbestillingReferanse = BrevbestillingReferanse(løsning.brevbestillingReferanse)
-        val ferdigstilt = brevbestillingService.ferdigstill(brevbestillingReferanse)
-        if (!ferdigstilt) {
-            throw IllegalArgumentException("Brevet er ikke gyldig ferdigstilt, fullfør brevet og prøv på nytt.")
-        } else {
-            brevbestillingRepository.oppdaterStatus(
-                behandlingId = kontekst.behandlingId(),
-                referanse = brevbestillingReferanse,
-                status = Status.FULLFØRT
-            )
-        }
+        return when (løsning.handling) {
+            SkrivBrevLøsning.Handling.FERDIGSTILL -> {
+                brevbestillingService.ferdigstill(kontekst.behandlingId(), brevbestillingReferanse)
+                LøsningsResultat("Brev ferdig")
+            }
 
-        return LøsningsResultat("Brev ferdig")
+            SkrivBrevLøsning.Handling.AVBRYT -> {
+                brevbestillingService.avbryt(kontekst.behandlingId(), brevbestillingReferanse)
+                LøsningsResultat("Brev avbrutt")
+            }
+        }
     }
 
     override fun forBehov(): Definisjon {

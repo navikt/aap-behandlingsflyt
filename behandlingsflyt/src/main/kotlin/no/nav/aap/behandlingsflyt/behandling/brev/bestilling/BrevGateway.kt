@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.brev.bestilling
 
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.brev.kontrakt.AvbrytBrevbestillingRequest
 import no.nav.aap.brev.kontrakt.BestillBrevRequest
 import no.nav.aap.brev.kontrakt.BestillBrevResponse
 import no.nav.aap.brev.kontrakt.Brev
@@ -54,7 +55,7 @@ class BrevGateway : BrevbestillingGateway {
             unikReferanse = unikReferanse,
             brevtype = mapTypeBrev(typeBrev),
             sprak = Språk.NB,
-            vedlegg = vedlegg?.let { setOf(it) }?: setOf()
+            vedlegg = vedlegg?.let { setOf(it) } ?: setOf()
         )
 
         val httpRequest = PostRequest<BestillBrevRequest>(
@@ -124,6 +125,21 @@ class BrevGateway : BrevbestillingGateway {
         val request = PutRequest<Brev>(body = brev)
 
         client.put<_, Unit>(url, request)
+    }
+
+    override fun avbryt(bestillingReferanse: BrevbestillingReferanse) {
+        val url = baseUri.resolve("/api/avbryt")
+
+        val request = PostRequest<AvbrytBrevbestillingRequest>(
+            body = AvbrytBrevbestillingRequest(bestillingReferanse.brevbestillingReferanse),
+            additionalHeaders = listOf(
+                Header("Accept", "application/json")
+            )
+        )
+        client.post<_, Unit>(
+            uri = url,
+            request = request
+        )
     }
 
     private fun mapTypeBrev(typeBrev: TypeBrev): Brevtype = when (typeBrev) {
