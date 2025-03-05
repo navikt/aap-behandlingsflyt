@@ -18,7 +18,9 @@ class Vilkårsresultat(
     }
 
     fun finnVilkår(vilkårtype: Vilkårtype): Vilkår {
-        return vilkår.first { it.type == vilkårtype }
+        return requireNotNull(optionalVilkår(vilkårtype)) {
+            "finner ikke $vilkårtype blant ${vilkår.joinToString { it.type.name }} (Vilkårsresultat.id=${id})"
+        }
     }
 
     fun optionalVilkår(vilkårtype: Vilkårtype): Vilkår? {
