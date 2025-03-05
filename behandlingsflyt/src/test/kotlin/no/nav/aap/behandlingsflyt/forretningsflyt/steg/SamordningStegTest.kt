@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import no.nav.aap.behandlingsflyt.behandling.samordning.AvklaringsType
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
@@ -68,7 +69,6 @@ class SamordningStegTest {
                         SamordningVurderingPeriode(
                             periode = Periode(LocalDate.now().minusYears(1), LocalDate.now()),
                             gradering = Prosent(50),
-                            kronesum = null
                         )
                     )
                 )
@@ -116,6 +116,51 @@ class SamordningStegTest {
     }
 
     @Test
+    fun `saksbehandler kan lagre flere perioder enn det vi får fra registre`() {
+        val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
+        val steg = settOppRessurser(Ytelse.SYKEPENGER, behandling.id)
+
+        InMemorySamordningYtelseVurderingRepository.lagreVurderinger(
+            behandling.id, listOf(
+                SamordningVurdering(
+                    ytelseType = Ytelse.SYKEPENGER,
+                    vurderingPerioder = listOf(
+                        SamordningVurderingPeriode(
+                            periode = Periode(LocalDate.now().minusYears(1), LocalDate.now()),
+                            gradering = Prosent(50),
+                        )
+                    )
+                )
+            )
+        )
+
+        val res2 = steg.utfør(
+            kontekst = FlytKontekstMedPerioder(
+                sakId = behandling.sakId,
+                behandlingId = behandling.id,
+                behandlingType = TypeBehandling.Revurdering,
+                vurdering = VurderingTilBehandling(
+                    vurderingType = VurderingType.REVURDERING,
+                    årsakerTilBehandling = setOf(ÅrsakTilBehandling.MOTTATT_SØKNAD),
+                    rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
+                )
+            )
+        )
+
+        assertThat(res2).isEqualTo(Fullført)
+
+        val uthentetGrunnlag = InMemorySamordningRepository.hentHvisEksisterer(behandling.id)
+
+        assertThat(uthentetGrunnlag!!.samordningPerioder).hasSize(1)
+        assertThat(uthentetGrunnlag.samordningPerioder.first()).isEqualTo(
+            SamordningPeriode(
+                periode = Periode(LocalDate.now().minusYears(1), LocalDate.now()),
+                gradering = Prosent(50),
+            )
+        )
+    }
+
+    @Test
     fun `om det kommer ny informasjon, avklaringsbehov opprettes igjen`() {
         val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
         val steg = settOppRessurser(Ytelse.SYKEPENGER, behandling.id)
@@ -142,7 +187,6 @@ class SamordningStegTest {
                         SamordningVurderingPeriode(
                             periode = Periode(LocalDate.now().minusYears(1), LocalDate.now()),
                             gradering = Prosent(50),
-                            kronesum = null
                         )
                     )
                 )
@@ -195,7 +239,6 @@ class SamordningStegTest {
                         )
                     ),
                     kilde = "xxxx",
-                    saksRef = "xxx"
                 )
             )
         )
@@ -224,6 +267,7 @@ class SamordningStegTest {
         fun manuelleYtelserProvider(): Stream<Ytelse> {
             return Ytelse.entries.filter { it.type == AvklaringsType.MANUELL }.stream()
         }
+
         @JvmStatic
         fun automatiskBehandledeYtelserProvider(): Stream<Ytelse> {
             return Ytelse.entries.filter { it.type == AvklaringsType.AUTOMATISK }.stream()
