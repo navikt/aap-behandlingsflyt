@@ -38,6 +38,7 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) : Tilkj
                         antallBarn = it.getInt("ANTALL_BARN"),
                         barnetilleggsats = Beløp(it.getInt("BARNETILLEGGSATS")),
                         grunnbeløp = Beløp(it.getInt("GRUNNBELOP")),
+                        utbetalingsdato = it.getLocalDate("UTBETALINGSDATO")
                     )
                 )
             }
@@ -77,8 +78,8 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) : Tilkj
         connection.execute(
             """
             INSERT INTO TILKJENT_PERIODE (TILKJENT_YTELSE_ID, PERIODE, DAGSATS, GRADERING, BARNETILLEGG,
-                                          GRUNNLAGSFAKTOR, GRUNNLAG, ANTALL_BARN, BARNETILLEGGSATS, GRUNNBELOP)
-            VALUES (?, ?::daterange, ?, ?, ?, ?, ?, ?, ?, ?)
+                                          GRUNNLAGSFAKTOR, GRUNNLAG, ANTALL_BARN, BARNETILLEGGSATS, GRUNNBELOP, UTBETALINGSDATO)
+            VALUES (?, ?::daterange, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """.trimIndent()
         ) {
             setParams {
@@ -92,6 +93,7 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) : Tilkj
                 setInt(8, tilkjent.antallBarn)
                 setBigDecimal(9, tilkjent.barnetilleggsats.verdi())
                 setBigDecimal(10, tilkjent.grunnbeløp.verdi())
+                setLocalDate(11, tilkjent.utbetalingsdato)
             }
         }
     }

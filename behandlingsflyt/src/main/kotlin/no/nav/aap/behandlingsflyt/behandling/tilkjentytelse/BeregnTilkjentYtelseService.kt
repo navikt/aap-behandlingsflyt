@@ -14,6 +14,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
+import java.time.LocalDate
 
 
 class BeregnTilkjentYtelseService(
@@ -78,7 +79,7 @@ class BeregnTilkjentYtelseService(
                     val arbeidsgradering = venstre.verdi.arbeidsgradering.gradering
                     Prosent.`100_PROSENT`.minus(institusjonsOppholdReduksjon).minus(arbeidsgradering)
                 }
-                Segment(periode, TilkjentGUnit(dagsats, utbetalingsgrad))
+                Segment(periode, TilkjentGUnit(dagsats, utbetalingsgrad, venstre.verdi.meldePeriode.tom.plusDays(1)))
             })
 
 
@@ -94,7 +95,8 @@ class BeregnTilkjentYtelseService(
                         gradering = utbetalingsgrad,
                         grunnlag = dagsats,
                         grunnlagsfaktor = venstre.verdi.dagsats,
-                        grunnbeløp = høyre.verdi
+                        grunnbeløp = høyre.verdi,
+                        utbetalingsdato = venstre.verdi.utbetalingsdato
                     )
                 )
             })
@@ -125,7 +127,8 @@ class BeregnTilkjentYtelseService(
                         grunnlag = venstre.verdi.grunnlag,
                         grunnbeløp = venstre.verdi.grunnbeløp,
                         antallBarn = høyre?.verdi?.antallBarn ?: 0,
-                        barnetilleggsats = høyre?.verdi?.barnetilleggsats ?: Beløp(0)
+                        barnetilleggsats = høyre?.verdi?.barnetilleggsats ?: Beløp(0),
+                        utbetalingsdato = venstre.verdi.utbetalingsdato
                     )
                 )
             })
@@ -137,6 +140,7 @@ class BeregnTilkjentYtelseService(
         val grunnlag: Beløp,
         val grunnlagsfaktor: GUnit,
         val grunnbeløp: Beløp,
+        val utbetalingsdato: LocalDate,
     )
 
     private class Barnetillegg(

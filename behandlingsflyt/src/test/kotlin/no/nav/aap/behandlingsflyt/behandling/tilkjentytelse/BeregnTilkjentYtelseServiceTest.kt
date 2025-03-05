@@ -35,8 +35,9 @@ class BeregnTilkjentYtelseServiceTest {
             gjennomsnittligInntektIG = GUnit(0),
             inntekter = emptyList()
         )
+        val periode = Periode(LocalDate.of(2023, 4, 30), LocalDate.of(2023, 5, 1))
         val underveisgrunnlag =
-            underveisgrunnlag(Periode(LocalDate.of(2023, 4, 30), LocalDate.of(2023, 5, 1)))
+            underveisgrunnlag(periode)
 
 
         val barnetilleggGrunnlag = BarnetilleggGrunnlag(1L, emptyList())
@@ -59,7 +60,8 @@ class BeregnTilkjentYtelseServiceTest {
                     grunnbeløp = Beløp("111477"),
                     antallBarn = 0,
                     barnetilleggsats = Beløp("0"),
-                    barnetillegg = Beløp("0")
+                    barnetillegg = Beløp("0"),
+                    utbetalingsdato = periode.tom.plusDays(1)
                 )
             ),
             Segment(
@@ -72,7 +74,8 @@ class BeregnTilkjentYtelseServiceTest {
                     grunnbeløp = Beløp("118620.00"),
                     antallBarn = 0,
                     barnetilleggsats = Beløp("0"),
-                    barnetillegg = Beløp("0")
+                    barnetillegg = Beløp("0"),
+                    utbetalingsdato = periode.tom.plusDays(1)
                 )
             )
         )
@@ -87,8 +90,9 @@ class BeregnTilkjentYtelseServiceTest {
             gjennomsnittligInntektIG = GUnit(0),
             inntekter = emptyList()
         )
+        val periode = Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1))
         val underveisgrunnlag = underveisgrunnlag(
-            Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1))
+            periode
         )
 
         val barnetilleggGrunnlag = BarnetilleggGrunnlag(
@@ -119,7 +123,8 @@ class BeregnTilkjentYtelseServiceTest {
                     grunnbeløp = Beløp("118620"),
                     antallBarn = 1,
                     barnetilleggsats = Beløp("36"),
-                    barnetillegg = Beløp("36")
+                    barnetillegg = Beløp("36"),
+                    utbetalingsdato = periode.tom.plusDays(1)
                 )
             )
         )
@@ -134,7 +139,8 @@ class BeregnTilkjentYtelseServiceTest {
             gjennomsnittligInntektIG = GUnit(0),
             inntekter = emptyList()
         )
-        val underveisgrunnlag = underveisgrunnlag(Periode(LocalDate.of(2023, 12, 30), LocalDate.of(2024, 1, 1)))
+        val periode = Periode(LocalDate.of(2023, 12, 30), LocalDate.of(2024, 1, 1))
+        val underveisgrunnlag = underveisgrunnlag(periode)
 
         val barnetilleggGrunnlag = BarnetilleggGrunnlag(
             1L,
@@ -168,7 +174,8 @@ class BeregnTilkjentYtelseServiceTest {
                     grunnbeløp = Beløp("118620"),
                     antallBarn = 1,
                     barnetilleggsats = Beløp("35"),
-                    barnetillegg = Beløp("35")
+                    barnetillegg = Beløp("35"),
+                    utbetalingsdato = periode.tom.plusDays(1)
                 )
             ),
             Segment(
@@ -181,7 +188,8 @@ class BeregnTilkjentYtelseServiceTest {
                     grunnbeløp = Beløp("118620"),
                     antallBarn = 1,
                     barnetilleggsats = Beløp("36"),
-                    barnetillegg = Beløp("36")
+                    barnetillegg = Beløp("36"),
+                    utbetalingsdato = periode.tom.plusDays(1)
                 )
             )
         )
@@ -197,7 +205,8 @@ class BeregnTilkjentYtelseServiceTest {
             gjennomsnittligInntektIG = GUnit(0),
             inntekter = emptyList()
         )
-        val underveisgrunnlag = underveisgrunnlag(Periode(LocalDate.of(2024, 6, 30), LocalDate.of(2024, 7, 1)))
+        val periode = Periode(LocalDate.of(2024, 6, 30), LocalDate.of(2024, 7, 1))
+        val underveisgrunnlag = underveisgrunnlag(periode)
 
 
         val barnetilleggGrunnlag = BarnetilleggGrunnlag(1L, emptyList())
@@ -220,7 +229,8 @@ class BeregnTilkjentYtelseServiceTest {
                     grunnbeløp = Beløp("124028"),
                     antallBarn = 0,
                     barnetilleggsats = Beløp("0"),
-                    barnetillegg = Beløp("0")
+                    barnetillegg = Beløp("0"),
+                    utbetalingsdato = periode.tom.plusDays(1)
                 )
             ),
             Segment(
@@ -233,7 +243,8 @@ class BeregnTilkjentYtelseServiceTest {
                     grunnbeløp = Beløp("124028"),
                     antallBarn = 0,
                     barnetilleggsats = Beløp("0"),
-                    barnetillegg = Beløp("0")
+                    barnetillegg = Beløp("0"),
+                    utbetalingsdato = periode.tom.plusDays(1)
                 )
             )
         )
@@ -248,7 +259,8 @@ class BeregnTilkjentYtelseServiceTest {
             gjennomsnittligInntektIG = GUnit(0),
             inntekter = emptyList()
         )
-        val underveisgrunnlag = underveisgrunnlag(Periode(LocalDate.of(2020, 3, 31), LocalDate.of(2020, 4, 1)))
+        val periode = Periode(LocalDate.of(2020, 3, 31), LocalDate.of(2020, 4, 1))
+        val underveisgrunnlag = underveisgrunnlag(periode)
         val barnetilleggGrunnlag = BarnetilleggGrunnlag(
             1L,
             emptyList()
@@ -272,7 +284,8 @@ class BeregnTilkjentYtelseServiceTest {
                     grunnbeløp = Beløp("99858"),
                     antallBarn = 0,
                     barnetilleggsats = Beløp("0"),
-                    barnetillegg = Beløp("0")
+                    barnetillegg = Beløp("0"),
+                    utbetalingsdato = periode.tom.plusDays(1)
                 )
             ),
             Segment(
@@ -285,7 +298,8 @@ class BeregnTilkjentYtelseServiceTest {
                     grunnbeløp = Beløp("99858"),
                     antallBarn = 0,
                     barnetilleggsats = Beløp("0"),
-                    barnetillegg = Beløp("0")
+                    barnetillegg = Beløp("0"),
+                    utbetalingsdato = periode.tom.plusDays(1)
                 )
             )
         )
@@ -296,9 +310,7 @@ class BeregnTilkjentYtelseServiceTest {
             id = 1L, perioder = listOf(
                 Underveisperiode(
                     periode = periode,
-                    meldePeriode = Periode(
-                        LocalDate.of(2020, 3, 31), LocalDate.of(2020, 4, 13)
-                    ),
+                    meldePeriode = periode,
                     utfall = Utfall.OPPFYLT,
                     rettighetsType = RettighetsType.BISTANDSBEHOV,
                     avslagsårsak = null,

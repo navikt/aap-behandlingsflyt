@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
+import java.time.LocalDate
 
 /**
  * @param grunnlag Beregningsgrunnlag som er lagt til grunn før beregning av dagsats og før gradering er beregnet.
@@ -15,8 +16,9 @@ class Tilkjent(
     val grunnbeløp: Beløp,
     val antallBarn: Int,
     val barnetilleggsats: Beløp,
-    val barnetillegg: Beløp
-    ) {
+    val barnetillegg: Beløp,
+    val utbetalingsdato: LocalDate
+) {
 
 
     fun redusertDagsats(): Beløp {
@@ -24,7 +26,7 @@ class Tilkjent(
     }
 
     override fun toString(): String {
-        return "Tilkjent(dagsats=$dagsats, gradering=$gradering, redusertDagsats=${redusertDagsats()}), grunnlag=$grunnlag, grunnlagsfaktor=$grunnlagsfaktor, grunnbeløp=$grunnbeløp, antallBarn=$antallBarn, barnetilleggsats=$barnetilleggsats, barnetillegg=$barnetillegg)"
+        return "Tilkjent(dagsats=$dagsats, gradering=$gradering, redusertDagsats=${redusertDagsats()}), grunnlag=$grunnlag, grunnlagsfaktor=$grunnlagsfaktor, grunnbeløp=$grunnbeløp, antallBarn=$antallBarn, barnetilleggsats=$barnetilleggsats, barnetillegg=$barnetillegg, utbetalingsdato=$utbetalingsdato)"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -41,6 +43,7 @@ class Tilkjent(
         if (grunnbeløp != other.grunnbeløp) return false
         if (barnetilleggsats != other.barnetilleggsats) return false
         if (barnetillegg != other.barnetillegg) return false
+        if (utbetalingsdato != other.utbetalingsdato) return false
 
         return true
     }
@@ -54,11 +57,12 @@ class Tilkjent(
         result = 31 * result + grunnbeløp.hashCode()
         result = 31 * result + barnetilleggsats.hashCode()
         result = 31 * result + barnetillegg.hashCode()
+        result = 31 * result + utbetalingsdato.hashCode()
         return result
     }
 }
 
-data class TilkjentGUnit(val dagsats: GUnit, val gradering: Prosent) {
+data class TilkjentGUnit(val dagsats: GUnit, val gradering: Prosent, val utbetalingsdato: LocalDate) {
 
     private fun redusertDagsats(): GUnit {
         return dagsats.multiplisert(gradering)

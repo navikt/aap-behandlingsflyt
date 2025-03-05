@@ -50,7 +50,8 @@ class TilkjentYtelseRepositoryImplTest {
                             grunnlag = Beløp(1000),
                             antallBarn = 1,
                             barnetilleggsats = Beløp(1000),
-                            grunnbeløp = Beløp(1000)
+                            grunnbeløp = Beløp(1000),
+                            utbetalingsdato = LocalDate.now().plusDays(14)
                         )
                     ),
                     Segment(
@@ -66,7 +67,8 @@ class TilkjentYtelseRepositoryImplTest {
                             grunnlag = Beløp(1000),
                             antallBarn = 1,
                             barnetilleggsats = Beløp(1000),
-                            grunnbeløp = Beløp(1000)
+                            grunnbeløp = Beløp(1000),
+                            utbetalingsdato = LocalDate.now().plusDays(14)
                         )
                     ),
                 )
