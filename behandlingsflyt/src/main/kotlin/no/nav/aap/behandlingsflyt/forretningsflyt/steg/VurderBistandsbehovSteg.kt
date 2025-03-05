@@ -184,7 +184,7 @@ class VurderBistandsbehovSteg private constructor(
     ): Boolean {
         return vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET).harPerioderSomErOppfylt()
             && vilkårsresultat.finnVilkår(Vilkårtype.LOVVALG).harPerioderSomErOppfylt()
-            && sykdomsvurderinger.all { it.erOppfylt() }
+            && sykdomsvurderinger.any { it.erOppfylt() }
     }
 
 

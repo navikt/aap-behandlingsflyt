@@ -79,7 +79,7 @@ class VurderYrkesskadeSteg private constructor(
         if (yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() != true) {
             return false
         }
-        if (sykdomGrunnlagTidslinje?.all { it.verdi.erOppfyltSettBortIfraVissVarighet() } != true) {
+        if (sykdomGrunnlagTidslinje?.any { it.verdi.erOppfyltSettBortIfraVissVarighet() } != true) {
             return false
         }
 
