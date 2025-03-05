@@ -73,7 +73,7 @@ class UtbetalingService(
                     barnetilleggsats = detaljer.barnetilleggsats.verdi(),
                     barnetillegg = detaljer.barnetillegg.verdi(),
                     ventedagerSamordning = false, //TODO: hvor får vi ventedager fra?
-                    utbetalingsdato = periode.tom.plusDays(1) //TODO: hent dette fra detaljer når det støtttes
+                    utbetalingsdato = detaljer.utbetalingsdato
                 )
             )
         }
