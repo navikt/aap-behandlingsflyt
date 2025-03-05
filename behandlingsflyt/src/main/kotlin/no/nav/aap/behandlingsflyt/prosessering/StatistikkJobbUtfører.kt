@@ -40,6 +40,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.Jobb
 import no.nav.aap.motor.JobbInput
@@ -52,7 +53,6 @@ private val log = LoggerFactory.getLogger(StatistikkJobbUtfører::class.java)
 
 
 class StatistikkJobbUtfører(
-    private val statistikkGateway: StatistikkGateway,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val behandlingRepository: BehandlingRepository,
     private val sakService: SakService,
@@ -69,6 +69,8 @@ class StatistikkJobbUtfører(
 
         håndterBehandlingStoppet(payload)
     } // Todo skriv test på g_regulering
+
+    private val statistikkGateway: StatistikkGateway = GatewayProvider.provide()
 
     private fun håndterBehandlingStoppet(hendelse: BehandlingFlytStoppetHendelse) {
 
@@ -329,7 +331,6 @@ class StatistikkJobbUtfører(
             val sakService = SakService(sakRepository)
 
             return StatistikkJobbUtfører(
-                StatistikkGateway(),
                 vilkårsresultatRepository,
                 behandlingRepository,
                 sakService,

@@ -63,6 +63,7 @@ import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.TestHendelsesMottak
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
+import no.nav.aap.behandlingsflyt.integrasjon.statistikk.StatistikkGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.aaregisteret.AARegisterGateway
 import no.nav.aap.behandlingsflyt.integrasjon.barn.PdlBarnGateway
 import no.nav.aap.behandlingsflyt.integrasjon.dokumentinnhenting.DokumentinnhentingGatewayImpl
@@ -222,6 +223,7 @@ class FlytOrkestratorTest {
                 .register<FakeApiInternGateway>()
                 .register<UtbetalingGatewayImpl>()
                 .register<AARegisterGateway>()
+                .register<StatistikkGatewayImpl>()
             motor.start()
         }
 

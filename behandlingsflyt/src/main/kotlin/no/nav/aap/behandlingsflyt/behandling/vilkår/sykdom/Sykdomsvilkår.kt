@@ -23,7 +23,7 @@ class Sykdomsvilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<Sykd
         if (segment == null) {
             throw IllegalArgumentException("Fant ikke regler for vurderingsdato ${grunnlag.vurderingsdato}")
         }
-        val regel = requireNotNull(segment).verdi
+        val regel = segment.verdi
 
         regel.vurder(grunnlag)
     }
