@@ -181,6 +181,12 @@ spec:
       value: api://dev-gcp.aap.brev/.default
     - name: INTEGRASJON_BREV_AZP
       value: dev-gcp:aap:brev
+    - name: INTEGRASJON_UTBETAL_URL
+      value: http://utbetal
+    - name: INTEGRASJON_UTBETAL_SCOPE
+      value: api://dev-gcp.aap.utbetal/.default
+    - name: INTEGRASJON_UTBETAL_AZP
+      value: dev-gcp:aap:utbetal
     - name: INTEGRASJON_DOKUMENTINNHENTING_URL
       value: http://dokumentinnhenting
     - name: INTEGRASJON_DOKUMENTINNHENTING_SCOPE

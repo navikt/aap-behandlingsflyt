@@ -125,6 +125,7 @@ object FakeServers : AutoCloseable {
     private val ainntekt = embeddedServer(Netty, port = 0, module = { ainntektFake() })
     private val aareg = embeddedServer(Netty, port = 0, module = { aaregFake() })
     private val datadeling = embeddedServer(Netty, port = 0, module = { datadelingFake() })
+    private val utbetal = embeddedServer(Netty, port = 0, module = {utbetalFake()})
 
     internal val statistikkHendelser = mutableListOf<StoppetBehandling>()
     internal val legeerklæringStatuser = mutableListOf<LegeerklæringStatusResponse>()
@@ -1282,6 +1283,32 @@ object FakeServers : AutoCloseable {
         }
     }
 
+    private fun Application.utbetalFake() {
+        install(ContentNegotiation) {
+            jackson {
+                registerModule(JavaTimeModule())
+            }
+        }
+        install(StatusPages) {
+            exception<Throwable> { call, cause ->
+                this@utbetalFake.log.info("Utbetal :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
+                call.respond(
+                    status = HttpStatusCode.InternalServerError,
+                    message = ErrorRespons(cause.message)
+                )
+            }
+
+        }
+
+        routing {
+            post("/tilkjentytelse") {
+                call.respond(HttpStatusCode.NoContent)
+            }
+        }
+
+    }
+
+
     private fun Application.brevFake() {
         val config = ClientConfig(scope = "")
         val client = RestClient.withDefaultResponseHandler(
@@ -1423,6 +1450,7 @@ object FakeServers : AutoCloseable {
         ainntekt.start()
         aareg.start()
         datadeling.start()
+        utbetal.start()
 
         println("AZURE PORT ${azure.port()}")
 
@@ -1511,6 +1539,10 @@ object FakeServers : AutoCloseable {
         // Datadeling
         System.setProperty("integrasjon.datadeling.url", "http://localhost:${datadeling.port()}")
         System.setProperty("integrasjon.datadeling.scope", "scope")
+
+        // Utbetal
+        System.setProperty("integrasjon.utbetal.url", "http://localhost:${utbetal.port()}")
+        System.setProperty("integrasjon.utbetal.scope", "utbetal")
     }
 
     override fun close() {
@@ -1534,6 +1566,7 @@ object FakeServers : AutoCloseable {
         ainntekt.stop(0L, 0L)
         aareg.stop(0L, 0L)
         datadeling.stop(0L, 0L)
+        utbetal.stop(0L, 0L)
     }
 }
 
