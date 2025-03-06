@@ -12,14 +12,14 @@ class AvklarFaktaBeregningService(private val vilkårsresultatRepository: Vilkå
         val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
         val bistandsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
         val lovvalgvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.LOVVALG)
-        val bistandsvilkåretEllerSykepengerErstatningHvisIkke = if (!bistandsvilkåret.harPerioderSomErOppfylt()) {
-            vilkårsresultat.optionalVilkår(Vilkårtype.SYKEPENGEERSTATNING)?.harPerioderSomErOppfylt() == true
-        } else {
-            bistandsvilkåret.harPerioderSomErOppfylt()
-        }
+        val bistandsvilkåretEllerSykepengerErstatningHvisIkke =
+            if (!(bistandsvilkåret.harPerioderSomErOppfylt() && sykdomsvilkåret.harPerioderSomErOppfylt())) {
+                vilkårsresultat.optionalVilkår(Vilkårtype.SYKEPENGEERSTATNING)?.harPerioderSomErOppfylt() == true
+            } else {
+                bistandsvilkåret.harPerioderSomErOppfylt() && sykdomsvilkåret.harPerioderSomErOppfylt()
+            }
 
-        return sykdomsvilkåret.harPerioderSomErOppfylt()
-            && bistandsvilkåretEllerSykepengerErstatningHvisIkke
-            && lovvalgvilkåret.harPerioderSomErOppfylt()
+        return bistandsvilkåretEllerSykepengerErstatningHvisIkke
+                && lovvalgvilkåret.harPerioderSomErOppfylt()
     }
 }
