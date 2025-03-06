@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingGateway
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingService
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -11,6 +12,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.gateway.GatewayProvider
@@ -18,7 +20,9 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
 class IverksettVedtakSteg private constructor(
+    private val behandlingRepository: BehandlingRepository,
     private val utbetalingService: UtbetalingService,
+    private val vedtakService: VedtakService,
     private val utbetalingGateway: UtbetalingGateway,
 ) : BehandlingSteg {
 
@@ -26,7 +30,12 @@ class IverksettVedtakSteg private constructor(
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
 
-        // TODO: Melding om vedtak
+        val behandling = behandlingRepository.hent(kontekst.behandlingId)
+        val vedtakstidspunkt = behandling.stegHistorikk()
+            .first { it.steg() == StegType.FATTE_VEDTAK && it.status() == StegStatus.AVSLUTTER }
+            .tidspunkt()
+
+        vedtakService.iverksettVedtak(behandling.id, vedtakstidspunkt)
 
         val tilkjentYtelseDto = utbetalingService.lagTilkjentYtelseForUtbetaling(kontekst.sakId, kontekst.behandlingId)
         if (tilkjentYtelseDto != null) {
@@ -47,7 +56,12 @@ class IverksettVedtakSteg private constructor(
             val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
             val utbetalingGateway = GatewayProvider.provide<UtbetalingGateway>()
             return IverksettVedtakSteg(
-                utbetalingService = UtbetalingService(sakRepository, behandlingRepository, tilkjentYtelseRepository, avklaringsbehovRepository),
+                utbetalingService = UtbetalingService(
+                    sakRepository,
+                    behandlingRepository,
+                    tilkjentYtelseRepository,
+                    avklaringsbehovRepository
+                ),
                 utbetalingGateway = utbetalingGateway
             )
         }
