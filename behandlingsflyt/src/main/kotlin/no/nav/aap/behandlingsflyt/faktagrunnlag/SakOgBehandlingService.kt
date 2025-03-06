@@ -79,11 +79,21 @@ class SakOgBehandlingService(
     fun oppdaterRettighetsperioden(sakId: SakId, brevkategori: InnsendingType, mottattDato: LocalDate) {
         if (setOf(InnsendingType.SØKNAD, InnsendingType.MELDEKORT).contains(brevkategori)) {
             val rettighetsperiode = sakRepository.hent(sakId).rettighetsperiode
-            val periode = Periode(
-                rettighetsperiode.fom,
+            val fom = if (rettighetsperiode.fom.isAfter(mottattDato)) {
+                mottattDato
+            } else {
+                rettighetsperiode.fom
+            }
+            val tom = if (mottattDato.plusYears(1).isAfter(rettighetsperiode.tom)) {
                 mottattDato.plusYears(1)
+            } else {
+                rettighetsperiode.tom
+            }
+            val periode = Periode(
+                fom,
+                tom
             ) // TODO: Usikker på om dette blir helt korrekt..
-            if (rettighetsperiode.tom < periode.tom) {
+            if (periode != rettighetsperiode) {
                 sakRepository.oppdaterRettighetsperiode(sakId, periode)
             }
         }
