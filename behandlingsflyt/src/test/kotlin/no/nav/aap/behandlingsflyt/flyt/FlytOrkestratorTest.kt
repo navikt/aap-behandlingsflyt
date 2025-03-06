@@ -33,6 +33,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLand
+import no.nav.aap.behandlingsflyt.drift.Driftfunksjoner
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
@@ -2083,6 +2084,75 @@ class FlytOrkestratorTest {
         }
         assertTrue(vilkårsResultat.all { it.erOppfylt() })
         assertTrue(overstyrtManuellVurdering == true)
+    }
+
+    @Test
+    fun KanTilbakeføreBehandlingTilStart() {
+        InitTestDatabase.dataSource.transaction { connection ->
+            val ident = ident()
+            val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+            val behandlingRepo = BehandlingRepositoryImpl(connection)
+
+            // Oppretter vanlig søknad
+            hendelsesMottak.håndtere(
+                ident, DokumentMottattPersonHendelse(
+                    journalpost = JournalpostId("1021234"),
+                    mottattTidspunkt = LocalDateTime.now(),
+                    strukturertDokument = StrukturertDokument(
+                        SøknadV0(
+                            student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                            medlemskap = SøknadMedlemskapDto(
+                                "JA", null, "JA", null,
+                                listOf(
+                                    UtenlandsPeriodeDto(
+                                        "SWE",
+                                        LocalDate.now().plusMonths(1),
+                                        LocalDate.now().minusMonths(1),
+                                        "JA",
+                                        null,
+                                        LocalDate.now().plusMonths(1),
+                                        LocalDate.now().minusMonths(1),
+                                    )
+                                )
+                            ),
+                        ),
+                    ),
+                    periode = periode
+                )
+            )
+
+            util.ventPåSvar()
+
+            val sak = hentSak(ident, periode)
+            val behandling = hentBehandling(sak.id)
+            val behandlingId = behandling.id
+
+            // Validér avklaring
+            var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandlingId)
+            assertTrue(åpneAvklaringsbehov.all { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
+
+            // Trigger manuell vurdering
+            løsAvklaringsBehov(
+                behandling, AvklarLovvalgMedlemskapLøsning(
+                    manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskapDto(
+                        LovvalgVedSøknadsTidspunkt("crazy lovvalgsland vurdering", EØSLand.NOR),
+                        MedlemskapVedSøknadsTidspunkt(null, true)
+                    ),
+                    behovstype = AvklaringsbehovKode.`5017`
+                )
+            )
+
+            // Validér avklaring
+            åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandlingId)
+            assertTrue(åpneAvklaringsbehov.all { it.definisjon == Definisjon.AVKLAR_SYKDOM })
+            assertTrue(behandlingRepo.hent(behandlingId).aktivtSteg() == StegType.AVKLAR_SYKDOM)
+
+            // Tilbakefør med hjelpefunksjon
+            Driftfunksjoner().flyttBehandlingTilStart(behandlingId, connection)
+
+            // Validér avklaring
+            assertTrue(behandlingRepo.hent(behandlingId).aktivtSteg() == StegType.START_BEHANDLING)
+        }
     }
 
     /**
