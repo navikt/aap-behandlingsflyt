@@ -5,6 +5,7 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
+import org.slf4j.LoggerFactory
 
 /**
  *  Utledning av hvilke perioder med innleggelse som kan gi reduksjon håndteres i et annet sted, alle opphold
@@ -15,8 +16,9 @@ import no.nav.aap.komponenter.verdityper.Prosent
  *  Se EtAnnetStedUtlederService for logikken
  */
 class InstitusjonRegel : UnderveisRegel {
+    private val logger = LoggerFactory.getLogger(InstitusjonRegel::class.java)
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
-
+        logger.info("Vurderer institusjonsregel med input: $input.")
         var institusjonTidslinje = konstruerTidslinje(input)
         if (institusjonTidslinje.isEmpty()) {
             return resultat
