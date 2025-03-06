@@ -38,6 +38,7 @@ import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.verdityper.dokument.Kanal
+import java.time.LocalDateTime
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
@@ -172,6 +173,7 @@ private fun registrerDokumentjobb(
             kanal = Kanal.DIGITAL,
             dokumentReferanse = dokumentReferanse,
             melding = AktivitetskortV0(fraOgMed = fom, tilOgMed = tom),
+            mottattTidspunkt = LocalDateTime.now()
         )
     )
 }

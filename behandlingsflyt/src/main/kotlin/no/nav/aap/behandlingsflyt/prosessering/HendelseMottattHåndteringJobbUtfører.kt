@@ -97,6 +97,7 @@ class HendelseMottattHåndteringJobbUtfører(
             brevkategori: InnsendingType,
             kanal: Kanal,
             melding: Melding? = null,
+            mottattTidspunkt: LocalDateTime
         ) = JobbInput(HendelseMottattHåndteringJobbUtfører)
             .apply {
                 forSak(sakId.toLong())
@@ -104,7 +105,7 @@ class HendelseMottattHåndteringJobbUtfører(
                 medParameter(MOTTATT_DOKUMENT_REFERANSE, DefaultJsonMapper.toJson(dokumentReferanse))
                 medParameter(BREVKODE, brevkategori.name)
                 medParameter(KANAL, kanal.name)
-                medParameter(MOTTATT_TIDSPUNKT, DefaultJsonMapper.toJson(LocalDateTime.now()))
+                medParameter(MOTTATT_TIDSPUNKT, DefaultJsonMapper.toJson(mottattTidspunkt))
                 medPayload(melding)
             }
 
