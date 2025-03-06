@@ -46,7 +46,8 @@ enum class Vilkårtype(
             Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD
         ),
         avslagsårsaker = listOf(
-            Avslagsårsak.MANGLENDE_DOKUMENTASJON
+            Avslagsårsak.MANGLENDE_DOKUMENTASJON,
+            Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING
         ),
         hjemmel = "§ 11-6"
     ),

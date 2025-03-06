@@ -7,6 +7,7 @@ enum class Avslagsårsak(val kode: String, val hjemmel: String) {
     IKKE_SYKDOM_AV_VISS_VARIGHET(kode = "11-5-1", "§ 11-5"),
     IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL(kode = "11-5-1", "§ 11-5"),
     IKKE_NOK_REDUSERT_ARBEIDSEVNE(kode = "11-5-1", "§ 11-5"),
+    IKKE_BEHOV_FOR_OPPFOLGING(kode = "11-6-1", "§ 11-6"),
     IKKE_MEDLEM_FORUTGÅENDE(kode= "11-2", hjemmel = "§ 11-2"),
     IKKE_MEDLEM(kode= "2-1", hjemmel = "§ 2-1"),
     IKKE_OPPFYLT_OPPHOLDSKRAV_EØS(kode = "11-3-1", hjemmel = "§ 11-3 1.ledd"),
