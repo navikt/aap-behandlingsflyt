@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
@@ -14,11 +13,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
-import java.time.LocalDate
-import java.time.Period
 
 class SamordningSteg(
     private val samordningService: SamordningService,
@@ -30,7 +26,7 @@ class SamordningSteg(
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         // Logikkplan
-        // 2.2 for foreldreenger: ha infokrav om oppstartdato, lag manuelt frivillig behov
+
 
         // 1.  hent vurderinger som har vært gjort tidligere
         // 2.  finn perioder av ytelser som krever manuell vurdering som ikke har blitt vurdert
@@ -53,7 +49,7 @@ class SamordningSteg(
             log.info("Fant perioder som ikke har blitt vurdert: $perioderSomIkkeHarBlittVurdert")
             return FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_GRADERING)
         }
-
+        // 2.2 for foreldreenger: ha infokrav om oppstartdato, lag manuelt frivillig behov
         // 3.  hvis har all tilgjengelig data:
         // 3.1 lag tidslinje av prosentgradering og lagre i SamordningRepository
         val samordningTidslinje =

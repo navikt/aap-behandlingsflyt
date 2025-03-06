@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningerMedBegrunnelse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningYtelseVurderingRepositoryImpl
@@ -16,7 +15,6 @@ import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
-import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
@@ -72,10 +70,13 @@ class SamordningServiceTest {
         dataSource.transaction { connection ->
             val ytelseVurderingRepo = SamordningYtelseVurderingRepositoryImpl(connection)
             opprettVurderingData(
-                ytelseVurderingRepo, behandlingId, vurderinger = SamordningerMedBegrunnelse(
-                    "En god begrunnelse", listOf(
+                ytelseVurderingRepo, behandlingId, vurderinger = listOf(
                         SamordningVurdering(
                             ytelseType = Ytelse.SYKEPENGER,
+                            begrunnelse = "En god begrunnelse",
+                            avslaasGrunnetLangVarighet = false,
+                            maksDatoEndelig = false,
+                            maksDato = LocalDate.now().plusYears(1),
                             vurderingPerioder = listOf(
                                 SamordningVurderingPeriode(
                                     periode = Periode(5 januar 2024, 10 januar 2024),
@@ -85,7 +86,6 @@ class SamordningServiceTest {
                         )
                     )
                 )
-            )
         }
 
         val input = dataSource.transaction { connection ->
@@ -125,16 +125,18 @@ class SamordningServiceTest {
     private fun opprettVurderingData(
         repo: SamordningYtelseVurderingRepositoryImpl,
         behandlingId: BehandlingId,
-        vurderinger: SamordningerMedBegrunnelse = SamordningerMedBegrunnelse(
-            "En god begrunnelse", listOf(
-                SamordningVurdering(
-                    Ytelse.SYKEPENGER,
-                    listOf(
-                        SamordningVurderingPeriode(
-                            Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
-                            Prosent(50),
-                            0
-                        )
+        vurderinger: List<SamordningVurdering> = listOf(
+            SamordningVurdering(
+                Ytelse.SYKEPENGER,
+                begrunnelse = "En god begrunnelse",
+                avslaasGrunnetLangVarighet = false,
+                maksDatoEndelig = false,
+                maksDato = LocalDate.now().plusYears(1),
+                listOf(
+                    SamordningVurderingPeriode(
+                        Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
+                        Prosent(50),
+                        0
                     )
                 )
             )
@@ -142,6 +144,7 @@ class SamordningServiceTest {
     ) {
         repo.lagreVurderinger(behandlingId, vurderinger)
     }
+
 
     private fun opprettYtelseData(
         repo: SamordningYtelseVurderingRepositoryImpl,
