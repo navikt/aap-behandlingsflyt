@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.flyt.steg.TilbakeføresFraKvalitetsikrer
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -18,6 +19,9 @@ class KvalitetssikringsSteg private constructor(
 ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        if (kontekst.behandlingType != TypeBehandling.Førstegangsbehandling) {
+            return Fullført
+        }
         val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         if (avklaringsbehov.skalTilbakeføresEtterKvalitetssikring()) {
