@@ -87,10 +87,11 @@ class BehandlingHendelseServiceImpl(
         flytJobbRepository.leggTil(
             JobbInput(jobb = DatadelingMeldePerioderJobbUtfører).medPayload(hendelse)
         )
-        flytJobbRepository.leggTil(
-            JobbInput(jobb = DatadelingSakStatusJobbUtfører).medPayload(hendelse)
-        )
-
+        if(behandling.status().erAvsluttet()) {
+            flytJobbRepository.leggTil(
+                JobbInput(jobb = DatadelingSakStatusJobbUtfører).medPayload(hendelse)
+            )
+        }
     }
 
     private fun DomeneÅrsakTilRetur.oversettTilKontrakt(): ÅrsakTilReturKodeKontrakt {
