@@ -113,4 +113,24 @@ class YrkesskadeBeregningTest {
 
         assertThat(grunnlag.grunnlaget()).isEqualTo(GUnit(4))
     }
+
+    @Test
+    fun `Hvis yrkesskadeandel er 100 prosent, og antatt årlig arbeidsinntekt er høyere enn 11-19, så settes grunnlaget tilsvarende antatt årlig arbeidsinntekt men begrenses til 6g`() {
+        val grunnlag11_19 = Grunnlag11_19(
+            grunnlaget = GUnit(2),
+            erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(0),
+            inntekter = emptyList()
+        )
+
+        val yrkesskadeBeregning = YrkesskadeBeregning(
+            grunnlag11_19 = grunnlag11_19,
+            antattÅrligInntekt = InntektPerÅr(2022, Beløp(8 * GRUNNBELØP_2022)),   // 439 136
+            andelAvNedsettelsenSomSkyldesYrkesskaden = Prosent(100)
+        )
+
+        val grunnlag = yrkesskadeBeregning.beregnYrkesskaden()
+
+        assertThat(grunnlag.grunnlaget()).isEqualTo(GUnit(6))
+    }
 }

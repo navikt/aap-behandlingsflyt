@@ -22,9 +22,9 @@ class YrkesskadeBeregning(
 
     fun beregnYrkesskaden(): GrunnlagYrkesskade {
         val grunnlagFra11_19 = grunnlag11_19.grunnlaget()
-        // TODO: ...og skal antattÅrligInntektGUnits begrenses til 6G...
+
         val benyttetGjennomsnittsbeløp = antattÅrligInntekt.gUnit()
-        val antattÅrligInntektGUnits = benyttetGjennomsnittsbeløp.gUnit
+        val antattÅrligInntektGUnits = benyttetGjennomsnittsbeløp.gUnit.begrensTil6GUnits()
         val grunnbeløp = benyttetGjennomsnittsbeløp.beløp
 
         // grunnlaget for arbeidsavklaringspengene skal ikke settes lavere enn den antatte årlige
@@ -35,7 +35,6 @@ class YrkesskadeBeregning(
         // (§11-22, andre ledd)
         val andelForBeregning = andelAvNedsettelsenSomSkyldesYrkesskaden.justertFor(TERSKELVERDI_FOR_YRKESSKADE)
 
-        // TODO: ...eller skal andelSomSkyldesYrkesskade begrenses til 6G
         val andelSomSkyldesYrkesskade = grunnlagForBeregningAvYrkesskadeandel.multiplisert(andelForBeregning)
         val andelSomIkkeSkyldesYrkesskade = grunnlagFra11_19.multiplisert(andelForBeregning.komplement())
 
