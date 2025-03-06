@@ -2,6 +2,9 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UtledMeldeperiodeRegel.Companion.groupByMeldeperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneVurdering.Companion.tidslinje
 import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -48,6 +51,9 @@ private val ANTALL_TIMER_I_MELDEPERIODE =
 // § 11-23 fjerde ledd
 private const val HØYESTE_GRADERING_NORMAL = 60
 
+// § 11-23 fjerde ledd
+private const val HØYESTE_GRADERING_YRKESSKADE = 70
+
 // § 11-23 sjette ledd
 private const val HØYESTE_GRADERING_OPPTRAPPING = 80
 
@@ -71,7 +77,10 @@ class GraderingArbeidRegel : UnderveisRegel {
             .leggTilVurderinger(graderingsgrenseverdier, Vurdering::leggTilGrenseverdi)
     }
 
-    private fun graderingerTidslinje(resultat: Tidslinje<Vurdering>, input: UnderveisInput): Tidslinje<ArbeidsGradering> {
+    private fun graderingerTidslinje(
+        resultat: Tidslinje<Vurdering>,
+        input: UnderveisInput
+    ): Tidslinje<ArbeidsGradering> {
         val timerArbeidetTidslinje = timerArbeidetTidslinje(input)
         val arbeidsevneVurdering = input.arbeidsevneGrunnlag.vurderinger.tidslinje()
 
@@ -101,7 +110,15 @@ class GraderingArbeidRegel : UnderveisRegel {
         val opptrappingTidslinje =
             Tidslinje(input.opptrappingPerioder.map { Segment(it, Prosent(HØYESTE_GRADERING_OPPTRAPPING)) })
 
-        return resultat.mapValue { Prosent(HØYESTE_GRADERING_NORMAL) }
+        val harYrkesskade = input.vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET).vilkårsperioder()
+            .any { it.utfall == Utfall.OPPFYLT && it.innvilgelsesårsak == Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG }
+
+        val øvreGrenseNormalt = if (harYrkesskade) {
+            Prosent(HØYESTE_GRADERING_YRKESSKADE)
+        } else {
+            Prosent(HØYESTE_GRADERING_NORMAL)
+        }
+        return resultat.mapValue { øvreGrenseNormalt }
             .kombiner(opptrappingTidslinje, StandardSammenslåere.prioriterHøyreSideCrossJoin())
     }
 
@@ -139,7 +156,11 @@ class GraderingArbeidRegel : UnderveisRegel {
         val andelArbeid = Prosent.fraDesimal(
             minOf(
                 BigDecimal.ONE,
-                (arbeidstimerMeldeperioden * BigDecimal(14)).divide(ANTALL_TIMER_I_MELDEPERIODE * antallDager, 3, RoundingMode.HALF_UP)
+                (arbeidstimerMeldeperioden * BigDecimal(14)).divide(
+                    ANTALL_TIMER_I_MELDEPERIODE * antallDager,
+                    3,
+                    RoundingMode.HALF_UP
+                )
             )
         )
 
