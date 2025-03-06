@@ -98,7 +98,7 @@ fun main() {
                         )
                         val periode = Periode(
                             LocalDate.now(),
-                            LocalDate.now().plusYears(3)
+                            LocalDate.now().plusYears(1)
                         )
                         datasource.transaction { connection ->
                             val sakService = PersonOgSakService(
