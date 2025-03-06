@@ -23,8 +23,10 @@ class Vilkår(
             "Spesielle innvilgelsesårsaker må være definert i VilkårType."
         }
         require(vilkårsperioder.mapNotNull { it.avslagsårsak }
-            .all { it in type.avslagsårsaker }) { "Ugyldig avslagsårsak for $type" }
-
+            .all { it in type.avslagsårsaker }) {
+            "Ugyldig avslagsårsak for $type, avslagsårsak: ${vilkårsperioder.mapNotNull { it.avslagsårsak }
+                .filterNot { it in type.avslagsårsaker }}"
+        }
     }
 
     private var vilkårTidslinje = Tidslinje(vilkårsperioder.map { vp -> Segment(vp.periode, Vilkårsvurdering(vp)) })
