@@ -18,7 +18,7 @@ public data class AvklaringsbehovHendelseDto(
     val typeBrev: TypeBrev? = null,
 )
 
-enum class TypeBrev {
+public enum class TypeBrev {
     VEDTAK_AVSLAG,
     VEDTAK_INNVILGELSE,
     VEDTAK_ENDRING,

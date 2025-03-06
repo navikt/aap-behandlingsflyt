@@ -87,7 +87,7 @@ sealed interface AktivitetspliktDokument {
     val metadata: Metadata
     val brudd: Brudd
 
-    class Metadata(
+    data class Metadata(
         /** Intern id brukt i databasen. Skal ikke deles utenfor appen. */
         val id: BruddAktivitetspliktId,
 
@@ -110,7 +110,11 @@ class AktivitetspliktFeilregistrering(
     override val metadata: AktivitetspliktDokument.Metadata,
     override val brudd: Brudd,
     val begrunnelse: String,
-): AktivitetspliktDokument
+) : AktivitetspliktDokument {
+    override fun toString(): String {
+        return "AktivitetspliktFeilregistrering(begrunnelse='$begrunnelse', metadata=$metadata, brudd=$brudd)"
+    }
+}
 
 /** Representerer dokumentet fra saksbehanlder om et brudd. */
 class AktivitetspliktRegistrering(
@@ -118,7 +122,11 @@ class AktivitetspliktRegistrering(
     override val brudd: Brudd,
     val begrunnelse: String,
     val grunn: Grunn,
-): AktivitetspliktDokument
+) : AktivitetspliktDokument {
+    override fun toString(): String {
+        return "AktivitetspliktRegistrering(begrunnelse='$begrunnelse', metadata=$metadata, brudd=$brudd, grunn=$grunn)"
+    }
+}
 
 
 /** Grunner fra §§ 11-7 til 11-9. */

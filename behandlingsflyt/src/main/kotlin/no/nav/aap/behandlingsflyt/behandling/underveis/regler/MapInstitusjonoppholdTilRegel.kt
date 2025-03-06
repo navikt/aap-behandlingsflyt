@@ -29,10 +29,7 @@ object MapInstitusjonoppholdTilRegel {
     }
 
     private fun mapSoning(segment: Segment<InstitusjonsOpphold>): Soning? {
-        val soning = segment.verdi.soning
-        if (soning == null) {
-            return null
-        }
+        val soning = segment.verdi.soning ?: return null
         return Soning(soner = true, girOpphør = soning.vurdering == OppholdVurdering.AVSLÅTT)
     }
 }
