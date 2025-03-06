@@ -151,11 +151,11 @@ object Revurdering : BehandlingType {
                 steg = FatteVedtakSteg,
                 årsakRelevanteForSteg = ÅrsakTilBehandling.alleInklusivGRegulering()
             ) // to-trinn
+            .medSteg(steg = IverksettVedtakSteg, årsakRelevanteForSteg = ÅrsakTilBehandling.alleInklusivGRegulering())
             .medSteg(
                 steg = MeldingOmVedtakBrevSteg,
                 årsakRelevanteForSteg = ÅrsakTilBehandling.alleInklusivGRegulering()
             )
-            .medSteg(steg = IverksettVedtakSteg, årsakRelevanteForSteg = ÅrsakTilBehandling.alleInklusivGRegulering())
             .build()
     }
 

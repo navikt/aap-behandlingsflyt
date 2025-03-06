@@ -111,13 +111,13 @@ public enum class StegType(
         gruppe = StegGruppe.FATTE_VEDTAK,
         status = Status.UTREDES
     ),
-    BREV(
-        gruppe = StegGruppe.BREV,
-        status = Status.IVERKSETTES,
-    ),
     IVERKSETT_VEDTAK(
         gruppe = StegGruppe.IVERKSETT_VEDTAK,
         status = Status.IVERKSETTES
+    ),
+    BREV(
+        gruppe = StegGruppe.BREV,
+        status = Status.IVERKSETTES,
     ),
     UDEFINERT(
         gruppe = StegGruppe.UDEFINERT,

@@ -214,7 +214,7 @@ class FlytOrkestrator(
         result: Transisjon,
         behandlingFlyt: BehandlingFlyt
     ): FlytSteg? {
-        val neste = if (result.erTilbakeføring()) {
+        val neste = if (result.erTilbakeføring() || !result.kanFortsette()) {
             behandlingFlyt.aktivtSteg()
         } else {
             behandlingFlyt.neste()
