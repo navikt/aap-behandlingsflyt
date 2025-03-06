@@ -9,6 +9,6 @@ enum class TypeBrev {
 
 
     fun erVedtak(): Boolean {
-        return setOf(VEDTAK_AVSLAG, VEDTAK_INNVILGELSE).contains(this)
+        return setOf(VEDTAK_AVSLAG, VEDTAK_INNVILGELSE, VEDTAK_ENDRING).contains(this)
     }
 }
