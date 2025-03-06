@@ -66,7 +66,6 @@ class SamordningStegTest {
                 SamordningVurdering(
                     ytelseType = ytelse,
                     begrunnelse = "En god begrunnelse",
-                    avslaasGrunnetLangVarighet = false,
                     maksDatoEndelig = false,
                     maksDato = LocalDate.now().plusYears(1),
                     vurderingPerioder = listOf(
@@ -129,7 +128,6 @@ class SamordningStegTest {
                 SamordningVurdering(
                     ytelseType = Ytelse.SYKEPENGER,
                     begrunnelse = "En god begrunnelse",
-                    avslaasGrunnetLangVarighet = false,
                     maksDatoEndelig = false,
                     maksDato = LocalDate.now().plusYears(1),
                     vurderingPerioder = listOf(
@@ -192,7 +190,6 @@ class SamordningStegTest {
                 SamordningVurdering(
                     ytelseType = Ytelse.SYKEPENGER,
                     begrunnelse = "En god begrunnelse",
-                    avslaasGrunnetLangVarighet = false,
                     maksDatoEndelig = false,
                     maksDato = LocalDate.now().plusYears(1),
                     vurderingPerioder = listOf(

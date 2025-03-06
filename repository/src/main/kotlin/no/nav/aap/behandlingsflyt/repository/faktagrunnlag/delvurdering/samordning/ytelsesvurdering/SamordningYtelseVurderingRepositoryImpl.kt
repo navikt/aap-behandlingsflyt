@@ -59,7 +59,6 @@ class SamordningYtelseVurderingRepositoryImpl(private val connection: DBConnecti
                     ytelseType = it.getEnum("ytelse_type"),
                     vurderingPerioder = hentSamordningVurderingPerioder(it.getLong("id")),
                     begrunnelse = it.getString("begrunnelse"),
-                    avslaasGrunnetLangVarighet = it.getBoolean("avslas_varighet"),
                     maksDatoEndelig = it.getBoolean("maksdato_endelig"),
                     maksDato = it.getLocalDate("maksdato"),
                 )
@@ -142,16 +141,15 @@ class SamordningYtelseVurderingRepositoryImpl(private val connection: DBConnecti
 
         for (vurdering in samordningVurderinger) {
             val vurderingQuery = """
-                INSERT INTO SAMORDNING_VURDERING (vurderinger_id, ytelse_type, begrunnelse, avslas_varighet, maksdato_endelig, maksdato) VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO SAMORDNING_VURDERING (vurderinger_id, ytelse_type, begrunnelse, maksdato_endelig, maksdato) VALUES (?, ?, ?, ?, ?)
                 """.trimIndent()
             val vurderingId = connection.executeReturnKey(vurderingQuery) {
                 setParams {
                     setLong(1, vurderingerId)
                     setEnumName(2, vurdering.ytelseType)
                     setString(3, vurdering.begrunnelse)
-                    setBoolean(4, vurdering.avslaasGrunnetLangVarighet)
-                    setBoolean(5, vurdering.maksDatoEndelig)
-                    setLocalDate(6, vurdering.maksDato)
+                    setBoolean(4, vurdering.maksDatoEndelig)
+                    setLocalDate(5, vurdering.maksDato)
                 }
             }
 

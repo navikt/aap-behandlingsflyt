@@ -22,7 +22,6 @@ data class SamordningYtelsePeriode(
 data class SamordningVurdering(
     val ytelseType: Ytelse,
     val begrunnelse: String,
-    val avslaasGrunnetLangVarighet: Boolean?,
     val maksDatoEndelig: Boolean?,
     val maksDato: LocalDate?,
     val vurderingPerioder: List<SamordningVurderingPeriode>,

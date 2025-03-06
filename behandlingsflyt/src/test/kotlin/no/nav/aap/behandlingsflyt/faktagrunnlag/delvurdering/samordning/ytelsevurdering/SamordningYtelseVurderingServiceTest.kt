@@ -74,7 +74,6 @@ class SamordningYtelseVurderingServiceTest {
                 SamordningVurdering(
                     Ytelse.SYKEPENGER,
                     begrunnelse = "En god begrunnelse",
-                    avslaasGrunnetLangVarighet = false,
                     maksDatoEndelig = false,
                     maksDato = LocalDate.now().plusYears(1),
                     listOf(
