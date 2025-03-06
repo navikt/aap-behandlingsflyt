@@ -10,7 +10,7 @@ public data class DatadelingDTO(
     val underveisperiode: List<UnderveisDTO>,  //Lag ny DTO
     val rettighetsPeriodeFom: LocalDate,
     val rettighetsPeriodeTom: LocalDate,
-    val behandlingStatus: Status,
+    val behandlingStatus: no.nav.aap.behandlingsflyt.kontrakt.behandling.Status,
     val vedtaksDato: LocalDate,
     val sak: SakDTO, // -\\-
     val tilkjent: List<TilkjentDTO>,
