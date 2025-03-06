@@ -77,9 +77,12 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapAPI(dataSource: DataSource) {
                         repositoryProvider.provide<BehandlingRepository>().hent(BehandlingReferanse(req.referanse))
                     val sak = repositoryProvider.provide<SakRepository>().hent(behandling.sakId)
 
-                    val personopplysningGrunnlag = repositoryProvider.provide<PersonopplysningForutgåendeRepository>()
-                        .hentHvisEksisterer(behandling.id)
-                        ?: throw IllegalStateException("Forventet å finne forutgående personopplysninger")
+                    val personopplysningGrunnlag =
+                        repositoryProvider.provide<PersonopplysningForutgåendeRepository>().hentHvisEksisterer(behandling.id)
+                    if (personopplysningGrunnlag == null) {
+                        // Steget har ikke fått kjørt enda, så
+                        return@transaction null
+                    }
                     val medlemskapArbeidInntektGrunnlag =
                         repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>()
                             .hentHvisEksisterer(behandling.id)
@@ -94,7 +97,11 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapAPI(dataSource: DataSource) {
                         sak.rettighetsperiode
                     )
                 }
-                respond(vurdering)
+                if (vurdering == null) {
+                    respond(KanBehandlesAutomatiskVurdering(false, listOf()))
+                } else {
+                    respond(vurdering)
+                }
             }
         }
     }
