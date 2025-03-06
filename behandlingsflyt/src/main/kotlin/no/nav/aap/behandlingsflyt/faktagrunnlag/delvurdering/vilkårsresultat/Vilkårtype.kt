@@ -56,7 +56,8 @@ enum class Vilkårtype(
         avslagsårsaker = listOf(
             Avslagsårsak.MANGLENDE_DOKUMENTASJON,
             Avslagsårsak.IKKE_MEDLEM,
-            Avslagsårsak.IKKE_MEDLEM_FORUTGÅENDE
+            Avslagsårsak.IKKE_MEDLEM_FORUTGÅENDE,
+            Avslagsårsak.NORGE_IKKE_KOMPETENT_STAT
         ),
         hjemmel = "§ 11-2"
     ),
