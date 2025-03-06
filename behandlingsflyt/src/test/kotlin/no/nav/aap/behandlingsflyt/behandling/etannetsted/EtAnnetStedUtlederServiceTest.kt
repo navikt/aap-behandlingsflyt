@@ -7,13 +7,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Ins
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soningsvurdering
-import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.barnetillegg.BarnetilleggRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.test.MockConnection
 import no.nav.aap.behandlingsflyt.test.februar
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
@@ -23,11 +23,13 @@ import java.time.LocalDate
 
 class EtAnnetStedUtlederServiceTest {
     val connection = MockConnection().toDBConnection()
+
+    // TODO: Erstatt med InMemory*Repo
     val utlederService = EtAnnetStedUtlederService(
         BarnetilleggRepositoryImpl(connection),
         InstitusjonsoppholdRepositoryImpl(connection),
-        SakRepositoryImpl(connection),
-        BehandlingRepositoryImpl(connection)
+        InMemorySakRepository,
+        InMemoryBehandlingRepository
     )
 
     @Test
