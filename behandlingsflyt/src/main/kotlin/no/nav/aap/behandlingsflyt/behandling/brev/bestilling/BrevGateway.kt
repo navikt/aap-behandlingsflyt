@@ -147,6 +147,7 @@ class BrevGateway : BrevbestillingGateway {
     private fun mapTypeBrev(typeBrev: TypeBrev): Brevtype = when (typeBrev) {
         TypeBrev.VEDTAK_AVSLAG -> Brevtype.AVSLAG
         TypeBrev.VEDTAK_INNVILGELSE -> Brevtype.INNVILGELSE
+        TypeBrev.VEDTAK_ENDRING -> Brevtype.VEDTAK_ENDRING
         TypeBrev.VARSEL_OM_BESTILLING -> Brevtype.VARSEL_OM_BESTILLING
         TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT -> Brevtype.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT
     }

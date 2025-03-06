@@ -118,6 +118,7 @@ class BehandlingHendelseServiceImpl(
         return when (this) {
             no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VEDTAK_AVSLAG -> TypeBrev.VEDTAK_AVSLAG
             no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VEDTAK_INNVILGELSE -> TypeBrev.VEDTAK_INNVILGELSE
+            no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VEDTAK_ENDRING -> TypeBrev.VEDTAK_ENDRING
             no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.VARSEL_OM_BESTILLING -> TypeBrev.VARSEL_OM_BESTILLING
             no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT -> TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT
         }

@@ -34,7 +34,7 @@ class BrevUtlederService(
                 ) {
                     return BrevBehov(null)
                 }
-                return BrevBehov(null) // TODO brevbehov her
+                return BrevBehov(TypeBrev.VEDTAK_ENDRING)
             }
 
             TypeBehandling.Tilbakekreving, TypeBehandling.Klage ->
