@@ -35,6 +35,8 @@ class VurderForutgåendeMedlemskapSteg private constructor(
             if (medlemskapBehov != null && medlemskapBehov.erÅpent()) {
                 avklaringsbehovene.avbryt(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
             }
+
+            return Fullført
         }
 
         when (kontekst.vurdering.vurderingType) {
