@@ -21,9 +21,6 @@ import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.util.stream.IntStream
 import kotlin.math.max
-import kotlin.time.Duration
-import kotlin.time.DurationUnit
-import kotlin.time.toDuration
 
 class EtAnnetStedUtlederService(
     private val barnetilleggRepository: BarnetilleggRepository,
@@ -32,7 +29,6 @@ class EtAnnetStedUtlederService(
     private val behandlingRepository: BehandlingRepository
 ) {
     private val log = LoggerFactory.getLogger(EtAnnetStedUtlederService::class.java)
-    private val grenseverdi = (3 * 30).toDuration(DurationUnit.DAYS)
 
     fun utled(
         behandlingId: BehandlingId,
@@ -81,7 +77,7 @@ class EtAnnetStedUtlederService(
             helseOpphold.disjoint(barnetilleggTidslinje) { p, v -> Segment(p, v.verdi) }
 
         // Oppholdet må være lengre enn 3 måneder for å være aktuelt for avklaring og må ha vart i minimum 2 måneder for å være klar for avklaring
-        val oppholdSomKanGiReduksjon = harOppholdSomKreverAvklaring(oppholdUtenBarnetillegg, grenseverdi)
+        val oppholdSomKanGiReduksjon = harOppholdSomKreverAvklaring(oppholdUtenBarnetillegg)
 
         perioderSomTrengerVurdering = perioderSomTrengerVurdering.kombiner(oppholdSomKanGiReduksjon.mapValue {
             InstitusjonsOpphold(helse = HelseOpphold(vurdering = OppholdVurdering.UAVKLART))
@@ -266,30 +262,28 @@ class EtAnnetStedUtlederService(
     }
 
     private fun harOppholdSomKreverAvklaring(
-        oppholdUtenBarnetillegg: Tidslinje<Boolean>,
-        femMåneder: Duration
+        oppholdUtenBarnetillegg: Tidslinje<Boolean>
     ): Tidslinje<Boolean> {
         return Tidslinje(
             oppholdUtenBarnetillegg.segmenter()
             .filter { segment -> segment.verdi }
             .filterNotNull()
             .filter { segment ->
-                harOppholdSomVarerMerEnnFireMånederOgErMinstToMånederInnIOppholdet(segment, femMåneder)
+                harOppholdSomVarerMerEnnFireMånederOgErMinstToMånederInnIOppholdet(segment)
             })
     }
 
     private fun harOppholdSomVarerMerEnnFireMånederOgErMinstToMånederInnIOppholdet(
-        segment: Segment<Boolean>,
-        femMåneder: Duration
+        segment: Segment<Boolean>
     ): Boolean {
         val fom = segment.fom().withDayOfMonth(1).plusMonths(1)
 
         if (fom.isAfter(segment.tom())) {
             return false
         }
+        val førsteDagMedMuligReduksjon = fom.plusMonths(3)
         val justertPeriode = Periode(fom, segment.tom())
-        val lengde = justertPeriode.antallDager().toDuration(DurationUnit.DAYS)
-        return femMåneder < lengde && (fom.plusMonths(2) < LocalDate.now() || Miljø.er() == MiljøKode.DEV)
+        return justertPeriode.inneholder(førsteDagMedMuligReduksjon) && (fom.plusMonths(2) < LocalDate.now() || Miljø.er() == MiljøKode.DEV)
     }
 
     private fun <T> opprettTidslinje(segmenter: List<Segment<T>>): Tidslinje<Boolean> {

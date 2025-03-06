@@ -2,17 +2,19 @@ package no.nav.aap.behandlingsflyt.behandling.etannetsted
 
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggPeriode
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.barnetillegg.BarnetilleggRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soningsvurdering
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.barnetillegg.BarnetilleggRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.test.MockConnection
+import no.nav.aap.behandlingsflyt.test.februar
+import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
@@ -53,6 +55,39 @@ class EtAnnetStedUtlederServiceTest {
 
         val res = utlederService.utledBehov(input)
         assertThat(res.harBehovForAvklaring()).isTrue
+    }
+
+    @Test
+    fun `skal først trigge avklaring når vi oppholdet varer lenger enn 3 kalender måneder `() {
+        val innleggelsesperiode = Periode(27 februar 2024, 31 mai 2024)
+        val input = EtAnnetStedInput(
+            institusjonsOpphold = listOf(
+                Segment(
+                    innleggelsesperiode,
+                    Institusjon(
+                        Institusjonstype.HS,
+                        Oppholdstype.D,
+                        "123",
+                        "test"
+                    )
+                )
+            ),
+            soningsvurderinger = emptyList(),
+            barnetillegg = emptyList(),
+            helsevurderinger = listOf(
+                HelseinstitusjonVurdering(
+                    periode = innleggelsesperiode,
+                    begrunnelse = "lagt inn med kost og losji",
+                    faarFriKostOgLosji = true,
+                    forsoergerEktefelle = false,
+                    harFasteUtgifter = false
+                )
+            ),
+            rettighetsperiode = Periode(27 februar 2023, 31 mai 2025)
+        )
+
+        val res = utlederService.utledBehov(input)
+        assertThat(res.harBehovForAvklaring()).isFalse
     }
 
     @Test
