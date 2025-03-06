@@ -7,7 +7,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 public data class DatadelingDTO(
-    val beregningsgrunnlag: BigDecimal, //lag ny enkel klasse for kun beregningsgrunnlaget
     val underveisperiode: List<UnderveisDTO>,  //Lag ny DTO
     val rettighetsPeriodeFom: LocalDate,
     val rettighetsPeriodeTom: LocalDate,
