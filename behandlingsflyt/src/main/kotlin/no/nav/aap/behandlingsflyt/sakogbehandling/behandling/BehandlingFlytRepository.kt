@@ -6,5 +6,5 @@ import no.nav.aap.lookup.repository.Repository
 interface BehandlingFlytRepository : Repository {
 
     fun oppdaterBehandlingStatus(behandlingId: BehandlingId, status: Status)
-    fun loggBesøktSteg(behandlingId: BehandlingId, tilstand: StegTilstand)
+    fun leggTilNyttAktivtSteg(behandlingId: BehandlingId, tilstand: StegTilstand)
 }

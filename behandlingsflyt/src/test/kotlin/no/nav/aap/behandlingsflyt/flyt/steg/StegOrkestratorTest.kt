@@ -73,11 +73,12 @@ class StegOrkestratorTest {
 
             assertThat(resultat).isNotNull
 
-            assertThat(behandling.stegHistorikk()).hasSize(4)
-            assertThat(behandling.stegHistorikk()[0].status()).isEqualTo(StegStatus.START)
-            assertThat(behandling.stegHistorikk()[1].status()).isEqualTo(StegStatus.OPPDATER_FAKTAGRUNNLAG)
-            assertThat(behandling.stegHistorikk()[2].status()).isEqualTo(StegStatus.UTFØRER)
-            assertThat(behandling.stegHistorikk()[3].status()).isEqualTo(StegStatus.AVKLARINGSPUNKT)
+            val stegHistorikk = BehandlingRepositoryImpl(connection).hentStegHistorikk(behandling.id)
+            assertThat(stegHistorikk).hasSize(4)
+            assertThat(stegHistorikk[0].status()).isEqualTo(StegStatus.START)
+            assertThat(stegHistorikk[1].status()).isEqualTo(StegStatus.OPPDATER_FAKTAGRUNNLAG)
+            assertThat(stegHistorikk[2].status()).isEqualTo(StegStatus.UTFØRER)
+            assertThat(stegHistorikk[3].status()).isEqualTo(StegStatus.AVKLARINGSPUNKT)
         }
     }
 }

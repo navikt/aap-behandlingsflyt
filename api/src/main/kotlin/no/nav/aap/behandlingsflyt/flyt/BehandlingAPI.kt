@@ -100,7 +100,7 @@ fun NormalOpenAPIRoute.behandlingApi(dataSource: DataSource) {
                                             )
                                         })
                             },
-                        aktivtSteg = behandling.stegHistorikk().last().steg(),
+                        aktivtSteg = behandling.aktivtSteg(),
                         versjon = behandling.versjon
                     )
                 }

@@ -87,7 +87,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             sakId = SakId(row.getLong("sak_id")),
             typeBehandling = TypeBehandling.Companion.from(row.getString("type")),
             status = row.getEnum("status"),
-            stegHistorikk = hentStegHistorikk(behandlingId),
+            stegTilstand = hentAktivtSteg(behandlingId),
             versjon = row.getLong("versjon"),
             årsaker = hentÅrsaker(behandlingId),
             opprettetTidspunkt = row.getLocalDateTime("opprettet_tid"),
@@ -126,7 +126,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         }
     }
 
-    override fun loggBesøktSteg(behandlingId: BehandlingId, tilstand: StegTilstand) {
+    override fun leggTilNyttAktivtSteg(behandlingId: BehandlingId, tilstand: StegTilstand) {
         val updateQuery = """
             UPDATE STEG_HISTORIKK set aktiv = false WHERE behandling_id = ? and aktiv = true
         """.trimIndent()
@@ -153,7 +153,27 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         }
     }
 
-    private fun hentStegHistorikk(behandlingId: BehandlingId): List<StegTilstand> {
+    fun hentAktivtSteg(behandlingId: BehandlingId): StegTilstand? {
+        val query = """
+            SELECT * FROM STEG_HISTORIKK WHERE behandling_id = ? AND AKTIV = true
+        """.trimIndent()
+
+        return connection.queryFirstOrNull(query) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+            setRowMapper { row ->
+                StegTilstand(
+                    tidspunkt = row.getLocalDateTime("OPPRETTET_TID"),
+                    stegType = row.getEnum("steg"),
+                    stegStatus = row.getEnum("status"),
+                    aktiv = row.getBoolean("aktiv"),
+                )
+            }
+        }
+    }
+
+    override fun hentStegHistorikk(behandlingId: BehandlingId): List<StegTilstand> {
         val query = """
             SELECT * FROM STEG_HISTORIKK WHERE behandling_id = ?
         """.trimIndent()

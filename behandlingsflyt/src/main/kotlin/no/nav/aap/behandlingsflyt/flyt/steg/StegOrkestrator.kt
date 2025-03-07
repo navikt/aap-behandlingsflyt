@@ -134,7 +134,7 @@ class StegOrkestrator(
         }
 
         val nyStegTilstand = StegTilstand(stegType = aktivtSteg.type(), stegStatus = nesteStegStatus, aktiv = true)
-        loggStegHistorikk(behandling, nyStegTilstand)
+        oppdaterStegOgStatus(behandling, nyStegTilstand)
 
         return transisjon
     }
@@ -203,13 +203,13 @@ class StegOrkestrator(
         return Fortsett
     }
 
-    private fun loggStegHistorikk(
+    private fun oppdaterStegOgStatus(
         behandling: Behandling,
         nyStegTilstand: StegTilstand
     ) {
         val førStatus = behandling.status()
-        behandling.visit(nyStegTilstand)
-        behandlingFlytRepository.loggBesøktSteg(behandlingId = behandling.id, nyStegTilstand)
+        behandling.oppdaterSteg(nyStegTilstand)
+        behandlingFlytRepository.leggTilNyttAktivtSteg(behandlingId = behandling.id, nyStegTilstand)
         val etterStatus = nyStegTilstand.steg().status
         if (førStatus != etterStatus) {
             behandlingFlytRepository.oppdaterBehandlingStatus(behandlingId = behandling.id, status = etterStatus)

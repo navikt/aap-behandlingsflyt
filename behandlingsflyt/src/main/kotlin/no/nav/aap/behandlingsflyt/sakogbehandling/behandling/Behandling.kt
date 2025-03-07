@@ -17,7 +17,7 @@ class Behandling(
     private val typeBehandling: TypeBehandling,
     private var status: Status = Status.OPPRETTET,
     private var årsaker: List<Årsak> = mutableListOf(),
-    private var stegHistorikk: List<StegTilstand> = mutableListOf(),
+    private var stegTilstand: StegTilstand? = null,
     val opprettetTidspunkt: LocalDateTime = LocalDateTime.now(),
     val versjon: Long
 ) : Comparable<Behandling> {
@@ -28,28 +28,21 @@ class Behandling(
         return FlytKontekst(sakId, id, typeBehandling)
     }
 
-    fun visit(stegTilstand: StegTilstand) {
-        if (!stegTilstand.aktiv) {
+    fun harBehandlingenStartet(): Boolean {
+        return stegTilstand != null
+    }
+
+    fun oppdaterSteg(nyStegTilstand: StegTilstand) {
+        if (!nyStegTilstand.aktiv) {
             throw IllegalStateException("Utvikler feil, prøver legge til steg med aktivtflagg false.")
         }
-        if (stegHistorikk.isEmpty() || aktivtStegTilstand() != stegTilstand) {
-            stegHistorikk.stream().filter { tilstand -> tilstand.aktiv }.forEach { tilstand -> tilstand.deaktiver() }
-            stegHistorikk += stegTilstand
-            stegHistorikk = stegHistorikk.sorted()
-        }
-        validerStegTilstand()
+        stegTilstand = nyStegTilstand
 
-        oppdaterStatus(stegTilstand)
+        oppdaterStatus(nyStegTilstand)
     }
 
     fun årsaker(): List<Årsak> {
         return årsaker.toList()
-    }
-
-    private fun validerStegTilstand() {
-        if (stegHistorikk.isNotEmpty() && stegHistorikk.stream().noneMatch { tilstand -> tilstand.aktiv }) {
-            throw IllegalStateException("Utvikler feil, mangler aktivt steg når steghistorikk ikke er tom.")
-        }
     }
 
     private fun oppdaterStatus(stegTilstand: StegTilstand) {
@@ -61,8 +54,6 @@ class Behandling(
 
     fun status(): Status = status
 
-    fun stegHistorikk(): List<StegTilstand> = stegHistorikk.toList()
-
     fun harIkkeVærtAktivitetIDetSiste(): Boolean {
         return aktivtStegTilstand().tidspunkt().isBefore(LocalDateTime.now().minusMinutes(15))
     }
@@ -71,17 +62,12 @@ class Behandling(
         return aktivtStegTilstand().steg()
     }
 
-    private fun aktivtStegTilstand(): StegTilstand {
-        return stegHistorikk.stream()
-            .filter { tilstand -> tilstand.aktiv }
-            .findAny()
-            .orElse(
-                StegTilstand(
-                    stegType = StegType.START_BEHANDLING,
-                    stegStatus = StegStatus.START,
-                    aktiv = true
-                )
-            )
+    fun aktivtStegTilstand(): StegTilstand {
+        return stegTilstand ?: StegTilstand(
+            stegType = StegType.START_BEHANDLING,
+            stegStatus = StegStatus.START,
+            aktiv = true
+        )
     }
 
     override fun compareTo(other: Behandling): Int {

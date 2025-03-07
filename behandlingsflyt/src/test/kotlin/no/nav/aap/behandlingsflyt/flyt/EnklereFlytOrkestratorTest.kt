@@ -63,8 +63,8 @@ class EnklereFlytOrkestratorTest {
 
         flytOrkestrator.forberedOgProsesserBehandling(flytKontekst)
 
-        assertThat(behandling.stegHistorikk()).isNotEmpty()
-        assertThat(behandling.stegHistorikk().map { tilstand -> tilstand.steg() }.distinct()).containsExactlyElementsOf(
+        assertThat(behandlingRepository.hentStegHistorikk(behandling.id)).isNotEmpty()
+        assertThat(behandlingRepository.hentStegHistorikk(behandling.id).map { tilstand -> tilstand.steg() }.distinct()).containsExactlyElementsOf(
             Førstegangsbehandling.flyt().stegene()
         )
 
@@ -126,8 +126,8 @@ class EnklereFlytOrkestratorTest {
 
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         assertThat(behandling.aktivtSteg()).isEqualTo(StegType.AVKLAR_SYKDOM)
-        assertThat(behandling.stegHistorikk()).isNotEmpty()
-        assertThat(behandling.stegHistorikk().map { tilstand -> tilstand.steg() }.distinct()).containsExactlyElementsOf(
+        assertThat(behandlingRepository.hentStegHistorikk(behandling.id)).isNotEmpty()
+        assertThat(behandlingRepository.hentStegHistorikk(behandling.id).map { tilstand -> tilstand.steg() }.distinct()).containsExactlyElementsOf(
             listOf(
                 StegType.START_BEHANDLING,
                 StegType.VURDER_LOVVALG,
@@ -144,8 +144,8 @@ class EnklereFlytOrkestratorTest {
 
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         assertThat(behandling.aktivtSteg()).isEqualTo(StegType.AVKLAR_SYKDOM)
-        assertThat(behandling.stegHistorikk()).isNotEmpty()
-        assertThat(behandling.stegHistorikk().map { tilstand -> tilstand.steg() }.distinct()).containsExactlyElementsOf(
+        assertThat(behandlingRepository.hentStegHistorikk(behandling.id)).isNotEmpty()
+        assertThat(behandlingRepository.hentStegHistorikk(behandling.id).map { tilstand -> tilstand.steg() }.distinct()).containsExactlyElementsOf(
             listOf(
                 StegType.START_BEHANDLING,
                 StegType.VURDER_LOVVALG,
@@ -166,8 +166,8 @@ class EnklereFlytOrkestratorTest {
 
         flytOrkestrator.forberedOgProsesserBehandling(flytKontekst3)
 
-        assertThat(behandling.stegHistorikk()).isNotEmpty()
-        assertThat(behandling.stegHistorikk().map { tilstand -> tilstand.steg() }.distinct()).containsExactlyElementsOf(
+        assertThat(behandlingRepository.hentStegHistorikk(behandling.id)).isNotEmpty()
+        assertThat(behandlingRepository.hentStegHistorikk(behandling.id).map { tilstand -> tilstand.steg() }.distinct()).containsExactlyElementsOf(
             Førstegangsbehandling.flyt().stegene()
         )
 
@@ -197,8 +197,8 @@ class EnklereFlytOrkestratorTest {
 
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         assertThat(behandling.aktivtSteg()).isEqualTo(StegType.AVKLAR_SYKDOM)
-        assertThat(behandling.stegHistorikk()).isNotEmpty()
-        assertThat(behandling.stegHistorikk()).containsExactlyElementsOf(
+        assertThat(behandlingRepository.hentStegHistorikk(behandling.id)).isNotEmpty()
+        assertThat(behandlingRepository.hentStegHistorikk(behandling.id)).containsExactlyElementsOf(
             listOf(
                 StegTilstand(stegType = StegType.START_BEHANDLING, stegStatus = StegStatus.START, aktiv = false),
                 StegTilstand(
@@ -274,8 +274,8 @@ class EnklereFlytOrkestratorTest {
 
         flytOrkestrator.forberedOgProsesserBehandling(flytKontekst3)
 
-        assertThat(behandling.stegHistorikk()).isNotEmpty()
-        assertThat(behandling.stegHistorikk()).containsExactlyElementsOf(
+        assertThat(behandlingRepository.hentStegHistorikk(behandling.id)).isNotEmpty()
+        assertThat(behandlingRepository.hentStegHistorikk(behandling.id)).containsExactlyElementsOf(
             listOf(
                 StegTilstand(stegType = StegType.START_BEHANDLING, stegStatus = StegStatus.START, aktiv = false),
                 StegTilstand(
