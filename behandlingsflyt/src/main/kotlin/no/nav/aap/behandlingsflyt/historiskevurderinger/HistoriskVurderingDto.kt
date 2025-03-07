@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.historiskevurderinger
 import java.time.LocalDate
 
 abstract class HistoriskVurderingDto<T>(
-    val vurderDato: LocalDate,
+    val vurdertDato: LocalDate,
     val vurdertAvIdent: String,
     val erGjeldendeVurdering: Boolean,
     val periode: ÅpenPeriodeDto,
