@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingGateway
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingService
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -31,11 +32,12 @@ class IverksettVedtakSteg private constructor(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
 
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
-        val vedtakstidspunkt = behandling.stegHistorikk()
-            .first { it.steg() == StegType.FATTE_VEDTAK && it.status() == StegStatus.AVSLUTTER }
-            .tidspunkt()
+        val vedtakstidspunkt =
+            behandling.stegHistorikk()
+                .find { it.steg() == StegType.FATTE_VEDTAK && it.status() == StegStatus.AVSLUTTER }
+                ?.tidspunkt() ?: error("Forventet å finne et avsluttet fatte vedtak steg")
 
-        vedtakService.iverksettVedtak(behandling.id, vedtakstidspunkt)
+        vedtakService.lagreVedtak(behandling.id, vedtakstidspunkt)
 
         val tilkjentYtelseDto = utbetalingService.lagTilkjentYtelseForUtbetaling(kontekst.sakId, kontekst.behandlingId)
         if (tilkjentYtelseDto != null) {
@@ -54,14 +56,18 @@ class IverksettVedtakSteg private constructor(
             val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
             val tilkjentYtelseRepository = repositoryProvider.provide<TilkjentYtelseRepository>()
             val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
+            val vedtakRepository = repositoryProvider.provide<VedtakRepository>()
             val utbetalingGateway = GatewayProvider.provide<UtbetalingGateway>()
             return IverksettVedtakSteg(
+                behandlingRepository = behandlingRepository,
                 utbetalingService = UtbetalingService(
-                    sakRepository,
-                    behandlingRepository,
-                    tilkjentYtelseRepository,
-                    avklaringsbehovRepository
+                    sakRepository = sakRepository,
+                    behandlingRepository = behandlingRepository,
+                    tilkjentYtelseRepository = tilkjentYtelseRepository,
+                    avklaringsbehovRepository = avklaringsbehovRepository,
+                    vedtakRepository = vedtakRepository
                 ),
+                vedtakService = VedtakService(vedtakRepository),
                 utbetalingGateway = utbetalingGateway
             )
         }

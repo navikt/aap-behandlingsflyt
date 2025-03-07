@@ -6,8 +6,7 @@ import java.time.LocalDateTime
 class VedtakService(
     val vedtakRepository: VedtakRepository
 ) {
-
-    fun iverksettVedtak(behandlingId: BehandlingId, vedtakstidspunkt:LocalDateTime) {
+    fun lagreVedtak(behandlingId: BehandlingId, vedtakstidspunkt: LocalDateTime) {
         vedtakRepository.lagre(behandlingId, vedtakstidspunkt)
     }
 }

@@ -71,6 +71,7 @@ import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.brev.bestilling.BrevbestillingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.behandling.vedtak.VedtakRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.barnetillegg.BarnetilleggRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7RepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepositoryImpl
@@ -298,6 +299,7 @@ private fun registerRepositories() {
         .register<InntektGrunnlagRepositoryImpl>()
         .register<MeldeperiodeRepositoryImpl>()
         .register<BrevbestillingRepositoryImpl>()
+        .register<VedtakRepositoryImpl>()
         .status()
 }
 
