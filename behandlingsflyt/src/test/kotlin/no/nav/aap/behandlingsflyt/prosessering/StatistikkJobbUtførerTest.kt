@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
@@ -498,13 +499,14 @@ class StatistikkJobbUtførerTest {
         val referanse = behandling.referanse
 
         val tilkjentYtelseRepository = object : TilkjentYtelseRepository {
-            override fun hentHvisEksisterer(behandlingId: BehandlingId): Tidslinje<Tilkjent>? {
+            override fun hentHvisEksisterer(behandlingId: BehandlingId): List<TilkjentYtelsePeriode>? {
                 TODO("Not yet implemented")
             }
 
-            override fun lagre(behandlingId: BehandlingId, tilkjent: Tidslinje<Tilkjent>) {
+            override fun lagre(behandlingId: BehandlingId, tilkjent: List<TilkjentYtelsePeriode>) {
                 TODO("Not yet implemented")
             }
+
         }
 
         val beregningsgrunnlagRepository = InMemoryBeregningsgrunnlagRepository

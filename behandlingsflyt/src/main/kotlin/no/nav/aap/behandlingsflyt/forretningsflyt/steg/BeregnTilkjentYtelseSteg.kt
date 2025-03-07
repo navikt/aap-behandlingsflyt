@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelseService
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
@@ -39,13 +40,11 @@ class BeregnTilkjentYtelseSteg private constructor(
             requireNotNull(samordningRepository.hentHvisEksisterer(kontekst.behandlingId)) { "Trenger samordningsgrunnlag." }
 
         val beregnetTilkjentYtelse = BeregnTilkjentYtelseService(
-            fødselsdato,
-            beregningsgrunnlag,
-            underveisgrunnlag,
-            barnetilleggGrunnlag,
-            samordningGrunnlag
+            fødselsdato, beregningsgrunnlag, underveisgrunnlag, barnetilleggGrunnlag, samordningGrunnlag
         ).beregnTilkjentYtelse()
-        tilkjentYtelseRepository.lagre(behandlingId = kontekst.behandlingId, tilkjent = beregnetTilkjentYtelse)
+        tilkjentYtelseRepository.lagre(
+            behandlingId = kontekst.behandlingId,
+            tilkjent = beregnetTilkjentYtelse.map { TilkjentYtelsePeriode(it.periode, it.verdi) })
         log.info("Beregnet tilkjent ytelse: $beregnetTilkjentYtelse")
 
         return Fullført
@@ -54,10 +53,8 @@ class BeregnTilkjentYtelseSteg private constructor(
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
             val repositoryProvider = RepositoryProvider(connection)
-            val personopplysningRepository =
-                repositoryProvider.provide<PersonopplysningRepository>()
-            val tilkjentYtelseRepository =
-                repositoryProvider.provide<TilkjentYtelseRepository>()
+            val personopplysningRepository = repositoryProvider.provide<PersonopplysningRepository>()
+            val tilkjentYtelseRepository = repositoryProvider.provide<TilkjentYtelseRepository>()
             val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
             val barnetilleggRepository = repositoryProvider.provide<BarnetilleggRepository>()
 

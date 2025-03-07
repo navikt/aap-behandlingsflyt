@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.utbetaling
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -55,10 +56,10 @@ class UtbetalingService(
         }
     }
 
-    private fun Tidslinje<Tilkjent>.tilTilkjentYtelsePeriodeDtoer() =
+    private fun List<TilkjentYtelsePeriode>.tilTilkjentYtelsePeriodeDtoer() =
         map { segment ->
             val periode = segment.periode
-            val detaljer = segment.verdi
+            val detaljer = segment.tilkjent
             TilkjentYtelsePeriodeDto(
                 fom = periode.fom,
                 tom = periode.tom,

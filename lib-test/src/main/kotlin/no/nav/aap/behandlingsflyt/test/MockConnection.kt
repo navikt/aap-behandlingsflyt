@@ -110,7 +110,7 @@ class MockConnection : Connection {
     }
 
     override fun setReadOnly(readOnly: Boolean) {
-        TODO("Not yet implemented")
+
     }
 
     override fun isReadOnly(): Boolean {

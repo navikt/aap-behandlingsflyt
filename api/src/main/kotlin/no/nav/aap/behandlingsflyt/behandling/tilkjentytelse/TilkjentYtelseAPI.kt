@@ -12,6 +12,7 @@ import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode as TilkjentYtelsePeriodeD
 
 fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource) {
     route("/api/behandling") {
@@ -22,18 +23,34 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource) {
                     behandlingPathParam = BehandlingPathParam("referanse")
                 )
             ) { req ->
-
                 val tilkjentYtelser = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryFactory = RepositoryProvider(connection)
                     val behandlingRepository = repositoryFactory.provide<BehandlingRepository>()
-                    val tilkjentYtelseRepository =
+                    val tilkjentYtelseRepository: TilkjentYtelseRepository =
                         repositoryFactory.provide<TilkjentYtelseRepository>()
 
                     TilkjentYtelseService(
                         behandlingRepository,
                         tilkjentYtelseRepository
                     ).hentTilkjentYtelse(req)
-                        .map { TilkjentYtelsePeriode(it.periode, it.tilkjent) }
+                        .map { tilkjentYtelsePeriode: TilkjentYtelsePeriodeD ->
+                            tilkjentYtelsePeriode.tilkjent.let {
+                                TilkjentYtelsePeriodeDTO(
+                                    fraOgMed = tilkjentYtelsePeriode.periode.fom,
+                                    tilOgMed = tilkjentYtelsePeriode.periode.tom,
+                                    dagsats = it.dagsats.verdi,
+                                    gradering = it.gradering.prosentverdi(),
+                                    grunnlag = it.grunnlag.verdi,
+                                    grunnlagsfaktor = it.grunnlagsfaktor.verdi(),
+                                    grunnbeløp = it.grunnbeløp.verdi,
+                                    antallBarn = it.antallBarn,
+                                    barnetilleggsats = it.barnetilleggsats.verdi,
+                                    barnetillegg = it.barnetillegg.verdi,
+                                    utbetalingsdato = it.utbetalingsdato,
+                                    redusertDagsats = it.redusertDagsats().verdi().toDouble()
+                                )
+                            }
+                        }
                 }
                 respond(TilkjentYtelseDto(perioder = tilkjentYtelser))
             }
