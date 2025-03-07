@@ -71,7 +71,6 @@ class BeregnTilkjentYtelseService(
 
         val samordningTidslinje = samordningGrunnlag.samordningPerioder.map { Segment(it.periode, it) }.let(::Tidslinje)
 
-        // TODO: Hvis vi har eget grunnlag for samordning må vi slå sammen denne tidslinjen her
         val gradertÅrligYtelseTidslinje = underveisTidslinje.kombiner(
             årligYtelseTidslinje, JoinStyle.INNER_JOIN { periode, venstre, høyre ->
                 val dagsats = høyre.verdi.dividert(ANTALL_ÅRLIGE_ARBEIDSDAGER)
@@ -83,7 +82,7 @@ class BeregnTilkjentYtelseService(
                     val arbeidsgradering = venstre.verdi.arbeidsgradering.gradering
                     Prosent.`100_PROSENT`
                         .minus(institusjonsOppholdReduksjon)
-                        .minus(arbeidsgradering) // minus samordninggradering her
+                        .minus(arbeidsgradering)
                 }
                 Segment(periode, TilkjentGUnit(dagsats, utbetalingsgrad, venstre.verdi.meldePeriode.tom.plusDays(1)))
             })
