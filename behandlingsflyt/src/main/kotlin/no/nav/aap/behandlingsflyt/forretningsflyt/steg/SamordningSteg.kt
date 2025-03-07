@@ -26,11 +26,11 @@ class SamordningSteg(
     private val samordningService: SamordningService,
     private val sakService: SakService,
     private val samordningRepository: SamordningRepository,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val spGateway: SykepengerGateway,
 
 ) : BehandlingSteg {
     private val log = LoggerFactory.getLogger(SamordningSteg::class.java)
-    private val spGateway = GatewayProvider.provide<SykepengerGateway>()
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         // Logikkplan
@@ -108,7 +108,7 @@ class SamordningSteg(
             val repositoryProvider = RepositoryProvider(connection)
             val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
             val samordningRepository = repositoryProvider.provide<SamordningRepository>()
-
+            val sykepengerGateway = GatewayProvider.provide<SykepengerGateway>()
             return SamordningSteg(
                 SamordningService(
                     repositoryProvider.provide()
@@ -117,7 +117,8 @@ class SamordningSteg(
                     repositoryProvider.provide()
                 ),
                 samordningRepository,
-                avklaringsbehovRepository
+                avklaringsbehovRepository,
+                sykepengerGateway
             )
         }
 
