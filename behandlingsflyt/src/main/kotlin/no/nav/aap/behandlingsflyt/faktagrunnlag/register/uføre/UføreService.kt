@@ -4,12 +4,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.adapter.UføreGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class UføreService(
@@ -46,7 +46,7 @@ class UføreService(
             return UføreService(
                 SakService(sakRepository),
                 repositoryProvider.provide(),
-                UføreGateway
+                GatewayProvider.provide<UføreRegisterGateway>()
             )
         }
     }

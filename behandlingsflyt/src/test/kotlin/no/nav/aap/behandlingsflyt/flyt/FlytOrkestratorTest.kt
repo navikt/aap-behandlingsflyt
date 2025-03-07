@@ -74,6 +74,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusSykepengerGateway
 import no.nav.aap.behandlingsflyt.integrasjon.statistikk.StatistikkGatewayImpl
+import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreGateway
 import no.nav.aap.behandlingsflyt.integrasjon.utbetaling.UtbetalingGatewayImpl
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -231,6 +232,7 @@ class FlytOrkestratorTest {
                 .register<InntektGatewayImpl>()
                 .register<BrevGateway>()
                 .register<OppgavestyringGatewayImpl>()
+                .register<UføreGateway>()
             motor.start()
         }
 

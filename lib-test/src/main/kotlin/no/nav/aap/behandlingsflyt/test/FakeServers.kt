@@ -37,7 +37,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.Medl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PERSON_QUERY
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PERSON_QUERY_HISTORIKK
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.adapter.UføreRespons
+import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeModell
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.Yrkesskader
