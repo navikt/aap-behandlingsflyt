@@ -133,7 +133,7 @@ class StegOrkestrator(
             else -> Fortsett
         }
 
-        val nyStegTilstand = StegTilstand(stegType = aktivtSteg.type(), stegStatus = nesteStegStatus)
+        val nyStegTilstand = StegTilstand(stegType = aktivtSteg.type(), stegStatus = nesteStegStatus, aktiv = true)
         loggStegHistorikk(behandling, nyStegTilstand)
 
         return transisjon

@@ -78,7 +78,8 @@ class Behandling(
             .orElse(
                 StegTilstand(
                     stegType = StegType.START_BEHANDLING,
-                    stegStatus = StegStatus.START
+                    stegStatus = StegStatus.START,
+                    aktiv = true
                 )
             )
     }
