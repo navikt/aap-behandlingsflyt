@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.BREV_SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.BrevbestillingLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevGrunnlag.Brev.Mottaker
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevGateway
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingGateway
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
@@ -44,12 +44,13 @@ import no.nav.aap.tilgang.authorizedPost
 import no.nav.aap.tilgang.authorizedPut
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
-import java.util.UUID
+import java.util.*
 import javax.sql.DataSource
 
 private val log = LoggerFactory.getLogger("BrevAPI")
 fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
 
+    val brevbestillingGateway = GatewayProvider.provide<BrevbestillingGateway>()
     route("/api") {
         route("/behandling") {
             route("/{referanse}/grunnlag/brev") {
@@ -70,7 +71,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
 
                         val brevbestillinger =
                             BrevbestillingService(
-                                brevbestillingGateway = BrevGateway(),
+                                brevbestillingGateway = brevbestillingGateway,
                                 brevbestillingRepository = brevbestillingRepository,
                                 behandlingRepository = behandlingRepository,
                                 sakRepository = sakRepository
@@ -140,7 +141,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                                         behandlingRepository.hent(req.behandlingsReferanse)
 
                                     val service = BrevbestillingService(
-                                        BrevGateway(),
+                                        brevbestillingGateway,
                                         brevbestillingRepository,
                                         behandlingRepository,
                                         sakRepository
@@ -196,7 +197,7 @@ fun NormalOpenAPIRoute.brevApi(dataSource: DataSource) {
                             })
                     )
                 ) { brevbestillingReferanse, brev ->
-                    BrevGateway().oppdater(brevbestillingReferanse, brev)
+                    brevbestillingGateway.oppdater(brevbestillingReferanse, brev)
                     respond("{}", HttpStatusCode.Accepted)
                 }
             }

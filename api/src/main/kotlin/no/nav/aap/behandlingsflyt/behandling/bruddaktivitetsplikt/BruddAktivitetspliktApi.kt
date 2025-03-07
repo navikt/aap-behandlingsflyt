@@ -7,7 +7,7 @@ import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.Tags
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevGateway
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepository
@@ -31,6 +31,7 @@ import no.nav.aap.komponenter.httpklient.auth.Bruker
 import no.nav.aap.komponenter.httpklient.auth.bruker
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -50,7 +51,7 @@ fun NormalOpenAPIRoute.aktivitetspliktApi(dataSource: DataSource) {
                 val repositoryProvider = RepositoryProvider(conn)
                 val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
                 val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                val brevGateway = BrevGateway()
+                val brevGateway = GatewayProvider.provide<BrevbestillingGateway>()
                 val aktivitetspliktRepository =
                     repositoryProvider.provide<AktivitetspliktRepository>()
                 val effektuer117Repository =

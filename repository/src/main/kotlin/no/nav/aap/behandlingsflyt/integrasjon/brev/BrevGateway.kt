@@ -1,5 +1,9 @@
-package no.nav.aap.behandlingsflyt.behandling.brev.bestilling
+package no.nav.aap.behandlingsflyt.integrasjon.brev
 
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingGateway
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.HåndterConflictResponseHandler
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.prometheus
@@ -24,10 +28,17 @@ import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PutRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
+import no.nav.aap.lookup.gateway.Factory
 import org.slf4j.LoggerFactory
 import java.net.URI
 
 class BrevGateway : BrevbestillingGateway {
+
+    companion object : Factory<BrevbestillingGateway> {
+        override fun konstruer(): BrevbestillingGateway {
+            return BrevGateway()
+        }
+    }
 
     private val log = LoggerFactory.getLogger(BrevGateway::class.java)
 

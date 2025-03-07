@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg.effektuer11_7
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevGateway
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
@@ -36,6 +35,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.time.Clock
@@ -181,7 +181,7 @@ class Effektuer11_7Steg(
 
             val brevbestillingService =
                 BrevbestillingService(
-                    brevbestillingGateway = BrevGateway(),
+                    brevbestillingGateway = GatewayProvider.provide(),
                     brevbestillingRepository = brevbestillingRepository,
                     behandlingRepository = behandlingRepository,
                     sakRepository = sakRepository

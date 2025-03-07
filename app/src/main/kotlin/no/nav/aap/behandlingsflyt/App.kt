@@ -26,6 +26,7 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.fritakmeldeplikt
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.sykdomsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykepengergrunnlag.sykepengerGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.tidspunkt.beregningVurderingAPI
+import no.nav.aap.behandlingsflyt.integrasjon.brev.BrevGateway
 import no.nav.aap.behandlingsflyt.behandling.brev.brevApi
 import no.nav.aap.behandlingsflyt.behandling.bruddaktivitetsplikt.aktivitetspliktApi
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.institusjonAPI
@@ -257,6 +258,7 @@ private fun registerGateways() {
         .register<AARegisterGateway>()
         .register<StatistikkGatewayImpl>()
         .register<InntektGatewayImpl>()
+        .register<BrevGateway>()
         .status()
 }
 

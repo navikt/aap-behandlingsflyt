@@ -5,8 +5,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
 import no.nav.aap.brev.kontrakt.Vedlegg
+import no.nav.aap.lookup.gateway.Gateway
 
-interface BrevbestillingGateway {
+interface BrevbestillingGateway : Gateway {
     fun bestillBrev(
         saksnummer: Saksnummer,
         behandlingReferanse: BehandlingReferanse,
