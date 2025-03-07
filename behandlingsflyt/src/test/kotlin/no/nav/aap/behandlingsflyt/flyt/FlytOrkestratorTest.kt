@@ -48,6 +48,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunktDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRegisterGatewayImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
@@ -61,7 +62,6 @@ import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.TestHendelsesMottak
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
-import no.nav.aap.behandlingsflyt.integrasjon.oppgave.OppgavestyringGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.aaregisteret.AARegisterGateway
 import no.nav.aap.behandlingsflyt.integrasjon.barn.PdlBarnGateway
 import no.nav.aap.behandlingsflyt.integrasjon.brev.BrevGateway
@@ -71,6 +71,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoBulkGateway
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoGateway
 import no.nav.aap.behandlingsflyt.integrasjon.inntekt.InntektGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapGateway
+import no.nav.aap.behandlingsflyt.integrasjon.oppgave.OppgavestyringGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusSykepengerGateway
 import no.nav.aap.behandlingsflyt.integrasjon.statistikk.StatistikkGatewayImpl
@@ -233,6 +234,7 @@ class FlytOrkestratorTest {
                 .register<BrevGateway>()
                 .register<OppgavestyringGatewayImpl>()
                 .register<UføreGateway>()
+                .register<YrkesskadeRegisterGatewayImpl>()
             motor.start()
         }
 
