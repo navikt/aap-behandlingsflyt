@@ -18,11 +18,11 @@ data class ManuellVurderingForLovvalgMedlemskapDto(
 )
 
 class HistoriskManuellVurderingForLovvalgMedlemskap(
-    vurderDato: LocalDate, vurdertAvIdent: String,
+    vurdertDato: LocalDate, vurdertAvIdent: String,
     erGjeldendeVurdering: Boolean, periode: ÅpenPeriodeDto,
     vurdering: ManuellVurderingForLovvalgMedlemskap
 ) : HistoriskVurderingDto<ManuellVurderingForLovvalgMedlemskap>(
-    vurderDato, vurdertAvIdent, erGjeldendeVurdering, periode, vurdering
+    vurdertDato, vurdertAvIdent, erGjeldendeVurdering, periode, vurdering
 )
 
 data class LovvalgVedSøknadsTidspunktDto(
