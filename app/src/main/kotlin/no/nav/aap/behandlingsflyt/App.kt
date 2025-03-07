@@ -236,8 +236,10 @@ internal fun Application.server(dbConfig: DbConfig) {
                 lovvalgMedlemskapGrunnlagAPI(dataSource)
                 samordningGrunnlag(dataSource)
                 forutgåendeMedlemskapAPI(dataSource)
-                driftAPI(dataSource)
             }
+        }
+        apiRouting {
+            driftAPI(dataSource)
         }
         actuator(prometheus, motor)
     }
