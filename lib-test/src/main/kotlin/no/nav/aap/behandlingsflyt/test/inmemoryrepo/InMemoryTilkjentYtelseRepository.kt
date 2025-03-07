@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseReposi
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 
 object InMemoryTilkjentYtelseRepository : TilkjentYtelseRepository {
-    val tilkjentYtelse = mutableMapOf<BehandlingId, List<TilkjentYtelsePeriode>>()
+    private val tilkjentYtelse = mutableMapOf<BehandlingId, List<TilkjentYtelsePeriode>>()
     override fun hentHvisEksisterer(behandlingId: BehandlingId): List<TilkjentYtelsePeriode>? {
         return tilkjentYtelse[behandlingId]
     }

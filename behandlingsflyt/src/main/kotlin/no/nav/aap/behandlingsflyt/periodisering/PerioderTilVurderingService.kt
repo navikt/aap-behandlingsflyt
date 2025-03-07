@@ -80,7 +80,7 @@ class PerioderTilVurderingService(
         )
     }
 
-    fun utledForlengelsePeriode(
+    private fun utledForlengelsePeriode(
         vurderingstype: VurderingType,
         forrigeBehandlingId: BehandlingId?,
         rettighetsperiode: Periode

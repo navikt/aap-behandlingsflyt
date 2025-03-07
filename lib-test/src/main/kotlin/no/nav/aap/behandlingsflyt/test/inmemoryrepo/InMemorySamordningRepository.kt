@@ -9,7 +9,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 
 object InMemorySamordningRepository : SamordningRepository {
-    val grunnlag = ConcurrentHashMap<BehandlingId, SamordningGrunnlag>()
+    private val grunnlag = ConcurrentHashMap<BehandlingId, SamordningGrunnlag>()
     private val id = AtomicLong(0)
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): SamordningGrunnlag? {
