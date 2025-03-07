@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerGateway
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
+import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusSykepengerGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.periodisering.VurderingTilBehandling
@@ -30,6 +31,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseVurd
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.gateway.GatewayProvider
+import no.nav.aap.lookup.gateway.GatewayRegistry
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -221,6 +223,7 @@ class SamordningStegTest {
         ytelse: Ytelse,
         behandlingId: BehandlingId
     ): SamordningSteg {
+        GatewayRegistry.register<AbakusSykepengerGateway>()
         val steg = SamordningSteg(
             samordningService = SamordningService(
                 samordningYtelseVurderingRepository = InMemorySamordningYtelseVurderingRepository

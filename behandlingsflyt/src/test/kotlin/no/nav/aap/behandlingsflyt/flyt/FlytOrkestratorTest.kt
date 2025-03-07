@@ -919,7 +919,7 @@ class FlytOrkestratorTest {
                 ),
             ),
         )
-        assertThat(hentÅpneAvklaringsbehov(behandling.id).map { it.definisjon }).isEqualTo(listOf(Definisjon.FORESLÅ_VEDTAK))
+        assertThat(hentÅpneAvklaringsbehov(behandling.id).map { it.definisjon }).isEqualTo(listOf(Definisjon.AVKLAR_SAMORDNING_GRADERING))
     }
 
     @Test
