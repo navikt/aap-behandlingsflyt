@@ -228,12 +228,9 @@ class SamordningStegTest {
             samordningService = SamordningService(
                 samordningYtelseVurderingRepository = InMemorySamordningYtelseVurderingRepository
             ),
-            sakService = SakService(
-                sakRepository = InMemorySakRepository
-            ),
             samordningRepository = InMemorySamordningRepository,
+            samordningYtelseVurderingRepository = InMemorySamordningYtelseVurderingRepository,
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-            spGateway = GatewayProvider.provide<SykepengerGateway>(),
         )
 
         lagreYtelseGrunnlag(behandlingId, ytelse, Periode(LocalDate.now().minusYears(1), LocalDate.now()))

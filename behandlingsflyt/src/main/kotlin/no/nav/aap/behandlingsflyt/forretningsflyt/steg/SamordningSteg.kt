@@ -2,11 +2,10 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
+import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerRequest
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.UtbetaltePerioder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -15,21 +14,17 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
-import java.time.LocalDate
 
 class SamordningSteg(
     private val samordningService: SamordningService,
-    private val sakService: SakService,
     private val samordningRepository: SamordningRepository,
+    private val samordningYtelseVurderingRepository: SamordningYtelseVurderingRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
-    private val spGateway: SykepengerGateway,
 
-) : BehandlingSteg {
+    ) : BehandlingSteg {
     private val log = LoggerFactory.getLogger(SamordningSteg::class.java)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -43,8 +38,6 @@ class SamordningSteg(
         // 3.  hvis har all tilgjengelig data:
         // 3.1 lag tidslinje av prosentgradering og lagre i SamordningRepository
 
-        val sak = sakService.hent(kontekst.sakId)
-        val personIdent = sak.person.aktivIdent().identifikator
         val input = requireNotNull(samordningService.hentInput(behandlingId = kontekst.behandlingId))
 
         val tidligereVurderinger = samordningService.tidligereVurderinger(input)
@@ -53,18 +46,20 @@ class SamordningSteg(
             input, tidligereVurderinger
         )
 
-        val sykepenger = hentYtelseSykepenger(personIdent, sak.rettighetsperiode.fom.minusWeeks(4), LocalDate.now())
+        val vurderingsGrunnlag = samordningYtelseVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
+        if (vurderingsGrunnlag != null) {
+            val ytelseId = vurderingsGrunnlag.ytelseGrunnlag.ytelseId
+            val ytelser = samordningYtelseVurderingRepository.hentSamordningYtelser(ytelseId)
 
-        if (!sykepenger.isEmpty())
-        {
-            log.info("Fant sykepenger de siste 4 uker ")
-            return FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_GRADERING)
+            if (ytelser.ytelser.any {it.ytelseType === Ytelse.SYKEPENGER}) {
+                log.info("Fant sykepenger de siste 4 uker ")
+                return FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_GRADERING)
+            }
+            if (perioderSomIkkeHarBlittVurdert.isNotEmpty()) {
+                log.info("Fant perioder som ikke har blitt vurdert: $perioderSomIkkeHarBlittVurdert")
+                return FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_GRADERING)
+            }
         }
-        if (perioderSomIkkeHarBlittVurdert.isNotEmpty()) {
-            log.info("Fant perioder som ikke har blitt vurdert: $perioderSomIkkeHarBlittVurdert")
-            return FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_GRADERING)
-        }
-
         val samordningTidslinje =
             samordningService.vurder(input, tidligereVurderinger)
 
@@ -92,32 +87,19 @@ class SamordningSteg(
         }
     }
 
-    private fun hentYtelseSykepenger(personIdent: String, fom: LocalDate, tom: LocalDate): List<UtbetaltePerioder> {
-        return spGateway.hentYtelseSykepenger(
-            SykepengerRequest(
-                setOf(personIdent),
-                fom,
-                tom
-            )
-        ).utbetaltePerioder
-    }
-
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
             val repositoryProvider = RepositoryProvider(connection)
             val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
             val samordningRepository = repositoryProvider.provide<SamordningRepository>()
-            val sykepengerGateway = GatewayProvider.provide<SykepengerGateway>()
+            val samordningYtelseVurderingRepository = repositoryProvider.provide<SamordningYtelseVurderingRepository>()
             return SamordningSteg(
                 SamordningService(
                     repositoryProvider.provide()
                 ),
-                SakService(
-                    repositoryProvider.provide()
-                ),
                 samordningRepository,
+                samordningYtelseVurderingRepository,
                 avklaringsbehovRepository,
-                sykepengerGateway
             )
         }
 

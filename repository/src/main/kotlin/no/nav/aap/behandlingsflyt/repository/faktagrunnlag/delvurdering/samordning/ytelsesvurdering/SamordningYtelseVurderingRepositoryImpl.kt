@@ -85,7 +85,8 @@ class SamordningYtelseVurderingRepositoryImpl(private val connection: DBConnecti
         }
     }
 
-    private fun hentSamordningYtelser(ytelserId: Long): SamordningYtelseGrunnlag {
+
+    override fun hentSamordningYtelser(ytelserId: Long): SamordningYtelseGrunnlag {
         val query = """
             SELECT * FROM SAMORDNING_YTELSE WHERE ytelser_id = ?
         """.trimIndent()
