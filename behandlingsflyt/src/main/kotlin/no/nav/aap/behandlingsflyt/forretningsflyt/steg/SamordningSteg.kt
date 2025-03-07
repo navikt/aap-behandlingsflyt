@@ -57,6 +57,7 @@ class SamordningSteg(
 
         if (!sykepenger.isEmpty())
         {
+            log.info("Fant sykepenger de siste 4 uker ")
             return FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_GRADERING)
         }
 
