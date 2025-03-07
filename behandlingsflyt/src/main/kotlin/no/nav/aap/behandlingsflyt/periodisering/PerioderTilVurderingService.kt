@@ -7,21 +7,22 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import org.slf4j.LoggerFactory
 
 class PerioderTilVurderingService(
     private val sakService: SakService,
     private val behandlingRepository: BehandlingRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository
 ) {
+
+    private val logger = LoggerFactory.getLogger(PerioderTilVurderingService::class.java)
 
     fun utled(kontekst: FlytKontekst, stegType: StegType): VurderingTilBehandling {
         val sak = sakService.hent(kontekst.sakId)
@@ -90,10 +91,16 @@ class PerioderTilVurderingService(
                     Vilkårtype.ALDERSVILKÅRET
                 ).tidslinje().helePerioden()
             val nyTidslinje = Tidslinje(rettighetsperiode, true)
-            val nyPeriode = nyTidslinje.kombiner(
+            val forlengelsesTidslinje = nyTidslinje.kombiner(
                 Tidslinje(forrigeRettighetsperiode, true),
                 StandardSammenslåere.minus()
-            ).helePerioden()
+            )
+            logger.info("$rettighetsperiode - $forrigeRettighetsperiode ==> $forlengelsesTidslinje")
+            if (forlengelsesTidslinje.isEmpty()) {
+                // Er egentlig ikke noe å forlenge, men skal behandles som det
+                return Periode(rettighetsperiode.tom, rettighetsperiode.tom)
+            }
+            val nyPeriode = forlengelsesTidslinje.helePerioden()
 
             return nyPeriode
         }
@@ -115,89 +122,6 @@ class PerioderTilVurderingService(
         return VurderingType.IKKE_RELEVANT
     }
 
-    private fun velgPrioritertVerdi(venstreVerdi: VurderingValue, høyreVerdi: VurderingValue): VurderingValue {
-        val årsaker = (venstreVerdi.årsaker + høyreVerdi.årsaker).toSet()
-        val typer = setOf(venstreVerdi.type, høyreVerdi.type)
-        if (typer.size == 1) {
-            return venstreVerdi
-        }
-        if (typer.contains(VurderingType.FØRSTEGANGSBEHANDLING)) {
-            return VurderingValue(VurderingType.FØRSTEGANGSBEHANDLING, årsaker.toList())
-        } else if (typer.contains(VurderingType.REVURDERING)) {
-            return VurderingValue(VurderingType.REVURDERING, årsaker.toList())
-        }
-        return return VurderingValue(typer.first(), årsaker.toList())
-    }
-
-    private fun utledVurdering(årsak: Årsak, rettighetsperiode: Periode): Vurdering {
-        return when (årsak.type) {
-            ÅrsakTilBehandling.MOTTATT_SØKNAD -> Vurdering(
-                VurderingType.FØRSTEGANGSBEHANDLING,
-                listOf(årsak.type),
-                årsak.periode ?: rettighetsperiode
-            )
-
-            ÅrsakTilBehandling.MOTTATT_AKTIVITETSMELDING -> Vurdering(
-                VurderingType.REVURDERING,
-                listOf(årsak.type),
-                requireNotNull(årsak.periode)
-            )
-
-            ÅrsakTilBehandling.MOTTATT_MELDEKORT -> Vurdering(
-                VurderingType.FORLENGELSE,
-                listOf(årsak.type),
-                requireNotNull(årsak.periode)
-            )
-
-            ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING -> Vurdering(
-                VurderingType.REVURDERING,
-                listOf(årsak.type),
-                rettighetsperiode
-            )
-
-            ÅrsakTilBehandling.MOTTATT_AVVIST_LEGEERKLÆRING -> Vurdering(
-                VurderingType.REVURDERING,
-                listOf(årsak.type),
-                rettighetsperiode
-            )
-
-            ÅrsakTilBehandling.MOTTATT_DIALOGMELDING -> Vurdering(
-                VurderingType.REVURDERING,
-                listOf(årsak.type),
-                rettighetsperiode
-            )
-
-            ÅrsakTilBehandling.G_REGULERING -> Vurdering(
-                VurderingType.REVURDERING,
-                listOf(årsak.type),
-                requireNotNull(årsak.periode)
-            )
-
-            ÅrsakTilBehandling.REVURDER_MEDLEMSKAP -> Vurdering(
-                VurderingType.REVURDERING,
-                listOf(årsak.type),
-                rettighetsperiode
-            )
-
-            ÅrsakTilBehandling.REVURDER_LOVVALG -> Vurdering(
-                VurderingType.REVURDERING,
-                listOf(årsak.type),
-                rettighetsperiode
-            )
-
-            ÅrsakTilBehandling.REVURDER_BEREGNING -> Vurdering(
-                VurderingType.REVURDERING,
-                listOf(årsak.type),
-                rettighetsperiode
-            )
-
-            ÅrsakTilBehandling.REVURDER_YRKESSKADE -> Vurdering(
-                VurderingType.REVURDERING,
-                listOf(årsak.type),
-                rettighetsperiode
-            )
-        }
-    }
 
     private fun årsakTilType(årsak: ÅrsakTilBehandling): VurderingType {
         return when (årsak) {
