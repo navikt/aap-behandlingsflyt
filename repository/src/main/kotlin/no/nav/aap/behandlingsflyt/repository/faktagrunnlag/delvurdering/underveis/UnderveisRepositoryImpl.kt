@@ -31,7 +31,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
     override fun hentHvisEksisterer(behandlingId: BehandlingId): UnderveisGrunnlag? {
         val query = """
             SELECT * FROM UNDERVEIS_GRUNNLAG WHERE behandling_id = ? and aktiv = true
-        """.trimIndent()
+ gl        """.trimIndent()
         return connection.queryFirstOrNull(query) {
             setParams {
                 setLong(1, behandlingId.toLong())

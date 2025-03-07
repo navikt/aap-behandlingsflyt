@@ -4,6 +4,9 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerRequest
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.UtbetaltePerioder
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -12,22 +15,27 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 
 class SamordningSteg(
     private val samordningService: SamordningService,
+    private val sakService: SakService,
     private val samordningRepository: SamordningRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository
 
 ) : BehandlingSteg {
     private val log = LoggerFactory.getLogger(SamordningSteg::class.java)
+    private val spGateway = GatewayProvider.provide<SykepengerGateway>()
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         // Logikkplan
 
-
+        // 0. Hent tidligere sykepengervedtak
         // 1.  hent vurderinger som har vært gjort tidligere
         // 2.  finn perioder av ytelser som krever manuell vurdering som ikke har blitt vurdert
         // 2.1 hvis ikke-tom -> avklaringsbehov for å vurdere manuelt
@@ -35,23 +43,28 @@ class SamordningSteg(
         // 3.  hvis har all tilgjengelig data:
         // 3.1 lag tidslinje av prosentgradering og lagre i SamordningRepository
 
+        val sak = sakService.hent(kontekst.sakId)
+        val personIdent = sak.person.aktivIdent().identifikator
         val input = requireNotNull(samordningService.hentInput(behandlingId = kontekst.behandlingId))
 
         val tidligereVurderinger = samordningService.tidligereVurderinger(input)
 
-        // 2.  finn perioder av ytelser som krever manuell vurdering som ikke har blitt vurdert
         val perioderSomIkkeHarBlittVurdert = samordningService.perioderSomIkkeHarBlittVurdert(
             input, tidligereVurderinger
         )
 
-        // 2.1 hvis ikke-tom -> avklaringsbehov for å vurdere manuelt
+        val sykepenger = hentYtelseSykepenger(personIdent, sak.rettighetsperiode.fom.minusWeeks(4), LocalDate.now())
+
+        if (!sykepenger.isEmpty())
+        {
+            return FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_GRADERING)
+        }
+
         if (perioderSomIkkeHarBlittVurdert.isNotEmpty()) {
             log.info("Fant perioder som ikke har blitt vurdert: $perioderSomIkkeHarBlittVurdert")
             return FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_GRADERING)
         }
-        // 2.2 for foreldreenger: ha infokrav om oppstartdato, lag manuelt frivillig behov
-        // 3.  hvis har all tilgjengelig data:
-        // 3.1 lag tidslinje av prosentgradering og lagre i SamordningRepository
+
         val samordningTidslinje =
             samordningService.vurder(input, tidligereVurderinger)
 
@@ -79,6 +92,16 @@ class SamordningSteg(
         }
     }
 
+    private fun hentYtelseSykepenger(personIdent: String, fom: LocalDate, tom: LocalDate): List<UtbetaltePerioder> {
+        return spGateway.hentYtelseSykepenger(
+            SykepengerRequest(
+                setOf(personIdent),
+                fom,
+                tom
+            )
+        ).utbetaltePerioder
+    }
+
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
             val repositoryProvider = RepositoryProvider(connection)
@@ -87,6 +110,9 @@ class SamordningSteg(
 
             return SamordningSteg(
                 SamordningService(
+                    repositoryProvider.provide()
+                ),
+                SakService(
                     repositoryProvider.provide()
                 ),
                 samordningRepository,
