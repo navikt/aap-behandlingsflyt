@@ -51,7 +51,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.flate.stud
 import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
 import no.nav.aap.behandlingsflyt.hendelse.mottattHendelseApi
-import no.nav.aap.behandlingsflyt.integrasjon.statistikk.StatistikkGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.aaregisteret.AARegisterGateway
 import no.nav.aap.behandlingsflyt.integrasjon.barn.PdlBarnGateway
 import no.nav.aap.behandlingsflyt.integrasjon.datadeling.ApiInternGatewayImpl
@@ -62,6 +61,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoGateway
 import no.nav.aap.behandlingsflyt.integrasjon.inntekt.InntektGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusSykepengerGateway
+import no.nav.aap.behandlingsflyt.integrasjon.statistikk.StatistikkGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.utbetaling.UtbetalingGatewayImpl
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
 import no.nav.aap.behandlingsflyt.pip.behandlingsflytPip
@@ -297,7 +297,6 @@ private fun registerRepositories() {
         .register<InstitusjonsoppholdRepositoryImpl>()
         .register<InntektGrunnlagRepositoryImpl>()
         .register<MeldeperiodeRepositoryImpl>()
-        .register<BrevbestillingRepositoryImpl>()
         .status()
 }
 
