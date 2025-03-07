@@ -42,10 +42,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepositoryImpl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøknadsTidspunkt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøknadsTidspunktDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskapDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunkt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunktDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
@@ -1814,8 +1814,8 @@ class FlytOrkestratorTest {
             behandling,
             AvklarLovvalgMedlemskapLøsning(
                 manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskapDto(
-                    LovvalgVedSøknadsTidspunkt("crazy lovvalgsland vurdering", null),
-                    MedlemskapVedSøknadsTidspunkt("crazy medlemskap vurdering", true)
+                    LovvalgVedSøknadsTidspunktDto("crazy lovvalgsland vurdering", null),
+                    MedlemskapVedSøknadsTidspunktDto("crazy medlemskap vurdering", true)
                 ),
                 behovstype = AvklaringsbehovKode.`5017`
             )
@@ -1873,8 +1873,8 @@ class FlytOrkestratorTest {
         løsAvklaringsBehov(
             behandling, AvklarLovvalgMedlemskapLøsning(
                 manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskapDto(
-                    LovvalgVedSøknadsTidspunkt("crazy lovvalgsland vurdering", EØSLand.DNK),
-                    MedlemskapVedSøknadsTidspunkt(null, null)
+                    LovvalgVedSøknadsTidspunktDto("crazy lovvalgsland vurdering", EØSLand.DNK),
+                    MedlemskapVedSøknadsTidspunktDto(null, null)
                 ),
                 behovstype = AvklaringsbehovKode.`5017`
             )
@@ -1931,8 +1931,8 @@ class FlytOrkestratorTest {
         løsAvklaringsBehov(
             behandling, AvklarLovvalgMedlemskapLøsning(
                 manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskapDto(
-                    LovvalgVedSøknadsTidspunkt("crazy lovvalgsland vurdering", EØSLand.NOR),
-                    MedlemskapVedSøknadsTidspunkt("crazy medlemskap vurdering", false)
+                    LovvalgVedSøknadsTidspunktDto("crazy lovvalgsland vurdering", EØSLand.NOR),
+                    MedlemskapVedSøknadsTidspunktDto("crazy medlemskap vurdering", false)
                 ),
                 behovstype = AvklaringsbehovKode.`5017`
             )
@@ -2026,8 +2026,8 @@ class FlytOrkestratorTest {
         løsAvklaringsBehov(
             behandling, AvklarOverstyrtLovvalgMedlemskapLøsning(
                 manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskapDto(
-                    LovvalgVedSøknadsTidspunkt("crazy lovvalgsland vurdering", EØSLand.NOR),
-                    MedlemskapVedSøknadsTidspunkt("crazy medlemskap vurdering", false)
+                    LovvalgVedSøknadsTidspunktDto("crazy lovvalgsland vurdering", EØSLand.NOR),
+                    MedlemskapVedSøknadsTidspunktDto("crazy medlemskap vurdering", false)
                 ),
                 behovstype = AvklaringsbehovKode.`5021`
             )
@@ -2069,8 +2069,8 @@ class FlytOrkestratorTest {
         løsAvklaringsBehov(
             behandling, AvklarOverstyrtLovvalgMedlemskapLøsning(
                 manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskapDto(
-                    LovvalgVedSøknadsTidspunkt("crazy lovvalgsland vurdering", EØSLand.NOR),
-                    MedlemskapVedSøknadsTidspunkt("crazy medlemskap vurdering", true)
+                    LovvalgVedSøknadsTidspunktDto("crazy lovvalgsland vurdering", EØSLand.NOR),
+                    MedlemskapVedSøknadsTidspunktDto("crazy medlemskap vurdering", true)
                 ),
                 behovstype = AvklaringsbehovKode.`5021`
             )
@@ -2138,8 +2138,8 @@ class FlytOrkestratorTest {
             løsAvklaringsBehov(
                 behandling, AvklarLovvalgMedlemskapLøsning(
                     manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskapDto(
-                        LovvalgVedSøknadsTidspunkt("crazy lovvalgsland vurdering", EØSLand.NOR),
-                        MedlemskapVedSøknadsTidspunkt(null, true)
+                        LovvalgVedSøknadsTidspunktDto("crazy lovvalgsland vurdering", EØSLand.NOR),
+                        MedlemskapVedSøknadsTidspunktDto(null, true)
                     ),
                     behovstype = AvklaringsbehovKode.`5017`
                 )

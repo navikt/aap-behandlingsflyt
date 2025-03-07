@@ -15,9 +15,10 @@ class AvklarLovvalgMedlemskapLøser(connection: DBConnection): AvklaringsbehovsL
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarLovvalgMedlemskapLøsning): LøsningsResultat {
         medlemskapArbeidInntektRepository.lagreManuellVurdering(kontekst.behandlingId(),
             ManuellVurderingForLovvalgMedlemskap(
-                løsning.manuellVurderingForLovvalgMedlemskap.lovvalgVedSøknadsTidspunkt,
-                løsning.manuellVurderingForLovvalgMedlemskap.medlemskapVedSøknadsTidspunkt,
-                false
+                lovvalgVedSøknadsTidspunkt = løsning.manuellVurderingForLovvalgMedlemskap.lovvalgVedSøknadsTidspunkt,
+                medlemskapVedSøknadsTidspunkt = løsning.manuellVurderingForLovvalgMedlemskap.medlemskapVedSøknadsTidspunkt,
+                vurdertAv = kontekst.bruker.ident,
+                overstyrt = false
             )
         )
         return LøsningsResultat("Vurdert lovvalg & medlemskap manuelt.")
