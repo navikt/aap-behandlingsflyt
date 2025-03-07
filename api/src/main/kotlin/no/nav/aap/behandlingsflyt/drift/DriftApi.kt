@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.drift
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
@@ -23,12 +22,12 @@ import javax.sql.DataSource
 fun NormalOpenAPIRoute.driftAPI(dataSource: DataSource) {
     route("/api/drift") {
         route("/flyttbehandlingtilstart/{referanse}") {
-            /*authorizedPost<BehandlingReferanse, Unit, Unit>(
+            authorizedPost<BehandlingReferanse, Unit, Unit>(
                 AuthorizationParamPathConfig(
                     behandlingPathParam = BehandlingPathParam("referanse"),
                     operasjon = Operasjon.DRIFTE
                 )
-            )*/post<BehandlingReferanse, Unit, Unit>{ req, _ ->
+            ){ req, _ ->
                 dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
