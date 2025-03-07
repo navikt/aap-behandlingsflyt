@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakFlytRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import org.slf4j.LoggerFactory
@@ -185,6 +186,11 @@ class FlytOrkestrator(
 
             if (!result.kanFortsette() || neste == null) {
                 if (neste == null) {
+                    // Valider siste stegstatus behandlingen
+                    val oppdatertBehandling = behandlingRepository.hent(behandling.id)
+                    val sisteSteg = oppdatertBehandling.stegHistorikk().last()
+                    require(sisteSteg.status() == StegStatus.AVSLUTTER)
+
                     // Avslutter behandling
                     behandlingFlytRepository.oppdaterBehandlingStatus(
                         behandlingId = behandling.id,
