@@ -85,7 +85,7 @@ class VirkningstidspunktUtlederTest {
                 Underveisperiode.oppfylt(periode)
             ), object : Faktagrunnlag {})
 
-        // Lagrer 100 samordning i begynnelsen
+        // Lagrer 100% samordning i begynnelsen
         InMemorySamordningRepository.lagre(
             behandlingId,
             listOf(SamordningPeriode(samordningPeriode, Prosent.`100_PROSENT`)),

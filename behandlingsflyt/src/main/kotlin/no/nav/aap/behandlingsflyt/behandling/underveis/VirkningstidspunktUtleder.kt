@@ -4,10 +4,8 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseReposi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.komponenter.verdityper.Prosent
 import java.time.LocalDate
 
 class VirkningstidspunktUtleder(
@@ -21,30 +19,24 @@ class VirkningstidspunktUtleder(
             .map { Segment(it.periode, it.tilkjent) }
             .let(::Tidslinje)
 
-        val samordingsperioder = samordningRepository.hentHvisEksisterer(behandlingId)!!
-
         val samordningTidslinje =
-            samordingsperioder.samordningPerioder.map { Segment(it.periode, it.gradering) }.let(::Tidslinje)
+            samordningRepository.hentHvisEksisterer(behandlingId)!!.samordningPerioder.map {
+                Segment(
+                    it.periode,
+                    it.gradering
+                )
+            }.let(::Tidslinje)
 
-        val r = tilkjentTidslinje.kombiner(samordningTidslinje, JoinStyle.LEFT_JOIN { periode, venstre, høyre ->
-            if (høyre == null) {
-                Segment(periode, Pair(venstre.verdi, Prosent.`0_PROSENT`))
-            } else {
-                Segment(periode, Pair(venstre.verdi, høyre.verdi))
-            }
-        })
 
         val underveisTidslinje =
             underveisRepository.hent(behandlingId).perioder.map { Segment(it.periode, it) }.let(::Tidslinje)
 
 
-        val rx = Tidslinje.zip3(samordningTidslinje, tilkjentTidslinje, underveisTidslinje)
+        val kombinertTidslinje = Tidslinje.zip3(samordningTidslinje, tilkjentTidslinje, underveisTidslinje)
 
-        require(rx.isNotEmpty())
+        require(kombinertTidslinje.isNotEmpty())
 
-        print(rx.segmenter().size)
-        print(rx)
-        return rx.filter {
+        return kombinertTidslinje.filter {
             it.verdi.second != null && it.verdi.second!!.redusertDagsats().verdi.toDouble() > 0 && (it.verdi.first?.prosentverdi()
                 ?: 0) < 100
         }
