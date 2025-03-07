@@ -60,7 +60,6 @@ class SamordningSteg(
             log.info("Fant sykepenger de siste 4 uker ")
             return FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_GRADERING)
         }
-
         if (perioderSomIkkeHarBlittVurdert.isNotEmpty()) {
             log.info("Fant perioder som ikke har blitt vurdert: $perioderSomIkkeHarBlittVurdert")
             return FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_GRADERING)

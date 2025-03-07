@@ -896,7 +896,6 @@ class FlytOrkestratorTest {
 
         assertThat(hentÅpneAvklaringsbehov(behandling.id).map { it.definisjon }).containsExactly(Definisjon.AVKLAR_SAMORDNING_GRADERING)
 
-
         løsAvklaringsBehov(
             behandling,
             AvklarSamordningGraderingLøsning(
@@ -919,7 +918,8 @@ class FlytOrkestratorTest {
                 ),
             ),
         )
-        assertThat(hentÅpneAvklaringsbehov(behandling.id).map { it.definisjon }).isEqualTo(listOf(Definisjon.AVKLAR_SAMORDNING_GRADERING))
+
+        assertThat(hentÅpneAvklaringsbehov(behandling.id).map { it.definisjon }).isEqualTo(listOf(Definisjon.FORESLÅ_VEDTAK))
     }
 
     @Test
