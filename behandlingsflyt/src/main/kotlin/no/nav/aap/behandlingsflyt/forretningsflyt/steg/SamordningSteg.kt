@@ -48,7 +48,6 @@ class SamordningSteg(
 
         val vurderingsGrunnlag = samordningYtelseVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
         if (vurderingsGrunnlag != null) {
-
             if (perioderSomIkkeHarBlittVurdert.isNotEmpty()) {
                 log.info("Fant perioder som ikke har blitt vurdert: $perioderSomIkkeHarBlittVurdert")
                 return FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_GRADERING)
