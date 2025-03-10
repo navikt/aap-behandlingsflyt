@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapArbei
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.HistoriskManuellVurderingForForutgåendeMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskap
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdOversikt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.Unntak
@@ -129,7 +128,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
 
     override fun lagreArbeidsforholdOgInntektINorge(
         behandlingId: BehandlingId,
-        arbeidGrunnlag: List<ArbeidsforholdOversikt>,
+        arbeidGrunnlag: List<ArbeidINorgeGrunnlag>,
         inntektGrunnlag: List<ArbeidsInntektMaaned>,
         medlId: Long?
     ) {
@@ -156,7 +155,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         }
     }
 
-    private fun lagreArbeidGrunnlag (arbeidGrunnlag: List<ArbeidsforholdOversikt>): Long? {
+    private fun lagreArbeidGrunnlag (arbeidGrunnlag: List<ArbeidINorgeGrunnlag>): Long? {
         if (arbeidGrunnlag.isEmpty()) return null
 
         val arbeiderQuery = """
@@ -171,8 +170,8 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
 
             connection.execute(arbeidQuery)  {
                 setParams {
-                    setString(1, forhold.arbeidssted.identer.first().ident)
-                    setString(2, forhold.type.kode)
+                    setString(1, forhold.identifikator)
+                    setString(2, forhold.arbeidsforholdKode)
                     setLong(3, arbeiderId)
                     setLocalDate(4, forhold.startdato)
                     setLocalDate(5, forhold.sluttdato)

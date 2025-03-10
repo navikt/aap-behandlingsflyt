@@ -1,8 +1,9 @@
 package no.nav.aap.behandlingsflyt.integrasjon.aaregisteret
 
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdRequest
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdoversiktResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.adapter.ArbeidsforholdRequest
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.adapter.ArbeidsforholdoversiktResponse
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
@@ -32,24 +33,31 @@ class AARegisterGateway : ArbeidsforholdGateway {
         prometheus = prometheus
     )
 
-    private fun query(request: ArbeidsforholdRequest): ArbeidsforholdoversiktResponse {
+    private fun query(request: ArbeidsforholdRequest): List<ArbeidINorgeGrunnlag> {
         val httpRequest = PostRequest(
             body = request,
             additionalHeaders = listOf(
                 Header("Accept", "application/json")
             )
         )
-        // TODO: oversett til vår egen type klasse her. Nå vil endring i respons fra AAREG tvinge
-        // kodeendring hos oss
-        return requireNotNull(client.post(uri = url, request = httpRequest))
+        val response: ArbeidsforholdoversiktResponse = requireNotNull(client.post(uri = url, request = httpRequest))
+
+        return response.arbeidsforholdoversikter.filter { it.arbeidssted.type.uppercase() == "UNDERENHET" }.map { arbeidsforhold ->
+            ArbeidINorgeGrunnlag(
+                identifikator = arbeidsforhold.arbeidssted.identer.first().ident,
+                arbeidsforholdKode = arbeidsforhold.type.kode,
+                startdato = arbeidsforhold.startdato,
+                sluttdato = arbeidsforhold.sluttdato
+            )
+        }
     }
 
-    override fun hentAARegisterData(request: ArbeidsforholdRequest): ArbeidsforholdoversiktResponse {
+    override fun hentAARegisterData(request: ArbeidsforholdRequest): List<ArbeidINorgeGrunnlag> {
         return try {
             query(request)
         } catch (e: IkkeFunnetException) {
             // Fant ikke ident i AAreg, de returnerer 404
-            ArbeidsforholdoversiktResponse()
+            listOf()
         } catch (e: Exception) {
             throw RuntimeException("Feil ved henting av data i AAreg: ${e.message}", e)
         }
