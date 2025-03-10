@@ -10,7 +10,7 @@ public data class DatadelingDTO(
     val underveisperiode: List<UnderveisDTO>,  //Lag ny DTO
     val rettighetsPeriodeFom: LocalDate,
     val rettighetsPeriodeTom: LocalDate,
-    val behandlingStatus: Status,
+    val behandlingStatus: no.nav.aap.behandlingsflyt.kontrakt.behandling.Status,
     val vedtaksDato: LocalDate,
     val sak: SakDTO, // -\\-
     val tilkjent: List<TilkjentDTO>,
@@ -36,12 +36,12 @@ public data class UnderveisDTO(
 public data class TilkjentDTO(
     val tilkjentFom: LocalDate,
     val tilkjentTom: LocalDate,
-    val dagsats: Int,
+    val dagsats: BigDecimal,
     val gradering: Int,
-    val grunnlag: Int,
-    val grunnlagsfaktor: Int,
-    val grunnbeløp: Int,
+    val grunnlag: BigDecimal,
+    val grunnlagsfaktor: BigDecimal,
+    val grunnbeløp: BigDecimal,
     val antallBarn: Int,
-    val barnetilleggsats: Int,
-    val barnetillegg: Int
+    val barnetilleggsats: BigDecimal,
+    val barnetillegg: BigDecimal
 )

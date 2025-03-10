@@ -2,10 +2,11 @@ plugins {
     id("behandlingsflyt.conventions")
 }
 
-val komponenterVersjon = "1.0.169"
+val komponenterVersjon = "1.0.171"
 val ktorVersion = "3.1.1"
 val tilgangVersjon = "1.0.15"
 val junitVersjon = "5.12.0"
+val mockOAuth2ServerVersion = "2.1.10"
 
 dependencies {
     api(project(":behandlingsflyt"))
@@ -24,7 +25,11 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersjon")
     testImplementation("org.junit.jupiter:junit-jupiter-params:$junitVersjon")
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
+    constraints {
+        implementation("commons-codec:commons-codec:1.18.0")
+    }
     testImplementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+    testImplementation("no.nav.security:mock-oauth2-server:$mockOAuth2ServerVersion")
     testImplementation(project(":lib-test"))
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("org.assertj:assertj-core:3.27.3")

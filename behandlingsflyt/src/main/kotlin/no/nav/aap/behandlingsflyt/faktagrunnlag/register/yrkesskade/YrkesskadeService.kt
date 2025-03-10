@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
 
@@ -104,7 +105,7 @@ class YrkesskadeService private constructor(
                 SakService(sakRepository),
                 repositoryProvider.provide(),
                 personopplysningRepository,
-                YrkesskadeRegisterGateway,
+                GatewayProvider.provide(),
                 mottattDokumentRepository,
             )
         }

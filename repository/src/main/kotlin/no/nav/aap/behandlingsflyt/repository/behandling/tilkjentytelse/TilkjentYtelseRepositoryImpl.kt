@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -20,7 +21,7 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
         }
     }
 
-    override fun hentHvisEksisterer(behandlingId: BehandlingId): Tidslinje<Tilkjent>? {
+    override fun hentHvisEksisterer(behandlingId: BehandlingId): List<TilkjentYtelsePeriode>? {
         val tilkjent = connection.queryList(
             """
             SELECT * FROM TILKJENT_PERIODE WHERE TILKJENT_YTELSE_ID IN (SELECT ID FROM TILKJENT_YTELSE WHERE BEHANDLING_ID=? AND AKTIV=TRUE)
@@ -30,7 +31,7 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
                 setLong(1, behandlingId.toLong())
             }
             setRowMapper {
-                Segment(
+                TilkjentYtelsePeriode(
                     periode = it.getPeriode("PERIODE"),
                     Tilkjent(
                         dagsats = Beløp(it.getInt("DAGSATS")),
@@ -49,10 +50,10 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
         if (tilkjent.isEmpty()) {
             return null
         }
-        return Tidslinje(tilkjent)
+        return tilkjent
     }
 
-    override fun lagre(behandlingId: BehandlingId, tilkjent: Tidslinje<Tilkjent>) {
+    override fun lagre(behandlingId: BehandlingId, tilkjent: List<TilkjentYtelsePeriode>) {
         val eksisterendeTilkjent = hentHvisEksisterer(behandlingId)
         if (eksisterendeTilkjent == tilkjent) {
             return
@@ -72,7 +73,7 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
             }
         }
         tilkjent.forEach { segment ->
-            lagrePeriode(tilkjentYtelseKey, segment.periode, segment.verdi)
+            lagrePeriode(tilkjentYtelseKey, segment.periode, segment.tilkjent)
         }
 
     }

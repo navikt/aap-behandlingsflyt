@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
@@ -16,8 +17,6 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
-import no.nav.aap.komponenter.tidslinje.Segment
-import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
@@ -36,14 +35,14 @@ class TilkjentYtelseRepositoryImplTest {
             val behandling = behandling(connection, sak)
 
             val tilkjentYtelseRepository = TilkjentYtelseRepositoryImpl(connection)
-            val tilkjentYtelse = Tidslinje(
+            val tilkjentYtelse =
                 listOf(
-                    Segment(
+                    TilkjentYtelsePeriode(
                         periode = Periode(
                             LocalDate.now(),
                             LocalDate.now().plusDays(1)
                         ),
-                        verdi = Tilkjent(
+                        tilkjent = Tilkjent(
                             dagsats = Beløp(1000),
                             gradering = Prosent(50),
                             barnetillegg = Beløp(1000),
@@ -55,12 +54,12 @@ class TilkjentYtelseRepositoryImplTest {
                             utbetalingsdato = LocalDate.now().plusDays(14)
                         )
                     ),
-                    Segment(
+                    TilkjentYtelsePeriode(
                         periode = Periode(
                             LocalDate.now().plusDays(2),
                             LocalDate.now().plusDays(3)
                         ),
-                        verdi = Tilkjent(
+                        tilkjent = Tilkjent(
                             dagsats = Beløp(1000),
                             gradering = Prosent(50),
                             barnetillegg = Beløp(1000),
@@ -73,7 +72,7 @@ class TilkjentYtelseRepositoryImplTest {
                         )
                     ),
                 )
-            )
+
             tilkjentYtelseRepository.lagre(behandling.id, tilkjentYtelse)
             val tilkjentYtelseHentet = tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)
             assertNotNull(tilkjentYtelseHentet)

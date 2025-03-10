@@ -4,7 +4,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevUtlederService
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevGateway
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingGateway
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
@@ -63,7 +64,7 @@ class MeldingOmVedtakBrevSteg private constructor(
                     underveisRepository = underveisRepository,
                 ),
                 BrevbestillingService(
-                    brevbestillingGateway = BrevGateway(),
+                    brevbestillingGateway = GatewayProvider.provide<BrevbestillingGateway>(),
                     brevbestillingRepository = brevbestillingRepository,
                     behandlingRepository = behandlingRepository,
                     sakRepository = sakRepository

@@ -186,8 +186,8 @@ class StatistikkJobbUtfører(
             TilkjentYtelsePeriodeDTO(
                 fraDato = it.periode.fom,
                 tilDato = it.periode.tom,
-                dagsats = it.verdi.dagsats.verdi().toDouble(),
-                gradering = it.verdi.gradering.prosentverdi().toDouble()
+                dagsats = it.tilkjent.dagsats.verdi().toDouble(),
+                gradering = it.tilkjent.gradering.prosentverdi().toDouble()
             )
         } ?: listOf())
 

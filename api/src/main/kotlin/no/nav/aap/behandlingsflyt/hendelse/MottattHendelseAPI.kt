@@ -32,7 +32,7 @@ fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource) {
                     val sak = repositoryProvider.provide<SakRepository>().hent(dto.saksnummer)
                     val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
 
-                    logger.info("Mottok dokumenthendelse. Brevkategori: ${dto.type}.")
+                    logger.info("Mottok dokumenthendelse. Brevkategori: ${dto.type} Mottattdato: ${dto.mottattTidspunkt}")
 
                     if (kjennerTilDokumentFraFør(dto, sak, mottattDokumentRepository)) {
                         logger.warn("Allerede håndtert dokument med referanse {}", dto.referanse)
@@ -45,6 +45,7 @@ fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource) {
                                 brevkategori = dto.type,
                                 kanal = dto.kanal,
                                 melding = dto.melding,
+                                mottattTidspunkt = dto.mottattTidspunkt
                             ),
                         )
                     }

@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag
 
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLand
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøknadsTidspunkt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøknadsTidspunktDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunkt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunktDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
@@ -60,8 +60,9 @@ class MedlemskapArbeidInntektRepositoryImplTest {
         repo.lagreArbeidsforholdOgInntektINorge(behandlingId, listOf(), listOf(), null)
         repo.lagreManuellVurdering(behandlingId,
             ManuellVurderingForLovvalgMedlemskap(
-                LovvalgVedSøknadsTidspunkt(begrunnelse, EØSLand.NOR),
-                MedlemskapVedSøknadsTidspunkt(begrunnelse, true)
+                LovvalgVedSøknadsTidspunktDto(begrunnelse, EØSLand.NOR),
+                MedlemskapVedSøknadsTidspunktDto(begrunnelse, true),
+                "SAKSBEHANDLER"
             )
         )
         repo.lagreOppgittUtenlandsOppplysninger(behandlingId, JournalpostId("1"), UtenlandsOppholdData(true, false, false, false, null))

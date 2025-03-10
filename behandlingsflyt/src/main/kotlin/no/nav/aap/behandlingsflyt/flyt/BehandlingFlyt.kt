@@ -192,6 +192,10 @@ class BehandlingFlyt private constructor(
         return requireNotNull(aktivtSteg).steg
     }
 
+    fun skalOppdatereFaktagrunnlag(): Boolean {
+        return requireNotNull(aktivtSteg).oppdaterFaktagrunnlag
+    }
+
     /**
      * Lager en kopi av flyten uten årsaker knyttet til steg
      */

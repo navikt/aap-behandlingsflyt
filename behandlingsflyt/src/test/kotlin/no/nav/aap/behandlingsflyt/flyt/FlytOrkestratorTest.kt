@@ -42,12 +42,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktRepositoryImpl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøknadsTidspunkt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøknadsTidspunktDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskapDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunkt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunktDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
@@ -64,15 +63,20 @@ import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.integrasjon.aaregisteret.AARegisterGateway
 import no.nav.aap.behandlingsflyt.integrasjon.barn.PdlBarnGateway
+import no.nav.aap.behandlingsflyt.integrasjon.brev.BrevGateway
 import no.nav.aap.behandlingsflyt.integrasjon.dokumentinnhenting.DokumentinnhentingGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoBulkGateway
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoGateway
 import no.nav.aap.behandlingsflyt.integrasjon.inntekt.InntektGatewayImpl
+import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapGateway
+import no.nav.aap.behandlingsflyt.integrasjon.oppgave.OppgavestyringGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusSykepengerGateway
 import no.nav.aap.behandlingsflyt.integrasjon.statistikk.StatistikkGatewayImpl
+import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreGateway
 import no.nav.aap.behandlingsflyt.integrasjon.utbetaling.UtbetalingGatewayImpl
+import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRegisterGatewayImpl
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -125,6 +129,7 @@ import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -229,6 +234,10 @@ class FlytOrkestratorTest {
                 .register<AARegisterGateway>()
                 .register<StatistikkGatewayImpl>()
                 .register<InntektGatewayImpl>()
+                .register<BrevGateway>()
+                .register<OppgavestyringGatewayImpl>()
+                .register<UføreGateway>()
+                .register<YrkesskadeRegisterGatewayImpl>()
             motor.start()
         }
 
@@ -1196,7 +1205,7 @@ class FlytOrkestratorTest {
         val behandling = hentBehandling(sak.id)
         assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
 
-        val stegHistorikk = behandling.stegHistorikk()
+        val stegHistorikk = hentStegHistorikk(behandling.id)
         assertThat(stegHistorikk.map { it.steg() }).contains(StegType.BREV)
         assertThat(stegHistorikk.map { it.status() }).contains(StegStatus.AVKLARINGSPUNKT)
 
@@ -1375,6 +1384,7 @@ class FlytOrkestratorTest {
                     ),
                     brevkategori = InnsendingType.LEGEERKLÆRING_AVVIST,
                     kanal = Kanal.DIGITAL,
+                    mottattTidspunkt = LocalDateTime.now()
                 )
             )
         }
@@ -1441,6 +1451,7 @@ class FlytOrkestratorTest {
                     ),
                     brevkategori = InnsendingType.LEGEERKLÆRING,
                     kanal = Kanal.DIGITAL,
+                    mottattTidspunkt = LocalDateTime.now()
                 )
             )
         }
@@ -1521,6 +1532,7 @@ class FlytOrkestratorTest {
                     ),
                     brevkategori = InnsendingType.DIALOGMELDING,
                     kanal = Kanal.DIGITAL,
+                    mottattTidspunkt = LocalDateTime.now()
                 )
             )
         }
@@ -1813,8 +1825,8 @@ class FlytOrkestratorTest {
             behandling,
             AvklarLovvalgMedlemskapLøsning(
                 manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskapDto(
-                    LovvalgVedSøknadsTidspunkt("crazy lovvalgsland vurdering", null),
-                    MedlemskapVedSøknadsTidspunkt("crazy medlemskap vurdering", true)
+                    LovvalgVedSøknadsTidspunktDto("crazy lovvalgsland vurdering", null),
+                    MedlemskapVedSøknadsTidspunktDto("crazy medlemskap vurdering", true)
                 ),
                 behovstype = AvklaringsbehovKode.`5017`
             )
@@ -1872,8 +1884,8 @@ class FlytOrkestratorTest {
         løsAvklaringsBehov(
             behandling, AvklarLovvalgMedlemskapLøsning(
                 manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskapDto(
-                    LovvalgVedSøknadsTidspunkt("crazy lovvalgsland vurdering", EØSLand.DNK),
-                    MedlemskapVedSøknadsTidspunkt(null, null)
+                    LovvalgVedSøknadsTidspunktDto("crazy lovvalgsland vurdering", EØSLand.DNK),
+                    MedlemskapVedSøknadsTidspunktDto(null, null)
                 ),
                 behovstype = AvklaringsbehovKode.`5017`
             )
@@ -1930,8 +1942,8 @@ class FlytOrkestratorTest {
         løsAvklaringsBehov(
             behandling, AvklarLovvalgMedlemskapLøsning(
                 manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskapDto(
-                    LovvalgVedSøknadsTidspunkt("crazy lovvalgsland vurdering", EØSLand.NOR),
-                    MedlemskapVedSøknadsTidspunkt("crazy medlemskap vurdering", false)
+                    LovvalgVedSøknadsTidspunktDto("crazy lovvalgsland vurdering", EØSLand.NOR),
+                    MedlemskapVedSøknadsTidspunktDto("crazy medlemskap vurdering", false)
                 ),
                 behovstype = AvklaringsbehovKode.`5017`
             )
@@ -2025,8 +2037,8 @@ class FlytOrkestratorTest {
         løsAvklaringsBehov(
             behandling, AvklarOverstyrtLovvalgMedlemskapLøsning(
                 manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskapDto(
-                    LovvalgVedSøknadsTidspunkt("crazy lovvalgsland vurdering", EØSLand.NOR),
-                    MedlemskapVedSøknadsTidspunkt("crazy medlemskap vurdering", false)
+                    LovvalgVedSøknadsTidspunktDto("crazy lovvalgsland vurdering", EØSLand.NOR),
+                    MedlemskapVedSøknadsTidspunktDto("crazy medlemskap vurdering", false)
                 ),
                 behovstype = AvklaringsbehovKode.`5021`
             )
@@ -2068,8 +2080,8 @@ class FlytOrkestratorTest {
         løsAvklaringsBehov(
             behandling, AvklarOverstyrtLovvalgMedlemskapLøsning(
                 manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskapDto(
-                    LovvalgVedSøknadsTidspunkt("crazy lovvalgsland vurdering", EØSLand.NOR),
-                    MedlemskapVedSøknadsTidspunkt("crazy medlemskap vurdering", true)
+                    LovvalgVedSøknadsTidspunktDto("crazy lovvalgsland vurdering", EØSLand.NOR),
+                    MedlemskapVedSøknadsTidspunktDto("crazy medlemskap vurdering", true)
                 ),
                 behovstype = AvklaringsbehovKode.`5021`
             )
@@ -2137,8 +2149,8 @@ class FlytOrkestratorTest {
             løsAvklaringsBehov(
                 behandling, AvklarLovvalgMedlemskapLøsning(
                     manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskapDto(
-                        LovvalgVedSøknadsTidspunkt("crazy lovvalgsland vurdering", EØSLand.NOR),
-                        MedlemskapVedSøknadsTidspunkt(null, true)
+                        LovvalgVedSøknadsTidspunktDto("crazy lovvalgsland vurdering", EØSLand.NOR),
+                        MedlemskapVedSøknadsTidspunktDto(null, true)
                     ),
                     behovstype = AvklaringsbehovKode.`5017`
                 )
@@ -2252,6 +2264,12 @@ class FlytOrkestratorTest {
         return dataSource.transaction(readOnly = true) { connection ->
             val finnSisteBehandlingFor = BehandlingRepositoryImpl(connection).finnSisteBehandlingFor(sakId)
             requireNotNull(finnSisteBehandlingFor)
+        }
+    }
+
+    private fun hentStegHistorikk(behandlingId: BehandlingId): List<StegTilstand> {
+        return dataSource.transaction(readOnly = true) { connection ->
+            BehandlingRepositoryImpl(connection).hentStegHistorikk(behandlingId)
         }
     }
 

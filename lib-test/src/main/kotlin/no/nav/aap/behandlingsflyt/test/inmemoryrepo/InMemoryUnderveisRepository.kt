@@ -9,7 +9,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 
 object InMemoryUnderveisRepository : UnderveisRepository {
-    val grunnlag = ConcurrentHashMap<BehandlingId, UnderveisGrunnlag>()
+    private val grunnlag = ConcurrentHashMap<BehandlingId, UnderveisGrunnlag>()
     private val id = AtomicLong(0)
 
     override fun hent(behandlingId: BehandlingId): UnderveisGrunnlag {

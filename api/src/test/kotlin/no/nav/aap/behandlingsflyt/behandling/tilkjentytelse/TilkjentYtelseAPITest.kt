@@ -1,0 +1,176 @@
+package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
+
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.nimbusds.jwt.SignedJWT
+import com.papsign.ktor.openapigen.OpenAPIGen
+import com.papsign.ktor.openapigen.route.apiRouting
+import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.request.*
+import io.ktor.http.*
+import io.ktor.serialization.jackson.*
+import io.ktor.server.application.*
+import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.testing.*
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.Fakes
+import no.nav.aap.behandlingsflyt.test.MockDataSource
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTilkjentYtelseRepository
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.GUnit
+import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.lookup.repository.RepositoryRegistry
+import no.nav.security.mock.oauth2.MockOAuth2Server
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Test
+import java.math.BigDecimal
+import java.time.LocalDate
+import java.util.*
+
+@Fakes
+class TilkjentYtelseAPITest {
+    companion object {
+        private val server = MockOAuth2Server()
+
+        @BeforeAll
+        @JvmStatic
+        fun beforeAll() {
+            server.start()
+
+            RepositoryRegistry
+                .register<InMemoryTilkjentYtelseRepository>()
+                .register<InMemoryBehandlingRepository>()
+        }
+    }
+
+    @Test
+    fun `hente ut tilkjent ytelse fra API`() {
+        val ds = MockDataSource()
+        val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
+
+        InMemoryTilkjentYtelseRepository.lagre(
+            behandling.id, tilkjent = listOf(
+                TilkjentYtelsePeriode(
+                    Periode(
+                        fom = LocalDate.parse("2025-03-07"),
+                        tom = LocalDate.parse("2026-03-07"),
+                    ),
+                    tilkjent = Tilkjent(
+                        dagsats = Beløp(500),
+                        gradering = Prosent(50),
+                        grunnlag = Beløp(10000),
+                        grunnlagsfaktor = GUnit("1.5"),
+                        grunnbeløp = Beløp(106399),
+                        antallBarn = 2,
+                        barnetilleggsats = Beløp(150),
+                        barnetillegg = Beløp(300),
+                        utbetalingsdato = LocalDate.parse("2025-03-08"),
+                    )
+                )
+            )
+        )
+
+        testApplication {
+            installApplication {
+                tilkjentYtelseAPI(ds)
+            }
+            val jwt = issueToken("nav:aap:afpoffentlig.read")
+
+            val client = createClient()
+
+            val response =
+                sendGetRequest(client, jwt, behandling.id, "/api/behandling/tilkjent/${behandling.referanse.referanse}")
+            assertThat(response.status).isEqualTo(HttpStatusCode.OK)
+
+            assertThat(response.body<TilkjentYtelseDto>()).isEqualTo(
+                TilkjentYtelseDto(
+                    perioder = listOf(
+                        TilkjentYtelsePeriodeDTO(
+                            fraOgMed = LocalDate.parse("2025-03-07"),
+                            tilOgMed = LocalDate.parse("2026-03-07"),
+                            dagsats = BigDecimal("500.00"),
+                            gradering = 50,
+                            grunnlag = BigDecimal("10000.00"),
+                            grunnlagsfaktor = BigDecimal("1.5000000000"),
+                            grunnbeløp = BigDecimal("106399.00"),
+                            antallBarn = 2,
+                            barnetilleggsats = BigDecimal("150.00"),
+                            barnetillegg = BigDecimal("300.00"),
+                            utbetalingsdato = LocalDate.parse("2025-03-08"),
+                            redusertDagsats = 400.0
+                        )
+                    )
+                )
+            )
+        }
+    }
+
+    private fun issueToken(scope: String) = server.issueToken(
+        issuerId = "default",
+        claims = mapOf(
+            "scope" to scope,
+            "consumer" to mapOf("authority" to "123", "ID" to "0192:889640782")
+        ),
+    )
+
+    private fun ApplicationTestBuilder.installApplication(apiEndepunkt: NormalOpenAPIRoute.() -> Unit) {
+        application {
+            install(OpenAPIGen)
+            install(ContentNegotiation) {
+                jackson {
+                    registerModule(JavaTimeModule())
+                    disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+                }
+            }
+
+            apiRouting(apiEndepunkt)
+        }
+    }
+
+    private fun opprettBehandling(sak: Sak, typeBehandling: TypeBehandling) =
+        InMemoryBehandlingRepository.opprettBehandling(
+            sak.id,
+            årsaker = listOf(),
+            typeBehandling = typeBehandling,
+            forrigeBehandlingId = null,
+        )
+
+    private fun nySak() = InMemorySakRepository.finnEllerOpprett(
+        person = Person(
+            id = 0,
+            identifikator = UUID.randomUUID(),
+            identer = listOf(Ident("0".repeat(11)))
+        ),
+        periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
+    )
+
+    private fun ApplicationTestBuilder.createClient() = createClient {
+        install(io.ktor.client.plugins.contentnegotiation.ContentNegotiation) {
+            jackson {
+                registerModule(JavaTimeModule())
+                disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+            }
+        }
+    }
+
+    private suspend fun sendGetRequest(
+        client: HttpClient,
+        jwt: SignedJWT,
+        payload: Any,
+        path: String
+    ) = client.get(path) {
+        header("Authorization", "Bearer ${jwt.serialize()}")
+        header("X-callid", UUID.randomUUID().toString())
+        contentType(ContentType.Application.Json)
+        setBody(payload)
+    }
+}

@@ -1,8 +1,10 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
+import no.nav.aap.behandlingsflyt.flyt.utledType
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
@@ -44,7 +46,6 @@ class SakOgBehandlingService(
                     forrigeBehandlingId = sisteBehandlingForSak.id
                 )
 
-
                 val beriketBehandling = BeriketBehandling(
                     behandling = nyBehandling,
                     tilstand = BehandlingTilstand.NY,
@@ -60,6 +61,8 @@ class SakOgBehandlingService(
                 return beriketBehandling
 
             } else {
+                // Valider at behandlingen står i et sted hvor den kan data
+                validerStegStatus(sisteBehandlingForSak)
                 // Oppdater årsaker hvis nødvendig
                 behandlingRepository.oppdaterÅrsaker(sisteBehandlingForSak, årsaker)
                 return BeriketBehandling(
@@ -68,6 +71,15 @@ class SakOgBehandlingService(
                     sisteAvsluttedeBehandling = null
                 )
             }
+        }
+    }
+
+    private fun validerStegStatus(behandling: Behandling) {
+        val flyt = utledType(behandling.typeBehandling()).flyt()
+        // TODO Utvide med regler for hva som kan knyttes til en behandling og når den eventuelt skal tilbake likevel
+        // Om den skal tilbake krever det endringer for å ta hensyn til disse
+        if (!flyt.skalOppdatereFaktagrunnlag()) {
+            throw IllegalStateException("Behandlingen[${behandling.referanse}] kan ikke motta opplysinger nå, avventer fullføring av steg som ligger etter at oppdatering av faktagrunnlag opphører.")
         }
     }
 

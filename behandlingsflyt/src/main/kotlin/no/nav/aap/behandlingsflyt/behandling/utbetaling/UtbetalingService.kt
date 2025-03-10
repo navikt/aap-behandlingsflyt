@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.utbetaling
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -57,16 +58,16 @@ class UtbetalingService(
         }
     }
 
-    private fun Tidslinje<Tilkjent>.tilTilkjentYtelsePeriodeDtoer() =
+    private fun List<TilkjentYtelsePeriode>.tilTilkjentYtelsePeriodeDtoer() =
         map { segment ->
             val periode = segment.periode
-            val detaljer = segment.verdi
+            val detaljer = segment.tilkjent
             TilkjentYtelsePeriodeDto(
                 fom = periode.fom,
                 tom = periode.tom,
                 detaljer = TilkjentYtelseDetaljerDto(
                     redusertDagsats = detaljer.redusertDagsats().verdi(),
-                    gradering = BigDecimal.valueOf(detaljer.gradering.prosentverdi().toLong()),  //TODO: bør være int på utbetalingsiden også.
+                    gradering = detaljer.gradering.prosentverdi(),
                     dagsats = detaljer.dagsats.verdi(),
                     grunnlag = detaljer.grunnlag.verdi(),
                     grunnlagsfaktor = detaljer.grunnlagsfaktor.verdi(),

@@ -6,12 +6,13 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.gateway.Factory
 
 class FakeApiInternGateway : ApiInternGateway {
-    companion object :Factory<ApiInternGateway> {
+    companion object : Factory<ApiInternGateway> {
         override fun konstruer(): ApiInternGateway {
-           return FakeApiInternGateway()
+            return FakeApiInternGateway()
         }
 
     }
+
     override fun sendPerioder(ident: String, perioder: List<Periode>) {
     }
 

@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt.internals
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
-import no.nav.aap.behandlingsflyt.repository.behandling.brev.bestilling.BrevbestillingRepositoryImpl
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
@@ -9,6 +8,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.innsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
+import no.nav.aap.behandlingsflyt.repository.behandling.brev.bestilling.BrevbestillingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -18,8 +18,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.verdityper.dokument.Kanal
+import java.time.LocalDateTime
 import javax.sql.DataSource
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 
 class TestHendelsesMottak(private val dataSource: DataSource) {
 
@@ -65,7 +65,8 @@ class TestHendelsesMottak(private val dataSource: DataSource) {
                         dokumentReferanse = referanse,
                         brevkategori = hendelse.strukturertDokument.data.innsendingType(),
                         kanal = Kanal.DIGITAL,
-                        melding = hendelse.strukturertDokument.data
+                        melding = hendelse.strukturertDokument.data,
+                        mottattTidspunkt = LocalDateTime.now()
                     )
                 )
             }

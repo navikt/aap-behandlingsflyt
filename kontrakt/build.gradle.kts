@@ -8,11 +8,11 @@ plugins {
 
 val tilgangVersjon = "1.0.15"
 val junitVersion = "5.11.3"
-val komponenterVersjon = "1.0.169"
+val komponenterVersjon = "1.0.171"
 
 dependencies {
     api("com.fasterxml.jackson.core:jackson-annotations:2.18.3")
-    api("no.nav:ktor-openapi-generator:1.0.81")
+    api("no.nav:ktor-openapi-generator:1.0.93")
     compileOnly("no.nav.aap.tilgang:api-kontrakt:$tilgangVersjon")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
