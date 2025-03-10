@@ -7,28 +7,42 @@ import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 
-class FastsettMeldeperiodeSteg(val sakRepository: SakRepository, val meldeperiodeRepository: MeldeperiodeRepository) :
-    BehandlingSteg {
+class FastsettMeldeperiodeSteg(
+    private val sakRepository: SakRepository,
+    private val meldeperiodeRepository: MeldeperiodeRepository,
+) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val rettighetsperiode = sakRepository.hent(kontekst.sakId).rettighetsperiode
+        oppdaterMeldeperioder(kontekst.behandlingId, rettighetsperiode)
+        return Fullført
+    }
 
-        val gamlePerioder = meldeperiodeRepository.hentHvisEksisterer(kontekst.behandlingId)
+    fun oppdaterMeldeperioder(behandlingId: BehandlingId, rettighetsperiode: Periode) {
+        val gamlePerioder = meldeperiodeRepository.hentHvisEksisterer(behandlingId)
 
-        val meldeperioder = generateSequence(rettighetsperiode.fom) { it.plusDays(MELDEPERIODE_LENGDE) }
+        val fastsattDag = gamlePerioder?.firstOrNull()?.fom
+
+        val førsteFastsatteDag = if (fastsattDag == null)
+            rettighetsperiode.fom
+        else
+            generateSequence(fastsattDag) { it.minusDays(MELDEPERIODE_LENGDE) }
+                .first { it <= rettighetsperiode.fom }
+
+        val meldeperioder = generateSequence(førsteFastsatteDag) { it.plusDays(MELDEPERIODE_LENGDE) }
             .takeWhile { it <= rettighetsperiode.tom }
-            .map { Periode(it, minOf(it.plusDays(MELDEPERIODE_LENGDE - 1), rettighetsperiode.tom)) }
+            .map { Periode(it, it.plusDays(MELDEPERIODE_LENGDE - 1)) }
             .toList()
 
         if (meldeperioder != gamlePerioder) {
-            meldeperiodeRepository.lagre(kontekst.behandlingId, meldeperioder)
+            meldeperiodeRepository.lagre(behandlingId, meldeperioder)
         }
-        return Fullført
     }
 
     companion object : FlytSteg {
