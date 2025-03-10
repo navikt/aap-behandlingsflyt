@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.kontrakt.datadeling
 
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -29,8 +28,8 @@ public data class UnderveisDTO(
     val meldeperiodeFom: LocalDate,
     val meldeperiodeTom: LocalDate,
     val utfall: String,
-    val rettighetsType: RettighetsType?,
-    val avslagsårsak: String, // skal ikke denne være Avslagsårsak?
+    val rettighetsType: String?,
+    val avslagsårsak: String?, // skal ikke denne være Avslagsårsak?
 )
 
 public data class TilkjentDTO(
