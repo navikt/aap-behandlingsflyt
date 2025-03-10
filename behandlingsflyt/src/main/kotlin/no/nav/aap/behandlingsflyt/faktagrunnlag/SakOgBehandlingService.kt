@@ -81,7 +81,7 @@ class SakOgBehandlingService(
     private fun utledBehandlingstype(sisteBeahndlingForSak: Behandling?, årsaker: List<Årsak>): TypeBehandling {
         if (årsaker.any { it.type == ÅrsakTilBehandling.MOTATT_KLAGE }) {
             return when (sisteBeahndlingForSak) {
-                null -> TODO("Hva skal skje når man har mottatt klage men det ikke finnes en behandling for saken?")
+                null -> throw IllegalArgumentException("Mottok klage, men det finnes ingen eksisterende behandling")
                 else -> TypeBehandling.Klage
             }
         } else {
