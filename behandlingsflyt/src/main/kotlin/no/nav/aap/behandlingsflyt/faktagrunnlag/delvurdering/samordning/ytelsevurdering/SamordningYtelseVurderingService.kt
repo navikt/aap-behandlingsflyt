@@ -32,7 +32,7 @@ class SamordningYtelseVurderingService(
         val sak = sakService.hent(kontekst.sakId)
         val personIdent = sak.person.aktivIdent().identifikator
         val foreldrepenger = hentYtelseForeldrepenger(personIdent, sak.rettighetsperiode.fom, sak.rettighetsperiode.tom)
-        val sykepenger = hentYtelseSykepenger(personIdent, sak.rettighetsperiode.fom, sak.rettighetsperiode.tom)
+        val sykepenger = hentYtelseSykepenger(personIdent, sak.rettighetsperiode.fom.minusWeeks(2), sak.rettighetsperiode.fom.plusYears(1))
         val eksisterendeData = samordningYtelseVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
         val samordningYtelser = mapTilSamordningYtelse(foreldrepenger, sykepenger)
 
