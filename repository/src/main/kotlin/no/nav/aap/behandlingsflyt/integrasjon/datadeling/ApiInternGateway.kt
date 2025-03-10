@@ -1,10 +1,17 @@
 package no.nav.aap.behandlingsflyt.integrasjon.datadeling
 
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.datadeling.SakStatus
 import no.nav.aap.behandlingsflyt.datadeling.SakStatusDTO
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.MeldekortPerioderDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DatadelingDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.SakDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.UnderveisDTO
 import no.nav.aap.behandlingsflyt.prometheus
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
@@ -13,6 +20,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.Client
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.gateway.Factory
 import java.net.URI
+import java.time.LocalDate
 
 class ApiInternGatewayImpl() : ApiInternGateway {
     companion object : Factory<ApiInternGateway> {
@@ -45,5 +53,52 @@ class ApiInternGatewayImpl() : ApiInternGateway {
             mapper = { _, _ ->
                 Unit
             })
+    }
+
+    override fun sendBehandling(sak: Sak, behandling: Behandling, tilkjent: List<TilkjentYtelsePeriode>?, underveis: List<Underveisperiode>, vedtaksDato: LocalDate) {
+        if (tilkjent != null) {
+            restClient.post(
+                uri = uri.resolve("/api/insert/vedtak"),
+                request = PostRequest(body = DatadelingDTO(
+                    underveisperiode = underveis.map {
+                        UnderveisDTO(
+                            underveisFom = it.periode.fom,
+                            underveisTom = it.periode.tom,
+                            meldeperiodeFom = it.meldePeriode.fom,
+                            meldeperiodeTom = it.meldePeriode.tom,
+                            utfall = it.utfall.name,
+                            rettighetsType = it.rettighetsType?.name,
+                            avslagsårsak = it.avslagsårsak?.name
+                        )
+                    },
+                    rettighetsPeriodeFom = sak.rettighetsperiode.fom,
+                    rettighetsPeriodeTom = sak.rettighetsperiode.tom,
+                    behandlingStatus = behandling.status(),
+                    vedtaksDato = vedtaksDato,
+                    sak = SakDTO(
+                        saksnummer = sak.saksnummer.toString(),
+                        status = sak.status(),
+                        fnr = sak.person.identer().map { ident -> ident.identifikator},
+                        opprettetTidspunkt = sak.opprettetTidspunkt
+                    ),
+                    tilkjent = tilkjent.map { tilkjentPeriode ->
+                        no.nav.aap.behandlingsflyt.kontrakt.datadeling.TilkjentDTO(
+                            tilkjentFom = tilkjentPeriode.periode.fom,
+                            tilkjentTom = tilkjentPeriode.periode.tom,
+                            dagsats = tilkjentPeriode.tilkjent.dagsats.verdi,
+                            gradering = tilkjentPeriode.tilkjent.gradering.prosentverdi(),
+                            grunnlag = tilkjentPeriode.tilkjent.grunnlag.verdi,
+                            grunnlagsfaktor = tilkjentPeriode.tilkjent.grunnlagsfaktor.verdi(),
+                            grunnbeløp = tilkjentPeriode.tilkjent.grunnbeløp.verdi,
+                            antallBarn = tilkjentPeriode.tilkjent.antallBarn,
+                            barnetilleggsats = tilkjentPeriode.tilkjent.barnetilleggsats.verdi,
+                            barnetillegg = tilkjentPeriode.tilkjent.barnetillegg.verdi
+                        )
+                    }
+                )),
+                mapper = { _, _ ->
+                    Unit
+                })
+        }
     }
 }
