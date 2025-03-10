@@ -843,7 +843,6 @@ class FlytOrkestratorTest {
         assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
 
         var alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
-
         assertThat(alleAvklaringsbehov).isNotEmpty()
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
 
@@ -905,7 +904,7 @@ class FlytOrkestratorTest {
                             ytelseType = Ytelse.SYKEPENGER,
                             begrunnelse = "En god begrunnelse",
                             maksDatoEndelig = false,
-                            maksDato = LocalDate.now().plusYears(1),
+                            maksDato = LocalDate.now().plusMonths(1),
                             vurderingPerioder = listOf(
                                 SamordningVurderingPeriode(
                                     periode = sykePengerPeriode,

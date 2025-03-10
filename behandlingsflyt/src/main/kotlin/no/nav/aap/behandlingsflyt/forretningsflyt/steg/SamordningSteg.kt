@@ -48,17 +48,12 @@ class SamordningSteg(
 
         val vurderingsGrunnlag = samordningYtelseVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
         if (vurderingsGrunnlag != null) {
-            val ytelseId = vurderingsGrunnlag.ytelseGrunnlag.ytelseId
-            val ytelser = samordningYtelseVurderingRepository.hentSamordningYtelser(ytelseId)
 
-            if (ytelser.ytelser.any {it.ytelseType === Ytelse.SYKEPENGER}) {
-                log.info("Fant sykepenger de siste 4 uker ")
-                return FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_GRADERING)
-            }
             if (perioderSomIkkeHarBlittVurdert.isNotEmpty()) {
                 log.info("Fant perioder som ikke har blitt vurdert: $perioderSomIkkeHarBlittVurdert")
                 return FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_GRADERING)
             }
+
         }
         val samordningTidslinje =
             samordningService.vurder(input, tidligereVurderinger)

@@ -1,7 +1,9 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningSteg
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import org.slf4j.LoggerFactory
 
 class AvklaringsbehovHendelseHåndterer(
     private val avklaringsbehovOrkestrator: AvklaringsbehovOrkestrator,
@@ -9,12 +11,10 @@ class AvklaringsbehovHendelseHåndterer(
     private val behandlingRepository: BehandlingRepository,
 ) {
 
-
     fun håndtere(key: BehandlingId, hendelse: LøsAvklaringsbehovHendelse) {
         val behandling = behandlingRepository.hent(key)
 
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-
         avklaringsbehovene.validateTilstand(
             behandling = behandling,
             avklaringsbehov = hendelse.behov().definisjon()
