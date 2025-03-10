@@ -65,3 +65,4 @@ public data class Ident(val identifikator: String) {
         require(identifikator.matches("\\d{11}".toRegex())) { "Ugyldig identifikator" }
     }
 }
+

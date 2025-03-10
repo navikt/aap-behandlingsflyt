@@ -7,5 +7,5 @@ public sealed interface AnnetRelevantDokument : Melding
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public data class AnnetRelevantDokumentV0(
-    public val årsakTilBehandling: ÅrsakTilBehandling,
+    public val årsakerTilBehandling: List<ÅrsakTilBehandling>,
 ) : AnnetRelevantDokument
