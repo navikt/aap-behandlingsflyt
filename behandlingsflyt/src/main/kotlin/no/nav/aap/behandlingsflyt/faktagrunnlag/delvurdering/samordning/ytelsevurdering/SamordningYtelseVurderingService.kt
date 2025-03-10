@@ -36,6 +36,9 @@ class SamordningYtelseVurderingService(
         val foreldrepenger = hentYtelseForeldrepenger(personIdent, sak.rettighetsperiode.fom, sak.rettighetsperiode.tom)
         val sykepenger = hentYtelseSykepenger(personIdent, sak.rettighetsperiode.fom.minusWeeks(2), sak.rettighetsperiode.fom.plusYears(1))
         log.info("Hentet sykepenger for PersonIdent $personIdent ${sykepenger.size}")
+        sykepenger.forEach { period ->
+            log.info("Periode" + period.toString())
+        }
         val eksisterendeData = samordningYtelseVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
         val samordningYtelser = mapTilSamordningYtelse(foreldrepenger, sykepenger)
 
