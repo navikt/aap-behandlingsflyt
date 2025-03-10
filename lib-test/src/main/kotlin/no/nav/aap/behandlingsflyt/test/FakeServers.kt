@@ -77,6 +77,7 @@ import no.nav.aap.brev.kontrakt.BestillBrevResponse
 import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
 import no.nav.aap.brev.kontrakt.Brevtype
+import no.nav.aap.brev.kontrakt.FerdigstillBrevRequest
 import no.nav.aap.brev.kontrakt.Innhold
 import no.nav.aap.brev.kontrakt.Språk
 import no.nav.aap.brev.kontrakt.Status
@@ -125,7 +126,7 @@ object FakeServers : AutoCloseable {
     private val ainntekt = embeddedServer(Netty, port = 0, module = { ainntektFake() })
     private val aareg = embeddedServer(Netty, port = 0, module = { aaregFake() })
     private val datadeling = embeddedServer(Netty, port = 0, module = { datadelingFake() })
-    private val utbetal = embeddedServer(Netty, port = 0, module = {utbetalFake()})
+    private val utbetal = embeddedServer(Netty, port = 0, module = { utbetalFake() })
 
     internal val statistikkHendelser = mutableListOf<StoppetBehandling>()
     internal val legeerklæringStatuser = mutableListOf<LegeerklæringStatusResponse>()
@@ -1405,10 +1406,21 @@ object FakeServers : AutoCloseable {
                         )
                     }
                     put("/oppdater") {
+                        val ref = UUID.fromString(call.pathParameters.get("referanse"))!!
+                        val brev = call.receive<Brev>()
+                        synchronized(mutex) {
+                            val i = brevStore.indexOfFirst { it.referanse == ref }
+                            brevStore[i] = brevStore[i].copy(brev = brev)
+                        }
                         call.respond(HttpStatusCode.NoContent, Unit)
                     }
                 }
                 post("/ferdigstill") {
+                    val ref = call.receive<FerdigstillBrevRequest>().referanse
+                    synchronized(mutex) {
+                        val i = brevStore.indexOfFirst { it.referanse == ref }
+                        brevStore[i] = brevStore[i].copy(status = Status.FERDIGSTILT)
+                    }
                     call.respond(HttpStatusCode.Accepted, Unit)
                 }
             }
