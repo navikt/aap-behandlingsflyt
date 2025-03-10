@@ -9,11 +9,7 @@ object InMemoryMeldeperiodeRepository: MeldeperiodeRepository {
     private val meldeperioder = ConcurrentHashMap<BehandlingId, List<Periode>>()
 
     override fun hent(behandlingId: BehandlingId): List<Periode> {
-        return meldeperioder[behandlingId]!!
-    }
-
-    override fun hentHvisEksisterer(behandlingId: BehandlingId): List<Periode>? {
-        return meldeperioder[behandlingId]
+        return meldeperioder[behandlingId].orEmpty()
     }
 
     override fun lagre(behandlingId: BehandlingId, meldeperioder: List<Periode>) {

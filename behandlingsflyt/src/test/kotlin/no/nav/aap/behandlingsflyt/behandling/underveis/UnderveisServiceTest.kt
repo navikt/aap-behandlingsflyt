@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.institusjons
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.MockDataSource
@@ -53,6 +54,7 @@ class UnderveisServiceTest {
                     ),
                     ArbeidsevneRepositoryImpl(connection),
                     MeldepliktRepositoryImpl(connection),
+                    MeldeperiodeRepositoryImpl(connection),
                 )
             val søknadsdato = LocalDate.now().minusDays(29)
             val periode = Periode(søknadsdato, søknadsdato.plusYears(3))
@@ -117,7 +119,7 @@ class UnderveisServiceTest {
                     )
                 )
             val relevanteVilkår = listOf(aldersVilkåret, lovvalgVilkåret, bistandVilkåret, medlemskapVilkåret, sykdomsVilkåret)
-            val input = tomUnderveisInput.copy(
+            val input = tomUnderveisInput(
                 rettighetsperiode = periode,
                 vilkårsresultat =  Vilkårsresultat(null, relevanteVilkår),
                 opptrappingPerioder = listOf(Periode(søknadsdato.plusYears(2), søknadsdato.plusYears(3))),

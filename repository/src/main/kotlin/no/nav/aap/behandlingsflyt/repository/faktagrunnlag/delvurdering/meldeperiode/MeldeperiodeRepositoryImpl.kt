@@ -15,10 +15,6 @@ class MeldeperiodeRepositoryImpl(private val connection: DBConnection): Meldeper
     }
 
     override fun hent(behandlingId: BehandlingId): List<Periode> {
-        return requireNotNull(hentHvisEksisterer(behandlingId))
-    }
-
-    override fun hentHvisEksisterer(behandlingId: BehandlingId): List<Periode>? {
         val query = """
             SELECT * FROM MELDEPERIODE 
             JOIN MELDEPERIODE_GRUNNLAG ON MELDEPERIODE.meldeperiodegrunnlag_id = MELDEPERIODE_GRUNNLAG.id

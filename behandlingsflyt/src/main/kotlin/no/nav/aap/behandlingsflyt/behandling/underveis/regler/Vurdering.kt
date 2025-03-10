@@ -122,7 +122,7 @@ data class Vurdering(
     }
 
     private fun arbeiderMindreEnnGrenseverdi(): Boolean {
-        return gradering == null || grenseverdi() >= gradering.andelArbeid
+        return gradering == null || grenseverdi == null || grenseverdi() >= gradering.andelArbeid
     }
 
     fun rettighetsType(): RettighetsType? {

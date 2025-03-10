@@ -51,7 +51,7 @@ class MeldepliktRegelTest {
             LocalDate.of(2020, JANUARY, 6),
             LocalDate.of(2020, MARCH, 1)
         )
-        val input = tomUnderveisInput.copy(
+        val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
             innsendingsTidspunkt = mapOf(
                 LocalDate.of(2020, JANUARY, 20) to JournalpostId("1"),
@@ -105,7 +105,7 @@ class MeldepliktRegelTest {
             LocalDate.of(2020, APRIL, 20),
             LocalDate.of(2021, APRIL, 19),
         )
-        val input = tomUnderveisInput.copy(
+        val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
         )
 
@@ -138,7 +138,7 @@ class MeldepliktRegelTest {
             LocalDate.of(2020, MARCH, 29),
         )
 
-        val input = tomUnderveisInput.copy(
+        val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
             innsendingsTidspunkt = mapOf(
                 LocalDate.of(2020, FEBRUARY, 2) to JournalpostId("1"),
@@ -202,7 +202,7 @@ class MeldepliktRegelTest {
             LocalDate.of(2020, APRIL, 20),
             LocalDate.of(2021, APRIL, 19),
         )
-        val input = tomUnderveisInput.copy(
+        val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
             meldepliktGrunnlag = MeldepliktGrunnlag(listOf(
                 Fritaksvurdering(
@@ -247,7 +247,7 @@ class MeldepliktRegelTest {
             LocalDate.of(2020, APRIL, 20),
             LocalDate.of(2021, APRIL, 19),
         )
-        val input = tomUnderveisInput.copy(
+        val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
             meldepliktGrunnlag = MeldepliktGrunnlag(listOf(
                 Fritaksvurdering(
@@ -291,7 +291,7 @@ class MeldepliktRegelTest {
             LocalDate.of(2020, MARCH, 1),
         )
 
-        val input = tomUnderveisInput.copy(
+        val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
         )
 
@@ -341,7 +341,7 @@ class MeldepliktRegelTest {
             LocalDate.of(2020, APRIL, 20),
             LocalDate.of(2021, APRIL, 19),
         )
-        val input = tomUnderveisInput.copy(
+        val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
             innsendingsTidspunkt = mapOf(
                 LocalDate.of(2020, MAY, 11) to JournalpostId("1"),
@@ -386,7 +386,7 @@ class MeldepliktRegelTest {
             LocalDate.of(2020, APRIL, 20),
             LocalDate.of(2021, APRIL, 19),
         )
-        val input = tomUnderveisInput.copy(
+        val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
             innsendingsTidspunkt = mapOf(
                 LocalDate.of(2020, MAY, 11) to JournalpostId("1"),
@@ -433,7 +433,7 @@ class MeldepliktRegelTest {
             LocalDate.of(2020, FEBRUARY, 16),
         )
 
-        val input = tomUnderveisInput.copy(
+        val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
             innsendingsTidspunkt = mapOf(
                 LocalDate.of(2020, JANUARY, 28) to JournalpostId("1"),
@@ -483,7 +483,7 @@ class MeldepliktRegelTest {
             LocalDate.of(2020, FEBRUARY, 16),
         )
 
-        val input = tomUnderveisInput.copy(
+        val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
             innsendingsTidspunkt = mapOf(
                 LocalDate.of(2020, JANUARY, 30) to JournalpostId("1"),
@@ -531,7 +531,7 @@ class MeldepliktRegelTest {
             LocalDate.of(2020, APRIL, 20),
             LocalDate.of(2020, MAY, 31),
         )
-        val input = tomUnderveisInput.copy(
+        val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
             meldepliktGrunnlag = MeldepliktGrunnlag(listOf(
                 Fritaksvurdering(
@@ -589,7 +589,7 @@ class MeldepliktRegelTest {
             LocalDate.of(2020, APRIL, 20),
             LocalDate.of(2020, MAY, 31),
         )
-        val input = tomUnderveisInput.copy(
+        val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
             meldepliktGrunnlag = MeldepliktGrunnlag(listOf(
                 Fritaksvurdering(
@@ -646,7 +646,7 @@ class MeldepliktRegelTest {
             LocalDate.of(2020, APRIL, 20),
             LocalDate.of(2020, MAY, 20),
         )
-        val input = tomUnderveisInput.copy(
+        val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
             innsendingsTidspunkt = mapOf(LocalDate.of(2020, MAY, 22) to JournalpostId("1"))
         )
@@ -690,7 +690,7 @@ class MeldepliktRegelTest {
             LocalDate.of(2020, APRIL, 20),
             LocalDate.of(2020, MAY, 17),
         )
-        val input = tomUnderveisInput.copy(
+        val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
             meldepliktGrunnlag = MeldepliktGrunnlag(listOf(
                 Fritaksvurdering(
@@ -747,7 +747,7 @@ class MeldepliktRegelTest {
             LocalDate.of(2020, APRIL, 20),
             LocalDate.of(2020, MAY, 17),
         )
-        val input = tomUnderveisInput.copy(
+        val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
         )
 
@@ -790,7 +790,7 @@ class MeldepliktRegelTest {
             LocalDate.of(2020, APRIL, 20),
             LocalDate.of(2020, MAY, 17),
         )
-        val input = tomUnderveisInput.copy(
+        val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
         )
 
@@ -826,7 +826,7 @@ class MeldepliktRegelTest {
             LocalDate.of(2020, APRIL, 20),
             LocalDate.of(2020, MAY, 31),
         )
-        val input = tomUnderveisInput.copy(
+        val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
         )
 
@@ -869,7 +869,7 @@ class MeldepliktRegelTest {
             LocalDate.of(2020, APRIL, 20),
             LocalDate.of(2020, MAY, 31),
         )
-        val input = tomUnderveisInput.copy(
+        val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
             meldepliktGrunnlag = MeldepliktGrunnlag(
                 listOf(Fritaksvurdering(
