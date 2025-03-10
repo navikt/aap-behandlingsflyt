@@ -65,6 +65,7 @@ class SakOgBehandlingService(
 
             } else {
                 // Valider at behandlingen står i et sted hvor den kan data
+                if (årsaker.any { it.type == ÅrsakTilBehandling.MOTATT_KLAGE }) TODO("Hva skal skje med klage mottatt for åpen behandling?")
                 validerStegStatus(sisteBehandlingForSak)
                 // Oppdater årsaker hvis nødvendig
                 behandlingRepository.oppdaterÅrsaker(sisteBehandlingForSak, årsaker)
@@ -92,7 +93,6 @@ class SakOgBehandlingService(
     }
 
     private fun validerStegStatus(behandling: Behandling) {
-        if (behandling.typeBehandling() == TypeBehandling.Klage) TODO("Hva skal skje når man mottar klage og det finnes en aktiv behandling?")
         val flyt = utledType(behandling.typeBehandling()).flyt()
         // TODO Utvide med regler for hva som kan knyttes til en behandling og når den eventuelt skal tilbake likevel
         // Om den skal tilbake krever det endringer for å ta hensyn til disse

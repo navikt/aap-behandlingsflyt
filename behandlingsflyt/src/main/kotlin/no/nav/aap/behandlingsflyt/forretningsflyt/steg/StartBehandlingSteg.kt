@@ -1,11 +1,15 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.FantVentebehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
+import no.nav.aap.behandlingsflyt.flyt.steg.Ventebehov
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -33,6 +37,14 @@ class StartBehandlingSteg private constructor(
                 }
 
             vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+        }
+        if (kontekst.behandlingType == TypeBehandling.Klage) {
+            return FantVentebehov(
+                Ventebehov(
+                    definisjon = Definisjon.VENTE_PÅ_KLAGE_IMPLEMENTASJON,
+                    grunn = ÅrsakTilSettPåVent.VENTER_PÅ_KLAGE_IMPLEMENTASJON
+                )
+            )
         }
 
         return Fullført

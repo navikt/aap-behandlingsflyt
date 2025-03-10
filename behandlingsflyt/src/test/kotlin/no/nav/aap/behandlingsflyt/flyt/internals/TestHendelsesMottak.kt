@@ -63,9 +63,9 @@ class TestHendelsesMottak(private val dataSource: DataSource) {
                     HendelseMottattHåndteringJobbUtfører.nyJobb(
                         sakId = sak.id,
                         dokumentReferanse = referanse,
-                        brevkategori = hendelse.strukturertDokument.data.innsendingType(),
+                        brevkategori = hendelse.innsendingType ?: hendelse.strukturertDokument?.data?.innsendingType()!!,
                         kanal = Kanal.DIGITAL,
-                        melding = hendelse.strukturertDokument.data,
+                        melding = hendelse.strukturertDokument?.data,
                         mottattTidspunkt = LocalDateTime.now()
                     )
                 )
