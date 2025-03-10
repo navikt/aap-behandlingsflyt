@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.underveis
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -38,6 +39,8 @@ class VirkningstidspunktUtleder(
 
         return kombinertTidslinje.filter {
             it.verdi.let { (samordningsprosent, tilkjentytelse, underveisperiode) ->
+                if (underveisperiode?.utfall != Utfall.OPPFYLT) return@filter false
+
                 tilkjentytelse != null && tilkjentytelse.redusertDagsats().verdi.toDouble() > 0 && (samordningsprosent?.prosentverdi()
                     ?: 0) < 100
             }
