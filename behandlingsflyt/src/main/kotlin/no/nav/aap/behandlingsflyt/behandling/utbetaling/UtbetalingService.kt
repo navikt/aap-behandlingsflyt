@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -14,13 +15,13 @@ import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseDetaljerDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelsePeriodeDto
 import java.math.BigDecimal
-import java.time.LocalDateTime
 
 class UtbetalingService(
     private val sakRepository: SakRepository,
     private val behandlingRepository: BehandlingRepository,
     private val tilkjentYtelseRepository: TilkjentYtelseRepository,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val vedtakRepository: VedtakRepository,
 ) {
 
      fun lagTilkjentYtelseForUtbetaling(sakId: SakId, behandlingId: BehandlingId): TilkjentYtelseDto? {
@@ -39,13 +40,14 @@ class UtbetalingService(
             val avklaringsbehovFatteVedtak = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FATTE_VEDTAK)
             val saksbehandlerIdent = avklaringsbehovForeslåVedtak?.endretAv() ?: ""
             val beslutterIdent = avklaringsbehovFatteVedtak?.endretAv() ?: ""
+            val vedtakstidspunkt = vedtakRepository.hent(behandlingId)?.vedtakstidspunkt ?: error("Fant ikke vedtak")
 
             TilkjentYtelseDto(
                 saksnummer = saksnummer,
                 behandlingsreferanse = behandlingsreferanse,
                 forrigeBehandlingsreferanse  = forrigeBehandlingRef,
                 personIdent = personIdent,
-                vedtakstidspunkt = LocalDateTime.now(), //TODO: denne er kanskje bra nok siden det skjer i iverksett steget?
+                vedtakstidspunkt = vedtakstidspunkt,
                 beslutterId = beslutterIdent,
                 saksbehandlerId = saksbehandlerIdent,
                 perioder = tilkjentYtelse.tilTilkjentYtelsePeriodeDtoer(),
