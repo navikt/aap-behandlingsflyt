@@ -67,6 +67,9 @@ class SamordningYtelseVurderingRepositoryImplTest {
         // Lagre vurdering
         val vurdering = SamordningVurdering(
             ytelseType = Ytelse.SYKEPENGER,
+            begrunnelse = "En god begrunnelse",
+            maksDatoEndelig = false,
+            maksDato = LocalDate.now().plusYears(1),
             vurderingPerioder = listOf(
                 SamordningVurderingPeriode(
                     periode = Periode(LocalDate.now().minusYears(3), LocalDate.now().minusDays(1)),
@@ -124,6 +127,9 @@ class SamordningYtelseVurderingRepositoryImplTest {
         // Lagre vurdering
         val vurdering = SamordningVurdering(
             ytelseType = Ytelse.SYKEPENGER,
+            begrunnelse = "En god begrunnelse",
+            maksDatoEndelig = false,
+            maksDato = LocalDate.now().plusYears(1),
             vurderingPerioder = listOf(
                 SamordningVurderingPeriode(
                     periode = Periode(LocalDate.now().minusYears(3), LocalDate.now().minusDays(1)),

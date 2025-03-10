@@ -31,6 +31,13 @@ object InMemorySamordningYtelseVurderingRepository : SamordningYtelseVurderingRe
         ytelser[behandlingId] = samordningYtelser
     }
 
+    override fun hentSamordningYtelser(behandlingId: BehandlingId, ytelseId: Long): SamordningYtelseGrunnlag {
+        return SamordningYtelseGrunnlag(
+            ytelseId = 2,
+            ytelser = ytelser[behandlingId] ?: emptyList()
+        )
+    }
+
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         TODO("Not yet implemented")
     }
