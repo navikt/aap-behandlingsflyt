@@ -35,10 +35,6 @@ class SamordningYtelseVurderingService(
         val personIdent = sak.person.aktivIdent().identifikator
         val foreldrepenger = hentYtelseForeldrepenger(personIdent, sak.rettighetsperiode.fom, sak.rettighetsperiode.tom)
         val sykepenger = hentYtelseSykepenger(personIdent, sak.rettighetsperiode.fom, sak.rettighetsperiode.tom)
-<<<<<<< HEAD
-=======
-
->>>>>>> bf48f4d1f (Fikset opp i konflikt)
         log.info("Hentet sykepenger for PersonIdent $personIdent ${sykepenger.size}")
         sykepenger.forEach { period ->
             log.info("Periode" + period.toString())
