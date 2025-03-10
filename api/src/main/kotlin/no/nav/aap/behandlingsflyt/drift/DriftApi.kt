@@ -19,6 +19,8 @@ import javax.sql.DataSource
  * Ikke bruk dette ved mindre du vet hva du gjør.
  * Med tid kan vi ha et admin-verktøy for alle disse.
  * */
+
+// TODO: Denne resetter en behandling til start, men trenger å fikses til å kunne sette behandlingen i gang igjen.
 fun NormalOpenAPIRoute.driftAPI(dataSource: DataSource) {
     route("/api/drift") {
         route("/flyttbehandlingtilstart/{referanse}") {
