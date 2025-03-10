@@ -31,4 +31,6 @@ data class Underveisperiode(
     override fun compareTo(other: Underveisperiode): Int {
         return periode.compareTo(other.periode)
     }
+
+    companion object
 }
