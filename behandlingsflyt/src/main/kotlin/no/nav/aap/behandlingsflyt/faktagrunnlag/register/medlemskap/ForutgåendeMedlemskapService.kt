@@ -1,12 +1,12 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap
 
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdOversikt
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdRequest
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.adapter.ArbeidsforholdRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektkomponentenGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.MedlemskapResponse
@@ -43,13 +43,12 @@ class ForutgåendeMedlemskapService private constructor(
         return if (nyeData == eksisterendeData) IKKE_ENDRET else ENDRET
     }
 
-    private fun innhentAARegisterGrunnlag5år(sak: Sak): List<ArbeidsforholdOversikt> {
+    private fun innhentAARegisterGrunnlag5år(sak: Sak): List<ArbeidINorgeGrunnlag> {
         val request = ArbeidsforholdRequest(
             arbeidstakerId = sak.person.aktivIdent().identifikator,
             historikk = true
         )
-        val response = GatewayProvider.provide<ArbeidsforholdGateway>().hentAARegisterData(request).arbeidsforholdoversikter
-        return response.filter { it.arbeidssted.type.uppercase() == "UNDERENHET" }
+        return GatewayProvider.provide<ArbeidsforholdGateway>().hentAARegisterData(request)
     }
 
     private fun innhentAInntektGrunnlag5år(sak: Sak): List<ArbeidsInntektMaaned> {
@@ -61,7 +60,7 @@ class ForutgåendeMedlemskapService private constructor(
         ).arbeidsInntektMaaned
     }
 
-    private fun lagre(behandlingId: BehandlingId, medlemskapGrunnlag: List<MedlemskapResponse>, arbeidGrunnlag: List<ArbeidsforholdOversikt>, inntektGrunnlag: List<ArbeidsInntektMaaned>) {
+    private fun lagre(behandlingId: BehandlingId, medlemskapGrunnlag: List<MedlemskapResponse>, arbeidGrunnlag: List<ArbeidINorgeGrunnlag>, inntektGrunnlag: List<ArbeidsInntektMaaned>) {
         val medlId = if (medlemskapGrunnlag.isNotEmpty()) medlemskapForutgåendeRepository.lagreUnntakMedlemskap(behandlingId, medlemskapGrunnlag) else null
         grunnlagRepository.lagreArbeidsforholdOgInntektINorge(behandlingId, arbeidGrunnlag, inntektGrunnlag, medlId)
     }
