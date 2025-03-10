@@ -60,7 +60,7 @@ class LovvalgService private constructor(
         val inntektskomponentGateway = InntektkomponentenGateway()
         return inntektskomponentGateway.hentAInntekt(
             sak.person.aktivIdent().identifikator,
-            YearMonth.from(sak.rettighetsperiode.fom),
+            YearMonth.from(sak.rettighetsperiode.fom.minusMonths(1)),
             YearMonth.from(sak.rettighetsperiode.fom)
         ).arbeidsInntektMaaned
     }
