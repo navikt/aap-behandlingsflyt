@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.forretningsflyt.steg.effektuer11_7
+package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
