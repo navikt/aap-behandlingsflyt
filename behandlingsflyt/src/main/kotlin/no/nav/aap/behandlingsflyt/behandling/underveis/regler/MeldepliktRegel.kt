@@ -27,7 +27,10 @@ import java.time.LocalDate
 class MeldepliktRegel(
     private val clock: Clock = Clock.systemDefaultZone(),
 ) : UnderveisRegel {
-    class MeldepliktData(val fritaksvurdering: Fritaksvurdering.FritaksvurderingData?, val innsending: JournalpostId?)
+    class MeldepliktData(
+        val fritaksvurdering: Fritaksvurdering.FritaksvurderingData?,
+        val innsending: JournalpostId?,
+    )
 
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
         require(input.rettighetsperiode.inneholder(resultat.helePerioden())) {
@@ -36,11 +39,9 @@ class MeldepliktRegel(
 
         val defaultTidslinje = Tidslinje<JournalpostId?>(input.rettighetsperiode, null)
 
-        val innsendtTidslinje: Tidslinje<JournalpostId?> = input.innsendingsTidspunkt.entries.map {
-            Segment<JournalpostId?>(
-                Periode(it.key, it.key), it.value
-            )
-        }.let { Tidslinje(it) }
+        val innsendtTidslinje: Tidslinje<JournalpostId?> = input.innsendingsTidspunkt.entries
+            .map { (dato, journalpostId) -> Segment<JournalpostId?>(Periode(dato, dato), journalpostId) }
+            .let { Tidslinje(it) }
 
         val dokumentTidslinje: Tidslinje<JournalpostId?> = defaultTidslinje.kombiner(
             innsendtTidslinje, StandardSammenslåere.prioriterHøyreSideCrossJoin()
@@ -53,15 +54,9 @@ class MeldepliktRegel(
                 Segment(periode, MeldepliktData(fritaksvurdering?.verdi, dokument?.verdi))
             })
 
-        val groupByMeldeperiode = meldepliktTidslinje.splittOppIPerioder(
-            resultat.map { vurdering ->
-                vurdering.verdi.meldeperiode().let {
-                    it.utvid(
-                        Periode(it.fom, it.fom.plusDays(7))
-                    )
-                }
-            }
-        ).segmenter()
+        val groupByMeldeperiode = meldepliktTidslinje
+            .splittOppIPerioder(resultat.map { vurdering -> vurdering.verdi.meldeperiode() })
+            .segmenter()
 
         if (groupByMeldeperiode.isEmpty()) return resultat
 

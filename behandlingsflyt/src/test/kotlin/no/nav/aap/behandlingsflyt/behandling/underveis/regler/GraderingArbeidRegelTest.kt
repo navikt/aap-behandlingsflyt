@@ -25,7 +25,7 @@ class GraderingArbeidRegelTest {
     fun `Arbeidsevnevurdering fører ikke til vurdering utenfor rettighetsperioden`() {
         val fom = LocalDate.parse("2024-10-31")
         val rettighetsperiode = Periode(fom, LocalDate.parse("2025-10-31"))
-        val input = tomUnderveisInput.copy(
+        val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
             arbeidsevneGrunnlag = ArbeidsevneGrunnlag(
                 listOf(
@@ -151,7 +151,7 @@ class GraderingArbeidRegelTest {
         rettighetsperiode: Periode,
         fastsattArbeidsevne: Prosent?,
         meldekort: List<Meldekort>
-    ) = tomUnderveisInput.copy(
+    ) = tomUnderveisInput(
         innsendingsTidspunkt = meldekort.associate { it.timerArbeidPerPeriode.first().periode.fom.minusDays(1) to it.journalpostId },
         rettighetsperiode = rettighetsperiode,
         meldekort = meldekort,

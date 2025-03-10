@@ -24,4 +24,5 @@ data class UnderveisInput(
     val etAnnetSted: List<EtAnnetSted>,
     val arbeidsevneGrunnlag: ArbeidsevneGrunnlag,
     val meldepliktGrunnlag: MeldepliktGrunnlag,
+    val meldeperioder: List<Periode>,
 ) : Faktagrunnlag
