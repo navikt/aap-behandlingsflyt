@@ -61,8 +61,8 @@ class TilkjentYtelseAPITest {
             behandling.id, tilkjent = listOf(
                 TilkjentYtelsePeriode(
                     Periode(
-                        fom = LocalDate.now(),
-                        tom = LocalDate.now().plusYears(1)
+                        fom = LocalDate.parse("2025-03-07"),
+                        tom = LocalDate.parse("2026-03-07"),
                     ),
                     tilkjent = Tilkjent(
                         dagsats = Beløp(500),
