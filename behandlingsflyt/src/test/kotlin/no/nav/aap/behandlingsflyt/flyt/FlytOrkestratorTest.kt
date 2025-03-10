@@ -30,6 +30,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevL
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
+import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLand
 import no.nav.aap.behandlingsflyt.drift.Driftfunksjoner
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
@@ -471,11 +472,14 @@ class FlytOrkestratorTest {
         )
 
         behandling = hentBehandling(sak.id)
+        assertThat(behandling.status()).isEqualTo(Status.IVERKSETTES)
+
+        val vedtak = hentVedtak(behandling.id)
+        assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
 
         alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
         // Det er bestilt vedtaksbrev
         assertThat(alleAvklaringsbehov).anySatisfy { assertTrue(it.erÅpent() && it.definisjon == Definisjon.BESTILL_BREV) }
-        assertThat(behandling.status()).isEqualTo(Status.IVERKSETTES)
 
         var brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
 
@@ -2264,6 +2268,13 @@ class FlytOrkestratorTest {
         return dataSource.transaction(readOnly = true) { connection ->
             val finnSisteBehandlingFor = BehandlingRepositoryImpl(connection).finnSisteBehandlingFor(sakId)
             requireNotNull(finnSisteBehandlingFor)
+        }
+    }
+
+    private fun hentVedtak(behandlingId: BehandlingId): Vedtak {
+        return dataSource.transaction(readOnly = true) { connection ->
+            val vedtak = VedtakRepositoryImpl(connection).hent(behandlingId)
+            requireNotNull(vedtak)
         }
     }
 

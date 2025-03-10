@@ -31,13 +31,13 @@ class IverksettVedtakSteg private constructor(
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
 
-        val behandling = behandlingRepository.hent(kontekst.behandlingId)
+        val stegHistorikk = behandlingRepository.hentStegHistorikk(kontekst.behandlingId)
         val vedtakstidspunkt =
-            behandling.stegHistorikk()
+            stegHistorikk
                 .find { it.steg() == StegType.FATTE_VEDTAK && it.status() == StegStatus.AVSLUTTER }
                 ?.tidspunkt() ?: error("Forventet å finne et avsluttet fatte vedtak steg")
 
-        vedtakService.lagreVedtak(behandling.id, vedtakstidspunkt)
+        vedtakService.lagreVedtak(kontekst.behandlingId, vedtakstidspunkt)
 
         val tilkjentYtelseDto = utbetalingService.lagTilkjentYtelseForUtbetaling(kontekst.sakId, kontekst.behandlingId)
         if (tilkjentYtelseDto != null) {

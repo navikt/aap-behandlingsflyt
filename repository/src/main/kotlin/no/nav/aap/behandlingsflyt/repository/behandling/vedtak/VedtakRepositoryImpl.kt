@@ -36,6 +36,12 @@ class VedtakRepositoryImpl(private val connection: DBConnection) : VedtakReposit
             setParams {
                 setLong(1, behandlingId.toLong())
             }
+            setRowMapper {
+                Vedtak(
+                    behandlingId = BehandlingId(it.getLong("behandling_id")),
+                    vedtakstidspunkt = it.getLocalDateTime("vedtakstidspunkt")
+                )
+            }
         }
     }
 }
