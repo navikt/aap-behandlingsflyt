@@ -35,7 +35,7 @@ public data class UnderveisDTO(
 public data class TilkjentDTO(
     val tilkjentFom: LocalDate,
     val tilkjentTom: LocalDate,
-    val dagsats: BigDecimal,
+    val dagsats: Int,
     val gradering: Int,
     val grunnlag: BigDecimal,
     val grunnlagsfaktor: BigDecimal,

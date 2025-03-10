@@ -13,7 +13,8 @@ object ProsesseringsJobber {
             HendelseMottattHåndteringJobbUtfører,
             StatistikkJobbUtfører,
             DatadelingMeldePerioderJobbUtfører,
-            DatadelingSakStatusJobbUtfører
+            DatadelingSakStatusJobbUtfører,
+            DatadelingBehandlingJobbUtfører
         )
     }
 }
