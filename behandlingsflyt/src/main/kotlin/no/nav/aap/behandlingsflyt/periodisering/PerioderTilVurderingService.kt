@@ -136,7 +136,7 @@ class PerioderTilVurderingService(
             ÅrsakTilBehandling.REVURDER_BEREGNING -> VurderingType.REVURDERING
             ÅrsakTilBehandling.REVURDER_YRKESSKADE -> VurderingType.REVURDERING
             ÅrsakTilBehandling.REVURDER_LOVVALG -> VurderingType.REVURDERING
-            ÅrsakTilBehandling.REVURDER_SAMORDING -> VurderingType.REVURDERING
+            ÅrsakTilBehandling.REVURDER_SAMORDNING -> VurderingType.REVURDERING
             ÅrsakTilBehandling.MOTATT_KLAGE -> VurderingType.IKKE_RELEVANT // TODO: Verifiser at dette er korrekt. 
         }
     }

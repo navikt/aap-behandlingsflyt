@@ -51,7 +51,7 @@ class OpprettRevurderingSteg(
                     sakId = kontekst.sakId,
                     årsaker = listOf(
                         Årsak(
-                            type = ÅrsakTilBehandling.REVURDER_SAMORDING,
+                            type = ÅrsakTilBehandling.REVURDER_SAMORDNING,
                         )
                     )
                 )

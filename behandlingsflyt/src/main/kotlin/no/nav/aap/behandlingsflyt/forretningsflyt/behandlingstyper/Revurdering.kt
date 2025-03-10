@@ -159,7 +159,7 @@ object Revurdering : BehandlingType {
             )
             .medSteg(
                 steg = OpprettRevurderingSteg,
-                årsakRelevanteForSteg = listOf(ÅrsakTilBehandling.REVURDER_SAMORDING)
+                årsakRelevanteForSteg = listOf(ÅrsakTilBehandling.REVURDER_SAMORDNING)
             )
             .build()
     }
