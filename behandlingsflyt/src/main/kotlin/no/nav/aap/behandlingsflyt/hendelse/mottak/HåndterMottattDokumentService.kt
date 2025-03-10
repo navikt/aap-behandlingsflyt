@@ -74,6 +74,7 @@ class HåndterMottattDokumentService(
                     is AnnetRelevantDokumentV0 -> melding.årsakerTilBehandling.map { Årsak(it.tilÅrsakTilBehandling()) }
                     else -> error("Melding må være AnnetRelevantDokumentV0")
                 }
+            InnsendingType.KLAGE -> listOf(Årsak(ÅrsakTilBehandling.MOTATT_KLAGE))
 
         }
     }

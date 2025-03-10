@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
 import no.nav.aap.behandlingsflyt.flyt.utledType
+import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Førstegangsbehandling
+import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Revurdering
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
@@ -8,6 +10,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.BehandlingTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.BeriketBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -32,7 +35,7 @@ class SakOgBehandlingService(
                 behandling = behandlingRepository.opprettBehandling(
                     sakId = sak.id,
                     årsaker = årsaker,
-                    typeBehandling = TypeBehandling.Førstegangsbehandling,
+                    typeBehandling = utledBehandlingstype(sisteBehandlingForSak, årsaker),
                     forrigeBehandlingId = null
                 ), tilstand = BehandlingTilstand.NY, sisteAvsluttedeBehandling = null
             )
@@ -42,7 +45,7 @@ class SakOgBehandlingService(
                 val nyBehandling = behandlingRepository.opprettBehandling(
                     sakId = sak.id,
                     årsaker = årsaker,
-                    typeBehandling = TypeBehandling.Revurdering,
+                    typeBehandling = utledBehandlingstype(sisteBehandlingForSak, årsaker),
                     forrigeBehandlingId = sisteBehandlingForSak.id
                 )
 
@@ -74,7 +77,22 @@ class SakOgBehandlingService(
         }
     }
 
+    private fun utledBehandlingstype(sisteBeahndlingForSak: Behandling?, årsaker: List<Årsak>): TypeBehandling {
+        if (årsaker.any { it.type == ÅrsakTilBehandling.MOTATT_KLAGE }) {
+            return when (sisteBeahndlingForSak) {
+                null -> TODO("Hva skal skje når man har mottatt klage men det ikke finnes en behandling for saken?")
+                else -> TypeBehandling.Klage
+            }
+        } else {
+            return when (sisteBeahndlingForSak) {
+                null -> TypeBehandling.Førstegangsbehandling
+                else -> TypeBehandling.Revurdering
+            }
+        }
+    }
+
     private fun validerStegStatus(behandling: Behandling) {
+        if (behandling.typeBehandling() == TypeBehandling.Klage) TODO("Hva skal skje når man mottar klage og det finnes en aktiv behandling?")
         val flyt = utledType(behandling.typeBehandling()).flyt()
         // TODO Utvide med regler for hva som kan knyttes til en behandling og når den eventuelt skal tilbake likevel
         // Om den skal tilbake krever det endringer for å ta hensyn til disse

@@ -11,5 +11,6 @@ public enum class InnsendingType {
     LEGEERKLÆRING,
     LEGEERKLÆRING_AVVIST,
     DIALOGMELDING,
+    KLAGE,
     ANNET_RELEVANT_DOKUMENT
 }
