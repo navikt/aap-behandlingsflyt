@@ -8,7 +8,7 @@ class StegTilstand(
     private val tidspunkt: LocalDateTime = LocalDateTime.now(),
     private val stegStatus: StegStatus,
     private val stegType: StegType,
-    var aktiv: Boolean = true
+    var aktiv: Boolean
 ) : Comparable<StegTilstand> {
 
     fun status(): StegStatus {

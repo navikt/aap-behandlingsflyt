@@ -128,6 +128,7 @@ import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -1202,7 +1203,7 @@ class FlytOrkestratorTest {
         val behandling = hentBehandling(sak.id)
         assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
 
-        val stegHistorikk = behandling.stegHistorikk()
+        val stegHistorikk = hentStegHistorikk(behandling.id)
         assertThat(stegHistorikk.map { it.steg() }).contains(StegType.BREV)
         assertThat(stegHistorikk.map { it.status() }).contains(StegStatus.AVKLARINGSPUNKT)
 
@@ -2261,6 +2262,12 @@ class FlytOrkestratorTest {
         return dataSource.transaction(readOnly = true) { connection ->
             val finnSisteBehandlingFor = BehandlingRepositoryImpl(connection).finnSisteBehandlingFor(sakId)
             requireNotNull(finnSisteBehandlingFor)
+        }
+    }
+
+    private fun hentStegHistorikk(behandlingId: BehandlingId): List<StegTilstand> {
+        return dataSource.transaction(readOnly = true) { connection ->
+            BehandlingRepositoryImpl(connection).hentStegHistorikk(behandlingId)
         }
     }
 

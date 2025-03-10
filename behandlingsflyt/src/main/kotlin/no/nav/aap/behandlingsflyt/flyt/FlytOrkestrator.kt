@@ -72,7 +72,7 @@ class FlytOrkestrator(
 
         val behandlingFlyt = utledFlytFra(behandling)
 
-        if (starterOppBehandling(behandling)) {
+        if (!behandling.harBehandlingenStartet()) {
             sakRepository.oppdaterSakStatus(kontekst.sakId, UTREDES)
         }
 
@@ -131,10 +131,6 @@ class FlytOrkestrator(
         tilbakefør(kontekst, behandling, tilbakeføringsflyt, avklaringsbehovene)
     }
 
-    private fun starterOppBehandling(behandling: Behandling): Boolean {
-        return behandling.stegHistorikk().isEmpty()
-    }
-
     private fun prosesserBehandling(kontekst: FlytKontekst) {
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
@@ -188,7 +184,7 @@ class FlytOrkestrator(
                 if (neste == null) {
                     // Valider siste stegstatus behandlingen
                     val oppdatertBehandling = behandlingRepository.hent(behandling.id)
-                    val sisteSteg = oppdatertBehandling.stegHistorikk().last()
+                    val sisteSteg = oppdatertBehandling.aktivtStegTilstand()
                     require(sisteSteg.status() == StegStatus.AVSLUTTER)
 
                     // Avslutter behandling

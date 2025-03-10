@@ -19,6 +19,7 @@ object InMemoryBehandlingRepository : BehandlingRepository, BehandlingFlytReposi
 
     private val idSeq = AtomicLong(10000)
     private val memory = HashMap<BehandlingId, Behandling>()
+    private val memoryStegHistorikk = HashMap<BehandlingId, List<StegTilstand>>()
     private val lock = Object()
 
     override fun opprettBehandling(
@@ -67,6 +68,12 @@ object InMemoryBehandlingRepository : BehandlingRepository, BehandlingFlytReposi
         }
     }
 
+    override fun hentStegHistorikk(behandlingId: BehandlingId): List<StegTilstand> {
+        synchronized(lock) {
+            return memoryStegHistorikk[behandlingId] ?: emptyList()
+        }
+    }
+
     override fun hent(referanse: BehandlingReferanse): Behandling {
         synchronized(lock) {
             logger.info("Henter behandling med referanse $referanse.")
@@ -111,10 +118,20 @@ object InMemoryBehandlingRepository : BehandlingRepository, BehandlingFlytReposi
         }
     }
 
-    override fun loggBesøktSteg(
+    override fun leggTilNyttAktivtSteg(
         behandlingId: BehandlingId,
         tilstand: StegTilstand
     ) {
-        // Behandlingen oppdateres av visit metoden på behandlingen
+        synchronized(lock) {
+            val stegHistorikk = memoryStegHistorikk[behandlingId]?.map {
+                StegTilstand(
+                    tidspunkt = it.tidspunkt(),
+                    stegStatus = it.status(),
+                    stegType = it.steg(),
+                    aktiv = false
+                )
+            } ?: emptyList()
+            memoryStegHistorikk[behandlingId] = stegHistorikk.plus(tilstand).sorted()
+        }
     }
 }
