@@ -37,9 +37,10 @@ class VirkningstidspunktUtleder(
         require(kombinertTidslinje.isNotEmpty())
 
         return kombinertTidslinje.filter {
-            it.verdi.second != null && it.verdi.second!!.redusertDagsats().verdi.toDouble() > 0 && (it.verdi.first?.prosentverdi()
-                ?: 0) < 100
-        }
-            .minDato()
+            it.verdi.let { (samordningsprosent, tilkjentytelse, underveisperiode) ->
+                tilkjentytelse != null && tilkjentytelse.redusertDagsats().verdi.toDouble() > 0 && (samordningsprosent?.prosentverdi()
+                    ?: 0) < 100
+            }
+        }.minDato()
     }
 }
