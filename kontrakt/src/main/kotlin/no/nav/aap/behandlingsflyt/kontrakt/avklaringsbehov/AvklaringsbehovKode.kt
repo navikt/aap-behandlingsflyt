@@ -99,6 +99,7 @@ public enum class AvklaringsbehovKode {
      * [MANUELL_OVERSTYRING_MEDLEMSKAP]
      */
     `5022`,
+    `5023`,
 
     /**
      * [AVKLAR_UTENLANDSK_MEDLEMSKAP_KODE]
