@@ -33,7 +33,7 @@ class SamordningYtelseVurderingRepositoryImpl(private val connection: DBConnecti
             setRowMapper {
                 SamordningYtelseVurderingGrunnlag(
                     vurderingGrunnlag = hentSamordningVurderinger(it.getLongOrNull("vurderinger_id")),
-                    ytelseGrunnlag = hentSamordningYtelser(it.getLong("ytelser_id"))
+                    ytelseGrunnlag = hentSamordningYtelser(behandlingId, it.getLong("ytelser_id"))
                 )
             }
         }
@@ -86,7 +86,7 @@ class SamordningYtelseVurderingRepositoryImpl(private val connection: DBConnecti
     }
 
 
-    override fun hentSamordningYtelser(ytelserId: Long): SamordningYtelseGrunnlag {
+    override fun hentSamordningYtelser(behandlingId: BehandlingId, ytelserId: Long): SamordningYtelseGrunnlag {
         val query = """
             SELECT * FROM SAMORDNING_YTELSE WHERE ytelser_id = ?
         """.trimIndent()

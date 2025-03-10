@@ -7,6 +7,6 @@ interface SamordningYtelseVurderingRepository : Repository {
     fun hentHvisEksisterer(behandlingId: BehandlingId): SamordningYtelseVurderingGrunnlag?
     fun lagreVurderinger(behandlingId: BehandlingId, samordningVurderinger: List<SamordningVurdering>)
     fun lagreYtelser(behandlingId: BehandlingId, samordningYtelser: List<SamordningYtelse>)
-    fun hentSamordningYtelser(ytelseId: Long) : SamordningYtelseGrunnlag
+    fun hentSamordningYtelser(behandlingId: BehandlingId, ytelseId: Long) : SamordningYtelseGrunnlag
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
 }

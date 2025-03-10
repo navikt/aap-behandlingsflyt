@@ -31,10 +31,10 @@ object InMemorySamordningYtelseVurderingRepository : SamordningYtelseVurderingRe
         ytelser[behandlingId] = samordningYtelser
     }
 
-    override fun hentSamordningYtelser(ytelseId: Long): SamordningYtelseGrunnlag {
+    override fun hentSamordningYtelser(behandlingId: BehandlingId, ytelseId: Long): SamordningYtelseGrunnlag {
        return SamordningYtelseGrunnlag(
            ytelseId = 2,
-           ytelser = emptyList()
+           ytelser = ytelser[behandlingId] ?: emptyList()
        )
     }
 
