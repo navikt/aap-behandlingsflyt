@@ -175,7 +175,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
 
     override fun hentStegHistorikk(behandlingId: BehandlingId): List<StegTilstand> {
         val query = """
-            SELECT * FROM STEG_HISTORIKK WHERE behandling_id = ?
+            SELECT * FROM STEG_HISTORIKK WHERE behandling_id = ? ORDER BY opprettet_tid
         """.trimIndent()
 
         return connection.queryList(query) {
@@ -190,7 +190,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                     aktiv = row.getBoolean("aktiv"),
                 )
             }
-        }.sorted()
+        }
     }
 
     override fun hentAlleFor(sakId: SakId): List<Behandling> {
