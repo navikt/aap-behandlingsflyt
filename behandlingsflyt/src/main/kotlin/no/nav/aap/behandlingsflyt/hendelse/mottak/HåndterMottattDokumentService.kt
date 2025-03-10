@@ -35,9 +35,9 @@ class HåndterMottattDokumentService(
     ) {
         val sak = sakService.hent(sakId)
         val periode = utledPeriode(brevkategori, mottattTidspunkt, melding)
-        val element = utledÅrsak(brevkategori, melding, periode)
+        val elementer = utledÅrsaker(brevkategori, melding, periode)
         val beriketBehandling =
-            sakOgBehandlingService.finnEllerOpprettBehandling(sak.saksnummer, listOf(element))
+            sakOgBehandlingService.finnEllerOpprettBehandling(sak.saksnummer, elementer)
         // TODO: Evaluer at at behandlingen faktisk kan motta endringene
         // Står hos beslutter - Hvilke endringer kan da håndteres
         // P.d.d. ingen da de feilaktig kobles på behandling men ikke tas hensyn til
@@ -49,27 +49,29 @@ class HåndterMottattDokumentService(
         prosesserBehandling.triggProsesserBehandling(
             sakId,
             beriketBehandling.behandling.id,
-            listOf("trigger" to element.type.name)
+            listOf("trigger" to elementer.map { it.type.name }.toString())
         )
         låsRepository.verifiserSkrivelås(behandlingSkrivelås)
     }
 
-    private fun utledÅrsak(brevkategori: InnsendingType, melding: Melding?, periode: Periode?): Årsak {
+    private fun utledÅrsaker(brevkategori: InnsendingType, melding: Melding?, periode: Periode?): List<Årsak> {
         return when (brevkategori) {
-            InnsendingType.SØKNAD -> Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD)
+            InnsendingType.SØKNAD -> listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
             InnsendingType.MELDEKORT ->
-                Årsak(
-                    ÅrsakTilBehandling.MOTTATT_MELDEKORT,
-                    periode
+                listOf(
+                    Årsak(
+                        ÅrsakTilBehandling.MOTTATT_MELDEKORT,
+                        periode
+                    )
                 )
 
-            InnsendingType.AKTIVITETSKORT -> Årsak(ÅrsakTilBehandling.MOTTATT_AKTIVITETSMELDING, periode)
-            InnsendingType.LEGEERKLÆRING_AVVIST -> Årsak(ÅrsakTilBehandling.MOTTATT_AVVIST_LEGEERKLÆRING)
-            InnsendingType.LEGEERKLÆRING -> Årsak(ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING)
-            InnsendingType.DIALOGMELDING -> Årsak(ÅrsakTilBehandling.MOTTATT_DIALOGMELDING)
+            InnsendingType.AKTIVITETSKORT -> listOf(Årsak(ÅrsakTilBehandling.MOTTATT_AKTIVITETSMELDING, periode))
+            InnsendingType.LEGEERKLÆRING_AVVIST -> listOf(Årsak(ÅrsakTilBehandling.MOTTATT_AVVIST_LEGEERKLÆRING))
+            InnsendingType.LEGEERKLÆRING -> listOf(Årsak(ÅrsakTilBehandling.MOTTATT_LEGEERKLÆRING))
+            InnsendingType.DIALOGMELDING -> listOf(Årsak(ÅrsakTilBehandling.MOTTATT_DIALOGMELDING))
             InnsendingType.ANNET_RELEVANT_DOKUMENT ->
                 when (melding) {
-                    is AnnetRelevantDokumentV0 -> Årsak(melding.årsakTilBehandling.tilÅrsakTilBehandling())
+                    is AnnetRelevantDokumentV0 -> melding.årsakerTilBehandling.map { Årsak(it.tilÅrsakTilBehandling()) }
                     else -> error("Melding må være AnnetRelevantDokumentV0")
                 }
 
