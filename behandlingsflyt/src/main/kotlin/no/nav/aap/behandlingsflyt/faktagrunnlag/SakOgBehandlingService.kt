@@ -1,8 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
 import no.nav.aap.behandlingsflyt.flyt.utledType
-import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Førstegangsbehandling
-import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Revurdering
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
@@ -78,14 +76,14 @@ class SakOgBehandlingService(
         }
     }
 
-    private fun utledBehandlingstype(sisteBeahndlingForSak: Behandling?, årsaker: List<Årsak>): TypeBehandling {
-        if (årsaker.any { it.type == ÅrsakTilBehandling.MOTATT_KLAGE }) {
-            return when (sisteBeahndlingForSak) {
+    private fun utledBehandlingstype(sisteBehandlingForSak: Behandling?, årsaker: List<Årsak>): TypeBehandling {
+        return if (årsaker.any { it.type == ÅrsakTilBehandling.MOTATT_KLAGE }) {
+            when (sisteBehandlingForSak) {
                 null -> throw IllegalArgumentException("Mottok klage, men det finnes ingen eksisterende behandling")
                 else -> TypeBehandling.Klage
             }
         } else {
-            return when (sisteBeahndlingForSak) {
+            when (sisteBehandlingForSak) {
                 null -> TypeBehandling.Førstegangsbehandling
                 else -> TypeBehandling.Revurdering
             }
