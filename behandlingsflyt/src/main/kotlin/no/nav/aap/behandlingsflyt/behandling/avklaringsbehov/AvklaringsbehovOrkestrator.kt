@@ -133,6 +133,7 @@ class AvklaringsbehovOrkestrator(
 
         // Bør ideelt kalle på
         løsFaktiskAvklaringsbehov(kontekst, avklaringsbehovene, avklaringsbehov, bruker)
+        log.info("Løste avklaringsbehov[${definisjoner}] på behandling[${behandling.referanse}]")
     }
 
     private fun løsFaktiskAvklaringsbehov(

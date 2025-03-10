@@ -129,7 +129,7 @@ class PerioderTilVurderingServiceTest {
         assertThat(res.årsakerTilBehandling.first()).isEqualTo(ÅrsakTilBehandling.MOTTATT_MELDEKORT)
         assertThat(res.vurderingType).isEqualTo(VurderingType.FORLENGELSE)
         assertThat(res.rettighetsperiode).isEqualTo(oppdatertRettighetsperiode)
-        assertThat(res.forlengensePeriode).isEqualTo(
+        assertThat(res.forlengelsePeriode).isEqualTo(
             Periode(
                 originalRettighetsperiode.tom.plusDays(1),
                 oppdatertRettighetsperiode.tom

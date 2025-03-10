@@ -22,15 +22,13 @@ class SakOgBehandlingService(
     private val behandlingRepository: BehandlingRepository
 ) {
 
-    fun finnEllerOpprettBehandling(key: Saksnummer, årsaker: List<Årsak>): BeriketBehandling {
-        val sak = sakRepository.hent(key)
-
-        val sisteBehandlingForSak = behandlingRepository.finnSisteBehandlingFor(sak.id)
+    fun finnEllerOpprettBehandling(sakId: SakId, årsaker: List<Årsak>): BeriketBehandling {
+        val sisteBehandlingForSak = behandlingRepository.finnSisteBehandlingFor(sakId)
 
         if (sisteBehandlingForSak == null) {
             return BeriketBehandling(
                 behandling = behandlingRepository.opprettBehandling(
-                    sakId = sak.id,
+                    sakId = sakId,
                     årsaker = årsaker,
                     typeBehandling = TypeBehandling.Førstegangsbehandling,
                     forrigeBehandlingId = null
@@ -40,7 +38,7 @@ class SakOgBehandlingService(
         } else {
             if (sisteBehandlingForSak.status().erAvsluttet()) {
                 val nyBehandling = behandlingRepository.opprettBehandling(
-                    sakId = sak.id,
+                    sakId = sakId,
                     årsaker = årsaker,
                     typeBehandling = TypeBehandling.Revurdering,
                     forrigeBehandlingId = sisteBehandlingForSak.id
@@ -72,6 +70,12 @@ class SakOgBehandlingService(
                 )
             }
         }
+    }
+
+    fun finnEllerOpprettBehandling(saksnummer: Saksnummer, årsaker: List<Årsak>): BeriketBehandling {
+        val sak = sakRepository.hent(saksnummer)
+
+        return finnEllerOpprettBehandling(sak.id, årsaker)
     }
 
     private fun validerStegStatus(behandling: Behandling) {

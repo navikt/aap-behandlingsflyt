@@ -95,7 +95,7 @@ class VurderBistandsbehovSteg private constructor(
             VurderingType.FORLENGELSE -> {
                 val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
 
-                vilkår.forleng(requireNotNull(kontekst.vurdering.forlengensePeriode))
+                vilkår.forleng(requireNotNull(kontekst.vurdering.forlengelsePeriode))
             }
 
             VurderingType.IKKE_RELEVANT -> {

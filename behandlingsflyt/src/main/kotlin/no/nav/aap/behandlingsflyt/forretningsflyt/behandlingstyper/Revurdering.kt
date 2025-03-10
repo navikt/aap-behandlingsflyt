@@ -31,6 +31,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FritakMeldepliktSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.IverksettVedtakSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.KvalitetssikringsSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.MeldingOmVedtakBrevSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.OpprettRevurderingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SimulerUtbetalingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.StartBehandlingSteg
@@ -155,6 +156,10 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = MeldingOmVedtakBrevSteg,
                 årsakRelevanteForSteg = ÅrsakTilBehandling.alleInklusivGRegulering()
+            )
+            .medSteg(
+                steg = OpprettRevurderingSteg,
+                årsakRelevanteForSteg = listOf(ÅrsakTilBehandling.REVURDER_SAMORDING)
             )
             .build()
     }

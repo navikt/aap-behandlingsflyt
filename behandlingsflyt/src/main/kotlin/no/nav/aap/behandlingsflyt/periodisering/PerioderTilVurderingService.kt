@@ -56,7 +56,7 @@ class PerioderTilVurderingService(
             return VurderingTilBehandling(
                 vurderingType = VurderingType.FORLENGELSE,
                 rettighetsperiode = sak.rettighetsperiode,
-                forlengensePeriode = utledForlengelsePeriode(
+                forlengelsePeriode = utledForlengelsePeriode(
                     VurderingType.FORLENGELSE,
                     behandling.forrigeBehandlingId,
                     sak.rettighetsperiode
@@ -71,7 +71,7 @@ class PerioderTilVurderingService(
         return VurderingTilBehandling(
             vurderingType = vurderingstype,
             rettighetsperiode = sak.rettighetsperiode,
-            forlengensePeriode = utledForlengelsePeriode(
+            forlengelsePeriode = utledForlengelsePeriode(
                 vurderingstype,
                 behandling.forrigeBehandlingId,
                 sak.rettighetsperiode
@@ -136,6 +136,7 @@ class PerioderTilVurderingService(
             ÅrsakTilBehandling.REVURDER_BEREGNING -> VurderingType.REVURDERING
             ÅrsakTilBehandling.REVURDER_YRKESSKADE -> VurderingType.REVURDERING
             ÅrsakTilBehandling.REVURDER_LOVVALG -> VurderingType.REVURDERING
+            ÅrsakTilBehandling.REVURDER_SAMORDING -> VurderingType.REVURDERING
         }
     }
 }

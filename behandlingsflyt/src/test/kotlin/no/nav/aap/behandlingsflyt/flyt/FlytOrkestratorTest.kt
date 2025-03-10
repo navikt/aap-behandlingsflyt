@@ -498,8 +498,6 @@ class FlytOrkestratorTest {
             no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FORHÅNDSVISNING_KLAR
         )
 
-        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
-
         behandling = hentBehandling(sak.id)
 
         alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
@@ -605,7 +603,6 @@ class FlytOrkestratorTest {
         val person = TestPerson(
             fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
             yrkesskade = listOf(TestYrkesskade()),
-            uføre = null
         )
         FakePersoner.leggTil(person)
 
@@ -923,6 +920,40 @@ class FlytOrkestratorTest {
             ),
         )
         assertThat(hentÅpneAvklaringsbehov(behandling.id).map { it.definisjon }).isEqualTo(listOf(Definisjon.FORESLÅ_VEDTAK))
+
+        løsAvklaringsBehov(behandling, ForeslåVedtakLøsning())
+        løsAvklaringsBehov(
+            behandling, FatteVedtakLøsning(
+                hentAlleAvklaringsbehov(behandling)
+                    .filter { behov -> behov.erTotrinn() }
+                    .map { behov ->
+                        TotrinnsVurdering(
+                            behov.definisjon.kode,
+                            true,
+                            "begrunnelse",
+                            null
+                        )
+                    }), Bruker("BESLUTTER")
+        )
+        var brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
+        løsAvklaringsBehov(
+            behandling, BrevbestillingLøsning(
+                LøsBrevbestillingDto(
+                    behandlingReferanse = behandling.referanse.referanse,
+                    bestillingReferanse = brevbestilling.referanse.brevbestillingReferanse,
+                    status = BrevbestillingLøsningStatus.KLAR_FOR_EDITERING
+                )
+            ), BREV_SYSTEMBRUKER
+        )
+        brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
+        val behandlingReferanse = behandling.referanse
+        løsAvklaringsBehov(
+            behandling, SkrivBrevLøsning(brevbestillingReferanse = brevbestilling.referanse.brevbestillingReferanse)
+        )
+
+        behandling = hentBehandling(sak.id)
+        assertThat(behandling.referanse).isNotEqualTo(behandlingReferanse)
+        assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
     }
 
     @Test
