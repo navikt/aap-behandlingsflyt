@@ -73,7 +73,7 @@ class TilkjentYtelseAPITest {
                         antallBarn = 2,
                         barnetilleggsats = Beløp(150),
                         barnetillegg = Beløp(300),
-                        utbetalingsdato = LocalDate.now().plusDays(1)
+                        utbetalingsdato = LocalDate.parse("2025-03-08"),
                     )
                 )
             )
