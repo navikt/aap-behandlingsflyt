@@ -49,6 +49,7 @@ import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.util.*
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.Effektuer11_7Steg
 
 class Effektuer11_7StegTest {
     @Test
