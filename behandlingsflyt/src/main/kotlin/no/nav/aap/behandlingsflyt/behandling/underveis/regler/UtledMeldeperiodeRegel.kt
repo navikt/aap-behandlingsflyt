@@ -13,19 +13,19 @@ class UtledMeldeperiodeRegel : UnderveisRegel {
             tidslinje: Tidslinje<T>,
         ): Tidslinje<Tidslinje<T>> {
             return tidslinje.splittOppIPerioder(
-                vurderinger.map { it.verdi.meldeperiode() }
+                vurderinger.map {
+                    Periode(
+                        fom = maxOf(it.verdi.meldeperiode().fom, vurderinger.minDato()),
+                        tom = minOf(it.verdi.meldeperiode().tom, vurderinger.maxDato()),
+                    )
+                }
             )
         }
     }
 
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
-        val rettighetsperiode = input.rettighetsperiode
-        val meldeperiodeTidslinje = generateSequence(rettighetsperiode.fom) { it.plusDays(MELDEPERIODE_LENGDE) }
-            .takeWhile { it <= rettighetsperiode.tom }
-            .map { Periode(it, minOf(it.plusDays(MELDEPERIODE_LENGDE - 1), rettighetsperiode.tom)) }
-            .map { Segment(it, it) }
-            .toList()
-            .let { Tidslinje(it) }
+        val meldeperiodeTidslinje = Tidslinje(input.meldeperioder.map { Segment(it, it) })
+            .kryss(input.rettighetsperiode)
 
         return resultat.leggTilVurderinger(meldeperiodeTidslinje, Vurdering::leggTilMeldeperiode)
     }

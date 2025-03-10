@@ -68,6 +68,7 @@ class UnderveisSteg(private val underveisService: UnderveisService) : Behandling
                     ),
                     arbeidsevneRepository = repositoryProvider.provide<ArbeidsevneRepository>(),
                     meldepliktRepository = repositoryProvider.provide(),
+                    meldeperiodeRepository = repositoryProvider.provide(),
                 )
             )
         }

@@ -24,11 +24,7 @@ class DatadelingMeldePerioderJobbUtfører(
         val sak = sakRepository.hent(behandling.sakId)
         val personIdent = sak.person.aktivIdent().identifikator
 
-        val perioder = meldeperiodeRepository.hentHvisEksisterer(behandling.id)
-
-        if (perioder == null) {
-            return
-        }
+        val perioder = meldeperiodeRepository.hent(behandling.id)
         apiInternGateway.sendPerioder(personIdent, perioder)
 
     }

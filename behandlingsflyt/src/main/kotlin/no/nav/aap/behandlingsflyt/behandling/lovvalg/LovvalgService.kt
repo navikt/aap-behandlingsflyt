@@ -4,10 +4,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ARBEIDSFORHOLDSTATUSER
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.adapter.ARBEIDSFORHOLDSTATUSER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdOversikt
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdRequest
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.adapter.ArbeidsforholdRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektkomponentenGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
@@ -47,13 +46,12 @@ class LovvalgService private constructor(
         return if (nyeData == eksisterendeData) IKKE_ENDRET else ENDRET
     }
 
-    private fun innhentAARegisterGrunnlag(sak: Sak): List<ArbeidsforholdOversikt> {
+    private fun innhentAARegisterGrunnlag(sak: Sak): List<ArbeidINorgeGrunnlag> {
         val request = ArbeidsforholdRequest(
             arbeidstakerId = sak.person.aktivIdent().identifikator,
             arbeidsforholdstatuser = listOf(ARBEIDSFORHOLDSTATUSER.AKTIV.toString())
         )
-        val response = GatewayProvider.provide<ArbeidsforholdGateway>().hentAARegisterData(request).arbeidsforholdoversikter
-        return response.filter { it.arbeidssted.type.uppercase() == "UNDERENHET" }
+        return GatewayProvider.provide<ArbeidsforholdGateway>().hentAARegisterData(request)
     }
 
     private fun innhentAInntektGrunnlag(sak: Sak): List<ArbeidsInntektMaaned> {
@@ -68,7 +66,7 @@ class LovvalgService private constructor(
     private fun lagre(
         behandlingId: BehandlingId,
         medlemskapGrunnlag: List<MedlemskapResponse>,
-        arbeidGrunnlag: List<ArbeidsforholdOversikt>,
+        arbeidGrunnlag: List<ArbeidINorgeGrunnlag>,
         inntektGrunnlag: List<ArbeidsInntektMaaned>
     ) {
         val medlId = if (medlemskapGrunnlag.isNotEmpty()) medlemskapRepository.lagreUnntakMedlemskap(

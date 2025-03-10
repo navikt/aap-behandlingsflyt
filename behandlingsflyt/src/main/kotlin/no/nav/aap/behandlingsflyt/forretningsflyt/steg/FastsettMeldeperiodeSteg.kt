@@ -25,20 +25,9 @@ class FastsettMeldeperiodeSteg(
     }
 
     fun oppdaterMeldeperioder(behandlingId: BehandlingId, rettighetsperiode: Periode) {
-        val gamlePerioder = meldeperiodeRepository.hentHvisEksisterer(behandlingId)
+        val gamlePerioder = meldeperiodeRepository.hent(behandlingId)
 
-        val fastsattDag = gamlePerioder?.firstOrNull()?.fom
-
-        val førsteFastsatteDag = if (fastsattDag == null)
-            rettighetsperiode.fom
-        else
-            generateSequence(fastsattDag) { it.minusDays(MELDEPERIODE_LENGDE) }
-                .first { it <= rettighetsperiode.fom }
-
-        val meldeperioder = generateSequence(førsteFastsatteDag) { it.plusDays(MELDEPERIODE_LENGDE) }
-            .takeWhile { it <= rettighetsperiode.tom }
-            .map { Periode(it, it.plusDays(MELDEPERIODE_LENGDE - 1)) }
-            .toList()
+        val meldeperioder = utledMeldeperiode(gamlePerioder, rettighetsperiode)
 
         if (meldeperioder != gamlePerioder) {
             meldeperiodeRepository.lagre(behandlingId, meldeperioder)
@@ -55,6 +44,25 @@ class FastsettMeldeperiodeSteg(
 
         override fun type(): StegType {
             return StegType.FASTSETT_MELDEPERIODER
+        }
+
+        fun utledMeldeperiode(
+            gamlePerioder: List<Periode>,
+            rettighetsperiode: Periode
+        ): List<Periode> {
+            val fastsattDag = gamlePerioder.firstOrNull()?.fom
+
+            val førsteFastsatteDag = if (fastsattDag == null)
+                rettighetsperiode.fom
+            else
+                generateSequence(fastsattDag) { it.minusDays(MELDEPERIODE_LENGDE) }
+                    .first { it <= rettighetsperiode.fom }
+
+            val meldeperioder = generateSequence(førsteFastsatteDag) { it.plusDays(MELDEPERIODE_LENGDE) }
+                .takeWhile { it <= rettighetsperiode.tom }
+                .map { Periode(it, it.plusDays(MELDEPERIODE_LENGDE - 1)) }
+                .toList()
+            return meldeperioder
         }
     }
 }

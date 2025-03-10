@@ -59,6 +59,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.Sykdo
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.YrkesskadevurderingDto
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestratorTest.Companion.util
 import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
+import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattSakHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.TestHendelsesMottak
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
@@ -131,7 +132,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -2204,6 +2207,53 @@ class FlytOrkestratorTest {
         }
     }
 
+    @Test
+    fun `Skal sette behandling på vent hvis man mottar klage`() {
+        val ident = ident()
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        val sak = InitTestDatabase.dataSource.transaction { connection ->
+
+            val sak = hentSak(ident, periode)
+            val førstegangbehandling = opprettBehandling(
+                sak.id,
+                årsaker = listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD)),
+                forrigeBehandlingId = null,
+                typeBehandling = TypeBehandling.Førstegangsbehandling
+            )
+
+            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(
+                behandlingId = førstegangbehandling.id,
+                status = Status.AVSLUTTET
+            )
+
+            assertThat(førstegangbehandling.status().erAvsluttet())
+            sak
+        }
+
+        InitTestDatabase.dataSource.transaction { connection ->
+            sendInnDokument(
+                ident, DokumentMottattPersonHendelse(
+                    journalpost = JournalpostId("21"),
+                    mottattTidspunkt = LocalDateTime.now().minusMonths(3),
+                    InnsendingType.KLAGE,
+                    strukturertDokument = null,
+                    periode
+                )
+            )
+            util.ventPåSvar()
+
+            val nyBehandling = hentBehandling(sak.id)
+            assertThat(nyBehandling.typeBehandling() == TypeBehandling.Klage)
+
+            val avklaringsbehovene = hentAvklaringsbehov(nyBehandling.id, connection)
+            val avklaringsbehov = avklaringsbehovene.hentÅpneVentebehov().first()
+            assertThat(avklaringsbehov.erÅpent())
+            assertThat(avklaringsbehov.erVentepunkt())
+            assertThat(avklaringsbehov.definisjon == Definisjon.VENTE_PÅ_KLAGE_IMPLEMENTASJON)
+        }
+    }
+
     /**
      * Løser avklaringsbehov og venter på svar vha [util].
      */
@@ -2289,6 +2339,22 @@ class FlytOrkestratorTest {
         }
     }
 
+    private fun opprettBehandling(
+        sakId: SakId,
+        årsaker: List<Årsak>,
+        typeBehandling: TypeBehandling,
+        forrigeBehandlingId: BehandlingId?
+    ): Behandling {
+        return dataSource.transaction { connection ->
+            BehandlingRepositoryImpl(connection).opprettBehandling(
+                forrigeBehandlingId = forrigeBehandlingId,
+                sakId = sakId,
+                typeBehandling = typeBehandling,
+                årsaker = årsaker
+            )
+        }
+    }
+
     private fun hentVilkårsresultat(behandlingId: BehandlingId): Vilkårsresultat {
         return dataSource.transaction(readOnly = true) { connection ->
             VilkårsresultatRepositoryImpl(connection).hent(behandlingId)
@@ -2341,7 +2407,6 @@ class FlytOrkestratorTest {
     ) {
         hendelsesMottak.håndtere(ident, dokumentMottattPersonHendelse)
     }
-
 
     private fun hentBrevAvType(behandling: Behandling, typeBrev: TypeBrev) =
         dataSource.transaction(readOnly = true) {

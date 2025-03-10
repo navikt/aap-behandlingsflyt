@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UtledMeldeperiodeR
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Vurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
@@ -39,6 +40,7 @@ class UnderveisService(
     private val etAnnetStedUtlederService: EtAnnetStedUtlederService,
     private val arbeidsevneRepository: ArbeidsevneRepository,
     private val meldepliktRepository: MeldepliktRepository,
+    private val meldeperiodeRepository: MeldeperiodeRepository,
 ) {
 
     private val kvoteService = KvoteService()
@@ -131,6 +133,8 @@ class UnderveisService(
         val meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandlingId)
             ?: MeldepliktGrunnlag(vurderinger = emptyList())
 
+        val meldeperioder = meldeperiodeRepository.hent(behandlingId)
+
         return UnderveisInput(
             rettighetsperiode = sak.rettighetsperiode,
             vilkårsresultat = vilkårsresultat,
@@ -142,6 +146,7 @@ class UnderveisService(
             etAnnetSted = etAnnetSted,
             arbeidsevneGrunnlag = arbeidsevneGrunnlag,
             meldepliktGrunnlag = meldepliktGrunnlag,
+            meldeperioder = meldeperioder,
         )
     }
 }

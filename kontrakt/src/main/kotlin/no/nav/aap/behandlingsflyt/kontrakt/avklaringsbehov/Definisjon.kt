@@ -227,6 +227,13 @@ public enum class Definisjon(
         løsesISteg = StegType.VURDER_MEDLEMSKAP,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
         kreverToTrinn = true
+    ),
+    VENTE_PÅ_KLAGE_IMPLEMENTASJON(
+        kode = AvklaringsbehovKode.`5023`,
+        type = BehovType.VENTEPUNKT,
+        løsesISteg = StegType.START_BEHANDLING,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
+        defaultFrist = Period.ofYears(5),
     );
 
     public companion object {

@@ -60,7 +60,8 @@ public enum class ÅrsakTilBehandling {
     REVURDER_YRKESSKADE,
     REVURDER_BEREGNING,
     REVURDER_LOVVALG,
-    REVURDER_SAMORDNING
+    REVURDER_SAMORDNING,
+    KLAGE
 }
 
 /**

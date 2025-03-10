@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.BehandlingTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.BeriketBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -30,7 +31,7 @@ class SakOgBehandlingService(
                 behandling = behandlingRepository.opprettBehandling(
                     sakId = sakId,
                     årsaker = årsaker,
-                    typeBehandling = TypeBehandling.Førstegangsbehandling,
+                    typeBehandling = utledBehandlingstype(sisteBehandlingForSak, årsaker),
                     forrigeBehandlingId = null
                 ), tilstand = BehandlingTilstand.NY, sisteAvsluttedeBehandling = null
             )
@@ -40,7 +41,7 @@ class SakOgBehandlingService(
                 val nyBehandling = behandlingRepository.opprettBehandling(
                     sakId = sakId,
                     årsaker = årsaker,
-                    typeBehandling = TypeBehandling.Revurdering,
+                    typeBehandling = utledBehandlingstype(sisteBehandlingForSak, årsaker),
                     forrigeBehandlingId = sisteBehandlingForSak.id
                 )
 
@@ -60,6 +61,7 @@ class SakOgBehandlingService(
 
             } else {
                 // Valider at behandlingen står i et sted hvor den kan data
+                if (årsaker.any { it.type == ÅrsakTilBehandling.MOTATT_KLAGE }) TODO("Hva skal skje med klage mottatt for åpen behandling?")
                 validerStegStatus(sisteBehandlingForSak)
                 // Oppdater årsaker hvis nødvendig
                 behandlingRepository.oppdaterÅrsaker(sisteBehandlingForSak, årsaker)
@@ -72,10 +74,25 @@ class SakOgBehandlingService(
         }
     }
 
+
     fun finnEllerOpprettBehandling(saksnummer: Saksnummer, årsaker: List<Årsak>): BeriketBehandling {
         val sak = sakRepository.hent(saksnummer)
 
         return finnEllerOpprettBehandling(sak.id, årsaker)
+    }
+
+    private fun utledBehandlingstype(sisteBehandlingForSak: Behandling?, årsaker: List<Årsak>): TypeBehandling {
+        return if (årsaker.any { it.type == ÅrsakTilBehandling.MOTATT_KLAGE }) {
+            when (sisteBehandlingForSak) {
+                null -> throw IllegalArgumentException("Mottok klage, men det finnes ingen eksisterende behandling")
+                else -> TypeBehandling.Klage
+            }
+        } else {
+            when (sisteBehandlingForSak) {
+                null -> TypeBehandling.Førstegangsbehandling
+                else -> TypeBehandling.Revurdering
+            }
+        }
     }
 
     private fun validerStegStatus(behandling: Behandling) {
