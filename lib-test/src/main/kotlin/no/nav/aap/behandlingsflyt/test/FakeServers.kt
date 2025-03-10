@@ -37,10 +37,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.adapter.Medl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PERSON_QUERY
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.adapter.PERSON_QUERY_HISTORIKK
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.adapter.UføreRespons
+import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeModell
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeRequest
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.Yrkesskader
+import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRequest
+import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.Yrkesskader
 import no.nav.aap.behandlingsflyt.integrasjon.barn.BARN_RELASJON_QUERY
 import no.nav.aap.behandlingsflyt.integrasjon.barn.PERSON_BOLK_QUERY
 import no.nav.aap.behandlingsflyt.integrasjon.ident.IDENT_QUERY
@@ -77,6 +77,7 @@ import no.nav.aap.brev.kontrakt.BestillBrevResponse
 import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
 import no.nav.aap.brev.kontrakt.Brevtype
+import no.nav.aap.brev.kontrakt.FerdigstillBrevRequest
 import no.nav.aap.brev.kontrakt.Innhold
 import no.nav.aap.brev.kontrakt.Språk
 import no.nav.aap.brev.kontrakt.Status
@@ -125,7 +126,7 @@ object FakeServers : AutoCloseable {
     private val ainntekt = embeddedServer(Netty, port = 0, module = { ainntektFake() })
     private val aareg = embeddedServer(Netty, port = 0, module = { aaregFake() })
     private val datadeling = embeddedServer(Netty, port = 0, module = { datadelingFake() })
-    private val utbetal = embeddedServer(Netty, port = 0, module = {utbetalFake()})
+    private val utbetal = embeddedServer(Netty, port = 0, module = { utbetalFake() })
 
     internal val statistikkHendelser = mutableListOf<StoppetBehandling>()
     internal val legeerklæringStatuser = mutableListOf<LegeerklæringStatusResponse>()
@@ -1405,10 +1406,21 @@ object FakeServers : AutoCloseable {
                         )
                     }
                     put("/oppdater") {
+                        val ref = UUID.fromString(call.pathParameters.get("referanse"))!!
+                        val brev = call.receive<Brev>()
+                        synchronized(mutex) {
+                            val i = brevStore.indexOfFirst { it.referanse == ref }
+                            brevStore[i] = brevStore[i].copy(brev = brev)
+                        }
                         call.respond(HttpStatusCode.NoContent, Unit)
                     }
                 }
                 post("/ferdigstill") {
+                    val ref = call.receive<FerdigstillBrevRequest>().referanse
+                    synchronized(mutex) {
+                        val i = brevStore.indexOfFirst { it.referanse == ref }
+                        brevStore[i] = brevStore[i].copy(status = Status.FERDIGSTILT)
+                    }
                     call.respond(HttpStatusCode.Accepted, Unit)
                 }
             }

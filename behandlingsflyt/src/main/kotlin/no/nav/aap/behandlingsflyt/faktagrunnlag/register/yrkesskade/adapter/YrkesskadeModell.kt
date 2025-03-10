@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter
 
 import java.time.LocalDate
 
+// TODO: slett denne når integrasjon med yrkesskade er på plass
 class YrkesskadeModell(
     val kommunenr: String,
     val saksblokk: String,

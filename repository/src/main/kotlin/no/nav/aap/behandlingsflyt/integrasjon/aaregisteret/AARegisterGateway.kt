@@ -39,6 +39,8 @@ class AARegisterGateway : ArbeidsforholdGateway {
                 Header("Accept", "application/json")
             )
         )
+        // TODO: oversett til vår egen type klasse her. Nå vil endring i respons fra AAREG tvinge
+        // kodeendring hos oss
         return requireNotNull(client.post(uri = url, request = httpRequest))
     }
 

@@ -65,7 +65,7 @@ class UtbetalingService(
                 tom = periode.tom,
                 detaljer = TilkjentYtelseDetaljerDto(
                     redusertDagsats = detaljer.redusertDagsats().verdi(),
-                    gradering = BigDecimal.valueOf(detaljer.gradering.prosentverdi().toLong()),  //TODO: bør være int på utbetalingsiden også.
+                    gradering = detaljer.gradering.prosentverdi(),
                     dagsats = detaljer.dagsats.verdi(),
                     grunnlag = detaljer.grunnlag.verdi(),
                     grunnlagsfaktor = detaljer.grunnlagsfaktor.verdi(),

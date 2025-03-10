@@ -32,8 +32,6 @@ class ProsesserBehandlingService(private val flytJobbRepository: FlytJobbReposit
             jobbInput.medParameter(it.first, it.second)
         }
 
-        flytJobbRepository.leggTil(
-            jobbInput
-        )
+        flytJobbRepository.leggTil(jobbInput)
     }
 }
