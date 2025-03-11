@@ -98,15 +98,15 @@ class SamordningYtelseVurderingRepositoryImplTest {
                     ytelseType = Ytelse.SYKEPENGER,
                     ytelsePerioder = listOf(
                         SamordningYtelsePeriode(
+                            periode = Periode(LocalDate.now().minusYears(3), LocalDate.now().minusDays(1)),
+                            gradering = null,
+                            kronesum = 123
+                        ),
+                        SamordningYtelsePeriode(
                             periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3)),
                             gradering = Prosent(50),
                             kronesum = null
                         ),
-                        SamordningYtelsePeriode(
-                            periode = Periode(LocalDate.now().minusYears(3), LocalDate.now().minusDays(1)),
-                            gradering = null,
-                            kronesum = 123
-                        )
                     ),
                     kilde = "XXXX",
                     saksRef = "saksref"
