@@ -33,7 +33,7 @@ class SamordningYtelseVurderingRepositoryImpl(private val connection: DBConnecti
             setRowMapper {
                 SamordningYtelseVurderingGrunnlag(
                     vurderingGrunnlag = hentSamordningVurderinger(it.getLongOrNull("vurderinger_id")),
-                    ytelseGrunnlag = hentSamordningYtelser(it.getLong("ytelser_id"))
+                    ytelseGrunnlag = hentSamordningYtelser(behandlingId, it.getLong("ytelser_id"))
                 )
             }
         }
@@ -58,6 +58,9 @@ class SamordningYtelseVurderingRepositoryImpl(private val connection: DBConnecti
                 SamordningVurdering(
                     ytelseType = it.getEnum("ytelse_type"),
                     vurderingPerioder = hentSamordningVurderingPerioder(it.getLong("id")),
+                    begrunnelse = it.getString("begrunnelse"),
+                    maksDatoEndelig = it.getBoolean("maksdato_endelig"),
+                    maksDato = it.getLocalDate("maksdato"),
                 )
             }
         }
@@ -82,7 +85,8 @@ class SamordningYtelseVurderingRepositoryImpl(private val connection: DBConnecti
         }
     }
 
-    private fun hentSamordningYtelser(ytelserId: Long): SamordningYtelseGrunnlag {
+
+    override fun hentSamordningYtelser(behandlingId: BehandlingId, ytelserId: Long): SamordningYtelseGrunnlag {
         val query = """
             SELECT * FROM SAMORDNING_YTELSE WHERE ytelser_id = ?
         """.trimIndent()
@@ -138,12 +142,15 @@ class SamordningYtelseVurderingRepositoryImpl(private val connection: DBConnecti
 
         for (vurdering in samordningVurderinger) {
             val vurderingQuery = """
-                INSERT INTO SAMORDNING_VURDERING (vurderinger_id, ytelse_type) VALUES (?, ?)
+                INSERT INTO SAMORDNING_VURDERING (vurderinger_id, ytelse_type, begrunnelse, maksdato_endelig, maksdato) VALUES (?, ?, ?, ?, ?)
                 """.trimIndent()
             val vurderingId = connection.executeReturnKey(vurderingQuery) {
                 setParams {
                     setLong(1, vurderingerId)
                     setEnumName(2, vurdering.ytelseType)
+                    setString(3, vurdering.begrunnelse)
+                    setBoolean(4, vurdering.maksDatoEndelig)
+                    setLocalDate(5, vurdering.maksDato)
                 }
             }
 

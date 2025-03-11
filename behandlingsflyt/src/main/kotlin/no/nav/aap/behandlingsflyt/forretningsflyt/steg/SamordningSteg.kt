@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -19,9 +20,10 @@ import org.slf4j.LoggerFactory
 class SamordningSteg(
     private val samordningService: SamordningService,
     private val samordningRepository: SamordningRepository,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val samordningYtelseVurderingRepository: SamordningYtelseVurderingRepository,
 
-) : BehandlingSteg {
+    ) : BehandlingSteg {
     private val log = LoggerFactory.getLogger(SamordningSteg::class.java)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -41,10 +43,12 @@ class SamordningSteg(
             input, tidligereVurderinger
         )
 
-
-        if (perioderSomIkkeHarBlittVurdert.isNotEmpty()) {
-            log.info("Fant perioder som ikke har blitt vurdert: $perioderSomIkkeHarBlittVurdert")
-            return FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_GRADERING)
+        val vurderingsGrunnlag = samordningYtelseVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
+        if (vurderingsGrunnlag != null) {
+            if (perioderSomIkkeHarBlittVurdert.isNotEmpty()) {
+                log.info("Fant perioder som ikke har blitt vurdert: $perioderSomIkkeHarBlittVurdert")
+                return FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_GRADERING)
+            }
         }
 
         val samordningTidslinje =
@@ -79,13 +83,14 @@ class SamordningSteg(
             val repositoryProvider = RepositoryProvider(connection)
             val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
             val samordningRepository = repositoryProvider.provide<SamordningRepository>()
-
+            val samordningYtelseVurderingRepository = repositoryProvider.provide<SamordningYtelseVurderingRepository>()
             return SamordningSteg(
                 SamordningService(
                     repositoryProvider.provide()
                 ),
                 samordningRepository,
-                avklaringsbehovRepository
+                avklaringsbehovRepository,
+                samordningYtelseVurderingRepository,
             )
         }
 

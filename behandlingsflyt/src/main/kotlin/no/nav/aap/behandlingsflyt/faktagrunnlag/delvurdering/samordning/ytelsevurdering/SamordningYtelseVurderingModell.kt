@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
+import java.time.LocalDate
 
 data class SamordningYtelse(
     val ytelseType: Ytelse,
@@ -20,6 +21,9 @@ data class SamordningYtelsePeriode(
 
 data class SamordningVurdering(
     val ytelseType: Ytelse,
+    val begrunnelse: String,
+    val maksDatoEndelig: Boolean,
+    val maksDato: LocalDate?,
     val vurderingPerioder: List<SamordningVurderingPeriode>,
 )
 

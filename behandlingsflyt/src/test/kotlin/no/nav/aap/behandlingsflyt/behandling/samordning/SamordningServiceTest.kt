@@ -15,7 +15,6 @@ import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
-import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
@@ -74,6 +73,9 @@ class SamordningServiceTest {
                 ytelseVurderingRepo, behandlingId, vurderinger = listOf(
                     SamordningVurdering(
                         ytelseType = Ytelse.SYKEPENGER,
+                        begrunnelse = "En god begrunnelse",
+                        maksDatoEndelig = false,
+                        maksDato = LocalDate.now().plusYears(1),
                         vurderingPerioder = listOf(
                             SamordningVurderingPeriode(
                                 periode = Periode(5 januar 2024, 10 januar 2024),
@@ -125,6 +127,9 @@ class SamordningServiceTest {
         vurderinger: List<SamordningVurdering> = listOf(
             SamordningVurdering(
                 Ytelse.SYKEPENGER,
+                begrunnelse = "En god begrunnelse",
+                maksDatoEndelig = false,
+                maksDato = LocalDate.now().plusYears(1),
                 listOf(
                     SamordningVurderingPeriode(
                         Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
