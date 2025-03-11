@@ -43,6 +43,7 @@ class OpprettRevurderingSteg(
                     årsaker = listOf(
                         Årsak(
                             type = ÅrsakTilBehandling.REVURDER_SAMORDNING,
+                            periode = kontekst.vurdering.rettighetsperiode
                         )
                     )
                 )
