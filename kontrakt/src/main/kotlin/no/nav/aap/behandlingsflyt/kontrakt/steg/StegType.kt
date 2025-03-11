@@ -83,6 +83,10 @@ public enum class StegType(
         gruppe = StegGruppe.UNDERVEIS,
         status = Status.UTREDES
     ),
+    SAMORDNING_UFØRE(
+        gruppe = StegGruppe.UNDERVEIS,
+        status = Status.UTREDES
+    ),
     SAMORDNING_GRADERING(
         gruppe = StegGruppe.UNDERVEIS,
         status = Status.UTREDES

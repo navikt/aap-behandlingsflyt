@@ -45,6 +45,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykdomSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykepengeErstatningSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderYrkesskadeSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.Effektuer11_7Steg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningUføreSteg
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 
 object Revurdering : BehandlingType {
@@ -64,7 +65,7 @@ object Revurdering : BehandlingType {
             .medSteg(steg = VurderStudentSteg)
             .medSteg(
                 steg = VurderSykdomSteg,
-                informasjonskrav = listOf(YrkesskadeService, UføreService, LegeerklæringService),
+                informasjonskrav = listOf(YrkesskadeService, LegeerklæringService),
                 årsakRelevanteForSteg = listOf(
                     ÅrsakTilBehandling.MOTTATT_SØKNAD,
                     ÅrsakTilBehandling.MOTTATT_DIALOGMELDING,
@@ -136,6 +137,7 @@ object Revurdering : BehandlingType {
             .medSteg(steg = EtAnnetStedSteg, informasjonskrav = listOf(InstitusjonsoppholdService))
             .medSteg(steg = UnderveisSteg, informasjonskrav = listOf(MeldekortService, AktivitetspliktInformasjonskrav))
             .medSteg(steg = SamordningSteg, informasjonskrav = listOf(SamordningYtelseVurderingService))
+            .medSteg(steg = SamordningUføreSteg, informasjonskrav = listOf(UføreService))
             .medSteg(steg = Effektuer11_7Steg)
             .medSteg(
                 steg = BeregnTilkjentYtelseSteg,

@@ -161,6 +161,12 @@ public enum class Definisjon(
         løsesISteg = StegType.SAMORDNING_GRADERING,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     ),
+    AVKLAR_SAMORDNING_UFØRE(
+        kode = AvklaringsbehovKode.`5024`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.SAMORDNING_UFØRE,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+    ),
     FORHÅNDSVARSEL_AKTIVITETSPLIKT(
         kode = AvklaringsbehovKode.`5016`,
         type = BehovType.BREV_VENTEPUNKT,
