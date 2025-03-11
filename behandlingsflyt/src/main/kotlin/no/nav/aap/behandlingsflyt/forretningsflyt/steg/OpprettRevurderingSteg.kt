@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingRepository
@@ -14,8 +13,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.komponenter.tidslinje.Segment
-import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
@@ -25,26 +22,20 @@ class OpprettRevurderingSteg(
 ) : BehandlingSteg {
     private val logger = LoggerFactory.getLogger(javaClass)
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        // Hvis førstegangsbehandling *og* samordning overlapp (med hva?)
-        // så opprett revurdering her
-        // ellers:
-        // ingenting
-
         return when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
-                val samordningVurdering = samordningYtelseVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
-                    ?: return Fullført
-
-                // TODO: lagre mer i grunnlaget, feil å hente herfra?
-                val sykepengerSamordning =
-                    samordningVurdering.vurderingGrunnlag.vurderinger.firstOrNull() { it.ytelseType == Ytelse.SYKEPENGER }
+                val samordningVurdering =
+                    samordningYtelseVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
                         ?: return Fullført
 
-                val snittetMedRettighetsperiode =
-                    sykepengerSamordning.vurderingPerioder.map { Segment(it.periode, it) }.let(::Tidslinje)
-                        .disjoint(kontekst.vurdering.rettighetsperiode)
+                // TODO: lagre mer i grunnlaget, feil å hente herfra?
+                val samordningVurderinger = samordningVurdering.vurderingGrunnlag.vurderinger
 
-                if (snittetMedRettighetsperiode.isEmpty()) return Fullført
+                if (samordningVurderinger.none { it.maksDatoEndelig }) return Fullført
+
+                val maksDatoer = samordningVurderinger.mapNotNull { it.maksDato }
+
+                if (maksDatoer.none { kontekst.vurdering.rettighetsperiode.inneholder(it) }) return Fullført
 
                 logger.info("Oppretter revurdering. SakID: ${kontekst.sakId}")
                 sakOgBehandlingService.finnEllerOpprettBehandling(

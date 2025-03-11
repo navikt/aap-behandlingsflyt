@@ -25,7 +25,11 @@ data class SamordningVurdering(
     val maksDatoEndelig: Boolean,
     val maksDato: LocalDate?,
     val vurderingPerioder: List<SamordningVurderingPeriode>,
-)
+) {
+    init {
+        require(!maksDatoEndelig || maksDato != null)
+    }
+}
 
 data class SamordningVurderingPeriode(
     val periode: Periode,
