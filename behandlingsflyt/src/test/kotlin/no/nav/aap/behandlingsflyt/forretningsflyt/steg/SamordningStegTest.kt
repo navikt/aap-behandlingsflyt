@@ -64,6 +64,9 @@ class SamordningStegTest {
             behandling.id, listOf(
                 SamordningVurdering(
                     ytelseType = ytelse,
+                    begrunnelse = "En god begrunnelse",
+                    maksDatoEndelig = false,
+                    maksDato = LocalDate.now().plusYears(1),
                     vurderingPerioder = listOf(
                         SamordningVurderingPeriode(
                             periode = Periode(LocalDate.now().minusYears(1), LocalDate.now()),
@@ -123,6 +126,9 @@ class SamordningStegTest {
             behandling.id, listOf(
                 SamordningVurdering(
                     ytelseType = Ytelse.SYKEPENGER,
+                    begrunnelse = "En god begrunnelse",
+                    maksDatoEndelig = false,
+                    maksDato = LocalDate.now().plusYears(1),
                     vurderingPerioder = listOf(
                         SamordningVurderingPeriode(
                             periode = Periode(LocalDate.now().minusYears(1), LocalDate.now()),
@@ -182,6 +188,9 @@ class SamordningStegTest {
             behandling.id, listOf(
                 SamordningVurdering(
                     ytelseType = Ytelse.SYKEPENGER,
+                    begrunnelse = "En god begrunnelse",
+                    maksDatoEndelig = false,
+                    maksDato = LocalDate.now().plusYears(1),
                     vurderingPerioder = listOf(
                         SamordningVurderingPeriode(
                             periode = Periode(LocalDate.now().minusYears(1), LocalDate.now()),
@@ -213,7 +222,8 @@ class SamordningStegTest {
                 samordningYtelseVurderingRepository = InMemorySamordningYtelseVurderingRepository
             ),
             samordningRepository = InMemorySamordningRepository,
-            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
+            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+            samordningYtelseVurderingRepository = InMemorySamordningYtelseVurderingRepository,
         )
 
         lagreYtelseGrunnlag(behandlingId, ytelse, Periode(LocalDate.now().minusYears(1), LocalDate.now()))
