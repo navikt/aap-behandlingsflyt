@@ -35,7 +35,7 @@ class FastsettSykdomsvilkåretSteg private constructor(
 
             VurderingType.FORLENGELSE -> {
                 // Forleng vilkåret
-                val forlengensePeriode = requireNotNull(kontekst.vurdering.forlengensePeriode)
+                val forlengensePeriode = requireNotNull(kontekst.vurdering.forlengelsePeriode)
                 val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
                 vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET).forleng(
                     forlengensePeriode

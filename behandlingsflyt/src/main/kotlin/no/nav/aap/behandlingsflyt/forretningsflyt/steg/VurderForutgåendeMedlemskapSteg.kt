@@ -51,7 +51,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
             }
 
             VurderingType.FORLENGELSE -> {
-                val forlengensePeriode = requireNotNull(kontekst.vurdering.forlengensePeriode)
+                val forlengensePeriode = requireNotNull(kontekst.vurdering.forlengelsePeriode)
                 val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
                 vilkårsresultat.finnVilkår(Vilkårtype.MEDLEMSKAP).forleng(
                     forlengensePeriode

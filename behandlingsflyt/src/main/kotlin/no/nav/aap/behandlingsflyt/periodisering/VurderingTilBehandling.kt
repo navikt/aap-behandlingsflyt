@@ -7,12 +7,12 @@ import no.nav.aap.komponenter.type.Periode
 data class VurderingTilBehandling(
     val vurderingType: VurderingType,
     val rettighetsperiode: Periode,
-    val forlengensePeriode: Periode? = null,
+    val forlengelsePeriode: Periode? = null,
     val årsakerTilBehandling: Set<ÅrsakTilBehandling>
 ) {
     init {
         if (vurderingType == VurderingType.FORLENGELSE) {
-            requireNotNull(forlengensePeriode) { "Forlengenseperiode er påkrevd ved forlengelse" }
+            requireNotNull(forlengelsePeriode) { "Forlengenseperiode er påkrevd ved forlengelse" }
         }
     }
 
