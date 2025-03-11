@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningYtelseVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
@@ -35,7 +36,7 @@ class SamordningServiceTest {
             opprettYtelseData(ytelseVurderingRepo, behandlingId)
             opprettVurderingData(ytelseVurderingRepo, behandlingId)
 
-            val service = SamordningService(ytelseVurderingRepo)
+            val service = SamordningService(ytelseVurderingRepo, SamordningYtelseRepositoryImpl(connection))
 
             val grunnlag = ytelseVurderingRepo.hentHvisEksisterer(behandlingId)!!
             val tidligereVurderinger = service.tidligereVurderinger(grunnlag)
@@ -91,7 +92,7 @@ class SamordningServiceTest {
             SamordningYtelseVurderingRepositoryImpl(connection).hentHvisEksisterer(behandlingId)!!
         }
         val ikkeVurdertePerioder = dataSource.transaction { connection ->
-            val service = SamordningService(SamordningYtelseVurderingRepositoryImpl(connection))
+            val service = SamordningService(SamordningYtelseVurderingRepositoryImpl(connection), SamordningYtelseRepositoryImpl(connection))
 
             val tidligereVurderinger = service.tidligereVurderinger(input)
             service.perioderSomIkkeHarBlittVurdert(input, tidligereVurderinger)
@@ -111,9 +112,7 @@ class SamordningServiceTest {
             val behandlingId = opprettSakdata(connection)
             opprettYtelseData(ytelseVurderingRepo, behandlingId)
 
-            val service = SamordningService(
-                ytelseVurderingRepo
-            )
+            val service = SamordningService(SamordningYtelseVurderingRepositoryImpl(connection), SamordningYtelseRepositoryImpl(connection))
             val input = ytelseVurderingRepo.hentHvisEksisterer(behandlingId)!!
             val tidligereVurderinger = service.tidligereVurderinger(input)
 

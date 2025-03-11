@@ -24,6 +24,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepos
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseVurderingRepository
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -219,7 +220,8 @@ class SamordningStegTest {
     ): SamordningSteg {
         val steg = SamordningSteg(
             samordningService = SamordningService(
-                samordningYtelseVurderingRepository = InMemorySamordningYtelseVurderingRepository
+                samordningYtelseVurderingRepository = InMemorySamordningYtelseVurderingRepository,
+                samordningYtelseRepository = InMemorySamordningYtelseRepository,
             ),
             samordningRepository = InMemorySamordningRepository,
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
@@ -235,7 +237,7 @@ class SamordningStegTest {
         ytelse: Ytelse,
         periode: Periode
     ) {
-        InMemorySamordningYtelseVurderingRepository.lagreYtelser(
+        InMemorySamordningYtelseRepository.lagre(
             behandlingId, listOf(
                 SamordningYtelse(
                     ytelseType = ytelse,

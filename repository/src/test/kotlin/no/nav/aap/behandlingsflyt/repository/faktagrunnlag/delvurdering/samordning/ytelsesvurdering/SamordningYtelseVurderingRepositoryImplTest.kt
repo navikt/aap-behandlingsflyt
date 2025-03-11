@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordn
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
@@ -24,6 +25,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
 
@@ -36,32 +38,6 @@ class SamordningYtelseVurderingRepositoryImplTest {
         val dataSource = InitTestDatabase.dataSource
         val behandling = dataSource.transaction {
             behandling(it, sak(it))
-        }
-
-        // Lagre ytelse
-        dataSource.transaction {
-            SamordningYtelseVurderingRepositoryImpl(it).lagreYtelser(
-                behandlingId = behandling.id,
-                samordningYtelser = listOf(
-                    SamordningYtelse(
-                        ytelseType = Ytelse.SYKEPENGER,
-                        ytelsePerioder = listOf(
-                            SamordningYtelsePeriode(
-                                periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3)),
-                                gradering = Prosent(50),
-                                kronesum = null
-                            ),
-                            SamordningYtelsePeriode(
-                                periode = Periode(LocalDate.now().minusYears(3), LocalDate.now().minusDays(1)),
-                                gradering = null,
-                                kronesum = 123
-                            )
-                        ),
-                        kilde = "XXXX",
-                        saksRef = "saksref"
-                    )
-                )
-            )
         }
 
         // Lagre vurdering
@@ -91,29 +67,6 @@ class SamordningYtelseVurderingRepositoryImplTest {
             SamordningYtelseVurderingRepositoryImpl(it).hentHvisEksisterer(behandling.id)
         }
 
-
-        assertThat(uthentet?.ytelseGrunnlag?.ytelser).isEqualTo(
-            listOf(
-                SamordningYtelse(
-                    ytelseType = Ytelse.SYKEPENGER,
-                    ytelsePerioder = listOf(
-                        SamordningYtelsePeriode(
-                            periode = Periode(LocalDate.now().minusYears(3), LocalDate.now().minusDays(1)),
-                            gradering = null,
-                            kronesum = 123
-                        ),
-                        SamordningYtelsePeriode(
-                            periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3)),
-                            gradering = Prosent(50),
-                            kronesum = null
-                        ),
-                    ),
-                    kilde = "XXXX",
-                    saksRef = "saksref"
-                )
-            )
-        )
-
         assertThat(uthentet?.vurderingGrunnlag?.vurderinger).isEqualTo(listOf(vurdering))
     }
 
@@ -138,7 +91,7 @@ class SamordningYtelseVurderingRepositoryImplTest {
                 )
             )
         )
-        assertThrows<IllegalArgumentException> {
+        assertDoesNotThrow  {
             dataSource.transaction {
                 SamordningYtelseVurderingRepositoryImpl(it).lagreVurderinger(
                     behandlingId = behandling.id,

@@ -22,7 +22,7 @@ import java.time.LocalDate
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelse as ForeldrePengerYtelse
 
 class SamordningYtelseVurderingService(
-    private val samordningYtelseVurderingRepository: SamordningYtelseVurderingRepository,
+    private val samordningYtelseRepository: SamordningYtelseRepository,
     private val sakService: SakService,
 ) : Informasjonskrav {
     private val fpGateway = GatewayProvider.provide<ForeldrepengerGateway>()
@@ -31,13 +31,15 @@ class SamordningYtelseVurderingService(
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
         val personIdent = sak.person.aktivIdent().identifikator
-        val foreldrepenger = hentYtelseForeldrepenger(personIdent, sak.rettighetsperiode.fom.minusWeeks(4), sak.rettighetsperiode.tom)
-        val sykepenger = hentYtelseSykepenger(personIdent, sak.rettighetsperiode.fom.minusWeeks(4), sak.rettighetsperiode.tom)
-        val eksisterendeData = samordningYtelseVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
+        val foreldrepenger =
+            hentYtelseForeldrepenger(personIdent, sak.rettighetsperiode.fom.minusWeeks(4), sak.rettighetsperiode.tom)
+        val sykepenger =
+            hentYtelseSykepenger(personIdent, sak.rettighetsperiode.fom.minusWeeks(4), sak.rettighetsperiode.tom)
+        val eksisterendeData = samordningYtelseRepository.hentHvisEksisterer(kontekst.behandlingId)
         val samordningYtelser = mapTilSamordningYtelse(foreldrepenger, sykepenger)
 
         if (harEndringerIYtelser(eksisterendeData, samordningYtelser)) {
-            samordningYtelseVurderingRepository.lagreYtelser(kontekst.behandlingId, samordningYtelser)
+            samordningYtelseRepository.lagre(kontekst.behandlingId, samordningYtelser)
             return Informasjonskrav.Endret.ENDRET
         }
 
@@ -68,10 +70,10 @@ class SamordningYtelseVurderingService(
     }
 
     private fun harEndringerIYtelser(
-        eksisterende: SamordningYtelseVurderingGrunnlag?,
+        eksisterende: SamordningYtelseGrunnlag?,
         samordningYtelser: List<SamordningYtelse>
     ): Boolean {
-        return samordningYtelser != eksisterende?.ytelseGrunnlag?.ytelser
+        return samordningYtelser != eksisterende?.ytelser
     }
 
     private fun mapTilSamordningYtelse(

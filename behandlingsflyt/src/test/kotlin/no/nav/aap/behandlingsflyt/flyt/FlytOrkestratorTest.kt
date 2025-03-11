@@ -104,6 +104,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.barnetillegg.Barnetil
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7RepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningYtelseVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
@@ -223,6 +224,7 @@ class FlytOrkestratorTest {
                 .register<InntektGrunnlagRepositoryImpl>()
                 .register<MeldeperiodeRepositoryImpl>()
                 .register<VedtakRepositoryImpl>()
+                .register<SamordningYtelseRepositoryImpl>()
                 .status()
             GatewayRegistry
                 .register<PdlBarnGateway>()

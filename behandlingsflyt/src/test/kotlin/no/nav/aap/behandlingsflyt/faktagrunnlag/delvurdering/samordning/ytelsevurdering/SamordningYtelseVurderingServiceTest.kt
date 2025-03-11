@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusSykepengerGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.periodisering.VurderingTilBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningYtelseVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
@@ -46,12 +47,12 @@ class SamordningYtelseVurderingServiceTest {
             val repo = SamordningYtelseVurderingRepositoryImpl(connection)
             val sakRepository = SakRepositoryImpl(connection)
             val service = SamordningYtelseVurderingService(
-                SamordningYtelseVurderingRepositoryImpl(connection),
+                SamordningYtelseRepositoryImpl(connection),
                 SakService(sakRepository),
             )
             val kontekst = opprettSakdata(connection)
 
-            //Når det ikke finnes data
+            // Når det ikke finnes data
             val ingenData = service.oppdater(kontekst)
             assertEquals(Informasjonskrav.Endret.ENDRET, ingenData)
 

@@ -9,6 +9,7 @@ import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -57,31 +58,33 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/samordning/") {
             get<BehandlingReferanse, SamordningYtelseVurderingGrunnlagDTO> { req ->
-                val samordning = dataSource.transaction { connection ->
+                val (registerYtelser, samordning) = dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
                     val samordningRepository = repositoryProvider.provide<SamordningYtelseVurderingRepository>()
+                    val samordningYtelseRepository = repositoryProvider.provide<SamordningYtelseRepository>()
 
                     val behandling =
                         BehandlingReferanseService(repositoryProvider.provide<BehandlingRepository>()).behandling(req)
 
+                    val registerYtelser = samordningYtelseRepository.hentHvisEksisterer(behandling.id)
                     val samordning = samordningRepository.hentHvisEksisterer(behandling.id)
 
-                    samordning
+                    Pair(registerYtelser, samordning)
                 }
                 if (samordning == null) {
                     respondWithStatus(HttpStatusCode.NotFound)
                 } else {
                     respond(
                         SamordningYtelseVurderingGrunnlagDTO(
-                            ytelser = samordning.ytelseGrunnlag.ytelser.map { it ->
+                            ytelser = registerYtelser?.ytelser?.map { it ->
                                 SamordningYtelseDTO(
                                     ytelseType = it.ytelseType,
                                     ytelsePerioder = it.ytelsePerioder.map { it.tilDTO() },
                                     kilde = it.kilde,
                                     saksRef = it.saksRef
                                 )
-                            },
-                            vurderinger = samordning.vurderingGrunnlag.vurderinger.map {
+                            }.orEmpty(),
+                            vurderinger = samordning.vurderingGrunnlag!!.vurderinger.map {
                                 SamordningVurderingDTO(
                                     ytelseType = it.ytelseType,
                                     vurderingPerioder = it.vurderingPerioder.map { it.tilDTO() }

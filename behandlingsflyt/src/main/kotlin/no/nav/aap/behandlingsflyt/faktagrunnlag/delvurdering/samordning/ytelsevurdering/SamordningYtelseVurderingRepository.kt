@@ -6,7 +6,11 @@ import no.nav.aap.lookup.repository.Repository
 interface SamordningYtelseVurderingRepository : Repository {
     fun hentHvisEksisterer(behandlingId: BehandlingId): SamordningYtelseVurderingGrunnlag?
     fun lagreVurderinger(behandlingId: BehandlingId, samordningVurderinger: List<SamordningVurdering>)
-    fun lagreYtelser(behandlingId: BehandlingId, samordningYtelser: List<SamordningYtelse>)
-    fun hentSamordningYtelser(behandlingId: BehandlingId, ytelseId: Long) : SamordningYtelseGrunnlag
+    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
+}
+
+interface SamordningYtelseRepository : Repository {
+    fun hentHvisEksisterer(behandlingId: BehandlingId): SamordningYtelseGrunnlag?
+    fun lagre(behandlingId: BehandlingId, samordningYtelser: List<SamordningYtelse>)
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
 }

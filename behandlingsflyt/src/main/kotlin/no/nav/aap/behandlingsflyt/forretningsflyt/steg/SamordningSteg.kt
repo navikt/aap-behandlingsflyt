@@ -86,6 +86,7 @@ class SamordningSteg(
             val samordningYtelseVurderingRepository = repositoryProvider.provide<SamordningYtelseVurderingRepository>()
             return SamordningSteg(
                 SamordningService(
+                    repositoryProvider.provide(),
                     repositoryProvider.provide()
                 ),
                 samordningRepository,

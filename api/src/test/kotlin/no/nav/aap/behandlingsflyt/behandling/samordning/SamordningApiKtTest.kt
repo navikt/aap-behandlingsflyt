@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.MockDataSource
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseVurderingRepository
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -43,6 +44,7 @@ class SamordningApiKtTest {
         fun beforeAll() {
             RepositoryRegistry
                 .register<InMemorySamordningYtelseVurderingRepository>()
+                .register<InMemorySamordningYtelseRepository>()
                 .register<InMemoryBehandlingRepository>()
         }
     }
@@ -52,7 +54,7 @@ class SamordningApiKtTest {
         val ds = MockDataSource()
         val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
 
-        InMemorySamordningYtelseVurderingRepository.lagreYtelser(
+        InMemorySamordningYtelseRepository.lagre(
             behandling.id, listOf(
                 SamordningYtelse(
                     ytelseType = Ytelse.PLEIEPENGER,
