@@ -203,7 +203,7 @@ class StatistikkJobbUtfører(
         val beregningsGrunnlagDTO: BeregningsgrunnlagDTO? =
             if (grunnlag == null) null else beregningsgrunnlagDTO(grunnlag)
 
-        log.info("Kaller aap-statistikk for sak ${sak.saksnummer}.")
+        log.info("Kaller aap-statistikk for sak ${sak.saksnummer} og behandling ${behandling.referanse}")
 
         val rettighetstypePerioder =
             underveisRepository.hent(behandling.id).perioder.filter { it.rettighetsType != null }.map {
