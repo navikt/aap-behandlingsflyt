@@ -921,7 +921,7 @@ class FlytOrkestratorTest {
                         )
                     ),
                     begrunnelse = "En god begrunnelse",
-                    maksDatoEndelig = false,
+                    maksDatoEndelig = true,
                     maksDato = LocalDate.now().plusMonths(1),
                 ),
             ),

@@ -29,7 +29,6 @@ class OpprettRevurderingSteg(
                     samordningYtelseVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
                         ?: return Fullført
 
-                // TODO: lagre mer i grunnlaget, feil å hente herfra?
                 val maksDato =
                     if (samordningVurdering.maksDatoEndelig && samordningVurdering.maksDato != null) samordningVurdering.maksDato else null
 
