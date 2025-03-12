@@ -55,13 +55,13 @@ class SamordningYtelseVurderingServiceTest {
 
             // Når det ikke finnes data
             val ingenData = service.oppdater(kontekst)
-            assertEquals(Informasjonskrav.Endret.ENDRET, ingenData)
+            assertEquals(Informasjonskrav.Endret.IKKE_ENDRET, ingenData)
 
-            //Data er uforandret
+            // Data er uforandret
             val sammeData = service.oppdater(kontekst)
             assertEquals(Informasjonskrav.Endret.IKKE_ENDRET, sammeData)
 
-            //Ny data har kommet inn
+            // Ny data har kommet inn
             opprettYtelseData(ytelseRepo, kontekst.behandlingId)
             opprettVurderingData(repo, kontekst.behandlingId)
             val nyData = service.oppdater(kontekst)

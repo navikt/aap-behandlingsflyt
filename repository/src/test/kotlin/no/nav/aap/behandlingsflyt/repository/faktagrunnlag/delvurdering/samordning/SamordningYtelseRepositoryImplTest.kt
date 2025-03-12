@@ -70,6 +70,76 @@ class SamordningYtelseRepositoryImplTest {
         }
     }
 
+    @Test
+    fun `sette inn for flere behandlinger, hente ut`() {
+        val behandling1 = dataSource.transaction {
+            behandling(it, sak(it))
+        }
+        val behandling2 = dataSource.transaction {
+            behandling(it, sak(it))
+        }
+        val samordningYtelser1 = listOf(
+            SamordningYtelse(
+                ytelseType = Ytelse.SYKEPENGER,
+                ytelsePerioder = listOf(
+                    SamordningYtelsePeriode(
+                        periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3)),
+                        gradering = Prosent.`70_PROSENT`,
+                    ),
+                    SamordningYtelsePeriode(
+                        periode = Periode(LocalDate.now().plusYears(3).plusDays(1), LocalDate.now().plusYears(6)),
+                        gradering = Prosent.`30_PROSENT`,
+                    )
+                ),
+                kilde = "kilde",
+                saksRef = "abc"
+            )
+        )
+        val samordningYtelser2 = listOf(
+            SamordningYtelse(
+                ytelseType = Ytelse.SYKEPENGER,
+                ytelsePerioder = listOf(
+                    SamordningYtelsePeriode(
+                        periode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(3)),
+                        gradering = Prosent.`70_PROSENT`
+                    ),
+                    SamordningYtelsePeriode(
+                        periode = Periode(LocalDate.now().plusYears(3).plusDays(1), LocalDate.now().plusYears(6)),
+                        gradering = Prosent.`100_PROSENT`,
+                    )
+                ),
+                kilde = "kilde2",
+                saksRef = "xxx"
+            )
+        )
+        dataSource.transaction {
+            SamordningYtelseRepositoryImpl(it).lagre(
+                behandling1.id,
+                samordningYtelser = samordningYtelser1
+            )
+            SamordningYtelseRepositoryImpl(it).lagre(
+                behandling2.id,
+                samordningYtelser = samordningYtelser2
+            )
+        }
+
+        val uthentet1 = dataSource.transaction {
+            SamordningYtelseRepositoryImpl(it).hentHvisEksisterer(behandling1.id)
+        }
+        assertThat(samordningYtelser1).isEqualTo(uthentet1!!.ytelser)
+        val uthentet2 = dataSource.transaction {
+            SamordningYtelseRepositoryImpl(it).hentHvisEksisterer(behandling2.id)
+        }
+        assertThat(samordningYtelser2).isEqualTo(uthentet2!!.ytelser)
+
+        // Kopier:
+        val kopiertBehandling = dataSource.transaction {
+            val nyBehandling = behandling(it, sak(it))
+
+            SamordningYtelseRepositoryImpl(it).kopier(behandling1.id, nyBehandling.id)
+        }
+    }
+
     private fun sak(connection: DBConnection): Sak {
         return PersonOgSakService(
             FakePdlGateway,

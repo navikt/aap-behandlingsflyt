@@ -39,7 +39,9 @@ class SamordningYtelseVurderingService(
         val samordningYtelser = mapTilSamordningYtelse(foreldrepenger, sykepenger)
 
         if (harEndringerIYtelser(eksisterendeData, samordningYtelser)) {
-            samordningYtelseRepository.lagre(kontekst.behandlingId, samordningYtelser)
+            if (samordningYtelser.isNotEmpty()) {
+                samordningYtelseRepository.lagre(kontekst.behandlingId, samordningYtelser)
+            }
             return Informasjonskrav.Endret.ENDRET
         }
 
@@ -73,6 +75,9 @@ class SamordningYtelseVurderingService(
         eksisterende: SamordningYtelseGrunnlag?,
         samordningYtelser: List<SamordningYtelse>
     ): Boolean {
+        if (eksisterende == null && samordningYtelser.isEmpty()) {
+            return false
+        }
         return samordningYtelser != eksisterende?.ytelser
     }
 

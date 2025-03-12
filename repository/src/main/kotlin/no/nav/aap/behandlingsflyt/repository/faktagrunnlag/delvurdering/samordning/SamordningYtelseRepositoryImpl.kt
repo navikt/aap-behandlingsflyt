@@ -22,9 +22,10 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): SamordningYtelseGrunnlag? {
         val sql = """
-            SELECT *
+            SELECT syg.samordning_ytelse_id as syg_samordning_ytelse_id,
+                   sy.id                    as sy_id
             FROM SAMORDNING_YTELSE_GRUNNLAG syg
-                     left join samordning_ytelse sy on syg.samordning_ytelse_id = sy.id
+                     left join samordning_ytelser sy on syg.samordning_ytelse_id = sy.id
             WHERE BEHANDLING_ID = ?
         """.trimIndent()
 
@@ -34,15 +35,8 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
             }
             setRowMapper { row ->
                 Pair(
-                    row.getLong("SAMORDNING_YTELSE_ID"),
-                    row.getEnumOrNull<Ytelse, Ytelse>("ytelse_type")?.let {
-                        SamordningYtelse(
-                            ytelseType = row.getEnum("ytelse_type"),
-                            ytelsePerioder = hentYtelsePerioder(row.getLong("ytelser_id")),
-                            kilde = row.getString("kilde"),
-                            saksRef = row.getStringOrNull("saks_ref")
-                        )
-                    }
+                    row.getLong("syg_samordning_ytelse_id"),
+                    hentYtelser(row.getLong("sy_id"))
                 )
             }
         }
@@ -51,8 +45,28 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
 
         return SamordningYtelseGrunnlag(
             grunnlagId = par.first().first,
-            ytelser = par.mapNotNull { it.second }
+            ytelser = par.first().second,
         )
+    }
+
+    private fun hentYtelser(ytelserId: Long): List<SamordningYtelse> {
+        val sql  ="""
+            select * from samordning_ytelser join samordning_ytelse on samordning_ytelser.id = samordning_ytelse.ytelser_id where samordning_ytelser.id = ?
+        """.trimIndent()
+
+        return dbConnection.queryList(sql) {
+            setParams {
+                setLong(1, ytelserId)
+            }
+            setRowMapper { row ->
+                SamordningYtelse(
+                    ytelseType = row.getEnum("ytelse_type"),
+                    ytelsePerioder = hentYtelsePerioder(row.getLong("ytelser_id")),
+                    kilde = row.getString("kilde"),
+                    saksRef = row.getStringOrNull("saks_ref")
+                )
+            }
+        }
     }
 
     private fun hentYtelsePerioder(ytelseId: Long): List<SamordningYtelsePeriode> {
