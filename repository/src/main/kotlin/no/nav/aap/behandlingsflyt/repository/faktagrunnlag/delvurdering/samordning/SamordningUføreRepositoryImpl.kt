@@ -38,7 +38,7 @@ class SamordningUføreRepositoryImpl(private val connection: DBConnection) : Sam
 
     fun hentSamordningUføreVurderingBegrunnelse(vurderingId: Long): String {
         val query = """
-            SELECT * FROM SAMORDNING_UFORE_VURDERING WHERE vurdering_id = ?
+            SELECT * FROM SAMORDNING_UFORE_VURDERING WHERE id = ?
         """.trimIndent()
         return connection.queryFirst(query) {
             setParams {

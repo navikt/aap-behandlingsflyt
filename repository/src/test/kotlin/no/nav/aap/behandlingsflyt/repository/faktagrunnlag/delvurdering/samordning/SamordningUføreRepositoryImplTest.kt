@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingPeriode
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningYtelseVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -20,26 +19,35 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
-import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 class SamordningUføreRepositoryImplTest {
-    private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+    private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
 
     @Test
-    fun `skal lagre ned en helt ny vurdering`() {
+    fun `skal lagre ned en helt ny vurdering og hente den opp igjen`() {
         val dataSource = InitTestDatabase.dataSource
         val behandling = dataSource.transaction {
             behandling(it, sak(it))
         }
 
         // Lagre ytelse
-        val vurdering = SamordningUføreVurdering(begrunnelse = "En fin begrunnelse", vurderingPerioder = listOf(
-            SamordningUføreVurderingPeriode(periode = Periode(periode.fom, LocalDate.MAX), uføregradTilSamordning = Prosent.`50_PROSENT`)
-        ))
+        val vurdering = SamordningUføreVurdering(
+            begrunnelse = "En fin begrunnelse", vurderingPerioder = listOf(
+                SamordningUføreVurderingPeriode(
+                    periode = Periode(periode.fom, periode.fom.plusMonths(3)),
+                    uføregradTilSamordning = Prosent.`50_PROSENT`
+                ),
+                SamordningUføreVurderingPeriode(
+                    periode = Periode(
+                        periode.fom.plusMonths(4),
+                        periode.fom.plusMonths(7)
+                    ), uføregradTilSamordning = Prosent.`70_PROSENT`
+                )
+            )
+        )
         dataSource.transaction {
             SamordningUføreRepositoryImpl(it).lagre(behandling.id, vurdering)
         }
@@ -49,8 +57,7 @@ class SamordningUføreRepositoryImplTest {
         }
 
         assertThat(uthentet).isNotNull
-        assertThat(uthentet).isEqualTo(vurdering)
-
+        assertThat(uthentet?.vurdering).isEqualTo(vurdering)
     }
 
     private fun sak(connection: DBConnection): Sak {
