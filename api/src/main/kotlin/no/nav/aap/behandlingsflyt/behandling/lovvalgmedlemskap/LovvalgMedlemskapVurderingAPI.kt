@@ -73,22 +73,20 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapAPI(dataSource: DataSource) {
             ) { req ->
                 val vurdering = dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
-                    val behandling =
-                        repositoryProvider.provide<BehandlingRepository>().hent(BehandlingReferanse(req.referanse))
+                    val medlemskapArbeidInntektForutgåendeRepository = repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>()
+                    val behandling = repositoryProvider.provide<BehandlingRepository>().hent(BehandlingReferanse(req.referanse))
                     val sak = repositoryProvider.provide<SakRepository>().hent(behandling.sakId)
 
-                    val personopplysningGrunnlag =
-                        repositoryProvider.provide<PersonopplysningForutgåendeRepository>().hentHvisEksisterer(behandling.id)
+                    val personopplysningGrunnlag = repositoryProvider.provide<PersonopplysningForutgåendeRepository>().hentHvisEksisterer(behandling.id)
                     if (personopplysningGrunnlag == null) {
                         // Steget har ikke fått kjørt enda, så
                         return@transaction null
                     }
-                    val medlemskapArbeidInntektGrunnlag =
-                        repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>()
-                            .hentHvisEksisterer(behandling.id)
-                    val oppgittUtenlandsOppholdGrunnlag =
-                        repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>()
-                            .hentOppgittUtenlandsOppholdHvisEksisterer(behandling.id)
+
+                    val medlemskapArbeidInntektGrunnlag = medlemskapArbeidInntektForutgåendeRepository.hentHvisEksisterer(behandling.id)
+
+                    val oppgittUtenlandsOppholdGrunnlag = medlemskapArbeidInntektForutgåendeRepository.hentOppgittUtenlandsOppholdHvisEksisterer(behandling.id)
+                        ?: medlemskapArbeidInntektForutgåendeRepository.hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(sak.id)
 
                     ForutgåendeMedlemskapLovvalgVurderingService().vurderTilhørighet(
                         ForutgåendeMedlemskapGrunnlag(
