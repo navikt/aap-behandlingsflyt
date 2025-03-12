@@ -9,7 +9,7 @@ metadata:
 spec:
   image: {{image}}
   ingresses:
-      - "https://aap-behandlingsflyt.intern.dev.nav.no"
+    - https://aap-behandlingsflyt.intern.dev.nav.no
   replicas:
     disableAutoScaling: true
     max: 2
@@ -25,9 +25,9 @@ spec:
       enabled: true
       runtime: "java"
     logging:
-        destinations:
-            - id: elastic
-            - id: loki
+      destinations:
+        - id: elastic
+        - id: loki
   gcp:
     sqlInstances:
       - type: POSTGRES_16
@@ -70,28 +70,29 @@ spec:
       rules:
         - application: brev
           permissions:
-              roles:
-                  - "brev"
-                  - "hent-personinfo"
+            roles:
+              - "brev"
+              - "hent-personinfo"
         - application: saksbehandling
           permissions:
-              roles:
-                  - "dokumentinnhenting-api"
+            roles:
+              - "dokumentinnhenting-api"
         - application: tilgang
           permissions:
-              roles:
-                  - "pip-api"
+            roles:
+              - "pip-api"
         - application: postmottak-backend
           permissions:
-              roles:
-                  - "opprett-sak"
+            roles:
+              - "opprett-sak"
         - application: dokumentinnhenting
           permissions:
-              roles:
-                  - "bestill-varselbrev"
+            roles:
+              - "bestill-varselbrev"
         - application: paw-patrol
+        - application: saksbehandling-lokal # For lokalt utvikling. IKKE kopier denne til prod.yaml
         - application: azure-token-generator # Ikke i prod :)
-          namespace: aura
+          namespace: nais
           cluster: dev-gcp
         - application: api
         - application: api-intern

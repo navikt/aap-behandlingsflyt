@@ -360,6 +360,26 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         }
     }
 
+    override fun hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(sakId: SakId): UtenlandsOppholdData? {
+        val query = """
+            SELECT *
+            FROM OPPGITT_UTENLANDSOPPHOLD_GRUNNLAG grunnlag
+            JOIN BEHANDLING behandling ON grunnlag.BEHANDLING_ID = behandling.ID
+            WHERE grunnlag.AKTIV AND behandling.SAK_ID = ?
+            ORDER BY behandling.OPPRETTET_TID DESC
+            LIMIT 1
+        """.trimIndent()
+
+        return connection.queryFirstOrNull(query) {
+            setParams {
+                setLong(1, sakId.id)
+            }
+            setRowMapper {
+                hentOppgittUtenlandsOpphold(it.getLong("oppgitt_utenlandsopphold_id"))
+            }
+        }
+    }
+
     private fun hentMedlemskapGrunnlag(medlemskapId: Long?): MedlemskapUnntakGrunnlag? {
         if (medlemskapId == null) return null
 

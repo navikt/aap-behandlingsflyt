@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering
 
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import java.time.LocalDate
@@ -21,9 +20,6 @@ data class SamordningYtelsePeriode(
 
 data class SamordningVurdering(
     val ytelseType: Ytelse,
-    val begrunnelse: String,
-    val maksDatoEndelig: Boolean,
-    val maksDato: LocalDate?,
     val vurderingPerioder: List<SamordningVurderingPeriode>,
 ) {
     init {
@@ -37,17 +33,15 @@ data class SamordningVurderingPeriode(
     val kronesum: Number? = null
 )
 
-data class SamordningYtelseVurderingGrunnlag(
-    val ytelseGrunnlag: SamordningYtelseGrunnlag,
-    val vurderingGrunnlag: SamordningVurderingGrunnlag
-) : Faktagrunnlag
-
 data class SamordningYtelseGrunnlag(
-    val ytelseId: Long,
+    val grunnlagId: Long,
     val ytelser: List<SamordningYtelse>,
 )
 
 data class SamordningVurderingGrunnlag(
-    val vurderingerId: Long?,
+    val vurderingerId: Long? = null,
+    val begrunnelse: String,
+    val maksDatoEndelig: Boolean,
+    val maksDato: LocalDate?,
     val vurderinger: List<SamordningVurdering>,
 )

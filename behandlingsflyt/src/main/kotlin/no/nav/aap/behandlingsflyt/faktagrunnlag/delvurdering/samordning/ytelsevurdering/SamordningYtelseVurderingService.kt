@@ -18,28 +18,30 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
-import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelse as ForeldrePengerYtelse
 
 class SamordningYtelseVurderingService(
-    private val samordningYtelseVurderingRepository: SamordningYtelseVurderingRepository,
+    private val samordningYtelseRepository: SamordningYtelseRepository,
     private val sakService: SakService,
 ) : Informasjonskrav {
     private val fpGateway = GatewayProvider.provide<ForeldrepengerGateway>()
     private val spGateway = GatewayProvider.provide<SykepengerGateway>()
-    private val log = LoggerFactory.getLogger(SamordningYtelseVurderingService::class.java)
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
         val personIdent = sak.person.aktivIdent().identifikator
-        val foreldrepenger = hentYtelseForeldrepenger(personIdent, sak.rettighetsperiode.fom, sak.rettighetsperiode.tom)
-        val sykepenger = hentYtelseSykepenger(personIdent, sak.rettighetsperiode.fom.minusWeeks(4), sak.rettighetsperiode.tom)
-        val eksisterendeData = samordningYtelseVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
+        val foreldrepenger =
+            hentYtelseForeldrepenger(personIdent, sak.rettighetsperiode.fom.minusWeeks(4), sak.rettighetsperiode.tom)
+        val sykepenger =
+            hentYtelseSykepenger(personIdent, sak.rettighetsperiode.fom.minusWeeks(4), sak.rettighetsperiode.tom)
+        val eksisterendeData = samordningYtelseRepository.hentHvisEksisterer(kontekst.behandlingId)
         val samordningYtelser = mapTilSamordningYtelse(foreldrepenger, sykepenger)
 
         if (harEndringerIYtelser(eksisterendeData, samordningYtelser)) {
-            samordningYtelseVurderingRepository.lagreYtelser(kontekst.behandlingId, samordningYtelser)
+            if (samordningYtelser.isNotEmpty()) {
+                samordningYtelseRepository.lagre(kontekst.behandlingId, samordningYtelser)
+            }
             return Informasjonskrav.Endret.ENDRET
         }
 
@@ -70,10 +72,13 @@ class SamordningYtelseVurderingService(
     }
 
     private fun harEndringerIYtelser(
-        eksisterende: SamordningYtelseVurderingGrunnlag?,
+        eksisterende: SamordningYtelseGrunnlag?,
         samordningYtelser: List<SamordningYtelse>
     ): Boolean {
-        return samordningYtelser != eksisterende?.ytelseGrunnlag?.ytelser
+        if (eksisterende == null && samordningYtelser.isEmpty()) {
+            return false
+        }
+        return samordningYtelser != eksisterende?.ytelser
     }
 
     private fun mapTilSamordningYtelse(

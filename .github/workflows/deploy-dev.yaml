@@ -60,6 +60,8 @@ jobs:
 
   publiser-kontrakt:
       needs: build
+      concurrency:
+          group: kontrakt
       permissions:
           contents: write
           packages: write
