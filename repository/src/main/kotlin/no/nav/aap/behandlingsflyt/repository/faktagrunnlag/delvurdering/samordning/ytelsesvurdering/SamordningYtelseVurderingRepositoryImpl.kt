@@ -90,8 +90,6 @@ class SamordningYtelseVurderingRepositoryImpl(private val connection: DBConnecti
             deaktiverGrunnlag(behandlingId)
         }
 
-        val ytelserId = eksisterendeGrunnlag?.ytelseGrunnlag?.grunnlagId
-
         val samordningVurderingerQuery = """
             INSERT INTO SAMORDNING_VURDERINGER DEFAULT VALUES
             """.trimIndent()
@@ -126,13 +124,12 @@ class SamordningYtelseVurderingRepositoryImpl(private val connection: DBConnecti
 
         // TODO: Skal denne sjekke om det er nye ytelser, eller skjer det uansett når det kommer nye vurderinger?
         val grunnlagQuery = """
-            INSERT INTO SAMORDNING_YTELSEVURDERING_GRUNNLAG (behandling_id, ytelser_id, vurderinger_id) VALUES (?, ?, ?)
+            INSERT INTO SAMORDNING_YTELSEVURDERING_GRUNNLAG (behandling_id, vurderinger_id) VALUES (?, ?)
         """.trimIndent()
         connection.execute(grunnlagQuery) {
             setParams {
                 setLong(1, behandlingId.toLong())
-                setLong(2, ytelserId)
-                setLong(3, vurderingerId)
+                setLong(2, vurderingerId)
             }
         }
     }
@@ -153,8 +150,8 @@ class SamordningYtelseVurderingRepositoryImpl(private val connection: DBConnecti
         }
         val query = """
             INSERT INTO SAMORDNING_YTELSEVURDERING_GRUNNLAG 
-                (behandling_id, ytelser_id, vurderinger_id) 
-            SELECT ?, ytelser_id, vurderinger_id 
+                (behandling_id, vurderinger_id)
+            SELECT ?, vurderinger_id
                 from SAMORDNING_YTELSEVURDERING_GRUNNLAG 
                 where behandling_id = ? and aktiv
         """.trimIndent()

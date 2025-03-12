@@ -10,6 +10,4 @@ CREATE TABLE samordning_ytelse_grunnlag
 CREATE UNIQUE INDEX UIDX_SAMORDING_YTELSE_GRUNNLAG_BEHANDLING_ID ON samordning_ytelse_grunnlag (BEHANDLING_ID) WHERE (AKTIV = TRUE);
 
 ALTER TABLE samordning_ytelsevurdering_grunnlag
-    alter column ytelser_id drop not null;
-
--- todo: drop table samordning_ytelser
+    drop column ytelser_id;
