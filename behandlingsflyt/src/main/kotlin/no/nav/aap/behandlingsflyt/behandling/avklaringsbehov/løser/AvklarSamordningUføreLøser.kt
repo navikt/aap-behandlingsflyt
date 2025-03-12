@@ -16,7 +16,7 @@ class AvklarSamordningUføreLøser(connection: DBConnection) : AvklaringsbehovsL
         kontekst: AvklaringsbehovKontekst,
         løsning: AvklarSamordningUføreLøsning
     ): LøsningsResultat {
-        samordningUføreRepository.lagre(kontekst.behandlingId(), løsning.vurderingerForSamordningUføre)
+        samordningUføreRepository.lagre(kontekst.behandlingId(), løsning.samordningUføreVurdering)
         return LøsningsResultat("Vurdert samordning uføre")
     }
 

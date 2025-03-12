@@ -1,8 +1,9 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingPeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.VurderingerForSamordningUføre
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -16,26 +17,43 @@ class SamordningUføreRepositoryImpl(private val connection: DBConnection) : Sam
         }
     }
 
-    override fun hentHvisEksisterer(behandlingId: BehandlingId): VurderingerForSamordningUføre? {
+    override fun hentHvisEksisterer(behandlingId: BehandlingId): SamordningUføreGrunnlag? {
         val query = """
-            SELECT * FROM SAMORDNING_UFORE_VURDERING WHERE behandling_id = ? and aktiv = true
+            SELECT * FROM SAMORDNING_UFORE_GRUNNLAG WHERE behandling_id = ? and aktiv = true
         """.trimIndent()
         return connection.queryFirstOrNull(query) {
             setParams {
                 setLong(1, behandlingId.toLong())
             }
             setRowMapper {
-                VurderingerForSamordningUføre(
-                    begrunnelse = it.getString("begrunnelse"),
-                    vurderingPerioder = hentSamordningUføreVurderingPerioder(it.getLong("id"))
+                SamordningUføreGrunnlag(
+                    vurdering = SamordningUføreVurdering(
+                        begrunnelse = hentSamordningUføreVurderingBegrunnelse(it.getLong("vurdering_id")),
+                        vurderingPerioder = hentSamordningUføreVurderingPerioder(it.getLong("vurdering_id"))
+                    )
                 )
+            }
+        }
+    }
+
+    fun hentSamordningUføreVurderingBegrunnelse(vurderingId: Long): String {
+        val query = """
+            SELECT * FROM SAMORDNING_UFORE_VURDERING WHERE vurdering_id = ?
+        """.trimIndent()
+        return connection.queryFirst(query) {
+            setParams {
+                setLong(1, vurderingId)
+            }
+            setRowMapper {
+                it.getString("begrunnelse")
+
             }
         }
     }
 
     fun hentSamordningUføreVurderingPerioder(vurderingId: Long): List<SamordningUføreVurderingPeriode> {
         val query = """
-            SELECT * FROM SAMORDING_UFORE_VURDERING_PERIODE WHERE vurdering_id = ?
+            SELECT * FROM SAMORDNING_UFORE_VURDERING_PERIODE WHERE vurdering_id = ?
         """.trimIndent()
         return connection.queryList(query) {
             setParams {
@@ -52,7 +70,7 @@ class SamordningUføreRepositoryImpl(private val connection: DBConnection) : Sam
 
     override fun lagre(
         behandlingId: BehandlingId,
-        vurdering: VurderingerForSamordningUføre
+        vurdering: SamordningUføreVurdering
     ) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         if (eksisterendeGrunnlag != null) {
@@ -60,18 +78,28 @@ class SamordningUføreRepositoryImpl(private val connection: DBConnection) : Sam
         }
 
         val samordingUføreVurderingQuery = """
-            INSERT INTO SAMORDNING_UFORE_VURDERING (behandling_id, begrunnelse) VALUES (?, ?)
+            INSERT INTO SAMORDNING_UFORE_VURDERING (begrunnelse) VALUES (?)
         """.trimIndent()
 
         val vurderingId = connection.executeReturnKey(samordingUføreVurderingQuery) {
             setParams {
-                setLong(1, behandlingId.id)
-                setString(2, vurdering.begrunnelse)
+                setString(1, vurdering.begrunnelse)
+            }
+        }
+
+        val samordingUføreGrunnlagQuery = """
+            INSERT INTO SAMORDNING_UFORE_GRUNNLAG (behandling_id, vurdering_id) VALUES (?, ?)
+        """.trimIndent()
+
+        connection.execute(samordingUføreGrunnlagQuery) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setLong(2, vurderingId)
             }
         }
 
         val periodeQuery = """
-                INSERT INTO SAMORDING_UFORE_VURDERING_PERIODE (periode, vurdering_id, uforegrad) VALUES (?::daterange, ?, ?)
+                INSERT INTO SAMORDNING_UFORE_VURDERING_PERIODE (periode, vurdering_id, uforegrad) VALUES (?::daterange, ?, ?)
                 """.trimIndent()
 
         connection.executeBatch(periodeQuery, vurdering.vurderingPerioder) {
@@ -85,7 +113,7 @@ class SamordningUføreRepositoryImpl(private val connection: DBConnection) : Sam
     }
 
     private fun deaktiverGrunnlag(behandlingId: BehandlingId) {
-        connection.execute("UPDATE SAMORDNING_UFORE_VURDERING set aktiv = false WHERE behandling_id = ? and aktiv = true") {
+        connection.execute("UPDATE SAMORDNING_UFORE_GRUNNLAG set aktiv = false WHERE behandling_id = ? and aktiv = true") {
             setParams {
                 setLong(1, behandlingId.toLong())
             }
@@ -97,6 +125,12 @@ class SamordningUføreRepositoryImpl(private val connection: DBConnection) : Sam
         fraBehandling: BehandlingId,
         tilBehandling: BehandlingId
     ) {
-        TODO()
+        require(fraBehandling != tilBehandling)
+        connection.execute("INSERT INTO SAMORDNING_UFORE_GRUNNLAG (BEHANDLING_ID, VURDERING_ID) SELECT ?, VURDERING_ID FROM SAMORDNING_UFORE_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?") {
+            setParams {
+                setLong(1, tilBehandling.toLong())
+                setLong(2, fraBehandling.toLong())
+            }
+        }
     }
 }

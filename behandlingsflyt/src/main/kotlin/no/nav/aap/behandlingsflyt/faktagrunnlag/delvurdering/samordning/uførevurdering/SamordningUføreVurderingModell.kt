@@ -3,7 +3,11 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførev
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 
-data class VurderingerForSamordningUføre(
+data class SamordningUføreGrunnlag(
+    val vurdering: SamordningUføreVurdering,
+)
+
+data class SamordningUføreVurdering(
     val begrunnelse: String,
     val vurderingPerioder: List<SamordningUføreVurderingPeriode>,
 )
