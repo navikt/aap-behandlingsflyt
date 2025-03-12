@@ -71,7 +71,7 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
 
     private fun hentYtelsePerioder(ytelseId: Long): List<SamordningYtelsePeriode> {
         val sql = """
-            SELECT * from samordning_ytelse_periode where ytelse_id = ?
+            SELECT * from samordning_ytelse_periode where ytelse_id = ? order by periode
         """.trimIndent()
         return dbConnection.queryList(sql) {
             setParams {
