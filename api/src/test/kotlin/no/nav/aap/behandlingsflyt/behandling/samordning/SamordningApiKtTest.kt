@@ -26,7 +26,7 @@ import no.nav.aap.behandlingsflyt.test.MockDataSource
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseVurderingRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningVurderingRepository
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.RepositoryRegistry
@@ -43,7 +43,7 @@ class SamordningApiKtTest {
         @JvmStatic
         fun beforeAll() {
             RepositoryRegistry
-                .register<InMemorySamordningYtelseVurderingRepository>()
+                .register<InMemorySamordningVurderingRepository>()
                 .register<InMemorySamordningYtelseRepository>()
                 .register<InMemoryBehandlingRepository>()
         }

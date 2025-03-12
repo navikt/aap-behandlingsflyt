@@ -3,11 +3,8 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordn
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
@@ -26,11 +23,10 @@ import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
-import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
 
 
-class SamordningYtelseVurderingRepositoryImplTest {
+class SamordningVurderingRepositoryImplTest {
     private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
     @Test
@@ -55,7 +51,7 @@ class SamordningYtelseVurderingRepositoryImplTest {
             )
         )
         dataSource.transaction {
-            SamordningYtelseVurderingRepositoryImpl(it).lagreVurderinger(
+            SamordningVurderingRepositoryImpl(it).lagreVurderinger(
                 behandlingId = behandling.id,
                 samordningVurderinger = listOf(
                     vurdering
@@ -64,7 +60,7 @@ class SamordningYtelseVurderingRepositoryImplTest {
         }
 
         val uthentet = dataSource.transaction {
-            SamordningYtelseVurderingRepositoryImpl(it).hentHvisEksisterer(behandling.id)
+            SamordningVurderingRepositoryImpl(it).hentHvisEksisterer(behandling.id)
         }
 
         assertThat(uthentet?.vurderinger).isEqualTo(listOf(vurdering))
@@ -93,7 +89,7 @@ class SamordningYtelseVurderingRepositoryImplTest {
         )
         assertDoesNotThrow  {
             dataSource.transaction {
-                SamordningYtelseVurderingRepositoryImpl(it).lagreVurderinger(
+                SamordningVurderingRepositoryImpl(it).lagreVurderinger(
                     behandlingId = behandling.id,
                     samordningVurderinger = listOf(
                         vurdering

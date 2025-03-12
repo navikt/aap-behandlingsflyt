@@ -10,7 +10,7 @@ import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
@@ -60,7 +60,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
             get<BehandlingReferanse, SamordningYtelseVurderingGrunnlagDTO> { req ->
                 val (registerYtelser, samordning) = dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
-                    val samordningRepository = repositoryProvider.provide<SamordningYtelseVurderingRepository>()
+                    val samordningRepository = repositoryProvider.provide<SamordningVurderingRepository>()
                     val samordningYtelseRepository = repositoryProvider.provide<SamordningYtelseRepository>()
 
                     val behandling =

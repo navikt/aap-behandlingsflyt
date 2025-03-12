@@ -25,7 +25,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseVurderingRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningVurderingRepository
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
@@ -61,7 +61,7 @@ class SamordningStegTest {
 
         assertThat(res).isEqualTo(FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_GRADERING))
 
-        InMemorySamordningYtelseVurderingRepository.lagreVurderinger(
+        InMemorySamordningVurderingRepository.lagreVurderinger(
             behandling.id, listOf(
                 SamordningVurdering(
                     ytelseType = ytelse,
@@ -123,7 +123,7 @@ class SamordningStegTest {
         val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
         val steg = settOppRessurser(Ytelse.SYKEPENGER, behandling.id)
 
-        InMemorySamordningYtelseVurderingRepository.lagreVurderinger(
+        InMemorySamordningVurderingRepository.lagreVurderinger(
             behandling.id, listOf(
                 SamordningVurdering(
                     ytelseType = Ytelse.SYKEPENGER,
@@ -185,7 +185,7 @@ class SamordningStegTest {
 
         assertThat(res).isEqualTo(FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_GRADERING))
 
-        InMemorySamordningYtelseVurderingRepository.lagreVurderinger(
+        InMemorySamordningVurderingRepository.lagreVurderinger(
             behandling.id, listOf(
                 SamordningVurdering(
                     ytelseType = Ytelse.SYKEPENGER,
@@ -220,7 +220,7 @@ class SamordningStegTest {
     ): SamordningSteg {
         val steg = SamordningSteg(
             samordningService = SamordningService(
-                samordningYtelseVurderingRepository = InMemorySamordningYtelseVurderingRepository,
+                samordningVurderingRepository = InMemorySamordningVurderingRepository,
                 samordningYtelseRepository = InMemorySamordningYtelseRepository,
             ),
             samordningRepository = InMemorySamordningRepository,

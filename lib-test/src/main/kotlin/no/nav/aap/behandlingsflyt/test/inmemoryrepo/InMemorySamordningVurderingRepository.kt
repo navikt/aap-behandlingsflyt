@@ -3,11 +3,11 @@ package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import java.util.concurrent.ConcurrentHashMap
 
-object InMemorySamordningYtelseVurderingRepository : SamordningYtelseVurderingRepository {
+object InMemorySamordningVurderingRepository : SamordningVurderingRepository {
     private val ytelser = ConcurrentHashMap<BehandlingId, List<SamordningYtelse>>()
     private val vurderinger = ConcurrentHashMap<BehandlingId, List<SamordningVurdering>>()
 

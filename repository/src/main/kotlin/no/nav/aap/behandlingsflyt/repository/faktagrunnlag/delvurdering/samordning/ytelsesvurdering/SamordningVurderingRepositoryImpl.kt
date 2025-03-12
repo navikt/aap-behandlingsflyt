@@ -3,18 +3,18 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.Factory
 
-class SamordningYtelseVurderingRepositoryImpl(private val connection: DBConnection) :
-    SamordningYtelseVurderingRepository {
+class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
+    SamordningVurderingRepository {
 
-    companion object : Factory<SamordningYtelseVurderingRepositoryImpl> {
-        override fun konstruer(connection: DBConnection): SamordningYtelseVurderingRepositoryImpl {
-            return SamordningYtelseVurderingRepositoryImpl(connection)
+    companion object : Factory<SamordningVurderingRepositoryImpl> {
+        override fun konstruer(connection: DBConnection): SamordningVurderingRepositoryImpl {
+            return SamordningVurderingRepositoryImpl(connection)
         }
     }
 

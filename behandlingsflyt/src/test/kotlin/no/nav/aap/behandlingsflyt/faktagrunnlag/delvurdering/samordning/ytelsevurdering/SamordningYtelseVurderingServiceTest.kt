@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.periodisering.VurderingTilBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningYtelseRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningYtelseVurderingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -45,7 +45,7 @@ class SamordningYtelseVurderingServiceTest {
     fun `krever avklaring når endringer kommer`() {
         InitTestDatabase.dataSource.transaction { connection ->
             val ytelseRepo = SamordningYtelseRepositoryImpl(connection)
-            val repo = SamordningYtelseVurderingRepositoryImpl(connection)
+            val repo = SamordningVurderingRepositoryImpl(connection)
             val sakRepository = SakRepositoryImpl(connection)
             val service = SamordningYtelseVurderingService(
                 SamordningYtelseRepositoryImpl(connection),
@@ -69,7 +69,7 @@ class SamordningYtelseVurderingServiceTest {
         }
     }
 
-    private fun opprettVurderingData(repo: SamordningYtelseVurderingRepositoryImpl, behandlingId: BehandlingId) {
+    private fun opprettVurderingData(repo: SamordningVurderingRepositoryImpl, behandlingId: BehandlingId) {
         repo.lagreVurderinger(
             behandlingId,
             listOf(

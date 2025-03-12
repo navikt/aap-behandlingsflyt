@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -14,12 +14,12 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Prosent
 
 class SamordningService(
-    private val samordningYtelseVurderingRepository: SamordningYtelseVurderingRepository,
+    private val samordningVurderingRepository: SamordningVurderingRepository,
     private val samordningYtelseRepository: SamordningYtelseRepository,
 ) {
 
     fun hentVurderinger(behandlingId: BehandlingId): SamordningVurderingGrunnlag? {
-        return samordningYtelseVurderingRepository.hentHvisEksisterer(behandlingId)
+        return samordningVurderingRepository.hentHvisEksisterer(behandlingId)
     }
 
     fun hentYtelser(behandlingId: BehandlingId): SamordningYtelseGrunnlag? {

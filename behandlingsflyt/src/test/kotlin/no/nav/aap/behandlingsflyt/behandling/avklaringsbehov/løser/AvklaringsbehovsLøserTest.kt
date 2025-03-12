@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn.BarnRep
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7RepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningYtelseVurderingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektForutgåendeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
@@ -44,7 +44,7 @@ class AvklaringsbehovsLøserTest {
         RepositoryRegistry.register(BeregningVurderingRepositoryImpl::class)
         RepositoryRegistry.register(SykdomRepositoryImpl::class)
         RepositoryRegistry.register(SykepengerErstatningRepositoryImpl::class)
-        RepositoryRegistry.register<SamordningYtelseVurderingRepositoryImpl>()
+        RepositoryRegistry.register<SamordningVurderingRepositoryImpl>()
         RepositoryRegistry.register<StudentRepositoryImpl>()
         RepositoryRegistry.register<MedlemskapArbeidInntektRepositoryImpl>()
         RepositoryRegistry.register<MeldepliktRepositoryImpl>()

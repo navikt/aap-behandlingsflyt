@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningYtelseRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningYtelseVurderingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -32,14 +32,14 @@ class SamordningServiceTest {
     fun `gjør vurderinger når all data er tilstede`() {
         val behandlingId = dataSource.transaction { opprettSakdata(it) }
         dataSource.transaction { connection ->
-            val ytelseVurderingRepo = SamordningYtelseVurderingRepositoryImpl(connection)
+            val ytelseVurderingRepo = SamordningVurderingRepositoryImpl(connection)
             val samordningYtelseRepository = SamordningYtelseRepositoryImpl(connection)
             opprettYtelseData(samordningYtelseRepository, behandlingId)
             opprettVurderingData(ytelseVurderingRepo, behandlingId)
         }
 
         dataSource.transaction { connection ->
-            val ytelseVurderingRepo = SamordningYtelseVurderingRepositoryImpl(connection)
+            val ytelseVurderingRepo = SamordningVurderingRepositoryImpl(connection)
             val samordningYtelseRepository = SamordningYtelseRepositoryImpl(connection)
             val service = SamordningService(ytelseVurderingRepo, samordningYtelseRepository)
 
@@ -74,7 +74,7 @@ class SamordningServiceTest {
 
         // Registrer vurdering fra 5 januar til 10 januar
         dataSource.transaction { connection ->
-            val ytelseVurderingRepo = SamordningYtelseVurderingRepositoryImpl(connection)
+            val ytelseVurderingRepo = SamordningVurderingRepositoryImpl(connection)
             opprettVurderingData(
                 ytelseVurderingRepo, behandlingId, vurderinger = listOf(
                     SamordningVurdering(
@@ -95,14 +95,14 @@ class SamordningServiceTest {
 
         val (ytelser, vurderinger) = dataSource.transaction { connection ->
             val service = SamordningService(
-                SamordningYtelseVurderingRepositoryImpl(connection),
+                SamordningVurderingRepositoryImpl(connection),
                 SamordningYtelseRepositoryImpl(connection)
             )
             Pair(service.hentYtelser(behandlingId), service.hentVurderinger(behandlingId))
         }
         val ikkeVurdertePerioder = dataSource.transaction { connection ->
             val service = SamordningService(
-                SamordningYtelseVurderingRepositoryImpl(connection),
+                SamordningVurderingRepositoryImpl(connection),
                 SamordningYtelseRepositoryImpl(connection)
             )
 
@@ -124,7 +124,7 @@ class SamordningServiceTest {
             opprettYtelseData(SamordningYtelseRepositoryImpl(connection), behandlingId)
 
             val service = SamordningService(
-                SamordningYtelseVurderingRepositoryImpl(connection),
+                SamordningVurderingRepositoryImpl(connection),
                 SamordningYtelseRepositoryImpl(connection)
             )
             val vurderinger = service.hentVurderinger(behandlingId)
@@ -138,7 +138,7 @@ class SamordningServiceTest {
     }
 
     private fun opprettVurderingData(
-        repo: SamordningYtelseVurderingRepositoryImpl,
+        repo: SamordningVurderingRepositoryImpl,
         behandlingId: BehandlingId,
         vurderinger: List<SamordningVurdering> = listOf(
             SamordningVurdering(

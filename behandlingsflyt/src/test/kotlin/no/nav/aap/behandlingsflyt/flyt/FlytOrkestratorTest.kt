@@ -59,7 +59,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.Sykdo
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.YrkesskadevurderingDto
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestratorTest.Companion.util
 import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
-import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattSakHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.TestHendelsesMottak
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
@@ -105,7 +104,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.effektue
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningYtelseRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningYtelseVurderingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.dokument.arbeid.MeldekortRepositoryImpl
@@ -214,7 +213,7 @@ class FlytOrkestratorTest {
                 .register<UføreRepositoryImpl>()
                 .register<MedlemskapArbeidInntektRepositoryImpl>()
                 .register<SykepengerErstatningRepositoryImpl>()
-                .register<SamordningYtelseVurderingRepositoryImpl>()
+                .register<SamordningVurderingRepositoryImpl>()
                 .register<StudentRepositoryImpl>()
                 .register<MeldepliktRepositoryImpl>()
                 .register<MedlemskapArbeidInntektForutgåendeRepositoryImpl>()
