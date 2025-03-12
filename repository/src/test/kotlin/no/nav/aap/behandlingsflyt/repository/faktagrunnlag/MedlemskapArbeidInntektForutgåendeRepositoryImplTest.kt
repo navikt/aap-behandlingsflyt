@@ -32,6 +32,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
             val personOgSakService = PersonOgSakService(FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection))
             val behandlingRepo = BehandlingRepositoryImpl(connection)
             val forutgåendeRepo = MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
+            val arbeidInntektRepo = MedlemskapArbeidInntektRepositoryImpl(connection)
 
             val sak = personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
 
@@ -52,7 +53,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
             val behandlingId1sak1 = behandling1sak1.id
             lagNyFullVurdering(behandlingId1sak1, forutgåendeRepo, "Random begrunnelse", connection)
 
-            val sisteUtenlandsOppholdData = forutgåendeRepo.hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(sak.id)
+            val sisteUtenlandsOppholdData = arbeidInntektRepo.hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(sak.id)
             assertEquals(sisteUtenlandsOppholdData?.harBoddINorgeSiste5År, true)
         }
     }
