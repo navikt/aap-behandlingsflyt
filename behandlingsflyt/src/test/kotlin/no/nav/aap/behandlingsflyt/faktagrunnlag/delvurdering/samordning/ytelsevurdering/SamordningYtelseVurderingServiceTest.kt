@@ -7,7 +7,8 @@ import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusSykepengerGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.periodisering.VurderingTilBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningYtelseVurderingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningYtelseRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -43,44 +44,48 @@ class SamordningYtelseVurderingServiceTest {
     @Test
     fun `krever avklaring når endringer kommer`() {
         InitTestDatabase.dataSource.transaction { connection ->
-            val repo = SamordningYtelseVurderingRepositoryImpl(connection)
+            val ytelseRepo = SamordningYtelseRepositoryImpl(connection)
+            val repo = SamordningVurderingRepositoryImpl(connection)
             val sakRepository = SakRepositoryImpl(connection)
             val service = SamordningYtelseVurderingService(
-                SamordningYtelseVurderingRepositoryImpl(connection),
+                SamordningYtelseRepositoryImpl(connection),
                 SakService(sakRepository),
             )
             val kontekst = opprettSakdata(connection)
 
-            //Når det ikke finnes data
+            // Når det ikke finnes data
             val ingenData = service.oppdater(kontekst)
-            assertEquals(Informasjonskrav.Endret.ENDRET, ingenData)
+            assertEquals(Informasjonskrav.Endret.IKKE_ENDRET, ingenData)
 
-            //Data er uforandret
+            // Data er uforandret
             val sammeData = service.oppdater(kontekst)
             assertEquals(Informasjonskrav.Endret.IKKE_ENDRET, sammeData)
 
-            //Ny data har kommet inn
-            opprettYtelseData(repo, kontekst.behandlingId)
+            // Ny data har kommet inn
+            opprettYtelseData(ytelseRepo, kontekst.behandlingId)
             opprettVurderingData(repo, kontekst.behandlingId)
             val nyData = service.oppdater(kontekst)
             assertEquals(Informasjonskrav.Endret.ENDRET, nyData)
         }
     }
 
-    private fun opprettVurderingData(repo: SamordningYtelseVurderingRepositoryImpl, behandlingId: BehandlingId) {
+    private fun opprettVurderingData(repo: SamordningVurderingRepositoryImpl, behandlingId: BehandlingId) {
         repo.lagreVurderinger(
             behandlingId,
-            listOf(
-                SamordningVurdering(
-                    Ytelse.SYKEPENGER,
-                    begrunnelse = "En god begrunnelse",
-                    maksDatoEndelig = false,
-                    maksDato = LocalDate.now().plusYears(1),
-                    listOf(
-                        SamordningVurderingPeriode(
-                            Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
-                            Prosent(50),
-                            0
+            SamordningVurderingGrunnlag(
+                begrunnelse = "En god begrunnelse",
+                maksDatoEndelig = false,
+                maksDato = LocalDate.now().plusYears(1),
+                vurderinger = listOf(
+                    SamordningVurdering(
+                        Ytelse.SYKEPENGER,
+
+                        listOf(
+                            SamordningVurderingPeriode(
+                                Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
+                                Prosent(50),
+                                0
+                            )
                         )
                     )
                 )
@@ -88,8 +93,8 @@ class SamordningYtelseVurderingServiceTest {
         )
     }
 
-    private fun opprettYtelseData(repo: SamordningYtelseVurderingRepositoryImpl, behandlingId: BehandlingId) {
-        repo.lagreYtelser(
+    private fun opprettYtelseData(repo: SamordningYtelseRepositoryImpl, behandlingId: BehandlingId) {
+        repo.lagre(
             behandlingId,
             listOf(
                 SamordningYtelse(
