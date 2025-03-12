@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.utbetaling
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
@@ -10,11 +9,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseDetaljerDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelsePeriodeDto
-import java.math.BigDecimal
 
 class UtbetalingService(
     private val sakRepository: SakRepository,
@@ -67,7 +64,7 @@ class UtbetalingService(
                 tom = periode.tom,
                 detaljer = TilkjentYtelseDetaljerDto(
                     redusertDagsats = detaljer.redusertDagsats().verdi(),
-                    gradering = detaljer.gradering.prosentverdi(),
+                    gradering = detaljer.gradering.endeligGradering.prosentverdi(),
                     dagsats = detaljer.dagsats.verdi(),
                     grunnlag = detaljer.grunnlag.verdi(),
                     grunnlagsfaktor = detaljer.grunnlagsfaktor.verdi(),

@@ -19,4 +19,7 @@ data class TilkjentYtelsePeriodeDTO(
     val barnetillegg: BigDecimal,
     val utbetalingsdato: LocalDate,
     val redusertDagsats: Double,
+    val arbeidGradering: Int?,
+    val institusjonGradering: Int?,
+    val samordningGradering: Int?
 )

@@ -51,7 +51,7 @@ class VirkningstidspunktUtlederTest {
                 TilkjentYtelsePeriode(
                     periode, Tilkjent(
                         dagsats = Beløp("954.06"),
-                        gradering = Prosent.`100_PROSENT`,
+                        gradering = TilkjentGradering(Prosent.`100_PROSENT`, Prosent.`0_PROSENT`, Prosent.`0_PROSENT`, Prosent.`0_PROSENT`),
                         grunnlag = Beløp("954.06"),
                         grunnlagsfaktor = GUnit("0.0076923077"),
                         grunnbeløp = Beløp("124028"),
@@ -94,7 +94,7 @@ class VirkningstidspunktUtlederTest {
                 TilkjentYtelsePeriode(
                     periode, Tilkjent(
                         dagsats = Beløp("954.06"),
-                        gradering = Prosent.`100_PROSENT`,
+                        gradering = TilkjentGradering(Prosent.`100_PROSENT`, Prosent.`0_PROSENT`, Prosent.`0_PROSENT`, Prosent.`0_PROSENT`),
                         grunnlag = Beløp("954.06"),
                         grunnlagsfaktor = GUnit("0.0076923077"),
                         grunnbeløp = Beløp("124028"),

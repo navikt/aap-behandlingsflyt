@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektForutgåendeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningForutgåendeRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -18,6 +19,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class AvklarOverstyrtForutgåendeMedlemskapLøser(connection: DBConnection): AvklaringsbehovsLøser<AvklarOverstyrtForutgåendeMedlemskapLøsning> {
     private val repositoryProvider = RepositoryProvider(connection)
     private val forutgåendeMedlemskapArbeidInntektRepository = repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>()
+    private val medlemskapArbeidInntektRepository = repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
     private val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
     private val sakRepository = repositoryProvider.provide<SakRepository>()
     private val personopplysningForutgåendeRepository = repositoryProvider.provide<PersonopplysningForutgåendeRepository>()
@@ -42,7 +44,7 @@ class AvklarOverstyrtForutgåendeMedlemskapLøser(connection: DBConnection): Avk
         val personopplysningGrunnlag = personopplysningForutgåendeRepository.hentHvisEksisterer(kontekst.behandlingId())
             ?: throw IllegalStateException("Forventet å finne personopplysninger")
         val medlemskapArbeidInntektGrunnlag = forutgåendeMedlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId())
-        val oppgittUtenlandsOppholdGrunnlag = forutgåendeMedlemskapArbeidInntektRepository.hentOppgittUtenlandsOppholdHvisEksisterer(kontekst.behandlingId())
+        val oppgittUtenlandsOppholdGrunnlag = medlemskapArbeidInntektRepository.hentOppgittUtenlandsOppholdHvisEksisterer(kontekst.behandlingId())
 
         ForutgåendeMedlemskapvilkåret(vilkårsresultat, sak.rettighetsperiode).vurderOverstyrt(
             ForutgåendeMedlemskapGrunnlag(medlemskapArbeidInntektGrunnlag, personopplysningGrunnlag, oppgittUtenlandsOppholdGrunnlag)

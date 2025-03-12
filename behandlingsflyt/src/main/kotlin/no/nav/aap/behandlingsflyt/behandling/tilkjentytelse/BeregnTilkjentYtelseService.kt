@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.RettTilBarnetillegg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
@@ -84,7 +83,14 @@ class BeregnTilkjentYtelseService(
                         .minus(institusjonsOppholdReduksjon)
                         .minus(arbeidsgradering)
                 }
-                Segment(periode, TilkjentGUnit(dagsats, utbetalingsgrad, venstre.verdi.meldePeriode.tom.plusDays(1)))
+                Segment(periode, TilkjentGUnit(
+                    dagsats, TilkjentGradering(
+                        endeligGradering = utbetalingsgrad,
+                        arbeidGradering = venstre.verdi.arbeidsgradering.gradering,
+                        institusjonGradering = venstre.verdi.institusjonsoppholdReduksjon,
+                        samordningGradering = null
+                    ), venstre.verdi.meldePeriode.tom.plusDays(1))
+                )
             })
 
         val gradertÅrligYtelseTidslinjeMedSamordning =
@@ -94,7 +100,14 @@ class BeregnTilkjentYtelseService(
                 } else {
                     val tilkjentGUnit = venstre.verdi
                     val nyGradering =
-                        tilkjentGUnit.copy(gradering = tilkjentGUnit.gradering.minus(høyre.verdi.gradering))
+                        tilkjentGUnit.copy(
+                            gradering = TilkjentGradering(
+                                endeligGradering = tilkjentGUnit.gradering.endeligGradering.minus(høyre.verdi.gradering),
+                                arbeidGradering = tilkjentGUnit.gradering.arbeidGradering,
+                                institusjonGradering = tilkjentGUnit.gradering.institusjonGradering,
+                                samordningGradering = høyre.verdi.gradering
+                            )
+                        )
                     Segment(periode, nyGradering)
                 }
             })
@@ -104,7 +117,7 @@ class BeregnTilkjentYtelseService(
             Grunnbeløp.tilTidslinje(), JoinStyle.INNER_JOIN { periode, venstre, grunnbeløp ->
                 val dagsats = grunnbeløp.verdi.multiplisert(venstre.verdi.dagsats)
 
-                val utbetalingsgrad = venstre.verdi.gradering
+                val utbetalingsgrad = venstre.verdi.gradering.endeligGradering
                 Segment(
                     periode, TilkjentFørBarn(
                         dagsats = dagsats,
@@ -112,7 +125,10 @@ class BeregnTilkjentYtelseService(
                         grunnlag = dagsats,
                         grunnlagsfaktor = venstre.verdi.dagsats,
                         grunnbeløp = grunnbeløp.verdi,
-                        utbetalingsdato = venstre.verdi.utbetalingsdato
+                        utbetalingsdato = venstre.verdi.utbetalingsdato,
+                        samordningGradering = venstre.verdi.gradering.samordningGradering,
+                        arbeidsGradering = venstre.verdi.gradering.arbeidGradering,
+                        institusjonGradering = venstre.verdi.gradering.institusjonGradering
                     )
                 )
             })
@@ -133,7 +149,12 @@ class BeregnTilkjentYtelseService(
             barnetilleggTidslinje,
             JoinStyle.LEFT_JOIN { periode, venstre, høyre ->
                 val dagsats = venstre.verdi.dagsats
-                val gradering = venstre.verdi.gradering
+                val gradering = TilkjentGradering(
+                    samordningGradering = venstre.verdi.samordningGradering,
+                    institusjonGradering = venstre.verdi.institusjonGradering,
+                    arbeidGradering = venstre.verdi.arbeidsGradering,
+                    endeligGradering = venstre.verdi.gradering
+                )
                 Segment(
                     periode, Tilkjent(
                         dagsats = dagsats,
@@ -157,6 +178,9 @@ class BeregnTilkjentYtelseService(
         val grunnlagsfaktor: GUnit,
         val grunnbeløp: Beløp,
         val utbetalingsdato: LocalDate,
+        val samordningGradering: Prosent?,
+        val arbeidsGradering: Prosent?,
+        val institusjonGradering: Prosent?
     )
 
     private class Barnetillegg(

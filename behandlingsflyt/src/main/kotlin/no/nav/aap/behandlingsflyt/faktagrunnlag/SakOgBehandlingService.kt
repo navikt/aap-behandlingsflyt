@@ -28,12 +28,23 @@ class SakOgBehandlingService(
 
         val sisteBehandlingForSak = behandlingRepository.finnSisteBehandlingFor(sak.id)
 
-        if (sisteBehandlingForSak == null) {
+        val behandlingstype = utledBehandlingstype(sisteBehandlingForSak, årsaker)
+        
+        if (behandlingstype == TypeBehandling.Klage) {
+            // TODO: Se på om vi må knytte klagebehandling mot en gitt behandling
             return BeriketBehandling(
                 behandling = behandlingRepository.opprettBehandling(
                     sakId = sak.id,
                     årsaker = årsaker,
-                    typeBehandling = utledBehandlingstype(sisteBehandlingForSak, årsaker),
+                    typeBehandling = behandlingstype,
+                    forrigeBehandlingId = null
+                ), tilstand = BehandlingTilstand.NY, sisteAvsluttedeBehandling = null)
+        } else if (sisteBehandlingForSak == null) {
+            return BeriketBehandling(
+                behandling = behandlingRepository.opprettBehandling(
+                    sakId = sak.id,
+                    årsaker = årsaker,
+                    typeBehandling = behandlingstype,
                     forrigeBehandlingId = null
                 ), tilstand = BehandlingTilstand.NY, sisteAvsluttedeBehandling = null
             )
@@ -43,7 +54,7 @@ class SakOgBehandlingService(
                 val nyBehandling = behandlingRepository.opprettBehandling(
                     sakId = sak.id,
                     årsaker = årsaker,
-                    typeBehandling = utledBehandlingstype(sisteBehandlingForSak, årsaker),
+                    typeBehandling = behandlingstype,
                     forrigeBehandlingId = sisteBehandlingForSak.id
                 )
 
@@ -63,7 +74,6 @@ class SakOgBehandlingService(
 
             } else {
                 // Valider at behandlingen står i et sted hvor den kan data
-                if (årsaker.any { it.type == ÅrsakTilBehandling.MOTATT_KLAGE }) TODO("Hva skal skje med klage mottatt for åpen behandling?")
                 validerStegStatus(sisteBehandlingForSak)
                 // Oppdater årsaker hvis nødvendig
                 behandlingRepository.oppdaterÅrsaker(sisteBehandlingForSak, årsaker)

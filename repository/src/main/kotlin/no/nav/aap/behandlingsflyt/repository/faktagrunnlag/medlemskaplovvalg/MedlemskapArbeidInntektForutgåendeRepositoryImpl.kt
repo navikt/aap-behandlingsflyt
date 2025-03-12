@@ -8,8 +8,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.Unntak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektForutgåendeRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -42,21 +40,6 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                     arbeiderINorgeGrunnlag = hentArbeiderINorgeGrunnlag(it.getLongOrNull("arbeider_id")),
                     manuellVurdering = hentManuellVurdering(it.getLongOrNull("manuell_vurdering_id"))
                 )
-            }
-        }
-    }
-
-    override fun hentOppgittUtenlandsOppholdHvisEksisterer(behandlingId: BehandlingId): UtenlandsOppholdData? {
-        val query = """
-            SELECT * FROM OPPGITT_UTENLANDSOPPHOLD_GRUNNLAG WHERE behandling_id = ? and aktiv = true
-        """.trimIndent()
-
-        return connection.queryFirstOrNull(query) {
-            setParams {
-                setLong(1, behandlingId.toLong())
-            }
-            setRowMapper {
-                hentOppgittUtenlandsOpphold(it.getLong("oppgitt_utenlandsopphold_id"))
             }
         }
     }
@@ -230,42 +213,6 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                     varMedlemMedNedsattArbeidsevne = it.getBooleanOrNull("var_medlem_med_nedsatt_arbeidsevne"),
                     medlemMedUnntakAvMaksFemAar = it.getBooleanOrNull("medlem_med_unntak_av_maks_fem_aar"),
                     overstyrt = it.getBoolean("overstyrt")
-                )
-            }
-        }
-    }
-
-    private fun hentOppgittUtenlandsOpphold(oppgittUtenlandsOppholdId: Long): UtenlandsOppholdData {
-        val utenlandsPeriode = connection.queryList(
-            """SELECT * FROM UTENLANDS_PERIODE WHERE OPPGITT_UTENLANDSOPPHOLD_ID = ?""".trimIndent()
-        ) {
-            setParams {
-                setLong(1, oppgittUtenlandsOppholdId)
-            }
-            setRowMapper {
-                UtenlandsPeriode(
-                    land = it.getStringOrNull("land"),
-                    tilDato = it.getLocalDateOrNull("til_dato"),
-                    fraDato = it.getLocalDateOrNull("fra_dato"),
-                    iArbeid = it.getBoolean("i_arbeid"),
-                    utenlandsId = it.getStringOrNull("utenlands_id")
-                )
-            }
-        }
-
-        return connection.queryFirst(
-            """SELECT * FROM OPPGITT_UTENLANDSOPPHOLD WHERE ID = ?""".trimIndent()
-        ) {
-            setParams {
-                setLong(1, oppgittUtenlandsOppholdId)
-            }
-            setRowMapper {
-                UtenlandsOppholdData(
-                    harBoddINorgeSiste5År = it.getBoolean("bodd_i_norge_siste_fem_aar"),
-                    harArbeidetINorgeSiste5År = it.getBoolean("arbeidet_i_norge_siste_fem_aar"),
-                    arbeidetUtenforNorgeFørSykdom = it.getBoolean("arbeidet_utenfor_norge_for_sykdom"),
-                    iTilleggArbeidUtenforNorge = it.getBoolean("i_tillegg_arbeid_utenfor_norge"),
-                    utenlandsOpphold = utenlandsPeriode
                 )
             }
         }

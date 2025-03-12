@@ -4,9 +4,8 @@ import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.FakePdlGateway
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
@@ -24,11 +23,11 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 
 
-class SamordningYtelseVurderingRepositoryImplTest {
+class SamordningVurderingRepositoryImplTest {
     private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
     @Test
@@ -38,38 +37,10 @@ class SamordningYtelseVurderingRepositoryImplTest {
             behandling(it, sak(it))
         }
 
-        // Lagre ytelse
-        dataSource.transaction {
-            SamordningYtelseVurderingRepositoryImpl(it).lagreYtelser(
-                behandlingId = behandling.id,
-                samordningYtelser = listOf(
-                    SamordningYtelse(
-                        ytelseType = Ytelse.SYKEPENGER,
-                        ytelsePerioder = listOf(
-                            SamordningYtelsePeriode(
-                                periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3)),
-                                gradering = Prosent(50),
-                                kronesum = null
-                            ),
-                            SamordningYtelsePeriode(
-                                periode = Periode(LocalDate.now().minusYears(3), LocalDate.now().minusDays(1)),
-                                gradering = null,
-                                kronesum = 123
-                            )
-                        ),
-                        kilde = "XXXX",
-                        saksRef = "saksref"
-                    )
-                )
-            )
-        }
-
         // Lagre vurdering
         val vurdering = SamordningVurdering(
             ytelseType = Ytelse.SYKEPENGER,
-            begrunnelse = "En god begrunnelse",
-            maksDatoEndelig = false,
-            maksDato = LocalDate.now().plusYears(1),
+
             vurderingPerioder = listOf(
                 SamordningVurderingPeriode(
                     periode = Periode(LocalDate.now().minusYears(3), LocalDate.now().minusDays(1)),
@@ -79,42 +50,22 @@ class SamordningYtelseVurderingRepositoryImplTest {
             )
         )
         dataSource.transaction {
-            SamordningYtelseVurderingRepositoryImpl(it).lagreVurderinger(
+            SamordningVurderingRepositoryImpl(it).lagreVurderinger(
                 behandlingId = behandling.id,
-                samordningVurderinger = listOf(
-                    vurdering
+                samordningVurderinger = SamordningVurderingGrunnlag(
+                    begrunnelse = "En god begrunnelse",
+                    maksDatoEndelig = false,
+                    maksDato = LocalDate.now().plusYears(1),
+                    vurderinger = listOf(vurdering)
                 )
             )
         }
 
         val uthentet = dataSource.transaction {
-            SamordningYtelseVurderingRepositoryImpl(it).hentHvisEksisterer(behandling.id)
+            SamordningVurderingRepositoryImpl(it).hentHvisEksisterer(behandling.id)
         }
 
-
-        assertThat(uthentet?.ytelseGrunnlag?.ytelser).isEqualTo(
-            listOf(
-                SamordningYtelse(
-                    ytelseType = Ytelse.SYKEPENGER,
-                    ytelsePerioder = listOf(
-                        SamordningYtelsePeriode(
-                            periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3)),
-                            gradering = Prosent(50),
-                            kronesum = null
-                        ),
-                        SamordningYtelsePeriode(
-                            periode = Periode(LocalDate.now().minusYears(3), LocalDate.now().minusDays(1)),
-                            gradering = null,
-                            kronesum = 123
-                        )
-                    ),
-                    kilde = "XXXX",
-                    saksRef = "saksref"
-                )
-            )
-        )
-
-        assertThat(uthentet?.vurderingGrunnlag?.vurderinger).isEqualTo(listOf(vurdering))
+        assertThat(uthentet?.vurderinger).isEqualTo(listOf(vurdering))
     }
 
     @Test
@@ -127,9 +78,7 @@ class SamordningYtelseVurderingRepositoryImplTest {
         // Lagre vurdering
         val vurdering = SamordningVurdering(
             ytelseType = Ytelse.SYKEPENGER,
-            begrunnelse = "En god begrunnelse",
-            maksDatoEndelig = false,
-            maksDato = LocalDate.now().plusYears(1),
+
             vurderingPerioder = listOf(
                 SamordningVurderingPeriode(
                     periode = Periode(LocalDate.now().minusYears(3), LocalDate.now().minusDays(1)),
@@ -138,12 +87,15 @@ class SamordningYtelseVurderingRepositoryImplTest {
                 )
             )
         )
-        assertThrows<IllegalArgumentException> {
+        assertDoesNotThrow {
             dataSource.transaction {
-                SamordningYtelseVurderingRepositoryImpl(it).lagreVurderinger(
+                SamordningVurderingRepositoryImpl(it).lagreVurderinger(
                     behandlingId = behandling.id,
-                    samordningVurderinger = listOf(
-                        vurdering
+                    samordningVurderinger = SamordningVurderingGrunnlag(
+                        begrunnelse = "En god begrunnelse",
+                        maksDatoEndelig = false,
+                        maksDato = LocalDate.now().plusYears(1),
+                        vurderinger = listOf(vurdering)
                     )
                 )
             }

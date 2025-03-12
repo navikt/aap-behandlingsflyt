@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
@@ -24,7 +25,8 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepos
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseVurderingRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningVurderingRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseRepository
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
@@ -60,17 +62,19 @@ class SamordningStegTest {
 
         assertThat(res).isEqualTo(FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_GRADERING))
 
-        InMemorySamordningYtelseVurderingRepository.lagreVurderinger(
-            behandling.id, listOf(
-                SamordningVurdering(
-                    ytelseType = ytelse,
-                    begrunnelse = "En god begrunnelse",
-                    maksDatoEndelig = false,
-                    maksDato = LocalDate.now().plusYears(1),
-                    vurderingPerioder = listOf(
-                        SamordningVurderingPeriode(
-                            periode = Periode(LocalDate.now().minusYears(1), LocalDate.now()),
-                            gradering = Prosent(50),
+        InMemorySamordningVurderingRepository.lagreVurderinger(
+            behandling.id, SamordningVurderingGrunnlag(
+                begrunnelse = "En god begrunnelse",
+                maksDatoEndelig = false,
+                maksDato = LocalDate.now().plusYears(1),
+                vurderinger = listOf(
+                    SamordningVurdering(
+                        ytelseType = ytelse,
+                        vurderingPerioder = listOf(
+                            SamordningVurderingPeriode(
+                                periode = Periode(LocalDate.now().minusYears(1), LocalDate.now()),
+                                gradering = Prosent(50),
+                            )
                         )
                     )
                 )
@@ -122,17 +126,19 @@ class SamordningStegTest {
         val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
         val steg = settOppRessurser(Ytelse.SYKEPENGER, behandling.id)
 
-        InMemorySamordningYtelseVurderingRepository.lagreVurderinger(
-            behandling.id, listOf(
-                SamordningVurdering(
-                    ytelseType = Ytelse.SYKEPENGER,
-                    begrunnelse = "En god begrunnelse",
-                    maksDatoEndelig = false,
-                    maksDato = LocalDate.now().plusYears(1),
-                    vurderingPerioder = listOf(
-                        SamordningVurderingPeriode(
-                            periode = Periode(LocalDate.now().minusYears(1), LocalDate.now()),
-                            gradering = Prosent(50),
+        InMemorySamordningVurderingRepository.lagreVurderinger(
+            behandling.id, SamordningVurderingGrunnlag(
+                begrunnelse = "En god begrunnelse",
+                maksDatoEndelig = false,
+                maksDato = LocalDate.now().plusYears(1),
+                vurderinger = listOf(
+                    SamordningVurdering(
+                        ytelseType = Ytelse.SYKEPENGER,
+                        vurderingPerioder = listOf(
+                            SamordningVurderingPeriode(
+                                periode = Periode(LocalDate.now().minusYears(1), LocalDate.now()),
+                                gradering = Prosent(50),
+                            )
                         )
                     )
                 )
@@ -184,17 +190,20 @@ class SamordningStegTest {
 
         assertThat(res).isEqualTo(FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_GRADERING))
 
-        InMemorySamordningYtelseVurderingRepository.lagreVurderinger(
-            behandling.id, listOf(
-                SamordningVurdering(
-                    ytelseType = Ytelse.SYKEPENGER,
-                    begrunnelse = "En god begrunnelse",
-                    maksDatoEndelig = false,
-                    maksDato = LocalDate.now().plusYears(1),
-                    vurderingPerioder = listOf(
-                        SamordningVurderingPeriode(
-                            periode = Periode(LocalDate.now().minusYears(1), LocalDate.now()),
-                            gradering = Prosent(50),
+        InMemorySamordningVurderingRepository.lagreVurderinger(
+            behandling.id, SamordningVurderingGrunnlag(
+                begrunnelse = "En god begrunnelse",
+                maksDatoEndelig = false,
+                maksDato = LocalDate.now().plusYears(1),
+                vurderinger = listOf(
+                    SamordningVurdering(
+                        ytelseType = Ytelse.SYKEPENGER,
+
+                        vurderingPerioder = listOf(
+                            SamordningVurderingPeriode(
+                                periode = Periode(LocalDate.now().minusYears(1), LocalDate.now()),
+                                gradering = Prosent(50),
+                            )
                         )
                     )
                 )
@@ -219,11 +228,11 @@ class SamordningStegTest {
     ): SamordningSteg {
         val steg = SamordningSteg(
             samordningService = SamordningService(
-                samordningYtelseVurderingRepository = InMemorySamordningYtelseVurderingRepository
+                samordningVurderingRepository = InMemorySamordningVurderingRepository,
+                samordningYtelseRepository = InMemorySamordningYtelseRepository,
             ),
             samordningRepository = InMemorySamordningRepository,
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-            samordningYtelseVurderingRepository = InMemorySamordningYtelseVurderingRepository,
         )
 
         lagreYtelseGrunnlag(behandlingId, ytelse, Periode(LocalDate.now().minusYears(1), LocalDate.now()))
@@ -235,7 +244,7 @@ class SamordningStegTest {
         ytelse: Ytelse,
         periode: Periode
     ) {
-        InMemorySamordningYtelseVurderingRepository.lagreYtelser(
+        InMemorySamordningYtelseRepository.lagre(
             behandlingId, listOf(
                 SamordningYtelse(
                     ytelseType = ytelse,

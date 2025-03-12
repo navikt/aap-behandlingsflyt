@@ -66,7 +66,7 @@ class TilkjentYtelseAPITest {
                     ),
                     tilkjent = Tilkjent(
                         dagsats = Beløp(500),
-                        gradering = Prosent(50),
+                        gradering = TilkjentGradering(Prosent(50), Prosent(50), Prosent(50), Prosent(50)),
                         grunnlag = Beløp(10000),
                         grunnlagsfaktor = GUnit("1.5"),
                         grunnbeløp = Beløp(106399),
@@ -106,7 +106,10 @@ class TilkjentYtelseAPITest {
                             barnetilleggsats = BigDecimal("150.00"),
                             barnetillegg = BigDecimal("300.00"),
                             utbetalingsdato = LocalDate.parse("2025-03-08"),
-                            redusertDagsats = 400.0
+                            redusertDagsats = 400.0,
+                            arbeidGradering = 50,
+                            institusjonGradering = 50,
+                            samordningGradering = 50
                         )
                     )
                 )
