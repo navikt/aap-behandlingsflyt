@@ -225,7 +225,6 @@ class SamordningStegTest {
             ),
             samordningRepository = InMemorySamordningRepository,
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-            samordningYtelseVurderingRepository = InMemorySamordningYtelseVurderingRepository,
         )
 
         lagreYtelseGrunnlag(behandlingId, ytelse, Periode(LocalDate.now().minusYears(1), LocalDate.now()))

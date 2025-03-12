@@ -40,7 +40,7 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
                             ytelseType = row.getEnum("ytelse_type"),
                             ytelsePerioder = hentYtelsePerioder(row.getLong("ytelser_id")),
                             kilde = row.getString("kilde"),
-                            saksRef = row.getString("saks_ref")
+                            saksRef = row.getStringOrNull("saks_ref")
                         )
                     }
                 )

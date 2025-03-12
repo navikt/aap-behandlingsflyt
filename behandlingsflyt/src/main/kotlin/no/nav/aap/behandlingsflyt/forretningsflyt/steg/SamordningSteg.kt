@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -21,7 +21,6 @@ class SamordningSteg(
     private val samordningService: SamordningService,
     private val samordningRepository: SamordningRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
-    private val samordningYtelseVurderingRepository: SamordningYtelseVurderingRepository,
 
     ) : BehandlingSteg {
     private val log = LoggerFactory.getLogger(SamordningSteg::class.java)
@@ -35,24 +34,21 @@ class SamordningSteg(
         // 3.  hvis har all tilgjengelig data:
         // 3.1 lag tidslinje av prosentgradering og lagre i SamordningRepository
 
-        val input = requireNotNull(samordningService.hentInput(behandlingId = kontekst.behandlingId))
-
-        val tidligereVurderinger = samordningService.tidligereVurderinger(input)
+        val vurderinger = samordningService.hentVurderinger(behandlingId = kontekst.behandlingId)
+        val ytelser = samordningService.hentYtelser(behandlingId = kontekst.behandlingId)
+        val tidligereVurderinger = samordningService.tidligereVurderinger(vurderinger)
 
         val perioderSomIkkeHarBlittVurdert = samordningService.perioderSomIkkeHarBlittVurdert(
-            input, tidligereVurderinger
+            ytelser, tidligereVurderinger
         )
 
-        val vurderingsGrunnlag = samordningYtelseVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
-        if (vurderingsGrunnlag != null) {
-            if (perioderSomIkkeHarBlittVurdert.isNotEmpty()) {
-                log.info("Fant perioder som ikke har blitt vurdert: $perioderSomIkkeHarBlittVurdert")
-                return FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_GRADERING)
-            }
+        if (perioderSomIkkeHarBlittVurdert.isNotEmpty()) {
+            log.info("Fant perioder som ikke har blitt vurdert: $perioderSomIkkeHarBlittVurdert")
+            return FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_GRADERING)
         }
 
         val samordningTidslinje =
-            samordningService.vurder(input, tidligereVurderinger)
+            samordningService.vurder(ytelser, tidligereVurderinger)
 
         samordningRepository.lagre(
             kontekst.behandlingId,
@@ -63,7 +59,7 @@ class SamordningSteg(
                         it.verdi.gradering
                     )
                 },
-            input
+            SamordningYtelseVurderingGrunnlag(ytelser, vurderinger)
         )
 
         log.info("Samordning tidslinje $samordningTidslinje")
@@ -83,7 +79,6 @@ class SamordningSteg(
             val repositoryProvider = RepositoryProvider(connection)
             val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
             val samordningRepository = repositoryProvider.provide<SamordningRepository>()
-            val samordningYtelseVurderingRepository = repositoryProvider.provide<SamordningYtelseVurderingRepository>()
             return SamordningSteg(
                 SamordningService(
                     repositoryProvider.provide(),
@@ -91,7 +86,6 @@ class SamordningSteg(
                 ),
                 samordningRepository,
                 avklaringsbehovRepository,
-                samordningYtelseVurderingRepository,
             )
         }
 

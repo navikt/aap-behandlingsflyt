@@ -44,6 +44,7 @@ class SamordningYtelseVurderingServiceTest {
     @Test
     fun `krever avklaring når endringer kommer`() {
         InitTestDatabase.dataSource.transaction { connection ->
+            val ytelseRepo = SamordningYtelseRepositoryImpl(connection)
             val repo = SamordningYtelseVurderingRepositoryImpl(connection)
             val sakRepository = SakRepositoryImpl(connection)
             val service = SamordningYtelseVurderingService(
@@ -61,7 +62,7 @@ class SamordningYtelseVurderingServiceTest {
             assertEquals(Informasjonskrav.Endret.IKKE_ENDRET, sammeData)
 
             //Ny data har kommet inn
-            opprettYtelseData(repo, kontekst.behandlingId)
+            opprettYtelseData(ytelseRepo, kontekst.behandlingId)
             opprettVurderingData(repo, kontekst.behandlingId)
             val nyData = service.oppdater(kontekst)
             assertEquals(Informasjonskrav.Endret.ENDRET, nyData)
@@ -89,8 +90,8 @@ class SamordningYtelseVurderingServiceTest {
         )
     }
 
-    private fun opprettYtelseData(repo: SamordningYtelseVurderingRepositoryImpl, behandlingId: BehandlingId) {
-        repo.lagreYtelser(
+    private fun opprettYtelseData(repo: SamordningYtelseRepositoryImpl, behandlingId: BehandlingId) {
+        repo.lagre(
             behandlingId,
             listOf(
                 SamordningYtelse(

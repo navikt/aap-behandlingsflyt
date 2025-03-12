@@ -30,17 +30,23 @@ class SamordningServiceTest {
 
     @Test
     fun `gjør vurderinger når all data er tilstede`() {
+        val behandlingId = dataSource.transaction { opprettSakdata(it) }
         dataSource.transaction { connection ->
             val ytelseVurderingRepo = SamordningYtelseVurderingRepositoryImpl(connection)
-            val behandlingId = opprettSakdata(connection)
-            opprettYtelseData(ytelseVurderingRepo, behandlingId)
+            val samordningYtelseRepository = SamordningYtelseRepositoryImpl(connection)
+            opprettYtelseData(samordningYtelseRepository, behandlingId)
             opprettVurderingData(ytelseVurderingRepo, behandlingId)
+        }
 
-            val service = SamordningService(ytelseVurderingRepo, SamordningYtelseRepositoryImpl(connection))
+        dataSource.transaction { connection ->
+            val ytelseVurderingRepo = SamordningYtelseVurderingRepositoryImpl(connection)
+            val samordningYtelseRepository = SamordningYtelseRepositoryImpl(connection)
+            val service = SamordningService(ytelseVurderingRepo, samordningYtelseRepository)
 
-            val grunnlag = ytelseVurderingRepo.hentHvisEksisterer(behandlingId)!!
-            val tidligereVurderinger = service.tidligereVurderinger(grunnlag)
-            assertThat(service.vurder(grunnlag, tidligereVurderinger)).isNotEmpty
+            val hentedeVurderinger = service.hentVurderinger(behandlingId)
+            val hentedeYtelser = service.hentYtelser(behandlingId)
+            val tidligereVurderinger = service.tidligereVurderinger(hentedeVurderinger)
+            assertThat(service.vurder(hentedeYtelser, tidligereVurderinger)).isNotEmpty
         }
     }
 
@@ -50,9 +56,8 @@ class SamordningServiceTest {
 
         // Opprett registerdata med vurdering fra 1 januar til 10 januar
         dataSource.transaction { connection ->
-            val ytelseVurderingRepo = SamordningYtelseVurderingRepositoryImpl(connection)
             opprettYtelseData(
-                ytelseVurderingRepo, behandlingId, ytelser = listOf(
+                SamordningYtelseRepositoryImpl(connection), behandlingId, ytelser = listOf(
                     SamordningYtelse(
                         ytelseType = Ytelse.SYKEPENGER,
                         ytelsePerioder = listOf(
@@ -88,14 +93,21 @@ class SamordningServiceTest {
             )
         }
 
-        val input = dataSource.transaction { connection ->
-            SamordningYtelseVurderingRepositoryImpl(connection).hentHvisEksisterer(behandlingId)!!
+        val (ytelser, vurderinger) = dataSource.transaction { connection ->
+            val service = SamordningService(
+                SamordningYtelseVurderingRepositoryImpl(connection),
+                SamordningYtelseRepositoryImpl(connection)
+            )
+            Pair(service.hentYtelser(behandlingId), service.hentVurderinger(behandlingId))
         }
         val ikkeVurdertePerioder = dataSource.transaction { connection ->
-            val service = SamordningService(SamordningYtelseVurderingRepositoryImpl(connection), SamordningYtelseRepositoryImpl(connection))
+            val service = SamordningService(
+                SamordningYtelseVurderingRepositoryImpl(connection),
+                SamordningYtelseRepositoryImpl(connection)
+            )
 
-            val tidligereVurderinger = service.tidligereVurderinger(input)
-            service.perioderSomIkkeHarBlittVurdert(input, tidligereVurderinger)
+            val tidligereVurderinger = service.tidligereVurderinger(vurderinger)
+            service.perioderSomIkkeHarBlittVurdert(ytelser, tidligereVurderinger)
         }
 
         // Forvent at ikke-vurderte perioder er fra 1 jan til 4 jan
@@ -107,16 +119,21 @@ class SamordningServiceTest {
 
     @Test
     fun `krever vurdering om det finnes samordningdata`() {
+        val behandlingId = dataSource.transaction { opprettSakdata(it) }
         dataSource.transaction { connection ->
-            val ytelseVurderingRepo = SamordningYtelseVurderingRepositoryImpl(connection)
-            val behandlingId = opprettSakdata(connection)
-            opprettYtelseData(ytelseVurderingRepo, behandlingId)
+            opprettYtelseData(SamordningYtelseRepositoryImpl(connection), behandlingId)
 
-            val service = SamordningService(SamordningYtelseVurderingRepositoryImpl(connection), SamordningYtelseRepositoryImpl(connection))
-            val input = ytelseVurderingRepo.hentHvisEksisterer(behandlingId)!!
-            val tidligereVurderinger = service.tidligereVurderinger(input)
+            val service = SamordningService(
+                SamordningYtelseVurderingRepositoryImpl(connection),
+                SamordningYtelseRepositoryImpl(connection)
+            )
+            val vurderinger = service.hentVurderinger(behandlingId)
+            val ytelser = service.hentYtelser(behandlingId)
 
-            assertThrows<IllegalArgumentException> { service.vurder(input, tidligereVurderinger) }
+            val tidligereVurderinger = service.tidligereVurderinger(vurderinger)
+
+
+            assertThrows<IllegalArgumentException> { service.vurder(ytelser, tidligereVurderinger) }
         }
     }
 
@@ -143,7 +160,7 @@ class SamordningServiceTest {
     }
 
     private fun opprettYtelseData(
-        repo: SamordningYtelseVurderingRepositoryImpl,
+        repo: SamordningYtelseRepositoryImpl,
         behandlingId: BehandlingId,
         ytelser: List<SamordningYtelse> = listOf(
             SamordningYtelse(
@@ -160,7 +177,7 @@ class SamordningServiceTest {
             )
         )
     ) {
-        repo.lagreYtelser(behandlingId, ytelser)
+        repo.lagre(behandlingId, ytelser)
     }
 
     private fun opprettSakdata(connection: DBConnection): BehandlingId {
