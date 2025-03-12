@@ -33,8 +33,8 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapAPI(dataSource: DataSource) {
             ) { req ->
                 val vurdering = dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
-                    val behandling =
-                        repositoryProvider.provide<BehandlingRepository>().hent(BehandlingReferanse(req.referanse))
+                    val behandling = repositoryProvider.provide<BehandlingRepository>().hent(BehandlingReferanse(req.referanse))
+                    val medlemskapArbeidInntektRepository = repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
                     val sak = repositoryProvider.provide<SakRepository>().hent(behandling.sakId)
 
                     val personopplysningGrunnlag =
@@ -46,9 +46,9 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapAPI(dataSource: DataSource) {
                     val medlemskapArbeidInntektGrunnlag =
                         repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
                             .hentHvisEksisterer(behandling.id)
-                    val oppgittUtenlandsOppholdGrunnlag =
-                        repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
-                            .hentOppgittUtenlandsOppholdHvisEksisterer(behandling.id)
+
+                    val oppgittUtenlandsOppholdGrunnlag = medlemskapArbeidInntektRepository.hentOppgittUtenlandsOppholdHvisEksisterer(behandling.id)
+                        ?: medlemskapArbeidInntektRepository.hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(sak.id)
 
                     MedlemskapLovvalgVurderingService().vurderTilhørighet(
                         MedlemskapLovvalgGrunnlag(
