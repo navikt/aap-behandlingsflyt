@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.Factory
+import java.time.LocalDate
 
 class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
     SamordningVurderingRepository {
@@ -32,32 +33,48 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
         }
     }
 
-    private fun hentSamordningVurderinger(vurderingerId: Long?): SamordningVurderingGrunnlag {
+    private fun hentSamordningVurderinger(vurderingerId: Long?): SamordningVurderingGrunnlag? {
         if (vurderingerId == null) {
-            return SamordningVurderingGrunnlag(
-                vurderingerId = null,
-                vurderinger = emptyList()
-            )
+            return null
         }
 
         val query = """
-            SELECT * FROM SAMORDNING_VURDERING WHERE vurderinger_id = ?
+            SELECT * FROM SAMORDNING_VURDERINGER svr JOIN SAMORDNING_VURDERING sv on svr.id = sv.vurderinger_id  WHERE vurderinger_id = ?
         """.trimIndent()
+
+        data class FellesFelter(
+            val begrunnelse: String,
+            val maksDatoEndelig: Boolean,
+            val maksDato: LocalDate?
+        )
+
         val vurderinger = connection.queryList(query) {
             setParams {
                 setLong(1, vurderingerId)
             }
             setRowMapper {
-                SamordningVurdering(
-                    ytelseType = it.getEnum("ytelse_type"),
-                    vurderingPerioder = hentSamordningVurderingPerioder(it.getLong("id")),
-                    begrunnelse = it.getString("begrunnelse"),
-                    maksDatoEndelig = it.getBoolean("maksdato_endelig"),
-                    maksDato = it.getLocalDate("maksdato"),
+                Pair(
+                    FellesFelter(
+                        begrunnelse = it.getString("begrunnelse"),
+                        maksDatoEndelig = it.getBoolean("maksdato_endelig"),
+                        maksDato = it.getLocalDateOrNull("maksdato")
+                    ), SamordningVurdering(
+                        ytelseType = it.getEnum("ytelse_type"),
+                        vurderingPerioder = hentSamordningVurderingPerioder(it.getLong("id")),
+                    )
                 )
             }
         }
-        return SamordningVurderingGrunnlag(vurderingerId, vurderinger)
+        val begrunnelse = vurderinger.first().first.begrunnelse
+        val maksDatoEndelig = vurderinger.first().first.maksDatoEndelig
+        val maksDato = vurderinger.first().first.maksDato
+        return SamordningVurderingGrunnlag(
+            vurderingerId = vurderingerId,
+            begrunnelse = begrunnelse,
+            maksDatoEndelig = maksDatoEndelig,
+            maksDato = maksDato,
+            vurderinger = vurderinger.map { it.second }
+        )
     }
 
     private fun hentSamordningVurderingPerioder(vurderingId: Long): List<SamordningVurderingPeriode> {
@@ -79,28 +96,35 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
     }
 
 
-    override fun lagreVurderinger(behandlingId: BehandlingId, samordningVurderinger: List<SamordningVurdering>) {
+    override fun lagreVurderinger(
+        behandlingId: BehandlingId,
+        samordningVurderinger: SamordningVurderingGrunnlag
+    ) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         if (eksisterendeGrunnlag != null) {
             deaktiverGrunnlag(behandlingId)
         }
 
         val samordningVurderingerQuery = """
-            INSERT INTO SAMORDNING_VURDERINGER DEFAULT VALUES
+            INSERT INTO SAMORDNING_VURDERINGER (begrunnelse, maksdato_endelig, maksdato)
+            VALUES (?, ?, ?)
             """.trimIndent()
-        val vurderingerId = connection.executeReturnKey(samordningVurderingerQuery)
+        val vurderingerId = connection.executeReturnKey(samordningVurderingerQuery) {
+            setParams {
+                setString(1, samordningVurderinger.begrunnelse)
+                setBoolean(2, samordningVurderinger.maksDatoEndelig)
+                setLocalDate(3, samordningVurderinger.maksDato)
+            }
+        }
 
-        for (vurdering in samordningVurderinger) {
+        for (vurdering in samordningVurderinger.vurderinger) {
             val vurderingQuery = """
-                INSERT INTO SAMORDNING_VURDERING (vurderinger_id, ytelse_type, begrunnelse, maksdato_endelig, maksdato) VALUES (?, ?, ?, ?, ?)
+                INSERT INTO SAMORDNING_VURDERING (vurderinger_id, ytelse_type) VALUES (?, ?)
                 """.trimIndent()
             val vurderingId = connection.executeReturnKey(vurderingQuery) {
                 setParams {
                     setLong(1, vurderingerId)
                     setEnumName(2, vurdering.ytelseType)
-                    setString(3, vurdering.begrunnelse)
-                    setBoolean(4, vurdering.maksDatoEndelig)
-                    setLocalDate(5, vurdering.maksDato)
                 }
             }
 

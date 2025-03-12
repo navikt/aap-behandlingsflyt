@@ -5,7 +5,11 @@ import no.nav.aap.lookup.repository.Repository
 
 interface SamordningVurderingRepository : Repository {
     fun hentHvisEksisterer(behandlingId: BehandlingId): SamordningVurderingGrunnlag?
-    fun lagreVurderinger(behandlingId: BehandlingId, samordningVurderinger: List<SamordningVurdering>)
+    fun lagreVurderinger(
+        behandlingId: BehandlingId,
+        samordningVurderinger: SamordningVurderingGrunnlag
+    )
+
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
 }
 

@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.samordning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
@@ -76,16 +77,18 @@ class SamordningServiceTest {
         dataSource.transaction { connection ->
             val ytelseVurderingRepo = SamordningVurderingRepositoryImpl(connection)
             opprettVurderingData(
-                ytelseVurderingRepo, behandlingId, vurderinger = listOf(
-                    SamordningVurdering(
-                        ytelseType = Ytelse.SYKEPENGER,
-                        begrunnelse = "En god begrunnelse",
-                        maksDatoEndelig = false,
-                        maksDato = LocalDate.now().plusYears(1),
-                        vurderingPerioder = listOf(
-                            SamordningVurderingPeriode(
-                                periode = Periode(5 januar 2024, 10 januar 2024),
-                                gradering = Prosent.`50_PROSENT`,
+                ytelseVurderingRepo, behandlingId, vurderinger = SamordningVurderingGrunnlag(
+                    begrunnelse = "En god begrunnelse",
+                    maksDatoEndelig = false,
+                    maksDato = LocalDate.now().plusYears(1),
+                    vurderinger = listOf(
+                        SamordningVurdering(
+                            ytelseType = Ytelse.SYKEPENGER,
+                            vurderingPerioder = listOf(
+                                SamordningVurderingPeriode(
+                                    periode = Periode(5 januar 2024, 10 januar 2024),
+                                    gradering = Prosent.`50_PROSENT`,
+                                )
                             )
                         )
                     )
@@ -140,17 +143,20 @@ class SamordningServiceTest {
     private fun opprettVurderingData(
         repo: SamordningVurderingRepositoryImpl,
         behandlingId: BehandlingId,
-        vurderinger: List<SamordningVurdering> = listOf(
-            SamordningVurdering(
-                Ytelse.SYKEPENGER,
-                begrunnelse = "En god begrunnelse",
-                maksDatoEndelig = false,
-                maksDato = LocalDate.now().plusYears(1),
-                listOf(
-                    SamordningVurderingPeriode(
-                        Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
-                        Prosent(50),
-                        0
+        vurderinger: SamordningVurderingGrunnlag = SamordningVurderingGrunnlag(
+            begrunnelse = "En god begrunnelse",
+            maksDatoEndelig = false,
+            maksDato = LocalDate.now().plusYears(1),
+            vurderinger = listOf(
+                SamordningVurdering(
+                    Ytelse.SYKEPENGER,
+
+                    listOf(
+                        SamordningVurderingPeriode(
+                            Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
+                            Prosent(50),
+                            0
+                        )
                     )
                 )
             )

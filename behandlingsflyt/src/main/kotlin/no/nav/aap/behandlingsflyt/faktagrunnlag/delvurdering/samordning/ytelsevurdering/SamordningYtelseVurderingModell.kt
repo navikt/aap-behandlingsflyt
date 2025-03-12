@@ -20,9 +20,6 @@ data class SamordningYtelsePeriode(
 
 data class SamordningVurdering(
     val ytelseType: Ytelse,
-    val begrunnelse: String,
-    val maksDatoEndelig: Boolean,
-    val maksDato: LocalDate?,
     val vurderingPerioder: List<SamordningVurderingPeriode>,
 )
 
@@ -38,6 +35,9 @@ data class SamordningYtelseGrunnlag(
 )
 
 data class SamordningVurderingGrunnlag(
-    val vurderingerId: Long?,
+    val vurderingerId: Long? = null,
+    val begrunnelse: String,
+    val maksDatoEndelig: Boolean,
+    val maksDato: LocalDate?,
     val vurderinger: List<SamordningVurdering>,
 )

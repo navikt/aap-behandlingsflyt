@@ -914,9 +914,6 @@ class FlytOrkestratorTest {
                     vurderteSamordninger = listOf(
                         SamordningVurdering(
                             ytelseType = Ytelse.SYKEPENGER,
-                            begrunnelse = "En god begrunnelse",
-                            maksDatoEndelig = false,
-                            maksDato = LocalDate.now().plusMonths(1),
                             vurderingPerioder = listOf(
                                 SamordningVurderingPeriode(
                                     periode = sykePengerPeriode,
@@ -925,7 +922,10 @@ class FlytOrkestratorTest {
                                 )
                             )
                         )
-                    )
+                    ),
+                    begrunnelse = "En god begrunnelse",
+                    maksDatoEndelig = false,
+                    maksDato = LocalDate.now().plusMonths(1),
                 ),
             ),
         )

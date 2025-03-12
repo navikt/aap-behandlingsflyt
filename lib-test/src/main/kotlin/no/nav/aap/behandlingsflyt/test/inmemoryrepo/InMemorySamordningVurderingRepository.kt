@@ -1,23 +1,19 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import java.util.concurrent.ConcurrentHashMap
 
 object InMemorySamordningVurderingRepository : SamordningVurderingRepository {
-    private val ytelser = ConcurrentHashMap<BehandlingId, List<SamordningYtelse>>()
-    private val vurderinger = ConcurrentHashMap<BehandlingId, List<SamordningVurdering>>()
+    private val vurderinger = ConcurrentHashMap<BehandlingId, SamordningVurderingGrunnlag>()
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): SamordningVurderingGrunnlag? {
-        val vurderinger = vurderinger[behandlingId] ?: emptyList()
-        return SamordningVurderingGrunnlag(vurderingerId = 1, vurderinger = vurderinger)
-
+        val vurderinger = vurderinger[behandlingId]
+        return vurderinger
     }
 
-    override fun lagreVurderinger(behandlingId: BehandlingId, samordningVurderinger: List<SamordningVurdering>) {
+    override fun lagreVurderinger(behandlingId: BehandlingId, samordningVurderinger: SamordningVurderingGrunnlag) {
         vurderinger[behandlingId] = samordningVurderinger
     }
 

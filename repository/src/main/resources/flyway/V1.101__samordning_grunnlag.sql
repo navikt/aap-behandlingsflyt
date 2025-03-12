@@ -11,3 +11,16 @@ CREATE UNIQUE INDEX UIDX_SAMORDING_YTELSE_GRUNNLAG_BEHANDLING_ID ON samordning_y
 
 ALTER TABLE samordning_ytelsevurdering_grunnlag
     drop column ytelser_id;
+
+ALTER TABLE samordning_vurdering
+    DROP column begrunnelse,
+    drop column maksdato,
+    drop column maksdato_endelig;
+
+ALTER TABLE samordning_vurderinger
+    add column begrunnelse      text    not null default '',
+    ADD COLUMN MAKSDATO_ENDELIG BOOLEAN NOT NULL DEFAULT FALSE,
+    ADD COLUMN MAKSDATO         DATE;
+
+ALTER TABLE samordning_vurderinger
+    alter column begrunnelse drop default;
