@@ -92,7 +92,7 @@ spec:
         - application: paw-patrol
         - application: saksbehandling-lokal # For lokalt utvikling. IKKE kopier denne til prod.yaml
         - application: azure-token-generator # Ikke i prod :)
-          namespace: aura
+          namespace: nais
           cluster: dev-gcp
         - application: api
         - application: api-intern
