@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentGradering
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
@@ -44,7 +45,7 @@ class TilkjentYtelseRepositoryImplTest {
                         ),
                         tilkjent = Tilkjent(
                             dagsats = Beløp(1000),
-                            gradering = Prosent(50),
+                            gradering = TilkjentGradering(Prosent.`50_PROSENT`, null, Prosent.`0_PROSENT`, Prosent.`0_PROSENT`),
                             barnetillegg = Beløp(1000),
                             grunnlagsfaktor = GUnit("1.0"),
                             grunnlag = Beløp(1000),
@@ -61,7 +62,7 @@ class TilkjentYtelseRepositoryImplTest {
                         ),
                         tilkjent = Tilkjent(
                             dagsats = Beløp(1000),
-                            gradering = Prosent(50),
+                            gradering = TilkjentGradering(Prosent.`50_PROSENT`, null, Prosent.`0_PROSENT`, Prosent.`0_PROSENT`),
                             barnetillegg = Beløp(1000),
                             grunnlagsfaktor = GUnit("1.0"),
                             grunnlag = Beløp(1000),
