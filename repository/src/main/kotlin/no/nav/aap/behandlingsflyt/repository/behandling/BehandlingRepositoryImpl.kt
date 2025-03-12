@@ -66,14 +66,15 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         return hent(BehandlingId(behandlingId))
     }
 
-    override fun finnSisteBehandlingFor(sakId: SakId): Behandling? {
+    override fun finnSisteBehandlingFor(sakId: SakId, behandlingstypeFilter: List<TypeBehandling>): Behandling? {
         val query = """
-            SELECT * FROM BEHANDLING WHERE sak_id = ? ORDER BY opprettet_tid DESC LIMIT 1
+            SELECT * FROM BEHANDLING WHERE sak_id = ? AND type = ANY(?::text[]) ORDER BY opprettet_tid DESC LIMIT 1
             """.trimIndent()
 
         return connection.queryFirstOrNull(query) {
             setParams {
                 setLong(1, sakId.toLong())
+                setArray(2, behandlingstypeFilter.map { it.identifikator() })
             }
             setRowMapper(::mapBehandling)
         }

@@ -8,6 +8,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import no.nav.aap.behandlingsflyt.Tags
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -84,7 +85,13 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
 
                     val behandling =
                         repositoryProvider.provide<BehandlingRepository>()
-                            .finnSisteBehandlingFor(sak.id)
+                            .finnSisteBehandlingFor(
+                                sak.id,
+                                behandlingstypeFilter = listOf(
+                                    TypeBehandling.Førstegangsbehandling,
+                                    TypeBehandling.Revurdering
+                                )
+                            )
 
                     SakOgBehandlingDTO(
                         personIdent = sak.person.aktivIdent().toString(),
