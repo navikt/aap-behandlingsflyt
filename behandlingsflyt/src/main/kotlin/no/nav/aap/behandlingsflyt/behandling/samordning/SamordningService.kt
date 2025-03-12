@@ -19,7 +19,7 @@ class SamordningService(
 ) {
 
     fun hentVurderinger(behandlingId: BehandlingId): SamordningVurderingGrunnlag? {
-        return samordningYtelseVurderingRepository.hentHvisEksisterer(behandlingId)?.vurderingGrunnlag
+        return samordningYtelseVurderingRepository.hentHvisEksisterer(behandlingId)
     }
 
     fun hentYtelser(behandlingId: BehandlingId): SamordningYtelseGrunnlag? {

@@ -3,8 +3,6 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -20,7 +18,7 @@ class SamordningYtelseVurderingRepositoryImpl(private val connection: DBConnecti
         }
     }
 
-    override fun hentHvisEksisterer(behandlingId: BehandlingId): SamordningYtelseVurderingGrunnlag? {
+    override fun hentHvisEksisterer(behandlingId: BehandlingId): SamordningVurderingGrunnlag? {
         val query = """
             SELECT * FROM SAMORDNING_YTELSEVURDERING_GRUNNLAG WHERE behandling_id = ? and aktiv = true
         """.trimIndent()
@@ -29,10 +27,7 @@ class SamordningYtelseVurderingRepositoryImpl(private val connection: DBConnecti
                 setLong(1, behandlingId.toLong())
             }
             setRowMapper {
-                SamordningYtelseVurderingGrunnlag(
-                    vurderingGrunnlag = hentSamordningVurderinger(it.getLongOrNull("vurderinger_id")),
-                    ytelseGrunnlag = null,
-                )
+                hentSamordningVurderinger(it.getLong("vurderinger_id"))
             }
         }
     }

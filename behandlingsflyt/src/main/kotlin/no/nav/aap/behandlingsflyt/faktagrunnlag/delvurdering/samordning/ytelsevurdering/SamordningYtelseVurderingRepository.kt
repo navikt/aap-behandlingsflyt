@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.lookup.repository.Repository
 
 interface SamordningYtelseVurderingRepository : Repository {
-    fun hentHvisEksisterer(behandlingId: BehandlingId): SamordningYtelseVurderingGrunnlag?
+    fun hentHvisEksisterer(behandlingId: BehandlingId): SamordningVurderingGrunnlag?
     fun lagreVurderinger(behandlingId: BehandlingId, samordningVurderinger: List<SamordningVurdering>)
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
 }

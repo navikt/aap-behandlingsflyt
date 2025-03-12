@@ -67,7 +67,7 @@ class SamordningYtelseVurderingRepositoryImplTest {
             SamordningYtelseVurderingRepositoryImpl(it).hentHvisEksisterer(behandling.id)
         }
 
-        assertThat(uthentet?.vurderingGrunnlag?.vurderinger).isEqualTo(listOf(vurdering))
+        assertThat(uthentet?.vurderinger).isEqualTo(listOf(vurdering))
     }
 
     @Test
