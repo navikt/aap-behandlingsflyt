@@ -7,7 +7,7 @@ import no.nav.aap.komponenter.verdityper.Prosent
  * Grunnlag fra smordningssteget som brukes i følgende steg.
  *
  * Alle fakta ligger i [no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingGrunnlag] og
- *  hentes i [no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingRepository].
+ * lagres ned som [no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag] sammen med denne.
  */
 data class SamordningGrunnlag(
     val id: Long,

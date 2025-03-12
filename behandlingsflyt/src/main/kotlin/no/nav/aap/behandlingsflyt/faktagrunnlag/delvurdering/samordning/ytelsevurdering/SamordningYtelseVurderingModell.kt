@@ -34,6 +34,7 @@ data class SamordningVurderingPeriode(
 )
 
 data class SamordningYtelseVurderingGrunnlag(
+    @Deprecated("Denne er alltid null.")
     val ytelseGrunnlag: SamordningYtelseGrunnlag?,
     val vurderingGrunnlag: SamordningVurderingGrunnlag?
 ) : Faktagrunnlag

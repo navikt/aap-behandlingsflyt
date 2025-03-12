@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.tidslinje.JoinStyle
@@ -25,14 +24,6 @@ class SamordningService(
 
     fun hentYtelser(behandlingId: BehandlingId): SamordningYtelseGrunnlag? {
         return samordningYtelseRepository.hentHvisEksisterer(behandlingId)
-    }
-
-    fun hentInput(behandlingId: BehandlingId): SamordningYtelseVurderingGrunnlag {
-        val ytelseGrunnlag = samordningYtelseRepository.hentHvisEksisterer(behandlingId)
-        return SamordningYtelseVurderingGrunnlag(
-            ytelseGrunnlag = ytelseGrunnlag,
-            vurderingGrunnlag = samordningYtelseVurderingRepository.hentHvisEksisterer(behandlingId)?.vurderingGrunnlag
-        )
     }
 
     fun tidligereVurderinger(grunnlag: SamordningVurderingGrunnlag?): Tidslinje<List<Pair<Ytelse, SamordningVurderingPeriode>>> {
@@ -57,8 +48,8 @@ class SamordningService(
                 .map { ytelse ->
                     Tidslinje(ytelse.ytelsePerioder.map { Segment(it.periode, Pair(ytelse.ytelseType, it)) })
                 }.fold(Tidslinje.empty<List<Pair<Ytelse, SamordningYtelsePeriode>>>()) { acc, curr ->
-                acc.kombiner(curr, slåSammenTilListe())
-            }
+                    acc.kombiner(curr, slåSammenTilListe())
+                }
 
         val perioderSomIkkeHarBlittVurdert =
             hentedeYtelserByManuelleYtelser.kombiner(tidligereVurderinger, StandardSammenslåere.minus())
