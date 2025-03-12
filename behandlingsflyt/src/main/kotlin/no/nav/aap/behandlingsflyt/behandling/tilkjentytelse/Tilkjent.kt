@@ -10,7 +10,7 @@ import java.time.LocalDate
  */
 class Tilkjent(
     val dagsats: Beløp,
-    val gradering: Prosent,
+    val gradering: TilkjentGradering,
     val grunnlag: Beløp,
     val grunnlagsfaktor: GUnit,
     val grunnbeløp: Beløp,
@@ -24,7 +24,7 @@ class Tilkjent(
      * Hent ut full dagsats etter reduksjon.
      */
     fun redusertDagsats(): Beløp {
-        return dagsats.multiplisert(gradering).pluss(barnetillegg.multiplisert(gradering))
+        return dagsats.multiplisert(gradering.endeligGradering).pluss(barnetillegg.multiplisert(gradering.endeligGradering))
     }
 
     override fun toString(): String {
@@ -64,10 +64,16 @@ class Tilkjent(
     }
 }
 
-data class TilkjentGUnit(val dagsats: GUnit, val gradering: Prosent, val utbetalingsdato: LocalDate) {
+data class TilkjentGradering(
+    val endeligGradering: Prosent,
+    val samordningGradering: Prosent?,
+    val institusjonGradering: Prosent?,
+    val arbeidGradering: Prosent?
+)
 
+data class TilkjentGUnit(val dagsats: GUnit, val gradering: TilkjentGradering, val utbetalingsdato: LocalDate) {
     private fun redusertDagsats(): GUnit {
-        return dagsats.multiplisert(gradering)
+        return dagsats.multiplisert(gradering.endeligGradering)
     }
 
     override fun toString(): String {
