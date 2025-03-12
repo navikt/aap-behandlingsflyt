@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -15,10 +15,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
+import java.time.temporal.ChronoUnit
 
 class OpprettRevurderingSteg(
     private val sakOgBehandlingService: SakOgBehandlingService,
-    private val samordningYtelseVurderingRepository: SamordningYtelseVurderingRepository
+    private val samordningYtelseVurderingRepository: SamordningVurderingRepository
 ) : BehandlingSteg {
     private val logger = LoggerFactory.getLogger(javaClass)
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -29,13 +30,11 @@ class OpprettRevurderingSteg(
                         ?: return Fullført
 
                 // TODO: lagre mer i grunnlaget, feil å hente herfra?
-                val samordningVurderinger = samordningVurdering.vurderingGrunnlag.vurderinger
+                val maksDato =
+                    if (samordningVurdering.maksDatoEndelig && samordningVurdering.maksDato != null) samordningVurdering.maksDato else null
 
-                if (samordningVurderinger.none { it.maksDatoEndelig }) return Fullført
 
-                val maksDatoer = samordningVurderinger.mapNotNull { it.maksDato }
-
-                if (maksDatoer.none { kontekst.vurdering.rettighetsperiode.inneholder(it) }) return Fullført
+                if (maksDato == null) return Fullført
 
                 logger.info("Oppretter revurdering. SakID: ${kontekst.sakId}")
                 sakOgBehandlingService.finnEllerOpprettBehandling(
@@ -43,7 +42,12 @@ class OpprettRevurderingSteg(
                     årsaker = listOf(
                         Årsak(
                             type = ÅrsakTilBehandling.REVURDER_SAMORDNING,
-                            periode = kontekst.vurdering.rettighetsperiode
+                            periode = kontekst.vurdering.rettighetsperiode.flytt(
+                                ChronoUnit.DAYS.between(
+                                    kontekst.vurdering.rettighetsperiode.tom,
+                                    samordningVurdering.maksDato
+                                )
+                            )
                         )
                     )
                 )

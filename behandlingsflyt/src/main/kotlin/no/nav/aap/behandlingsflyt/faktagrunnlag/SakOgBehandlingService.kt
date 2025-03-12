@@ -40,7 +40,7 @@ class SakOgBehandlingService(
         } else if (sisteBehandlingForSak == null) {
             return BeriketBehandling(
                 behandling = behandlingRepository.opprettBehandling(
-                    sakId = sak.id,
+                    sakId = sakId,
                     årsaker = årsaker,
                     typeBehandling = behandlingstype,
                     forrigeBehandlingId = null
