@@ -4,7 +4,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandGru
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
 
 class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepository {
@@ -31,14 +33,38 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
                 BistandGrunnlag(
                     id = row.getLong("ID"),
                     behandlingId = behandlingId,
-                    vurdering = BistandVurdering(
-                        begrunnelse = row.getString("BEGRUNNELSE"),
-                        erBehovForAktivBehandling = row.getBoolean("BEHOV_FOR_AKTIV_BEHANDLING"),
-                        erBehovForArbeidsrettetTiltak = row.getBoolean("BEHOV_FOR_ARBEIDSRETTET_TILTAK"),
-                        erBehovForAnnenOppfølging = row.getBooleanOrNull("BEHOV_FOR_ANNEN_OPPFOELGING")
-                    )
+                    vurdering = bistandvurderingRowMapper(row)
                 )
             }
+        }
+    }
+
+    private fun bistandvurderingRowMapper(row: Row): BistandVurdering {
+        return BistandVurdering(
+            begrunnelse = row.getString("BEGRUNNELSE"),
+            erBehovForAktivBehandling = row.getBoolean("BEHOV_FOR_AKTIV_BEHANDLING"),
+            erBehovForArbeidsrettetTiltak = row.getBoolean("BEHOV_FOR_ARBEIDSRETTET_TILTAK"),
+            erBehovForAnnenOppfølging = row.getBooleanOrNull("BEHOV_FOR_ANNEN_OPPFOELGING")
+        )
+    }
+
+    override fun hentHistoriskeBistandsvurderinger(sakId: SakId, behandlingId: BehandlingId): List<BistandVurdering> {
+        val query = """
+            SELECT DISTINCT bistand.*
+            FROM bistand_grunnlag grunnlag
+            INNER JOIN bistand ON grunnlag.bistand_id = bistand.id
+            INNER JOIN behandling ON grunnlag.behandling_id = behandling.id
+            WHERE grunnlag.aktiv AND behandling.sak_id = ?
+                AND behandling.opprettet_tid < (select a.opprettet_tid from behandling a where id = ?)
+            ORDER BY bistand.opprettet_tid
+        """.trimIndent()
+
+        return connection.queryList(query) {
+            setParams {
+                setLong(1, sakId.id)
+                setLong(2, behandlingId.id)
+            }
+            setRowMapper(::bistandvurderingRowMapper)
         }
     }
 
