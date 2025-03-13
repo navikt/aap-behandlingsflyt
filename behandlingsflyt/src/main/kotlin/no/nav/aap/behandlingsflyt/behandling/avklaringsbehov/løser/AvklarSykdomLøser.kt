@@ -22,7 +22,7 @@ class AvklarSykdomLøser(connection: DBConnection) : AvklaringsbehovsLøser<Avkl
     private val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
     private val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
     private val yrkersskadeRepository = repositoryProvider.provide<YrkesskadeRepository>()
-    private val logger = LoggerFactory.getLogger(AvklarSykdomLøsning::class.java)
+    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarSykdomLøsning): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
@@ -72,7 +72,7 @@ class AvklarSykdomLøser(connection: DBConnection) : AvklaringsbehovsLøser<Avkl
         val harYrkesskade = yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true
         sykdomLøsning.forEach {
             if (!it.verdi.erKonsistentForSykdom(harYrkesskade)) {
-                logger.info(
+                log.info(
                     "Sykdomsvurderingen er ikke konsistent med yrkesskade sykdomsvurdering=[{}] harYrkesskade=[{}]",
                     it.verdi,
                     harYrkesskade,

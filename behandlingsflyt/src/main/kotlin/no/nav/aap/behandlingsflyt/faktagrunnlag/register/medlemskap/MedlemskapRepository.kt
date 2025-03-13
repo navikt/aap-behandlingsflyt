@@ -8,13 +8,13 @@ import no.nav.aap.komponenter.type.Periode
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 
-private val logger = LoggerFactory.getLogger(MedlemskapRepository::class.java)
-
 class MedlemskapRepository(private val connection: DBConnection) {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     fun lagreUnntakMedlemskap(behandlingId: BehandlingId, unntak: List<MedlemskapResponse>): Long {
         if (hentHvisEksisterer(behandlingId) != null) {
-            logger.info("Medlemsskapsgrunnlag for behandling $behandlingId eksisterer allerede. Deaktiverer forrige lagrede.")
+            log.info("Medlemsskapsgrunnlag for behandling $behandlingId eksisterer allerede. Deaktiverer forrige lagrede.")
             deaktiverEksisterendeGrunnlag(behandlingId)
         }
 
@@ -92,7 +92,7 @@ class MedlemskapRepository(private val connection: DBConnection) {
             setRowMapper { it.getLong("MEDLEMSKAP_UNNTAK_PERSON_ID") }
         }
         if (behandlingsMedlemskapUnntak == null) {
-            logger.info("Fant ingen aktive unntak for behandling med ID $behandlingId.")
+            log.info("Fant ingen aktive unntak for behandling med ID $behandlingId.")
             return null
         }
         return MedlemskapUnntakGrunnlag(hentMedlemskapUnntak(behandlingsMedlemskapUnntak))

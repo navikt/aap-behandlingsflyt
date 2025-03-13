@@ -40,7 +40,7 @@ class BrevGateway : BrevbestillingGateway {
         }
     }
 
-    private val log = LoggerFactory.getLogger(BrevGateway::class.java)
+    private val log = LoggerFactory.getLogger(javaClass)
 
     private val baseUri = URI.create(requiredConfigForKey("integrasjon.brev.url"))
     val config = ClientConfig(

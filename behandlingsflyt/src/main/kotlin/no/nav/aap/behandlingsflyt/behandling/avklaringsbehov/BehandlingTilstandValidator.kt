@@ -9,11 +9,11 @@ class BehandlingTilstandValidator(
     private val behandlingReferanseService: BehandlingReferanseService,
     private val flytJobbRepository: FlytJobbRepository
 ) {
-    private val logger = LoggerFactory.getLogger(javaClass)
+    private val log = LoggerFactory.getLogger(javaClass)
 
     fun validerTilstand(behandlingReferanse: BehandlingReferanse, behandlingVersjon: Long) {
         val behandling = behandlingReferanseService.behandling(behandlingReferanse)
-        logger.info("Validerer tilstand for behandling ${behandling.id}")
+        log.info("Validerer tilstand for behandling ${behandling.id}")
         ValiderBehandlingTilstand.validerTilstandBehandling(behandling, behandlingVersjon)
 
         val jobberForBehandling = flytJobbRepository.hentJobberForBehandling(behandling.id.toLong())

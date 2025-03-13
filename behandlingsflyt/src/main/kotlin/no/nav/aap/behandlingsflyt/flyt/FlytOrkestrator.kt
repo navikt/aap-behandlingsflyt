@@ -27,7 +27,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakFlytRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import org.slf4j.LoggerFactory
 
-private val log = LoggerFactory.getLogger(FlytOrkestrator::class.java)
 
 /**
  * Har ansvar for å drive flyten til en gitt behandling. Typen behandling styrer hvilke steg som skal utføres.
@@ -52,6 +51,8 @@ class FlytOrkestrator(
     private val behandlingHendelseService: BehandlingHendelseService,
     private val ventebehovEvaluererService: VentebehovEvaluererService
 ) {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     fun opprettKontekst(sakId: SakId, behandlingId: BehandlingId): FlytKontekst {
         val typeBehandling = behandlingRepository.hentBehandlingType(behandlingId)

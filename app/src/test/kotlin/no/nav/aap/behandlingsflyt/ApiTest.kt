@@ -79,11 +79,10 @@ import java.time.Year
 import java.util.*
 import kotlin.test.fail
 
-private val logger = LoggerFactory.getLogger(ApiTest::class.java)
-
-
 @Fakes
 class ApiTest {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     companion object {
         private val postgres = postgreSQLContainer()
@@ -376,7 +375,7 @@ class ApiTest {
             )
         }
 
-        logger.info("Behandling: $behandling")
+        log.info("Behandling: $behandling")
     }
 
     @Test
@@ -468,7 +467,7 @@ class ApiTest {
                     try {
                         utvidedSak = block()
                     } catch (e: Exception) {
-                        logger.info("Exception: $e")
+                        log.info("Exception: $e")
                     } finally {
                         delay(delayMs)
                         tries++

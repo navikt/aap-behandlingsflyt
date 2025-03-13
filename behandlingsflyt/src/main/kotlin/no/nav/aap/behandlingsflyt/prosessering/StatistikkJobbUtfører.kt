@@ -49,7 +49,7 @@ import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
-private val log = LoggerFactory.getLogger(StatistikkJobbUtfører::class.java)
+
 
 
 class StatistikkJobbUtfører(
@@ -63,7 +63,10 @@ class StatistikkJobbUtfører(
     private val sykdomRepository: SykdomRepository,
     private val underveisRepository: UnderveisRepository,
 ) : JobbUtfører {
+
+    private val log = LoggerFactory.getLogger(javaClass)
     override fun utfør(input: JobbInput) {
+
         log.info("Utfører jobbinput statistikk: $input")
         val payload = input.payload<BehandlingFlytStoppetHendelse>()
 

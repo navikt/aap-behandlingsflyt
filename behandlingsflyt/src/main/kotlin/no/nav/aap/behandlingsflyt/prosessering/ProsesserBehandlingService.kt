@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory
 
 class ProsesserBehandlingService(private val flytJobbRepository: FlytJobbRepository) {
 
-    private val log = LoggerFactory.getLogger(ProsesserBehandlingService::class.java)
+    private val log = LoggerFactory.getLogger(javaClass)
 
     fun triggProsesserBehandling(
         sakId: SakId,

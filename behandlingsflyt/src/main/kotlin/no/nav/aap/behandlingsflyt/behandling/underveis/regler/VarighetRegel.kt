@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory
  */
 //WIP
 class VarighetRegel : UnderveisRegel {
-    private val log = LoggerFactory.getLogger(VarighetRegel::class.java)
+    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
         val telleverk = Telleverk(input.kvoter)

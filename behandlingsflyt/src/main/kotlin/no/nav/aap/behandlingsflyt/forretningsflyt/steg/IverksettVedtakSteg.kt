@@ -27,7 +27,7 @@ class IverksettVedtakSteg private constructor(
     private val utbetalingGateway: UtbetalingGateway,
 ) : BehandlingSteg {
 
-    private val log = LoggerFactory.getLogger(IverksettVedtakSteg::class.java)
+    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
 

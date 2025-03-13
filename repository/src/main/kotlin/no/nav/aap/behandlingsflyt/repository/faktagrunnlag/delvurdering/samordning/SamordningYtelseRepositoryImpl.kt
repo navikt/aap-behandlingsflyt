@@ -12,7 +12,7 @@ import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 
 class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : SamordningYtelseRepository {
-    private val logger = LoggerFactory.getLogger(SamordningYtelseRepositoryImpl::class.java)
+    private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<SamordningYtelseRepository> {
         override fun konstruer(connection: DBConnection): SamordningYtelseRepository {
@@ -141,7 +141,7 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         val eksisterendeGrunnlag = hentHvisEksisterer(fraBehandling)
         if (eksisterendeGrunnlag == null) {
-            logger.warn("Prøver å kopiere fra behandling $fraBehandling til $tilBehandling, men fant ingen grunnlag for behandlingen")
+            log.warn("Prøver å kopiere fra behandling $fraBehandling til $tilBehandling, men fant ingen grunnlag for behandlingen")
             return
         }
         val query = """
@@ -158,7 +158,7 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
                 setLong(2, fraBehandling.toLong())
             }
             setResultValidator { require(it == 1) }
-            logger.info("Kopiert fra behandling $fraBehandling til $tilBehandling")
+            log.info("Kopiert fra behandling $fraBehandling til $tilBehandling")
         }
     }
 

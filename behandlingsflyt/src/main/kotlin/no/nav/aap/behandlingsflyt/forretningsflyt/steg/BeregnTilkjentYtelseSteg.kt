@@ -28,7 +28,7 @@ class BeregnTilkjentYtelseSteg private constructor(
     private val tilkjentYtelseRepository: TilkjentYtelseRepository,
     private val samordningRepository: SamordningRepository,
 ) : BehandlingSteg {
-    private val log = LoggerFactory.getLogger(BeregnTilkjentYtelseSteg::class.java)
+    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val beregningsgrunnlag = beregningsgrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)

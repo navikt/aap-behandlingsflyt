@@ -23,7 +23,7 @@ class SamordningSteg(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
 
     ) : BehandlingSteg {
-    private val log = LoggerFactory.getLogger(SamordningSteg::class.java)
+    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         // Logikkplan

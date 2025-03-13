@@ -9,9 +9,11 @@ import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import org.slf4j.LoggerFactory
 
-private val log = LoggerFactory.getLogger(StoppetHendelseJobbUtfører::class.java)
+
 
 class StoppetHendelseJobbUtfører private constructor() : JobbUtfører {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
         val hendelse = input.payload<BehandlingFlytStoppetHendelse>()

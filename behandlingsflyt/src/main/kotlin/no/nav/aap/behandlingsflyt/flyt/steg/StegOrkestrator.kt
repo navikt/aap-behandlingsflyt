@@ -15,8 +15,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 
-private val log = LoggerFactory.getLogger(StegOrkestrator::class.java)
-
 /**
  * Håndterer den definerte prosessen i et gitt steg, flytter behandlingen gjennom de forskjellige fasene internt i et
  * steg. Et steg beveger seg gjennom flere faser som har forskjellig ansvar.
@@ -40,6 +38,7 @@ class StegOrkestrator(
     private val stegKonstruktør: StegKonstruktør
 ) {
 
+    private val log = LoggerFactory.getLogger(javaClass)
 
     private val behandlingSteg = stegKonstruktør.konstruer(aktivtSteg)
 

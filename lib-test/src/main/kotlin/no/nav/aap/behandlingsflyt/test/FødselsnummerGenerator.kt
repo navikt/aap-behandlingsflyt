@@ -71,7 +71,7 @@ class FødselsnummerGenerator private constructor(
     }
 
     companion object {
-        private val LOG: Logger = LoggerFactory.getLogger(FødselsnummerGenerator::class.java)
+        private val LOG: Logger = LoggerFactory.getLogger(javaClass)
         private const val NAV_SYNTETISK_IDENT_OFFSET_MND = 40
         private const val DNR_OFFSETT_DAYS = 40
         private val random: Random = Random()

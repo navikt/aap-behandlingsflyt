@@ -12,12 +12,12 @@ import no.nav.aap.komponenter.httpklient.auth.Bruker
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 
-private val log = LoggerFactory.getLogger(Avklaringsbehovene::class.java)
 
 class Avklaringsbehovene(
     private val repository: AvklaringsbehovOperasjonerRepository,
     private val behandlingId: BehandlingId
 ) : AvklaringsbehoveneDecorator {
+    private val log = LoggerFactory.getLogger(javaClass)
     private var avklaringsbehovene: MutableList<Avklaringsbehov> = repository.hent(behandlingId).toMutableList()
 
     fun ingenEndring(avklaringsbehov: Avklaringsbehov, bruker: String) {

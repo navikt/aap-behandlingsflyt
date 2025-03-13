@@ -28,7 +28,7 @@ class EtAnnetStedUtlederService(
     private val sakRepository: SakRepository,
     private val behandlingRepository: BehandlingRepository
 ) {
-    private val log = LoggerFactory.getLogger(EtAnnetStedUtlederService::class.java)
+    private val log = LoggerFactory.getLogger(javaClass)
 
     fun utled(
         behandlingId: BehandlingId,

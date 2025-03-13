@@ -23,7 +23,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
 class UnderveisSteg(private val underveisService: UnderveisService) : BehandlingSteg {
-    private val log = LoggerFactory.getLogger(UnderveisSteg::class.java)
+    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         // Skal alltid kjøres uavhengig av vurderingstype

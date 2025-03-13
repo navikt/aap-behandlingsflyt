@@ -23,7 +23,7 @@ class EtAnnetStedSteg(
     private val etAnnetStedUtlederService: EtAnnetStedUtlederService
 ) : BehandlingSteg {
 
-    private val log = LoggerFactory.getLogger(EtAnnetStedSteg::class.java)
+    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
