@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
@@ -17,13 +19,17 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class SamordningUføreSteg(
     private val uføreRepository: UføreRepository,
     private val behandlingRepository: BehandlingRepository,
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         when (kontekst.vurdering.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
-                val uføreGrunnlag = uføreRepository.hentHvisEksisterer(kontekst.behandlingId)
-                if (uføreGrunnlag != null) {
-                    return FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_UFØRE)
+                if (erIkkeVurdertTidligereIBehandlingen(avklaringsbehovene)) {
+                    val uføreGrunnlag = uføreRepository.hentHvisEksisterer(kontekst.behandlingId)
+                    if (uføreGrunnlag != null) {
+                        return FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_UFØRE)
+                    }
                 }
             }
 
@@ -34,7 +40,9 @@ class SamordningUføreSteg(
                     uføreRepository.hentHvisEksisterer(it)
                 }
 
-                if (uføreGrunnlag?.id != uføreGrunnlagPåForrigeBehandling?.id) {
+                if (erIkkeVurdertTidligereIBehandlingen(avklaringsbehovene) &&
+                    uføreGrunnlag?.vurdering != uføreGrunnlagPåForrigeBehandling?.vurdering
+                ) {
                     return FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_UFØRE)
                 }
             }
@@ -44,12 +52,20 @@ class SamordningUføreSteg(
         return Fullført
     }
 
+    private fun erIkkeVurdertTidligereIBehandlingen(
+        avklaringsbehovene: Avklaringsbehovene
+    ): Boolean {
+        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SAMORDNING_UFØRE)
+        return (avklaringsbehov == null || avklaringsbehov.erÅpent())
+    }
+
     companion object : FlytSteg {
         override fun konstruer(connection: DBConnection): BehandlingSteg {
             val repositoryProvider = RepositoryProvider(connection)
             val uføreRepository = repositoryProvider.provide<UføreRepository>()
             val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-            return SamordningUføreSteg(uføreRepository, behandlingRepository)
+            val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
+            return SamordningUføreSteg(uføreRepository, behandlingRepository, avklaringsbehovRepository)
         }
 
         override fun type(): StegType {

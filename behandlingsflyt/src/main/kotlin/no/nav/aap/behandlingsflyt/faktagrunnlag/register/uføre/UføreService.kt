@@ -8,7 +8,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -24,18 +23,24 @@ class UføreService(
         val behandlingId = kontekst.behandlingId
         val gamleData = uføreRepository.hentHvisEksisterer(behandlingId)
 
-        if (uføregrad.uføregrad.prosentverdi() != 0) {
+        val uføregradPåBehandlingErUendret =
+            gamleData != null && gamleData.vurdering.uføregrad == uføregrad.uføregrad
+
+        if (uføregradPåBehandlingErUendret) {
+            return IKKE_ENDRET
+        }
+
+        if (uføregrad.uføregrad.prosentverdi() != 0 ||
+            (uføregrad.uføregrad.prosentverdi() == 0 && (gamleData?.vurdering?.uføregrad?.prosentverdi() ?: 0) > 0)
+        ) {
             uføreRepository.lagre(
                 behandlingId,
                 uføregrad
             )
-        } else if (gamleData != null) {
-            uføreRepository.lagre(behandlingId, Uføre(Prosent(0)))
+            return ENDRET
         }
 
-        val nyeData = uføreRepository.hentHvisEksisterer(behandlingId)
-
-        return if (nyeData == gamleData) IKKE_ENDRET else ENDRET
+        return IKKE_ENDRET
     }
 
     companion object : Informasjonskravkonstruktør {
