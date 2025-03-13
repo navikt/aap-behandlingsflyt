@@ -62,6 +62,7 @@ jobs:
       needs: build
       concurrency:
           group: kontrakt
+          cancel-in-progress: true
       permissions:
           contents: write
           packages: write
