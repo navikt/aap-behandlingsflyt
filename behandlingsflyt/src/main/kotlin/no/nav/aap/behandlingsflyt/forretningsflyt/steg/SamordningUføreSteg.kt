@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
@@ -17,7 +16,6 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 class SamordningUføreSteg(
     private val uføreRepository: UføreRepository,
-    private val samordningUføreRepository: SamordningUføreRepository,
     private val behandlingRepository: BehandlingRepository,
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -30,19 +28,14 @@ class SamordningUføreSteg(
             }
 
             VurderingType.REVURDERING -> {
-                val tidligereVurdering = samordningUføreRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurdering
                 val uføreGrunnlag = uføreRepository.hentHvisEksisterer(kontekst.behandlingId)
-                if (tidligereVurdering == null && uføreGrunnlag != null) {
-                    return FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_UFØRE)
+                val behandling = behandlingRepository.hent(kontekst.behandlingId)
+                val forrigeUføreGrunnlag = behandling.forrigeBehandlingId?.let {
+                    uføreRepository.hentHvisEksisterer(it)
                 }
-                if (tidligereVurdering != null && uføreGrunnlag != null) {
-                    val behandling = behandlingRepository.hent(kontekst.behandlingId)
-                    val forrigeUføreGrunnlag = behandling.forrigeBehandlingId?.let {
-                        uføreRepository.hentHvisEksisterer(it)
-                    }
-                    if (uføreGrunnlag.id != forrigeUføreGrunnlag?.id) {
-                        return FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_UFØRE)
-                    }
+
+                if (uføreGrunnlag?.id != forrigeUføreGrunnlag?.id) {
+                    return FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_UFØRE)
                 }
             }
 
@@ -56,9 +49,8 @@ class SamordningUføreSteg(
         override fun konstruer(connection: DBConnection): BehandlingSteg {
             val repositoryProvider = RepositoryProvider(connection)
             val uføreRepository = repositoryProvider.provide<UføreRepository>()
-            val samordningUføreRepository = repositoryProvider.provide<SamordningUføreRepository>()
             val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-            return SamordningUføreSteg(uføreRepository, samordningUføreRepository, behandlingRepository)
+            return SamordningUføreSteg(uføreRepository, behandlingRepository)
         }
 
         override fun type(): StegType {
