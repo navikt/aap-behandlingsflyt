@@ -80,7 +80,7 @@ class BeregnTilkjentYtelseService(
                     Prosent.`0_PROSENT`
                 } else {
                     val institusjonsOppholdReduksjon = venstre.verdi.institusjonsoppholdReduksjon.komplement()
-                    val arbeidsgraderingReduksjon = Prosent.`100_PROSENT`.minus(venstre.verdi.arbeidsgradering.gradering).komplement()
+                    val arbeidsgraderingReduksjon = venstre.verdi.arbeidsgradering.gradering
                     arbeidsgraderingReduksjon.multiplisert(institusjonsOppholdReduksjon)
                 }
                 Segment(
