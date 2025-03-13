@@ -85,8 +85,12 @@ class SamordningApiKtTest {
                             ytelseType = Ytelse.PLEIEPENGER,
                             kilde = "kilde",
                             saksRef = "saksref",
-                            fom = LocalDate.now(),
-                            tom = LocalDate.now().plusYears(1),
+                            perioder = listOf(
+                                Periode(
+                                    fom = LocalDate.now(),
+                                    tom = LocalDate.now().plusYears(1),
+                                )
+                            ),
                             gradering = 50,
                             kronesum = null
                         )
