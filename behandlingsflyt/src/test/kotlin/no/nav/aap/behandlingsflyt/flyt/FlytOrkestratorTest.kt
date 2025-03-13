@@ -2372,7 +2372,10 @@ class FlytOrkestratorTest {
 
     private fun hentBehandling(sakId: SakId): Behandling {
         return dataSource.transaction(readOnly = true) { connection ->
-            val finnSisteBehandlingFor = BehandlingRepositoryImpl(connection).finnSisteBehandlingFor(sakId)
+            val finnSisteBehandlingFor = BehandlingRepositoryImpl(connection).finnSisteBehandlingFor(
+                sakId,
+                listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering, TypeBehandling.Klage)
+            )
             requireNotNull(finnSisteBehandlingFor)
         }
     }

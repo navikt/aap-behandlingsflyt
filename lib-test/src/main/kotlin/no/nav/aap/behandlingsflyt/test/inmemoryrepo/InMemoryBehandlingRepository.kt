@@ -50,9 +50,12 @@ object InMemoryBehandlingRepository : BehandlingRepository, BehandlingFlytReposi
         }
     }
 
-    override fun finnSisteBehandlingFor(sakId: SakId): Behandling? {
+    override fun finnSisteBehandlingFor(sakId: SakId, behandlingstypeFilter: List<TypeBehandling>): Behandling? {
         synchronized(lock) {
-            return memory.values.filter { behandling -> behandling.sakId == sakId }.maxOrNull()
+            return memory.values
+                .filter { behandling -> behandling.sakId == sakId }
+                .filter { behandling -> behandling.typeBehandling() in behandlingstypeFilter }
+                .maxOrNull()
         }
     }
 

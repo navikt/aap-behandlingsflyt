@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentGradering
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -35,7 +36,12 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
                     periode = it.getPeriode("PERIODE"),
                     Tilkjent(
                         dagsats = Beløp(it.getInt("DAGSATS")),
-                        gradering = Prosent(it.getInt("GRADERING")),
+                        gradering = TilkjentGradering(
+                            samordningGradering = it.getIntOrNull("SAMORDNING_GRADERING")?.let { result -> Prosent(result) },
+                            institusjonGradering = it.getIntOrNull("INSTITUSJON_GRADERING")?.let { result -> Prosent(result) },
+                            arbeidGradering = it.getIntOrNull("ARBEID_GRADERING")?.let { result -> Prosent(result) },
+                            endeligGradering = Prosent(it.getInt("GRADERING"))
+                        ),
                         barnetillegg = Beløp(it.getInt("BARNETILLEGG")),
                         grunnlagsfaktor = GUnit(it.getBigDecimal("GRUNNLAGSFAKTOR")),
                         grunnlag = Beløp(it.getInt("GRUNNLAG")),
@@ -82,15 +88,16 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
         connection.execute(
             """
             INSERT INTO TILKJENT_PERIODE (TILKJENT_YTELSE_ID, PERIODE, DAGSATS, GRADERING, BARNETILLEGG,
-                                          GRUNNLAGSFAKTOR, GRUNNLAG, ANTALL_BARN, BARNETILLEGGSATS, GRUNNBELOP, UTBETALINGSDATO)
-            VALUES (?, ?::daterange, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                          GRUNNLAGSFAKTOR, GRUNNLAG, ANTALL_BARN, BARNETILLEGGSATS, GRUNNBELOP, 
+                                          UTBETALINGSDATO, SAMORDNING_GRADERING, INSTITUSJON_GRADERING, ARBEID_GRADERING)
+            VALUES (?, ?::daterange, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """.trimIndent()
         ) {
             setParams {
                 setLong(1, tilkjentYtelseId)
                 setPeriode(2, periode)
                 setBigDecimal(3, tilkjent.dagsats.verdi())
-                setInt(4, tilkjent.gradering.prosentverdi())
+                setInt(4, tilkjent.gradering.endeligGradering.prosentverdi())
                 setBigDecimal(5, tilkjent.barnetillegg.verdi())
                 setBigDecimal(6, tilkjent.grunnlagsfaktor.verdi())
                 setBigDecimal(7, tilkjent.grunnlag.verdi())
@@ -98,6 +105,9 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
                 setBigDecimal(9, tilkjent.barnetilleggsats.verdi())
                 setBigDecimal(10, tilkjent.grunnbeløp.verdi())
                 setLocalDate(11, tilkjent.utbetalingsdato)
+                setInt(12, tilkjent.gradering.samordningGradering?.prosentverdi())
+                setInt(13, tilkjent.gradering.institusjonGradering?.prosentverdi())
+                setInt(14, tilkjent.gradering.arbeidGradering?.prosentverdi())
             }
         }
     }

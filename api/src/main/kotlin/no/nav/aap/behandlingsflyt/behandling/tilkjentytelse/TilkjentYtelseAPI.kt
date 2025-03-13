@@ -39,7 +39,7 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource) {
                                     fraOgMed = tilkjentYtelsePeriode.periode.fom,
                                     tilOgMed = tilkjentYtelsePeriode.periode.tom,
                                     dagsats = it.dagsats.verdi,
-                                    gradering = it.gradering.prosentverdi(),
+                                    gradering = it.gradering.endeligGradering.prosentverdi(),
                                     grunnlag = it.grunnlag.verdi,
                                     grunnlagsfaktor = it.grunnlagsfaktor.verdi(),
                                     grunnbeløp = it.grunnbeløp.verdi,
@@ -47,7 +47,10 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource) {
                                     barnetilleggsats = it.barnetilleggsats.verdi,
                                     barnetillegg = it.barnetillegg.verdi,
                                     utbetalingsdato = it.utbetalingsdato,
-                                    redusertDagsats = it.redusertDagsats().verdi().toDouble()
+                                    redusertDagsats = it.redusertDagsats().verdi().toDouble(),
+                                    arbeidGradering = it.gradering.arbeidGradering?.prosentverdi(),
+                                    institusjonGradering = it.gradering.institusjonGradering?.prosentverdi(),
+                                    samordningGradering = it.gradering.samordningGradering?.prosentverdi()
                                 )
                             }
                         }

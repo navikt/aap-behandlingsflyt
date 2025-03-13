@@ -24,10 +24,13 @@ class SakOgBehandlingService(
 ) {
 
     fun finnEllerOpprettBehandling(sakId: SakId, årsaker: List<Årsak>): BeriketBehandling {
-        val sisteBehandlingForSak = behandlingRepository.finnSisteBehandlingFor(sakId)
+        val sisteBehandlingForSak = behandlingRepository.finnSisteBehandlingFor(
+            sakId,
+            listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)
+        )
 
         val behandlingstype = utledBehandlingstype(sisteBehandlingForSak, årsaker)
-        
+
         if (behandlingstype == TypeBehandling.Klage) {
             // TODO: Se på om vi må knytte klagebehandling mot en gitt behandling
             return BeriketBehandling(
@@ -36,7 +39,8 @@ class SakOgBehandlingService(
                     årsaker = årsaker,
                     typeBehandling = behandlingstype,
                     forrigeBehandlingId = null
-                ), tilstand = BehandlingTilstand.NY, sisteAvsluttedeBehandling = null)
+                ), tilstand = BehandlingTilstand.NY, sisteAvsluttedeBehandling = null
+            )
         } else if (sisteBehandlingForSak == null) {
             return BeriketBehandling(
                 behandling = behandlingRepository.opprettBehandling(
