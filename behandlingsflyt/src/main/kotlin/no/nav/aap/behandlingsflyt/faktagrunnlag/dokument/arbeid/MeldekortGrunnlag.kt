@@ -8,8 +8,13 @@ data class MeldekortGrunnlag(
     private val rekkefølge: Set<DokumentRekkefølge>
 ) {
     init {
-        require(rekkefølge.size >= meldekortene.size)
-        require(rekkefølge.all { meldekortene.any { pk -> it.referanse.asJournalpostId == pk.journalpostId } })
+        require(rekkefølge.size >= meldekortene.size) {
+            "sjekk feilet: rekkefølge.size(${rekkefølge.size}) >= meldekortene.size(${meldekortene.size})"
+
+        }
+        require(rekkefølge.all { meldekortene.any { pk -> it.referanse.asJournalpostId == pk.journalpostId } }) {
+            "sjekk feilet: ${rekkefølge.joinToString {it.referanse.toString()}} subset ${meldekortene.joinToString {it.journalpostId.toString()}}"
+        }
     }
 
     /**
