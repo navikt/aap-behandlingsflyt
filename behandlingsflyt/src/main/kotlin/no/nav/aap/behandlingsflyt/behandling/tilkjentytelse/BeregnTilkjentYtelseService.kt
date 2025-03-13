@@ -78,10 +78,10 @@ class BeregnTilkjentYtelseService(
                     Prosent.`0_PROSENT`
                 } else {
                     val institusjonsOppholdReduksjon = venstre.verdi.institusjonsoppholdReduksjon
-                    val arbeidsgradering = venstre.verdi.arbeidsgradering.gradering
+                    val arbeidsgraderingReduksjon = Prosent.`100_PROSENT`.minus(venstre.verdi.arbeidsgradering.gradering)
                     Prosent.`100_PROSENT`
                         .minus(institusjonsOppholdReduksjon)
-                        .minus(arbeidsgradering)
+                        .minus(arbeidsgraderingReduksjon)
                 }
                 Segment(periode, TilkjentGUnit(
                     dagsats, TilkjentGradering(
