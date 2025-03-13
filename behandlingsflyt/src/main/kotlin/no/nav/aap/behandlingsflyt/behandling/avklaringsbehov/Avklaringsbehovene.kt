@@ -87,7 +87,7 @@ class Avklaringsbehovene(
                         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
                     }
                 } else {
-                    log.warn("Forsøkte å legge til et avklaringsbehov som allerede eksisterte")
+                    log.info("Forsøkte å legge til et avklaringsbehov som allerede eksisterte")
                 }
             } else {
                 repository.opprett(
