@@ -24,6 +24,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.SafListDokumentGa
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.auth.token
+import no.nav.aap.komponenter.miljo.Miljø
+import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -113,6 +115,10 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                     applicationRole = "opprett-sak",
                 )
             ) { _, dto ->
+                if (Miljø.er() == MiljøKode.PROD) {
+                    TODO("Vi er ikke i produksjon ennå.")
+                }
+
                 val saken: SaksinfoDTO = dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
                     val ident = Ident(dto.ident)

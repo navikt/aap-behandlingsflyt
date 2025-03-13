@@ -15,6 +15,8 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.time.LocalDate
 
 
@@ -77,19 +79,19 @@ class BeregnTilkjentYtelseService(
                 val utbetalingsgrad = if (venstre.verdi.utfall == Utfall.IKKE_OPPFYLT) {
                     Prosent.`0_PROSENT`
                 } else {
-                    val institusjonsOppholdReduksjon = venstre.verdi.institusjonsoppholdReduksjon
-                    val arbeidsgraderingReduksjon = Prosent.`100_PROSENT`.minus(venstre.verdi.arbeidsgradering.gradering)
-                    Prosent.`100_PROSENT`
-                        .minus(institusjonsOppholdReduksjon)
-                        .minus(arbeidsgraderingReduksjon)
+                    val institusjonsOppholdReduksjon = venstre.verdi.institusjonsoppholdReduksjon.komplement()
+                    val arbeidsgraderingReduksjon = Prosent.`100_PROSENT`.minus(venstre.verdi.arbeidsgradering.gradering).komplement()
+                    arbeidsgraderingReduksjon.multiplisert(institusjonsOppholdReduksjon)
                 }
-                Segment(periode, TilkjentGUnit(
-                    dagsats, TilkjentGradering(
-                        endeligGradering = utbetalingsgrad,
-                        arbeidGradering = venstre.verdi.arbeidsgradering.gradering,
-                        institusjonGradering = venstre.verdi.institusjonsoppholdReduksjon,
-                        samordningGradering = null
-                    ), venstre.verdi.meldePeriode.tom.plusDays(1))
+                Segment(
+                    periode, TilkjentGUnit(
+                        dagsats, TilkjentGradering(
+                            endeligGradering = utbetalingsgrad,
+                            arbeidGradering = venstre.verdi.arbeidsgradering.gradering,
+                            institusjonGradering = venstre.verdi.institusjonsoppholdReduksjon,
+                            samordningGradering = null
+                        ), venstre.verdi.meldePeriode.tom.plusDays(1)
+                    )
                 )
             })
 
