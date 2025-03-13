@@ -58,7 +58,8 @@ public enum class Definisjon(
         type = BehovType.BREV,
         løsesAv = listOf(
             Rolle.SAKSBEHANDLER_OPPFOLGING,
-            Rolle.SAKSBEHANDLER_NASJONAL
+            Rolle.SAKSBEHANDLER_NASJONAL,
+            Rolle.BESLUTTER
         )
     ),
     AVKLAR_STUDENT(
