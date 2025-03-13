@@ -27,7 +27,7 @@ class SamordningUføreSteg(
                 }
             }
 
-            VurderingType.REVURDERING -> {
+            VurderingType.REVURDERING, VurderingType.FORLENGELSE -> {
                 val uføreGrunnlag = uføreRepository.hentHvisEksisterer(kontekst.behandlingId)
                 val behandling = behandlingRepository.hent(kontekst.behandlingId)
                 val uføreGrunnlagPåForrigeBehandling = behandling.forrigeBehandlingId?.let {
@@ -39,7 +39,6 @@ class SamordningUføreSteg(
                 }
             }
 
-            VurderingType.FORLENGELSE -> TODO()
             VurderingType.IKKE_RELEVANT -> {}
         }
         return Fullført
