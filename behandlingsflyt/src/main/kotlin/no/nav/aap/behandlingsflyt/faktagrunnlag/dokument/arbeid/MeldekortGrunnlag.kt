@@ -12,8 +12,10 @@ data class MeldekortGrunnlag(
             "sjekk feilet: rekkefølge.size(${rekkefølge.size}) >= meldekortene.size(${meldekortene.size})"
 
         }
-        require(rekkefølge.all { meldekortene.any { pk -> it.referanse.asJournalpostId == pk.journalpostId } }) {
-            "sjekk feilet: ${rekkefølge.joinToString {it.referanse.toString()}} subset ${meldekortene.joinToString {it.journalpostId.toString()}}"
+
+        val rekkefølgeIder = rekkefølge.map { it.referanse.asJournalpostId }
+        require(meldekortene.all { it.journalpostId in rekkefølgeIder }) {
+            "sjekk feilet: ${meldekortene.joinToString {it.journalpostId.toString()}} subset ${rekkefølge.joinToString {it.referanse.toString()}}"
         }
     }
 
