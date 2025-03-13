@@ -15,8 +15,6 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
-import java.math.BigDecimal
-import java.math.RoundingMode
 import java.time.LocalDate
 
 
