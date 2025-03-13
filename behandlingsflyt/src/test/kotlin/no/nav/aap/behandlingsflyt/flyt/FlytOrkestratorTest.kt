@@ -959,9 +959,12 @@ class FlytOrkestratorTest {
         )
 
         behandling = hentBehandling(sak.id)
+        // Siden samordning overlappet, skal en revurdering opprettes med en gang
         assertThat(behandling.referanse).isNotEqualTo(behandlingReferanse)
         assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
         util.ventPåSvar(sakId = behandling.sakId.id)
+
+        // Verifiser at den er satt på vent
         val åpneAvklaringsbehovPåNyBehandling = hentAlleAvklaringsbehov(behandling)
         util.ventPåSvar(behandlingId = behandling.id.id, sakId = behandling.sakId.id)
         assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).containsExactly(Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT)
