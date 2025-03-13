@@ -13,7 +13,6 @@ import io.ktor.server.application.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.testing.*
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.SamordningYtelseDTO
-import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.SamordningYtelsePeriodeDTO
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.SamordningYtelseVurderingGrunnlagDTO
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.samordningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
@@ -84,16 +83,12 @@ class SamordningApiKtTest {
                     ytelser = listOf(
                         SamordningYtelseDTO(
                             ytelseType = Ytelse.PLEIEPENGER,
-                            ytelsePerioder = listOf(
-                                SamordningYtelsePeriodeDTO(
-                                    fom = LocalDate.now(),
-                                    tom = LocalDate.now().plusYears(1),
-                                    gradering = 50,
-                                    kronesum = null
-                                )
-                            ),
                             kilde = "kilde",
-                            saksRef = "saksref"
+                            saksRef = "saksref",
+                            fom = LocalDate.now(),
+                            tom = LocalDate.now().plusYears(1),
+                            gradering = 50,
+                            kronesum = null
                         )
                     ),
                     vurderinger = listOf()
