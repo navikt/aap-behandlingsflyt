@@ -1,8 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
-import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SattPåVentLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlagImpl
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.steg.internal.StegKonstruktørImpl
@@ -38,24 +36,6 @@ class AvklaringsbehovOrkestrator(
     private val prosesserBehandling = ProsesserBehandlingService(FlytJobbRepository(connection))
 
     private val log = LoggerFactory.getLogger(javaClass)
-
-    fun taAvVentHvisPåVentOgFortsettProsessering(behandlingId: BehandlingId) {
-        val behandling = behandlingRepository.hent(behandlingId)
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-        avklaringsbehovene.validateTilstand(behandling = behandling)
-
-        val kontekst = behandling.flytKontekst()
-        if (avklaringsbehovene.erSattPåVent()) {
-            løsAvklaringsbehov(
-                kontekst = kontekst,
-                avklaringsbehovene = avklaringsbehovene,
-                avklaringsbehov = SattPåVentLøsning(),
-                bruker = SYSTEMBRUKER,
-                behandling = behandling
-            )
-        }
-        fortsettProsessering(kontekst)
-    }
 
     fun løsAvklaringsbehovOgFortsettProsessering(
         kontekst: FlytKontekst,
@@ -133,6 +113,7 @@ class AvklaringsbehovOrkestrator(
 
         // Bør ideelt kalle på
         løsFaktiskAvklaringsbehov(kontekst, avklaringsbehovene, avklaringsbehov, bruker)
+        log.info("Løste avklaringsbehov[${definisjoner}] på behandling[${behandling.referanse}]")
     }
 
     private fun løsFaktiskAvklaringsbehov(

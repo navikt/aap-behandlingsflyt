@@ -161,6 +161,13 @@ public enum class Definisjon(
         løsesISteg = StegType.SAMORDNING_GRADERING,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     ),
+    SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT(
+        kode = AvklaringsbehovKode.`5024`,
+        type = BehovType.VENTEPUNKT,
+        løsesISteg = StegType.SAMORDNING_GRADERING,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+        defaultFrist = Period.ofWeeks(4),
+    ),
     FORHÅNDSVARSEL_AKTIVITETSPLIKT(
         kode = AvklaringsbehovKode.`5016`,
         type = BehovType.BREV_VENTEPUNKT,
@@ -289,7 +296,7 @@ public enum class Definisjon(
         VENTEPUNKT(Definisjon::validerVentepunkt),
 
         /**
-         * Overstyr er at saksbehandler kan overstryre automatiske vurderinger og trigge behovet
+         * Overstyr er at saksbehandler kan overstyre automatiske vurderinger og trigge behovet
          * (f.eks et dokument)
          */
         OVERSTYR(Definisjon::validerManuelt)
