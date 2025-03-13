@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.*
-import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterMottattDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
@@ -14,7 +13,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
@@ -25,7 +23,7 @@ class OpprettRevurderingSteg(
     private val samordningYtelseVurderingRepository: SamordningVurderingRepository,
     private val låsRepository: TaSkriveLåsRepository,
     private val prosesserBehandling: ProsesserBehandlingService,
-    ) : BehandlingSteg {
+) : BehandlingSteg {
     private val logger = LoggerFactory.getLogger(javaClass)
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         return when (kontekst.vurdering.vurderingType) {
@@ -50,17 +48,15 @@ class OpprettRevurderingSteg(
                     )
                 )
 
-                val behandlingSkrivelås = låsRepository.låsBehandling(beriketBehandling.behandling.id)
-
-//                sakOgBehandlingService.oppdaterRettighetsperioden(beriketBehandling.behandling.sakId, brevkategori, mottattDato)
+                val behandlingSkrivelås =
+                    låsRepository.låsBehandling(beriketBehandling.behandling.id)
 
                 prosesserBehandling.triggProsesserBehandling(
                     beriketBehandling.behandling.sakId,
                     beriketBehandling.behandling.id,
-//                    listOf("trigger" to elementer.map { it.type.name }.toString())
                 )
                 låsRepository.verifiserSkrivelås(behandlingSkrivelås)
-                return Fullført
+                
                 return FantVentebehov(
                     Ventebehov(
                         definisjon = Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT,
