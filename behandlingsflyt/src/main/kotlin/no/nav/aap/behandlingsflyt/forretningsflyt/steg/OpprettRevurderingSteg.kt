@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -33,11 +34,7 @@ class OpprettRevurderingSteg(
                     samordningYtelseVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
                         ?: return Fullført
 
-                val revurderingsDato =
-                    if (samordningVurdering.maksDatoEndelig && samordningVurdering.maksDato != null) samordningVurdering.maksDato else null
-
-
-                if (revurderingsDato == null) return Fullført
+                if (!erUsikkerhetTilknyttetMaksSykepengerDato(samordningVurdering)) return Fullført
 
                 logger.info("Oppretter revurdering. SakID: ${kontekst.sakId}")
                 val beriketBehandling = sakOgBehandlingService.finnEllerOpprettBehandling(
@@ -65,6 +62,10 @@ class OpprettRevurderingSteg(
                 Fullført
             }
         }
+    }
+
+    private fun erUsikkerhetTilknyttetMaksSykepengerDato(samordningVurdering: SamordningVurderingGrunnlag): Boolean {
+        return samordningVurdering.maksDatoEndelig && samordningVurdering.maksDato != null
     }
 
     companion object : FlytSteg {
