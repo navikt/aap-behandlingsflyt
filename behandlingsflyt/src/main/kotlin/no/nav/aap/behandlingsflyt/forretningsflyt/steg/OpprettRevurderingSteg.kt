@@ -1,11 +1,12 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
-import no.nav.aap.behandlingsflyt.flyt.steg.*
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
+import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Årsak
@@ -56,14 +57,8 @@ class OpprettRevurderingSteg(
                     beriketBehandling.behandling.id,
                 )
                 låsRepository.verifiserSkrivelås(behandlingSkrivelås)
-                
-                return FantVentebehov(
-                    Ventebehov(
-                        definisjon = Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT,
-                        grunn = ÅrsakTilSettPåVent.VENTER_PÅ_OPPLYSNINGER,
-                        frist = revurderingsDato
-                    )
-                )
+
+                return Fullført
             }
 
             VurderingType.REVURDERING, VurderingType.FORLENGELSE, VurderingType.IKKE_RELEVANT -> {
