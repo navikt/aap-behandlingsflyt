@@ -18,10 +18,9 @@ class UføreRepositoryImpl(private val connection: DBConnection) : UføreReposit
     override fun hentHvisEksisterer(behandlingId: BehandlingId): UføreGrunnlag? {
         return connection.queryFirstOrNull(
             """
-            SELECT g.ID, u.UFOREGRAD
-            FROM UFORE_GRUNNLAG g
-            INNER JOIN UFORE u ON g.UFORE_ID = u.ID
-            WHERE g.AKTIV AND g.BEHANDLING_ID = ?
+            SELECT *
+            FROM UFORE_GRUNNLAG
+            WHERE AKTIV AND BEHANDLING_ID = ?
             """.trimIndent()
         ) {
             setParams {
@@ -29,36 +28,56 @@ class UføreRepositoryImpl(private val connection: DBConnection) : UføreReposit
             }
             setRowMapper { row ->
                 UføreGrunnlag(
-                    id = row.getLong("ID"),
+                    id = row.getLong("id"),
                     behandlingId = behandlingId,
-                    vurdering = Uføre(
-                        uføregrad = Prosent(row.getInt("UFOREGRAD"))
-                    )
+                    vurderinger = hentVurderinger(row.getLong("ufore_id"))
                 )
             }
         }
     }
 
-    override fun lagre(behandlingId: BehandlingId, uføre: Uføre) {
-        val eksisterendeUføreGrunnlag = hentHvisEksisterer(behandlingId)
+    private fun hentVurderinger(uføreId: Long): List<Uføre> {
+        return connection.queryList(
+            """
+            SELECT * FROM UFORE_GRADERING WHERE UFORE_ID = ?
+        """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, uføreId)
+            }
+            setRowMapper { row ->
+                Uføre(
+                    virkningstidspunkt = row.getLocalDate("virkningstidspunkt"),
+                    uføregrad = Prosent(row.getInt("uforegrad"))
+                )
+            }
+        }
+    }
 
-        if (eksisterendeUføreGrunnlag?.vurdering == uføre) return
+    override fun lagre(behandlingId: BehandlingId, uføre: List<Uføre>) {
+        val eksisterendeUføreGrunnlag = hentHvisEksisterer(behandlingId)
 
         if (eksisterendeUføreGrunnlag != null) {
             deaktiverEksisterende(behandlingId)
         }
 
-        val uføreId =
-            connection.executeReturnKey("INSERT INTO UFORE (UFOREGRAD) VALUES (?)") {
-                setParams {
-                    setInt(1, uføre.uføregrad.prosentverdi())
-                }
-            }
+        val uføreId = connection.executeReturnKey("INSERT INTO UFORE DEFAULT VALUES")
 
         connection.execute("INSERT INTO UFORE_GRUNNLAG (BEHANDLING_ID, UFORE_ID) VALUES (?, ?)") {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, uføreId)
+            }
+        }
+
+        connection.executeBatch(
+            "INSERT INTO UFORE_GRADERING (UFORE_ID, UFOREGRAD, VIRKNINGSTIDSPUNKT) VALUES (?, ?, ?)",
+            uføre
+        ) {
+            setParams {
+                setLong(1, uføreId)
+                setInt(2, it.uføregrad.prosentverdi())
+                setLocalDate(3, it.virkningstidspunkt)
             }
         }
     }

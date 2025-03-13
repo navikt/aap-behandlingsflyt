@@ -18,29 +18,27 @@ class UføreService(
 ) : Informasjonskrav {
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
-        val uføregrad = uføreRegisterGateway.innhent(sak.person, sak.rettighetsperiode.fom)
+        val uføregrader = uføreRegisterGateway.innhent(sak.person, sak.rettighetsperiode.fom)
 
         val behandlingId = kontekst.behandlingId
-        val gamleData = uføreRepository.hentHvisEksisterer(behandlingId)
+        val eksisterendeGrunnlag = uføreRepository.hentHvisEksisterer(behandlingId)
 
-        val uføregradPåBehandlingErUendret =
-            gamleData != null && gamleData.vurdering.uføregrad == uføregrad.uføregrad
-
-        if (uføregradPåBehandlingErUendret) {
-            return IKKE_ENDRET
-        }
-
-        if (uføregrad.uføregrad.prosentverdi() != 0 ||
-            (uføregrad.uføregrad.prosentverdi() == 0 && (gamleData?.vurdering?.uføregrad?.prosentverdi() ?: 0) > 0)
-        ) {
-            uføreRepository.lagre(
-                behandlingId,
-                uføregrad
-            )
+        if (harEndringerUføre(eksisterendeGrunnlag, uføregrader)) {
+            uføreRepository.lagre(behandlingId, uføregrader)
             return ENDRET
         }
 
         return IKKE_ENDRET
+    }
+
+    private fun harEndringerUføre(
+        eksisterende: UføreGrunnlag?,
+        uføregrader: List<Uføre>
+    ): Boolean {
+        if (eksisterende == null && uføregrader.isEmpty()) {
+            return false
+        }
+        return uføregrader != eksisterende?.vurderinger
     }
 
     companion object : Informasjonskravkonstruktør {

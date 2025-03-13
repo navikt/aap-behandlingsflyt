@@ -5,5 +5,5 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 class UføreGrunnlag(
     val id: Long,
     val behandlingId: BehandlingId,
-    val vurdering: Uføre,
+    val vurderinger: List<Uføre>,
 )

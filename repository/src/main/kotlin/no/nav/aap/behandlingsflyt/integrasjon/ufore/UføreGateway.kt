@@ -57,21 +57,22 @@ object UføreGateway : UføreRegisterGateway {
         }
     }
 
-    override fun innhent(person: Person, forDato: LocalDate): Uføre {
+    override fun innhent(person: Person, forDato: LocalDate): List<Uføre> {
         val datoString = forDato.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
         val request =
             UføreRequest(person.identer().filter { it.aktivIdent }.map { it.identifikator }.first(), datoString)
         val uføreRes = query(request)
+        val uføregrad = uføreRes?.uforegrad
 
-        if (uføreRes == null) {
-            logger.warn("Fant ikke person i Pesys. Returnerer uføregrad null.")
-            return Uføre(
-                uføregrad = Prosent.`0_PROSENT`
-            )
+        if (uføregrad == null) {
+            return emptyList()
         }
 
-        return Uføre(
-            uføregrad = uføreRes.uforegrad?.let { Prosent(it) } ?: Prosent.`0_PROSENT`
+        return listOf(
+            Uføre(
+                virkningstidspunkt = forDato,
+                uføregrad = Prosent(uføregrad)
+            )
         )
     }
 }
