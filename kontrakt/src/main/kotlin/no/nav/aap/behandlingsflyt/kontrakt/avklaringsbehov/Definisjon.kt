@@ -296,7 +296,7 @@ public enum class Definisjon(
         VENTEPUNKT(Definisjon::validerVentepunkt),
 
         /**
-         * Overstyr er at saksbehandler kan overstryre automatiske vurderinger og trigge behovet
+         * Overstyr er at saksbehandler kan overstyre automatiske vurderinger og trigge behovet
          * (f.eks et dokument)
          */
         OVERSTYR(Definisjon::validerManuelt)

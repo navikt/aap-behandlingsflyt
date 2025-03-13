@@ -19,12 +19,15 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 
 class StartBehandlingSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val sakService: SakService,
     private val samordningVurderingRepository: SamordningVurderingRepository,
 ) : BehandlingSteg {
+
+    private val logger = LoggerFactory.getLogger(StartBehandlingSteg::class.java)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         if (kontekst.behandlingType == TypeBehandling.Førstegangsbehandling) {
@@ -45,8 +48,7 @@ class StartBehandlingSteg private constructor(
         if (kontekst.behandlingType == TypeBehandling.Revurdering) {
             if (kontekst.vurdering.årsakerTilBehandling.contains(ÅrsakTilBehandling.REVURDER_SAMORDNING)) {
                 val ventTil = samordningVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)!!
-
-
+                logger.info("Fant samordningdato, setter på vent.")
                 return FantVentebehov(
                     Ventebehov(
                         definisjon = Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT,

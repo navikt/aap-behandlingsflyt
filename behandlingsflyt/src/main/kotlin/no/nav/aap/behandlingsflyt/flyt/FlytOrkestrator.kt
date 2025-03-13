@@ -82,11 +82,10 @@ class FlytOrkestrator(
         if (avklaringsbehovene.erSattPåVent()) {
             // TODO: Vurdere om det hendelser som trigger prosesserBehandling
             //  (f.eks ankommet dokument) skal ta behandling av vent
-            val evaluerere = ventebehovEvaluererService
             val kandidatBehov = avklaringsbehovene.hentÅpneVentebehov()
 
             val behovSomErLøst =
-                kandidatBehov.filter { behov -> evaluerere.ansesSomLøst(behandling.id, behov, kontekst.sakId) }
+                kandidatBehov.filter { behov -> ventebehovEvaluererService.ansesSomLøst(behandling.id, behov, kontekst.sakId) }
             behovSomErLøst.forEach { avklaringsbehovene.løsAvklaringsbehov(it.definisjon, "", SYSTEMBRUKER.ident) }
             // Hvis fortsatt på vent
             if (avklaringsbehovene.erSattPåVent()) {

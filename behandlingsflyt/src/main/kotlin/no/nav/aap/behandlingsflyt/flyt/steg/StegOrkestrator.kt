@@ -50,7 +50,7 @@ class StegOrkestrator(
     ): Transisjon {
         MDC.putCloseable("stegType", aktivtSteg.type().name).use {
             var gjeldendeStegStatus = StegStatus.START
-            log.info("Behandler steg '{}'", aktivtSteg.type())
+            log.info("Behandler steg '{}'. Behandling-ref: ${behandling.referanse}", aktivtSteg.type())
 
             val kontekstMedPerioder = FlytKontekstMedPerioder(
                 sakId = kontekst.sakId,

@@ -26,6 +26,8 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettYr
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SamordningVentPaVirkningstidspunktLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SattPåVentLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
@@ -965,10 +967,15 @@ class FlytOrkestratorTest {
         util.ventPåSvar(sakId = behandling.sakId.id)
 
         // Verifiser at den er satt på vent
-        val åpneAvklaringsbehovPåNyBehandling = hentAlleAvklaringsbehov(behandling)
+        var åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(behandling.id)
         util.ventPåSvar(behandlingId = behandling.id.id, sakId = behandling.sakId.id)
         assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).containsExactly(Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT)
 
+        // Ta av vent
+        løsAvklaringsBehov(behandling, SamordningVentPaVirkningstidspunktLøsning())
+
+        åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(behandling.id)
+        assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
     }
 
     @Test
