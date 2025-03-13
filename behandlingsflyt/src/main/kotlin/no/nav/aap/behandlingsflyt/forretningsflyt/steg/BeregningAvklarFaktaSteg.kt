@@ -63,7 +63,7 @@ class BeregningAvklarFaktaSteg private constructor(
 
                 val vilkårsresultat = vilkårsresultatRepository1.hent(behandlingId)
                 val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
-                if ((beregningVurdering == null || harVærtVurdertMinstEnGangIBehandlingen(
+                if ((beregningVurdering == null || erIkkeVurdertTidligereIBehandlingen(
                         avklaringsbehovene,
                         Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT
                     )) && erIkkeStudent(vilkårsresultat)
@@ -89,7 +89,7 @@ class BeregningAvklarFaktaSteg private constructor(
         return Fullført
     }
 
-    private fun harVærtVurdertMinstEnGangIBehandlingen(
+    private fun erIkkeVurdertTidligereIBehandlingen(
         avklaringsbehovene: Avklaringsbehovene,
         definisjon: Definisjon
     ): Boolean {
@@ -124,7 +124,7 @@ class BeregningAvklarFaktaSteg private constructor(
         return yrkesskader?.yrkesskader?.harYrkesskade() == true && yrkesskadeVurdering?.erÅrsakssammenheng == true && (harIkkeFastsattBeløpForAlle(
             yrkesskadeVurdering.relevanteSaker,
             beregningGrunnlag
-        ) || harVærtVurdertMinstEnGangIBehandlingen(avklaringsbehovene, Definisjon.FASTSETT_YRKESSKADEINNTEKT))
+        ) || erIkkeVurdertTidligereIBehandlingen(avklaringsbehovene, Definisjon.FASTSETT_YRKESSKADEINNTEKT))
     }
 
     private fun harIkkeFastsattBeløpForAlle(
