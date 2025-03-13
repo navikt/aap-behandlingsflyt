@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
 import javax.sql.DataSource
@@ -28,7 +29,7 @@ data class SamordningYtelseVurderingGrunnlagDTO(
 
 data class SamordningYtelseDTO(
     val ytelseType: Ytelse,
-    val ytelsePerioder: List<SamordningYtelsePeriodeDTO>,
+    val perioder: List<Periode>,
     val gradering: Int?,
     val kronesum: Int?,
     val kilde: String,
@@ -37,20 +38,11 @@ data class SamordningYtelseDTO(
 
 data class SamordningVurderingDTO(
     val ytelseType: Ytelse,
-    val vurderingPerioder: List<SamordningVurderingPeriodeDTO>,
+    val perioder: List<Periode>,
     val gradering: Int?,
     val kronesum: Int?
 )
 
-data class SamordningVurderingPeriodeDTO(
-    val fom: LocalDate,
-    val tom: LocalDate,
-)
-
-data class SamordningYtelsePeriodeDTO(
-    val fom: LocalDate,
-    val tom: LocalDate,
-)
 
 fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
     route("/api/behandling") {
@@ -76,7 +68,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
                             ytelse.ytelsePerioder.map {
                                 SamordningYtelseDTO(
                                     ytelseType = ytelse.ytelseType,
-                                    ytelsePerioder = ytelse.ytelsePerioder.map { it.tilDTO() },
+                                    perioder = ytelse.ytelsePerioder.map { it.tilDTO() },
                                     gradering = it.gradering?.prosentverdi(),
                                     kronesum = it.kronesum?.toInt(),
                                     kilde = ytelse.kilde,
@@ -88,7 +80,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
                             vurdering.vurderingPerioder.map {
                             SamordningVurderingDTO(
                                 ytelseType = vurdering.ytelseType,
-                                vurderingPerioder = vurdering.vurderingPerioder.map { it.tilDTO() },
+                                perioder = vurdering.vurderingPerioder.map { it.tilDTO() },
                                 gradering = it.gradering?.prosentverdi(),
                                 kronesum = it.kronesum?.toInt(),
                             )
@@ -102,15 +94,15 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
 
 }
 
-private fun SamordningVurderingPeriode.tilDTO(): SamordningVurderingPeriodeDTO {
-    return SamordningVurderingPeriodeDTO(
+private fun SamordningVurderingPeriode.tilDTO(): Periode {
+    return Periode(
         fom = this.periode.fom,
         tom = this.periode.tom,
     )
 }
 
-private fun SamordningYtelsePeriode.tilDTO(): SamordningYtelsePeriodeDTO {
-    return SamordningYtelsePeriodeDTO(
+private fun SamordningYtelsePeriode.tilDTO(): Periode {
+    return Periode(
         fom = this.periode.fom,
         tom = this.periode.tom,
     )
