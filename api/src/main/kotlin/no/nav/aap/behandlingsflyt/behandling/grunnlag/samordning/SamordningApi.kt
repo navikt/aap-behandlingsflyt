@@ -29,7 +29,7 @@ data class SamordningYtelseVurderingGrunnlagDTO(
 
 data class SamordningYtelseDTO(
     val ytelseType: Ytelse,
-    val perioder: List<Periode>,
+    val periode: Periode,
     val gradering: Int?,
     val kronesum: Int?,
     val kilde: String,
@@ -38,7 +38,7 @@ data class SamordningYtelseDTO(
 
 data class SamordningVurderingDTO(
     val ytelseType: Ytelse,
-    val perioder: List<Periode>,
+    val periode: Periode,
     val gradering: Int?,
     val kronesum: Int?
 )
@@ -68,7 +68,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
                             ytelse.ytelsePerioder.map {
                                 SamordningYtelseDTO(
                                     ytelseType = ytelse.ytelseType,
-                                    perioder = ytelse.ytelsePerioder.map { it.tilDTO() },
+                                    periode = Periode(fom = it.periode.fom, tom = it.periode.tom),
                                     gradering = it.gradering?.prosentverdi(),
                                     kronesum = it.kronesum?.toInt(),
                                     kilde = ytelse.kilde,
@@ -80,8 +80,8 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
                             vurdering.vurderingPerioder.map {
                             SamordningVurderingDTO(
                                 ytelseType = vurdering.ytelseType,
-                                perioder = vurdering.vurderingPerioder.map { it.tilDTO() },
                                 gradering = it.gradering?.prosentverdi(),
+                                periode = Periode(fom = it.periode.fom, tom = it.periode.tom),
                                 kronesum = it.kronesum?.toInt(),
                             )
                         }}
