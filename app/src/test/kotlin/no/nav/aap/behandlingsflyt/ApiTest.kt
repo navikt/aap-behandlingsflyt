@@ -68,16 +68,12 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
-import java.io.BufferedWriter
-import java.io.FileWriter
 import java.io.InputStream
 import java.net.URI
-import java.nio.charset.StandardCharsets
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Year
 import java.util.*
-import kotlin.test.fail
 
 @Fakes
 class ApiTest {
@@ -434,28 +430,6 @@ class ApiTest {
             ÅrsakTilBehandling.MOTTATT_AKTIVITETSMELDING
         )
 
-    }
-
-    @Test
-    fun `skal lagre openapi som fil`() {
-        val openApiDoc =
-            requireNotNull(
-                client.get(
-                    URI.create("http://localhost:$port/openapi.json"),
-                    GetRequest(currentToken = getToken())
-                ) { body, _ ->
-                    String(body.readAllBytes(), StandardCharsets.UTF_8)
-                }
-            )
-
-        try {
-            val writer = BufferedWriter(FileWriter("../openapi.json"))
-            writer.write(openApiDoc)
-
-            writer.close()
-        } catch (_: Exception) {
-            fail()
-        }
     }
 
     private fun <E> kallInntilKlar(maxTries: Int = 10, delayMs: Long = 100L, block: () -> E): E? {

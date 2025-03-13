@@ -38,6 +38,11 @@ tasks.register<JavaExec>("runTestApp") {
     mainClass.set("no.nav.aap.behandlingsflyt.TestAppKt")
 }
 
+tasks.register<JavaExec>("genererOpenApiJson") {
+    classpath = sourceSets.test.get().runtimeClasspath
+    mainClass.set("no.nav.aap.behandlingsflyt.GenererOpenApiJsonKt")
+}
+
 
 tasks.register<JavaExec>("beregnCSV") {
     classpath = sourceSets.test.get().runtimeClasspath
