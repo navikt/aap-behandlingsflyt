@@ -26,13 +26,13 @@ import java.time.LocalDateTime
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.ÅrsakTilRetur as DomeneÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.ÅrsakTilReturKode as ÅrsakTilReturKodeKontrakt
 
-private val log = LoggerFactory.getLogger(BehandlingHendelseServiceImpl::class.java)
-
 class BehandlingHendelseServiceImpl(
     private val flytJobbRepository: FlytJobbRepository,
     private val brevbestillingRepository: BrevbestillingRepository,
     private val sakService: SakService
 ) : BehandlingHendelseService {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun stoppet(
         behandling: Behandling,

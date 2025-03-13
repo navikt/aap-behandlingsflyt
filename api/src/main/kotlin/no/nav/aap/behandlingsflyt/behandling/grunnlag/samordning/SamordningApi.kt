@@ -28,29 +28,22 @@ data class SamordningYtelseVurderingGrunnlagDTO(
 
 data class SamordningYtelseDTO(
     val ytelseType: Ytelse,
-    val ytelsePerioder: List<SamordningYtelsePeriodeDTO>,
+    val fom: LocalDate,
+    val tom: LocalDate,
+    val gradering: Int?,
+    val kronesum: Int?,
     val kilde: String,
-    val saksRef: String?,
+    val saksRef: String?
 )
 
 data class SamordningVurderingDTO(
     val ytelseType: Ytelse,
-    val vurderingPerioder: List<SamordningVurderingPeriodeDTO>,
-)
-
-data class SamordningVurderingPeriodeDTO(
     val fom: LocalDate,
     val tom: LocalDate,
     val gradering: Int?,
     val kronesum: Int?
 )
 
-data class SamordningYtelsePeriodeDTO(
-    val fom: LocalDate,
-    val tom: LocalDate,
-    val gradering: Int?,
-    val kronesum: Int?
-)
 
 fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
     route("/api/behandling") {
@@ -72,42 +65,33 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
 
                 respond(
                     SamordningYtelseVurderingGrunnlagDTO(
-                        ytelser = registerYtelser?.ytelser?.map { it ->
-                            SamordningYtelseDTO(
-                                ytelseType = it.ytelseType,
-                                ytelsePerioder = it.ytelsePerioder.map { it.tilDTO() },
-                                kilde = it.kilde,
-                                saksRef = it.saksRef
-                            )
+                        ytelser = registerYtelser?.ytelser?.flatMap { ytelse ->
+                            ytelse.ytelsePerioder.map {
+                                SamordningYtelseDTO(
+                                    ytelseType = ytelse.ytelseType,
+                                    fom = it.periode.fom,
+                                    tom = it.periode.tom,
+                                    gradering = it.gradering?.prosentverdi(),
+                                    kronesum = it.kronesum?.toInt(),
+                                    kilde = ytelse.kilde,
+                                    saksRef = ytelse.saksRef
+                                )
+                            }
                         }.orEmpty(),
-                        vurderinger = samordning?.vurderinger.orEmpty().map {
+                        vurderinger = samordning?.vurderinger.orEmpty().flatMap { vurdering ->
+                            vurdering.vurderingPerioder.map {
                             SamordningVurderingDTO(
-                                ytelseType = it.ytelseType,
-                                vurderingPerioder = it.vurderingPerioder.map { it.tilDTO() }
+                                ytelseType = vurdering.ytelseType,
+                                fom = it.periode.fom,
+                                tom = it.periode.tom,
+                                gradering = it.gradering?.prosentverdi(),
+                                kronesum = it.kronesum?.toInt(),
                             )
-                        }
+                        }}
                     )
                 )
 
             }
         }
     }
-}
-
-private fun SamordningVurderingPeriode.tilDTO(): SamordningVurderingPeriodeDTO {
-    return SamordningVurderingPeriodeDTO(
-        fom = this.periode.fom,
-        tom = this.periode.tom,
-        gradering = this.gradering?.prosentverdi(),
-        kronesum = this.kronesum?.toInt()
-    )
-}
-
-private fun SamordningYtelsePeriode.tilDTO(): SamordningYtelsePeriodeDTO {
-    return SamordningYtelsePeriodeDTO(
-        fom = this.periode.fom,
-        tom = this.periode.tom,
-        gradering = this.gradering?.prosentverdi(),
-        kronesum = this.kronesum?.toInt()
-    )
 }

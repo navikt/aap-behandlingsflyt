@@ -50,7 +50,6 @@ class Effektuer11_7Steg(
     private val effektuer117repository: Effektuer11_7Repository,
     private val clock: Clock = Clock.systemDefaultZone(),
 ) : BehandlingSteg {
-    private val logger = LoggerFactory.getLogger(Effektuer11_7Steg::class.java)
     private val typeBrev = TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {

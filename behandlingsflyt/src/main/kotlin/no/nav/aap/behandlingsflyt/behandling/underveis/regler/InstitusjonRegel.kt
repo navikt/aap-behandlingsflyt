@@ -16,9 +16,9 @@ import org.slf4j.LoggerFactory
  *  Se EtAnnetStedUtlederService for logikken
  */
 class InstitusjonRegel : UnderveisRegel {
-    private val logger = LoggerFactory.getLogger(InstitusjonRegel::class.java)
+    private val log = LoggerFactory.getLogger(javaClass)
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
-        logger.info("Vurderer institusjonsregel med input: $input.")
+        log.info("Vurderer institusjonsregel med input: $input.")
         var institusjonTidslinje = konstruerTidslinje(input)
         if (institusjonTidslinje.isEmpty()) {
             return resultat

@@ -23,9 +23,8 @@ import java.time.format.DateTimeFormatter
  */
 data class UføreRespons(val uforegrad: Int?)
 
-private val logger = LoggerFactory.getLogger(UføreGateway::class.java)
-
 object UføreGateway : UføreRegisterGateway {
+    private val log = LoggerFactory.getLogger(javaClass)
     private val url = URI.create(requiredConfigForKey("integrasjon.pesys.url"))
     private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.pesys.scope"))
     private val client = RestClient.withDefaultResponseHandler(
@@ -45,14 +44,14 @@ object UføreGateway : UføreRegisterGateway {
 
         val uri = url.resolve("pen/api/uforetrygd/uforegrad?dato=${uføreRequest.dato}")
         try {
-            logger.info("Henter uføregrad for dato: ${uføreRequest.dato}")
+            log.info("Henter uføregrad for dato: ${uføreRequest.dato}")
             return client.get(
                 uri = uri,
                 request = httpRequest
             )
         } catch (e: IkkeFunnetException) {
             // Om personen ikke ble funnet i PESYS.
-            logger.info("Fant ikke person i PESYS. Returnerer null. URL brukt: $uri. Message: ${e.message}")
+            log.info("Fant ikke person i PESYS. Returnerer null. URL brukt: $uri. Message: ${e.message}")
             return null
         }
     }
@@ -64,7 +63,7 @@ object UføreGateway : UføreRegisterGateway {
         val uføreRes = query(request)
 
         if (uføreRes == null) {
-            logger.warn("Fant ikke person i Pesys. Returnerer uføregrad null.")
+            log.warn("Fant ikke person i Pesys. Returnerer uføregrad null.")
             return Uføre(
                 uføregrad = Prosent.`0_PROSENT`
             )

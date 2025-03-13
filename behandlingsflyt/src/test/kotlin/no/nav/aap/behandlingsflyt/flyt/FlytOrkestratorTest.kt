@@ -55,6 +55,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.SamordningVurderingData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
@@ -910,16 +911,12 @@ class FlytOrkestratorTest {
             behandling,
             AvklarSamordningGraderingLøsning(
                 vurderingerForSamordning = VurderingerForSamordning(
-                    vurderteSamordninger = listOf(
-                        SamordningVurdering(
+                    vurderteSamordningerData = listOf(
+                        SamordningVurderingData(
                             ytelseType = Ytelse.SYKEPENGER,
-                            vurderingPerioder = listOf(
-                                SamordningVurderingPeriode(
-                                    periode = sykePengerPeriode,
-                                    gradering = Prosent(90),
-                                    kronesum = null
-                                )
-                            )
+                            periode = sykePengerPeriode,
+                            gradering = Prosent(90),
+                            kronesum = null,
                         )
                     ),
                     begrunnelse = "En god begrunnelse",

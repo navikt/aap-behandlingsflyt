@@ -13,11 +13,11 @@ import java.io.InputStream
 import java.net.URI
 import java.net.http.HttpHeaders
 
-private val log = LoggerFactory.getLogger(SafHentDokumentGateway::class.java)
-
 data class DokumentInfoId(val dokumentInfoId: String)
 
 class SafHentDokumentGateway(private val restClient: RestClient<InputStream>) {
+
+    private val log = LoggerFactory.getLogger(javaClass)
     private val restUrl = URI.create(requiredConfigForKey("integrasjon.saf.url.rest"))
 
     companion object {

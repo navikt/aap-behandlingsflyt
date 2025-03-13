@@ -35,7 +35,7 @@ class AvklaringsbehovOrkestrator(
     private val sakRepository = repositoryProvider.provide<SakRepository>()
     private val prosesserBehandling = ProsesserBehandlingService(FlytJobbRepository(connection))
 
-    private val log = LoggerFactory.getLogger(AvklaringsbehovOrkestrator::class.java)
+    private val log = LoggerFactory.getLogger(javaClass)
 
     fun løsAvklaringsbehovOgFortsettProsessering(
         kontekst: FlytKontekst,

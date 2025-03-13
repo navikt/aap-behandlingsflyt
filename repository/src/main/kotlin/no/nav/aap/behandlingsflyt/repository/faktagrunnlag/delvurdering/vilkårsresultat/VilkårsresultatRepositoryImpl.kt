@@ -17,10 +17,11 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 
-private val log = LoggerFactory.getLogger(VilkårsresultatRepositoryImpl::class.java)
+
 
 class VilkårsresultatRepositoryImpl(private val connection: DBConnection) : VilkårsresultatRepository {
-
+    private val log = LoggerFactory.getLogger(javaClass)
+    
     companion object : Factory<VilkårsresultatRepositoryImpl> {
         override fun konstruer(connection: DBConnection): VilkårsresultatRepositoryImpl {
             return VilkårsresultatRepositoryImpl(connection)

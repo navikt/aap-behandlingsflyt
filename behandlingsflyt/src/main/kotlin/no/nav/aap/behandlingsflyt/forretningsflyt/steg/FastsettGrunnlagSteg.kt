@@ -28,7 +28,7 @@ class FastsettGrunnlagSteg(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val avklarFaktaBeregningService: AvklarFaktaBeregningService
 ) : BehandlingSteg {
-    private val log = LoggerFactory.getLogger(FastsettGrunnlagSteg::class.java)
+    private val log = LoggerFactory.getLogger(javaClass)
 
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
