@@ -30,11 +30,11 @@ class SamordningUføreSteg(
             VurderingType.REVURDERING -> {
                 val uføreGrunnlag = uføreRepository.hentHvisEksisterer(kontekst.behandlingId)
                 val behandling = behandlingRepository.hent(kontekst.behandlingId)
-                val forrigeUføreGrunnlag = behandling.forrigeBehandlingId?.let {
+                val uføreGrunnlagPåForrigeBehandling = behandling.forrigeBehandlingId?.let {
                     uføreRepository.hentHvisEksisterer(it)
                 }
 
-                if (uføreGrunnlag?.id != forrigeUføreGrunnlag?.id) {
+                if (uføreGrunnlag?.id != uføreGrunnlagPåForrigeBehandling?.id) {
                     return FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_UFØRE)
                 }
             }
