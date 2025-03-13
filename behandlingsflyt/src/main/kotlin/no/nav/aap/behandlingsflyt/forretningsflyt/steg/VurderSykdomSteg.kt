@@ -52,7 +52,7 @@ class VurderSykdomSteg private constructor(
             }
 
             VurderingType.REVURDERING -> {
-                if (harVærtVurdertMinstEnGangIBehandlingen(avklaringsbehovene)) {
+                if (erIkkeVurdertTidligereIBehandlingen(avklaringsbehovene)) {
                     return FantAvklaringsbehov(Definisjon.AVKLAR_SYKDOM)
                 } else {
                     val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)
@@ -74,7 +74,7 @@ class VurderSykdomSteg private constructor(
         return Fullført
     }
 
-    private fun harVærtVurdertMinstEnGangIBehandlingen(
+    private fun erIkkeVurdertTidligereIBehandlingen(
         avklaringsbehovene: Avklaringsbehovene
     ): Boolean {
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)
@@ -89,7 +89,7 @@ class VurderSykdomSteg private constructor(
         if (!erIkkeAvslagPåVilkårTidligere(vilkårResultat) || studentVurdering?.erOppfylt() == true) {
             return false
         }
-        return harVærtVurdertMinstEnGangIBehandlingen(avklaringsbehovene)
+        return erIkkeVurdertTidligereIBehandlingen(avklaringsbehovene)
     }
 
     private fun erIkkeAvslagPåVilkårTidligere(vilkårsresultat: Vilkårsresultat): Boolean {
