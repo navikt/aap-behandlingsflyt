@@ -28,7 +28,7 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
                 setLong(1, behandlingId.toLong())
             }
             setRowMapper {
-                hentSamordningVurderinger(it.getLong("vurderinger_id"))
+                hentSamordningVurderinger(it.getLongOrNull("vurderinger_id"))
             }
         }
     }
