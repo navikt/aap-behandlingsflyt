@@ -339,7 +339,10 @@ class FlytOrkestratorTest {
                     erBehovForAktivBehandling = true,
                     erBehovForArbeidsrettetTiltak = false,
                     erBehovForAnnenOppfølging = null,
-                    vurderingenGjelderFra = null
+                    vurderingenGjelderFra = null,
+                    skalVurdereAapIOvergangTilUføre = null,
+                    skalVurdereAapIOvergangTilArbeid = null,
+                    overgangBegrunnelse = null
                 ),
             )
         )
@@ -444,7 +447,10 @@ class FlytOrkestratorTest {
                     erBehovForAktivBehandling = true,
                     erBehovForArbeidsrettetTiltak = false,
                     erBehovForAnnenOppfølging = null,
-                    vurderingenGjelderFra = null
+                    vurderingenGjelderFra = null,
+                    skalVurdereAapIOvergangTilUføre = null,
+                    skalVurdereAapIOvergangTilArbeid = null,
+                    overgangBegrunnelse = null
                 ),
             ),
         )
@@ -695,7 +701,10 @@ class FlytOrkestratorTest {
                     erBehovForAktivBehandling = true,
                     erBehovForArbeidsrettetTiltak = false,
                     erBehovForAnnenOppfølging = null,
-                    vurderingenGjelderFra = null
+                    vurderingenGjelderFra = null,
+                    skalVurdereAapIOvergangTilUføre = null,
+                    skalVurdereAapIOvergangTilArbeid = null,
+                    overgangBegrunnelse = null
                 ),
             ),
         )
@@ -911,7 +920,10 @@ class FlytOrkestratorTest {
                     erBehovForAktivBehandling = true,
                     erBehovForArbeidsrettetTiltak = false,
                     erBehovForAnnenOppfølging = null,
-                    vurderingenGjelderFra = null
+                    vurderingenGjelderFra = null,
+                    skalVurdereAapIOvergangTilUføre = null,
+                    skalVurdereAapIOvergangTilArbeid = null,
+                    overgangBegrunnelse = null
                 ),
             ),
         )
@@ -1106,6 +1118,9 @@ class FlytOrkestratorTest {
                     erBehovForArbeidsrettetTiltak = false,
                     erBehovForAnnenOppfølging = null,
                     vurderingenGjelderFra = null,
+                    skalVurdereAapIOvergangTilUføre = null,
+                    skalVurdereAapIOvergangTilArbeid = null,
+                    overgangBegrunnelse = null
                 ),
             ),
         )
@@ -2536,7 +2551,10 @@ class FlytOrkestratorTest {
                     erBehovForAktivBehandling = true,
                     erBehovForArbeidsrettetTiltak = false,
                     erBehovForAnnenOppfølging = null,
-                    vurderingenGjelderFra = null
+                    vurderingenGjelderFra = null,
+                    skalVurdereAapIOvergangTilUføre = null,
+                    skalVurdereAapIOvergangTilArbeid = null,
+                    overgangBegrunnelse = null
                 ),
             ),
         )

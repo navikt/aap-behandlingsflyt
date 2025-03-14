@@ -19,7 +19,11 @@ class BistandVurderingDtoTest {
             erBehovForArbeidsrettetTiltak = false,
             erBehovForAnnenOppfølging = erBehovForAnnenOppfølging,
             vurderingenGjelderFra = null,
-            vurdertAv = "Z00000"
+            vurdertAv = "Z00000",
+            skalVurdereAapIOvergangTilUføre = null,
+            skalVurdereAapIOvergangTilArbeid = null,
+            overgangBegrunnelse = null,
+            harOppfylt11_5 = null
         )
     }
 
@@ -33,7 +37,11 @@ class BistandVurderingDtoTest {
             erBehovForArbeidsrettetTiltak = !behov,
             erBehovForAnnenOppfølging = null,
             vurderingenGjelderFra = null,
-            vurdertAv = "Z00000"
+            vurdertAv = "Z00000",
+            skalVurdereAapIOvergangTilUføre = null,
+            skalVurdereAapIOvergangTilArbeid = null,
+            overgangBegrunnelse = null,
+            harOppfylt11_5 = null
         )
     }
 
@@ -44,7 +52,11 @@ class BistandVurderingDtoTest {
             erBehovForArbeidsrettetTiltak = true,
             vurderingenGjelderFra = null,
             erBehovForAnnenOppfølging = null,
-            vurdertAv = "Z00000"
+            vurdertAv = "Z00000",
+            skalVurdereAapIOvergangTilUføre = null,
+            skalVurdereAapIOvergangTilArbeid = null,
+            overgangBegrunnelse = null,
+            harOppfylt11_5 = null
         )
     }
 
@@ -61,7 +73,11 @@ class BistandVurderingDtoTest {
                 erBehovForArbeidsrettetTiltak = !behov,
                 erBehovForAnnenOppfølging = erBehovForAnnenOppfølging,
                 vurderingenGjelderFra = null,
-                vurdertAv = "Z00000"
+                vurdertAv = "Z00000",
+                skalVurdereAapIOvergangTilUføre = null,
+                skalVurdereAapIOvergangTilArbeid = null,
+                overgangBegrunnelse = null,
+                harOppfylt11_5 = null
             )
         }
     }
@@ -78,7 +94,11 @@ class BistandVurderingDtoTest {
                 erBehovForArbeidsrettetTiltak = true,
                 erBehovForAnnenOppfølging = erBehovForAnnenOppfølging,
                 vurderingenGjelderFra = null,
-                vurdertAv = "Z00000"
+                vurdertAv = "Z00000",
+                skalVurdereAapIOvergangTilUføre = null,
+                skalVurdereAapIOvergangTilArbeid = null,
+                overgangBegrunnelse = null,
+                harOppfylt11_5 = null
             )
         }
     }
@@ -92,7 +112,11 @@ class BistandVurderingDtoTest {
                 erBehovForArbeidsrettetTiltak = false,
                 erBehovForAnnenOppfølging = null,
                 vurderingenGjelderFra = null,
-                vurdertAv = "Z00000"
+                vurdertAv = "Z00000",
+                skalVurdereAapIOvergangTilUføre = null,
+                skalVurdereAapIOvergangTilArbeid = null,
+                overgangBegrunnelse = null,
+                harOppfylt11_5 = null
             )
         }
     }

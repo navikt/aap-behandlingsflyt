@@ -8,16 +8,23 @@ data class BistandVurdering(
     val erBehovForAktivBehandling: Boolean,
     val erBehovForArbeidsrettetTiltak: Boolean,
     val erBehovForAnnenOppfølging: Boolean?,
+    val overgangBegrunnelse: String?,
+    val skalVurdereAapIOvergangTilUføre: Boolean?,
+    val skalVurdereAapIOvergangTilArbeid: Boolean?,
     val vurdertAv: String,
     val vurderingenGjelderFra: LocalDate?
 ) {
-    fun toDto() = BistandVurderingDto(
+    fun toDto(harOppfylt11_5: Boolean? = null) = BistandVurderingDto(
         begrunnelse = begrunnelse,
         erBehovForAktivBehandling = erBehovForAktivBehandling,
         erBehovForArbeidsrettetTiltak = erBehovForArbeidsrettetTiltak,
         erBehovForAnnenOppfølging = erBehovForAnnenOppfølging,
         vurderingenGjelderFra = vurderingenGjelderFra,
-        vurdertAv = vurdertAv
+        overgangBegrunnelse = overgangBegrunnelse,
+        skalVurdereAapIOvergangTilUføre = skalVurdereAapIOvergangTilUføre,
+        skalVurdereAapIOvergangTilArbeid = skalVurdereAapIOvergangTilArbeid,
+        vurdertAv = vurdertAv,
+        harOppfylt11_5 = harOppfylt11_5
     )
 
     fun erBehovForBistand(): Boolean {
