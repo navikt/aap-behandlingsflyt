@@ -16,7 +16,7 @@ class SamordningVentPaVirkningstidspunktLøsning(
         "behovstype",
         required = true,
         defaultValue = SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT
-    ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5024`
+    ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5025`
 ) : AvklaringsbehovLøsning {
     override fun løs(connection: DBConnection, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
         return SamordningVentPaVirkningstidspunktLøser(connection).løs(kontekst, this)
