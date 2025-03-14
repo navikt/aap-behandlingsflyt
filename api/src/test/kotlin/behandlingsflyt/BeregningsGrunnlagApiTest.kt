@@ -90,7 +90,7 @@ class BeregningsGrunnlagApiTest {
                     InntektPerÅr(2021, Beløp(400000)),
                     InntektPerÅr(2020, Beløp(300000))
                 ),
-                uføregrad = Prosent(30),
+                uføregrad = listOf(Uføre(LocalDate.now(), Prosent(30))),
                 yrkesskadevurdering = Yrkesskadevurdering(
                     begrunnelse = "en begrunnelse",
                     andelAvNedsettelsen = Prosent(30),
