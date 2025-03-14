@@ -18,7 +18,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
-import java.time.LocalDate
 import javax.sql.DataSource
 
 /**
@@ -49,7 +48,6 @@ data class SamordningVurderingDTO(
 
 data class SamordningUføreVurderingGrunnlagDTO(
     val vurdering: SamordningUføreVurdering,
-//    val grunnlag:
 )
 
 fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
@@ -64,7 +62,8 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
 
                     val behandling = behandlingRepository.hent(behandlingReferanse)
                     val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandling.id)
-                    val samordningUføreVurdering = samordningUføreRepository.hentHvisEksisterer(behandling.id)?.vurdering
+                    val samordningUføreVurdering =
+                        samordningUføreRepository.hentHvisEksisterer(behandling.id)?.vurdering
                 }
             }
         }
@@ -100,13 +99,14 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
                         }.orEmpty(),
                         vurderinger = samordning?.vurderinger.orEmpty().flatMap { vurdering ->
                             vurdering.vurderingPerioder.map {
-                            SamordningVurderingDTO(
-                                ytelseType = vurdering.ytelseType,
-                                gradering = it.gradering?.prosentverdi(),
-                                periode = Periode(fom = it.periode.fom, tom = it.periode.tom),
-                                kronesum = it.kronesum?.toInt(),
-                            )
-                        }}
+                                SamordningVurderingDTO(
+                                    ytelseType = vurdering.ytelseType,
+                                    gradering = it.gradering?.prosentverdi(),
+                                    periode = Periode(fom = it.periode.fom, tom = it.periode.tom),
+                                    kronesum = it.kronesum?.toInt(),
+                                )
+                            }
+                        }
                     )
                 )
 

@@ -21,6 +21,7 @@ class Beregning(
                 // TODO:
                 // Hva hvis bruker har flere uføregrader?
                 // Skal saksbahandler velge den som er knyttet til ytterligere nedsatt-tidspunktet?
+                // TODO Er first() riktig her
                 uføregrad = input.uføregrad().first().uføregrad,
                 inntekterForegåendeÅr = inntekterFørYtterligereNedsattDato
             )
