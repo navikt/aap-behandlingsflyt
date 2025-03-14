@@ -5,10 +5,13 @@ import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
@@ -52,8 +55,27 @@ data class SamordningYtelsePeriodeDTO(
     val kronesum: Int?
 )
 
+data class SamordningUføreVurderingGrunnlagDTO(
+    val vurdering: SamordningUføreVurdering,
+//    val grunnlag:
+)
+
 fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
     route("/api/behandling") {
+        route("/{referanse}/grunnlag/samordning-ufore") {
+            get<BehandlingReferanse, SamordningUføreVurderingGrunnlagDTO> { behandlingReferanse ->
+                dataSource.transaction { connection ->
+                    val repositoryProvider = RepositoryProvider(connection)
+                    val samordningUføreRepository = repositoryProvider.provide<SamordningUføreRepository>()
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val uføreRepository = repositoryProvider.provide<UføreRepository>()
+
+                    val behandling = behandlingRepository.hent(behandlingReferanse)
+                    val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandling.id)
+                    val samordningUføreVurdering = samordningUføreRepository.hentHvisEksisterer(behandling.id)?.vurdering
+                }
+            }
+        }
         route("/{referanse}/grunnlag/samordning/") {
             get<BehandlingReferanse, SamordningYtelseVurderingGrunnlagDTO> { req ->
                 val (registerYtelser, samordning) = dataSource.transaction { connection ->
