@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerGrunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -35,13 +36,14 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
         var vurderingId: Long? = null
         if (vurdering != null) {
             val query = """
-            INSERT INTO SYKEPENGE_VURDERING (begrunnelse, oppfylt) VALUES (?, ?)
+            INSERT INTO SYKEPENGE_VURDERING (begrunnelse, oppfylt, grunn) VALUES (?, ?, ?)
         """.trimIndent()
 
             vurderingId = connection.executeReturnKey(query) {
                 setParams {
                     setString(1, vurdering.begrunnelse)
                     setBoolean(2, vurdering.harRettPå)
+                    setString(3, vurdering.grunn.toString())
                 }
             }
 
@@ -135,7 +137,8 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
                 SykepengerVurdering(
                     row.getString("begrunnelse"),
                     hentDokumenter(vurderingId),
-                    row.getBoolean("oppfylt")
+                    row.getBoolean("oppfylt"),
+                    row.getEnum<SykepengerGrunn>("grunn")
                 )
             }
         }
