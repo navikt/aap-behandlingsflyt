@@ -57,6 +57,8 @@ class UføreRepositoryImpl(private val connection: DBConnection) : UføreReposit
     override fun lagre(behandlingId: BehandlingId, uføre: List<Uføre>) {
         val eksisterendeUføreGrunnlag = hentHvisEksisterer(behandlingId)
 
+        if (eksisterendeUføreGrunnlag?.vurderinger == uføre) return
+
         if (eksisterendeUføreGrunnlag != null) {
             deaktiverEksisterende(behandlingId)
         }

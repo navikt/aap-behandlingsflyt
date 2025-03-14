@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagY
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Input
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
@@ -32,7 +33,7 @@ class BeregningTest {
                     InntektPerÅr(2021, Beløp(400000)),
                     InntektPerÅr(2020, Beløp(300000))
                 ),
-                uføregrad = null,
+                uføregrad = emptyList(),
                 yrkesskadevurdering = null,
                 beregningGrunnlag = null,
                 registrerteYrkesskader = null
@@ -54,7 +55,7 @@ class BeregningTest {
                     InntektPerÅr(2021, Beløp(400000)),
                     InntektPerÅr(2020, Beløp(300000))
                 ),
-                uføregrad = Prosent(30),
+                uføregrad = listOf(Uføre(LocalDate.now(), Prosent(30))),
                 yrkesskadevurdering = null,
                 beregningGrunnlag = BeregningGrunnlag(
                     tidspunktVurdering = BeregningstidspunktVurdering(
@@ -84,7 +85,7 @@ class BeregningTest {
             Input(
                 nedsettelsesDato = LocalDate.of(2023, 1, 1),
                 inntekter = inntekterPerÅr,
-                uføregrad = null,
+                uføregrad = emptyList(),
                 yrkesskadevurdering = Yrkesskadevurdering(
                     begrunnelse = "en begrunnelse",
                     andelAvNedsettelsen = Prosent(40),
@@ -136,7 +137,7 @@ class BeregningTest {
                     InntektPerÅr(2021, Beløp(400000)),
                     InntektPerÅr(2020, Beløp(300000))
                 ),
-                uføregrad = Prosent(50),
+                uføregrad = listOf(Uføre(LocalDate.now(), Prosent(50))),
                 yrkesskadevurdering = Yrkesskadevurdering(
                     begrunnelse = "en begrunnelse",
                     andelAvNedsettelsen = Prosent(30),
@@ -188,7 +189,7 @@ class BeregningTest {
                     InntektPerÅr(2021, Beløp(400000)),
                     InntektPerÅr(2020, Beløp(300000))
                 ),
-                uføregrad = Prosent(0),
+                uføregrad = listOf(Uføre(LocalDate.now(), Prosent(0))),
                 yrkesskadevurdering = null,
                 beregningGrunnlag = BeregningGrunnlag(
                     tidspunktVurdering = BeregningstidspunktVurdering(
@@ -211,7 +212,7 @@ class BeregningTest {
                     InntektPerÅr(2021, Beløp(400000)),
                     InntektPerÅr(2020, Beløp(300000))
                 ),
-                uføregrad = null,
+                uføregrad = emptyList(),
                 yrkesskadevurdering = null,
                 beregningGrunnlag = BeregningGrunnlag(
                     tidspunktVurdering = BeregningstidspunktVurdering(

@@ -20,7 +20,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
@@ -55,7 +54,7 @@ class InntektService private constructor(
                 Input(
                     nedsettelsesDato = nedsettelsesDato,
                     inntekter = setOf(),
-                    uføregrad = uføreGrunnlag?.vurdering?.uføregrad ?: Prosent(0),
+                    uføregrad = uføreGrunnlag?.vurderinger ?: emptyList(),
                     yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
                     registrerteYrkesskader = yrkesskadeGrunnlag?.yrkesskader,
                     beregningGrunnlag = beregningVurdering

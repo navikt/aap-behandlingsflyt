@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Innte
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Input
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
@@ -17,7 +18,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVur
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.komponenter.verdityper.Prosent
 import java.time.LocalDate
 
 class BeregningService(
@@ -43,7 +43,7 @@ class BeregningService(
             yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
             vurdering = beregningVurdering,
             inntekter = inntektGrunnlag.inntekter,
-            uføregrad = uføre?.vurdering?.uføregrad,
+            uføregrad = uføre?.vurderinger ?: emptyList(),
             registrerteYrkesskader = yrkesskadeGrunnlag?.yrkesskader
         )
 
@@ -63,7 +63,7 @@ class BeregningService(
         yrkesskadevurdering: Yrkesskadevurdering?,
         vurdering: BeregningGrunnlag?,
         inntekter: Set<InntektPerÅr>,
-        uføregrad: Prosent?,
+        uføregrad: List<Uføre>,
         registrerteYrkesskader: Yrkesskader?
     ): Inntektsbehov {
         return Inntektsbehov(

@@ -41,7 +41,7 @@ class SamordningUføreSteg(
                 }
 
                 if (erIkkeVurdertTidligereIBehandlingen(avklaringsbehovene) &&
-                    uføreGrunnlag?.vurdering != uføreGrunnlagPåForrigeBehandling?.vurdering
+                    uføreGrunnlag?.vurderinger != uføreGrunnlagPåForrigeBehandling?.vurderinger
                 ) {
                     return FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_UFØRE)
                 }

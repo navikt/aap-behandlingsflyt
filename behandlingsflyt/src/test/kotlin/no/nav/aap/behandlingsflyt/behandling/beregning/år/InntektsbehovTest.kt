@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.beregning.år
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Input
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.komponenter.verdityper.Beløp
@@ -27,7 +28,7 @@ class InntektsbehovTest {
                     InntektPerÅr(nedsettelsesDato.minusYears(3).year, Beløp(128)),
                     InntektPerÅr(nedsettelsesDato.minusYears(4).year, Beløp(129))
                 ),
-                uføregrad = Prosent.`0_PROSENT`,
+                uføregrad = listOf(Uføre(LocalDate.now(), Prosent.`0_PROSENT`)),
                 yrkesskadevurdering = null,
                 beregningGrunnlag = null,
                 registrerteYrkesskader = null
@@ -48,7 +49,7 @@ class InntektsbehovTest {
             Input(
                 nedsettelsesDato,
                 inntekter = setOf(),
-                uføregrad = Prosent.`0_PROSENT`,
+                uføregrad = listOf(Uføre(LocalDate.now(), Prosent.`0_PROSENT`)),
                 yrkesskadevurdering = null,
                 beregningGrunnlag = null,
                 registrerteYrkesskader = null
@@ -73,7 +74,7 @@ class InntektsbehovTest {
             Input(
                 nedsettelsesDato,
                 setOf(),
-                Prosent.`0_PROSENT`,
+                listOf(Uføre(LocalDate.now(), Prosent.`0_PROSENT`)),
                 null,
                 null,
                 BeregningGrunnlag(
@@ -108,7 +109,7 @@ class InntektsbehovTest {
             Input(
                 nedsettelsesDato,
                 inntekter = setOf(),
-                uføregrad = Prosent.`30_PROSENT`,
+                uføregrad = listOf(Uføre(LocalDate.now(), Prosent.`30_PROSENT`)),
                 yrkesskadevurdering = null,
                 registrerteYrkesskader = null,
                 beregningGrunnlag = BeregningGrunnlag(

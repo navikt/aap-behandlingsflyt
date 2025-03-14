@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -38,7 +39,8 @@ class Inntektsbehov(private val input: Input) {
      * Skal beregne med uføre om det finnes data på uføregrad.
      */
     fun finnesUføreData(): Boolean {
-        return input.beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato != null && input.uføregrad != null
+        return input.beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato != null
+                && input.uføregrad.isNotEmpty()
     }
 
     /**
@@ -67,7 +69,7 @@ class Inntektsbehov(private val input: Input) {
         }.toSet()
     }
 
-    fun uføregrad(): Prosent {
+    fun uføregrad(): List<Uføre> {
         return requireNotNull(input.uføregrad)
     }
 

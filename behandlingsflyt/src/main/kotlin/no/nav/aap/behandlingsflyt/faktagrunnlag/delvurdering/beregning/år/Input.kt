@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
-import no.nav.aap.komponenter.verdityper.Prosent
 import java.time.LocalDate
 
 /**
@@ -18,7 +18,7 @@ import java.time.LocalDate
 data class Input(
     val nedsettelsesDato: LocalDate,
     val inntekter: Set<InntektPerÅr>,
-    val uføregrad: Prosent?,
+    val uføregrad: List<Uføre>,
     val yrkesskadevurdering: Yrkesskadevurdering?,
     val registrerteYrkesskader: Yrkesskader?,
     val beregningGrunnlag: BeregningGrunnlag?,

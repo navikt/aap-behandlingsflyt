@@ -56,9 +56,9 @@ class UføreRepositoryImplTest {
             val behandling = behandling(connection, sak)
 
             val uføreRepository = UføreRepositoryImpl(connection)
-            uføreRepository.lagre(behandling.id, Uføre(Prosent(100)))
+            uføreRepository.lagre(behandling.id, listOf(Uføre(LocalDate.now(), Prosent(100))))
             val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandling.id)
-            assertThat(uføreGrunnlag?.vurdering).isEqualTo(Uføre(Prosent(100)))
+            assertThat(uføreGrunnlag?.vurderinger).isEqualTo(listOf(Uføre(LocalDate.now(), Prosent(100))))
         }
     }
 
@@ -69,16 +69,17 @@ class UføreRepositoryImplTest {
             val behandling = behandling(connection, sak)
 
             val uføreRepository = UføreRepositoryImpl(connection)
-            uføreRepository.lagre(behandling.id, Uføre(Prosent(100)))
-            uføreRepository.lagre(behandling.id, Uføre(Prosent(80)))
-            uføreRepository.lagre(behandling.id, Uføre(Prosent(80)))
+            uføreRepository.lagre(behandling.id, listOf(Uføre(LocalDate.now(), Prosent(100))))
+            uføreRepository.lagre(behandling.id, listOf(Uføre(LocalDate.now(), Prosent(80))))
+            uføreRepository.lagre(behandling.id, listOf(Uføre(LocalDate.now(), Prosent(80))))
 
             val opplysninger = connection.queryList(
                 """
-                    SELECT u.UFOREGRAD
+                    SELECT ug.UFOREGRAD
                     FROM BEHANDLING b
                     INNER JOIN UFORE_GRUNNLAG g ON b.ID = g.BEHANDLING_ID
                     INNER JOIN UFORE u ON g.UFORE_ID = u.ID
+                    INNER JOIN UFORE_GRADERING ug ON ug.UFORE_ID = u.ID
                     WHERE b.SAK_ID = ?
                     """.trimIndent()
             ) {
@@ -99,7 +100,7 @@ class UføreRepositoryImplTest {
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
             val uføreRepository = UføreRepositoryImpl(connection)
-            uføreRepository.lagre(behandling1.id, Uføre(Prosent(100)))
+            uføreRepository.lagre(behandling1.id, listOf(Uføre(LocalDate.now(), Prosent(100))))
             connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
                 setParams {
                     setLong(1, behandling1.id.toLong())
@@ -109,7 +110,7 @@ class UføreRepositoryImplTest {
             val behandling2 = behandling(connection, sak)
 
             val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandling2.id)
-            assertThat(uføreGrunnlag?.vurdering).isEqualTo(Uføre(Prosent(100)))
+            assertThat(uføreGrunnlag?.vurderinger).isEqualTo(listOf(Uføre(LocalDate.now(), Prosent(100))))
         }
     }
 
@@ -129,8 +130,8 @@ class UføreRepositoryImplTest {
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
             val uføreRepository = UføreRepositoryImpl(connection)
-            uføreRepository.lagre(behandling1.id, Uføre(Prosent(100)))
-            uføreRepository.lagre(behandling1.id, Uføre(Prosent(80)))
+            uføreRepository.lagre(behandling1.id, listOf(Uføre(LocalDate.now(), Prosent(100))))
+            uføreRepository.lagre(behandling1.id, listOf(Uføre(LocalDate.now(), Prosent(80))))
             connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
                 setParams {
                     setLong(1, behandling1.id.toLong())
@@ -140,7 +141,7 @@ class UføreRepositoryImplTest {
             val behandling2 = behandling(connection, sak)
 
             val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandling2.id)
-            assertThat(uføreGrunnlag?.vurdering).isEqualTo(Uføre(Prosent(80)))
+            assertThat(uføreGrunnlag?.vurderinger).isEqualTo(listOf(Uføre(LocalDate.now(), Prosent(80))))
         }
     }
 
@@ -151,13 +152,13 @@ class UføreRepositoryImplTest {
             val behandling = behandling(connection, sak)
             val uføreRepository = UføreRepositoryImpl(connection)
 
-            uføreRepository.lagre(behandling.id, Uføre(Prosent(100)))
+            uføreRepository.lagre(behandling.id, listOf(Uføre(LocalDate.now(), Prosent(100))))
             val orginaltGrunnlag = uføreRepository.hentHvisEksisterer(behandling.id)
-            assertThat(orginaltGrunnlag?.vurdering).isEqualTo(Uføre(Prosent(100)))
+            assertThat(orginaltGrunnlag?.vurderinger).isEqualTo(listOf(Uføre(LocalDate.now(), Prosent(100))))
 
-            uføreRepository.lagre(behandling.id, Uføre(Prosent(80)))
+            uføreRepository.lagre(behandling.id, listOf(Uføre(LocalDate.now(), Prosent(80))))
             val oppdatertGrunnlag = uføreRepository.hentHvisEksisterer(behandling.id)
-            assertThat(oppdatertGrunnlag?.vurdering).isEqualTo(Uføre(Prosent(80)))
+            assertThat(oppdatertGrunnlag?.vurderinger).isEqualTo(listOf(Uføre(LocalDate.now(), Prosent(80))))
 
             data class Opplysning(
                 val aktiv: Boolean,
@@ -167,10 +168,11 @@ class UføreRepositoryImplTest {
             val opplysninger =
                 connection.queryList(
                     """
-                    SELECT g.AKTIV, u.UFOREGRAD
+                    SELECT g.AKTIV, ug.UFOREGRAD
                     FROM BEHANDLING b
                     INNER JOIN UFORE_GRUNNLAG g ON b.ID = g.BEHANDLING_ID
                     INNER JOIN UFORE u ON g.UFORE_ID = u.ID
+                    INNER JOIN UFORE_GRADERING ug ON ug.UFORE_ID = u.ID
                     WHERE b.SAK_ID = ?
                     """.trimIndent()
                 ) {
@@ -199,8 +201,8 @@ class UføreRepositoryImplTest {
             val sak = sak(connection)
             val behandling1 = behandling(connection, sak)
             val uføreRepository = UføreRepositoryImpl(connection)
-            uføreRepository.lagre(behandling1.id, Uføre(Prosent(100)))
-            uføreRepository.lagre(behandling1.id, Uføre(Prosent(80)))
+            uføreRepository.lagre(behandling1.id, listOf(Uføre(LocalDate.now(), Prosent(100))))
+            uføreRepository.lagre(behandling1.id, listOf(Uføre(LocalDate.now(), Prosent(80))))
             connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
                 setParams {
                     setLong(1, behandling1.id.toLong())
@@ -219,10 +221,11 @@ class UføreRepositoryImplTest {
             val opplysninger =
                 connection.queryList(
                     """
-                    SELECT b.ID AS BEHANDLING_ID, u.ID AS UFORE_ID, g.AKTIV, u.UFOREGRAD
+                    SELECT b.ID AS BEHANDLING_ID, u.ID AS UFORE_ID, g.AKTIV, ug.UFOREGRAD
                     FROM BEHANDLING b
                     INNER JOIN UFORE_GRUNNLAG g ON b.ID = g.BEHANDLING_ID
                     INNER JOIN UFORE u ON g.UFORE_ID = u.ID
+                    INNER JOIN UFORE_GRADERING ug ON ug.UFORE_ID = u.ID
                     WHERE b.SAK_ID = ?
                     """.trimIndent()
                 ) {
@@ -244,7 +247,7 @@ class UføreRepositoryImplTest {
                 .hasSize(2)
             assertThat(opplysninger.map(Grunnlag::opplysning))
                 .hasSize(3)
-                .containsExactly(
+                .containsExactlyInAnyOrder(
                     Opplysning(
                         behandlingId = behandling1.id.toLong(),
                         aktiv = false,
