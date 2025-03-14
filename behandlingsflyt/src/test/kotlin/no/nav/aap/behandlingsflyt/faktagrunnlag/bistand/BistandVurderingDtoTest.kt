@@ -18,7 +18,8 @@ class BistandVurderingDtoTest {
             erBehovForAktivBehandling = false,
             erBehovForArbeidsrettetTiltak = false,
             erBehovForAnnenOppfølging = erBehovForAnnenOppfølging,
-            vurderingenGjelderFra = null
+            vurderingenGjelderFra = null,
+            vurdertAv = "Z00000"
         )
     }
 
@@ -31,7 +32,8 @@ class BistandVurderingDtoTest {
             erBehovForAktivBehandling = behov,
             erBehovForArbeidsrettetTiltak = !behov,
             erBehovForAnnenOppfølging = null,
-            vurderingenGjelderFra = null
+            vurderingenGjelderFra = null,
+            vurdertAv = "Z00000"
         )
     }
 
@@ -41,7 +43,8 @@ class BistandVurderingDtoTest {
             erBehovForAktivBehandling = true,
             erBehovForArbeidsrettetTiltak = true,
             vurderingenGjelderFra = null,
-            erBehovForAnnenOppfølging = null
+            erBehovForAnnenOppfølging = null,
+            vurdertAv = "Z00000"
         )
     }
 
@@ -57,7 +60,8 @@ class BistandVurderingDtoTest {
                 erBehovForAktivBehandling = behov,
                 erBehovForArbeidsrettetTiltak = !behov,
                 erBehovForAnnenOppfølging = erBehovForAnnenOppfølging,
-                vurderingenGjelderFra = null
+                vurderingenGjelderFra = null,
+                vurdertAv = "Z00000"
             )
         }
     }
@@ -73,7 +77,8 @@ class BistandVurderingDtoTest {
                 erBehovForAktivBehandling = true,
                 erBehovForArbeidsrettetTiltak = true,
                 erBehovForAnnenOppfølging = erBehovForAnnenOppfølging,
-                vurderingenGjelderFra = null
+                vurderingenGjelderFra = null,
+                vurdertAv = "Z00000"
             )
         }
     }
@@ -86,7 +91,8 @@ class BistandVurderingDtoTest {
                 erBehovForAktivBehandling = false,
                 erBehovForArbeidsrettetTiltak = false,
                 erBehovForAnnenOppfølging = null,
-                vurderingenGjelderFra = null
+                vurderingenGjelderFra = null,
+                vurdertAv = "Z00000"
             )
         }
     }

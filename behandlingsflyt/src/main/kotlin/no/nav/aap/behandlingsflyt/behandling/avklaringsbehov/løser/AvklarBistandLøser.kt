@@ -21,7 +21,7 @@ class AvklarBistandLøser(val connection: DBConnection) :
     ): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
 
-        val bistandsVurdering = løsning.bistandsVurdering.tilBistandVurdering()
+        val bistandsVurdering = løsning.bistandsVurdering.tilBistandVurdering(kontekst.bruker)
         bistandRepository.lagre(
             behandlingId = behandling.id,
             bistandVurdering = bistandsVurdering

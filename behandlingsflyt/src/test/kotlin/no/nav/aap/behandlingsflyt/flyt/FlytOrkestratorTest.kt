@@ -55,6 +55,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.SamordningVurderingData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
@@ -327,7 +328,7 @@ class FlytOrkestratorTest {
 
         løsAvklaringsBehov(
             behandling, AvklarBistandsbehovLøsning(
-                bistandsVurdering = BistandVurderingDto(
+                bistandsVurdering = BistandVurderingLøsningDto(
                     begrunnelse = "Trenger hjelp fra nav",
                     erBehovForAktivBehandling = true,
                     erBehovForArbeidsrettetTiltak = false,
@@ -414,7 +415,7 @@ class FlytOrkestratorTest {
         løsAvklaringsBehov(
             behandling,
             AvklarBistandsbehovLøsning(
-                bistandsVurdering = BistandVurderingDto(
+                bistandsVurdering = BistandVurderingLøsningDto(
                     begrunnelse = "Trenger hjelp fra nav",
                     erBehovForAktivBehandling = true,
                     erBehovForArbeidsrettetTiltak = false,
@@ -650,7 +651,7 @@ class FlytOrkestratorTest {
         løsAvklaringsBehov(
             behandling,
             AvklarBistandsbehovLøsning(
-                bistandsVurdering = BistandVurderingDto(
+                bistandsVurdering = BistandVurderingLøsningDto(
                     begrunnelse = "Trenger hjelp fra nav",
                     erBehovForAktivBehandling = true,
                     erBehovForArbeidsrettetTiltak = false,
@@ -866,7 +867,7 @@ class FlytOrkestratorTest {
         løsAvklaringsBehov(
             behandling,
             AvklarBistandsbehovLøsning(
-                bistandsVurdering = BistandVurderingDto(
+                bistandsVurdering = BistandVurderingLøsningDto(
                     begrunnelse = "Trenger hjelp fra nav",
                     erBehovForAktivBehandling = true,
                     erBehovForArbeidsrettetTiltak = false,
@@ -1060,12 +1061,12 @@ class FlytOrkestratorTest {
         løsAvklaringsBehov(
             behandling,
             AvklarBistandsbehovLøsning(
-                bistandsVurdering = BistandVurderingDto(
+                bistandsVurdering = BistandVurderingLøsningDto(
                     begrunnelse = "Trenger hjelp fra nav",
                     erBehovForAktivBehandling = true,
                     erBehovForArbeidsrettetTiltak = false,
                     erBehovForAnnenOppfølging = null,
-                    vurderingenGjelderFra = null
+                    vurderingenGjelderFra = null,
                 ),
             ),
         )
@@ -2491,7 +2492,7 @@ class FlytOrkestratorTest {
         løsAvklaringsBehov(
             behandling,
             AvklarBistandsbehovLøsning(
-                bistandsVurdering = BistandVurderingDto(
+                bistandsVurdering = BistandVurderingLøsningDto(
                     begrunnelse = "Trenger hjelp fra nav",
                     erBehovForAktivBehandling = true,
                     erBehovForArbeidsrettetTiltak = false,
