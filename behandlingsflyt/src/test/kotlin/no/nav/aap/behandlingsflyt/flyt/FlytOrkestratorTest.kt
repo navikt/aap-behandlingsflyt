@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarLovv
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOverstyrtForutgåendeMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOverstyrtLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningUføreLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
@@ -37,6 +38,8 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLand
 import no.nav.aap.behandlingsflyt.drift.Driftfunksjoner
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
@@ -107,6 +110,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.barnetillegg.Barnetil
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7RepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningUføreRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
@@ -228,6 +232,7 @@ class FlytOrkestratorTest {
                 .register<MeldeperiodeRepositoryImpl>()
                 .register<VedtakRepositoryImpl>()
                 .register<SamordningYtelseRepositoryImpl>()
+                .register<SamordningUføreRepositoryImpl>()
                 .status()
             GatewayRegistry
                 .register<PdlBarnGateway>()
@@ -266,6 +271,7 @@ class FlytOrkestratorTest {
         val person = TestPerson(
             fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
             yrkesskade = listOf(TestYrkesskade()),
+            uføre = Prosent(50),
             barn = listOf(
                 TestPerson(
                     identer = setOf(Ident("1234123")),
@@ -367,6 +373,7 @@ class FlytOrkestratorTest {
                 )
             ),
         )
+
         behandling = hentBehandling(sak.id)
 
         løsAvklaringsBehov(
@@ -380,6 +387,22 @@ class FlytOrkestratorTest {
                 ),
             ),
         )
+
+        behandling = hentBehandling(sak.id)
+
+        løsAvklaringsBehov(
+            behandling, AvklarSamordningUføreLøsning(
+                samordningUføreVurdering = SamordningUføreVurdering(
+                    begrunnelse = "Samordnet med uføre",
+                    vurderingPerioder = listOf(
+                        SamordningUføreVurderingPeriode(
+                            periode = sak.rettighetsperiode, uføregradTilSamordning = Prosent(45)
+                        )
+                    )
+                )
+            )
+        )
+
         behandling = hentBehandling(sak.id)
 
         // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
@@ -389,6 +412,7 @@ class FlytOrkestratorTest {
 
         løsAvklaringsBehov(behandling, ForeslåVedtakLøsning())
         behandling = hentBehandling(sak.id)
+        alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
 
         løsAvklaringsBehov(
             behandling, FatteVedtakLøsning(
@@ -450,6 +474,21 @@ class FlytOrkestratorTest {
                 ),
             )
         )
+        behandling = hentBehandling(sak.id)
+
+        løsAvklaringsBehov(
+            behandling, AvklarSamordningUføreLøsning(
+                samordningUføreVurdering = SamordningUføreVurdering(
+                    begrunnelse = "Samordnet med uføre",
+                    vurderingPerioder = listOf(
+                        SamordningUføreVurderingPeriode(
+                            periode = sak.rettighetsperiode, uføregradTilSamordning = Prosent(45)
+                        )
+                    )
+                )
+            )
+        )
+
         behandling = hentBehandling(sak.id)
 
         // Saken er tilbake til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter

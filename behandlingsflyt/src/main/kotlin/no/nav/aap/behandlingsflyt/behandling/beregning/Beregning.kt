@@ -21,7 +21,7 @@ class Beregning(
                 // TODO:
                 // Hva hvis bruker har flere uføregrader?
                 // Skal saksbahandler velge den som er knyttet til ytterligere nedsatt-tidspunktet?
-                uføregrad = input.uføregrad(),
+                uføregrad = input.uføregrad().first().uføregrad,
                 inntekterForegåendeÅr = inntekterFørYtterligereNedsattDato
             )
             val ytterligereNedsattArbeidsevneDato = input.hentYtterligereNedsattArbeidsevneDato()

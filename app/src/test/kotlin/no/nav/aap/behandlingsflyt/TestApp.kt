@@ -88,7 +88,7 @@ fun main() {
                                 identer = setOf(ident),
                                 fødselsdato = Fødselsdato(dto.fødselsdato),
                                 yrkesskade = if (dto.yrkesskade) listOf(TestYrkesskade()) else emptyList(),
-                                uføre = dto.uføre?.let(::Prosent) ?: Prosent.`0_PROSENT`,
+                                uføre = dto.uføre?.let(::Prosent),
                                 barn = barn,
                                 institusjonsopphold = listOfNotNull(
                                     if (dto.institusjoner.fengsel == true) genererFengselsopphold() else null,

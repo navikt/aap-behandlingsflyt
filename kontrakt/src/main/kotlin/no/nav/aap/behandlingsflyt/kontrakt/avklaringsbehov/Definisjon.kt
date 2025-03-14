@@ -162,8 +162,14 @@ public enum class Definisjon(
         løsesISteg = StegType.SAMORDNING_GRADERING,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     ),
-    SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT(
+    AVKLAR_SAMORDNING_UFØRE(
         kode = AvklaringsbehovKode.`5024`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.SAMORDNING_UFØRE,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+    ),
+    SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT(
+        kode = AvklaringsbehovKode.`5025`,
         type = BehovType.VENTEPUNKT,
         løsesISteg = StegType.SAMORDNING_GRADERING,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),

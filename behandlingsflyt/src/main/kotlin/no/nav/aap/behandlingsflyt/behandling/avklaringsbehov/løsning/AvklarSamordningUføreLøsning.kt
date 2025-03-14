@@ -1,0 +1,27 @@
+package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonTypeName
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarSamordningUføreLøser
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurdering
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_SAMORDNING_UFØRE_KODE
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
+import no.nav.aap.komponenter.dbconnect.DBConnection
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeName(value = AVKLAR_SAMORDNING_UFØRE_KODE)
+class AvklarSamordningUføreLøsning(
+    @JsonProperty("samordningUføreVurdering", required = true) val samordningUføreVurdering: SamordningUføreVurdering,
+    @JsonProperty(
+        "behovstype",
+        required = true,
+        defaultValue = AVKLAR_SAMORDNING_UFØRE_KODE
+    ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5024`
+) : AvklaringsbehovLøsning {
+    override fun løs(connection: DBConnection, kontekst: AvklaringsbehovKontekst): LøsningsResultat {
+        return AvklarSamordningUføreLøser(connection).løs(kontekst, this)
+    }
+}

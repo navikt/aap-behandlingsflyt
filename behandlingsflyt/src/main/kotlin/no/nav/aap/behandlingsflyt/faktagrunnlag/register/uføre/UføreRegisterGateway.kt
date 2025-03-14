@@ -8,5 +8,5 @@ interface UføreRegisterGateway : Gateway {
     fun innhent(
         person: Person,
         forDato: LocalDate
-    ): Uføre
+    ): List<Uføre>
 }

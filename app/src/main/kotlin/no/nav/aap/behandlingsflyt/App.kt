@@ -80,6 +80,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.barnetillegg.Barnetil
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.effektuer11_7.Effektuer11_7RepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningUføreRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
@@ -300,6 +301,7 @@ private fun registerRepositories() {
         .register<SykepengerErstatningRepositoryImpl>()
         .register<SamordningVurderingRepositoryImpl>()
         .register<SamordningYtelseRepositoryImpl>()
+        .register<SamordningUføreRepositoryImpl>()
         .register<StudentRepositoryImpl>()
         .register<MeldepliktRepositoryImpl>()
         .register<MedlemskapArbeidInntektForutgåendeRepositoryImpl>()

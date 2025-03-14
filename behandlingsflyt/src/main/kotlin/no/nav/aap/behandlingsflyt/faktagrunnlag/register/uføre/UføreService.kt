@@ -8,7 +8,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -19,23 +18,27 @@ class UføreService(
 ) : Informasjonskrav {
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
-        val uføregrad = uføreRegisterGateway.innhent(sak.person, sak.rettighetsperiode.fom)
+        val uføregrader = uføreRegisterGateway.innhent(sak.person, sak.rettighetsperiode.fom)
 
         val behandlingId = kontekst.behandlingId
-        val gamleData = uføreRepository.hentHvisEksisterer(behandlingId)
+        val eksisterendeGrunnlag = uføreRepository.hentHvisEksisterer(behandlingId)
 
-        if (uføregrad.uføregrad.prosentverdi() != 0) {
-            uføreRepository.lagre(
-                behandlingId,
-                uføregrad
-            )
-        } else if (gamleData != null) {
-            uføreRepository.lagre(behandlingId, Uføre(Prosent(0)))
+        if (harEndringerUføre(eksisterendeGrunnlag, uføregrader)) {
+            uføreRepository.lagre(behandlingId, uføregrader)
+            return ENDRET
         }
 
-        val nyeData = uføreRepository.hentHvisEksisterer(behandlingId)
+        return IKKE_ENDRET
+    }
 
-        return if (nyeData == gamleData) IKKE_ENDRET else ENDRET
+    private fun harEndringerUføre(
+        eksisterende: UføreGrunnlag?,
+        uføregrader: List<Uføre>
+    ): Boolean {
+        if (eksisterende == null && uføregrader.isEmpty()) {
+            return false
+        }
+        return uføregrader != eksisterende?.vurderinger
     }
 
     companion object : Informasjonskravkonstruktør {

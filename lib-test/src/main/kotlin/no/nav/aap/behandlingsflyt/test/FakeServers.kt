@@ -183,7 +183,7 @@ object FakeServers : AutoCloseable {
                 }
                 val uføregrad = hentPerson.uføre?.prosentverdi()
                 if (uføregrad == null) {
-                    call.respond(HttpStatusCode.OK, UføreRespons(uforegrad = 0))
+                    call.respond(HttpStatusCode.NotFound)
                 } else {
                     call.respond(HttpStatusCode.OK, UføreRespons(uforegrad = uføregrad))
                 }

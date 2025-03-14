@@ -1,0 +1,11 @@
+CREATE TABLE UFORE_GRADERING
+(
+    ID                 BIGSERIAL PRIMARY KEY,
+    UFORE_ID           BIGINT                                 NOT NULL REFERENCES UFORE (ID),
+    UFOREGRAD          SMALLINT                               NOT NULL,
+    VIRKNINGSTIDSPUNKT DATE                                   NOT NULL,
+    OPPRETTET_TID      TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+ALTER TABLE UFORE
+    DROP COLUMN UFOREGRAD;

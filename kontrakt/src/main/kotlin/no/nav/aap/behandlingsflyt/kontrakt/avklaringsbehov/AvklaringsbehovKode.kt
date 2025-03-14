@@ -17,7 +17,8 @@ public const val AVKLAR_BARNETILLEGG_KODE: String = "5009"
 public const val AVKLAR_SONINGSFORRHOLD_KODE: String = "5010"
 public const val AVKLAR_HELSEINSTITUSJON_KODE: String = "5011"
 public const val AVKLAR_SAMORDNING_GRADERING_KODE: String = "5012"
-public const val SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT: String = "5024"
+public const val SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT: String = "5025"
+public const val AVKLAR_SAMORDNING_UFØRE_KODE: String = "5024"
 public const val AVKLAR_YRKESSKADE_KODE: String = "5013"
 public const val FASTSETT_YRKESSKADE_BELØP_KODE: String = "5014"
 public const val EFFEKTUER_11_7_KODE: String = "5015"
@@ -87,6 +88,7 @@ public enum class AvklaringsbehovKode {
     `5017`,
     `5018`,
     `5020`,
+    `5024`,
     `5097`,
     `5098`,
     `5099`,
@@ -105,7 +107,7 @@ public enum class AvklaringsbehovKode {
     /**
      * [SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT], for [Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT].
      */
-    `5024`,
+    `5025`,
 
     /**
      * [AVKLAR_UTENLANDSK_MEDLEMSKAP_KODE]
