@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
+import java.math.BigDecimal
 import java.time.LocalDate
 
 data class VurderingerForSamordning(
@@ -15,7 +16,7 @@ data class VurderingerForSamordning(
 data class SamordningVurderingData(
     val ytelseType: Ytelse,
     val periode: Periode,
-    val gradering: Prosent?,
-    val kronesum: Number? = null
+    val gradering: Int?,
+    val kronesum: BigDecimal? = null
 )
 

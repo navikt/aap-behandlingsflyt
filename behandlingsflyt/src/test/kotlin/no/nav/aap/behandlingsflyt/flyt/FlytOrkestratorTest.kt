@@ -915,7 +915,7 @@ class FlytOrkestratorTest {
                         SamordningVurderingData(
                             ytelseType = Ytelse.SYKEPENGER,
                             periode = sykePengerPeriode,
-                            gradering = Prosent(90),
+                            gradering = 90,
                             kronesum = null,
                         )
                     ),
