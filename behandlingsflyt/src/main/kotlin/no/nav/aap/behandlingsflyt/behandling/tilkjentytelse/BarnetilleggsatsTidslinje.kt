@@ -9,16 +9,20 @@ import java.time.LocalDate
 val BARNETILLEGGSATS_TIDSLINJE = Tidslinje(
     listOf(
         Segment(
-            periode = Periode(LocalDate.MIN, LocalDate.of(2023, 1,31)),
+            periode = Periode(LocalDate.MIN, LocalDate.of(2023, 1, 31)),
             verdi = Beløp(27)
         ),
         Segment(
-            periode = Periode(LocalDate.of(2023,2,1), LocalDate.of(2023,12,31)),
+            periode = Periode(LocalDate.of(2023, 2, 1), LocalDate.of(2023, 12, 31)),
             verdi = Beløp(35)
         ),
         Segment(
-            periode = Periode(LocalDate.of(2024,1,1), LocalDate.MAX),
+            periode = Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 31)),
             verdi = Beløp(36)
+        ),
+        Segment(
+            periode = Periode(LocalDate.of(2025, 1, 1), LocalDate.MAX),
+            verdi = Beløp(37)
         )
     )
 )

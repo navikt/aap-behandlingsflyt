@@ -10,6 +10,9 @@ import no.nav.aap.komponenter.verdityper.Prosent
 
 data class UnderveisperiodeId(val asLong: Long)
 
+/**
+ * @param institusjonsoppholdReduksjon Hvor mange prosent institusjonsopphold skal redusere. Merk: ikke prosentpoeng.
+ */
 data class Underveisperiode(
     val periode: Periode,
     val meldePeriode: Periode,

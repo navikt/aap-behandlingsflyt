@@ -30,14 +30,14 @@ private const val KANAL = "kanal"
 private const val MOTTATT_DOKUMENT_REFERANSE = "referanse"
 private const val MOTTATT_TIDSPUNKT = "mottattTidspunkt"
 
-private val logger = LoggerFactory.getLogger(HendelseMottattHåndteringJobbUtfører::class.java)
-
 class HendelseMottattHåndteringJobbUtfører(
     private val låsRepository: TaSkriveLåsRepository,
     private val hånderMottattDokumentService: HåndterMottattDokumentService,
     private val mottaDokumentService: MottaDokumentService,
     private val mottattDokumentRepository: MottattDokumentRepository
 ) : JobbUtfører {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
         val sakId = SakId(input.sakId())
@@ -55,7 +55,7 @@ class HendelseMottattHåndteringJobbUtfører(
         val referanse = DefaultJsonMapper.fromJson<InnsendingReferanse>(input.parameter(MOTTATT_DOKUMENT_REFERANSE))
 
         if (kjennerTilDokumentFraFør(referanse, innsendingType, sakId)) {
-            logger.warn("Allerede håndtert dokument med referanse {}", referanse)
+            log.warn("Allerede håndtert dokument med referanse {}", referanse)
             return
         }
 

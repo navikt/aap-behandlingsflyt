@@ -12,6 +12,15 @@ repositories {
     maven("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
 }
 
+testing {
+    suites {
+        @Suppress("UnstableApiUsage") val test by getting(JvmTestSuite::class) {
+            useJUnitJupiter()
+        }
+    }
+}
+
+
 tasks.test {
     useJUnitPlatform()
     maxParallelForks = Runtime.getRuntime().availableProcessors() / 2

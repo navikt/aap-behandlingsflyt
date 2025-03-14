@@ -49,7 +49,7 @@ import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
-private val log = LoggerFactory.getLogger(StatistikkJobbUtfører::class.java)
+
 
 
 class StatistikkJobbUtfører(
@@ -63,7 +63,10 @@ class StatistikkJobbUtfører(
     private val sykdomRepository: SykdomRepository,
     private val underveisRepository: UnderveisRepository,
 ) : JobbUtfører {
+
+    private val log = LoggerFactory.getLogger(javaClass)
     override fun utfør(input: JobbInput) {
+
         log.info("Utfører jobbinput statistikk: $input")
         val payload = input.payload<BehandlingFlytStoppetHendelse>()
 
@@ -120,6 +123,7 @@ class StatistikkJobbUtfører(
                     ÅrsakTilBehandling.REVURDER_BEREGNING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.REVURDER_BEREGNING
                     ÅrsakTilBehandling.REVURDER_YRKESSKADE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.REVURDER_YRKESSKADE
                     ÅrsakTilBehandling.REVURDER_LOVVALG -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.REVURDER_LOVVALG
+                    ÅrsakTilBehandling.REVURDER_SAMORDNING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.REVURDER_SAMORDNING
                     ÅrsakTilBehandling.MOTATT_KLAGE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.ÅrsakTilBehandling.KLAGE
                 }
             }.distinct()
@@ -202,7 +206,7 @@ class StatistikkJobbUtfører(
         val beregningsGrunnlagDTO: BeregningsgrunnlagDTO? =
             if (grunnlag == null) null else beregningsgrunnlagDTO(grunnlag)
 
-        log.info("Kaller aap-statistikk for sak ${sak.saksnummer}.")
+        log.info("Kaller aap-statistikk for sak ${sak.saksnummer} og behandling ${behandling.referanse}")
 
         val rettighetstypePerioder =
             underveisRepository.hent(behandling.id).perioder.filter { it.rettighetsType != null }.map {

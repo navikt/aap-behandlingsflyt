@@ -27,6 +27,8 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettYr
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SamordningVentPaVirkningstidspunktLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SattPåVentLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
@@ -56,6 +58,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.SamordningVurderingData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
@@ -330,11 +334,12 @@ class FlytOrkestratorTest {
 
         løsAvklaringsBehov(
             behandling, AvklarBistandsbehovLøsning(
-                bistandsVurdering = BistandVurderingDto(
+                bistandsVurdering = BistandVurderingLøsningDto(
                     begrunnelse = "Trenger hjelp fra nav",
                     erBehovForAktivBehandling = true,
                     erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = null
+                    erBehovForAnnenOppfølging = null,
+                    vurderingenGjelderFra = null
                 ),
             )
         )
@@ -434,11 +439,12 @@ class FlytOrkestratorTest {
         løsAvklaringsBehov(
             behandling,
             AvklarBistandsbehovLøsning(
-                bistandsVurdering = BistandVurderingDto(
+                bistandsVurdering = BistandVurderingLøsningDto(
                     begrunnelse = "Trenger hjelp fra nav",
                     erBehovForAktivBehandling = true,
                     erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = null
+                    erBehovForAnnenOppfølging = null,
+                    vurderingenGjelderFra = null
                 ),
             ),
         )
@@ -540,8 +546,6 @@ class FlytOrkestratorTest {
         assertThat(brevbestilling.status).isEqualTo(
             no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FORHÅNDSVISNING_KLAR
         )
-
-        util.ventPåSvar(sak.id.toLong(), behandling.id.toLong())
 
         behandling = hentBehandling(sak.id)
 
@@ -648,7 +652,6 @@ class FlytOrkestratorTest {
         val person = TestPerson(
             fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
             yrkesskade = listOf(TestYrkesskade()),
-            uføre = null
         )
         FakePersoner.leggTil(person)
 
@@ -687,11 +690,12 @@ class FlytOrkestratorTest {
         løsAvklaringsBehov(
             behandling,
             AvklarBistandsbehovLøsning(
-                bistandsVurdering = BistandVurderingDto(
+                bistandsVurdering = BistandVurderingLøsningDto(
                     begrunnelse = "Trenger hjelp fra nav",
                     erBehovForAktivBehandling = true,
                     erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = null
+                    erBehovForAnnenOppfølging = null,
+                    vurderingenGjelderFra = null
                 ),
             ),
         )
@@ -902,11 +906,12 @@ class FlytOrkestratorTest {
         løsAvklaringsBehov(
             behandling,
             AvklarBistandsbehovLøsning(
-                bistandsVurdering = BistandVurderingDto(
+                bistandsVurdering = BistandVurderingLøsningDto(
                     begrunnelse = "Trenger hjelp fra nav",
                     erBehovForAktivBehandling = true,
                     erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = null
+                    erBehovForAnnenOppfølging = null,
+                    vurderingenGjelderFra = null
                 ),
             ),
         )
@@ -950,25 +955,68 @@ class FlytOrkestratorTest {
             behandling,
             AvklarSamordningGraderingLøsning(
                 vurderingerForSamordning = VurderingerForSamordning(
-                    vurderteSamordninger = listOf(
-                        SamordningVurdering(
+                    vurderteSamordningerData = listOf(
+                        SamordningVurderingData(
                             ytelseType = Ytelse.SYKEPENGER,
-                            vurderingPerioder = listOf(
-                                SamordningVurderingPeriode(
-                                    periode = sykePengerPeriode,
-                                    gradering = Prosent(90),
-                                    kronesum = null
-                                )
-                            )
+                            periode = sykePengerPeriode,
+                            gradering = 90,
+                            kronesum = null,
                         )
                     ),
                     begrunnelse = "En god begrunnelse",
-                    maksDatoEndelig = false,
+                    maksDatoEndelig = true,
                     maksDato = LocalDate.now().plusMonths(1),
                 ),
             ),
         )
         assertThat(hentÅpneAvklaringsbehov(behandling.id).map { it.definisjon }).isEqualTo(listOf(Definisjon.FORESLÅ_VEDTAK))
+
+        løsAvklaringsBehov(behandling, ForeslåVedtakLøsning())
+        løsAvklaringsBehov(
+            behandling, FatteVedtakLøsning(
+                hentAlleAvklaringsbehov(behandling)
+                    .filter { behov -> behov.erTotrinn() }
+                    .map { behov ->
+                        TotrinnsVurdering(
+                            behov.definisjon.kode,
+                            true,
+                            "begrunnelse",
+                            null
+                        )
+                    }), Bruker("BESLUTTER")
+        )
+        var brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
+        løsAvklaringsBehov(
+            behandling, BrevbestillingLøsning(
+                LøsBrevbestillingDto(
+                    behandlingReferanse = behandling.referanse.referanse,
+                    bestillingReferanse = brevbestilling.referanse.brevbestillingReferanse,
+                    status = BrevbestillingLøsningStatus.KLAR_FOR_EDITERING
+                )
+            ), BREV_SYSTEMBRUKER
+        )
+        brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
+        val behandlingReferanse = behandling.referanse
+        løsAvklaringsBehov(
+            behandling, SkrivBrevLøsning(brevbestillingReferanse = brevbestilling.referanse.brevbestillingReferanse)
+        )
+
+        behandling = hentBehandling(sak.id)
+        // Siden samordning overlappet, skal en revurdering opprettes med en gang
+        assertThat(behandling.referanse).isNotEqualTo(behandlingReferanse)
+        assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+        util.ventPåSvar(sakId = behandling.sakId.id)
+
+        // Verifiser at den er satt på vent
+        var åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(behandling.id)
+        util.ventPåSvar(behandlingId = behandling.id.id, sakId = behandling.sakId.id)
+        assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).containsExactly(Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT)
+
+        // Ta av vent
+        løsAvklaringsBehov(behandling, SamordningVentPaVirkningstidspunktLøsning())
+
+        åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(behandling.id)
+        assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
     }
 
     @Test
@@ -1052,11 +1100,12 @@ class FlytOrkestratorTest {
         løsAvklaringsBehov(
             behandling,
             AvklarBistandsbehovLøsning(
-                bistandsVurdering = BistandVurderingDto(
+                bistandsVurdering = BistandVurderingLøsningDto(
                     begrunnelse = "Trenger hjelp fra nav",
                     erBehovForAktivBehandling = true,
                     erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = null
+                    erBehovForAnnenOppfølging = null,
+                    vurderingenGjelderFra = null,
                 ),
             ),
         )
@@ -2375,7 +2424,10 @@ class FlytOrkestratorTest {
 
     private fun hentBehandling(sakId: SakId): Behandling {
         return dataSource.transaction(readOnly = true) { connection ->
-            val finnSisteBehandlingFor = BehandlingRepositoryImpl(connection).finnSisteBehandlingFor(sakId)
+            val finnSisteBehandlingFor = BehandlingRepositoryImpl(connection).finnSisteBehandlingFor(
+                sakId,
+                listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering, TypeBehandling.Klage)
+            )
             requireNotNull(finnSisteBehandlingFor)
         }
     }
@@ -2479,11 +2531,12 @@ class FlytOrkestratorTest {
         løsAvklaringsBehov(
             behandling,
             AvklarBistandsbehovLøsning(
-                bistandsVurdering = BistandVurderingDto(
+                bistandsVurdering = BistandVurderingLøsningDto(
                     begrunnelse = "Trenger hjelp fra nav",
                     erBehovForAktivBehandling = true,
                     erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = null
+                    erBehovForAnnenOppfølging = null,
+                    vurderingenGjelderFra = null
                 ),
             ),
         )

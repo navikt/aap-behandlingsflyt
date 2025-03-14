@@ -26,7 +26,7 @@ class BarnetilleggSteg(
     private val barnetilleggService: BarnetilleggService,
     private val barnetilleggRepository: BarnetilleggRepository
 ) : BehandlingSteg {
-    private val log = LoggerFactory.getLogger(BarnetilleggSteg::class.java)
+    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
 

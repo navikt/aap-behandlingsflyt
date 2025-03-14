@@ -29,7 +29,7 @@ jobs:
                 with:
                     gradle-version: wrapper
             -   name: Bygg & test
-                run: gradle :app:test --tests '*ApiTest*.*openapi*' --continue --configuration-cache --stacktrace --info --no-build-cache
+                run: gradle genererOpenApiJson
             -   uses: actions/checkout@v4
                 with:
                     repository: navikt/aap-backend-typescript-types

@@ -58,7 +58,8 @@ public enum class Definisjon(
         type = BehovType.BREV,
         løsesAv = listOf(
             Rolle.SAKSBEHANDLER_OPPFOLGING,
-            Rolle.SAKSBEHANDLER_NASJONAL
+            Rolle.SAKSBEHANDLER_NASJONAL,
+            Rolle.BESLUTTER
         )
     ),
     AVKLAR_STUDENT(
@@ -166,6 +167,13 @@ public enum class Definisjon(
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.SAMORDNING_UFØRE,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+    ),
+    SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT(
+        kode = AvklaringsbehovKode.`5025`,
+        type = BehovType.VENTEPUNKT,
+        løsesISteg = StegType.SAMORDNING_GRADERING,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+        defaultFrist = Period.ofWeeks(4),
     ),
     FORHÅNDSVARSEL_AKTIVITETSPLIKT(
         kode = AvklaringsbehovKode.`5016`,
@@ -295,7 +303,7 @@ public enum class Definisjon(
         VENTEPUNKT(Definisjon::validerVentepunkt),
 
         /**
-         * Overstyr er at saksbehandler kan overstryre automatiske vurderinger og trigge behovet
+         * Overstyr er at saksbehandler kan overstyre automatiske vurderinger og trigge behovet
          * (f.eks et dokument)
          */
         OVERSTYR(Definisjon::validerManuelt)

@@ -13,7 +13,7 @@ import java.lang.reflect.ParameterizedType
 internal class FakesExtension() : BeforeAllCallback, ParameterResolver,
     BeforeEachCallback {
 
-    private val log: Logger = LoggerFactory.getLogger(Fakes::class.java)
+    private val log: Logger = LoggerFactory.getLogger(javaClass)
 
     init {
         Thread.currentThread().setUncaughtExceptionHandler { _, e -> log.error("Uhåndtert feil", e) }

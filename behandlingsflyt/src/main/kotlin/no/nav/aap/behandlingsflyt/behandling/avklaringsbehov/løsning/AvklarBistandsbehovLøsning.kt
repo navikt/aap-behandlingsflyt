@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarBistandLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_BISTANDSBEHOV_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -16,7 +17,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 @JsonTypeName(value = AVKLAR_BISTANDSBEHOV_KODE)
 class AvklarBistandsbehovLøsning(
     @JsonProperty("bistandsVurdering", required = true)
-    val bistandsVurdering: BistandVurderingDto,
+    val bistandsVurdering: BistandVurderingLøsningDto,
     @JsonProperty(
         "behovstype",
         required = true,

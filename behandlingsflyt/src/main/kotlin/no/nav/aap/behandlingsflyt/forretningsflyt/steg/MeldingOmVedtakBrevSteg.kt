@@ -24,7 +24,7 @@ import no.nav.aap.lookup.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
-private val logger = LoggerFactory.getLogger("BrevSteg")
+private val log = LoggerFactory.getLogger("BrevSteg")
 
 class MeldingOmVedtakBrevSteg private constructor(
     private val brevUtlederService: BrevUtlederService,
@@ -40,7 +40,7 @@ class MeldingOmVedtakBrevSteg private constructor(
                 brevbestillingService.harBestillingOmVedtak(kontekst.behandlingId)
             if (!bestillingFinnes) {
                 val behandling = behandlingRepository.hent(kontekst.behandlingId)
-                logger.info("Bestiller brev for sak ${kontekst.sakId}.")
+                log.info("Bestiller brev for sak ${kontekst.sakId}.")
                 brevbestillingService.bestill(kontekst.behandlingId, typeBrev, "${behandling.referanse}-$typeBrev")
                 return FantVentebehov(Ventebehov(BESTILL_BREV, ÅrsakTilSettPåVent.VENTER_PÅ_MASKINELL_AVKLARING))
             }

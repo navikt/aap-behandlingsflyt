@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
 import javax.sql.DataSource
@@ -31,29 +32,20 @@ data class SamordningYtelseVurderingGrunnlagDTO(
 
 data class SamordningYtelseDTO(
     val ytelseType: Ytelse,
-    val ytelsePerioder: List<SamordningYtelsePeriodeDTO>,
+    val periode: Periode,
+    val gradering: Int?,
+    val kronesum: Int?,
     val kilde: String,
-    val saksRef: String?,
+    val saksRef: String?
 )
 
 data class SamordningVurderingDTO(
     val ytelseType: Ytelse,
-    val vurderingPerioder: List<SamordningVurderingPeriodeDTO>,
-)
-
-data class SamordningVurderingPeriodeDTO(
-    val fom: LocalDate,
-    val tom: LocalDate,
+    val periode: Periode,
     val gradering: Int?,
     val kronesum: Int?
 )
 
-data class SamordningYtelsePeriodeDTO(
-    val fom: LocalDate,
-    val tom: LocalDate,
-    val gradering: Int?,
-    val kronesum: Int?
-)
 
 data class SamordningUføreVurderingGrunnlagDTO(
     val vurdering: SamordningUføreVurdering,
@@ -94,42 +86,46 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
 
                 respond(
                     SamordningYtelseVurderingGrunnlagDTO(
-                        ytelser = registerYtelser?.ytelser?.map { it ->
-                            SamordningYtelseDTO(
-                                ytelseType = it.ytelseType,
-                                ytelsePerioder = it.ytelsePerioder.map { it.tilDTO() },
-                                kilde = it.kilde,
-                                saksRef = it.saksRef
-                            )
+                        ytelser = registerYtelser?.ytelser?.flatMap { ytelse ->
+                            ytelse.ytelsePerioder.map {
+                                SamordningYtelseDTO(
+                                    ytelseType = ytelse.ytelseType,
+                                    periode = Periode(fom = it.periode.fom, tom = it.periode.tom),
+                                    gradering = it.gradering?.prosentverdi(),
+                                    kronesum = it.kronesum?.toInt(),
+                                    kilde = ytelse.kilde,
+                                    saksRef = ytelse.saksRef
+                                )
+                            }
                         }.orEmpty(),
-                        vurderinger = samordning?.vurderinger.orEmpty().map {
+                        vurderinger = samordning?.vurderinger.orEmpty().flatMap { vurdering ->
+                            vurdering.vurderingPerioder.map {
                             SamordningVurderingDTO(
-                                ytelseType = it.ytelseType,
-                                vurderingPerioder = it.vurderingPerioder.map { it.tilDTO() }
+                                ytelseType = vurdering.ytelseType,
+                                gradering = it.gradering?.prosentverdi(),
+                                periode = Periode(fom = it.periode.fom, tom = it.periode.tom),
+                                kronesum = it.kronesum?.toInt(),
                             )
-                        }
+                        }}
                     )
                 )
 
             }
         }
     }
+
 }
 
-private fun SamordningVurderingPeriode.tilDTO(): SamordningVurderingPeriodeDTO {
-    return SamordningVurderingPeriodeDTO(
+private fun SamordningVurderingPeriode.tilDTO(): Periode {
+    return Periode(
         fom = this.periode.fom,
         tom = this.periode.tom,
-        gradering = this.gradering?.prosentverdi(),
-        kronesum = this.kronesum?.toInt()
     )
 }
 
-private fun SamordningYtelsePeriode.tilDTO(): SamordningYtelsePeriodeDTO {
-    return SamordningYtelsePeriodeDTO(
+private fun SamordningYtelsePeriode.tilDTO(): Periode {
+    return Periode(
         fom = this.periode.fom,
         tom = this.periode.tom,
-        gradering = this.gradering?.prosentverdi(),
-        kronesum = this.kronesum?.toInt()
     )
 }

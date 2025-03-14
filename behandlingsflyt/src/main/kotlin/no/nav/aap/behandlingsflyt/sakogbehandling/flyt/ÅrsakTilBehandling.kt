@@ -11,6 +11,7 @@ enum class ÅrsakTilBehandling {
     MOTTATT_DIALOGMELDING,
     MOTATT_KLAGE,
     REVURDER_MEDLEMSKAP,
+    REVURDER_SAMORDNING,
     REVURDER_LOVVALG,
     REVURDER_BEREGNING,
     REVURDER_YRKESSKADE,
@@ -50,5 +51,6 @@ fun EksponertÅrsak.tilÅrsakTilBehandling() =
         EksponertÅrsak.REVURDER_YRKESSKADE -> ÅrsakTilBehandling.REVURDER_YRKESSKADE
         EksponertÅrsak.REVURDER_BEREGNING -> ÅrsakTilBehandling.REVURDER_BEREGNING
         EksponertÅrsak.REVURDER_LOVVALG -> ÅrsakTilBehandling.REVURDER_LOVVALG
+        EksponertÅrsak.REVURDER_SAMORDNING -> ÅrsakTilBehandling.REVURDER_SAMORDNING
         EksponertÅrsak.KLAGE -> ÅrsakTilBehandling.MOTATT_KLAGE
     }

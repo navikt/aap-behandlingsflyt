@@ -1,28 +1,22 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand
+package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandVurdering
+import no.nav.aap.komponenter.httpklient.auth.Bruker
 import java.time.LocalDate
 
-data class BistandVurdering(
+data class BistandVurderingLøsningDto(
     val begrunnelse: String,
     val erBehovForAktivBehandling: Boolean,
     val erBehovForArbeidsrettetTiltak: Boolean,
     val erBehovForAnnenOppfølging: Boolean?,
-    val vurdertAv: String,
-    val vurderingenGjelderFra: LocalDate?
+    val vurderingenGjelderFra: LocalDate?,
 ) {
-    fun toDto() = BistandVurderingDto(
+    fun tilBistandVurdering(bruker: Bruker) = BistandVurdering(
         begrunnelse = begrunnelse,
         erBehovForAktivBehandling = erBehovForAktivBehandling,
         erBehovForArbeidsrettetTiltak = erBehovForArbeidsrettetTiltak,
         erBehovForAnnenOppfølging = erBehovForAnnenOppfølging,
         vurderingenGjelderFra = vurderingenGjelderFra,
-        vurdertAv = vurdertAv
+        vurdertAv = bruker.ident
     )
-
-    fun erBehovForBistand(): Boolean {
-        return (erBehovForAktivBehandling || erBehovForArbeidsrettetTiltak || erBehovForAnnenOppfølging == true)
-    }
-
 }
-

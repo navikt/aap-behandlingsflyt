@@ -22,7 +22,7 @@ class PerioderTilVurderingService(
     private val vilkårsresultatRepository: VilkårsresultatRepository
 ) {
 
-    private val logger = LoggerFactory.getLogger(PerioderTilVurderingService::class.java)
+    private val log = LoggerFactory.getLogger(javaClass)
 
     fun utled(kontekst: FlytKontekst, stegType: StegType): VurderingTilBehandling {
         val sak = sakService.hent(kontekst.sakId)
@@ -95,7 +95,7 @@ class PerioderTilVurderingService(
                 Tidslinje(forrigeRettighetsperiode, true),
                 StandardSammenslåere.minus()
             )
-            logger.info("$rettighetsperiode - $forrigeRettighetsperiode ==> $forlengelsesTidslinje")
+            log.info("$rettighetsperiode - $forrigeRettighetsperiode ==> $forlengelsesTidslinje")
             if (forlengelsesTidslinje.isEmpty()) {
                 // Er egentlig ikke noe å forlenge, men skal behandles som det
                 return Periode(rettighetsperiode.tom, rettighetsperiode.tom)
@@ -136,6 +136,7 @@ class PerioderTilVurderingService(
             ÅrsakTilBehandling.REVURDER_BEREGNING -> VurderingType.REVURDERING
             ÅrsakTilBehandling.REVURDER_YRKESSKADE -> VurderingType.REVURDERING
             ÅrsakTilBehandling.REVURDER_LOVVALG -> VurderingType.REVURDERING
+            ÅrsakTilBehandling.REVURDER_SAMORDNING -> VurderingType.REVURDERING
             ÅrsakTilBehandling.MOTATT_KLAGE -> VurderingType.IKKE_RELEVANT // TODO: Verifiser at dette er korrekt. 
         }
     }

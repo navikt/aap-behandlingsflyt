@@ -12,7 +12,7 @@ import kotlin.jvm.java
 
 class HåndterConflictResponseHandler : RestResponseHandler<InputStream> {
 
-    private val log = LoggerFactory.getLogger(HåndterConflictResponseHandler::class.java)
+    private val log = LoggerFactory.getLogger(javaClass)
 
     private val defaultResponseHandler = DefaultResponseHandler()
 

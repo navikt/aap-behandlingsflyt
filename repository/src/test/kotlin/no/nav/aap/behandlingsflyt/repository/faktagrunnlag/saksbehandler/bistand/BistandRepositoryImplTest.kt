@@ -20,6 +20,7 @@ import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryRegistry
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
@@ -57,7 +58,9 @@ class BistandRepositoryImplTest {
                     begrunnelse = "begrunnelse",
                     erBehovForAktivBehandling = false,
                     erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = false
+                    erBehovForAnnenOppfølging = false,
+                    vurderingenGjelderFra = null,
+                    vurdertAv = "Z00000"
                 )
             )
             val bistandGrunnlag = bistandRepository.hentHvisEksisterer(behandling.id)
@@ -66,7 +69,9 @@ class BistandRepositoryImplTest {
                     begrunnelse = "begrunnelse",
                     erBehovForAktivBehandling = false,
                     erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = false
+                    erBehovForAnnenOppfølging = false,
+                    vurderingenGjelderFra = null,
+                    vurdertAv = "Z00000"
                 )
             )
         }
@@ -85,7 +90,9 @@ class BistandRepositoryImplTest {
                     begrunnelse = "en begrunnelse",
                     erBehovForAktivBehandling = false,
                     erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = false
+                    erBehovForAnnenOppfølging = false,
+                    vurderingenGjelderFra = null,
+                    vurdertAv = "Z00000"
                 )
             )
             bistandRepository.lagre(
@@ -94,7 +101,9 @@ class BistandRepositoryImplTest {
                     begrunnelse = "annen begrunnelse",
                     erBehovForAktivBehandling = false,
                     erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = false
+                    erBehovForAnnenOppfølging = false,
+                    vurderingenGjelderFra = null,
+                    vurdertAv = "Z00000"
                 )
             )
             bistandRepository.lagre(
@@ -103,7 +112,9 @@ class BistandRepositoryImplTest {
                     begrunnelse = "annen begrunnelse",
                     erBehovForAktivBehandling = false,
                     erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = false
+                    erBehovForAnnenOppfølging = false,
+                    vurderingenGjelderFra = null,
+                    vurdertAv = "Z00000"
                 )
             )
 
@@ -139,7 +150,9 @@ class BistandRepositoryImplTest {
                     begrunnelse = "begrunnelse",
                     erBehovForAktivBehandling = false,
                     erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = false
+                    erBehovForAnnenOppfølging = false,
+                    vurderingenGjelderFra = null,
+                    vurdertAv = "Z00000"
                 )
             )
             connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
@@ -156,7 +169,9 @@ class BistandRepositoryImplTest {
                     begrunnelse = "begrunnelse",
                     erBehovForAktivBehandling = false,
                     erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = false
+                    erBehovForAnnenOppfølging = false,
+                    vurderingenGjelderFra = null,
+                    vurdertAv = "Z00000"
                 )
             )
         }
@@ -184,7 +199,9 @@ class BistandRepositoryImplTest {
                     begrunnelse = "en begrunnelse",
                     erBehovForAktivBehandling = false,
                     erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = false
+                    erBehovForAnnenOppfølging = false,
+                    vurderingenGjelderFra = null,
+                    vurdertAv = "Z00000"
                 )
             )
             bistandRepository.lagre(
@@ -193,7 +210,9 @@ class BistandRepositoryImplTest {
                     begrunnelse = "annen begrunnelse",
                     erBehovForAktivBehandling = false,
                     erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = false
+                    erBehovForAnnenOppfølging = false,
+                    vurderingenGjelderFra = null,
+                    vurdertAv = "Z00000"
                 )
             )
             connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
@@ -210,7 +229,9 @@ class BistandRepositoryImplTest {
                     begrunnelse = "annen begrunnelse",
                     erBehovForAktivBehandling = false,
                     erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = false
+                    erBehovForAnnenOppfølging = false,
+                    vurderingenGjelderFra = null,
+                    vurdertAv = "Z00000"
                 )
             )
         }
@@ -229,7 +250,9 @@ class BistandRepositoryImplTest {
                     begrunnelse = "en begrunnelse",
                     erBehovForAktivBehandling = false,
                     erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = false
+                    erBehovForAnnenOppfølging = false,
+                    vurderingenGjelderFra = null,
+                    vurdertAv = "Z00000"
                 )
             )
             val orginaltGrunnlag = bistandRepository.hentHvisEksisterer(behandling.id)
@@ -238,7 +261,9 @@ class BistandRepositoryImplTest {
                     begrunnelse = "en begrunnelse",
                     erBehovForAktivBehandling = false,
                     erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = false
+                    erBehovForAnnenOppfølging = false,
+                    vurderingenGjelderFra = null,
+                    vurdertAv = "Z00000"
                 )
             )
 
@@ -248,7 +273,9 @@ class BistandRepositoryImplTest {
                     begrunnelse = "annen begrunnelse",
                     erBehovForAktivBehandling = false,
                     erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = false
+                    erBehovForAnnenOppfølging = false,
+                    vurderingenGjelderFra = null,
+                    vurdertAv = "Z00000"
                 )
             )
             val oppdatertGrunnlag = bistandRepository.hentHvisEksisterer(behandling.id)
@@ -257,7 +284,9 @@ class BistandRepositoryImplTest {
                     begrunnelse = "annen begrunnelse",
                     erBehovForAktivBehandling = false,
                     erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = false
+                    erBehovForAnnenOppfølging = false,
+                    vurderingenGjelderFra = null,
+                    vurdertAv = "Z00000"
                 )
             )
 
@@ -307,7 +336,9 @@ class BistandRepositoryImplTest {
                     begrunnelse = "en begrunnelse",
                     erBehovForAktivBehandling = false,
                     erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = false
+                    erBehovForAnnenOppfølging = false,
+                    vurderingenGjelderFra = null,
+                    vurdertAv = "Z00000"
                 )
             )
             bistandRepository.lagre(
@@ -316,7 +347,9 @@ class BistandRepositoryImplTest {
                     begrunnelse = "annen begrunnelse",
                     erBehovForAktivBehandling = false,
                     erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = false
+                    erBehovForAnnenOppfølging = false,
+                    vurderingenGjelderFra = null,
+                    vurdertAv = "Z00000"
                 )
             )
             connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
@@ -381,6 +414,60 @@ class BistandRepositoryImplTest {
                 )
         }
     }
+    
+    @Test
+    fun `Kan hente historiske vurderinger fra tidligere behandlinger`() {
+        val bistandsvurdering1 = BistandVurdering(
+            begrunnelse = "Begrunnelse",
+            erBehovForAktivBehandling = true,
+            erBehovForArbeidsrettetTiltak = true,
+            erBehovForAnnenOppfølging = false,
+            vurderingenGjelderFra = null,
+                    vurdertAv = "Z00000"
+        )
+        val bistandsvurdering2 = BistandVurdering(
+            begrunnelse = "Ny begrunnelse",
+            erBehovForAktivBehandling = true,
+            erBehovForArbeidsrettetTiltak = false,
+            erBehovForAnnenOppfølging = false,
+            vurderingenGjelderFra = null,
+                    vurdertAv = "Z00000"
+        )
+        
+        val (førstegangsbehandling, sak) = InitTestDatabase.dataSource.transaction { connection ->
+            val repo = BistandRepositoryImpl(connection)
+            val sak = sak(connection)
+            val førstegangsbehandling = behandling(connection, sak)
+            
+            repo.lagre(førstegangsbehandling.id, bistandsvurdering1)
+            repo.lagre(førstegangsbehandling.id, bistandsvurdering2)
+            Pair(førstegangsbehandling, sak)
+        }
+        
+        val revurderingUtenOppdatertBistandsvurdering = InitTestDatabase.dataSource.transaction { connection ->
+            val repo = BistandRepositoryImpl(connection)
+            val revurdering = revurdering(connection, førstegangsbehandling, sak)
+            val historikk = repo.hentHistoriskeBistandsvurderinger(revurdering.sakId, revurdering.id)
+            assertEquals(listOf(bistandsvurdering2), historikk)
+            revurdering
+        }
+        
+        InitTestDatabase.dataSource.transaction { connection ->
+            val repo = BistandRepositoryImpl(connection)
+            val revurdering = revurdering(connection, revurderingUtenOppdatertBistandsvurdering, sak)
+            val bistandsvurdering3 = BistandVurdering(
+                begrunnelse = "Tredje begrunnelse",
+                erBehovForAktivBehandling = true,
+                erBehovForArbeidsrettetTiltak = false,
+                erBehovForAnnenOppfølging = false,
+                vurderingenGjelderFra = null,
+                vurdertAv = "Z00000"
+            )
+            repo.lagre(revurdering.id, bistandsvurdering3)
+            val historikk = repo.hentHistoriskeBistandsvurderinger(revurdering.sakId, revurdering.id)
+            assertEquals(listOf(bistandsvurdering2), historikk)
+        }
+    }
 
     private companion object {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
@@ -402,6 +489,16 @@ class BistandRepositoryImplTest {
             sak.saksnummer,
             listOf(Årsak(ÅrsakTilBehandling.MOTTATT_SØKNAD))
         ).behandling
+    }
+
+    private fun revurdering(connection: DBConnection, behandling: Behandling, sak: Sak): Behandling {
+        connection.execute("UPDATE BEHANDLING SET STATUS = 'AVSLUTTET' WHERE ID = ?") {
+            setParams {
+                setLong(1, behandling.id.toLong())
+            }
+        }
+        
+        return behandling(connection, sak)
     }
 
 }

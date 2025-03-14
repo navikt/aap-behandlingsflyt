@@ -105,9 +105,10 @@ import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
-private val logger = LoggerFactory.getLogger(FakesExtension::class.java)
+
 
 object FakeServers : AutoCloseable {
+    private val log = LoggerFactory.getLogger(javaClass)
     private val azure = embeddedServer(Netty, port = AzurePortHolder.getPort(), module = { azureFake() })
     private val brev = embeddedServer(Netty, port = 0, module = { brevFake() })
     private val pdl = embeddedServer(Netty, port = 0, module = { pdlFake() })
@@ -1558,7 +1559,7 @@ object FakeServers : AutoCloseable {
     }
 
     override fun close() {
-        logger.info("Closing Servers.")
+        log.info("Closing Servers.")
         if (!started.get()) {
             return
         }

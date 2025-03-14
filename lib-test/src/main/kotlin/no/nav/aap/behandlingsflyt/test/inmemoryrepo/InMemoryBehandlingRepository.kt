@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicLong
 
 object InMemoryBehandlingRepository : BehandlingRepository, BehandlingFlytRepository {
-    private val logger = LoggerFactory.getLogger(javaClass)
+    private val log = LoggerFactory.getLogger(javaClass)
 
     private val idSeq = AtomicLong(10000)
     private val memory = HashMap<BehandlingId, Behandling>()
@@ -50,9 +50,12 @@ object InMemoryBehandlingRepository : BehandlingRepository, BehandlingFlytReposi
         }
     }
 
-    override fun finnSisteBehandlingFor(sakId: SakId): Behandling? {
+    override fun finnSisteBehandlingFor(sakId: SakId, behandlingstypeFilter: List<TypeBehandling>): Behandling? {
         synchronized(lock) {
-            return memory.values.filter { behandling -> behandling.sakId == sakId }.maxOrNull()
+            return memory.values
+                .filter { behandling -> behandling.sakId == sakId }
+                .filter { behandling -> behandling.typeBehandling() in behandlingstypeFilter }
+                .maxOrNull()
         }
     }
 
@@ -76,7 +79,7 @@ object InMemoryBehandlingRepository : BehandlingRepository, BehandlingFlytReposi
 
     override fun hent(referanse: BehandlingReferanse): Behandling {
         synchronized(lock) {
-            logger.info("Henter behandling med referanse $referanse.")
+            log.info("Henter behandling med referanse $referanse.")
             return memory.values.single { behandling -> behandling.referanse == referanse }
         }
     }

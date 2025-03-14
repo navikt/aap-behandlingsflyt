@@ -111,7 +111,7 @@ class VurderBistandsbehovSteg private constructor(
         return Fullført
     }
 
-    private fun harVærtVurdertMinstEnGangIBehandlingen(
+    private fun erIkkeVurdertTidligereIBehandlingen(
         avklaringsbehovene: Avklaringsbehovene
     ): Boolean {
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_BISTANDSBEHOV)
@@ -142,7 +142,7 @@ class VurderBistandsbehovSteg private constructor(
             periode,
             vilkår,
             studentGrunnlag?.studentvurdering?.erOppfylt() == true
-        ) || harVærtVurdertMinstEnGangIBehandlingen(avklaringsbehovene)
+        ) || erIkkeVurdertTidligereIBehandlingen(avklaringsbehovene)
     }
 
 

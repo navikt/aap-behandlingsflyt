@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import javax.sql.DataSource
 
-private val logger = LoggerFactory.getLogger("hendelse.MottattHendelseAPI")
+private val log = LoggerFactory.getLogger("hendelse.MottattHendelseAPI")
 
 fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource) {
     route("/api/hendelse") {
@@ -32,10 +32,10 @@ fun NormalOpenAPIRoute.mottattHendelseApi(dataSource: DataSource) {
                     val sak = repositoryProvider.provide<SakRepository>().hent(dto.saksnummer)
                     val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
 
-                    logger.info("Mottok dokumenthendelse. Brevkategori: ${dto.type} Mottattdato: ${dto.mottattTidspunkt}")
+                    log.info("Mottok dokumenthendelse. Brevkategori: ${dto.type} Mottattdato: ${dto.mottattTidspunkt}")
 
                     if (kjennerTilDokumentFraFør(dto, sak, mottattDokumentRepository)) {
-                        logger.warn("Allerede håndtert dokument med referanse {}", dto.referanse)
+                        log.warn("Allerede håndtert dokument med referanse {}", dto.referanse)
                     } else {
                         val flytJobbRepository = FlytJobbRepository(connection)
                         flytJobbRepository.leggTil(

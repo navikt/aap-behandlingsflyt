@@ -119,6 +119,10 @@ public enum class StegType(
         gruppe = StegGruppe.IVERKSETT_VEDTAK,
         status = Status.IVERKSETTES
     ),
+    OPPRETT_REVURDERING(
+        gruppe = StegGruppe.IVERKSETT_VEDTAK,
+        status = Status.IVERKSETTES
+    ),
     BREV(
         gruppe = StegGruppe.BREV,
         status = Status.IVERKSETTES,

@@ -8,9 +8,10 @@ import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.isSubtypeOf
 import kotlin.reflect.full.starProjectedType
 
-private val logger = LoggerFactory.getLogger(RepositoryRegistry::class.java)
 
 object RepositoryRegistry {
+
+    private val log = LoggerFactory.getLogger(javaClass)
     private val registry = HashSet<KClass<Repository>>()
     private val lock = Object()
 
@@ -29,7 +30,7 @@ object RepositoryRegistry {
                 }.any { type -> klass.starProjectedType.isSubtypeOf(type) }
             }
             if (removedSomething) {
-                logger.warn("Repository '{}' hadde en variant allerede registrert", repository)
+                log.warn("Repository '{}' hadde en variant allerede registrert", repository)
             }
             @Suppress("UNCHECKED_CAST")
             registry.add(repository as KClass<Repository>)
@@ -57,7 +58,7 @@ object RepositoryRegistry {
         synchronized(lock) {
             val singleOrNull = registry.singleOrNull { klass -> klass.starProjectedType.isSubtypeOf(ktype) }
             if (singleOrNull == null) {
-                logger.warn("Repository av typen '{}' er ikke registrert, har følgende '{}'", ktype, registry)
+                log.warn("Repository av typen '{}' er ikke registrert, har følgende '{}'", ktype, registry)
                 throw IllegalStateException("Repository av typen '$ktype' er ikke registrert")
             }
             return singleOrNull
@@ -69,7 +70,7 @@ object RepositoryRegistry {
     }
 
     fun status() {
-        logger.info(
+        log.info(
             "{} repositories registrert har følgende '{}'",
             registry.size,
             registry.map { kclass -> kclass.starProjectedType })

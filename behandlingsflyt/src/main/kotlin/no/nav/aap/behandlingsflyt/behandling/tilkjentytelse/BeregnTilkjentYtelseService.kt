@@ -77,19 +77,19 @@ class BeregnTilkjentYtelseService(
                 val utbetalingsgrad = if (venstre.verdi.utfall == Utfall.IKKE_OPPFYLT) {
                     Prosent.`0_PROSENT`
                 } else {
-                    val institusjonsOppholdReduksjon = venstre.verdi.institusjonsoppholdReduksjon
-                    val arbeidsgradering = venstre.verdi.arbeidsgradering.gradering
-                    Prosent.`100_PROSENT`
-                        .minus(institusjonsOppholdReduksjon)
-                        .minus(arbeidsgradering)
+                    val institusjonsOppholdReduksjon = venstre.verdi.institusjonsoppholdReduksjon.komplement()
+                    val arbeidsgraderingReduksjon = venstre.verdi.arbeidsgradering.gradering
+                    arbeidsgraderingReduksjon.multiplisert(institusjonsOppholdReduksjon)
                 }
-                Segment(periode, TilkjentGUnit(
-                    dagsats, TilkjentGradering(
-                        endeligGradering = utbetalingsgrad,
-                        arbeidGradering = venstre.verdi.arbeidsgradering.gradering,
-                        institusjonGradering = venstre.verdi.institusjonsoppholdReduksjon,
-                        samordningGradering = null
-                    ), venstre.verdi.meldePeriode.tom.plusDays(1))
+                Segment(
+                    periode, TilkjentGUnit(
+                        dagsats, TilkjentGradering(
+                            endeligGradering = utbetalingsgrad,
+                            arbeidGradering = venstre.verdi.arbeidsgradering.gradering,
+                            institusjonGradering = venstre.verdi.institusjonsoppholdReduksjon,
+                            samordningGradering = null
+                        ), venstre.verdi.meldePeriode.tom.plusDays(1)
+                    )
                 )
             })
 

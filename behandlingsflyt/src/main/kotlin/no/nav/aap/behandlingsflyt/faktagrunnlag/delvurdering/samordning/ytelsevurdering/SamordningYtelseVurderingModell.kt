@@ -40,4 +40,8 @@ data class SamordningVurderingGrunnlag(
     val maksDatoEndelig: Boolean,
     val maksDato: LocalDate?,
     val vurderinger: List<SamordningVurdering>,
-)
+) {
+    init {
+        require(!maksDatoEndelig || maksDato != null)
+    }
+}

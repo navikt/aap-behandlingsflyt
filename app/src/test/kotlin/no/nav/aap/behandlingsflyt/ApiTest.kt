@@ -68,22 +68,17 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
-import java.io.BufferedWriter
-import java.io.FileWriter
 import java.io.InputStream
 import java.net.URI
-import java.nio.charset.StandardCharsets
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Year
 import java.util.*
-import kotlin.test.fail
-
-private val logger = LoggerFactory.getLogger(ApiTest::class.java)
-
 
 @Fakes
 class ApiTest {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     companion object {
         private val postgres = postgreSQLContainer()
@@ -133,6 +128,7 @@ class ApiTest {
         @JvmStatic
         @BeforeAll
         fun beforeall() {
+            System.setProperty("NAIS_CLUSTER_NAME", "dev-gcp")
             server.start()
             port =
                 runBlocking { server.engine.resolvedConnectors().first { it.type == ConnectorType.HTTP }.port }
@@ -375,7 +371,7 @@ class ApiTest {
             )
         }
 
-        logger.info("Behandling: $behandling")
+        log.info("Behandling: $behandling")
     }
 
     @Test
@@ -436,28 +432,6 @@ class ApiTest {
 
     }
 
-    @Test
-    fun `skal lagre openapi som fil`() {
-        val openApiDoc =
-            requireNotNull(
-                client.get(
-                    URI.create("http://localhost:$port/openapi.json"),
-                    GetRequest(currentToken = getToken())
-                ) { body, _ ->
-                    String(body.readAllBytes(), StandardCharsets.UTF_8)
-                }
-            )
-
-        try {
-            val writer = BufferedWriter(FileWriter("../openapi.json"))
-            writer.write(openApiDoc)
-
-            writer.close()
-        } catch (_: Exception) {
-            fail()
-        }
-    }
-
     private fun <E> kallInntilKlar(maxTries: Int = 10, delayMs: Long = 100L, block: () -> E): E? {
         return runBlocking {
             suspend {
@@ -467,7 +441,7 @@ class ApiTest {
                     try {
                         utvidedSak = block()
                     } catch (e: Exception) {
-                        logger.info("Exception: $e")
+                        log.info("Exception: $e")
                     } finally {
                         delay(delayMs)
                         tries++

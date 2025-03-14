@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory
 
 internal object ValiderBehandlingTilstand {
 
-    private val logger = LoggerFactory.getLogger(ValiderBehandlingTilstand::class.java)
+    private val log = LoggerFactory.getLogger(javaClass)
 
     fun validerTilstandBehandling(
         behandling: Behandling,
@@ -19,12 +19,12 @@ internal object ValiderBehandlingTilstand {
         if (avklaringsbehov != null) {
             if (!eksisterendeAvklaringsbehov.map { a -> a.definisjon }
                     .contains(avklaringsbehov) && !avklaringsbehov.erFrivillig() && !avklaringsbehov.erOverstyring()) {
-                logger.warn("Forsøker å løse avklaringsbehov $avklaringsbehov ikke knyttet til behandlingen, har $eksisterendeAvklaringsbehov")
+                log.warn("Forsøker å løse avklaringsbehov $avklaringsbehov ikke knyttet til behandlingen, har $eksisterendeAvklaringsbehov")
                 throw IllegalArgumentException("Forsøker å løse avklaringsbehov $avklaringsbehov ikke knyttet til behandlingen, har $eksisterendeAvklaringsbehov")
             }
             val flyt = utledType(behandling.typeBehandling()).flyt()
             if (!flyt.erStegFørEllerLik(avklaringsbehov.løsesISteg, behandling.aktivtSteg())) {
-                logger.warn(
+                log.warn(
                     "Forsøker å løse avklaringsbehov $avklaringsbehov som er definert i et steg etter nåværende steg[${behandling.aktivtSteg()}] ${
                         behandling.typeBehandling().identifikator()
                     }"
@@ -44,14 +44,14 @@ internal object ValiderBehandlingTilstand {
     fun validerTilstandBehandling(behandling: Behandling, versjon: Long) {
         validerStatus(behandling.status())
         if (behandling.versjon != versjon) {
-            logger.warn("Behandlingen har blitt oppdatert. Versjonsnummer[$versjon] ulikt fra siste[${behandling.versjon}]")
+            log.warn("Behandlingen har blitt oppdatert. Versjonsnummer[$versjon] ulikt fra siste[${behandling.versjon}]")
             throw OutdatedBehandlingException("Behandlingen har blitt oppdatert. Versjonsnummer[$versjon] ulikt fra siste[${behandling.versjon}]")
         }
     }
 
     private fun validerStatus(behandlingStatus: Status) {
         if (Status.AVSLUTTET == behandlingStatus) {
-            logger.warn("Forsøker manipulere på behandling som er avsluttet")
+            log.warn("Forsøker manipulere på behandling som er avsluttet")
             throw IllegalArgumentException("Forsøker manipulere på behandling som er avsluttet")
         }
     }

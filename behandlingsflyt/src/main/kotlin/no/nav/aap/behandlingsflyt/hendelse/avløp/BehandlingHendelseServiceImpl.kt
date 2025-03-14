@@ -26,13 +26,13 @@ import java.time.LocalDateTime
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.ÅrsakTilRetur as DomeneÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.ÅrsakTilReturKode as ÅrsakTilReturKodeKontrakt
 
-private val log = LoggerFactory.getLogger(BehandlingHendelseServiceImpl::class.java)
-
 class BehandlingHendelseServiceImpl(
     private val flytJobbRepository: FlytJobbRepository,
     private val brevbestillingRepository: BrevbestillingRepository,
     private val sakService: SakService
 ) : BehandlingHendelseService {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun stoppet(
         behandling: Behandling,
@@ -117,6 +117,7 @@ class BehandlingHendelseServiceImpl(
             no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent.VENTER_PÅ_MASKINELL_AVKLARING -> ÅrsakTilSettPåVent.VENTER_PÅ_MASKINELL_AVKLARING
             no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent.VENTER_PÅ_UTENLANDSK_VIDEREFORING_AVKLARING -> ÅrsakTilSettPåVent.VENTER_PÅ_UTENLANDSK_VIDEREFORING_AVKLARING
             no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent.VENTER_PÅ_KLAGE_IMPLEMENTASJON -> ÅrsakTilSettPåVent.VENTER_PÅ_KLAGE_IMPLEMENTASJON
+            no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent.VENTER_PÅ_SVAR_PÅ_FORHÅNDSVARSEL -> ÅrsakTilSettPåVent.VENTER_PÅ_SVAR_PÅ_FORHÅNDSVARSEL
         }
     }
 

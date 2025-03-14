@@ -166,7 +166,7 @@ internal fun Application.server(dbConfig: DbConfig) {
 
     install(StatusPages) {
         exception<Throwable> { call, cause ->
-            val logger = LoggerFactory.getLogger(App::class.java)
+            val logger = LoggerFactory.getLogger(javaClass)
             when (cause) {
                 is ElementNotFoundException -> {
                     call.respondText(status = HttpStatusCode.NotFound, text = cause.message ?: "")

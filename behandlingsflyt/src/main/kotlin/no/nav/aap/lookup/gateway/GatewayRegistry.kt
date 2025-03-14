@@ -8,9 +8,9 @@ import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.isSubtypeOf
 import kotlin.reflect.full.starProjectedType
 
-private val logger = LoggerFactory.getLogger(GatewayRegistry::class.java)
-
 object GatewayRegistry {
+
+    private val log = LoggerFactory.getLogger(javaClass)
     private val registry = HashSet<KClass<Gateway>>()
     private val lock = Object()
 
@@ -29,7 +29,7 @@ object GatewayRegistry {
                 }.any { type -> klass.starProjectedType.isSubtypeOf(type) }
             }
             if (removedSomething) {
-                logger.warn("Gateway '{}' var allerede registrert", repository)
+                log.warn("Gateway '{}' var allerede registrert", repository)
             }
             @Suppress("UNCHECKED_CAST")
             registry.add(repository as KClass<Gateway>)
@@ -57,7 +57,7 @@ object GatewayRegistry {
         synchronized(lock) {
             val singleOrNull = registry.singleOrNull { klass -> klass.starProjectedType.isSubtypeOf(ktype) }
             if (singleOrNull == null) {
-                logger.warn("Gateway av typen '{}' er ikke registrert, har følgende '{}'", ktype, registry)
+                log.warn("Gateway av typen '{}' er ikke registrert, har følgende '{}'", ktype, registry)
                 throw IllegalStateException("Gateway av typen '$ktype' er ikke registrert")
             }
             return singleOrNull
@@ -65,7 +65,7 @@ object GatewayRegistry {
     }
 
     fun status() {
-        logger.info(
+        log.info(
             "{} gateway registrert har følgende '{}'",
             registry.size,
             registry.map { kclass -> kclass.starProjectedType })

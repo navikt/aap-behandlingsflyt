@@ -13,9 +13,9 @@ import org.slf4j.LoggerFactory
 import java.net.URI
 import java.time.LocalDateTime
 
-private val log = LoggerFactory.getLogger(SafListDokumentGateway::class.java)
-
 object SafListDokumentGateway {
+
+    private val log = LoggerFactory.getLogger(javaClass)
     private val graphqlUrl = URI.create(requiredConfigForKey("integrasjon.saf.url.graphql"))
 
     val config = ClientConfig(
