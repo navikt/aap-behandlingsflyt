@@ -17,7 +17,8 @@ class BistandVurderingDtoTest {
         BistandVurderingDto("hei",
             erBehovForAktivBehandling = false,
             erBehovForArbeidsrettetTiltak = false,
-            erBehovForAnnenOppfølging = erBehovForAnnenOppfølging
+            erBehovForAnnenOppfølging = erBehovForAnnenOppfølging,
+            vurderingenGjelderFra = null
         )
     }
 
@@ -29,7 +30,8 @@ class BistandVurderingDtoTest {
         BistandVurderingDto("hei",
             erBehovForAktivBehandling = behov,
             erBehovForArbeidsrettetTiltak = !behov,
-            erBehovForAnnenOppfølging = null
+            erBehovForAnnenOppfølging = null,
+            vurderingenGjelderFra = null
         )
     }
 
@@ -38,6 +40,7 @@ class BistandVurderingDtoTest {
         BistandVurderingDto("hei",
             erBehovForAktivBehandling = true,
             erBehovForArbeidsrettetTiltak = true,
+            vurderingenGjelderFra = null,
             erBehovForAnnenOppfølging = null
         )
     }
@@ -53,7 +56,8 @@ class BistandVurderingDtoTest {
                 "hei",
                 erBehovForAktivBehandling = behov,
                 erBehovForArbeidsrettetTiltak = !behov,
-                erBehovForAnnenOppfølging = erBehovForAnnenOppfølging
+                erBehovForAnnenOppfølging = erBehovForAnnenOppfølging,
+                vurderingenGjelderFra = null
             )
         }
     }
@@ -68,7 +72,8 @@ class BistandVurderingDtoTest {
                 "hei",
                 erBehovForAktivBehandling = true,
                 erBehovForArbeidsrettetTiltak = true,
-                erBehovForAnnenOppfølging = erBehovForAnnenOppfølging
+                erBehovForAnnenOppfølging = erBehovForAnnenOppfølging,
+                vurderingenGjelderFra = null
             )
         }
     }
@@ -80,7 +85,8 @@ class BistandVurderingDtoTest {
                 "hei",
                 erBehovForAktivBehandling = false,
                 erBehovForArbeidsrettetTiltak = false,
-                erBehovForAnnenOppfølging = null
+                erBehovForAnnenOppfølging = null,
+                vurderingenGjelderFra = null
             )
         }
     }

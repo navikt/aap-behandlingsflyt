@@ -1,0 +1,1 @@
+alter table bistand add column vurderingen_gjelder_fra date;

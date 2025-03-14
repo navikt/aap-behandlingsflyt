@@ -1,12 +1,14 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandVurdering
+import java.time.LocalDate
 
 data class BistandVurderingDto(
     val begrunnelse: String,
     val erBehovForAktivBehandling: Boolean,
     val erBehovForArbeidsrettetTiltak: Boolean,
-    val erBehovForAnnenOppfølging: Boolean?
+    val erBehovForAnnenOppfølging: Boolean?,
+    val vurderingenGjelderFra: LocalDate?,
 ) {
     companion object {
         fun fraBistandVurdering(bistandVurdering: BistandVurdering?) = bistandVurdering?.toDto()
@@ -22,6 +24,7 @@ data class BistandVurderingDto(
         begrunnelse = begrunnelse,
         erBehovForAktivBehandling = erBehovForAktivBehandling,
         erBehovForArbeidsrettetTiltak = erBehovForArbeidsrettetTiltak,
-        erBehovForAnnenOppfølging = erBehovForAnnenOppfølging
+        erBehovForAnnenOppfølging = erBehovForAnnenOppfølging,
+        vurderingenGjelderFra = vurderingenGjelderFra
     )
 }

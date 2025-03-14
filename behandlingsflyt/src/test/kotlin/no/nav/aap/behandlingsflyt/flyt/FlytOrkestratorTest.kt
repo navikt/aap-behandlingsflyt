@@ -331,7 +331,8 @@ class FlytOrkestratorTest {
                     begrunnelse = "Trenger hjelp fra nav",
                     erBehovForAktivBehandling = true,
                     erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = null
+                    erBehovForAnnenOppfølging = null,
+                    vurderingenGjelderFra = null
                 ),
             )
         )
@@ -417,7 +418,8 @@ class FlytOrkestratorTest {
                     begrunnelse = "Trenger hjelp fra nav",
                     erBehovForAktivBehandling = true,
                     erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = null
+                    erBehovForAnnenOppfølging = null,
+                    vurderingenGjelderFra = null
                 ),
             ),
         )
@@ -652,7 +654,8 @@ class FlytOrkestratorTest {
                     begrunnelse = "Trenger hjelp fra nav",
                     erBehovForAktivBehandling = true,
                     erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = null
+                    erBehovForAnnenOppfølging = null,
+                    vurderingenGjelderFra = null
                 ),
             ),
         )
@@ -867,7 +870,8 @@ class FlytOrkestratorTest {
                     begrunnelse = "Trenger hjelp fra nav",
                     erBehovForAktivBehandling = true,
                     erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = null
+                    erBehovForAnnenOppfølging = null,
+                    vurderingenGjelderFra = null
                 ),
             ),
         )
@@ -1060,7 +1064,8 @@ class FlytOrkestratorTest {
                     begrunnelse = "Trenger hjelp fra nav",
                     erBehovForAktivBehandling = true,
                     erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = null
+                    erBehovForAnnenOppfølging = null,
+                    vurderingenGjelderFra = null
                 ),
             ),
         )
@@ -2490,7 +2495,8 @@ class FlytOrkestratorTest {
                     begrunnelse = "Trenger hjelp fra nav",
                     erBehovForAktivBehandling = true,
                     erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = null
+                    erBehovForAnnenOppfølging = null,
+                    vurderingenGjelderFra = null
                 ),
             ),
         )
