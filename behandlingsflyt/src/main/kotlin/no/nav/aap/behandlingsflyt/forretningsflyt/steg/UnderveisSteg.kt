@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederService
 import no.nav.aap.behandlingsflyt.behandling.underveis.UnderveisService
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
@@ -27,7 +28,7 @@ class UnderveisSteg(private val underveisService: UnderveisService) : Behandling
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         // Skal alltid kjøres uavhengig av vurderingstype
-        val underveisTidslinje = underveisService.vurder(kontekst.behandlingId)
+        val underveisTidslinje = underveisService.vurder(kontekst.sakId, kontekst.behandlingId)
 
         log.debug("Underveis tidslinje {}", underveisTidslinje)
 
@@ -69,6 +70,10 @@ class UnderveisSteg(private val underveisService: UnderveisService) : Behandling
                     arbeidsevneRepository = repositoryProvider.provide<ArbeidsevneRepository>(),
                     meldepliktRepository = repositoryProvider.provide(),
                     meldeperiodeRepository = repositoryProvider.provide(),
+                    vedtakService = VedtakService(
+                        vedtakRepository = repositoryProvider.provide(),
+                        behandlingRepository = behandlingRepository,
+                    )
                 )
             )
         }

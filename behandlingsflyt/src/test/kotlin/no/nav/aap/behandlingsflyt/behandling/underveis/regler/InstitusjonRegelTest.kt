@@ -43,9 +43,7 @@ class InstitusjonRegelTest {
         val vurderingFraTidligereResultat = Vurdering(
             emptyList(),
             null,
-            MeldepliktVurdering(
-                null, Utfall.OPPFYLT
-            ),
+            MeldepliktVurdering.Fritak,
             null,
             null,
             null,

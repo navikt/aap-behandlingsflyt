@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UnderveisInput
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UtledMeldeperiodeRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Vurdering
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
@@ -26,6 +27,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.Arbeid
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -41,6 +43,7 @@ class UnderveisService(
     private val arbeidsevneRepository: ArbeidsevneRepository,
     private val meldepliktRepository: MeldepliktRepository,
     private val meldeperiodeRepository: MeldeperiodeRepository,
+    private val vedtakService: VedtakService,
 ) {
 
     private val kvoteService = KvoteService()
@@ -79,8 +82,8 @@ class UnderveisService(
         }
     }
 
-    fun vurder(behandlingId: BehandlingId): Tidslinje<Vurdering> {
-        val input = genererInput(behandlingId)
+    fun vurder(sakId: SakId, behandlingId: BehandlingId): Tidslinje<Vurdering> {
+        val input = genererInput(sakId, behandlingId)
 
         val vurderRegler = vurderRegler(input)
         underveisRepository.lagre(
@@ -112,7 +115,7 @@ class UnderveisService(
         }
     }
 
-    private fun genererInput(behandlingId: BehandlingId): UnderveisInput {
+    private fun genererInput(sakId: SakId, behandlingId: BehandlingId): UnderveisInput {
         val sak = behandlingService.hentSakFor(behandlingId)
         val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
 
@@ -135,6 +138,8 @@ class UnderveisService(
 
         val meldeperioder = meldeperiodeRepository.hent(behandlingId)
 
+        val vedtaksdatoFørstegangsbehandling = vedtakService.vedtakstidspunktFørstegangsbehandling(sakId)
+
         return UnderveisInput(
             rettighetsperiode = sak.rettighetsperiode,
             vilkårsresultat = vilkårsresultat,
@@ -147,6 +152,7 @@ class UnderveisService(
             arbeidsevneGrunnlag = arbeidsevneGrunnlag,
             meldepliktGrunnlag = meldepliktGrunnlag,
             meldeperioder = meldeperioder,
+            vedtaksdatoFørstegangsbehandling = vedtaksdatoFørstegangsbehandling?.toLocalDate(),
         )
     }
 }

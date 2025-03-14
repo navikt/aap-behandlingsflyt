@@ -1,13 +1,12 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak.IKKE_OVERHOLDT_MELDEPLIKT_SANKSJON
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak.MELDEPLIKT_FRIST_IKKE_PASSERT
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.IKKE_OPPFYLT
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
+import no.nav.aap.behandlingsflyt.test.april
+import no.nav.aap.behandlingsflyt.test.februar
+import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.test.mai
+import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -18,11 +17,6 @@ import org.junit.jupiter.api.Test
 import java.time.Clock
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.Month.APRIL
-import java.time.Month.FEBRUARY
-import java.time.Month.JANUARY
-import java.time.Month.MARCH
-import java.time.Month.MAY
 import java.time.ZoneId
 
 
@@ -30,9 +24,7 @@ class MeldepliktRegelTest {
     private data class Forventer(
         val fom: LocalDate,
         val tom: LocalDate,
-        val utfall: Utfall,
-        val årsak: UnderveisÅrsak? = null,
-        val dokument: MeldepliktRegel.Dokument? = null,
+        val vurdering: MeldepliktVurdering,
     )
 
     /*   2020
@@ -48,15 +40,15 @@ class MeldepliktRegelTest {
     @Test
     fun `Meldeplikt overholdt ved innsendt på fastsatt dag`() {
         val rettighetsperiode = Periode(
-            LocalDate.of(2020, JANUARY, 6),
-            LocalDate.of(2020, MARCH, 1)
+            6 januar 2020,
+            1 mars 2020
         )
         val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
             innsendingsTidspunkt = mapOf(
-                LocalDate.of(2020, JANUARY, 20) to JournalpostId("1"),
-                LocalDate.of(2020, FEBRUARY, 3) to JournalpostId("2"),
-                LocalDate.of(2020, FEBRUARY, 17) to JournalpostId("3"),
+                20 januar 2020 to JournalpostId("1"),
+                3 februar 2020 to JournalpostId("2"),
+                17 februar 2020 to JournalpostId("3"),
             ),
         )
 
@@ -65,59 +57,55 @@ class MeldepliktRegelTest {
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
             Forventer(
-                fom = LocalDate.of(2020, JANUARY, 6),
-                tom = LocalDate.of(2020, JANUARY, 19),
-                utfall = OPPFYLT,
+                fom = 6 januar 2020,
+                tom = 19 januar 2020,
+                vurdering = MeldepliktVurdering.FørVedtak,
             ),
             Forventer(
-                fom = LocalDate.of(2020, JANUARY, 20),
-                tom = LocalDate.of(2020, FEBRUARY, 2),
-                dokument = MeldepliktRegel.Meldt(JournalpostId("1")),
-                utfall = OPPFYLT,
+                fom = 20 januar 2020,
+                tom = 2 februar 2020,
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1")),
             ),
             Forventer(
-                fom = LocalDate.of(2020, FEBRUARY, 3),
-                tom = LocalDate.of(2020, FEBRUARY, 16),
-                dokument = MeldepliktRegel.Meldt(JournalpostId("2")),
-                utfall = OPPFYLT,
+                fom = 3 februar 2020,
+                tom = 16 februar 2020,
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("2")),
             ),
             Forventer(
-                fom = LocalDate.of(2020, FEBRUARY, 17),
-                tom = LocalDate.of(2020, MARCH, 1),
-                dokument = MeldepliktRegel.Meldt(JournalpostId("3")),
-                utfall = OPPFYLT,
+                fom = 17 februar 2020,
+                tom = 1 mars 2020,
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("3")),
             ),
         )
     }
 
-/*
-           April                      May                       June
-     Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
-            1  2  3  4  5                   1  2  3       1  2  3  4  5  6  7
-      6  7  8  9 10 11 12       4  5  6  7  8  9 10       8  9 10 11 12 13 14
-     13 14 15 16 17 18 19      11 12 13 14 15 16 17      15 16 17 18 19 20 21
-     20 21 22 23 24 25 26      18 19 20 21 22 23 24      22 23 24 25 26 27 28
-     27 28 29 30               25 26 27 28 29 30 31      29 30
-     */
+    /*
+               April                      May                       June
+         Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
+                1  2  3  4  5                   1  2  3       1  2  3  4  5  6  7
+          6  7  8  9 10 11 12       4  5  6  7  8  9 10       8  9 10 11 12 13 14
+         13 14 15 16 17 18 19      11 12 13 14 15 16 17      15 16 17 18 19 20 21
+         20 21 22 23 24 25 26      18 19 20 21 22 23 24      22 23 24 25 26 27 28
+         27 28 29 30               25 26 27 28 29 30 31      29 30
+         */
     @Test
     fun `Skal starte med full utbetalingsplan`() {
-        val rettighetsperiode = Periode(
-            LocalDate.of(2020, APRIL, 20),
-            LocalDate.of(2021, APRIL, 19),
-        )
-        val input = tomUnderveisInput(
-            rettighetsperiode = rettighetsperiode,
-        )
-
-        val vurdertTidslinje = vurder(input, nå = rettighetsperiode.fom)
+        val rettighetsperiode = Periode(20 april 2020, 19 april 2021)
+        val input = tomUnderveisInput(rettighetsperiode = rettighetsperiode)
+        val vurdertTidslinje = vurder(input, nå = 20 april 2020)
 
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
             Forventer(
-                fom = rettighetsperiode.fom,
-                tom = rettighetsperiode.tom,
-                utfall = OPPFYLT,
-            )
+                fom = 20 april 2020,
+                tom = 3 mai 2020,
+                vurdering = MeldepliktVurdering.FørVedtak,
+            ),
+            Forventer(
+                fom = 4 mai 2020,
+                tom = 19 april 2021,
+                vurdering = MeldepliktVurdering.FremtidigOppfylt,
+            ),
         )
     }
 
@@ -133,16 +121,13 @@ class MeldepliktRegelTest {
      */
     @Test
     fun `Meldeplikt skal være stanset etter at man ikke har meldt seg og fristen utløpt`() {
-        val rettighetsperiode = Periode(
-            LocalDate.of(2020, JANUARY, 6),
-            LocalDate.of(2020, MARCH, 29),
-        )
+        val rettighetsperiode = Periode(6 januar 2020, 29 mars 2020)
 
         val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
             innsendingsTidspunkt = mapOf(
-                LocalDate.of(2020, FEBRUARY, 2) to JournalpostId("1"),
-                LocalDate.of(2020, MARCH, 6) to JournalpostId("2")
+                2 februar 2020 to JournalpostId("1"),
+                6 mars 2020 to JournalpostId("2"),
             ),
         )
 
@@ -151,67 +136,63 @@ class MeldepliktRegelTest {
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
             Forventer(
-                fom = LocalDate.of(2020, JANUARY, 6), tom = LocalDate.of(2020, JANUARY, 19),
-                utfall = OPPFYLT,
+                fom = 6 januar 2020, tom = 19 januar 2020,
+                vurdering = MeldepliktVurdering.FørVedtak,
             ),
             Forventer(
-                fom = LocalDate.of(2020, JANUARY, 20), tom = LocalDate.of(2020, FEBRUARY, 1),
-                utfall = IKKE_OPPFYLT,
-                årsak = IKKE_OVERHOLDT_MELDEPLIKT_SANKSJON,
+                fom = 20 januar 2020, tom = 1 februar 2020,
+                vurdering = MeldepliktVurdering.IkkeMeldtSeg,
             ),
             Forventer(
-                fom = LocalDate.of(2020, FEBRUARY, 2), tom = LocalDate.of(2020, FEBRUARY, 2),
-                dokument = MeldepliktRegel.Meldt(JournalpostId("1")),
-                utfall = OPPFYLT,
+                fom = 2 februar 2020, tom = 2 februar 2020,
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1")),
             ),
             Forventer(
-                fom = LocalDate.of(2020, FEBRUARY, 3), tom = LocalDate.of(2020, FEBRUARY, 16),
-                utfall = IKKE_OPPFYLT,
-                årsak = IKKE_OVERHOLDT_MELDEPLIKT_SANKSJON,
+                fom = 3 februar 2020, tom = 16 februar 2020,
+                vurdering = MeldepliktVurdering.IkkeMeldtSeg,
             ),
             Forventer(
-                fom = LocalDate.of(2020, FEBRUARY, 17), tom = LocalDate.of(2020, MARCH, 1),
-                utfall = IKKE_OPPFYLT,
-                årsak = IKKE_OVERHOLDT_MELDEPLIKT_SANKSJON,
+                fom = 17 februar 2020, tom = 1 mars 2020,
+                vurdering = MeldepliktVurdering.IkkeMeldtSeg,
             ),
             Forventer(
-                fom = LocalDate.of(2020, MARCH, 2), tom = LocalDate.of(2020, MARCH, 15),
-                dokument = MeldepliktRegel.Meldt(JournalpostId("2")),
-                utfall = OPPFYLT,
+                fom = 2 mars 2020, tom = 15 mars 2020,
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("2")),
             ),
             Forventer(
-                fom = LocalDate.of(2020, MARCH, 16), tom = LocalDate.of(2020, MARCH, 29),
-                utfall = IKKE_OPPFYLT,
-                årsak = IKKE_OVERHOLDT_MELDEPLIKT_SANKSJON,
+                fom = 16 mars 2020, tom = 29 mars 2020,
+                vurdering = MeldepliktVurdering.IkkeMeldtSeg,
             ),
         )
     }
 
-/*
-           April                      May                       June
-     Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
-            1  2  3  4  5                   1  2  3       1  2  3  4  5  6  7
-      6  7  8  9 10 11 12       4  5  6  7  8  9 10       8  9 10 11 12 13 14
-     13 14 15 16 17 18 19      11 12 13 14 15 16 17      15 16 17 18 19 20 21
-     20 21 22 23 24 25 26      18 19 20 21 22 23 24      22 23 24 25 26 27 28
-     27 28 29 30               25 26 27 28 29 30 31      29 30
-     */
+    /*
+               April                      May                       June
+         Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
+                1  2  3  4  5                   1  2  3       1  2  3  4  5  6  7
+          6  7  8  9 10 11 12       4  5  6  7  8  9 10       8  9 10 11 12 13 14
+         13 14 15 16 17 18 19      11 12 13 14 15 16 17      15 16 17 18 19 20 21
+         20 21 22 23 24 25 26      18 19 20 21 22 23 24      22 23 24 25 26 27 28
+         27 28 29 30               25 26 27 28 29 30 31      29 30
+         */
     @Test
     fun `Meldeplikt overholdt ved fritak hele meldeperioden`() {
         val rettighetsperiode = Periode(
-            LocalDate.of(2020, APRIL, 20),
-            LocalDate.of(2021, APRIL, 19),
+            20 april 2020,
+            19 april 2021,
         )
         val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
-            meldepliktGrunnlag = MeldepliktGrunnlag(listOf(
-                Fritaksvurdering(
-                    harFritak = true,
-                    fraDato = rettighetsperiode.fom,
-                    begrunnelse = "kan ikke",
-                    opprettetTid = rettighetsperiode.fom.atStartOfDay(),
+            meldepliktGrunnlag = MeldepliktGrunnlag(
+                listOf(
+                    Fritaksvurdering(
+                        harFritak = true,
+                        fraDato = rettighetsperiode.fom,
+                        begrunnelse = "kan ikke",
+                        opprettetTid = rettighetsperiode.fom.atStartOfDay(),
+                    )
                 )
-            ))
+            )
         )
 
         val vurdertTidslinje = vurder(input, nå = rettighetsperiode.tom.plusDays(1))
@@ -221,61 +202,56 @@ class MeldepliktRegelTest {
             Forventer(
                 fom = rettighetsperiode.fom,
                 tom = rettighetsperiode.fom.plusDays(13),
-                utfall = OPPFYLT,
+                vurdering = MeldepliktVurdering.FørVedtak,
             ),
             Forventer(
                 fom = rettighetsperiode.fom.plusDays(14),
                 tom = rettighetsperiode.tom,
-                utfall = OPPFYLT,
-                dokument = MeldepliktRegel.Fritak
+                vurdering = MeldepliktVurdering.Fritak
             )
         )
     }
 
-/*
-             April                      May                       June
-      Mo  Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
-              1  2  3  4  5                   1  2  3       1  2  3  4  5  6  7
-       6   7  8  9 10 11 12       4  5  6  7  8  9 10       8  9 10 11 12 13 14
-      13  14 15 16 17 18 19      11 12 13 14 15 16 17      15 16 17 18 19 20 21
-     [20] 21 22 23 24 25 26      18 19 20 21 22 23 24      22 23 24 25 26 27 28
-      27  28 29 30               25 26 27 28 29 30 31      29 30
-     */
+    /*
+                 April                      May                       June
+          Mo  Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
+                  1  2  3  4  5                   1  2  3       1  2  3  4  5  6  7
+           6   7  8  9 10 11 12       4  5  6  7  8  9 10       8  9 10 11 12 13 14
+          13  14 15 16 17 18 19      11 12 13 14 15 16 17      15 16 17 18 19 20 21
+         [20] 21 22 23 24 25 26      18 19 20 21 22 23 24      22 23 24 25 26 27 28
+          27  28 29 30               25 26 27 28 29 30 31      29 30
+         */
     @Test
     fun `Innsending etter fristen, men har fritak hele meldeperioden`() {
-        val rettighetsperiode = Periode(
-            LocalDate.of(2020, APRIL, 20),
-            LocalDate.of(2021, APRIL, 19),
-        )
+        val rettighetsperiode = Periode(20 april 2020, 19 april 2021)
         val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
-            meldepliktGrunnlag = MeldepliktGrunnlag(listOf(
-                Fritaksvurdering(
-                    harFritak = true,
-                    fraDato = rettighetsperiode.fom,
-                    begrunnelse = "kan ikke",
-                    opprettetTid = rettighetsperiode.fom.atStartOfDay(),
+            meldepliktGrunnlag = MeldepliktGrunnlag(
+                listOf(
+                    Fritaksvurdering(
+                        harFritak = true,
+                        fraDato = 20 april 2020,
+                        begrunnelse = "kan ikke",
+                        opprettetTid = rettighetsperiode.fom.atStartOfDay(),
+                    )
                 )
-            )),
-            innsendingsTidspunkt = mapOf(
-                LocalDate.of(2020, APRIL, 28) to JournalpostId("1"),
             ),
+            innsendingsTidspunkt = mapOf(28 april 2020 to JournalpostId("1")),
         )
 
-        val vurdertTidslinje = vurder(input, nå = rettighetsperiode.tom.plusDays(1))
+        val vurdertTidslinje = vurder(input, nå = 20 april 2021)
 
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
             Forventer(
-                fom = rettighetsperiode.fom,
-                tom = rettighetsperiode.fom.plusDays(13),
-                utfall = OPPFYLT,
+                fom = 20 april 2020,
+                tom = 3 mai 2020,
+                vurdering = MeldepliktVurdering.FørVedtak,
             ),
             Forventer(
-                fom = rettighetsperiode.fom.plusDays(14),
-                tom = rettighetsperiode.tom,
-                utfall = OPPFYLT,
-                dokument = MeldepliktRegel.Fritak
+                fom = 4 mai 2020,
+                tom = 19 april 2021,
+                vurdering = MeldepliktVurdering.Fritak
             )
         )
     }
@@ -287,131 +263,125 @@ class MeldepliktRegelTest {
     @Test
     fun `Fremtidige meldeperioder er IKKE_OPPFYLT hvis forrige har ført til stans`() {
         val rettighetsperiode = Periode(
-            LocalDate.of(2020, JANUARY, 6),
-            LocalDate.of(2020, MARCH, 1),
+            6 januar 2020,
+            1 mars 2020,
         )
 
         val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
         )
 
-        val vurdertTidslinje = vurder(input, nå = LocalDate.of(2020, FEBRUARY, 2))
+        val vurdertTidslinje = vurder(input, nå = 2 februar 2020)
 
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
             Forventer(
-                fom = LocalDate.of(2020, JANUARY, 6), tom = LocalDate.of(2020, JANUARY, 19),
-                utfall = OPPFYLT,
+                fom = 6 januar 2020, tom = 19 januar 2020,
+                vurdering = MeldepliktVurdering.FørVedtak,
             ),
             Forventer(
-                fom = LocalDate.of(2020, JANUARY, 20), tom = LocalDate.of(2020, FEBRUARY, 1),
-                utfall = IKKE_OPPFYLT,
-                årsak = IKKE_OVERHOLDT_MELDEPLIKT_SANKSJON,
+                fom = 20 januar 2020, tom = 1 februar 2020,
+                vurdering = MeldepliktVurdering.IkkeMeldtSeg,
             ),
             Forventer(
-                fom = LocalDate.of(2020, FEBRUARY, 2), tom = LocalDate.of(2020, FEBRUARY, 2),
-                utfall = IKKE_OPPFYLT,
-                årsak = MELDEPLIKT_FRIST_IKKE_PASSERT,
+                fom = 2 februar 2020, tom = 2 februar 2020,
+                vurdering = MeldepliktVurdering.FremtidigIkkeOppfylt,
             ),
             Forventer(
-                fom = LocalDate.of(2020, FEBRUARY, 3), tom = LocalDate.of(2020, FEBRUARY, 16),
-                utfall = IKKE_OPPFYLT,
-                årsak = MELDEPLIKT_FRIST_IKKE_PASSERT
+                fom = 3 februar 2020, tom = 16 februar 2020,
+                vurdering = MeldepliktVurdering.FremtidigIkkeOppfylt,
             ),
             Forventer(
-                fom = LocalDate.of(2020, FEBRUARY, 17), tom = LocalDate.of(2020, MARCH, 1),
-                utfall = IKKE_OPPFYLT,
-                årsak = MELDEPLIKT_FRIST_IKKE_PASSERT,
+                fom = 17 februar 2020, tom = 1 mars 2020,
+                vurdering = MeldepliktVurdering.FremtidigIkkeOppfylt,
             )
         )
     }
 
-/*
-           April                      May                       June
-     Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
-            1  2  3  4  5                   1  2  3       1  2  3  4  5  6  7
-      6  7  8  9 10 11 12       4  5  6  7  8  9 10       8  9 10 11 12 13 14
-     13 14 15 16 17 18 19      11 12 13 14 15 16 17      15 16 17 18 19 20 21
-     20 21 22 23 24 25 26      18 19 20 21 22 23 24      22 23 24 25 26 27 28
-     27 28 29 30               25 26 27 28 29 30 31      29 30
-     */
+    /*
+               April                      May                       June
+         Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
+                1  2  3  4  5                   1  2  3       1  2  3  4  5  6  7
+          6  7  8  9 10 11 12       4  5  6  7  8  9 10       8  9 10 11 12 13 14
+         13 14 15 16 17 18 19      11 12 13 14 15 16 17      15 16 17 18 19 20 21
+         20 21 22 23 24 25 26      18 19 20 21 22 23 24      22 23 24 25 26 27 28
+         27 28 29 30               25 26 27 28 29 30 31      29 30
+         */
     @Test
     fun `Innsending siste dagen av fristen, oppfylt for hele meldeperioden`() {
         val rettighetsperiode = Periode(
-            LocalDate.of(2020, APRIL, 20),
-            LocalDate.of(2021, APRIL, 19),
+            20 april 2020,
+            19 april 2021,
         )
         val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
             innsendingsTidspunkt = mapOf(
-                LocalDate.of(2020, MAY, 11) to JournalpostId("1"),
+                11 mai 2020 to JournalpostId("1"),
             ),
         )
 
-        val vurdertTidslinje = vurder(input, nå = LocalDate.of(2020, MAY, 16))
+        val vurdertTidslinje = vurder(input, nå = 16 mai 2020)
 
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
             Forventer(
                 fom = rettighetsperiode.fom,
                 tom = rettighetsperiode.fom.plusDays(13),
-                utfall = OPPFYLT,
+                vurdering = MeldepliktVurdering.FørVedtak,
             ),
             Forventer(
-                dokument = MeldepliktRegel.Meldt(JournalpostId("1")),
                 fom = rettighetsperiode.fom.plusDays(14),
                 tom = rettighetsperiode.fom.plusDays(27),
-                utfall = OPPFYLT,
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1")),
             ),
             Forventer(
                 fom = rettighetsperiode.fom.plusDays(28),
                 tom = rettighetsperiode.tom,
-                utfall = OPPFYLT,
+                vurdering = MeldepliktVurdering.FremtidigOppfylt,
             ),
         )
     }
 
-/*
-           April                      May                       June
-     Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
-            1  2  3  4  5                   1  2  3       1  2  3  4  5  6  7
-      6  7  8  9 10 11 12       4  5  6  7  8  9 10       8  9 10 11 12 13 14
-     13 14 15 16 17 18 19      11 12 13 14 15 16 17      15 16 17 18 19 20 21
-     20 21 22 23 24 25 26      18 19 20 21 22 23 24      22 23 24 25 26 27 28
-     27 28 29 30               25 26 27 28 29 30 31      29 30
-     */
+    /*
+               April                      May                       June
+         Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
+                1  2  3  4  5                   1  2  3       1  2  3  4  5  6  7
+          6  7  8  9 10 11 12       4  5  6  7  8  9 10       8  9 10 11 12 13 14
+         13 14 15 16 17 18 19      11 12 13 14 15 16 17      15 16 17 18 19 20 21
+         20 21 22 23 24 25 26      18 19 20 21 22 23 24      22 23 24 25 26 27 28
+         27 28 29 30               25 26 27 28 29 30 31      29 30
+         */
     @Test
     fun `Innsending siste dagen av fristen, oppfylt for hele meldeperioden, selv når meldeperioden har passert`() {
         val rettighetsperiode = Periode(
-            LocalDate.of(2020, APRIL, 20),
-            LocalDate.of(2021, APRIL, 19),
+            20 april 2020,
+            19 april 2021,
         )
         val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
             innsendingsTidspunkt = mapOf(
-                LocalDate.of(2020, MAY, 11) to JournalpostId("1"),
+                11 mai 2020 to JournalpostId("1"),
             ),
         )
 
-        val vurdertTidslinje = vurder(input, nå = LocalDate.of(2020, MAY, 18))
+        val vurdertTidslinje = vurder(input, nå = 18 mai 2020)
 
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
             Forventer(
                 fom = rettighetsperiode.fom,
                 tom = rettighetsperiode.fom.plusDays(13),
-                utfall = OPPFYLT,
+                vurdering = MeldepliktVurdering.FørVedtak,
             ),
             Forventer(
-                dokument = MeldepliktRegel.Meldt(JournalpostId("1")),
                 fom = rettighetsperiode.fom.plusDays(14),
                 tom = rettighetsperiode.fom.plusDays(27),
-                utfall = OPPFYLT,
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1")),
             ),
             Forventer(
                 fom = rettighetsperiode.fom.plusDays(28),
                 tom = rettighetsperiode.tom,
-                utfall = OPPFYLT,
+                vurdering = MeldepliktVurdering.FremtidigOppfylt,
             ),
         )
     }
@@ -429,39 +399,36 @@ class MeldepliktRegelTest {
     @Test
     fun `Meldeplikt er oppfylt fra dagen etter frist og ut meldeperioden ved innmelding dagen etter frist`() {
         val rettighetsperiode = Periode(
-            LocalDate.of(2020, JANUARY, 6),
-            LocalDate.of(2020, FEBRUARY, 16),
+            6 januar 2020,
+            16 februar 2020,
         )
 
         val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
             innsendingsTidspunkt = mapOf(
-                LocalDate.of(2020, JANUARY, 28) to JournalpostId("1"),
+                28 januar 2020 to JournalpostId("1"),
             ),
         )
 
-        val vurdertTidslinje = vurder(input, nå = LocalDate.of(2020, FEBRUARY, 17))
+        val vurdertTidslinje = vurder(input, nå = 17 februar 2020)
 
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
             Forventer(
-                fom = LocalDate.of(2020, JANUARY, 6), tom = LocalDate.of(2020, JANUARY, 19),
-                utfall = OPPFYLT,
+                fom = 6 januar 2020, tom = 19 januar 2020,
+                vurdering = MeldepliktVurdering.FørVedtak,
             ),
             Forventer(
-                fom = LocalDate.of(2020, JANUARY, 20), tom = LocalDate.of(2020, JANUARY, 27),
-                utfall = IKKE_OPPFYLT,
-                årsak = IKKE_OVERHOLDT_MELDEPLIKT_SANKSJON,
+                fom = 20 januar 2020, tom = 27 januar 2020,
+                vurdering = MeldepliktVurdering.IkkeMeldtSeg,
             ),
             Forventer(
-                fom = LocalDate.of(2020, JANUARY, 28), tom = LocalDate.of(2020, FEBRUARY, 2),
-                dokument = MeldepliktRegel.Meldt(JournalpostId("1")),
-                utfall = OPPFYLT,
+                fom = 28 januar 2020, tom = 2 februar 2020,
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1")),
             ),
             Forventer(
-                fom = LocalDate.of(2020, FEBRUARY, 3), tom = LocalDate.of(2020, FEBRUARY, 16),
-                utfall = IKKE_OPPFYLT,
-                årsak = IKKE_OVERHOLDT_MELDEPLIKT_SANKSJON,
+                fom = 3 februar 2020, tom = 16 februar 2020,
+                vurdering = MeldepliktVurdering.IkkeMeldtSeg,
             )
         )
     }
@@ -479,39 +446,36 @@ class MeldepliktRegelTest {
     @Test
     fun `Meldeplikt er oppfylt fra innsending og ut meldeperioden ved innmelding etter frist`() {
         val rettighetsperiode = Periode(
-            LocalDate.of(2020, JANUARY, 6),
-            LocalDate.of(2020, FEBRUARY, 16),
+            6 januar 2020,
+            16 februar 2020,
         )
 
         val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
             innsendingsTidspunkt = mapOf(
-                LocalDate.of(2020, JANUARY, 30) to JournalpostId("1"),
+                30 januar 2020 to JournalpostId("1"),
             ),
         )
 
-        val vurdertTidslinje = vurder(input, nå = LocalDate.of(2020, FEBRUARY, 17))
+        val vurdertTidslinje = vurder(input, nå = 17 februar 2020)
 
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
             Forventer(
-                fom = LocalDate.of(2020, JANUARY, 6), tom = LocalDate.of(2020, JANUARY, 19),
-                utfall = OPPFYLT,
+                fom = 6 januar 2020, tom = 19 januar 2020,
+                vurdering = MeldepliktVurdering.FørVedtak,
             ),
             Forventer(
-                fom = LocalDate.of(2020, JANUARY, 20), tom = LocalDate.of(2020, JANUARY, 29),
-                utfall = IKKE_OPPFYLT,
-                årsak = IKKE_OVERHOLDT_MELDEPLIKT_SANKSJON,
+                fom = 20 januar 2020, tom = 29 januar 2020,
+                vurdering = MeldepliktVurdering.IkkeMeldtSeg,
             ),
             Forventer(
-                fom = LocalDate.of(2020, JANUARY, 30), tom = LocalDate.of(2020, FEBRUARY, 2),
-                dokument = MeldepliktRegel.Meldt(JournalpostId("1")),
-                utfall = OPPFYLT,
+                fom = 30 januar 2020, tom = 2 februar 2020,
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1")),
             ),
             Forventer(
-                fom = LocalDate.of(2020, FEBRUARY, 3), tom = LocalDate.of(2020, FEBRUARY, 16),
-                utfall = IKKE_OPPFYLT,
-                årsak = IKKE_OVERHOLDT_MELDEPLIKT_SANKSJON,
+                fom = 3 februar 2020, tom = 16 februar 2020,
+                vurdering = MeldepliktVurdering.IkkeMeldtSeg,
             )
         )
     }
@@ -528,26 +492,28 @@ class MeldepliktRegelTest {
     @Test
     fun `har fritak akkurat en meldeperiode, melder seg den neste`() {
         val rettighetsperiode = Periode(
-            LocalDate.of(2020, APRIL, 20),
-            LocalDate.of(2020, MAY, 31),
+            20 april 2020,
+            31 mai 2020,
         )
         val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
-            meldepliktGrunnlag = MeldepliktGrunnlag(listOf(
-                Fritaksvurdering(
-                    harFritak = true,
-                    fraDato = LocalDate.of(2020, MAY, 4),
-                    begrunnelse = "kan ikke",
-                    opprettetTid = rettighetsperiode.fom.atStartOfDay(),
-                ),
-                Fritaksvurdering(
-                    harFritak = false,
-                    fraDato = LocalDate.of(2020, MAY, 18),
-                    begrunnelse = "kan",
-                    opprettetTid = rettighetsperiode.fom.atStartOfDay(),
+            meldepliktGrunnlag = MeldepliktGrunnlag(
+                listOf(
+                    Fritaksvurdering(
+                        harFritak = true,
+                        fraDato = 4 mai 2020,
+                        begrunnelse = "kan ikke",
+                        opprettetTid = rettighetsperiode.fom.atStartOfDay(),
+                    ),
+                    Fritaksvurdering(
+                        harFritak = false,
+                        fraDato = 18 mai 2020,
+                        begrunnelse = "kan",
+                        opprettetTid = rettighetsperiode.fom.atStartOfDay(),
+                    )
                 )
-            )),
-            innsendingsTidspunkt = mapOf(LocalDate.of(2020, MAY, 19) to JournalpostId("1"))
+            ),
+            innsendingsTidspunkt = mapOf(19 mai 2020 to JournalpostId("1"))
         )
 
         val vurdertTidslinje = vurder(input, nå = rettighetsperiode.tom.plusDays(1))
@@ -557,19 +523,17 @@ class MeldepliktRegelTest {
             Forventer(
                 fom = rettighetsperiode.fom,
                 tom = rettighetsperiode.fom.plusDays(13),
-                utfall = OPPFYLT,
+                vurdering = MeldepliktVurdering.FørVedtak,
             ),
             Forventer(
-                fom = LocalDate.of(2020, MAY, 4),
-                tom = LocalDate.of(2020, MAY, 17),
-                utfall = OPPFYLT,
-                dokument = MeldepliktRegel.Fritak
+                fom = 4 mai 2020,
+                tom = 17 mai 2020,
+                vurdering = MeldepliktVurdering.Fritak,
             ),
             Forventer(
-                dokument = MeldepliktRegel.Meldt(JournalpostId("1")),
-                fom = LocalDate.of(2020, MAY, 18),
-                tom = LocalDate.of(2020, MAY, 31),
-                utfall = OPPFYLT,
+                fom = 18 mai 2020,
+                tom = 31 mai 2020,
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1")),
             )
         )
     }
@@ -586,25 +550,27 @@ class MeldepliktRegelTest {
     @Test
     fun `Hvis fritaksperiode == meldeperiode, oppfylt for kun den meldeperioden`() {
         val rettighetsperiode = Periode(
-            LocalDate.of(2020, APRIL, 20),
-            LocalDate.of(2020, MAY, 31),
+            20 april 2020,
+            31 mai 2020,
         )
         val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
-            meldepliktGrunnlag = MeldepliktGrunnlag(listOf(
-                Fritaksvurdering(
-                    harFritak = true,
-                    fraDato = LocalDate.of(2020, MAY, 4),
-                    begrunnelse = "kan ikke",
-                    opprettetTid = rettighetsperiode.fom.atStartOfDay(),
-                ),
-                Fritaksvurdering(
-                    harFritak = false,
-                    fraDato = LocalDate.of(2020, MAY, 18),
-                    begrunnelse = "kan",
-                    opprettetTid = rettighetsperiode.fom.atStartOfDay(),
+            meldepliktGrunnlag = MeldepliktGrunnlag(
+                listOf(
+                    Fritaksvurdering(
+                        harFritak = true,
+                        fraDato = 4 mai 2020,
+                        begrunnelse = "kan ikke",
+                        opprettetTid = rettighetsperiode.fom.atStartOfDay(),
+                    ),
+                    Fritaksvurdering(
+                        harFritak = false,
+                        fraDato = 18 mai 2020,
+                        begrunnelse = "kan",
+                        opprettetTid = rettighetsperiode.fom.atStartOfDay(),
+                    )
                 )
-            ))
+            )
         )
 
         val vurdertTidslinje = vurder(input, nå = rettighetsperiode.tom.plusDays(1))
@@ -614,19 +580,17 @@ class MeldepliktRegelTest {
             Forventer(
                 fom = rettighetsperiode.fom,
                 tom = rettighetsperiode.fom.plusDays(13),
-                utfall = OPPFYLT,
+                vurdering = MeldepliktVurdering.FørVedtak,
             ),
             Forventer(
-                fom = LocalDate.of(2020, MAY, 4),
-                tom = LocalDate.of(2020, MAY, 17),
-                utfall = OPPFYLT,
-                dokument = MeldepliktRegel.Fritak
+                fom = 4 mai 2020,
+                tom = 17 mai 2020,
+                vurdering = MeldepliktVurdering.Fritak,
             ),
             Forventer(
-                fom = LocalDate.of(2020, MAY, 18),
+                fom = 18 mai 2020,
                 tom = rettighetsperiode.tom,
-                utfall = IKKE_OPPFYLT,
-                årsak = IKKE_OVERHOLDT_MELDEPLIKT_SANKSJON,
+                vurdering = MeldepliktVurdering.IkkeMeldtSeg,
             ),
         )
     }
@@ -643,34 +607,32 @@ class MeldepliktRegelTest {
     @Test
     fun `Meldefrist er etter rettighetsperioden`() {
         val rettighetsperiode = Periode(
-            LocalDate.of(2020, APRIL, 20),
-            LocalDate.of(2020, MAY, 20),
+            20 april 2020,
+            20 mai 2020,
         )
         val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
-            innsendingsTidspunkt = mapOf(LocalDate.of(2020, MAY, 22) to JournalpostId("1"))
+            innsendingsTidspunkt = mapOf(22 mai 2020 to JournalpostId("1"))
         )
 
-        val vurdertTidslinje = vurder(input, nå = LocalDate.of(2020, MAY, 23))
+        val vurdertTidslinje = vurder(input, nå = 23 mai 2020)
 
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
             Forventer(
                 fom = rettighetsperiode.fom,
                 tom = rettighetsperiode.fom.plusDays(13),
-                utfall = OPPFYLT,
+                vurdering = MeldepliktVurdering.FørVedtak,
             ),
             Forventer(
-                fom = LocalDate.of(2020, MAY, 4),
-                tom = LocalDate.of(2020, MAY, 17),
-                utfall = IKKE_OPPFYLT,
-                årsak = IKKE_OVERHOLDT_MELDEPLIKT_SANKSJON
+                fom = 4 mai 2020,
+                tom = 17 mai 2020,
+                vurdering = MeldepliktVurdering.IkkeMeldtSeg,
             ),
             Forventer(
-                fom = LocalDate.of(2020, MAY, 18),
-                tom = LocalDate.of(2020, MAY, 20),
-                utfall = OPPFYLT,
-                dokument = MeldepliktRegel.Meldt(JournalpostId("1"))
+                fom = 18 mai 2020,
+                tom = 20 mai 2020,
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1"))
             ),
         )
     }
@@ -687,25 +649,27 @@ class MeldepliktRegelTest {
     @Test
     fun `får fritak etter meldefrist uten å ha meldt seg, får oppfylt fra fritaksdag og ut`() {
         val rettighetsperiode = Periode(
-            LocalDate.of(2020, APRIL, 20),
-            LocalDate.of(2020, MAY, 17),
+            20 april 2020,
+            17 mai 2020,
         )
         val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
-            meldepliktGrunnlag = MeldepliktGrunnlag(listOf(
-                Fritaksvurdering(
-                    harFritak = true,
-                    fraDato = LocalDate.of(2020, MAY, 14),
-                    begrunnelse = "kan ikke",
-                    opprettetTid = rettighetsperiode.fom.atStartOfDay(),
-                ),
-                Fritaksvurdering(
-                    harFritak = false,
-                    fraDato = LocalDate.of(2020, MAY, 15),
-                    begrunnelse = "kan",
-                    opprettetTid = rettighetsperiode.fom.atStartOfDay(),
+            meldepliktGrunnlag = MeldepliktGrunnlag(
+                listOf(
+                    Fritaksvurdering(
+                        harFritak = true,
+                        fraDato = 14 mai 2020,
+                        begrunnelse = "kan ikke",
+                        opprettetTid = rettighetsperiode.fom.atStartOfDay(),
+                    ),
+                    Fritaksvurdering(
+                        harFritak = false,
+                        fraDato = 15 mai 2020,
+                        begrunnelse = "kan",
+                        opprettetTid = rettighetsperiode.fom.atStartOfDay(),
+                    )
                 )
-            ))
+            )
         )
 
         val vurdertTidslinje = vurder(input, nå = rettighetsperiode.tom.plusDays(1))
@@ -715,19 +679,17 @@ class MeldepliktRegelTest {
             Forventer(
                 fom = rettighetsperiode.fom,
                 tom = rettighetsperiode.fom.plusDays(13),
-                utfall = OPPFYLT,
+                vurdering = MeldepliktVurdering.FørVedtak,
             ),
             Forventer(
-                fom = LocalDate.of(2020, MAY, 4),
-                tom = LocalDate.of(2020, MAY, 13),
-                utfall = IKKE_OPPFYLT,
-                årsak = IKKE_OVERHOLDT_MELDEPLIKT_SANKSJON,
+                fom = 4 mai 2020,
+                tom = 13 mai 2020,
+                vurdering = MeldepliktVurdering.IkkeMeldtSeg,
             ),
             Forventer(
-                dokument = MeldepliktRegel.Fritak,
-                fom = LocalDate.of(2020, MAY, 14),
-                tom = LocalDate.of(2020, MAY, 17),
-                utfall = OPPFYLT,
+                fom = 14 mai 2020,
+                tom = 17 mai 2020,
+                vurdering = MeldepliktVurdering.Fritak,
             )
         )
     }
@@ -744,33 +706,31 @@ class MeldepliktRegelTest {
     @Test
     fun `frist har passert, men dags dato er fortsatt i meldeperioden`() {
         val rettighetsperiode = Periode(
-            LocalDate.of(2020, APRIL, 20),
-            LocalDate.of(2020, MAY, 17),
+            20 april 2020,
+            17 mai 2020,
         )
         val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
         )
 
-        val vurdertTidslinje = vurder(input, nå = LocalDate.of(2020, MAY, 15))
+        val vurdertTidslinje = vurder(input, nå = 15 mai 2020)
 
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
             Forventer(
                 fom = rettighetsperiode.fom,
                 tom = rettighetsperiode.fom.plusDays(13),
-                utfall = OPPFYLT,
+                vurdering = MeldepliktVurdering.FørVedtak,
             ),
             Forventer(
-                fom = LocalDate.of(2020, MAY, 4),
-                tom = LocalDate.of(2020, MAY, 14),
-                utfall = IKKE_OPPFYLT,
-                årsak = IKKE_OVERHOLDT_MELDEPLIKT_SANKSJON,
+                fom = 4 mai 2020,
+                tom = 14 mai 2020,
+                vurdering = MeldepliktVurdering.IkkeMeldtSeg,
             ),
             Forventer(
-                fom = LocalDate.of(2020, MAY, 15),
-                tom = LocalDate.of(2020, MAY, 17),
-                utfall = IKKE_OPPFYLT,
-                årsak = MELDEPLIKT_FRIST_IKKE_PASSERT
+                fom = 15 mai 2020,
+                tom = 17 mai 2020,
+                vurdering = MeldepliktVurdering.FremtidigIkkeOppfylt,
             )
         )
     }
@@ -786,27 +746,24 @@ class MeldepliktRegelTest {
      */
     @Test
     fun `frist har ikke passert, forrige meldeperiode er oppfylt`() {
-        val rettighetsperiode = Periode(
-            LocalDate.of(2020, APRIL, 20),
-            LocalDate.of(2020, MAY, 17),
-        )
+        val rettighetsperiode = Periode(20 april 2020, 17 mai 2020)
         val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
         )
 
-        val vurdertTidslinje = vurder(input, nå = LocalDate.of(2020, MAY, 7))
+        val vurdertTidslinje = vurder(input, nå = 7 mai 2020)
 
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
             Forventer(
-                fom = rettighetsperiode.fom,
-                tom = rettighetsperiode.fom.plusDays(13),
-                utfall = OPPFYLT,
+                fom = 20 april 2020,
+                tom = 3 mai 2020,
+                vurdering = MeldepliktVurdering.FørVedtak,
             ),
             Forventer(
-                fom = LocalDate.of(2020, MAY, 4),
-                tom = LocalDate.of(2020, MAY, 17),
-                utfall = OPPFYLT
+                fom = 4 mai 2020,
+                tom = 17 mai 2020,
+                vurdering = MeldepliktVurdering.FremtidigOppfylt,
             )
         )
     }
@@ -823,33 +780,31 @@ class MeldepliktRegelTest {
     @Test
     fun `frist har ikke passert, forrige meldeperiode er ikke oppfylt`() {
         val rettighetsperiode = Periode(
-            LocalDate.of(2020, APRIL, 20),
-            LocalDate.of(2020, MAY, 31),
+            20 april 2020,
+            31 mai 2020,
         )
         val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
         )
 
-        val vurdertTidslinje = vurder(input, nå = LocalDate.of(2020, MAY, 20))
+        val vurdertTidslinje = vurder(input, nå = 20 mai 2020)
 
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
             Forventer(
                 fom = rettighetsperiode.fom,
                 tom = rettighetsperiode.fom.plusDays(13),
-                utfall = OPPFYLT,
+                vurdering = MeldepliktVurdering.FørVedtak,
             ),
             Forventer(
-                fom = LocalDate.of(2020, MAY, 4),
-                tom = LocalDate.of(2020, MAY, 17),
-                utfall = IKKE_OPPFYLT,
-                årsak = IKKE_OVERHOLDT_MELDEPLIKT_SANKSJON,
+                fom = 4 mai 2020,
+                tom = 17 mai 2020,
+                vurdering = MeldepliktVurdering.IkkeMeldtSeg,
             ),
             Forventer(
-                fom = LocalDate.of(2020, MAY, 18),
-                tom = LocalDate.of(2020, MAY, 31),
-                utfall = IKKE_OPPFYLT,
-                årsak = MELDEPLIKT_FRIST_IKKE_PASSERT,
+                fom = 18 mai 2020,
+                tom = 31 mai 2020,
+                vurdering = MeldepliktVurdering.FremtidigIkkeOppfylt,
             )
         )
     }
@@ -866,47 +821,46 @@ class MeldepliktRegelTest {
     @Test
     fun `frist har ikke passert, forrige meldeperiode er ikke oppfylt, fritak etter fristen`() {
         val rettighetsperiode = Periode(
-            LocalDate.of(2020, APRIL, 20),
-            LocalDate.of(2020, MAY, 31),
+            20 april 2020,
+            31 mai 2020,
         )
         val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
             meldepliktGrunnlag = MeldepliktGrunnlag(
-                listOf(Fritaksvurdering(
-                    harFritak = true,
-                    fraDato = LocalDate.of(2020, MAY, 28),
-                    begrunnelse = "kan ikke",
-                    opprettetTid = LocalDateTime.now()
-                ))
+                listOf(
+                    Fritaksvurdering(
+                        harFritak = true,
+                        fraDato = 28 mai 2020,
+                        begrunnelse = "kan ikke",
+                        opprettetTid = LocalDateTime.now()
+                    )
+                )
             )
         )
 
-        val vurdertTidslinje = vurder(input, nå = LocalDate.of(2020, MAY, 20))
+        val vurdertTidslinje = vurder(input, nå = 20 mai 2020)
 
         assertVurdering(
             vurdertTidslinje, rettighetsperiode,
             Forventer(
                 fom = rettighetsperiode.fom,
                 tom = rettighetsperiode.fom.plusDays(13),
-                utfall = OPPFYLT,
+                vurdering = MeldepliktVurdering.FørVedtak,
             ),
             Forventer(
-                fom = LocalDate.of(2020, MAY, 4),
-                tom = LocalDate.of(2020, MAY, 17),
-                utfall = IKKE_OPPFYLT,
-                årsak = IKKE_OVERHOLDT_MELDEPLIKT_SANKSJON,
+                fom = 4 mai 2020,
+                tom = 17 mai 2020,
+                vurdering = MeldepliktVurdering.IkkeMeldtSeg,
             ),
             Forventer(
-                fom = LocalDate.of(2020, MAY, 18),
-                tom = LocalDate.of(2020, MAY, 27),
-                utfall = IKKE_OPPFYLT,
-                årsak = MELDEPLIKT_FRIST_IKKE_PASSERT,
+                fom = 18 mai 2020,
+                tom = 27 mai 2020,
+                vurdering = MeldepliktVurdering.FremtidigIkkeOppfylt,
             ),
             Forventer(
-                fom = LocalDate.of(2020, MAY, 28),
-                tom = LocalDate.of(2020, MAY, 31),
-                utfall = OPPFYLT,
-                dokument = MeldepliktRegel.Fritak
+                fom = 28 mai 2020,
+                tom = 31 mai 2020,
+                vurdering = MeldepliktVurdering.Fritak,
             )
         )
     }
@@ -924,38 +878,20 @@ class MeldepliktRegelTest {
         rettighetsperiode: Periode,
         vararg forventedeVurderinger: Forventer,
     ) {
-        return assertVurdering(vurdertTidslinje, rettighetsperiode, false, *forventedeVurderinger)
-    }
-
-    private fun assertVurdering(
-        vurdertTidslinje: Tidslinje<Vurdering>,
-        rettighetsperiode: Periode,
-        aksepterFlereVurderinger: Boolean,
-        vararg forventedeVurderinger: Forventer,
-    ) {
         val forventetTidslinje = forventedeVurderinger
             .map { Segment(Periode(it.fom, it.tom), it) }
             .let { Tidslinje(it) }
 
         assertThat(vurdertTidslinje.erSammenhengende()).isTrue()
         assertThat(vurdertTidslinje.helePerioden()).isEqualTo(rettighetsperiode)
-
-        if (!aksepterFlereVurderinger) {
-            assertThat(forventetTidslinje.helePerioden()).isEqualTo(rettighetsperiode)
-        }
+        assertThat(forventetTidslinje.helePerioden()).isEqualTo(rettighetsperiode)
 
         vurdertTidslinje.kombiner<_, Nothing>(
             forventetTidslinje,
             JoinStyle.RIGHT_JOIN { periode, vurdering, forventet ->
-                assertThat(vurdering?.verdi?.meldepliktUtfall())
-                    .`as`("for periode $vurdering")
-                    .isEqualTo(forventet.verdi.utfall)
-                assertThat(vurdering?.verdi?.meldepliktVurdering?.dokument)
-                    .`as`("for periode $vurdering")
-                    .isEqualTo(forventet.verdi.dokument)
-                assertThat(vurdering?.verdi?.meldepliktVurdering?.årsak)
-                    .`as`("for periode $vurdering")
-                    .isEqualTo(forventet.verdi.årsak)
+                assertThat(vurdering?.verdi?.meldepliktVurdering)
+                    .`as`("for periode $periode")
+                    .isEqualTo(forventet.verdi.vurdering)
                 null
             })
     }

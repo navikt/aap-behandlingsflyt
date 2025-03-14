@@ -67,7 +67,7 @@ class IverksettVedtakSteg private constructor(
                     avklaringsbehovRepository = avklaringsbehovRepository,
                     vedtakRepository = vedtakRepository
                 ),
-                vedtakService = VedtakService(vedtakRepository),
+                vedtakService = VedtakService(vedtakRepository, behandlingRepository),
                 utbetalingGateway = utbetalingGateway
             )
         }

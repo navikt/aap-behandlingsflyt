@@ -25,4 +25,5 @@ data class UnderveisInput(
     val arbeidsevneGrunnlag: ArbeidsevneGrunnlag,
     val meldepliktGrunnlag: MeldepliktGrunnlag,
     val meldeperioder: List<Periode>,
+    val vedtaksdatoFørstegangsbehandling: LocalDate?,
 ) : Faktagrunnlag

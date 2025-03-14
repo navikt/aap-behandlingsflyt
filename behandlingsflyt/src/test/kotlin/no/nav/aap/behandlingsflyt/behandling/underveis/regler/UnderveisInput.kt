@@ -40,7 +40,8 @@ fun tomUnderveisInput(
     etAnnetSted: List<EtAnnetSted> = listOf(),
     arbeidsevneGrunnlag: ArbeidsevneGrunnlag = ArbeidsevneGrunnlag(emptyList()),
     meldepliktGrunnlag: MeldepliktGrunnlag = MeldepliktGrunnlag(emptyList()),
-    meldeperioder: List<Periode> = FastsettMeldeperiodeSteg.utledMeldeperiode(listOf(), rettighetsperiode)
+    meldeperioder: List<Periode> = FastsettMeldeperiodeSteg.utledMeldeperiode(listOf(), rettighetsperiode),
+    vedtaksdatoFørstegangsbehandling: LocalDate? = rettighetsperiode.fom,
 ): UnderveisInput {
     return UnderveisInput(
         rettighetsperiode = rettighetsperiode,
@@ -53,7 +54,8 @@ fun tomUnderveisInput(
         etAnnetSted = etAnnetSted,
         arbeidsevneGrunnlag = arbeidsevneGrunnlag,
         meldepliktGrunnlag = meldepliktGrunnlag,
-        meldeperioder = meldeperioder
+        meldeperioder = meldeperioder,
+        vedtaksdatoFørstegangsbehandling = vedtaksdatoFørstegangsbehandling,
     )
 }
 
