@@ -90,12 +90,14 @@ spec:
             roles:
               - "bestill-varselbrev"
         - application: paw-patrol
-        - application: saksbehandling-lokal # For lokalt utvikling. IKKE kopier denne til prod.yaml
+        - application: api
+        - application: api-intern
+        {{#if isdev}}
+        - application: saksbehandling-lokal # For lokal utvikling. IKKE kopier denne til prod.yaml
         - application: azure-token-generator # Ikke i prod :)
           namespace: nais
           cluster: dev-gcp
-        - application: api
-        - application: api-intern
+        {{/if}}
     outbound:
       external:
         - host: pdl-api.dev-fss-pub.nais.io
