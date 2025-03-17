@@ -22,10 +22,13 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
+import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 import java.time.LocalDate
 
 class TilkjentYtelseRepositoryImplTest {
@@ -44,13 +47,13 @@ class TilkjentYtelseRepositoryImplTest {
                             LocalDate.now().plusDays(1)
                         ),
                         tilkjent = Tilkjent(
-                            dagsats = Beløp(1000),
-                            gradering = TilkjentGradering(Prosent.`50_PROSENT`, null, Prosent.`0_PROSENT`, Prosent.`0_PROSENT`),
-                            barnetillegg = Beløp(1000),
+                            dagsats = Beløp(999),
+                            gradering = TilkjentGradering(Prosent.`66_PROSENT`, null, Prosent.`0_PROSENT`, Prosent.`0_PROSENT`),
+                            barnetillegg = Beløp(999),
                             grunnlagsfaktor = GUnit("1.0"),
-                            grunnlag = Beløp(1000),
+                            grunnlag = Beløp(999),
                             antallBarn = 1,
-                            barnetilleggsats = Beløp(1000),
+                            barnetilleggsats = Beløp(999),
                             grunnbeløp = Beløp(1000),
                             utbetalingsdato = LocalDate.now().plusDays(14)
                         )
@@ -78,7 +81,8 @@ class TilkjentYtelseRepositoryImplTest {
             val tilkjentYtelseHentet = tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)
             assertNotNull(tilkjentYtelseHentet)
             assertEquals(tilkjentYtelse, tilkjentYtelseHentet)
-
+            // Dobbeltsjekke at vi avrunder redusert dagsats til nærmeste heltall
+            assertThat(tilkjentYtelse.first().tilkjent.redusertDagsats()).isEqualTo(Beløp(BigDecimal("1319")))
         }
 
     }

@@ -11,13 +11,16 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.LocalDate
 import javax.sql.DataSource
 
 /**
@@ -45,16 +48,32 @@ data class SamordningVurderingDTO(
     val kronesum: Int?
 )
 
-
 data class SamordningUføreVurderingGrunnlagDTO(
-    val vurdering: SamordningUføreVurdering,
+    val vurdering: SamordningUføreVurderingDTO?,
+    val grunnlag: List<SamordningUføreGrunnlagDTO>
 )
+
+data class SamordningUføreGrunnlagDTO(
+    val virkningstidspunkt: LocalDate,
+    val uføregrad: Prosent
+)
+
+data class SamordningUføreVurderingDTO(
+    val begrunnelse: String,
+    val vurderingPerioder: List<SamordningUføreVurderingPeriodeDTO>,
+)
+
+data class SamordningUføreVurderingPeriodeDTO(
+    val periode: Periode,
+    val uføregradTilSamordning: Prosent
+)
+
 
 fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/samordning-ufore") {
             get<BehandlingReferanse, SamordningUføreVurderingGrunnlagDTO> { behandlingReferanse ->
-                dataSource.transaction { connection ->
+                val (registerGrunnlag, vurdering) = dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
                     val samordningUføreRepository = repositoryProvider.provide<SamordningUføreRepository>()
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
@@ -64,7 +83,16 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
                     val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandling.id)
                     val samordningUføreVurdering =
                         samordningUføreRepository.hentHvisEksisterer(behandling.id)?.vurdering
+                    Pair(uføreGrunnlag, samordningUføreVurdering)
                 }
+
+                respond(
+                    SamordningUføreVurderingGrunnlagDTO(
+                        vurdering = mapSamordningUføreVurdering(vurdering),
+                        grunnlag = mapSamordningUføreGrunnlag(registerGrunnlag)
+
+                    )
+                )
             }
         }
         route("/{referanse}/grunnlag/samordning/") {
@@ -114,6 +142,28 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
         }
     }
 
+}
+
+private fun mapSamordningUføreVurdering(vurdering: SamordningUføreVurdering?) : SamordningUføreVurderingDTO? {
+    return vurdering?.let {
+        SamordningUføreVurderingDTO(
+            begrunnelse = it.begrunnelse,
+            vurderingPerioder = it.vurderingPerioder.map { periode ->
+                SamordningUføreVurderingPeriodeDTO(
+                    periode.periode,
+                    periode.uføregradTilSamordning
+                )
+            })
+    }
+}
+
+private fun mapSamordningUføreGrunnlag(registerGrunnlag: UføreGrunnlag?): List<SamordningUføreGrunnlagDTO> {
+    return registerGrunnlag?.vurderinger?.map {
+        SamordningUføreGrunnlagDTO(
+            virkningstidspunkt = it.virkningstidspunkt,
+            uføregrad = it.uføregrad
+        )
+    } ?: emptyList()
 }
 
 private fun SamordningVurderingPeriode.tilDTO(): Periode {

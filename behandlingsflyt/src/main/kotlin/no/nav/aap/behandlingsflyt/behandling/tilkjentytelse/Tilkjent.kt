@@ -3,6 +3,8 @@ package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.time.LocalDate
 
 /**
@@ -24,7 +26,7 @@ class Tilkjent(
      * Hent ut full dagsats etter reduksjon.
      */
     fun redusertDagsats(): Beløp {
-        return dagsats.multiplisert(gradering.endeligGradering).pluss(barnetillegg.multiplisert(gradering.endeligGradering))
+        return Beløp(dagsats.multiplisert(gradering.endeligGradering).pluss(barnetillegg.multiplisert(gradering.endeligGradering)).verdi().setScale(0, RoundingMode.HALF_UP))
     }
 
     override fun toString(): String {
