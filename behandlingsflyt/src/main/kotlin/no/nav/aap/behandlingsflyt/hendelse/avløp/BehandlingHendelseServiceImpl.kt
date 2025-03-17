@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepos
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.EndringDTO
@@ -15,6 +16,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.prosessering.DatadelingBehandlingJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.DatadelingMeldePerioderJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.DatadelingSakStatusJobbUtfører
+import no.nav.aap.behandlingsflyt.prosessering.MeldeperiodeTilMeldekortBackendJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.StatistikkJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.StoppetHendelseJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -88,7 +90,12 @@ class BehandlingHendelseServiceImpl(
         flytJobbRepository.leggTil(
             JobbInput(jobb = DatadelingMeldePerioderJobbUtfører).medPayload(hendelse)
         )
-        if(behandling.status().erAvsluttet()) {
+
+        if (behandling.typeBehandling() in listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)) {
+            flytJobbRepository.leggTil(MeldeperiodeTilMeldekortBackendJobbUtfører.nyJobb(sak.id, behandling.id))
+        }
+
+        if (behandling.status().erAvsluttet()) {
             flytJobbRepository.leggTil(
                 JobbInput(jobb = DatadelingSakStatusJobbUtfører).medPayload(hendelse)
             )
