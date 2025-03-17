@@ -60,6 +60,7 @@ class ApiInternGatewayImpl() : ApiInternGateway {
             restClient.post(
                 uri = uri.resolve("/api/insert/vedtak"),
                 request = PostRequest(body = DatadelingDTO(
+                    behandlingsId = behandling.id.toString(),
                     underveisperiode = underveis.map {
                         UnderveisDTO(
                             underveisFom = it.periode.fom,

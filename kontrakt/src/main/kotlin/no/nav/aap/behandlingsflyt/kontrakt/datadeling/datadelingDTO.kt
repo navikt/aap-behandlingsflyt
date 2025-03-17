@@ -10,6 +10,7 @@ public data class DatadelingDTO(
     val rettighetsPeriodeFom: LocalDate,
     val rettighetsPeriodeTom: LocalDate,
     val behandlingStatus: no.nav.aap.behandlingsflyt.kontrakt.behandling.Status,
+    val behandlingsId: String,
     val vedtaksDato: LocalDate,
     val sak: SakDTO, // -\\-
     val tilkjent: List<TilkjentDTO>,
