@@ -78,7 +78,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository, S
     override fun finnAlle(): List<Sak> {
         return connection.queryList(
             """
-                SELECT DISTINCT ON (sak.id, sak.person_id)
+                SELECT
                  SAK.*,
                  PERSON.REFERANSE AS PERSON_REFERANSE,
                  IDENTER
