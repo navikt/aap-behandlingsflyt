@@ -28,6 +28,9 @@ import javax.sql.DataSource
  * @param vurderinger Manuelle vurderinger gjort av saksbehandler for gitte ytelser.
  */
 data class SamordningYtelseVurderingGrunnlagDTO(
+    val begrunnelse: String?,
+    val maksDato: LocalDate?,
+    val maksDatoEndelig: Boolean?,
     val ytelser: List<SamordningYtelseDTO>,
     val vurderinger: List<SamordningVurderingDTO>,
 )
@@ -134,7 +137,10 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
                                     kronesum = it.kronesum?.toInt(),
                                 )
                             }
-                        }
+                        },
+                        begrunnelse = samordning?.begrunnelse,
+                        maksDato = samordning?.maksDato,
+                        maksDatoEndelig = samordning?.maksDatoEndelig
                     )
                 )
 

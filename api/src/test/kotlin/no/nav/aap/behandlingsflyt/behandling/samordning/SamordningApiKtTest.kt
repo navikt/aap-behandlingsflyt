@@ -65,9 +65,9 @@ class SamordningApiKtTest {
                         )
                     ),
                     kilde = "kilde",
-                    saksRef = "saksref"
-                )
-            )
+                    saksRef = "saksref",
+                ),
+            ),
         )
 
         testApplication {
@@ -89,13 +89,15 @@ class SamordningApiKtTest {
                                 Periode(
                                     fom = LocalDate.now(),
                                     tom = LocalDate.now().plusYears(1),
-                                )
-                            ,
+                                ),
                             gradering = 50,
-                            kronesum = null
+                            kronesum = null,
                         )
                     ),
-                    vurderinger = listOf()
+                    vurderinger = listOf(),
+                    begrunnelse = null,
+                    maksDato = null,
+                    maksDatoEndelig = null
                 )
             )
 
