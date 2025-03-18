@@ -8,8 +8,6 @@ metadata:
     sub: behandlingsflyt
 spec:
   image: {{image}}
-  ingresses:
-    - {{ingress}}
   replicas:
     disableAutoScaling: true
     max: 2
@@ -92,19 +90,13 @@ spec:
         - application: paw-patrol
         - application: api
         - application: api-intern
-        {{#if isdev}}
-        - application: saksbehandling-lokal # For lokal utvikling. IKKE kopier denne til prod.yaml
-        - application: azure-token-generator # Ikke i prod :)
-          namespace: nais
-          cluster: dev-gcp
-        {{/if}}
     outbound:
       external:
-        - host: pdl-api.dev-fss-pub.nais.io
-        - host: pensjon-popp-q2.dev-fss-pub.nais.io
-        - host: fpabakus.dev-fss-pub.nais.io
-        - host: aareg-services-q1.dev-fss-pub.nais.io
-        - host: pensjon-pen-q2.dev-fss-pub.nais.io
+        - host: pdl-api.prod-fss-pub.nais.io
+        - host: pensjon-popp-q2.prod-fss-pub.nais.io
+        - host: fpabakus.prod-fss-pub.nais.io
+        - host: aareg-services-q1.prod-fss-pub.nais.io
+        - host: pensjon-pen-q2.prod-fss-pub.nais.io
       rules:
         - application: brev
         - application: tilgang
@@ -119,97 +111,97 @@ spec:
           namespace: tbd
         - application: pensjon-pen-q2
           namespace: pensjon-q2
-          cluster: dev-fss
+          cluster: prod-fss
         - application: api-intern
 
   env:
     - name: INTEGRASJON_PDL_URL
-      value: https://pdl-api.dev-fss-pub.nais.io/graphql
+      value: https://pdl-api.prod-fss-pub.nais.io/graphql
     - name: INTEGRASJON_PDL_SCOPE
-      value: api://dev-fss.pdl.pdl-api/.default
+      value: api://prod-fss.pdl.pdl-api/.default
     - name: INTEGRASJON_SAF_URL_GRAPHQL
-      value: https://saf-q2.dev-fss-pub.nais.io/graphql
+      value: https://saf-q2.prod-fss-pub.nais.io/graphql
     - name: INTEGRASJON_SAF_URL_REST
-      value: https://saf-q2.dev-fss-pub.nais.io/rest
+      value: https://saf-q2.prod-fss-pub.nais.io/rest
     - name: INTEGRASJON_SAF_SCOPE
-      value: api://dev-fss.teamdokumenthandtering.saf/.default
+      value: api://prod-fss.teamdokumenthandtering.saf/.default
     - name: INTEGRASJON_YRKESSKADE_URL
       value: http://yrkesskade-saker.yrkesskade/api/v1/saker/
     - name: INTEGRASJON_YRKESSKADE_SCOPE
-      value: api://dev-gcp.yrkesskade.yrkesskade-saker/.default
+      value: api://prod-gcp.yrkesskade.yrkesskade-saker/.default
     - name: INTEGRASJON_INSTITUSJONSOPPHOLD_URL
-      value: https://institusjon-opphold-proxy-q2.dev-fss-pub.nais.io/api/v1/person/institusjonsopphold
+      value: https://institusjon-opphold-proxy-q2.prod-fss-pub.nais.io/api/v1/person/institusjonsopphold
     - name: INTEGRASJON_INSTITUSJONSOPPHOLD_SCOPE
-      value: api://dev-fss.team-rocket.inst2-q2/.default
+      value: api://prod-fss.team-rocket.inst2-q2/.default
     - name: INTEGRASJON_INNTEKT_URL
-      value: https://pensjon-popp-q2.dev-fss-pub.nais.io/popp/api/inntekt/sumPi
+      value: https://pensjon-popp-q2.prod-fss-pub.nais.io/popp/api/inntekt/sumPi
     - name: INTEGRASJON_INNTEKT_SCOPE
-      value: api://dev-fss.pensjonopptjening.pensjon-popp-q2/.default
+      value: api://prod-fss.pensjonopptjening.pensjon-popp-q2/.default
     - name: INTEGRASJON_OPPGAVESTYRING_URL
       value: http://oppgave
     - name: INTEGRASJON_OPPGAVESTYRING_SCOPE
-      value: api://dev-gcp.aap.oppgave/.default
+      value: api://prod-gcp.aap.oppgave/.default
     - name: INTEGRASJON_STATISTIKK_URL
       value: http://statistikk
     - name: INTEGRASJON_STATISTIKK_SCOPE
-      value: api://dev-gcp.aap.statistikk/.default
+      value: api://prod-gcp.aap.statistikk/.default
     - name: INTEGRASJON_PESYS_URL
-      value: https://pensjon-pen-q2.dev-fss-pub.nais.io
+      value: https://pensjon-pen-q2.prod-fss-pub.nais.io
     - name: INTEGRASJON_PESYS_SCOPE
-      value: api://dev-fss.pensjon-q2.pensjon-pen-q2/.default
+      value: api://prod-fss.pensjon-q2.pensjon-pen-q2/.default
     - name: INTEGRASJON_TILGANG_URL
       value: http://tilgang
     - name: INTEGRASJON_TILGANG_SCOPE
-      value: api://dev-gcp.aap.tilgang/.default
+      value: api://prod-gcp.aap.tilgang/.default
     - name: INTEGRASJON_TILGANG_AZP
-      value: dev-gcp:aap:tilgang
+      value: prod-gcp:aap:tilgang
     - name: INTEGRASJON_MEDL_URL
-      value: https://medlemskap-medl-api.dev-fss-pub.nais.io/api/v1/medlemskapsunntak
+      value: https://medlemskap-medl-api.prod-fss-pub.nais.io/api/v1/medlemskapsunntak
     - name: INTEGRASJON_MEDL_SCOPE
-      value: api://dev-fss.team-rocket.medlemskap-medl-api/.default
+      value: api://prod-fss.team-rocket.medlemskap-medl-api/.default
     - name: INTEGRASJON_POSTMOTTAK_AZP
-      value: dev-gcp:aap:postmottak-backend
+      value: prod-gcp:aap:postmottak-backend
     - name: INTEGRASJON_FORELDREPENGER_URL
-      value: https://fpabakus.dev-fss-pub.nais.io/fpabakus/ekstern/api/ytelse/v1
+      value: https://fpabakus.prod-fss-pub.nais.io/fpabakus/ekstern/api/ytelse/v1
     - name: INTEGRASJON_FORELDREPENGER_SCOPE
-      value: api://dev-fss.teamforeldrepenger.fpabakus/.default
+      value: api://prod-fss.teamforeldrepenger.fpabakus/.default
     - name: INTEGRASJON_SYKEPENGER_URL
       value: http://spokelse.tbd
     - name: INTEGRASJON_SYKEPENGER_SCOPE
-      value: api://dev-gcp.tbd.spokelse/.default
+      value: api://prod-gcp.tbd.spokelse/.default
     - name: INTEGRASJON_BREV_URL
       value: http://brev
     - name: INTEGRASJON_BREV_SCOPE
-      value: api://dev-gcp.aap.brev/.default
+      value: api://prod-gcp.aap.brev/.default
     - name: INTEGRASJON_BREV_AZP
-      value: dev-gcp:aap:brev
+      value: prod-gcp:aap:brev
     - name: INTEGRASJON_MELDEKORT_URL
       value: http://meldekort-backend
     - name: INTEGRASJON_MELDEKORT_SCOPE
-      value: api://dev-gcp.aap.meldekort-backend/.default
+      value: api://prod-gcp.aap.meldekort-backend/.default
     - name: INTEGRASJON_UTBETAL_URL
       value: http://utbetal
     - name: INTEGRASJON_UTBETAL_SCOPE
-      value: api://dev-gcp.aap.utbetal/.default
+      value: api://prod-gcp.aap.utbetal/.default
     - name: INTEGRASJON_UTBETAL_AZP
-      value: dev-gcp:aap:utbetal
+      value: prod-gcp:aap:utbetal
     - name: INTEGRASJON_DOKUMENTINNHENTING_URL
       value: http://dokumentinnhenting
     - name: INTEGRASJON_DOKUMENTINNHENTING_SCOPE
-      value: api://dev-gcp.aap.dokumentinnhenting/.default
+      value: api://prod-gcp.aap.dokumentinnhenting/.default
     - name: INTEGRASJON_DOKUMENTINNHENTING_AZP
-      value: dev-gcp:aap:dokumentinnhenting
+      value: prod-gcp:aap:dokumentinnhenting
     - name: INTEGRASJON_SAKSBEHANDLING_AZP
-      value: dev-gcp:aap:saksbehandling
+      value: prod-gcp:aap:saksbehandling
     - name: INTEGRASJON_AAREG_URL
-      value: https://aareg-services-q2.dev-fss-pub.nais.io
+      value: https://aareg-services-q2.prod-fss-pub.nais.io
     - name: INTEGRASJON_AAREG_SCOPE
-      value: api://dev-fss.arbeidsforhold.aareg-services-nais/.default
+      value: api://prod-fss.arbeidsforhold.aareg-services-nais/.default
     - name: INTEGRASJON_INNTEKTSKOMPONENTEN_URL
-      value: https://team-inntekt-proxy.dev-fss-pub.nais.io/proxy/inntektskomponenten-q2/rs/api/v1
+      value: https://team-inntekt-proxy.prod-fss-pub.nais.io/proxy/inntektskomponenten-q2/rs/api/v1
     - name: INTEGRASJON_INNTEKTSKOMPONENTEN_SCOPE
-      value: api://dev-fss.team-inntekt.inntektskomponenten/.default
+      value: api://prod-fss.team-inntekt.inntektskomponenten/.default
     - name: INTEGRASJON_DATADELING_URL
       value: http://api-intern
     - name: INTEGRASJON_DATADELING_SCOPE
-      value: api://dev-gcp.aap.api-intern/.default
+      value: api://prod-gcp.aap.api-intern/.default

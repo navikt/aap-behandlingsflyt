@@ -126,6 +126,20 @@ jobs:
         env:
           PRINT_PAYLOAD: true
           CLUSTER: dev-gcp
-          RESOURCE: .nais/app.yml
-          VARS: .nais/dev.yml
+          RESOURCE: .nais/nais-dev.yml
           VAR: image=${{ needs.build.outputs.image }}
+
+  deploy-prod:
+      needs: deploy-dev
+      runs-on: ubuntu-latest
+      permissions:
+          contents: read
+          id-token: write
+      steps:
+          - uses: actions/checkout@v4
+          - uses: nais/deploy/actions/deploy@v2
+            env:
+                PRINT_PAYLOAD: true
+                CLUSTER: prod-gcp
+                RESOURCE: .nais/nais-prod.yml
+                VAR: image=${{ needs.build.outputs.image }}
