@@ -158,7 +158,7 @@ public enum class Definisjon(
     ),
     AVKLAR_SAMORDNING_GRADERING(
         kode = AvklaringsbehovKode.`5012`,
-        type = BehovType.MANUELT_PÅKREVD,
+        type = BehovType.MANUELT_FRIVILLIG,
         løsesISteg = StegType.SAMORDNING_GRADERING,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     ),
