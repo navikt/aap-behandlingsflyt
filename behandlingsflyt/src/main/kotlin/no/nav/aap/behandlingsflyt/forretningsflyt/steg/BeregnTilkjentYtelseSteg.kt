@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.Barnet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -27,6 +28,7 @@ class BeregnTilkjentYtelseSteg private constructor(
     private val barnetilleggRepository: BarnetilleggRepository,
     private val tilkjentYtelseRepository: TilkjentYtelseRepository,
     private val samordningRepository: SamordningRepository,
+    private val samordningUføreRepository: SamordningUføreRepository,
 ) : BehandlingSteg {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -38,9 +40,10 @@ class BeregnTilkjentYtelseSteg private constructor(
         val barnetilleggGrunnlag = requireNotNull(barnetilleggRepository.hentHvisEksisterer(kontekst.behandlingId))
         val samordningGrunnlag =
             requireNotNull(samordningRepository.hentHvisEksisterer(kontekst.behandlingId)) { "Trenger samordningsgrunnlag." }
+        val samordningUføre = samordningUføreRepository.hentHvisEksisterer(kontekst.behandlingId)
 
         val beregnetTilkjentYtelse = BeregnTilkjentYtelseService(
-            fødselsdato, beregningsgrunnlag, underveisgrunnlag, barnetilleggGrunnlag, samordningGrunnlag
+            fødselsdato, beregningsgrunnlag, underveisgrunnlag, barnetilleggGrunnlag, samordningGrunnlag, samordningUføre
         ).beregnTilkjentYtelse()
         tilkjentYtelseRepository.lagre(
             behandlingId = kontekst.behandlingId,
@@ -64,6 +67,7 @@ class BeregnTilkjentYtelseSteg private constructor(
                 personopplysningRepository,
                 barnetilleggRepository,
                 tilkjentYtelseRepository,
+                repositoryProvider.provide(),
                 repositoryProvider.provide()
             )
         }

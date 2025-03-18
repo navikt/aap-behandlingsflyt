@@ -37,6 +37,7 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
                     Tilkjent(
                         dagsats = Beløp(it.getInt("DAGSATS")),
                         gradering = TilkjentGradering(
+                            samordningUføregradering = it.getIntOrNull("SAMORDNING_UFORE_GRADERING")?.let { result -> Prosent(result) },
                             samordningGradering = it.getIntOrNull("SAMORDNING_GRADERING")?.let { result -> Prosent(result) },
                             institusjonGradering = it.getIntOrNull("INSTITUSJON_GRADERING")?.let { result -> Prosent(result) },
                             arbeidGradering = it.getIntOrNull("ARBEID_GRADERING")?.let { result -> Prosent(result) },
@@ -89,8 +90,8 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
             """
             INSERT INTO TILKJENT_PERIODE (TILKJENT_YTELSE_ID, PERIODE, DAGSATS, GRADERING, BARNETILLEGG,
                                           GRUNNLAGSFAKTOR, GRUNNLAG, ANTALL_BARN, BARNETILLEGGSATS, GRUNNBELOP, 
-                                          UTBETALINGSDATO, SAMORDNING_GRADERING, INSTITUSJON_GRADERING, ARBEID_GRADERING)
-            VALUES (?, ?::daterange, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                          UTBETALINGSDATO, SAMORDNING_GRADERING, INSTITUSJON_GRADERING, ARBEID_GRADERING, SAMORDNING_UFORE_GRADERING)
+            VALUES (?, ?::daterange, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """.trimIndent()
         ) {
             setParams {
@@ -108,6 +109,7 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
                 setInt(12, tilkjent.gradering.samordningGradering?.prosentverdi())
                 setInt(13, tilkjent.gradering.institusjonGradering?.prosentverdi())
                 setInt(14, tilkjent.gradering.arbeidGradering?.prosentverdi())
+                setInt(15, tilkjent.gradering.samordningUføregradering?.prosentverdi())
             }
         }
     }
