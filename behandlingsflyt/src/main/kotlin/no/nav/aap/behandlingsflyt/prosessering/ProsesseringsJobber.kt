@@ -14,7 +14,8 @@ object ProsesseringsJobber {
             StatistikkJobbUtfører,
             DatadelingMeldePerioderJobbUtfører,
             DatadelingSakStatusJobbUtfører,
-            DatadelingBehandlingJobbUtfører
+            DatadelingBehandlingJobbUtfører,
+            MeldeperiodeTilMeldekortBackendJobbUtfører,
         )
     }
 }

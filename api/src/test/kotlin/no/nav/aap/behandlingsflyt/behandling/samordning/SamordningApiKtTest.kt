@@ -59,7 +59,7 @@ class SamordningApiKtTest {
                     ytelseType = Ytelse.PLEIEPENGER,
                     ytelsePerioder = listOf(
                         SamordningYtelsePeriode(
-                            periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1)),
+                            periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1).minusDays(1)),
                             gradering = Prosent(50),
                             kronesum = null
                         )
@@ -88,7 +88,7 @@ class SamordningApiKtTest {
                             periode =
                                 Periode(
                                     fom = LocalDate.now(),
-                                    tom = LocalDate.now().plusYears(1),
+                                    tom = LocalDate.now().plusYears(1).minusDays(1),
                                 ),
                             gradering = 50,
                             kronesum = null,

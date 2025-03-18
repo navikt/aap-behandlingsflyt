@@ -131,8 +131,8 @@ class SakOgBehandlingService(
             } else {
                 rettighetsperiode.fom
             }
-            val tom = if (mottattDato.plusYears(1).isAfter(rettighetsperiode.tom)) {
-                mottattDato.plusYears(1)
+            val tom = if (mottattDato.plusYears(1).minusDays(1).isAfter(rettighetsperiode.tom)) {
+                mottattDato.plusYears(1).minusDays(1)
             } else {
                 rettighetsperiode.tom
             }

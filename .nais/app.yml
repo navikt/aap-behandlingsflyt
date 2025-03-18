@@ -108,6 +108,7 @@ spec:
       rules:
         - application: brev
         - application: tilgang
+        - application: meldekort-backend
         - application: yrkesskade-saker
           namespace: yrkesskade
         - application: oppgave
@@ -182,6 +183,10 @@ spec:
       value: api://dev-gcp.aap.brev/.default
     - name: INTEGRASJON_BREV_AZP
       value: dev-gcp:aap:brev
+    - name: INTEGRASJON_MELDEKORT_URL
+      value: http://meldekort-backend
+    - name: INTEGRASJON_MELDEKORT_SCOPE
+      value: api://dev-gcp.aap.meldekort-backend/.default
     - name: INTEGRASJON_UTBETAL_URL
       value: http://utbetal
     - name: INTEGRASJON_UTBETAL_SCOPE

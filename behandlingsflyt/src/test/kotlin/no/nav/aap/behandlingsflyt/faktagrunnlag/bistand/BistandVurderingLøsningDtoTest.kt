@@ -1,29 +1,27 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.bistand
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
 
-class BistandVurderingDtoTest {
+class BistandVurderingLøsningLøsningDtoTest {
 
     @ParameterizedTest
     @ValueSource(booleans = [true, false])
     fun `erBehovForAnnenOppfølging kan være en Boolean hvis erBehovForAnnenOppfølging AND erBehovForArbeidsrettetTiltak er false`(
         erBehovForAnnenOppfølging: Boolean
     ) {
-        BistandVurderingDto("hei",
+        BistandVurderingLøsningDto("hei",
             erBehovForAktivBehandling = false,
             erBehovForArbeidsrettetTiltak = false,
             erBehovForAnnenOppfølging = erBehovForAnnenOppfølging,
             vurderingenGjelderFra = null,
-            vurdertAv = "Z00000",
             skalVurdereAapIOvergangTilUføre = null,
             skalVurdereAapIOvergangTilArbeid = null,
             overgangBegrunnelse = null,
-            harOppfylt11_5 = null
         )
     }
 
@@ -32,31 +30,27 @@ class BistandVurderingDtoTest {
     fun `erBehovForAnnenOppfølging kan være null hvis erBehovForAnnenOppfølging OR erBehovForArbeidsrettetTiltak er true`(
         behov: Boolean
     ) {
-        BistandVurderingDto("hei",
+        BistandVurderingLøsningDto("hei",
             erBehovForAktivBehandling = behov,
             erBehovForArbeidsrettetTiltak = !behov,
             erBehovForAnnenOppfølging = null,
             vurderingenGjelderFra = null,
-            vurdertAv = "Z00000",
             skalVurdereAapIOvergangTilUføre = null,
             skalVurdereAapIOvergangTilArbeid = null,
             overgangBegrunnelse = null,
-            harOppfylt11_5 = null
         )
     }
 
     @Test
     fun `erBehovForAnnenOppfølging kan være null hvis erBehovForAnnenOppfølging AND erBehovForArbeidsrettetTiltak er true`() {
-        BistandVurderingDto("hei",
+        BistandVurderingLøsningDto("hei",
             erBehovForAktivBehandling = true,
             erBehovForArbeidsrettetTiltak = true,
             vurderingenGjelderFra = null,
             erBehovForAnnenOppfølging = null,
-            vurdertAv = "Z00000",
             skalVurdereAapIOvergangTilUføre = null,
             skalVurdereAapIOvergangTilArbeid = null,
             overgangBegrunnelse = null,
-            harOppfylt11_5 = null
         )
     }
 
@@ -67,17 +61,15 @@ class BistandVurderingDtoTest {
         erBehovForAnnenOppfølging: Boolean
     ) {
         assertThrows<IllegalArgumentException> {
-            BistandVurderingDto(
+            BistandVurderingLøsningDto(
                 "hei",
                 erBehovForAktivBehandling = behov,
                 erBehovForArbeidsrettetTiltak = !behov,
                 erBehovForAnnenOppfølging = erBehovForAnnenOppfølging,
                 vurderingenGjelderFra = null,
-                vurdertAv = "Z00000",
                 skalVurdereAapIOvergangTilUføre = null,
                 skalVurdereAapIOvergangTilArbeid = null,
                 overgangBegrunnelse = null,
-                harOppfylt11_5 = null
             )
         }
     }
@@ -88,17 +80,15 @@ class BistandVurderingDtoTest {
         erBehovForAnnenOppfølging: Boolean
     ) {
         assertThrows<IllegalArgumentException> {
-            BistandVurderingDto(
+            BistandVurderingLøsningDto(
                 "hei",
                 erBehovForAktivBehandling = true,
                 erBehovForArbeidsrettetTiltak = true,
                 erBehovForAnnenOppfølging = erBehovForAnnenOppfølging,
                 vurderingenGjelderFra = null,
-                vurdertAv = "Z00000",
                 skalVurdereAapIOvergangTilUføre = null,
                 skalVurdereAapIOvergangTilArbeid = null,
                 overgangBegrunnelse = null,
-                harOppfylt11_5 = null
             )
         }
     }
@@ -106,17 +96,15 @@ class BistandVurderingDtoTest {
     @Test
     fun `erBehovForAnnenOppfølging kan ikke være null hvis erBehovForAnnenOppfølging AND erBehovForArbeidsrettetTiltak er false`() {
         assertThrows<IllegalArgumentException> {
-            BistandVurderingDto(
+            BistandVurderingLøsningDto(
                 "hei",
                 erBehovForAktivBehandling = false,
                 erBehovForArbeidsrettetTiltak = false,
                 erBehovForAnnenOppfølging = null,
                 vurderingenGjelderFra = null,
-                vurdertAv = "Z00000",
                 skalVurdereAapIOvergangTilUføre = null,
                 skalVurdereAapIOvergangTilArbeid = null,
                 overgangBegrunnelse = null,
-                harOppfylt11_5 = null
             )
         }
     }

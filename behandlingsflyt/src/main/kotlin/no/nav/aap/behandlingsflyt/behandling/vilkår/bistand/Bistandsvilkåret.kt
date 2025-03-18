@@ -19,21 +19,25 @@ class Bistandsvilkåret(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<B
         var avslagsårsak: Avslagsårsak? = null
         var innvilgelsesårsak: Innvilgelsesårsak? = null
         val studentVurdering = grunnlag.studentvurdering
+        val bistandVurdering = grunnlag.vurdering
 
         if (studentVurdering?.erOppfylt() == true) {
             utfall = Utfall.OPPFYLT
             innvilgelsesårsak = Innvilgelsesårsak.STUDENT
-        } else if (grunnlag.vurdering?.erBehovForBistand() == true) {
+        } else if (bistandVurdering?.skalVurdereAapIOvergangTilUføre == true) {
+            utfall = Utfall.OPPFYLT
+            innvilgelsesårsak = Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD
+        } else if (bistandVurdering?.skalVurdereAapIOvergangTilArbeid == true) {
+            innvilgelsesårsak = Innvilgelsesårsak.ARBEIDSSØKER
+            utfall = Utfall.OPPFYLT
+        } else if (bistandVurdering?.erBehovForBistand() == true
+        ) {
             utfall = Utfall.OPPFYLT
         } else {
             utfall = Utfall.IKKE_OPPFYLT
             avslagsårsak = Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING // TODO: Må ha mer
         }
-        // TODO!!!
-        // 11-18 - under behandling av krav om uføretrygd
-        // 11-17 - i perioden som arbeidssøker
-        // VIKTIG
-
+        
         lagre(
             grunnlag, VurderingsResultat(
                 utfall = utfall,
@@ -45,6 +49,7 @@ class Bistandsvilkåret(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<B
 
     private fun lagre(grunnlag: BistandFaktagrunnlag, vurderingsResultat: VurderingsResultat): VurderingsResultat {
         vilkår.leggTilVurdering(
+            // TODO: Her overskriver man fremtidige perioder - legge til tidslinje i stedet
             Vilkårsperiode(
                 Periode(grunnlag.vurderingsdato, grunnlag.sisteDagMedMuligYtelse),
                 vurderingsResultat.utfall,

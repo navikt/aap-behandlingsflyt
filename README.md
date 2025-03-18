@@ -3,6 +3,11 @@
 Behandlingsflyt for Arbeidsavklaringspenger (AAP). Definerer flyten for ulike behandlingstyper, og styrer prosessen med
 å drive saksflyten fremover.
 
+> **Note**
+>
+> Repoet kan inneholde regelverksendringer som ikke enda er vedtatt.
+> Vi har derfor valgt å holde dette repoet lukket.
+
 ### API-dokumentasjon
 
 APIene er dokumentert med Swagger: https://aap-behandlingsflyt.intern.dev.nav.no/swagger-ui/index.html
