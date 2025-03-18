@@ -50,7 +50,8 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource) {
                                     redusertDagsats = it.redusertDagsats().verdi().toDouble(),
                                     arbeidGradering = it.gradering.arbeidGradering?.prosentverdi(),
                                     institusjonGradering = it.gradering.institusjonGradering?.prosentverdi(),
-                                    samordningGradering = it.gradering.samordningGradering?.prosentverdi()
+                                    samordningGradering = it.gradering.samordningGradering?.prosentverdi(),
+                                    samordningUføreGradering = it.gradering.samordningUføregradering?.prosentverdi()
                                 )
                             }
                         }

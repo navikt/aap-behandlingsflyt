@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.barnetillegg.RettTilBarnetillegg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
@@ -23,7 +24,8 @@ class BeregnTilkjentYtelseService(
     private val beregningsgrunnlag: Grunnlag?,
     private val underveisgrunnlag: UnderveisGrunnlag,
     private val barnetilleggGrunnlag: BarnetilleggGrunnlag,
-    private val samordningGrunnlag: SamordningGrunnlag
+    private val samordningGrunnlag: SamordningGrunnlag,
+    private val samordningUføre: SamordningUføreGrunnlag?
 ) {
 
     private fun tilTidslinje(barnetilleggGrunnlag: BarnetilleggGrunnlag): Tidslinje<RettTilBarnetillegg> {
@@ -69,6 +71,8 @@ class BeregnTilkjentYtelseService(
         }
 
         val samordningTidslinje = samordningGrunnlag.samordningPerioder.map { Segment(it.periode, it) }.let(::Tidslinje)
+        val samordningUføreTidslinje =
+            samordningUføre?.vurdering?.vurderingPerioder?.map { Segment(it.periode, it) }?.let(::Tidslinje)
 
         val gradertÅrligYtelseTidslinje = underveisTidslinje.kombiner(
             årligYtelseTidslinje, JoinStyle.INNER_JOIN { periode, venstre, høyre ->
@@ -87,30 +91,52 @@ class BeregnTilkjentYtelseService(
                             endeligGradering = utbetalingsgrad,
                             arbeidGradering = venstre.verdi.arbeidsgradering.gradering,
                             institusjonGradering = venstre.verdi.institusjonsoppholdReduksjon,
-                            samordningGradering = null
+                            samordningGradering = Prosent.`0_PROSENT`,
+                            samordningUføregradering = Prosent.`0_PROSENT`
                         ), venstre.verdi.meldePeriode.tom.plusDays(1)
                     )
                 )
             })
 
-        val gradertÅrligYtelseTidslinjeMedSamordning =
-            gradertÅrligYtelseTidslinje.kombiner(samordningTidslinje, JoinStyle.LEFT_JOIN { periode, venstre, høyre ->
-                if (høyre == null) {
-                    venstre
-                } else {
-                    val tilkjentGUnit = venstre.verdi
-                    val nyGradering =
-                        tilkjentGUnit.copy(
-                            gradering = TilkjentGradering(
-                                endeligGradering = tilkjentGUnit.gradering.endeligGradering.minus(høyre.verdi.gradering),
-                                arbeidGradering = tilkjentGUnit.gradering.arbeidGradering,
-                                institusjonGradering = tilkjentGUnit.gradering.institusjonGradering,
-                                samordningGradering = høyre.verdi.gradering
+        val gradertÅrligYtelseTidslinjeMedSamordningUføre =
+            samordningUføreTidslinje?.let {
+                gradertÅrligYtelseTidslinje.kombiner(it, JoinStyle.LEFT_JOIN { periode, venstre, høyre ->
+                    if (høyre == null) {
+                        venstre
+                    } else {
+                        val tilkjentGUnit = venstre.verdi
+                        val nyGradering =
+                            tilkjentGUnit.copy(
+                                gradering = tilkjentGUnit.gradering.copy(
+                                    endeligGradering = tilkjentGUnit.gradering.endeligGradering.minus(høyre.verdi.uføregradTilSamordning),
+                                    samordningUføregradering = høyre.verdi.uføregradTilSamordning
+                                )
                             )
-                        )
-                    Segment(periode, nyGradering)
-                }
-            })
+                        Segment(periode, nyGradering)
+
+                    }
+                })
+            } ?: gradertÅrligYtelseTidslinje
+
+
+        val gradertÅrligYtelseTidslinjeMedSamordning =
+            gradertÅrligYtelseTidslinjeMedSamordningUføre.kombiner(
+                samordningTidslinje,
+                JoinStyle.LEFT_JOIN { periode, venstre, høyre ->
+                    if (høyre == null) {
+                        venstre
+                    } else {
+                        val tilkjentGUnit = venstre.verdi
+                        val nyGradering =
+                            tilkjentGUnit.copy(
+                                gradering = tilkjentGUnit.gradering.copy(
+                                    endeligGradering = tilkjentGUnit.gradering.endeligGradering.minus(høyre.verdi.gradering),
+                                    samordningGradering = høyre.verdi.gradering,
+                                )
+                            )
+                        Segment(periode, nyGradering)
+                    }
+                })
 
 
         val gradertÅrligTilkjentYtelseBeløp = gradertÅrligYtelseTidslinjeMedSamordning.kombiner(
@@ -127,6 +153,7 @@ class BeregnTilkjentYtelseService(
                         grunnbeløp = grunnbeløp.verdi,
                         utbetalingsdato = venstre.verdi.utbetalingsdato,
                         samordningGradering = venstre.verdi.gradering.samordningGradering,
+                        samordningUføreGradering = venstre.verdi.gradering.samordningUføregradering,
                         arbeidsGradering = venstre.verdi.gradering.arbeidGradering,
                         institusjonGradering = venstre.verdi.gradering.institusjonGradering
                     )
@@ -153,7 +180,8 @@ class BeregnTilkjentYtelseService(
                     samordningGradering = venstre.verdi.samordningGradering,
                     institusjonGradering = venstre.verdi.institusjonGradering,
                     arbeidGradering = venstre.verdi.arbeidsGradering,
-                    endeligGradering = venstre.verdi.gradering
+                    endeligGradering = venstre.verdi.gradering,
+                    samordningUføregradering = venstre.verdi.samordningUføreGradering
                 )
                 Segment(
                     periode, Tilkjent(
@@ -179,6 +207,7 @@ class BeregnTilkjentYtelseService(
         val grunnbeløp: Beløp,
         val utbetalingsdato: LocalDate,
         val samordningGradering: Prosent?,
+        val samordningUføreGradering: Prosent?,
         val arbeidsGradering: Prosent?,
         val institusjonGradering: Prosent?
     )

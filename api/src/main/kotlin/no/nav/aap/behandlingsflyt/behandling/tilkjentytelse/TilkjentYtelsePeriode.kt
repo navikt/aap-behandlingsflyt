@@ -21,5 +21,6 @@ data class TilkjentYtelsePeriodeDTO(
     val redusertDagsats: Double,
     val arbeidGradering: Int?,
     val institusjonGradering: Int?,
-    val samordningGradering: Int?
+    val samordningGradering: Int?,
+    val samordningUføreGradering: Int?
 )

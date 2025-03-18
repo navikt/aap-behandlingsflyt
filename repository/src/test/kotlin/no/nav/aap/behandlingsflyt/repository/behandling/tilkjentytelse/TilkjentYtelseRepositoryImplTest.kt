@@ -48,7 +48,7 @@ class TilkjentYtelseRepositoryImplTest {
                         ),
                         tilkjent = Tilkjent(
                             dagsats = Beløp(999),
-                            gradering = TilkjentGradering(Prosent.`66_PROSENT`, null, Prosent.`0_PROSENT`, Prosent.`0_PROSENT`),
+                            gradering = TilkjentGradering(Prosent.`66_PROSENT`, Prosent.`0_PROSENT`, Prosent.`0_PROSENT`, Prosent.`0_PROSENT`, Prosent.`0_PROSENT`),
                             barnetillegg = Beløp(999),
                             grunnlagsfaktor = GUnit("1.0"),
                             grunnlag = Beløp(999),
@@ -65,7 +65,7 @@ class TilkjentYtelseRepositoryImplTest {
                         ),
                         tilkjent = Tilkjent(
                             dagsats = Beløp(1000),
-                            gradering = TilkjentGradering(Prosent.`50_PROSENT`, null, Prosent.`0_PROSENT`, Prosent.`0_PROSENT`),
+                            gradering = TilkjentGradering(Prosent.`50_PROSENT`, Prosent.`0_PROSENT`, Prosent.`0_PROSENT`, Prosent.`0_PROSENT`, Prosent.`0_PROSENT`),
                             barnetillegg = Beløp(1000),
                             grunnlagsfaktor = GUnit("1.0"),
                             grunnlag = Beløp(1000),
