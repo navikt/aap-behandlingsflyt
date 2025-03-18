@@ -6,7 +6,7 @@ Behandlingsflyt for Arbeidsavklaringspenger (AAP). Definerer flyten for ulike be
 > **Note**
 >
 > Repoet kan inneholde regelverksendringer som ikke enda er vedtatt.
-> Vi har derfor valgt å holde dette repoet lukket. .
+> Vi har derfor valgt å holde dette repoet lukket.
 
 ### API-dokumentasjon
 

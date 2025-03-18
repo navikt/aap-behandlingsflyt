@@ -123,8 +123,8 @@ fun NormalOpenAPIRoute.saksApi(dataSource: DataSource) {
                     val repositoryProvider = RepositoryProvider(connection)
                     val ident = Ident(dto.ident)
                     val periode = Periode(
-                        dto.søknadsdato, dto.søknadsdato.plusYears(1)
-                    ) // Setter til et år frem i tid som er tilsvarende "vedtakslengde" i forskriften
+                        dto.søknadsdato, dto.søknadsdato.plusYears(1).minusDays(1)
+                    ) // Setter til fra og med dagens dato, til og med et år frem i tid minus en dag som er tilsvarende "vedtakslengde" i forskriften
                     val sak = PersonOgSakService(
                         pdlGateway = GatewayProvider.provide(IdentGateway::class),
                         personRepository = repositoryProvider.provide<PersonRepository>(),
