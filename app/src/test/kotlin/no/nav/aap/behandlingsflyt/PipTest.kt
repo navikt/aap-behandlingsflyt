@@ -40,8 +40,6 @@ class PipTest {
         private lateinit var port: Number
 
         private val dbConfig = DbConfig(
-            host = "sdg",
-            port = "sdf",
             database = "sdf",
             url = postgres.jdbcUrl,
             username = postgres.username,

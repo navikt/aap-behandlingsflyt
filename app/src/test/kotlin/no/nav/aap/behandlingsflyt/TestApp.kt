@@ -60,8 +60,6 @@ fun main() {
     // Starter server
     embeddedServer(Netty, port = 8080) {
         val dbConfig = DbConfig(
-            host = "sdg",
-            port = "sdf",
             database = "sdf",
             url = postgres.jdbcUrl,
             username = postgres.username,

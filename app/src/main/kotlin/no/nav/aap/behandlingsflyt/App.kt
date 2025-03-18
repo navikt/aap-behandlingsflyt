@@ -343,8 +343,6 @@ fun Application.startMotor(dataSource: DataSource): Motor {
 }
 
 class DbConfig(
-    host: String = System.getenv("NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_HOST"),
-    val port: String = System.getenv("NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_PORT"),
     val database: String = System.getenv("NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_DATABASE"),
     val url: String = System.getenv("NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_JDBC_URL"),
     val username: String = System.getenv("NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_USERNAME"),
@@ -357,7 +355,6 @@ fun initDatasource(dbConfig: DbConfig): DataSource = HikariDataSource(HikariConf
     password = dbConfig.password
     maximumPoolSize = 10 + (ANTALL_WORKERS * 2)
     minimumIdle = 1
-    driverClassName = "org.postgresql.Driver"
     connectionTestQuery = "SELECT 1"
     metricRegistry = prometheus
 })
