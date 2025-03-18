@@ -19,10 +19,4 @@ data class BistandVurderingDto(
     companion object {
         fun fraBistandVurdering(bistandVurdering: BistandVurdering?, harOppfylt11_5: Boolean? = null) = bistandVurdering?.toDto(harOppfylt11_5)
     }
-
-    init {
-        require((erBehovForAktivBehandling || erBehovForArbeidsrettetTiltak) xor (erBehovForAnnenOppfølging != null)) {
-            "erBehovForAnnenOppfølging kan bare bli besvart hvis erBehovForAktivBehandling og erBehovForArbeidsrettetTiltak er besvart med nei"
-        }
-    }
 }

@@ -25,4 +25,15 @@ data class BistandVurderingLøsningDto(
         skalVurdereAapIOvergangTilArbeid = skalVurdereAapIOvergangTilArbeid,
         vurdertAv = bruker.ident
     )
+
+    init {
+        require((erBehovForAktivBehandling || erBehovForArbeidsrettetTiltak) xor (erBehovForAnnenOppfølging != null)) {
+            "erBehovForAnnenOppfølging kan bare bli besvart hvis erBehovForAktivBehandling og erBehovForArbeidsrettetTiltak er besvart med nei"
+        }
+        
+       //  TODO: uncomment når frontend er implementert
+//        require((erBehovForAktivBehandling || erBehovForArbeidsrettetTiltak || erBehovForAnnenOppfølging == true) xor (skalVurdereAapIOvergangTilUføre != null)) {
+//            "skalVurdereAapIOvergangTilUføre kan bare bli besvart hvis oppfølgingsbehov er vurdert til nei"
+//        }
+    }
 }
