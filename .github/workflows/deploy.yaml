@@ -130,7 +130,7 @@ jobs:
           VAR: image=${{ needs.build.outputs.image }}
 
   deploy-prod:
-      needs: deploy-dev
+      needs: [deploy-dev, build]
       runs-on: ubuntu-latest
       permissions:
           contents: read
