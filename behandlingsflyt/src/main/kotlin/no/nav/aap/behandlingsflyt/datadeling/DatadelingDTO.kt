@@ -22,25 +22,13 @@ data class SakStatus(
         fun fromKelvin(saksnummer: String, status: Status, periode: Periode): SakStatus {
             return SakStatus(
                 sakId = saksnummer,
-                statusKode = SakStatus.fromStatus(status),
+                statusKode = VedtakStatus.valueOf(status.toString()),
                 periode = periode,
             )
         }
-
-        private fun fromStatus(status: Status): SakStatus.VedtakStatus {
-            return when (status) {
-                Status.AVSLUTTET -> VedtakStatus.AVSLU
-                Status.UTREDES -> VedtakStatus.REGIS
-                Status.LØPENDE -> VedtakStatus.IVERK
-                Status.OPPRETTET -> VedtakStatus.OPPRE
-                else -> {
-                    VedtakStatus.UKJENT
-                }
-            }
-        }
     }
 
-    enum class Kilde{
+    enum class Kilde {
         ARENA,
         KELVIN
     }
@@ -55,7 +43,12 @@ data class SakStatus(
         MOTAT,
         OPPRE,
         REGIS,
-        UKJENT
+        UKJENT,
+        OPPRETTET,
+        UTREDES,
+        LØPENDE,
+        AVSLUTTET
+
     }
 
     override fun equals(other: Any?): Boolean {
@@ -80,9 +73,3 @@ data class SakStatus(
         return result
     }
 }
-
-data class BehandlingDatadeling(
-    val rettighetsPeriode: Periode,
-    val behandling: Behandling,
-    val tilkjent: Tidslinje<Tilkjent>,
-)
