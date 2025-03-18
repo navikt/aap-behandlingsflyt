@@ -106,7 +106,7 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
         }
         return sykdomsvurdering.erSkadeSykdomEllerLyteVesentligdel == true &&
                 sykdomsvurdering.erArbeidsevnenNedsatt == true &&
-                sykdomsvurdering.erNedsettelseIArbeidsevneAvEnVissVarighet == true &&
+                (sykdomsvurdering.erNedsettelseIArbeidsevneAvEnVissVarighet == null || sykdomsvurdering.erNedsettelseIArbeidsevneAvEnVissVarighet == true) &&
                 (sykdomsvurdering.erNedsettelseIArbeidsevneMerEnnHalvparten == true ||
                         (sykdomsvurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true && yrkesskadevurdering?.erÅrsakssammenheng == true))
     }
