@@ -11,7 +11,7 @@ val junitVersjon = "5.12.1"
 dependencies {
     api(project(":kontrakt"))
     implementation("io.micrometer:micrometer-registry-prometheus:1.14.5")
-    implementation("ch.qos.logback:logback-classic:1.5.17")
+    implementation("ch.qos.logback:logback-classic:1.5.18")
     implementation("net.logstash.logback:logstash-logback-encoder:8.0")
 
     api("no.nav.aap.tilgang:plugin:$tilgangVersjon")
