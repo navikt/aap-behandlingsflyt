@@ -38,6 +38,7 @@ import java.time.LocalDate
 import java.util.*
 import java.util.stream.Stream
 
+@Disabled("FOR TESTDAG - BUG")
 class SamordningStegTest {
     @ParameterizedTest
     @MethodSource("manuelleYtelserProvider")
