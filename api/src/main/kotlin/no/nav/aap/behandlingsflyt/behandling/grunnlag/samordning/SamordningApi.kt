@@ -98,7 +98,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(dataSource: DataSource) {
                 )
             }
         }
-        route("/{referanse}/grunnlag/samordning/") {
+        route("/{referanse}/grunnlag/samordning") {
             get<BehandlingReferanse, SamordningYtelseVurderingGrunnlagDTO> { req ->
                 val (registerYtelser, samordning) = dataSource.transaction { connection ->
                     val repositoryProvider = RepositoryProvider(connection)
