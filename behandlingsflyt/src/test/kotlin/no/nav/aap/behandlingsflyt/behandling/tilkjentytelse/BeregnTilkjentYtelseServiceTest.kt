@@ -752,4 +752,66 @@ class BeregnTilkjentYtelseServiceTest {
             )
         )
     }
+
+    @Test
+    fun `justerer institusjonsopphold etter å ha samordnet uføre og sykepenger`() {
+        val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
+        val beregningsgrunnlag = object : Grunnlag {
+            override fun grunnlaget(): GUnit {
+                return GUnit(BigDecimal(4))
+            }
+        }
+        val periode = Periode(1 juni 2023, 1 august 2023)
+
+        val underveisgrunnlag = underveisgrunnlag(periode, institusjonsOppholdReduksjon = Prosent.`50_PROSENT`)
+
+        val barnetilleggGrunnlag = BarnetilleggGrunnlag(1L, emptyList())
+        val samordningsgrunnlag = SamordningGrunnlag(
+            0L, listOf(
+                SamordningPeriode(
+                    periode = periode, gradering = Prosent(10)
+                )
+            )
+        )
+
+        val samordningUføre = SamordningUføreGrunnlag(
+            vurdering = SamordningUføreVurdering(
+                "", listOf(
+                    SamordningUføreVurderingPeriode(periode = periode, Prosent.`30_PROSENT`)
+                )
+            )
+        )
+
+        val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
+            fødselsdato,
+            beregningsgrunnlag,
+            underveisgrunnlag,
+            barnetilleggGrunnlag,
+            samordningsgrunnlag,
+            samordningUføre
+        ).beregnTilkjentYtelse()
+
+        assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
+            Segment(
+                periode = Periode(1 juni 2023, 1 august 2023), verdi = Tilkjent(
+                    dagsats = Beløp("1204.45"), //4*0.66*111477/260
+                    gradering = TilkjentGradering(
+                        endeligGradering = Prosent.`30_PROSENT`,
+                        samordningGradering = Prosent(10),
+                        institusjonGradering = Prosent.`50_PROSENT`,
+                        arbeidGradering = Prosent.`100_PROSENT`,
+                        samordningUføregradering = Prosent.`30_PROSENT`
+                    ),
+                    grunnlag = Beløp("1204.45"),
+                    grunnlagsfaktor = GUnit("0.0101538462"),
+                    grunnbeløp = Beløp("118620"),
+                    antallBarn = 0,
+                    barnetilleggsats = Beløp("0"),
+                    barnetillegg = Beløp("0"),
+                    utbetalingsdato = periode.tom.plusDays(1),
+                )
+            ),
+        )
+    }
+
 }

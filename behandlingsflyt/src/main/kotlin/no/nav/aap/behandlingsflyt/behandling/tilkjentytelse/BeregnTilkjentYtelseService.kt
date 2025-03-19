@@ -81,9 +81,10 @@ class BeregnTilkjentYtelseService(
                 val utbetalingsgrad = if (venstre.verdi.utfall == Utfall.IKKE_OPPFYLT) {
                     Prosent.`0_PROSENT`
                 } else {
-                    val institusjonsOppholdReduksjon = venstre.verdi.institusjonsoppholdReduksjon.komplement()
-                    val arbeidsgraderingReduksjon = venstre.verdi.arbeidsgradering.gradering
-                    arbeidsgraderingReduksjon.multiplisert(institusjonsOppholdReduksjon)
+                    venstre.verdi.arbeidsgradering.gradering
+//                    val institusjonsOppholdReduksjon = venstre.verdi.institusjonsoppholdReduksjon.komplement()
+//                    val arbeidsgraderingReduksjon = venstre.verdi.arbeidsgradering.gradering
+//                    arbeidsgraderingReduksjon.multiplisert(institusjonsOppholdReduksjon)
                 }
                 Segment(
                     periode, TilkjentGUnit(
@@ -108,7 +109,7 @@ class BeregnTilkjentYtelseService(
                         val nyGradering =
                             tilkjentGUnit.copy(
                                 gradering = tilkjentGUnit.gradering.copy(
-                                    endeligGradering = tilkjentGUnit.gradering.endeligGradering.minus(høyre.verdi.uføregradTilSamordning),
+                                    endeligGradering = tilkjentGUnit.gradering.endeligGradering.minus(høyre.verdi.uføregradTilSamordning, Prosent.`0_PROSENT`),
                                     samordningUføregradering = høyre.verdi.uføregradTilSamordning
                                 )
                             )
@@ -130,7 +131,7 @@ class BeregnTilkjentYtelseService(
                         val nyGradering =
                             tilkjentGUnit.copy(
                                 gradering = tilkjentGUnit.gradering.copy(
-                                    endeligGradering = tilkjentGUnit.gradering.endeligGradering.minus(høyre.verdi.gradering),
+                                    endeligGradering = tilkjentGUnit.gradering.endeligGradering.minus(høyre.verdi.gradering, Prosent.`0_PROSENT`),
                                     samordningGradering = høyre.verdi.gradering,
                                 )
                             )
@@ -142,12 +143,12 @@ class BeregnTilkjentYtelseService(
         val gradertÅrligTilkjentYtelseBeløp = gradertÅrligYtelseTidslinjeMedSamordning.kombiner(
             Grunnbeløp.tilTidslinje(), JoinStyle.INNER_JOIN { periode, venstre, grunnbeløp ->
                 val dagsats = grunnbeløp.verdi.multiplisert(venstre.verdi.dagsats)
+                val redusertUtbetalingsgrad = reduserUtbetalingsgradVedInstitusjonsopphold(venstre.verdi.gradering)
 
-                val utbetalingsgrad = venstre.verdi.gradering.endeligGradering
                 Segment(
                     periode, TilkjentFørBarn(
                         dagsats = dagsats,
-                        gradering = utbetalingsgrad,
+                        gradering = redusertUtbetalingsgrad,
                         grunnlag = dagsats,
                         grunnlagsfaktor = venstre.verdi.dagsats,
                         grunnbeløp = grunnbeløp.verdi,
@@ -198,6 +199,11 @@ class BeregnTilkjentYtelseService(
                 )
             })
     }
+
+    private fun reduserUtbetalingsgradVedInstitusjonsopphold(tilkjentGradering: TilkjentGradering) =
+        tilkjentGradering.institusjonGradering?.let {
+            tilkjentGradering.endeligGradering.multiplisert(it.komplement())
+        } ?: tilkjentGradering.endeligGradering
 
     private class TilkjentFørBarn(
         val dagsats: Beløp,
