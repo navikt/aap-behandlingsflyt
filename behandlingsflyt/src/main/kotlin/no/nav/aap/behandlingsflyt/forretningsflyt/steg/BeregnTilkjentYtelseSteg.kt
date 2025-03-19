@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseReposi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
@@ -38,12 +39,19 @@ class BeregnTilkjentYtelseSteg private constructor(
         val fødselsdato =
             requireNotNull(personopplysningRepository.hentHvisEksisterer(kontekst.behandlingId)?.brukerPersonopplysning?.fødselsdato)
         val barnetilleggGrunnlag = requireNotNull(barnetilleggRepository.hentHvisEksisterer(kontekst.behandlingId))
-        val samordningGrunnlag =
-            requireNotNull(samordningRepository.hentHvisEksisterer(kontekst.behandlingId)) { "Trenger samordningsgrunnlag." }
+        val samordningGrunnlag = samordningRepository.hentHvisEksisterer(kontekst.behandlingId) ?: SamordningGrunnlag(
+            id = 0L,
+            samordningPerioder = listOf()
+        )
         val samordningUføre = samordningUføreRepository.hentHvisEksisterer(kontekst.behandlingId)
 
         val beregnetTilkjentYtelse = BeregnTilkjentYtelseService(
-            fødselsdato, beregningsgrunnlag, underveisgrunnlag, barnetilleggGrunnlag, samordningGrunnlag, samordningUføre
+            fødselsdato,
+            beregningsgrunnlag,
+            underveisgrunnlag,
+            barnetilleggGrunnlag,
+            samordningGrunnlag,
+            samordningUføre
         ).beregnTilkjentYtelse()
         tilkjentYtelseRepository.lagre(
             behandlingId = kontekst.behandlingId,
