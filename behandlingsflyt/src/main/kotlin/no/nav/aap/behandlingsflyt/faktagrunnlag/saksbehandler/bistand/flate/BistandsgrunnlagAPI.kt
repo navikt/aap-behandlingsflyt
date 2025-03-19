@@ -37,6 +37,7 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(dataSource: DataSource) {
                     val vurderingDto = BistandVurderingDto.fraBistandVurdering(grunnlag?.vurdering)
                     BistandGrunnlagDto(
                         vurderingDto,
+                        listOfNotNull(vurderingDto),
                         historiskeVurderinger.map { it.toDto() })
                 }
 
