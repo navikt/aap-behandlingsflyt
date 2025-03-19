@@ -93,6 +93,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.BrevbestillingLøsning
 import no.nav.aap.behandlingsflyt.kontrakt.brevbestilling.LøsBrevbestillingDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ArbeidIPeriodeV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
@@ -347,6 +349,28 @@ class FlytOrkestratorTest {
             )
         )
         behandling = hentBehandling(sak.id)
+
+        // Sender inn en søknad
+        sendInnDokument(
+            ident, DokumentMottattPersonHendelse(
+                journalpost = JournalpostId("22"),
+                mottattTidspunkt = LocalDateTime.now(),
+                strukturertDokument = StrukturertDokument(
+                    MeldekortV0(
+                        harDuArbeidet = false,
+                        timerArbeidPerPeriode = listOf(
+                            ArbeidIPeriodeV0(
+                                fraOgMedDato = LocalDate.now().minusMonths(3),
+                                tilOgMedDato = LocalDate.now().plusMonths(3),
+                                timerArbeid = 0.0,
+                            )
+                        )
+                    ),
+                ),
+                periode = periode
+            )
+        )
+        util.ventPåSvar()
 
         alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
         løsAvklaringsBehov(

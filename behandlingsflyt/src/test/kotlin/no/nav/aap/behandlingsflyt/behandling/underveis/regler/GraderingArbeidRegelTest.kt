@@ -72,7 +72,7 @@ class GraderingArbeidRegelTest {
     }
 
     @Test
-    fun `Hvis det ikke er registrert timer arbeidet brukes fastsatt arbeidsevne i utregning av gradering`() {
+    fun `Hvis det ikke er registrert timer arbeidet blir graderingen 0 prosent`() {
         val rettighetsperiode = Periode(LocalDate.parse("2024-10-31"), LocalDate.parse("2025-10-31"))
         val input = underveisInput(
             rettighetsperiode = rettighetsperiode,
@@ -81,7 +81,7 @@ class GraderingArbeidRegelTest {
         )
         val vurdering = vurder(input)
 
-        assertEquals(Prosent.`70_PROSENT`, vurdering.segment(rettighetsperiode.fom)?.verdi?.arbeidsgradering()?.gradering)
+        assertEquals(Prosent.`0_PROSENT`, vurdering.segment(rettighetsperiode.fom)?.verdi?.arbeidsgradering()?.gradering)
     }
 
     @Test
