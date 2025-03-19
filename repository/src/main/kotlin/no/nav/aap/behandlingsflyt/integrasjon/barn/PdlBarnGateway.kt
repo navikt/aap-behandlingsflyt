@@ -50,7 +50,7 @@ object PdlBarnGateway : BarnGateway {
 
         return relasjoner.map {
             Ident(
-                it.relatertPersonsIdent
+                requireNotNull(it.relatertPersonsIdent) { "Vi støtter ikke per nå at denne er null fra PDL " }
             )
         }
     }
@@ -69,7 +69,8 @@ object PdlBarnGateway : BarnGateway {
             res.person?.let { person ->
                 person.foedselsdato?.let { foedsel ->
                     val fødselsdato = PdlParser.utledFødselsdato(foedsel)
-                    Barn(ident = Ident(res.ident),
+                    Barn(
+                        ident = Ident(res.ident),
                         fødselsdato = requireNotNull(fødselsdato),
                         dødsdato = person.doedsfall?.firstOrNull()?.doedsdato?.let { Dødsdato.parse(it) })
                 }

@@ -103,7 +103,7 @@ data class PdlFoedsel(
 )
 
 data class PdlRelasjon(
-    val relatertPersonsIdent: String
+    val relatertPersonsIdent: String?
 )
 
 data class PdlPersoninfoData(
